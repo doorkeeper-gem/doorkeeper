@@ -3,6 +3,7 @@ require File.expand_path("../dummy/config/environment", __FILE__)
 
 require 'rspec/rails'
 require 'rspec/autorun'
+require 'generator_spec/test_case'
 
 ENGINE_RAILS_ROOT = File.join(File.dirname(__FILE__), '../')
 
@@ -15,3 +16,4 @@ RSpec.configure do |config|
 
   config.infer_base_class_for_anonymous_controllers = false
 end
+
