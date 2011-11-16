@@ -4,6 +4,9 @@ require File.expand_path("../dummy/config/environment", __FILE__)
 require 'rspec/rails'
 require 'rspec/autorun'
 require 'generator_spec/test_case'
+require 'factory_girl_rails'
+FactoryGirl.definition_file_paths << File.join(File.dirname(__FILE__), 'factories')
+FactoryGirl.find_definitions
 
 ENGINE_RAILS_ROOT = File.join(File.dirname(__FILE__), '../')
 
