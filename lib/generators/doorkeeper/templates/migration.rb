@@ -1,3 +1,3 @@
-class DoorkeeperMigration < ActiveRecord::Migration
+class CreateDoorkeeperTables < ActiveRecord::Migration
 
 end
