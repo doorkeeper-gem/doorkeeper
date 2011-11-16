@@ -1,4 +1,3 @@
 Rails.application.routes.draw do
-
-  mount Doorkeeper::Engine => "/doorkeeper"
+  mount Doorkeeper::Engine => "/oauth"
 end
