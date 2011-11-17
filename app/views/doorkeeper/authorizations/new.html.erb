@@ -1,2 +1,22 @@
-<h1>Authorizations#new</h1>
-<p>Find me in app/views/doorkeeper/authorizations/new.html.erb</p>
+<div class="span16">
+  <h2>Authorize <%= @authorization.client_name %> to use your account?</h2>
+</div>
+
+<div class="span16">
+  <p>This application <b>will able to</b>:</p>
+
+  <ul>
+    <li>Access your public data</li>
+  </ul>
+
+  <%= form_tag authorization_path do %>
+    <%= hidden_field_tag :client_id, @authorization.client_id %>
+    <%= hidden_field_tag :response_type, @authorization.response_type %>
+    <%= submit_tag "Authorize", class: "btn primary" %> or
+  <% end %>
+  <%= form_tag authorization_path, :method => :delete do %>
+    <%= hidden_field_tag :client_id, @authorization.client_id %>
+    <%= hidden_field_tag :response_type, @authorization.response_type %>
+    <%= button_tag "Deny", class: "btn" %>
+  <% end %>
+</div>
