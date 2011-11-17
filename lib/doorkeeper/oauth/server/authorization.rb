@@ -4,22 +4,22 @@ module OAuth
 
       class InvalidRedirectionURI < StandardError; end
 
-      attr_reader :application, :resource, :grant
+      attr_reader :client, :resource, :grant
 
-      def initialize(application, resource, options = {})
-        @application, @resource, @options = application, resource, options
+      def initialize(client, resource, options = {})
+        @client, @resource, @options = client, resource, options
       end
 
       def grant!
         validate_params!
         @grant ||= AccessGrant.create(
-          application: application,
+          client: client,
           resource: resource
         )
       end
 
       def redirect_uri
-        uri = URI.parse(application.redirect_uri)
+        uri = URI.parse(client.redirect_uri)
         uri.query = "code=#{token}"
         uri.to_s
       end
@@ -40,7 +40,7 @@ module OAuth
 
       def redirect_uri_valid?
         return true unless options[:redirect_uri].present?
-        options[:redirect_uri] == application.redirect_uri
+        options[:redirect_uri] == client.redirect_uri
       end
     end
   end
