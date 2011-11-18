@@ -1,0 +1,29 @@
+<div class="span16">
+  <header class="page-header">
+    <h2>Your applications</h2>
+  </header>
+
+  <p><%= link_to 'New Application', new_application_path %></p>
+
+  <table class="zebra-striped">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Callback url</th>
+        <th></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @applications.each do |application| %>
+        <tr>
+          <td><%= link_to application.name, application %></td>
+          <td><%= application.redirect_uri %></td>
+          <td><%= link_to 'Edit', edit_application_path(application) %></td>
+          <td><%= link_to 'Destroy', application, confirm: 'Are you sure?', method: :delete %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+</div>

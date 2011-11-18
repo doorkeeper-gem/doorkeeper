@@ -3,4 +3,6 @@ Doorkeeper::Engine.routes.draw do
   post   'authorize', :to => "authorizations#create",  :as => :authorization
   delete 'authorize', :to => "authorizations#destroy", :as => :authorization
   post   'token',     :to => "tokens#create",          :as => :token
+
+  resources :applications
 end

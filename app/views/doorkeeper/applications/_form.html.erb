@@ -1,0 +1,25 @@
+<%= form_for(application) do |f| %>
+  <fieldset>
+    <% if @application.errors.any? %>
+      <div class="alert-message error" data-alert><a class="close" href="#">×</a><p>Whoops! Check your form for possible errors</p></div>
+    <% end %>
+
+    <p>
+      <%= f.label :name %>
+
+      <div class="input">
+        <%= f.text_field :name %>
+      </div>
+    </p>
+    <p>
+      <%= f.label :redirect_uri %>
+      <div class="input">
+        <%= f.text_field :redirect_uri %>
+      </div>
+    </p>
+    <div class="actions">
+      <%= f.submit :Submit %>
+    </div>
+  </fieldset>
+<% end %>
+
