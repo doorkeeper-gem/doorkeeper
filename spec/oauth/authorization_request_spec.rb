@@ -2,11 +2,18 @@ require "spec_helper"
 
 module Doorkeeper::OAuth
   describe AuthorizationRequest do
-    describe "issuing an authorization code" do
-      let(:client)   { Factory(:application) }
-      let(:resource) { double(:resource, :id => 1) }
+    let(:client)   { Factory(:application) }
+    let(:resource) { double(:resource, :id => 1) }
+    let(:params)   {
+      {
+        :response_type => "code",
+        :client_id => client.uid,
+        :redirect_uri => client.redirect_uri,
+      }
+    }
 
-      subject { create_code_request_for(client, resource) }
+    describe "issuing an authorization code" do
+      subject { AuthorizationRequest.new(resource, params) }
 
       it "creates the authorization grant" do
         subject.authorize
@@ -25,37 +32,22 @@ module Doorkeeper::OAuth
     end
 
     describe "redirecting with error" do
-      let(:client)   { Factory(:application) }
-      let(:resource) { double(:resource, :id => 1) }
-
       before do
         AccessGrant.should_not_receive(:create)
       end
 
       it "redirects with :invalid_request when missing response_type" do
-        auth = AuthorizationRequest.new(resource, default_params.except(:response_type))
+        auth = AuthorizationRequest.new(resource, params.except(:response_type))
         auth.authorize
         auth.invalid_redirect_uri.should == "https://app.com/callback?error=invalid_request"
       end
 
       it "raises an error when redirect_uri is mismatch" do
-        auth = AuthorizationRequest.new(resource, default_params.merge(:redirect_uri => "http://mismatch.com"))
+        auth = AuthorizationRequest.new(resource, params.merge(:redirect_uri => "http://mismatch.com"))
         expect {
           auth.authorize
         }.to raise_error(MismatchRedirectURI)
       end
-    end
-
-    def create_code_request_for(client, resource)
-      AuthorizationRequest.new(resource, default_params)
-    end
-
-    def default_params
-      {
-        :response_type => "code",
-        :client_id => client.uid,
-        :redirect_uri => client.redirect_uri,
-      }
     end
   end
 end
