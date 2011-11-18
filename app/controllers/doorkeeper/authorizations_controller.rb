@@ -1,5 +1,7 @@
 module Doorkeeper
   class AuthorizationsController < ApplicationController
+    before_filter :authenticate_resource!
+
     rescue_from OAuth::MismatchRedirectURI do
       Rails.logger.error "OAuth: Invalid application redirect_uri"
       render :error
@@ -17,11 +19,6 @@ module Doorkeeper
       else
         redirect_to authorization.invalid_redirect_uri
       end
-    end
-
-    private
-
-    def current_resource
     end
   end
 end
