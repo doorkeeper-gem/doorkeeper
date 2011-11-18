@@ -1,6 +1,10 @@
 require "doorkeeper/engine"
-require "doorkeeper/oauth/random_string"
-require "doorkeeper/oauth"
 
 module Doorkeeper
+  module OAuth
+    class MismatchRedirectURI < StandardError; end
+
+    autoload :RandomString,         "doorkeeper/oauth/random_string"
+    autoload :AuthorizationRequest, "doorkeeper/oauth/authorization_request"
+  end
 end

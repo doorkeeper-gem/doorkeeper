@@ -1,5 +1,5 @@
 class Application < ActiveRecord::Base
-  include OAuth::RandomString
+  include Doorkeeper::OAuth::RandomString
   set_table_name 'oauth_applications'
 
   validates :name, :secret, :presence => true

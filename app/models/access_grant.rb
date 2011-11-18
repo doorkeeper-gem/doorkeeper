@@ -1,5 +1,5 @@
 class AccessGrant < ActiveRecord::Base
-  include OAuth::RandomString
+  include Doorkeeper::OAuth::RandomString
 
   self.table_name = "oauth_access_grants"
 

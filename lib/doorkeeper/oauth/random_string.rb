@@ -1,4 +1,4 @@
-module OAuth
+module Doorkeeper::OAuth
   module RandomString
     def random_string
       SecureRandom.hex(32)
