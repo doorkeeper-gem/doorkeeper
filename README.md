@@ -1,5 +1,7 @@
 # Doorkeeper - awesome oauth provider for your Rails app.
 
+{<img src="https://secure.travis-ci.org/applicake/doorkeeper.png" />}[http://travis-ci.org/applicake/doorkeeper]
+
 ## Installation
 
 Put this in your Gemfile:
