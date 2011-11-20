@@ -55,7 +55,7 @@ module Doorkeeper
 
     describe "with valid params" do
       it "redirects to client's uri" do
-        OAuth::AuthorizationRequest.any_instance.stub(:valid?) { true }
+        OAuth::AuthorizationRequest.any_instance.stub(:authorize) { true }
         post :create, :use_route => :doorkeeper
         should redirect_to("http://something.com/cb?code=token")
       end
@@ -63,13 +63,13 @@ module Doorkeeper
 
     describe "with invalid params" do
       it "renders :error when params are invalid" do
-        OAuth::AuthorizationRequest.any_instance.stub(:valid?) { false }
+        OAuth::AuthorizationRequest.any_instance.stub(:authorize) { false }
         post :create, :use_route => :doorkeeper
         should redirect_to("http://something.com/cb?error=invalid_request")
       end
 
       it "renders :error when params are invalid" do
-        OAuth::AuthorizationRequest.any_instance.stub(:valid?) { raise OAuth::MismatchRedirectURI }
+        OAuth::AuthorizationRequest.any_instance.stub(:authorize) { raise OAuth::MismatchRedirectURI }
         post :create, :use_route => :doorkeeper
         should render_template(:error)
       end

@@ -5,7 +5,6 @@ module Doorkeeper::OAuth
     attr_reader :resource_owner, :options
 
     delegate :name, :uid, :to => :client, :prefix => true
-    alias    :client_id :client_uid
 
     def initialize(resource_owner, options)
       @resource_owner = resource_owner
@@ -16,7 +15,7 @@ module Doorkeeper::OAuth
     def authorize
       if valid?
         @grant = AccessGrant.create!(
-          :application_id => client_id,
+          :application_id => client.id,
           :resource_owner_id => resource_owner.id,
           :expires_in => DEFAULT_EXPIRATION_TIME
         )
@@ -25,6 +24,10 @@ module Doorkeeper::OAuth
 
     def response_type
       options[:response_type]
+    end
+
+    def client_id
+      options[:client_id]
     end
 
     def valid?
