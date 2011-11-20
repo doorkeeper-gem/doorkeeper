@@ -6,6 +6,14 @@ Put this in your Gemfile:
 
     gem 'doorkeeper'
 
+Run the installation generator with:
+
+    rails generate doorkeeper:install
+
+This will generate the doorkeeper initializer and the oauth tables migration. Don't forget to run the migration in your application:
+
+    rake db:migrate
+
 ## Configuration
 
 Mount Doorkeeper routes to your app
