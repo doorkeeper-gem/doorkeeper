@@ -23,10 +23,15 @@ end
 require 'rspec/core/rake_task'
 
 desc 'Default: run specs.'
-task :default => :spec
+task :default => :run_specs
 
 desc "Run all specs"
 RSpec::Core::RakeTask.new
+
+task :run_specs do
+  Rake::Task["app:db:schema:load"].invoke
+  Rake::Task["spec"].invoke
+end
 
 APP_RAKEFILE = File.expand_path("../spec/dummy/Rakefile", __FILE__)
 load 'rails/tasks/engine.rake'
