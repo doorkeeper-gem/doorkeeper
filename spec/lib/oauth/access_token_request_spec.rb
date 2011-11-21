@@ -21,5 +21,8 @@ module Doorkeeper::OAuth
       its(:access_token) { should =~ /\w+/ }
       its(:token_type)   { "bearer" }
     end
+
+    it "validates grant application against authenticated application"
+
   end
 end

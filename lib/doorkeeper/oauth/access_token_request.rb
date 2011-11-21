@@ -2,8 +2,8 @@ module Doorkeeper::OAuth
   class AccessTokenRequest
     DEFAULT_EXPIRATION_TIME = 2.days
 
-    def initialize(grant, options)
-      @grant         = grant
+    def initialize(code, options)
+      @code          = code
       @client_id     = options[:client_id]
       @client_secret = options[:client_secret]
     end
@@ -12,14 +12,20 @@ module Doorkeeper::OAuth
       if valid?
         @access_token = AccessToken.create!(
           :application_id => client.uid,
-          :resource_owner_id => authorization.resource_owner_id,
+          :resource_owner_id => grant.resource_owner_id,
           :expires_at => DateTime.now + DEFAULT_EXPIRATION_TIME
         )
       end
     end
 
+    def authorization
+      { 'access_token' => access_token,
+        'token_type'   => token_type
+      }
+    end
+
     def valid?
-      authorization && client
+      grant && client
     end
 
     def access_token
@@ -32,8 +38,8 @@ module Doorkeeper::OAuth
 
     private
 
-    def authorization
-      @authorization ||= AccessGrant.find_by_token(@grant)
+    def grant
+      @grant ||= AccessGrant.find_by_token(@code)
     end
 
     def client
