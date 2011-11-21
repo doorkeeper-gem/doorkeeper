@@ -4,9 +4,7 @@ feature "Authorization Request" do
   let(:client) { Factory(:application) }
 
   before do
-    Doorkeeper.resource_owner_authenticator = Proc.new do
-      User.create!
-    end
+    Doorkeeper.stub(:authenticate_resource_owner => proc do User.create! end)
   end
 
   scenario "requesting with valid client" do

@@ -11,7 +11,7 @@ module Doorkeeper
     end
 
     def current_resource
-      instance_eval(&Doorkeeper.resource_owner_authenticator)
+      instance_eval(&Doorkeeper.authenticate_resource_owner)
     end
   end
 end

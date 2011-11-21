@@ -1,7 +1,8 @@
-Doorkeeper.setup do |config|
+Doorkeeper.configure do
   # This block will be called to check whether the
   # resource owner is authenticated or not
-  config.resource_owner_authenticator = proc do
+  resource_owner_authenticator do
+    # put your resource owner authentication logic here
     User.find_by_id(session[:user_id])
   end
 end
