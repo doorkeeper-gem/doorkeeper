@@ -7,7 +7,7 @@ class Doorkeeper::InstallGenerator < Rails::Generators::Base
   def install
     migration_template 'migration.rb', 'db/migrate/create_doorkeeper_tables.rb'
     template "initializer.rb", "config/initializers/doorkeeper.rb"
-
+    route "mount Doorkeeper::Engine => '/oauth'"
   end
 
   def self.next_migration_number(dirname)

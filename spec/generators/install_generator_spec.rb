@@ -11,6 +11,8 @@ describe 'Doorkeeper::InstallGenerator' do
   describe "after running the generator" do
     before :each do
       prepare_destination
+      FileUtils.mkdir(::File.expand_path("config", Pathname(destination_root)))
+      FileUtils.copy_file(::File.expand_path("../templates/routes.rb", __FILE__), ::File.expand_path("config/routes.rb", Pathname.new(destination_root)))
       run_generator
     end
 
@@ -20,6 +22,10 @@ describe 'Doorkeeper::InstallGenerator' do
 
     it "creates an initializer file" do
       assert_file 'config/initializers/doorkeeper.rb'
+    end
+
+    it "adds sample route" do
+      assert_file "config/routes.rb", /mount Doorkeeper::Engine/
     end
   end
 end
