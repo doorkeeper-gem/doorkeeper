@@ -14,9 +14,12 @@ describe 'Doorkeeper::InstallGenerator' do
       run_generator
     end
 
-    it "should create a migration" do
+    it "creates a migration" do
       assert_migration "db/migrate/create_doorkeeper_tables.rb"
     end
-  end
 
+    it "creates an initializer file" do
+      assert_file 'config/initializers/doorkeeper.rb'
+    end
+  end
 end
