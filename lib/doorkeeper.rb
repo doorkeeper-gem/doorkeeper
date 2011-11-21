@@ -12,7 +12,4 @@ module Doorkeeper
   def self.setup
     yield self
   end
-
-  mattr_accessor :resource_owner_authenticator
-  @@resource_owner_authenticator = nil
 end
