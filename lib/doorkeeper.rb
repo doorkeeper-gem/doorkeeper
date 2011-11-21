@@ -7,6 +7,7 @@ module Doorkeeper
 
     autoload :RandomString,         "doorkeeper/oauth/random_string"
     autoload :AuthorizationRequest, "doorkeeper/oauth/authorization_request"
+    autoload :AccessTokenRequest,   "doorkeeper/oauth/access_token_request"
   end
 
   def self.setup
