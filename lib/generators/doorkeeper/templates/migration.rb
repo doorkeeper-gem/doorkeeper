@@ -1,5 +1,5 @@
 class CreateDoorkeeperTables < ActiveRecord::Migration
-  def self.change
+  def change
     create_table :oauth_applications do |t|
       t.string :name,   :null => false
       t.string :uid,    :null => false
