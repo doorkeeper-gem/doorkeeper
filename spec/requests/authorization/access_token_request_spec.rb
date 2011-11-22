@@ -10,4 +10,10 @@ feature "Access token request" do
     body['access_token'].should =~ /\w+/
     body['token_type'].should == "bearer"
   end
+
+  scenario "requesting with invalid grant code" do
+    post "/oauth/token?code=invalid&client_id=#{client.uid}&client_secret=#{client.secret}"
+    body = JSON.parse(response.body)
+    body['error'].should == 'invalid_grant'
+  end
 end

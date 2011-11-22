@@ -36,6 +36,10 @@ module Doorkeeper::OAuth
       "bearer"
     end
 
+    def error
+      { 'error' => 'invalid_grant' }
+    end
+
     private
 
     def grant
