@@ -20,7 +20,7 @@ class CreateDoorkeeperTables < ActiveRecord::Migration
       t.integer  :resource_owner_id, :null => false
       t.integer  :application_id,    :null => false
       t.string   :token
-      t.datetime :expires_at,        :null => false
+      t.datetime :expires_at
       t.datetime :revoked_at
       t.datetime :created_at,        :null => false
     end
