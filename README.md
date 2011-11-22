@@ -36,8 +36,14 @@ You need to configure Doorkeeper in order to provide resource_owner model and au
 
     Doorkeeper.configure do
       resource_owner_authenticator do
-        current_user # returns nil if current_user is not logged in
+        current_user || redirect_to('/sign_in', :alert => "Needs sign in.") # returns nil if current_user is not logged in
       end
+    end
+
+If you use devise, you may want to use warden to authenticate the block:
+
+    resource_owner_authenticator do
+      current_user || warden.authenticate!(:scope => :user)
     end
 
 ## Protecting resources (a.k.a your API endpoint)

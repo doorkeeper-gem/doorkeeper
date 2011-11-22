@@ -3,11 +3,7 @@ module Doorkeeper
     private
 
     def authenticate_resource!
-      redirect_to main_app.root_url unless current_resource_authenticated?
-    end
-
-    def current_resource_authenticated?
-      !!current_resource
+      current_resource
     end
 
     def current_resource
