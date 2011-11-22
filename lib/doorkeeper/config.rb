@@ -15,21 +15,35 @@ module Doorkeeper
   end
 
   class Config
+    module ConfigOptions
+      def register_config_option(name, attribute, receives_block = true)
+        define_method name do |*args, &block|
+          if receives_block
+            self.instance_variable_set(:"@#{attribute}", block)
+          else
+            self.instance_variable_set(:"@#{attribute}", args[0])
+          end
+        end
+
+        attr_reader attribute
+        public attribute
+      end
+
+      def extended(base)
+        base.send(:private, :register_method)
+      end
+    end
+
+    extend ConfigOptions
     include ActiveModel::Validations
 
-    attr_reader :authenticate_resource_owner
+    register_config_option :resource_owner_authenticator, :authenticate_resource_owner
 
     validates_presence_of :authenticate_resource_owner, :message => "You have to specify resource_owner_authenticator block"
 
 
     def initialize(&block)
       instance_eval &block
-    end
-
-    private
-    attr_writer :authenticate_resource_owner
-    def resource_owner_authenticator(&block)
-      self.authenticate_resource_owner = block
     end
   end
 end
