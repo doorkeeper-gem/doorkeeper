@@ -1,83 +1,98 @@
 module Doorkeeper::OAuth
   class AuthorizationRequest
+
+    module ValidationMethods
+      def error_type
+        case
+          when missing_required_attributes? then :invalid_request
+          when invalid_client?              then :invalid_client
+          when invalid_redirect_uri?        then :invalid_redirect_uri
+          when invalid_response_type?       then :unsupported_response_type
+        end
+      end
+
+      def invalid_redirect_uri?
+        client.redirect_uri != redirect_uri
+      end
+
+      def invalid_client?
+        !client
+      end
+
+      def missing_required_attributes?
+        !response_type.present? || !client_id.present? || !redirect_uri.present?
+      end
+
+      def invalid_response_type?
+        response_type != "code"
+      end
+    end
+
+    include ValidationMethods
+
     DEFAULT_EXPIRATION_TIME = 600
 
-    attr_reader :resource_owner, :options
+    ATTRIBUTES = [
+      :response_type,
+      :client_id,
+      :redirect_uri,
+      :scope,
+      :state
+    ]
 
-    delegate :name, :uid, :to => :client, :prefix => true
+    attr_accessor *ATTRIBUTES
+    attr_accessor :resource_owner, :error
 
-    def initialize(resource_owner, options)
+    def initialize(resource_owner, attributes)
       @resource_owner = resource_owner
-      @options        = options
       @grant          = nil
+      @error          = nil
+      ATTRIBUTES.each do |attribute|
+        instance_variable_set("@#{attribute}", attributes[attribute])
+      end
     end
 
     def authorize
-      if valid?
-        @grant = AccessGrant.create!(
-          :application_id => client.id,
-          :resource_owner_id => resource_owner.id,
-          :expires_in => DEFAULT_EXPIRATION_TIME
-        )
-      end
-    end
-
-    def response_type
-      options[:response_type]
-    end
-
-    def client_id
-      options[:client_id]
+      build_authorization if valid?
     end
 
     def valid?
-      has_response_type? &&
-      has_client? &&
-      redirect_uri_matches?
+      @error = error_type
+      @error.nil?
     end
 
-    def token
-      @grant.token
-    end
-
-    def redirect_uri
-      build_uri { |uri| uri.query = "code=#{token}" }
+    def success_redirect_uri
+      build_uri do |uri|
+        query = "code=#{token}"
+        query << "&state=#{state}" if has_state?
+        uri.query = query
+      end
     end
 
     def invalid_redirect_uri
-      build_uri { |uri| uri.query = "error=#{error_name}" }
+      build_uri { |uri| uri.query = "error=#{error}" }
     end
 
-    def error_name
-      case
-      when !has_response_type? then "invalid_request"
-      end
+    def client
+      @client ||= Application.find_by_uid(client_id)
     end
 
     private
 
-    def has_response_type?
-      response_type.present?
+    def build_authorization
+      @grant = AccessGrant.create!(
+        :application_id => client.id,
+        :resource_owner_id => resource_owner.id,
+        :expires_in => DEFAULT_EXPIRATION_TIME
+      )
     end
 
-    def has_client?
-      client.present?
+    def has_state?
+      state.present?
     end
 
-    def has_redirect_uri?
-      options[:redirect_uri].present?
-    end
-
-    def redirect_uri_mismatches?
-      has_redirect_uri? and client.redirect_uri != options[:redirect_uri]
-    end
-
-    def redirect_uri_matches?
-      redirect_uri_mismatches? ? raise(MismatchRedirectURI) : true
-    end
-
-    def client
-      @client ||= Application.find_by_uid(options[:client_id])
+    def token
+      @grant.token
     end
 
     def build_uri

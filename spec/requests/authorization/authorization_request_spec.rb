@@ -8,18 +8,19 @@ feature "Authorization Request" do
   end
 
   scenario "requesting with valid client" do
-    visit "/oauth/authorize?client_id=#{client.uid}&response_type=code"
+    visit "/oauth/authorize?client_id=#{client.uid}&redirect_uri=#{client.redirect_uri}&response_type=code"
     click_on "Authorize"
 
     # Authorization code was created
     grant = client.access_grants.first
     grant.should_not be_nil
 
-    should_be_on redirect_uri_with_code(client.redirect_uri, grant.token)
+    i_should_be_on_url redirect_uri_with_code(client.redirect_uri, grant.token)
   end
 
-  def should_be_on(path)
-    page.current_url.should == path
+  scenario "requesting with invalid valid client_id" do
+    visit "/oauth/authorize?client_id=invalid&redirect_uri=#{client.redirect_uri}&response_type=code"
+    i_should_see "An error has occurred"
   end
 
   def redirect_uri_with_code(uri, code)
