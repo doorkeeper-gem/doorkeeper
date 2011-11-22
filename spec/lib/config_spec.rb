@@ -15,18 +15,25 @@ module Doorkeeper
     end
 
     describe "validation" do
-      it "should raise error if no config set" do
+      it "raises an error if no config set" do
         lambda do
           Doorkeeper.validate_configuration
         end.should raise_error "You have to specify doorkeeper configuration"
       end
 
-      it "should raise error if no resource_owner_authenticator block has been set" do
+      it "raises an error if no resource_owner_authenticator block has been set" do
         Doorkeeper.configure do
         end
         lambda do
           Doorkeeper.validate_configuration
-        end.should raise_error "You have to specify resource_owner_authenticator block"
+        end.should raise_error "You have to specify resource_owner_authenticator block for doorkeeper"
+      end
+
+      it "does not raise an error if all configs have been set" do
+        Doorkeeper.configure do
+          resource_owner_authenticator do end
+        end
+        Doorkeeper.validate_configuration.should be_true
       end
     end
 

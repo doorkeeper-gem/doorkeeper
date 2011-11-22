@@ -12,6 +12,7 @@ module Doorkeeper
     unless @@config.valid?
       raise @@config.errors.values.join(',')
     end
+    true
   end
 
   class Config
@@ -39,7 +40,7 @@ module Doorkeeper
 
     register_config_option :resource_owner_authenticator, :authenticate_resource_owner
 
-    validates_presence_of :authenticate_resource_owner, :message => "You have to specify resource_owner_authenticator block"
+    validates_presence_of :authenticate_resource_owner, :message => "You have to specify resource_owner_authenticator block for doorkeeper"
 
 
     def initialize(&block)
