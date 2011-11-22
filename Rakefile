@@ -33,6 +33,14 @@ task :run_specs do
   Rake::Task["spec"].invoke
 end
 
+namespace :doorkeeper do
+  desc "Install doorkeeper in dummy app"
+  task :install do
+    cd 'spec/dummy'
+    system 'bundle exec rails g doorkeeper:install --force'
+  end
+end
+
 APP_RAKEFILE = File.expand_path("../spec/dummy/Rakefile", __FILE__)
 load 'rails/tasks/engine.rake'
 
