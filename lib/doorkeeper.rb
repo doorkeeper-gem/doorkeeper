@@ -1,5 +1,6 @@
 require "doorkeeper/engine"
 require "doorkeeper/config"
+require "doorkeeper/doorkeeper_for"
 
 module Doorkeeper
   module OAuth
