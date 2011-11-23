@@ -2,6 +2,8 @@ module Doorkeeper
   class ApplicationsController < ApplicationController
     respond_to :html
 
+    before_filter :authenticate_admin!
+
     def index
       @applications = Application.all
     end
