@@ -15,7 +15,7 @@ module Doorkeeper
 
   describe AuthorizationsController, "#new" do
     before do
-      controller.stub(:current_resource) { double(:resource, :id => 1) }
+      controller.stub(:current_resource_owner) { double(:resource, :id => 1) }
     end
 
     describe "when authorization is valid" do
@@ -38,7 +38,7 @@ module Doorkeeper
 
   describe AuthorizationsController, "#create" do
     before do
-      controller.stub(:current_resource) { double(:resource, :id => 1) }
+      controller.stub(:current_resource_owner) { double(:resource, :id => 1) }
       OAuth::AuthorizationRequest.any_instance.stub(:success_redirect_uri) { "http://something.com/cb?code=token" }
     end
 
