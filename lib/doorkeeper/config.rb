@@ -3,10 +3,6 @@ module Doorkeeper
     @@config = Config.new(&block)
   end
 
-  def self.authenticate_resource_owner
-    @@config.authenticate_resource_owner
-  end
-
   def self.validate_configuration
     raise "You have to specify doorkeeper configuration" unless class_variable_defined?(:@@config)
     unless @@config.valid?
@@ -28,6 +24,12 @@ module Doorkeeper
 
         attr_reader attribute
         public attribute
+
+        Doorkeeper.class_eval "
+            def self.#{attribute}
+              @@config.#{attribute}
+            end
+          "
       end
 
       def extended(base)
