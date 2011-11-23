@@ -41,6 +41,7 @@ module Doorkeeper
     include ActiveModel::Validations
 
     register_config_option :resource_owner_authenticator, :authenticate_resource_owner
+    register_config_option :admin_authenticator, :authenticate_admin
 
     validates_presence_of :authenticate_resource_owner, :message => "You have to specify resource_owner_authenticator block for doorkeeper"
 

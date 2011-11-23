@@ -46,5 +46,15 @@ module Doorkeeper
         config.authenticate_resource_owner.should == block
       end
     end
+
+    describe "admin_authenticator" do
+      it "sets the block that is accessible via authenticate_admin" do
+        block = proc do end
+        config = Config.new do
+          admin_authenticator &block
+        end
+        config.authenticate_admin.should == block
+      end
+    end
   end
 end
