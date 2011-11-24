@@ -4,7 +4,7 @@ class Application < ActiveRecord::Base
 
   has_many :access_grants
 
-  validates :name, :secret, :presence => true
+  validates :name, :secret, :redirect_uri, :presence => true
   validates :uid, :presence => true, :uniqueness => true
 
   before_validation :generate_uid, :generate_secret, :on => :create

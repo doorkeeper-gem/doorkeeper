@@ -24,6 +24,12 @@ describe 'Application' do
     new_application.should_not be_valid
   end
 
+  it 'is invalid without redirect_uri' do
+    new_application.save
+    new_application.redirect_uri = nil
+    new_application.should_not be_valid
+  end
+
   it 'checks uniqueness of uid' do
     app1 = Factory(:application)
     app2 = Factory(:application)
