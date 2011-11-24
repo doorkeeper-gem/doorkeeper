@@ -14,7 +14,7 @@ describe SemiProtectedResourcesController do
     end
 
     it "responds with success if token is passed in HTTP Authorization header" do
-      request.env["Authorization"] = "Bearer #{token_string}"
+      request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
       get :index
       response.should be_success
     end
@@ -33,7 +33,7 @@ describe SemiProtectedResourcesController do
     end
 
     it "responds with unauthorized if token is passed in HTTP Authorization header" do
-      request.env["Authorization"] = "Bearer #{token_string}"
+      request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
       get :index
       response.status.should == 401
     end

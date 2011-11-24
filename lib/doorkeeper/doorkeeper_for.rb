@@ -30,7 +30,7 @@ module Doorkeeper
     end
 
     def get_doorkeeper_token
-      token = params[:access_token] || params[:bearer_token] || request.env['Authorization']
+      token = params[:access_token] || params[:bearer_token] || request.env['HTTP_AUTHORIZATION']
       if token
         token.gsub!(/Bearer /, '')
       end
