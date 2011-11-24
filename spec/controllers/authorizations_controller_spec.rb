@@ -1,25 +1,25 @@
 require "spec_helper"
 
-module Doorkeeper
-  describe AuthorizationsController, "when resource is not authenticated" do
+describe Doorkeeper::AuthorizationsController do
+  include Doorkeeper::OAuth
+
+  describe "when resource owner is not authenticated" do
+    before { get :new, :use_route => :doorkeeper }
+
     it "get #new redirects to main app's root url" do
-      get :new, :use_route => :doorkeeper
       should redirect_to(controller.main_app.root_url)
     end
 
     it "post #create redirects to main app's root url" do
-      post :create, :use_route => :doorkeeper
       should redirect_to(controller.main_app.root_url)
     end
   end
 
-  describe AuthorizationsController, "#new" do
-    before do
-      controller.stub(:current_resource_owner) { double(:resource, :id => 1) }
-    end
+  describe "#new" do
+    include_context "authenticated resource owner"
 
     describe "when authorization is valid" do
-      before { OAuth::AuthorizationRequest.any_instance.stub(:valid?) { true } }
+      include_context "valid authorization request"
 
       it "renders :new" do
         get :new, :use_route => :doorkeeper
@@ -28,34 +28,49 @@ module Doorkeeper
     end
 
     describe "when authorization is not valid" do
+      include_context "invalid authorization request"
+
       it "renders :error" do
-        OAuth::AuthorizationRequest.any_instance.stub(:valid?) { false }
         get :new, :use_route => :doorkeeper
         should render_template(:error)
       end
     end
   end
 
-  describe AuthorizationsController, "#create" do
-    before do
-      controller.stub(:current_resource_owner) { double(:resource, :id => 1) }
-      OAuth::AuthorizationRequest.any_instance.stub(:success_redirect_uri) { "http://something.com/cb?code=token" }
-    end
+  describe "#create" do
+    include_context "authenticated resource owner"
 
     describe "when authorization is valid" do
+      include_context "valid authorization request"
+
       it "redirects to client's uri" do
-        OAuth::AuthorizationRequest.any_instance.stub(:authorize) { true }
         post :create, :use_route => :doorkeeper
         should redirect_to("http://something.com/cb?code=token")
       end
     end
 
     describe "when authorization is not valid" do
+      include_context "invalid authorization request"
+
       it "renders :error" do
-        OAuth::AuthorizationRequest.any_instance.stub(:authorize) { false }
         post :create, :use_route => :doorkeeper
         should render_template(:error)
       end
+    end
+  end
+
+  describe "#destroy" do
+    include_context "authenticated resource owner"
+
+    before do
+      controller.stub(:authorization) do
+        double(:authorization, :deny => true, :invalid_redirect_uri => "http://something.com/cb?error=access_denied")
+      end
+    end
+
+    it "redirects to client's callback with error" do
+      delete :destroy, :use_route => :doorkeeper
+      should redirect_to("http://something.com/cb?error=access_denied")
     end
   end
 end
