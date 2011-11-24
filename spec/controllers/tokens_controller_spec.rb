@@ -1,18 +1,33 @@
 require "spec_helper"
 
-module Doorkeeper
-  describe TokensController do
-    describe "when authorization has succeeded" do
-      before do
-        OAuth::AccessTokenRequest.any_instance.stub(:authorize).and_return(true)
-        OAuth::AccessTokenRequest.any_instance.stub(:access_token).and_return("token")
-        post :create, :use_route => :doorkeeper
-      end
+describe Doorkeeper::TokensController do
+  describe "when authorization has succeeded" do
+    let :token do
+      double(:token, :authorize => true)
+    end
 
-      it "includes access token in the response" do
-        body = JSON.parse(response.body)
-        body['access_token'].should_not be_nil
-      end
+    before do
+      controller.stub(:token) { token }
+    end
+
+    it "returns the authorization" do
+      token.should_receive(:authorization)
+      post :create, :use_route => :doorkeeper
+    end
+  end
+
+  describe "when authorization has failed" do
+    let :token do
+      double(:token, :authorize => false)
+    end
+
+    before do
+      controller.stub(:token) { token }
+    end
+
+    it "returns the error response" do
+      token.should_receive(:error_response)
+      post :create, :use_route => :doorkeeper
     end
   end
 end
