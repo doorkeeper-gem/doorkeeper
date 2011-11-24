@@ -18,19 +18,20 @@ This will generate the doorkeeper initializer and the oauth tables migration. Do
 
 ## Configuration
 
-Mount Doorkeeper routes to your app
+The installation will mount the Doorkeeper routes to your app like this:
 
     Rails.application.routes.draw do
-      # Your routes
       mount Doorkeeper::Engine => "/oauth"
+      # your routes
     end
 
 This will mount following routes:
 
-    GET    /oauth/authorize
-    POST   /oauth/authorize
-    DELETE /oauth/authorize
-    POST   /oauth/token
+    GET       /oauth/authorize
+    POST      /oauth/authorize
+    DELETE    /oauth/authorize
+    POST      /oauth/token
+    resources /oauth/applications
 
 You need to configure Doorkeeper in order to provide resource_owner model and authentication block `initializers/doorkeeper.rb`
 
@@ -51,14 +52,38 @@ If you use devise, you may want to use warden to authenticate the block:
 In the controller add the before_filter to authorize the token
 
     class ProtectedResourcesController < ApplicationController
-      require_oauth_token # For all actions
-      require_oauth_token :only => :index # Require token only for index action
-      require_oauth_token :except => :show # Require token for all actions except show
+      doorkeeper_for :all # For all actions
+      doorkeeper_for :only   => :index # Require token only for index action
+      doorkeeper_for :except => :show  # Require token for all actions except show
     end
 
-If the token is not valid it would serve 40x response.
+## Creating and using client applications
 
-## TODO:
+To start using OAuth 2 as a client first fire up the server with `rails server`, go to `/oauth/applications` and create an application for your client.
 
-- Provide a way to generate views, so far we serve authorization#new view Generator to create a template initializer
-- Add config option to redirect path when resource owner is not logged in
+Choose a name and a callback url for it. If you use oauth2 gem you can specify your just generated client as:
+
+    require 'oauth2'
+    client_id     = '...' # your client's id
+    client_secret = '...' # your client's secret
+    redirect_uri  = '...' # your client's redirect uri
+    client = OAuth2::Client.new(
+      client_id,
+      client_secret,
+      :site => "http://localhost:3000"
+    )
+
+If you changed the default mount path `/oauth` in your `routes.rb` you need to specify it in the oauth client as `:authorize_url` and `:token_url`. For more information, check the oauth2 gem documentation.
+
+After that you can try to request an authorization code with the oauth2 gem as follow:
+
+    client.auth_code.authorize_url(:redirect_uri => redirect_uri)
+    # => http://localhost:3000/oauth/authorize?response_type=code&client_id=...&redirect_uri=...
+
+If you visit the returned url, you'll see a screen to authorize your app. Click on `authorize` and you'll be redirected to your client redirect url.
+
+Grab the code from the redirect url and request a access token with the following:
+
+    token = client.auth_code.get_token(parms[:code])
+
+You now have an access token to access you protected resources.
