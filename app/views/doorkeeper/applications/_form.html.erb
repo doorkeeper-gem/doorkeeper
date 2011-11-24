@@ -4,21 +4,23 @@
       <div class="alert-message error" data-alert><a class="close" href="#">×</a><p>Whoops! Check your form for possible errors</p></div>
     <% end %>
 
-    <p>
+    <div class="clearfix">
       <%= f.label :name %>
-
       <div class="input">
         <%= f.text_field :name %>
       </div>
-    </p>
-    <p>
+    </div>
+
+    <div class="clearfix">
       <%= f.label :redirect_uri %>
       <div class="input">
         <%= f.text_field :redirect_uri %>
       </div>
-    </p>
+    </div class="clearfix">
+
     <div class="actions">
-      <%= f.submit :Submit %>
+      <%= f.submit :Submit, :class => "btn primary" %>
+      <%= link_to "Cancel", applications_path, :class => "btn" %>
     </div>
   </fieldset>
 <% end %>
