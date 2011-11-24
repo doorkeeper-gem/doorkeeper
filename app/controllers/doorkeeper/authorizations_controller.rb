@@ -15,5 +15,11 @@ module Doorkeeper
         render :error
       end
     end
+
+    def destroy
+      @authorization = OAuth::AuthorizationRequest.new(current_resource_owner, params)
+      @authorization.deny
+      redirect_to @authorization.invalid_redirect_uri
+    end
   end
 end

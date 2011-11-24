@@ -47,6 +47,7 @@ module Doorkeeper::OAuth
       @resource_owner = resource_owner
       @grant          = nil
       @error          = nil
+      @request_denied = false
       ATTRIBUTES.each do |attribute|
         instance_variable_set("@#{attribute}", attributes[attribute])
       end
@@ -54,6 +55,10 @@ module Doorkeeper::OAuth
 
     def authorize
       build_authorization if valid?
+    end
+
+    def deny
+      @error = :access_denied
     end
 
     def valid?

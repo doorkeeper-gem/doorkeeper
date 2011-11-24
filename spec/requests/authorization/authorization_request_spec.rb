@@ -18,6 +18,12 @@ feature "Authorization Request" do
     i_should_be_on_url redirect_uri_with_code(client.redirect_uri, grant.token)
   end
 
+  scenario "deny access to the client redirects with error" do
+    visit "/oauth/authorize?client_id=#{client.uid}&redirect_uri=#{client.redirect_uri}&response_type=code"
+    click_on "Deny"
+    i_should_be_on_url redirect_uri_with_error(client.redirect_uri, "access_denied")
+  end
+
   scenario "requesting with invalid valid client_id" do
     visit "/oauth/authorize?client_id=invalid&redirect_uri=#{client.redirect_uri}&response_type=code"
     i_should_see "An error has occurred"
@@ -26,6 +32,12 @@ feature "Authorization Request" do
   def redirect_uri_with_code(uri, code)
     uri = URI.parse(uri)
     uri.query = "code=#{code}"
+    uri.to_s
+  end
+
+  def redirect_uri_with_error(uri, error)
+    uri = URI.parse(uri)
+    uri.query = "error=#{error}"
     uri.to_s
   end
 end
