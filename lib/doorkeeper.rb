@@ -3,6 +3,8 @@ require "doorkeeper/config"
 require "doorkeeper/doorkeeper_for"
 
 module Doorkeeper
+  autoload :Validations, "doorkeeper/validations"
+
   module OAuth
     class MismatchRedirectURI < StandardError; end
 

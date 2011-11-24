@@ -1,30 +1,22 @@
 module Doorkeeper::OAuth
   class AuthorizationRequest
+    include Doorkeeper::Validations
 
     module ValidationMethods
-      def error_type
-        case
-          when missing_required_attributes? then :invalid_request
-          when invalid_client?              then :invalid_client
-          when invalid_redirect_uri?        then :invalid_redirect_uri
-          when invalid_response_type?       then :unsupported_response_type
-        end
+      def validate_required_attributes
+        :invalid_request if !response_type.present? || !client_id.present? || !redirect_uri.present?
       end
 
-      def invalid_redirect_uri?
-        client.redirect_uri != redirect_uri
+      def validate_client
+        :invalid_client unless client
       end
 
-      def invalid_client?
-        !client
+      def validate_redirect_uri
+        :invalid_redirect_uri unless client.redirect_uri == redirect_uri
       end
 
-      def missing_required_attributes?
-        !response_type.present? || !client_id.present? || !redirect_uri.present?
-      end
-
-      def invalid_response_type?
-        response_type != "code"
+      def validate_response_type
+        :unsupported_response_type unless response_type == "code"
       end
     end
 
@@ -40,30 +32,27 @@ module Doorkeeper::OAuth
       :state
     ]
 
+    validate :required_attributes
+    validate :client
+    validate :redirect_uri
+    validate :response_type
+
     attr_accessor *ATTRIBUTES
     attr_accessor :resource_owner, :error
 
     def initialize(resource_owner, attributes)
+      ATTRIBUTES.each { |attr| instance_variable_set("@#{attr}", attributes[attr]) }
       @resource_owner = resource_owner
       @grant          = nil
-      @error          = nil
-      @request_denied = false
-      ATTRIBUTES.each do |attribute|
-        instance_variable_set("@#{attribute}", attributes[attribute])
-      end
+      validate
     end
 
     def authorize
-      build_authorization if valid?
+      create_authorization if valid?
     end
 
     def deny
-      @error = :access_denied
-    end
-
-    def valid?
-      @error = error_type
-      @error.nil?
+      self.error = :access_denied
     end
 
     def success_redirect_uri
@@ -84,7 +73,7 @@ module Doorkeeper::OAuth
 
     private
 
-    def build_authorization
+    def create_authorization
       @grant = AccessGrant.create!(
         :application_id => client.id,
         :resource_owner_id => resource_owner.id,
