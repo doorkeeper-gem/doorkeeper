@@ -3,14 +3,6 @@ module Doorkeeper
     @@config = Config.new(&block)
   end
 
-  def self.validate_configuration
-    raise "You have to specify doorkeeper configuration" unless class_variable_defined?(:@@config)
-    unless @@config.valid?
-      raise @@config.errors.values.join(',')
-    end
-    true
-  end
-
   class Config
     module ConfigOptions
       def register_config_option(name, attribute, receives_block = true)
@@ -38,13 +30,9 @@ module Doorkeeper
     end
 
     extend ConfigOptions
-    include ActiveModel::Validations
 
     register_config_option :resource_owner_authenticator, :authenticate_resource_owner
     register_config_option :admin_authenticator, :authenticate_admin
-
-    validates_presence_of :authenticate_resource_owner, :message => "You have to specify resource_owner_authenticator block for doorkeeper"
-
 
     def initialize(&block)
       instance_eval &block

@@ -14,29 +14,6 @@ module Doorkeeper
       Doorkeeper.remove_class_variable(:@@config) if Doorkeeper.class_variable_defined?(:@@config)
     end
 
-    describe "validation" do
-      it "raises an error if no config set" do
-        lambda do
-          Doorkeeper.validate_configuration
-        end.should raise_error "You have to specify doorkeeper configuration"
-      end
-
-      it "raises an error if no resource_owner_authenticator block has been set" do
-        Doorkeeper.configure do
-        end
-        lambda do
-          Doorkeeper.validate_configuration
-        end.should raise_error "You have to specify resource_owner_authenticator block for doorkeeper"
-      end
-
-      it "does not raise an error if all configs have been set" do
-        Doorkeeper.configure do
-          resource_owner_authenticator do end
-        end
-        Doorkeeper.validate_configuration.should be_true
-      end
-    end
-
     describe "resource_owner_authenticator" do
       it "sets the block that is accessible via authenticate_resource_owner" do
         block = proc do end
