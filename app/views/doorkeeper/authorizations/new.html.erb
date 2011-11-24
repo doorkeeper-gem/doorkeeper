@@ -3,12 +3,6 @@
 </div>
 
 <div class="span16">
-  <p>This application <b>will able to</b>:</p>
-
-  <ul>
-    <li>Access your public data</li>
-  </ul>
-
   <%= form_tag authorization_path do %>
     <%= hidden_field_tag :client_id, @authorization.client_id %>
     <%= hidden_field_tag :redirect_uri, @authorization.redirect_uri %>
