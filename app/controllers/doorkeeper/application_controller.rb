@@ -15,5 +15,13 @@ module Doorkeeper
         instance_eval(&block)
       end
     end
+
+    def method_missing(method, *args, &block)
+      if method =~ /_(url|path)$/
+        raise "Your path has not been found. Didn't you mean to call main_app.#{method} in doorkeeper configuration block?"
+      else
+        super
+      end
+    end
   end
 end
