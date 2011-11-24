@@ -21,5 +21,15 @@ module Doorkeeper
     def show
       @application = Application.find(params[:id])
     end
+
+    def edit
+      @application = Application.find(params[:id])
+    end
+
+    def update
+      @application = Application.find(params[:id])
+      flash[:notice] = "Application updated" if @application.update_attributes(params[:application])
+      respond_with @application
+    end
   end
 end

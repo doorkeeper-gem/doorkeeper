@@ -3,6 +3,10 @@ module RequestSpecHelper
     page.should have_content(content)
   end
 
+  def i_should_not_see(content)
+    page.should have_no_content(content)
+  end
+
   def i_should_be_on(path)
     current_path.should eq(path)
   end

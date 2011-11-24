@@ -44,3 +44,27 @@ feature 'Show application' do
     i_should_see 'Just another oauth app'
   end
 end
+
+feature 'Edit application' do
+  let :app do
+    Factory :application, :name => 'OMG my app'
+  end
+
+  background do
+    visit "/oauth/applications/#{app.id}/edit"
+  end
+
+  scenario 'updating a valid app' do
+    fill_in :name, :with => "Serious app"
+    click_button 'Submit'
+    i_should_see "Application updated"
+    i_should_see "Serious app"
+    i_should_not_see "OMG my app"
+  end
+
+  scenario 'updating an invalid app' do
+    fill_in :name, :with => ""
+    click_button 'Submit'
+    i_should_see 'Whoops! Check your form for possible errors'
+  end
+end
