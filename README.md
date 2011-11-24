@@ -2,6 +2,15 @@
 
 [![Build Status](https://secure.travis-ci.org/applicake/doorkeeper.png)](http://travis-ci.org/applicake/doorkeeper)
 
+Doorkeeper is a gem that makes it easy to introduce oauth2 provider
+functionality to your application.
+
+So far it supports only Authorization Code
+flow, but we will gradually introduce other flows.
+
+For more information about Oauth2 go to
+[Oauth2 Specs (Draft)](http://tools.ietf.org/html/draft-ietf-oauth-v2-22)
+
 ## Installation
 
 Put this in your Gemfile:
