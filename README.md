@@ -93,6 +93,6 @@ If you visit the returned url, you'll see a screen to authorize your app. Click 
 
 Grab the code from the redirect url and request a access token with the following:
 
-    token = client.auth_code.get_token(parms[:code])
+    token = client.auth_code.get_token(parms[:code], :redirect_uri => redirect_uri)
 
 You now have an access token to access you protected resources.
