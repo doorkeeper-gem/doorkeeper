@@ -1,21 +1,48 @@
 module Doorkeeper::OAuth
   class AccessTokenRequest
-    DEFAULT_EXPIRATION_TIME = 2.days
+    module ValidationMethods
+      def validate_required_attributes
+        :invalid_request if !code.present? || !grant_type.present? || !redirect_uri.present?
+      end
 
-    def initialize(code, options)
-      @code          = code
-      @client_id     = options[:client_id]
-      @client_secret = options[:client_secret]
+      def validate_client
+        :invalid_client unless client
+      end
+
+      def validate_grant
+        :invalid_grant if grant.nil? || grant.expired? || grant.application_id != client.id || grant.redirect_uri != redirect_uri
+      end
+
+      def validate_grant_type
+        :unsupported_grant_type unless grant_type == "authorization_code"
+      end
+    end
+
+    include Doorkeeper::Validations
+    include ValidationMethods
+
+    ATTRIBUTES = [
+      :client_id,
+      :client_secret,
+      :grant_type,
+      :code,
+      :redirect_uri,
+    ]
+
+    validate :required_attributes
+    validate :client
+    validate :grant
+    validate :grant_type
+
+    attr_accessor *ATTRIBUTES
+
+    def initialize(code, attributes = {})
+      ATTRIBUTES.each { |attr| instance_variable_set("@#{attr}", attributes[attr]) }
+      validate
     end
 
     def authorize
-      if valid?
-        @access_token = AccessToken.create!(
-          :application_id => client.uid,
-          :resource_owner_id => grant.resource_owner_id,
-          :expires_at => DateTime.now + DEFAULT_EXPIRATION_TIME
-        )
-      end
+      create_access_token if valid?
     end
 
     def authorization
@@ -25,7 +52,7 @@ module Doorkeeper::OAuth
     end
 
     def valid?
-      grant && client
+      self.error.nil?
     end
 
     def access_token
@@ -36,8 +63,8 @@ module Doorkeeper::OAuth
       "bearer"
     end
 
-    def error
-      { 'error' => 'invalid_grant' }
+    def error_response
+      { 'error' => error.to_s }
     end
 
     private
@@ -48,6 +75,13 @@ module Doorkeeper::OAuth
 
     def client
       @client ||= Application.find_by_uid_and_secret(@client_id, @client_secret)
+    end
+
+    def create_access_token
+      @access_token = AccessToken.create!(
+        :application_id    => client.uid,
+        :resource_owner_id => grant.resource_owner_id,
+      )
     end
   end
 end

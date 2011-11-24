@@ -5,7 +5,7 @@ module Doorkeeper
       if token_request.authorize
         render :json => token_request.authorization
       else
-        render :json => token_request.error
+        render :json => token_request.error_response
       end
     end
   end

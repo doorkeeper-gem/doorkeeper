@@ -7,7 +7,7 @@ class AccessToken < ActiveRecord::Base
 
   scope :accessible, where(:revoked_at => nil)
 
-  validates :application_id, :resource_owner_id, :presence => true
+  validates :application_id, :resource_owner_id, :token, :presence => true
 
   before_validation :generate_token, :on => :create
 

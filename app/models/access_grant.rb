@@ -5,7 +5,7 @@ class AccessGrant < ActiveRecord::Base
 
   belongs_to :application
 
-  validates :resource_owner_id, :application_id, :token, :expires_in, :presence => true
+  validates :resource_owner_id, :application_id, :token, :expires_in, :redirect_uri, :presence => true
 
   before_validation :generate_token, :on => :create
 

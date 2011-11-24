@@ -75,9 +75,10 @@ module Doorkeeper::OAuth
 
     def create_authorization
       @grant = AccessGrant.create!(
-        :application_id => client.id,
+        :application_id    => client.id,
         :resource_owner_id => resource_owner.id,
-        :expires_in => DEFAULT_EXPIRATION_TIME
+        :expires_in        => DEFAULT_EXPIRATION_TIME,
+        :redirect_uri      => redirect_uri
       )
     end
 
