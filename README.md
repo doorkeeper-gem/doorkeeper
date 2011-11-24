@@ -36,14 +36,14 @@ This will mount following routes:
 You need to configure Doorkeeper in order to provide resource_owner model and authentication block `initializers/doorkeeper.rb`
 
     Doorkeeper.configure do
-      resource_owner_authenticator do
+      resource_owner_authenticator do |routes|
         current_user || redirect_to('/sign_in', :alert => "Needs sign in.") # returns nil if current_user is not logged in
       end
     end
 
 If you use devise, you may want to use warden to authenticate the block:
 
-    resource_owner_authenticator do
+    resource_owner_authenticator do |routes|
       current_user || warden.authenticate!(:scope => :user)
     end
 

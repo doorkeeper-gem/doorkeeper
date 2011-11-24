@@ -3,8 +3,8 @@
 There is a setup that you need to do before you can use doorkeeper.
 
 Step 1.
-Go to config/initializers/doorkeeper.rb and configure resource_owner_authenticator
-block.
+Go to config/initializers/doorkeeper.rb and configure
+resource_owner_authenticator block.
 
 Step 2.
 That's it, that's all. Enjoy!
