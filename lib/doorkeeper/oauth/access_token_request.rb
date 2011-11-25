@@ -59,10 +59,10 @@ module Doorkeeper::OAuth
     end
 
     def create_access_token
-      @access_token = AccessToken.create!(
+      @access_token = AccessToken.create!({
         :application_id    => client.uid,
         :resource_owner_id => grant.resource_owner_id,
-      )
+      })
     end
 
     def validate_attributes

@@ -7,12 +7,12 @@
     <%= hidden_field_tag :client_id, @authorization.client_id %>
     <%= hidden_field_tag :redirect_uri, @authorization.redirect_uri %>
     <%= hidden_field_tag :response_type, @authorization.response_type %>
-    <%= submit_tag "Authorize", class: "btn primary" %> or
+    <%= submit_tag "Authorize", :class => "btn primary" %> or
   <% end %>
   <%= form_tag authorization_path, :method => :delete do %>
     <%= hidden_field_tag :client_id, @authorization.client_id %>
     <%= hidden_field_tag :redirect_uri, @authorization.redirect_uri %>
     <%= hidden_field_tag :response_type, @authorization.response_type %>
-    <%= button_tag "Deny", class: "btn" %>
+    <%= button_tag "Deny", :class => "btn" %>
   <% end %>
 </div>

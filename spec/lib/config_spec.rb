@@ -3,15 +3,15 @@ require 'spec_helper'
 module Doorkeeper
   describe Config do
     before :all do
-      @old_config = Doorkeeper.class_variable_get(:@@config)
+      @old_config = Doorkeeper.send :class_variable_get, :@@config
     end
 
     after :all do
-      Doorkeeper.class_variable_set(:@@config, @old_config)
+      Doorkeeper.send :class_variable_set, :@@config, @old_config
     end
 
     before :each do
-      Doorkeeper.remove_class_variable(:@@config) if Doorkeeper.class_variable_defined?(:@@config)
+      Doorkeeper.send :remove_class_variable, :@@config if Doorkeeper.class_variable_defined?(:@@config)
     end
 
     describe "resource_owner_authenticator" do

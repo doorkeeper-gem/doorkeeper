@@ -20,7 +20,7 @@
           <td><%= link_to application.name, application %></td>
           <td><%= application.redirect_uri %></td>
           <td><%= link_to 'Edit', edit_application_path(application) %></td>
-          <td><%= link_to 'Destroy', application, confirm: 'Are you sure?', method: :delete %></td>
+          <td><%= link_to 'Destroy', application, :confirm => 'Are you sure?', :method => :delete %></td>
         </tr>
       <% end %>
     </tbody>
