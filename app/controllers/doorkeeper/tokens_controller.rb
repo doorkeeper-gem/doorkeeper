@@ -10,6 +10,6 @@ class Doorkeeper::TokensController < Doorkeeper::ApplicationController
   private
 
   def token
-    @token ||= Doorkeeper::OAuth::AccessTokenRequest.new(params[:code], params)
+    @token ||= Doorkeeper::OAuth::AccessTokenRequest.new(params)
   end
 end

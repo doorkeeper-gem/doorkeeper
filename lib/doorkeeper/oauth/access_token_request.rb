@@ -1,25 +1,6 @@
 module Doorkeeper::OAuth
   class AccessTokenRequest
-    module ValidationMethods
-      def validate_attributes
-        code.present? && grant_type.present? && redirect_uri.present?
-      end
-
-      def validate_client
-        !!client
-      end
-
-      def validate_grant
-        grant && grant.accessible? && grant.application_id == client.id && grant.redirect_uri == redirect_uri
-      end
-
-      def validate_grant_type
-        grant_type == "authorization_code"
-      end
-    end
-
     include Doorkeeper::Validations
-    include ValidationMethods
 
     ATTRIBUTES = [
       :client_id,
@@ -36,7 +17,7 @@ module Doorkeeper::OAuth
 
     attr_accessor *ATTRIBUTES
 
-    def initialize(code, attributes = {})
+    def initialize(attributes = {})
       ATTRIBUTES.each { |attr| instance_variable_set("@#{attr}", attributes[attr]) }
       validate
     end
@@ -82,6 +63,22 @@ module Doorkeeper::OAuth
         :application_id    => client.uid,
         :resource_owner_id => grant.resource_owner_id,
       )
+    end
+
+    def validate_attributes
+      code.present? && grant_type.present? && redirect_uri.present?
+    end
+
+    def validate_client
+      !!client
+    end
+
+    def validate_grant
+      grant && grant.accessible? && grant.application_id == client.id && grant.redirect_uri == redirect_uri
+    end
+
+    def validate_grant_type
+      grant_type == "authorization_code"
     end
   end
 end
