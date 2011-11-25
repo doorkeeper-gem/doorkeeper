@@ -97,9 +97,10 @@ Grab the code from the redirect url and request a access token with the followin
 
 You now have an access token to access you protected resources.
 
+## Contributing/Development
+
+Check our [contributing guidelines page in the wiki](https://github.com/applicake/doorkeeper/wiki/Contributing)
+
 ## Supported ruby versions
 
-- 1.8.7
-- 1.9.2
-- 1.9.3
-- rubinius
+All supported ruby versions are [listed here](https://github.com/applicake/doorkeeper/wiki/Supported-Ruby-versions)
