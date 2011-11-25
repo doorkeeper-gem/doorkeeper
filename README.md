@@ -96,3 +96,10 @@ Grab the code from the redirect url and request a access token with the followin
     token = client.auth_code.get_token(parms[:code], :redirect_uri => redirect_uri)
 
 You now have an access token to access you protected resources.
+
+## Supported ruby versions
+
+- 1.8.7
+- 1.9.2
+- 1.9.3
+- rubinius
