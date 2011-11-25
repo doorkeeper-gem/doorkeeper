@@ -1,20 +1,20 @@
 module Doorkeeper::OAuth
   class AccessTokenRequest
     module ValidationMethods
-      def validate_required_attributes
-        :invalid_request if !code.present? || !grant_type.present? || !redirect_uri.present?
+      def validate_attributes
+        code.present? && grant_type.present? && redirect_uri.present?
       end
 
       def validate_client
-        :invalid_client unless client
+        !!client
       end
 
       def validate_grant
-        :invalid_grant if grant.nil? || grant.expired? || grant.application_id != client.id || grant.redirect_uri != redirect_uri
+        grant && grant.accessible? && grant.application_id == client.id && grant.redirect_uri == redirect_uri
       end
 
       def validate_grant_type
-        :unsupported_grant_type unless grant_type == "authorization_code"
+        grant_type == "authorization_code"
       end
     end
 
@@ -29,10 +29,10 @@ module Doorkeeper::OAuth
       :redirect_uri,
     ]
 
-    validate :required_attributes
-    validate :client
-    validate :grant
-    validate :grant_type
+    validate :attributes, :error => :invalid_request
+    validate :client,     :error => :invalid_client
+    validate :grant,      :error => :invalid_grant
+    validate :grant_type, :error => :unsupported_grant_type
 
     attr_accessor *ATTRIBUTES
 

@@ -8,7 +8,7 @@ module Doorkeeper
       @error = nil
       self.class.validations.each do |validation|
         break if @error
-        @error = send("validate_#{validation}")
+        @error = validation.last unless send("validate_#{validation.first}")
       end
     end
 
@@ -17,8 +17,8 @@ module Doorkeeper
     end
 
     module ClassMethods
-      def validate(attribute)
-        validations << attribute
+      def validate(attribute, options = {})
+        validations << [attribute, options[:error]]
       end
 
       def validations

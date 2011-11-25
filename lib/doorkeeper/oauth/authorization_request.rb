@@ -2,26 +2,6 @@ module Doorkeeper::OAuth
   class AuthorizationRequest
     include Doorkeeper::Validations
 
-    module ValidationMethods
-      def validate_required_attributes
-        :invalid_request if !response_type.present? || !client_id.present? || !redirect_uri.present?
-      end
-
-      def validate_client
-        :invalid_client unless client
-      end
-
-      def validate_redirect_uri
-        :invalid_redirect_uri unless client.redirect_uri == redirect_uri
-      end
-
-      def validate_response_type
-        :unsupported_response_type unless response_type == "code"
-      end
-    end
-
-    include ValidationMethods
-
     DEFAULT_EXPIRATION_TIME = 600
 
     ATTRIBUTES = [
@@ -32,10 +12,10 @@ module Doorkeeper::OAuth
       :state
     ]
 
-    validate :required_attributes
-    validate :client
-    validate :redirect_uri
-    validate :response_type
+    validate :attributes,    :error => :invalid_request
+    validate :client,        :error => :invalid_client
+    validate :redirect_uri,  :error => :invalid_redirect_uri
+    validate :response_type, :error => :unsupported_response_type
 
     attr_accessor *ATTRIBUTES
     attr_accessor :resource_owner, :error
@@ -94,6 +74,22 @@ module Doorkeeper::OAuth
       uri = URI.parse(client.redirect_uri)
       yield uri
       uri.to_s
+    end
+
+    def validate_attributes
+      %w(response_type client_id redirect_uri).all? { |attr| send(attr).present? }
+    end
+
+    def validate_client
+      !!client
+    end
+
+    def validate_redirect_uri
+      client.redirect_uri == redirect_uri
+    end
+
+    def validate_response_type
+      response_type == "code"
     end
   end
 end
