@@ -23,15 +23,10 @@ end
 require 'rspec/core/rake_task'
 
 desc 'Default: run specs.'
-task :default => :run_specs
+task :default => :spec
 
 desc "Run all specs"
-RSpec::Core::RakeTask.new
-
-task :run_specs do
-  Rake::Task["app:db:schema:load"].invoke
-  Rake::Task["spec"].invoke
-end
+RSpec::Core::RakeTask.new(:spec => "app:test:prepare")
 
 namespace :doorkeeper do
   desc "Install doorkeeper in dummy app"
@@ -44,6 +39,4 @@ end
 APP_RAKEFILE = File.expand_path("../spec/dummy/Rakefile", __FILE__)
 load 'rails/tasks/engine.rake'
 
-
 Bundler::GemHelper.install_tasks
-
