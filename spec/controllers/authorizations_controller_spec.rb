@@ -18,12 +18,25 @@ describe Doorkeeper::AuthorizationsController do
   describe "#new" do
     include_context "authenticated resource owner"
 
-    describe "when authorization is valid" do
+    describe "when authorization is valid and no access token exists" do
       include_context "valid authorization request"
+
+      before { authorization.stub(:access_token_exists? => false) }
 
       it "renders :new" do
         get :new, :use_route => :doorkeeper
         should render_template(:new)
+      end
+    end
+
+    describe "when authorization is valid and an access token already exists" do
+      include_context "valid authorization request"
+
+      before { authorization.stub(:access_token_exists? => true) }
+
+      it "renders :new" do
+        get :new, :use_route => :doorkeeper
+        should redirect_to("http://something.com/cb?code=token")
       end
     end
 

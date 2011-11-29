@@ -2,7 +2,14 @@ class Doorkeeper::AuthorizationsController < Doorkeeper::ApplicationController
   before_filter :authenticate_resource_owner!
 
   def new
-    render :error unless authorization.valid?
+    if authorization.valid?
+      if authorization.access_token_exists?
+        authorization.authorize
+        redirect_to authorization.success_redirect_uri
+      end
+    else
+      render :error
+    end
   end
 
   def create

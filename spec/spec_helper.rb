@@ -20,7 +20,7 @@ RSpec.configure do |config|
 
   config.infer_base_class_for_anonymous_controllers = false
 
-  config.include RequestSpecHelper, :type => :request
-
+  config.include RequestSpecHelper,          :type => :request
+  config.include AuthorizationRequestHelper, :type => :request
+  config.include AccessTokenRequestHelper,   :type => :request
 end
-
