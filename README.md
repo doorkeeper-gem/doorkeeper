@@ -2,20 +2,19 @@
 
 [![Build Status](https://secure.travis-ci.org/applicake/doorkeeper.png)](http://travis-ci.org/applicake/doorkeeper)
 
-Doorkeeper is a gem that makes it easy to introduce oauth2 provider
-functionality to your application.
+Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider functionality to your application.
 
-So far it supports only Authorization Code
-flow, but we will gradually introduce other flows.
+So far it supports only Authorization Code flow, but we will [gradually introduce other flows](https://github.com/applicake/doorkeeper/wiki/Supported-Features).
 
-For more information about Oauth2 go to
-[Oauth2 Specs (Draft)](http://tools.ietf.org/html/draft-ietf-oauth-v2-22)
+For more information about OAuth 2 go to [OAuth 2 Specs (Draft)](http://tools.ietf.org/html/draft-ietf-oauth-v2-22).
 
 ## Installation
 
 Put this in your Gemfile:
 
-    gem 'doorkeeper'
+``` ruby
+gem 'doorkeeper'
+```
 
 Run the installation generator with:
 
@@ -29,10 +28,12 @@ This will generate the doorkeeper initializer and the oauth tables migration. Do
 
 The installation will mount the Doorkeeper routes to your app like this:
 
-    Rails.application.routes.draw do
-      mount Doorkeeper::Engine => "/oauth"
-      # your routes
-    end
+``` ruby
+Rails.application.routes.draw do
+  mount Doorkeeper::Engine => "/oauth"
+  # your routes
+end
+```
 
 This will mount following routes:
 
@@ -44,63 +45,77 @@ This will mount following routes:
 
 You need to configure Doorkeeper in order to provide resource_owner model and authentication block `initializers/doorkeeper.rb`
 
-    Doorkeeper.configure do
-      resource_owner_authenticator do |routes|
-        current_user || redirect_to('/sign_in', :alert => "Needs sign in.") # returns nil if current_user is not logged in
-      end
-    end
+``` ruby
+Doorkeeper.configure do
+  resource_owner_authenticator do |routes|
+    current_user || redirect_to('/sign_in', :alert => "Needs sign in.") # returns nil if current_user is not logged in
+  end
+end
+```
 
 If you use devise, you may want to use warden to authenticate the block:
 
-    resource_owner_authenticator do |routes|
-      current_user || warden.authenticate!(:scope => :user)
-    end
+``` ruby
+resource_owner_authenticator do |routes|
+  current_user || warden.authenticate!(:scope => :user)
+end
+```
 
 ## Protecting resources (a.k.a your API endpoint)
 
-In the controller add the before_filter to authorize the token
+In your api controller, add the `doorkeeper_for` to require the oauth token:
 
-    class ProtectedResourcesController < ApplicationController
-      doorkeeper_for :all # For all actions
-      doorkeeper_for :only   => :index # Require token only for index action
-      doorkeeper_for :except => :show  # Require token for all actions except show
-    end
+``` ruby
+class Api::V1::ProtectedResourcesController < Api::V1::ApiController
+  doorkeeper_for :all              # Require access token for all actions
+  doorkeeper_for :only   => :index # Only for index action
+  doorkeeper_for :except => :show  # All actions except show
 
-## Creating and using client applications
+  # your actions
+end
+```
 
-To start using OAuth 2 as a client first fire up the server with `rails server`, go to `/oauth/applications` and create an application for your client.
+You don't need to setup any before filter, `doorkeeper_for` will handle that for you.
 
-Choose a name and a callback url for it. If you use oauth2 gem you can specify your just generated client as:
+## Authenticated resource owner
 
-    require 'oauth2'
-    client_id     = '...' # your client's id
-    client_secret = '...' # your client's secret
-    redirect_uri  = '...' # your client's redirect uri
-    client = OAuth2::Client.new(
-      client_id,
-      client_secret,
-      :site => "http://localhost:3000"
-    )
+If you want to return data based on the current resource owner for example, the access token user credentials, you'll need to define a method in your controller to return the resource owner instance:
 
-If you changed the default mount path `/oauth` in your `routes.rb` you need to specify it in the oauth client as `:authorize_url` and `:token_url`. For more information, check the oauth2 gem documentation.
+``` ruby
+class Api::V1::CredentialsController < Api::V1::ApiController
+  doorkeeper_for :all
+  respond_to     :json
 
-After that you can try to request an authorization code with the oauth2 gem as follow:
+  # GET /api/v1/me.json
+  def me
+    respond_with current_resource_owner
+  end
 
-    client.auth_code.authorize_url(:redirect_uri => redirect_uri)
-    # => http://localhost:3000/oauth/authorize?response_type=code&client_id=...&redirect_uri=...
+  private
 
-If you visit the returned url, you'll see a screen to authorize your app. Click on `authorize` and you'll be redirected to your client redirect url.
+  # Find the user that owns the access token
+  def current_resource_owner
+    User.find(doorkeeper_token.resource_owner_id) if doorkeeper_token
+  end
+end
+```
 
-Grab the code from the redirect url and request a access token with the following:
+## Other resources
 
-    token = client.auth_code.get_token(parms[:code], :redirect_uri => redirect_uri)
+### Live demo
 
-You now have an access token to access you protected resources.
+Check out this [live demo](http://doorkeeper-provider.herokuapp.com) hosted on heroku. For more demos check out [the wiki](https://github.com/applicake/doorkeeper/wiki/Example-Applications).
 
-## Contributing/Development
+### Client applications
 
-Check our [contributing guidelines page in the wiki](https://github.com/applicake/doorkeeper/wiki/Contributing)
+After you set up the provider, you may want to create a client application to test the integration. Check out these [client examples](https://github.com/applicake/doorkeeper/wiki/Example-Applications) in our wiki or follow this [tutorial here](https://github.com/applicake/doorkeeper/wiki/Testing-your-provider-with-OAuth2-gem).
 
-## Supported ruby versions
+### Contributing/Development
+
+Want to contribute and don't know where to start? Check out [features we're missing](https://github.com/applicake/doorkeeper/wiki/Supported-Features), create [example apps](https://github.com/applicake/doorkeeper/wiki/Example-Applications), integrate the gem with your app and let us know!
+
+Also, check out our [contributing guidelines page](https://github.com/applicake/doorkeeper/wiki/Contributing).
+
+### Supported ruby versions
 
 All supported ruby versions are [listed here](https://github.com/applicake/doorkeeper/wiki/Supported-Ruby-versions)
