@@ -67,7 +67,7 @@ describe AccessGrant do
     end
 
     describe "when is revoked" do
-      before { subject.revoke! }
+      before { subject.revoke }
       it { should     be_revoked }
       it { should_not be_accessible }
     end

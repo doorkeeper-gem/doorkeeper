@@ -1,7 +1,7 @@
 class AccessGrant < ActiveRecord::Base
   include Doorkeeper::OAuth::RandomString
 
-  self.set_table_name :oauth_access_grants
+  set_table_name :oauth_access_grants
 
   belongs_to :application
 
@@ -17,7 +17,7 @@ class AccessGrant < ActiveRecord::Base
     !expired? && !revoked?
   end
 
-  def revoke!
+  def revoke
     update_attribute :revoked_at, DateTime.now
   end
 

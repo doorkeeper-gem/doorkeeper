@@ -58,7 +58,7 @@ module Doorkeeper::OAuth
     end
 
     def revoke_grant
-      grant.revoke!
+      grant.revoke
     end
 
     def client
