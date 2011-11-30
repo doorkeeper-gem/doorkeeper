@@ -27,4 +27,17 @@ feature "Access Token Request" do
     parsed_response.should_not have_key('access_token')
     parsed_response['error'].should == 'invalid_grant'
   end
+
+  scenario "get error when posting an already revoked grant code" do
+    # First successfull request
+    post token_endpoint_url(:code => @authorization.token, :client => @client)
+
+    # Second attempt with same token
+    expect {
+      post token_endpoint_url(:code => @authorization.token, :client => @client)
+    }.to_not change { AccessToken.count }
+
+    parsed_response.should_not have_key('access_token')
+    parsed_response['error'].should == 'invalid_grant'
+  end
 end

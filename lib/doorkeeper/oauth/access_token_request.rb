@@ -23,7 +23,10 @@ module Doorkeeper::OAuth
     end
 
     def authorize
-      create_access_token if valid?
+      if valid?
+        revoke_grant
+        create_access_token
+      end
     end
 
     def authorization
@@ -52,6 +55,10 @@ module Doorkeeper::OAuth
 
     def grant
       @grant ||= AccessGrant.find_by_token(@code)
+    end
+
+    def revoke_grant
+      grant.revoke!
     end
 
     def client
