@@ -11,7 +11,7 @@ class AccessToken < ActiveRecord::Base
 
   before_validation :generate_token, :on => :create
 
-  def revoke!
+  def revoke
     update_attribute :revoked_at, DateTime.now
   end
 

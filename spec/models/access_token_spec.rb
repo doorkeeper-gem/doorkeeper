@@ -31,17 +31,17 @@ describe AccessToken do
     end
   end
 
-  describe "revoke!" do
+  describe "revoke" do
     subject { Factory(:access_token) }
 
     it "updates the revoked attribute" do
       expect {
-        subject.revoke!
+        subject.revoke
       }.to change { subject.revoked? }.from(false).to(true)
     end
 
     it "is not accessible" do
-      subject.revoke!
+      subject.revoke
       subject.should_not be_accessible
     end
   end
