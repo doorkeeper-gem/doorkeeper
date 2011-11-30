@@ -13,3 +13,7 @@ body {
 .inline_block {
   display: inline-block;
 }
+
+table td {
+  vertical-align: middle;
+}
