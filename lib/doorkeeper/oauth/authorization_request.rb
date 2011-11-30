@@ -31,6 +31,11 @@ module Doorkeeper::OAuth
       create_authorization if valid?
     end
 
+    def access_token_exists?
+      token = AccessToken.accessible.where(:application_id => client.id, :resource_owner_id => resource_owner.id)
+      !token.first.nil?
+    end
+
     def deny
       self.error = :access_denied
     end
