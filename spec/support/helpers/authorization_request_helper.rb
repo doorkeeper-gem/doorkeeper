@@ -8,6 +8,10 @@ module AuthorizationRequestHelper
     @client = Factory(:application, client_attributes)
   end
 
+  def authorization_code_exists(options)
+    @authorization = Factory(:access_grant, :application => options[:client])
+  end
+
   def authorization_endpoint_url(options = {})
     client_id     = options[:client_id]    ? options[:client_id]    : options[:client].uid
     redirect_uri  = options[:redirect_uri] ? options[:redirect_uri] : options[:client].redirect_uri

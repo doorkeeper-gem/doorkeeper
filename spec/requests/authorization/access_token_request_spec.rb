@@ -1,28 +1,30 @@
 require "spec_helper"
 
-feature "Access token request" do
-  let(:client) { Factory(:application) }
-  let(:code)   { Factory(:access_grant, :application => client) }
-
-  scenario "requesting with valid grant code" do
-    post "/oauth/token?code=#{code.token}&client_id=#{client.uid}&client_secret=#{client.secret}&redirect_uri=#{client.redirect_uri}&grant_type=authorization_code"
-
-    json.should_not have_key('error')
-
-    # Return the access token response
-    json['access_token'].should =~ /\w+/
-    json['token_type'].should == "bearer"
+feature "Access Token Request" do
+  background do
+    client_exists
+    authorization_code_exists(:client => @client)
   end
 
-  scenario "requesting with invalid grant code" do
-    post "/oauth/token?code=invalid&client_id=#{client.uid}&client_secret=#{client.secret}&redirect_uri=#{client.redirect_uri}&grant_type=authorization_code"
+  scenario "get access token for valid grant code" do
+    post token_endpoint_url(:code => @authorization.token, :client => @client)
 
-    json.should_not have_key('access_token')
+    token = AccessToken.where(:application_id => @client.id).first
+    token.should_not be_nil
 
-    json['error'].should == 'invalid_grant'
+    parsed_response.should_not have_key('error')
+
+    parsed_response['access_token'].should == token.token
+    parsed_response['token_type'].should   == "bearer"
   end
 
-  def json
-    JSON.parse(response.body)
+  scenario "get error for invalid grant code" do
+    post token_endpoint_url(:code => "invalid", :client => @client)
+
+    token = AccessToken.where(:application_id => @client.id).first
+    token.should be_nil
+
+    parsed_response.should_not have_key('access_token')
+    parsed_response['error'].should == 'invalid_grant'
   end
 end
