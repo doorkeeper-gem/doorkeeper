@@ -15,6 +15,7 @@ class CreateDoorkeeperTables < ActiveRecord::Migration
       t.integer  :expires_in,        :null => false
       t.string   :redirect_uri,      :null => false
       t.datetime :created_at,        :null => false
+      t.datetime :revoked_at
     end
 
     create_table :oauth_access_tokens do |t|

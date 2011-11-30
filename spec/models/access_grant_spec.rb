@@ -57,4 +57,19 @@ describe AccessGrant do
       end
     end
   end
+
+  describe "revoke token" do
+    before { subject.save! }
+
+    describe "for new grants" do
+      it { should_not be_revoked }
+      it { should     be_accessible }
+    end
+
+    describe "when is revoked" do
+      before { subject.revoke }
+      it { should     be_revoked }
+      it { should_not be_accessible }
+    end
+  end
 end
