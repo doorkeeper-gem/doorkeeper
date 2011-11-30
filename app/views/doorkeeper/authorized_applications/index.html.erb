@@ -1,0 +1,26 @@
+<div class="span16">
+  <header class="page-header">
+    <h2>Your authorized applications</h2>
+  </header>
+
+  <table class="zebra-striped">
+    <thead>
+      <tr>
+        <th>Application</th>
+        <th>Authorized at</th>
+        <th></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @applications.each do |application| %>
+        <tr>
+          <td><%= link_to application.name, application %></td>
+          <td><%= application.created_at %></td>
+          <td><%= link_to 'Revoke', authorized_application_path(application), :confirm => 'Are you sure?', :method => :delete, :class => 'btn danger' %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+</div>

@@ -11,6 +11,10 @@ class AccessToken < ActiveRecord::Base
 
   before_validation :generate_token, :on => :create
 
+  def self.authorized_for(application_id, resource_owner_id)
+    accessible.where(:application_id => application_id, :resource_owner_id => resource_owner_id).first
+  end
+
   def revoke
     update_attribute :revoked_at, DateTime.now
   end

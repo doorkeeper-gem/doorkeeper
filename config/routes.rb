@@ -5,4 +5,5 @@ Doorkeeper::Engine.routes.draw do
   post   'token',     :to => "tokens#create",          :as => :token
 
   resources :applications
+  resources :authorized_applications, :only => [:index, :destroy]
 end
