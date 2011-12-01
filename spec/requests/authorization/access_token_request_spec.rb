@@ -15,9 +15,10 @@ feature "Access Token Request" do
 
     parsed_response.should_not have_key('error')
 
-    parsed_response['access_token'].should == token.token
-    parsed_response['expires_in'].should   == token.expires_in
-    parsed_response['token_type'].should   == "bearer"
+    parsed_response['access_token'].should  == token.token
+    parsed_response['token_type'].should    == "bearer"
+    parsed_response['expires_in'].should    == token.expires_in
+    parsed_response['refresh_token'].should be_nil
   end
 
   scenario "get error for invalid grant code" do

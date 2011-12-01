@@ -20,9 +20,13 @@ module Doorkeeper::OAuth
       before { subject.authorize }
 
       it { should be_valid }
-      its(:access_token) { should =~ /\w+/ }
-      its(:token_type)   { should == "bearer" }
-      its(:error)        { should be_nil }
+      its(:token_type)    { should == "bearer" }
+      its(:error)         { should be_nil }
+      its(:refresh_token) { should be_nil }
+
+      it "has an access token" do
+        subject.access_token.token.should =~ /\w+/
+      end
     end
 
     describe "creating the access token" do
@@ -33,7 +37,8 @@ module Doorkeeper::OAuth
           :application_id    => client.id,
           :resource_owner_id => grant.resource_owner_id,
           :expires_in        => 2.hours,
-          :scopes            =>"public write"
+          :scopes            =>"public write",
+          :use_refresh_token => false,
         })
         subject.authorize
       end
@@ -99,6 +104,97 @@ module Doorkeeper::OAuth
             expired = token(params)
             expired.error.should == :invalid_grant
           end
+        end
+      end
+    end
+  end
+
+  describe AccessTokenRequest, "refresh token" do
+    let(:client) { Factory(:application) }
+    let(:access) { Factory(:access_token, :application => client, :use_refresh_token => true) }
+    let(:params) {
+      {
+        :client_id     => client.uid,
+        :client_secret => client.secret,
+        :refresh_token => access.refresh_token,
+        :grant_type    => "refresh_token",
+      }
+    }
+
+    before do
+      Doorkeeper.configure { use_refresh_token }
+    end
+
+    describe "with a valid authorization code and client" do
+      subject { AccessTokenRequest.new(params) }
+
+      before do
+        subject.authorize
+      end
+
+      it { should be_valid }
+      its(:token_type)    { should == "bearer" }
+      its(:error)         { should be_nil }
+      its(:refresh_token) { should_not be_nil }
+
+      it "has an access token" do
+        subject.access_token.token.should =~ /\w+/
+      end
+    end
+
+    describe "with errors" do
+      def token(params)
+        AccessTokenRequest.new(params)
+      end
+
+      it "includes the error in the response" do
+        access_token = token(params.except(:grant_type))
+        access_token.error_response['error'].should == "invalid_request"
+      end
+
+      [:grant_type, :refresh_token].each do |param|
+        describe "when :#{param} is missing" do
+          subject     { token(params.except(param)) }
+          its(:error) { should == :invalid_request }
+        end
+      end
+
+      describe "when :client_id does not match" do
+        subject     { token(params.merge(:client_id => "inexistent")) }
+        its(:error) { should == :invalid_client }
+      end
+
+      describe "when :client_secret does not match" do
+        subject     { token(params.merge(:client_secret => "inexistent")) }
+        its(:error) { should == :invalid_client }
+      end
+
+      describe "when :refresh_token does not exist" do
+        subject     { token(params.merge(:refresh_token => "inexistent")) }
+        its(:error) { should == :invalid_grant }
+      end
+
+      describe "when :grant_type is not 'refresh_token'" do
+        subject     { token(params.merge(:grant_type => "invalid")) }
+        its(:error) { should == :invalid_request }
+      end
+
+      describe "when granted application does not match" do
+        subject { token(params) }
+
+        before do
+          access.application = Factory(:application)
+          access.save!
+        end
+
+        its(:error) { should == :invalid_grant }
+      end
+
+      describe "when :refresh_token is revoked" do
+        it "error is :invalid_grant" do
+          access.revoke # create grant instance
+          revoked = token(params)
+          revoked.error.should == :invalid_grant
         end
       end
     end
