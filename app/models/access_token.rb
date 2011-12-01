@@ -1,7 +1,7 @@
 class AccessToken < ActiveRecord::Base
   include Doorkeeper::OAuth::RandomString
 
-  self.table_name = "oauth_access_tokens"
+  set_table_name :oauth_access_tokens
 
   belongs_to :application
 
@@ -24,7 +24,7 @@ class AccessToken < ActiveRecord::Base
   end
 
   def expired?
-    self.expires_at.present? && DateTime.now > self.expires_at
+    self.expires_in.present? && Time.now > self.expires_in
   end
 
   def accessible?
