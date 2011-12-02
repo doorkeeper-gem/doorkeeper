@@ -1,3 +1,6 @@
+require 'doorkeeper/config/scopes'
+require 'doorkeeper/config/scope'
+
 module Doorkeeper
   def self.configure(&block)
     @config = Config::Builder.new(&block).build
