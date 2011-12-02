@@ -28,7 +28,14 @@ end
 
 shared_context "authenticated resource owner" do
   before do
-    controller.stub(:current_resource_owner) { double(:resource, :id => 1) }
+    user = double(:resource, :id => 1)
+    Doorkeeper.configuration.stub(:authenticate_resource_owner) { proc do user end }
+  end
+end
+
+shared_context "not authenticated resource owner" do
+  before do
+    Doorkeeper.configuration.stub(:authenticate_resource_owner) { proc do redirect_to '/' end }
   end
 end
 

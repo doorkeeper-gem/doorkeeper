@@ -4,6 +4,8 @@ describe Doorkeeper::AuthorizationsController do
   include Doorkeeper::OAuth
 
   describe "when resource owner is not authenticated" do
+    include_context "not authenticated resource owner"
+
     before { get :new, :use_route => :doorkeeper }
 
     it "get #new redirects to main app's root url" do
