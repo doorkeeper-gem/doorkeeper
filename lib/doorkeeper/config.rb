@@ -47,10 +47,16 @@ module Doorkeeper
       #
       def option(name, options = {})
         attribute = options[:as] || name
+        attribute_builder = options[:builder_class]
 
         Builder.instance_eval do
           define_method name do |*args, &block|
-            value = block ? block : args.first
+            value = unless attribute_builder
+              block ? block : args.first
+            else
+              attribute_builder.new(&block).build
+            end
+
             @config.instance_variable_set(:"@#{attribute}", value)
           end
         end
