@@ -35,6 +35,11 @@ module Doorkeeper
       # If the +:as+ option is defined, the builder method will be the specified
       # option while the config attribute will be the +name+ parameter.
       #
+      # If you want to introduce another level of config DSL you can
+      # define +builder_class+ parameter.
+      # Builder should take a block as the initializer parameter and respond to function +build+
+      # that returns the value of the config attribute.
+      #
       # ==== Options
       #
       # * [:+as+] Set the builder method that goes inside +configure+ block
@@ -45,6 +50,7 @@ module Doorkeeper
       #    option :name
       #    option :name, :as => :set_name
       #    option :name, :default => "My Name"
+      #    option :scopes :builder_class => ScopesBuilder
       #
       def option(name, options = {})
         attribute = options[:as] || name
