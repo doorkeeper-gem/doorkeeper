@@ -21,29 +21,29 @@ module Doorkeeper
 
     module Option
 
-      # Defines configuration options
+      # Defines configuration option
       #
       # When you call option, it defines two methods. One method will take place
-      # in the +Config+ class (getter) and the other method will take place in the
+      # in the +Config+ class and the other method will take place in the
       # +Builder+ class.
       #
-      # The +name+ attribute will set both getter an setter. If the +:attribute+
-      # option is defined, the setter will be the specified attribute while the
-      # getter will be the +name+ parameter.
+      # The +name+ parameter will set both builder method and config attribute.
+      # If the +:as+ option is defined, the builder method will be the specified
+      # option while the config attribute will be the +name+ parameter.
       #
       # ==== Options
       #
-      # * [:+attribute+] The setter that goes inside +configure+ block
+      # * [:+as+] Set the builder method that goes inside +configure+ block
       # * [+:default+] The default value in case no option was set
       #
       # ==== Examples
       #
       #    option :name
-      #    option :name, :attribute => :set_name
+      #    option :name, :as => :set_name
       #    option :name, :default => "My Name"
       #
       def option(name, options = {})
-        attribute = options[:attribute] || name
+        attribute = options[:as] || name
 
         Builder.instance_eval do
           define_method name do |*args, &block|
@@ -66,9 +66,9 @@ module Doorkeeper
 
     extend Option
 
-    option :resource_owner_authenticator, :attribute => :authenticate_resource_owner
-    option :admin_authenticator,          :attribute => :authenticate_admin
-    option :access_token_expires_in,      :default   => 7200
+    option :resource_owner_authenticator, :as      => :authenticate_resource_owner
+    option :admin_authenticator,          :as      => :authenticate_admin
+    option :access_token_expires_in,      :default => 7200
 
   end
 end
