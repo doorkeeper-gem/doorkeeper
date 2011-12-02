@@ -1,7 +1,7 @@
 module AuthorizationRequestHelper
   def resource_owner_is_authenticated(resource_owner = nil)
     resource_owner ||= User.create!
-    Doorkeeper.stub(:authenticate_resource_owner => proc { resource_owner })
+    Doorkeeper.configuration.stub(:authenticate_resource_owner => proc { resource_owner })
   end
 
   def client_exists(client_attributes = {})
