@@ -1,5 +1,6 @@
 require 'doorkeeper/config/scopes'
 require 'doorkeeper/config/scope'
+require 'doorkeeper/config/scopes_builder'
 
 module Doorkeeper
   def self.configure(&block)
@@ -78,6 +79,6 @@ module Doorkeeper
     option :resource_owner_authenticator, :as      => :authenticate_resource_owner
     option :admin_authenticator,          :as      => :authenticate_admin
     option :access_token_expires_in,      :default => 7200
-
+    option :authorization_scopes,         :as      => :scopes, :builder_class => ScopesBuilder
   end
 end
