@@ -1,42 +1,74 @@
 module Doorkeeper
   def self.configure(&block)
-    @@config = Config.new(&block)
+    @config = Config::Builder.new(&block).build
+  end
+
+  def self.configuration
+    @config
   end
 
   class Config
-    module ConfigOptions
-      def register_config_option(name, attribute, receives_block = true)
-        define_method name do |*args, &block|
-          if receives_block
-            self.instance_variable_set(:"@#{attribute}", block)
-          else
-            self.instance_variable_set(:"@#{attribute}", args[0])
+    class Builder
+      def initialize(&block)
+        @config = Config.new
+        instance_eval(&block)
+      end
+
+      def build
+        @config
+      end
+    end
+
+    module Option
+
+      # Defines configuration options
+      #
+      # When you call option, it defines two methods. One method will take place
+      # in the +Config+ class (getter) and the other method will take place in the
+      # +Builder+ class.
+      #
+      # The +name+ attribute will set both getter an setter. If the +:attribute+
+      # option is defined, the setter will be the specified attribute while the
+      # getter will be the +name+ parameter.
+      #
+      # ==== Options
+      #
+      # * [:+attribute+] The setter that goes inside +configure+ block
+      # * [+:default+] The default value in case no option was set
+      #
+      # ==== Examples
+      #
+      #    option :name
+      #    option :name, :attribute => :set_name
+      #    option :name, :default => "My Name"
+      #
+      def option(name, options = {})
+        attribute = options[:attribute] || name
+
+        Builder.instance_eval do
+          define_method name do |*args, &block|
+            value = block ? block : args.first
+            @config.instance_variable_set(:"@#{attribute}", value)
           end
         end
 
-        attr_reader attribute
-        public attribute
+        define_method attribute do |*args|
+          instance_variable_get(:"@#{attribute}") || options[:default]
+        end
 
-        Doorkeeper.class_eval "
-            def self.#{attribute}
-              @@config.#{attribute}
-            end
-          "
+        public attribute
       end
 
       def extended(base)
-        base.send(:private, :register_method)
+        base.send(:private, :option)
       end
     end
 
-    extend ConfigOptions
+    extend Option
 
-    register_config_option :resource_owner_authenticator, :authenticate_resource_owner
-    register_config_option :admin_authenticator, :authenticate_admin
+    option :resource_owner_authenticator, :attribute => :authenticate_resource_owner
+    option :admin_authenticator,          :attribute => :authenticate_admin
+    option :access_token_expires_in,      :default   => 7200
 
-    def initialize(&block)
-      instance_eval &block
-    end
   end
 end
-
