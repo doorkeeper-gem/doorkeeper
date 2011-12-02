@@ -1,0 +1,28 @@
+require 'spec_helper'
+
+feature 'Private API' do
+  background do
+    @client   = Factory(:application)
+    @resource = User.create!
+    @token    = client_is_authorized(@client, @resource)
+  end
+
+  scenario 'client requests protected resource with valid token' do
+    with_access_token_header @token.token
+    visit '/full_protected_resources'
+    page.body.should have_content("index")
+  end
+
+  scenario 'client attempts to request protected resource with invalid token' do
+    with_access_token_header "invalid"
+    visit '/full_protected_resources'
+    response_status_should 401
+  end
+
+  scenario 'client attempts to request protected resource with expired token' do
+    @token.update_attribute :expires_in, -100 # expires token
+    with_access_token_header @token.token
+    visit '/full_protected_resources'
+    response_status_should 401
+  end
+end

@@ -11,6 +11,14 @@ module AccessTokenRequestHelper
     "/oauth/token?code=#{options[:code]}&client_id=#{client_id}&client_secret=#{client_secret}&redirect_uri=#{redirect_uri}&grant_type=#{grant_type}"
   end
 
+  def with_access_token_header(token)
+    page.driver.header 'Authorization', "Bearer #{token}"
+  end
+
+  def response_status_should(status)
+    page.driver.response.status.to_i.should == status
+  end
+
   def parsed_response
     JSON.parse(response.body)
   end

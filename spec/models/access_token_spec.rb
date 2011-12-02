@@ -47,7 +47,7 @@ describe AccessToken do
   end
 
   describe "token expiration" do
-    subject { Factory(:access_token, :expires_in => 2.hours.from_now) }
+    subject { Factory(:access_token, :expires_in => 2.hours) }
 
     context "when expiration time has not passed" do
       it { should_not be_expired }

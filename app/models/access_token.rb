@@ -24,7 +24,7 @@ class AccessToken < ActiveRecord::Base
   end
 
   def expired?
-    self.expires_in.present? && Time.now > self.expires_in
+    expires_in.present? && Time.now > expired_time
   end
 
   def accessible?
@@ -36,6 +36,10 @@ class AccessToken < ActiveRecord::Base
   end
 
   private
+
+  def expired_time
+    self.created_at + expires_in.seconds
+  end
 
   def generate_token
     self.token = unique_random_string_for(:token)
