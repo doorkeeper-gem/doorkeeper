@@ -7,11 +7,11 @@ module Doorkeeper
     end
 
     def current_resource_owner
-      instance_exec(main_app, &Doorkeeper.authenticate_resource_owner)
+      instance_exec(main_app, &Doorkeeper.configuration.authenticate_resource_owner)
     end
 
     def authenticate_admin!
-      if block = Doorkeeper.authenticate_admin
+      if block = Doorkeeper.configuration.authenticate_admin
         instance_exec(main_app, &block)
       end
     end
