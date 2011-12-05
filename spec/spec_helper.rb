@@ -9,6 +9,8 @@ require 'factory_girl_rails'
 FactoryGirl.definition_file_paths << File.join(File.dirname(__FILE__), 'factories')
 FactoryGirl.find_definitions
 
+require "database_cleaner"
+
 ENGINE_RAILS_ROOT = File.join(File.dirname(__FILE__), '../')
 
 # load schema to in memory sqlite
@@ -19,13 +21,21 @@ Dir[File.join(ENGINE_RAILS_ROOT, "spec/support/**/*.rb")].each { |f| require f }
 RSpec.configure do |config|
   config.mock_with :rspec
 
-  config.use_transactional_fixtures = true
+  config.before(:suite) do
+    DatabaseCleaner.strategy = :transaction
+    DatabaseCleaner.clean_with(:truncation)
+  end
 
-  config.infer_base_class_for_anonymous_controllers = false
+  config.before(:each) do
+    DatabaseCleaner.start
+  end
 
-  config.after do
+  config.after(:each) do
+    DatabaseCleaner.clean
     Doorkeeper.configure {}
   end
+
+  config.infer_base_class_for_anonymous_controllers = false
 
   config.include RequestSpecHelper,          :type => :request
   config.include AuthorizationRequestHelper, :type => :request
