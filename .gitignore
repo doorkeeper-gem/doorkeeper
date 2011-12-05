@@ -1,4 +1,5 @@
 .bundle/
+.rbx
 *.rbc
 log/*.log
 pkg/
