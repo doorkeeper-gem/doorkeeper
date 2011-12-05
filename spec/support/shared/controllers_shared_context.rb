@@ -1,4 +1,4 @@
-shared_context "valid token" do
+shared_context "valid token", :token => :valid do
   let :token_string do
     "1A2B3C4D"
   end
@@ -8,11 +8,11 @@ shared_context "valid token" do
   end
 
   before :each do
-    AccessToken.should_receive(:find_by_token).with(token_string).and_return(token)
+    AccessToken.stub(:find_by_token).with(token_string).and_return(token)
   end
 end
 
-shared_context "invalid token" do
+shared_context "invalid token", :token => :invalid do
   let :token_string do
     "1A2B3C4D"
   end
@@ -22,7 +22,7 @@ shared_context "invalid token" do
   end
 
   before :each do
-    AccessToken.should_receive(:find_by_token).with(token_string).and_return(token)
+    AccessToken.stub(:find_by_token).with(token_string).and_return(token)
   end
 end
 

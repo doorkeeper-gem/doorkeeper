@@ -1,14 +1,21 @@
 module Doorkeeper
   module Controller
     module ClassMethods
-      def doorkeeper_for(options)
+      def doorkeeper_for(*args, options)
         raise "You have to specify some option for doorkeeper_for method" unless options.present?
-        options = nil if options == :all
-        if options
-          before_filter :doorkeeper_before_filter, options
-        else
-          before_filter :doorkeeper_before_filter
+
+        filter_options = {}
+        scopes = []
+        if options.is_a? Hash
+          scopes = options.delete(:scopes) || []
+          filter_options = options.select { |k, v| [:except, :only].include? k }
         end
+
+        filter_proc = proc do
+          doorkeeper_before_filter(scopes)
+        end
+
+        before_filter filter_options, &filter_proc
       end
     end
 
@@ -17,12 +24,17 @@ module Doorkeeper
       base.send(:private, :doorkeeper_before_filter, :doorkeeper_token, :doorkeeper_valid_token, :get_doorkeeper_token)
     end
 
-    def doorkeeper_before_filter
-      head :unauthorized unless doorkeeper_valid_token
+    def doorkeeper_before_filter(scopes = [])
+      head :unauthorized unless doorkeeper_valid_token and doorkeeper_token_has_scope(scopes)
     end
 
     def doorkeeper_valid_token
       doorkeeper_token and doorkeeper_token.accessible?
+    end
+
+    def doorkeeper_token_has_scope(scopes)
+      return true if scopes.empty?
+      doorkeeper_token.scopes.any? { |scope| scopes.include? scope }
     end
 
     def doorkeeper_token
