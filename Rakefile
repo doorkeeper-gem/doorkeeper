@@ -26,7 +26,7 @@ desc 'Default: run specs.'
 task :default => :spec
 
 desc "Run all specs"
-RSpec::Core::RakeTask.new(:spec => "app:test:prepare")
+RSpec::Core::RakeTask.new(:spec)
 
 namespace :doorkeeper do
   desc "Install doorkeeper in dummy app"
