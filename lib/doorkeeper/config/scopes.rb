@@ -32,6 +32,10 @@ module Doorkeeper
       end
     end
 
+    def default_scope_string
+      defaults.map(&:name).join(" ")
+    end
+
     def with_names(*names)
       names = names.map(&:to_sym)
       @scopes.select do |scope|

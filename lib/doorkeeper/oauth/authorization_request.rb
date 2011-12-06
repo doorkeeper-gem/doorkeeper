@@ -56,6 +56,10 @@ module Doorkeeper::OAuth
       @client ||= Application.find_by_uid(client_id)
     end
 
+    def scopes
+      Doorkeeper.configuration.scopes.with_names(*scope.split(" "))
+    end
+
     private
 
     def create_authorization
@@ -63,7 +67,8 @@ module Doorkeeper::OAuth
         :application_id    => client.id,
         :resource_owner_id => resource_owner.id,
         :expires_in        => DEFAULT_EXPIRATION_TIME,
-        :redirect_uri      => redirect_uri
+        :redirect_uri      => redirect_uri,
+        :scopes            => scope
       )
     end
 

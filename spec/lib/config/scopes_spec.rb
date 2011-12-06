@@ -98,6 +98,24 @@ module Doorkeeper
       end
     end
 
+    describe :default_scope_string do
+      let :default_scopes do
+        create_scopes_array "public", true,
+                            "other_public", true
+      end
+
+      let :scopes_array do
+        array = create_scopes_array "awesome", false,
+                                    "awesome2", false
+        array + default_scopes
+      end
+
+      it "returns the string that joins names of default scopes" do
+        subject.default_scope_string.should == "public other_public"
+      end
+
+    end
+
     def create_scopes_array(*args)
       args.each_slice(2).map do |slice|
         scope_double(*slice)
