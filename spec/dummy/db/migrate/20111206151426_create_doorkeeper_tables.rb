@@ -26,6 +26,7 @@ class CreateDoorkeeperTables < ActiveRecord::Migration
       t.datetime :expires_at
       t.datetime :revoked_at
       t.datetime :created_at,        :null => false
+      t.string   :scopes
     end
   end
 end
