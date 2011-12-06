@@ -31,6 +31,10 @@ class AccessToken < ActiveRecord::Base
     !expired? && !revoked?
   end
 
+  def scopes
+    self[:scopes].split(" ").map(&:to_sym)
+  end
+
   private
 
   def generate_token

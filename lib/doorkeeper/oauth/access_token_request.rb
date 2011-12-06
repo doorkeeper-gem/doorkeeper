@@ -69,6 +69,7 @@ module Doorkeeper::OAuth
       @access_token = AccessToken.create!({
         :application_id    => client.id,
         :resource_owner_id => grant.resource_owner_id,
+        :scopes            => grant.scopes_string
       })
     end
 
