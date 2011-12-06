@@ -12,6 +12,10 @@ module Doorkeeper
   end
 
   class Config
+    def default_scope_string
+      @scopes.try(:default_scope_string) || ""
+    end
+
     class Builder
       def initialize(&block)
         @config = Config.new

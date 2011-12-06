@@ -69,6 +69,15 @@ module Doorkeeper::OAuth
 
     end
 
+    describe "if no scope given" do
+      it "sets the scope to the default one" do
+        Doorkeeper.stub_chain(:configuration, :default_scope_string).and_return("public email")
+        request = AuthorizationRequest.new(resource_owner, attributes.except(:scope))
+        request.scope.should == "public email"
+
+      end
+    end
+
     describe "with errors" do
       before do
         AccessGrant.should_not_receive(:create)

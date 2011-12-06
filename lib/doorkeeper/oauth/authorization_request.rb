@@ -24,6 +24,7 @@ module Doorkeeper::OAuth
       ATTRIBUTES.each { |attr| instance_variable_set("@#{attr}", attributes[attr]) }
       @resource_owner = resource_owner
       @grant          = nil
+      @scope          ||= Doorkeeper.configuration.default_scope_string
       validate
     end
 
