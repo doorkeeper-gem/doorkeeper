@@ -31,7 +31,8 @@ module Doorkeeper::OAuth
 
     def authorization
       { 'access_token' => access_token,
-        'token_type'   => token_type
+        'token_type'   => token_type,
+        'expires_in'   => @access_token.expires_in,
       }
     end
 
