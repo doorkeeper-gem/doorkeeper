@@ -16,7 +16,7 @@ module AuthorizationRequestHelper
   end
 
   def authorization_code_exists(options)
-    @authorization = Factory(:access_grant, :application => options[:client])
+    @authorization = Factory(:access_grant, :application => options[:client], :scopes => options[:scopes])
   end
 
   def authorization_endpoint_url(options = {})
