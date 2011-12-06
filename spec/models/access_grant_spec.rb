@@ -72,4 +72,12 @@ describe AccessGrant do
       it { should_not be_accessible }
     end
   end
+
+  describe :scopes, "returns an array of scopes" do
+    subject { Factory(:access_grant, :scopes => "public write").scopes }
+
+    it { should be_kind_of(Array) }
+    its(:count) { should == 2 }
+    it { should include(:public, :write) }
+  end
 end
