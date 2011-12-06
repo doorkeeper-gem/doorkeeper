@@ -8,6 +8,13 @@ module AuthorizationRequestHelper
     @client = Factory(:application, client_attributes)
   end
 
+  def scopes_exist
+    scopes = Doorkeeper::Scopes.new
+    scopes.add(Doorkeeper::Scope.new(:public, :default => true, :description => "Access your public data"))
+    scopes.add(Doorkeeper::Scope.new(:write, :default => false, :description => "Update your data"))
+    Doorkeeper.configuration.instance_variable_set(:@scopes, scopes)
+  end
+
   def authorization_code_exists(options)
     @authorization = Factory(:access_grant, :application => options[:client])
   end
@@ -16,7 +23,8 @@ module AuthorizationRequestHelper
     client_id     = options[:client_id]    ? options[:client_id]    : options[:client].uid
     redirect_uri  = options[:redirect_uri] ? options[:redirect_uri] : options[:client].redirect_uri
     response_type = options[:response_type] || "code"
-    "/oauth/authorize?client_id=#{client_id}&redirect_uri=#{redirect_uri}&response_type=#{response_type}"
+    scope_part   = options[:scope] ? "&scope=#{URI.encode(options[:scope])}" : ""
+    "/oauth/authorize?client_id=#{client_id}&redirect_uri=#{redirect_uri}&response_type=#{response_type}#{scope_part}"
   end
 
   def redirect_uri_with_code(uri, code)

@@ -4,6 +4,21 @@ feature "Authorization Request" do
   background do
     resource_owner_is_authenticated
     client_exists
+    scopes_exist
+  end
+
+  context "display authorization scopes" do
+    scenario "default scopes" do
+      visit authorization_endpoint_url(:client => @client)
+      i_should_see "Access your public data"
+      i_should_not_see "Update your data"
+    end
+
+    scenario "with scopes specified in param" do
+      visit authorization_endpoint_url(:client => @client, :scope => "public write")
+      i_should_see "Access your public data"
+      i_should_see "Update your data"
+    end
   end
 
   scenario "resource owner authorize the client" do
