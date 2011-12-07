@@ -51,7 +51,11 @@ module Doorkeeper::OAuth
     end
 
     def invalid_redirect_uri
-      build_uri { |uri| uri.query = "error=#{error}" }
+      build_uri do |uri|
+        query = "error=#{error}"
+        query << "&state=#{state}" if has_state?
+        uri.query = query
+      end
     end
 
     def client

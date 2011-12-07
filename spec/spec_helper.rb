@@ -16,13 +16,9 @@ Dir[File.join(ENGINE_RAILS_ROOT, "spec/support/**/*.rb")].each { |f| require f }
 RSpec.configure do |config|
   config.mock_with :rspec
 
+  config.infer_base_class_for_anonymous_controllers = false
+
   config.after(:each) do
     Doorkeeper.configure {}
   end
-
-  config.infer_base_class_for_anonymous_controllers = false
-
-  config.include RequestSpecHelper,          :type => :request
-  config.include AuthorizationRequestHelper, :type => :request
-  config.include AccessTokenRequestHelper,   :type => :request
 end

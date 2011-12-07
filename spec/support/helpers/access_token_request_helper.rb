@@ -3,19 +3,15 @@ module AccessTokenRequestHelper
     Factory(:access_token, :application => client, :resource_owner_id => resource_owner.id)
   end
 
-  def token_endpoint_url(options = {})
-    client_id     = options[:client_id]     ? options[:client_id]     : options[:client].uid
-    client_secret = options[:client_secret] ? options[:client_secret] : options[:client].secret
-    redirect_uri  = options[:redirect_uri]  ? options[:redirect_uri]  : options[:client].redirect_uri
-    grant_type    = options[:grant_type] || "authorization_code"
-    "/oauth/token?code=#{options[:code]}&client_id=#{client_id}&client_secret=#{client_secret}&redirect_uri=#{redirect_uri}&grant_type=#{grant_type}"
-  end
-
   def with_access_token_header(token)
-    page.driver.header 'Authorization', "Bearer #{token}"
+    with_header 'Authorization', "Bearer #{token}"
   end
 
-  def response_status_should(status)
+  def with_header(header, value)
+    page.driver.header header, value
+  end
+
+  def response_status_should_be(status)
     page.driver.response.status.to_i.should == status
   end
 
@@ -23,3 +19,5 @@ module AccessTokenRequestHelper
     JSON.parse(response.body)
   end
 end
+
+RSpec.configuration.send :include, AccessTokenRequestHelper, :type => :request

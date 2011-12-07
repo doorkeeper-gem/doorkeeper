@@ -1,55 +1,108 @@
 require "spec_helper"
 
-feature "Authorization Request" do
+feature "Authorization Request", "when resource owner is authenticated" do
   background do
     resource_owner_is_authenticated
     client_exists
     scopes_exist
   end
 
-  context "display authorization scopes" do
-    scenario "default scopes" do
+  context "with valid client credentials and parameters" do
+    context "display authorization scopes" do
+      scenario "default scopes" do
+        visit authorization_endpoint_url(:client => @client)
+        i_should_see "Access your public data"
+        i_should_not_see "Update your data"
+      end
+
+      scenario "with scopes specified in param" do
+        visit authorization_endpoint_url(:client => @client, :scope => "public write")
+        i_should_see "Access your public data"
+        i_should_see "Update your data"
+      end
+    end
+
+    context "with state parameter" do
+      scenario "returns the state to client's callback url" do
+        visit authorization_endpoint_url(:client => @client, :state => "return-this")
+        click_on "Authorize"
+        url_should_have_param("state", "return-this")
+      end
+
+      scenario "omit the state if no one was specified" do
+        visit authorization_endpoint_url(:client => @client)
+        click_on "Authorize"
+        url_should_not_have_param("state")
+      end
+
+      scenario "returns the state if client access was denied" do
+        visit authorization_endpoint_url(:client => @client, :state => "return-that")
+        click_on "Deny"
+        url_should_have_param("state", "return-that")
+      end
+    end
+
+    scenario "resource owner authorizes the client" do
       visit authorization_endpoint_url(:client => @client)
-      i_should_see "Access your public data"
-      i_should_not_see "Update your data"
+
+      click_on "Authorize"
+      client_should_be_authorized(@client)
+
+      grant = @client.access_grants.first
+
+      i_should_be_on_client_callback(@client)
+      url_should_have_param("code", grant.token)
     end
 
-    scenario "with scopes specified in param" do
-      visit authorization_endpoint_url(:client => @client, :scope => "public write")
-      i_should_see "Access your public data"
-      i_should_see "Update your data"
+    scenario "skips authorization for previously authorized clients" do
+      client_is_authorized(@client, User.last)
+      visit authorization_endpoint_url(:client => @client)
+
+      client_should_be_authorized(@client)
+
+      grant = @client.access_grants.first
+
+      i_should_be_on_client_callback(@client)
+      url_should_have_param("code", grant.token)
+    end
+
+    scenario "resource owner denies client access" do
+      visit authorization_endpoint_url(:client => @client)
+
+      click_on "Deny"
+      client_should_not_be_authorized(@client)
+
+      i_should_be_on_client_callback(@client)
+      url_should_not_have_param("code")
+      url_should_have_param("error", "access_denied")
     end
   end
 
-  scenario "resource owner authorize the client" do
-    visit authorization_endpoint_url(:client => @client)
-    click_on "Authorize"
+  context "with invalid client credentials or parameters" do
+    after do
+      client_should_not_be_authorized(@client)
+    end
 
-    # Authorization code was created
-    grant = @client.access_grants.first
-    grant.should_not be_nil
+    [:client_id, :redirect_uri, :response_type].each do |parameter|
+      scenario "recieves an error for invalid #{parameter}" do
+        visit authorization_endpoint_url(:client => @client, parameter => "invalid")
+        i_should_see "An error has occurred"
+      end
+    end
 
-    i_should_be_on_url redirect_uri_with_code(@client.redirect_uri, grant.token)
+    scenario "recieves an error for invalid :scope"
+  end
+end
+
+feature "Authorization Request", "when resource owner is not authenticated" do
+  background do
+    Doorkeeper.configuration.builder.resource_owner_authenticator do |routes|
+      User.first || redirect_to("/sign_in")
+    end
   end
 
-  scenario "resource owner with previously authorized client" do
-    client_is_authorized(@client, User.last)
-    visit authorization_endpoint_url(:client => @client)
-
-    grant = @client.access_grants.first
-
-    # Skips authorization form and redirect with new grant
-    i_should_be_on_url redirect_uri_with_code(@client.redirect_uri, grant.token)
-  end
-
-  scenario "resource owner deny access to the client" do
-    visit authorization_endpoint_url(:client => @client)
-    click_on "Deny"
-    i_should_be_on_url redirect_uri_with_error(@client.redirect_uri, "access_denied")
-  end
-
-  scenario "resource owner recieves an error with invalid client" do
-    visit authorization_endpoint_url(:client => @client, :client_id => "invalid")
-    i_should_see "An error has occurred"
+  scenario "resource owner gets redirected to authentication" do
+    visit authorization_endpoint_url(:client_id => "1", :redirect_uri => "r")
+    i_should_be_on "/"
   end
 end

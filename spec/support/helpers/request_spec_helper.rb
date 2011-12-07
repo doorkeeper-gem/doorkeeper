@@ -11,7 +11,21 @@ module RequestSpecHelper
     current_path.should eq(path)
   end
 
-  def i_should_be_on_url(path)
-    page.current_url.should == path
+  def url_should_have_param(param, value)
+    current_params[param].should == value
+  end
+
+  def url_should_not_have_param(param)
+    current_params.should_not have_key(param)
+  end
+
+  def current_params
+    Rack::Utils.parse_query(current_uri.query)
+  end
+
+  def current_uri
+    URI.parse(page.current_url)
   end
 end
+
+RSpec.configuration.send :include, RequestSpecHelper, :type => :request

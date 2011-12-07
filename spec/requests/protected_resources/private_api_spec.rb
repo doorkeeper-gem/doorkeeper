@@ -16,13 +16,13 @@ feature 'Private API' do
   scenario 'client attempts to request protected resource with invalid token' do
     with_access_token_header "invalid"
     visit '/full_protected_resources'
-    response_status_should 401
+    response_status_should_be 401
   end
 
   scenario 'client attempts to request protected resource with expired token' do
     @token.update_attribute :expires_in, -100 # expires token
     with_access_token_header @token.token
     visit '/full_protected_resources'
-    response_status_should 401
+    response_status_should_be 401
   end
 end
