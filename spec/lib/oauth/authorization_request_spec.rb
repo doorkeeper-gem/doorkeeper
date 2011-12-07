@@ -105,6 +105,12 @@ module Doorkeeper::OAuth
         its(:error) { should == :unsupported_response_type }
       end
 
+      [nil, "", " ", "\r\n", "\t", "\rsth\n"].each do |invalid_value|
+        describe "when :scope has #{invalid_value.inspect}" do
+          subject     { auth(attributes.merge(:scope => invalid_value)) }
+          its(:error) { should == :invalid_scope }
+        end
+      end
     end
 
     def auth(attributes)

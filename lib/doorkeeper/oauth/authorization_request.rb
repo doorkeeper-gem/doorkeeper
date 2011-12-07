@@ -16,6 +16,7 @@ module Doorkeeper::OAuth
     validate :client,        :error => :invalid_client
     validate :redirect_uri,  :error => :invalid_redirect_uri
     validate :response_type, :error => :unsupported_response_type
+    validate :scope,         :error => :invalid_scope
 
     attr_accessor *ATTRIBUTES
     attr_accessor :resource_owner, :error
@@ -101,6 +102,10 @@ module Doorkeeper::OAuth
 
     def validate_response_type
       response_type == "code"
+    end
+
+    def validate_scope
+      scope.present? && scope !~ /[\n|\r|\t]/
     end
   end
 end
