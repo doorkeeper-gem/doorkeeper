@@ -35,4 +35,18 @@ describe Doorkeeper, "configuration" do
       subject.access_token_expires_in.should == 4.hours
     end
   end
+
+  describe "scopes" do
+    it "can be set with authorization_scopes method in DSL" do
+      Doorkeeper.configure do
+        authorization_scopes do
+          scope :public, :default => true, :description => "Public"
+        end
+      end
+
+      subject.scopes[:public].should_not be_nil
+      subject.scopes[:public].description.should == "Public"
+      subject.scopes[:public].default.should == true
+    end
+  end
 end

@@ -3,7 +3,7 @@ require "spec_helper"
 feature "Access Token Request" do
   background do
     client_exists
-    authorization_code_exists(:client => @client)
+    authorization_code_exists(:client => @client, :scopes => "public")
   end
 
   scenario "get access token for valid grant code" do
@@ -11,6 +11,7 @@ feature "Access Token Request" do
 
     token = AccessToken.where(:application_id => @client.id).first
     token.should_not be_nil
+    token.scopes.should == [:public]
 
     parsed_response.should_not have_key('error')
 

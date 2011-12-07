@@ -67,9 +67,9 @@ In your api controller, add the `doorkeeper_for` to require the oauth token:
 
 ``` ruby
 class Api::V1::ProtectedResourcesController < Api::V1::ApiController
-  doorkeeper_for :all              # Require access token for all actions
-  doorkeeper_for :only   => :index # Only for index action
-  doorkeeper_for :except => :show  # All actions except show
+  doorkeeper_for :all                    # Require access token for all actions
+  doorkeeper_for :index                  # Only for index action
+  doorkeeper_for :all, :except => :show  # All actions except show
 
   # your actions
 end

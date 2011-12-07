@@ -9,7 +9,7 @@ module Doorkeeper::OAuth
         :response_type => "code",
         :client_id     => client.uid,
         :redirect_uri  => client.redirect_uri,
-        :scope         => "public",
+        :scope         => "public write",
         :state         => "return-this"
       }
     end
@@ -17,24 +17,64 @@ module Doorkeeper::OAuth
     describe "with valid attributes" do
       subject { AuthorizationRequest.new(resource_owner, attributes) }
 
-      before { subject.authorize }
+      describe "after authorization" do
+        before { subject.authorize }
 
-      its(:response_type) { should == "code" }
-      its(:client_id)     { should == client.uid }
-      its(:scope)         { should == "public" }
-      its(:state)         { should == "return-this" }
-      its(:error)         { should be_nil }
+        its(:response_type) { should == "code" }
+        its(:client_id)     { should == client.uid }
+        its(:scope)         { should == "public write" }
+        its(:state)         { should == "return-this" }
+        its(:error)         { should be_nil }
 
-      describe ".success_redirect_uri" do
-        let(:query) { URI.parse(subject.success_redirect_uri).query }
+        describe ".success_redirect_uri" do
+          let(:query) { URI.parse(subject.success_redirect_uri).query }
 
-        it "includes the grant code" do
-          query.should =~ %r{code=\w+}
+          it "includes the grant code" do
+            query.should =~ %r{code=\w+}
+          end
+
+          it "includes the state previous assumed" do
+            query.should =~ %r{state=return-this}
+          end
+        end
+      end
+
+      describe :scopes  do
+        it "returns scopes objects returned by Doorkeeper::Scopes with names specified by scopes" do
+          scopes = double(Array)
+          scopes_object = double(Doorkeeper::Scopes)
+          scopes_object.should_receive(:with_names).with("public", "write").and_return(scopes)
+          Doorkeeper.stub_chain(:configuration, :scopes).and_return(scopes_object)
+          subject.scopes.should == scopes
+        end
+      end
+
+      describe :authorize do
+        let(:authorization_request) { AuthorizationRequest.new(resource_owner, attributes) }
+        subject { authorization_request.authorize }
+
+        it "returns AccessGrant object" do
+          subject.is_a? AccessGrant
         end
 
-        it "includes the state previous assumed" do
-          query.should =~ %r{state=return-this}
+        it "returns instance saved in the database" do
+          subject.should be_persisted
         end
+
+        it "returns object thath has scopes attribtue same as scope attribute of authorization request" do
+          subject.scopes == authorization_request.scope
+        end
+
+      end
+
+    end
+
+    describe "if no scope given" do
+      it "sets the scope to the default one" do
+        Doorkeeper.stub_chain(:configuration, :default_scope_string).and_return("public email")
+        request = AuthorizationRequest.new(resource_owner, attributes.except(:scope))
+        request.scope.should == "public email"
+
       end
     end
 
@@ -65,6 +105,12 @@ module Doorkeeper::OAuth
         its(:error) { should == :unsupported_response_type }
       end
 
+      [nil, "", " ", "\r\n", "\t", "\rsth\n"].each do |invalid_value|
+        describe "when :scope has #{invalid_value.inspect}" do
+          subject     { auth(attributes.merge(:scope => invalid_value)) }
+          its(:error) { should == :invalid_scope }
+        end
+      end
     end
 
     def auth(attributes)

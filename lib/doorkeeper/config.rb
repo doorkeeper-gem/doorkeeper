@@ -1,3 +1,7 @@
+require 'doorkeeper/config/scopes'
+require 'doorkeeper/config/scope'
+require 'doorkeeper/config/scopes_builder'
+
 module Doorkeeper
   def self.configure(&block)
     @config = Config::Builder.new(&block).build
@@ -8,6 +12,10 @@ module Doorkeeper
   end
 
   class Config
+    def default_scope_string
+      @scopes.try(:default_scope_string) || ""
+    end
+
     class Builder
       def initialize(&block)
         @config = Config.new
@@ -31,6 +39,11 @@ module Doorkeeper
       # If the +:as+ option is defined, the builder method will be the specified
       # option while the config attribute will be the +name+ parameter.
       #
+      # If you want to introduce another level of config DSL you can
+      # define +builder_class+ parameter.
+      # Builder should take a block as the initializer parameter and respond to function +build+
+      # that returns the value of the config attribute.
+      #
       # ==== Options
       #
       # * [:+as+] Set the builder method that goes inside +configure+ block
@@ -41,13 +54,20 @@ module Doorkeeper
       #    option :name
       #    option :name, :as => :set_name
       #    option :name, :default => "My Name"
+      #    option :scopes :builder_class => ScopesBuilder
       #
       def option(name, options = {})
         attribute = options[:as] || name
+        attribute_builder = options[:builder_class]
 
         Builder.instance_eval do
           define_method name do |*args, &block|
-            value = block ? block : args.first
+            value = unless attribute_builder
+              block ? block : args.first
+            else
+              attribute_builder.new(&block).build
+            end
+
             @config.instance_variable_set(:"@#{attribute}", value)
           end
         end
@@ -69,6 +89,6 @@ module Doorkeeper
     option :resource_owner_authenticator, :as      => :authenticate_resource_owner
     option :admin_authenticator,          :as      => :authenticate_admin
     option :access_token_expires_in,      :default => 7200
-
+    option :authorization_scopes,         :as      => :scopes, :builder_class => ScopesBuilder
   end
 end

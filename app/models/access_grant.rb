@@ -25,6 +25,14 @@ class AccessGrant < ActiveRecord::Base
     revoked_at.present?
   end
 
+  def scopes
+    self[:scopes].split(" ").map(&:to_sym)
+  end
+
+  def scopes_string
+    self[:scopes]
+  end
+
   private
 
   def expired_time

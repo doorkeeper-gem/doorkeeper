@@ -12,4 +12,10 @@ Doorkeeper.configure do
   # admin_authenticator do
   #   Admin.find_by_id(session[:admin_id]) || redirect_to main_app.new_admin_session_path
   # end
+  #
+  #
+  authorization_scopes do
+    scope :public, :default => true, :description => "The public one"
+    scope :write, :description => "Updating information"
+  end
 end

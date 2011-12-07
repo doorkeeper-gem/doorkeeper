@@ -4,5 +4,6 @@ FactoryGirl.define do
     application
     redirect_uri "https://app.com/callback"
     expires_in 100
+    scopes "public write"
   end
 end
