@@ -32,7 +32,8 @@ module Doorkeeper::OAuth
         AccessToken.should_receive(:create!).with({
           :application_id    => client.id,
           :resource_owner_id => grant.resource_owner_id,
-          :expires_in        => 2.hours
+          :expires_in        => 2.hours,
+          :scopes            =>"public write"
         })
         subject.authorize
       end
