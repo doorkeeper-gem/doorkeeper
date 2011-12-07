@@ -11,6 +11,60 @@ module ControllerActions
   end
 end
 
+shared_examples "specified for particular actions" do
+  context "with valid token", :token => :valid do
+    it "allows into index action" do
+      get :index, :access_token => token_string
+      response.should be_success
+    end
+
+    it "allows into show action" do
+      get :show, :id => "3", :access_token => token_string
+      response.should be_success
+    end
+  end
+
+  context "with invalid token", :token => :invalid do
+    include_context "invalid token"
+
+    it "does not allow into index action" do
+      get :index, :access_token => token_string
+      response.status.should == 401
+    end
+
+    it "allows into show action" do
+      get :show, :id => "5", :access_token => token_string
+      response.should be_success
+    end
+  end
+end
+
+shared_examples "specified with except" do
+  context "with valid token", :token => :valid do
+    it "allows into index action" do
+      get :index, :access_token => token_string
+      response.should be_success
+    end
+
+    it "allows into show action" do
+      get :show, :id => "4", :access_token => token_string
+      response.should be_success
+    end
+  end
+
+  context "with invalid token", :token => :invalid do
+    it "allows into index action" do
+      get :index, :access_token => token_string
+      response.should be_success
+    end
+
+    it "does not allow into show action" do
+      get :show, :id => "14", :access_token => token_string
+      response.status.should == 401
+    end
+  end
+end
+
 describe "Doorkeeper_for helper" do
   context "accepts token code specified as" do
     controller do
@@ -75,68 +129,42 @@ describe "Doorkeeper_for helper" do
 
   context "defined only for index action" do
     controller do
+      doorkeeper_for :index
+
+      include ControllerActions
+    end
+    include_examples "specified for particular actions"
+  end
+
+  context "defined only for index action (old syntax)" do
+    controller do
       doorkeeper_for :only => :index
 
       include ControllerActions
     end
 
-    context "with valid token", :token => :valid do
-      it "allows into index action" do
-        get :index, :access_token => token_string
-        response.should be_success
-      end
-
-      it "allows into show action" do
-        get :show, :id => "3", :access_token => token_string
-        response.should be_success
-      end
-    end
-
-    context "with invalid token", :token => :invalid do
-      include_context "invalid token"
-
-      it "does not allow into index action" do
-        get :index, :access_token => token_string
-        response.status.should == 401
-      end
-
-      it "allows into show action" do
-        get :show, :id => "5", :access_token => token_string
-        response.should be_success
-      end
-    end
+    include_examples "specified for particular actions"
   end
 
   context "defined for actions except index" do
+    controller do
+      doorkeeper_for :all, :except => :index
+
+      include ControllerActions
+    end
+
+    include_examples "specified with except"
+  end
+
+  context "defined for actions except index (old syntax)" do
     controller do
       doorkeeper_for :except => :index
 
       include ControllerActions
     end
 
-    context "with valid token", :token => :valid do
-      it "allows into index action" do
-        get :index, :access_token => token_string
-        response.should be_success
-      end
+    include_examples "specified with except"
 
-      it "allows into show action" do
-        get :show, :id => "4", :access_token => token_string
-        response.should be_success
-      end
-    end
-
-    context "with invalid token", :token => :invalid do
-      it "allows into index action" do
-        get :index, :access_token => token_string
-        response.should be_success
-      end
-
-      it "does not allow into show action" do
-        get :show, :id => "14", :access_token => token_string
-        response.status.should == 401
-      end
-    end
   end
 
   context "defined with scopes" do
