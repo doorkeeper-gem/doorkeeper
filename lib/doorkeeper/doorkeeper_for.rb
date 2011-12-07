@@ -76,7 +76,8 @@ module Doorkeeper
     def self.handle_hash(hash)
       if hash.has_key?(:only)
         warn "DEPRECATED: :only option. Put the actions you want doorkeeper to take care of after doorkeeper_for eg: doorkeeper_for :index, :new"
-        return create_doorkeeper_for(*hash[:only], hash.except(:only))
+        args = [hash[:only], hash.except(:only)]
+        return create_doorkeeper_for(*args)
       end
 
       if hash.has_key?(:except)
