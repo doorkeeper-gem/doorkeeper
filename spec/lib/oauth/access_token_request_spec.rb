@@ -25,6 +25,20 @@ module Doorkeeper::OAuth
       its(:error)        { should be_nil }
     end
 
+    describe "creating the access token" do
+      subject { AccessTokenRequest.new(params) }
+
+      it "creates with correct params" do
+        AccessToken.should_receive(:create!).with({
+          :application_id    => client.id,
+          :resource_owner_id => grant.resource_owner_id,
+          :expires_in        => 2.hours,
+          :scopes            =>"public write"
+        })
+        subject.authorize
+      end
+    end
+
     describe "with errors" do
       def token(params)
         AccessTokenRequest.new(params)

@@ -46,26 +46,22 @@ describe AccessToken do
     end
   end
 
-  describe "expired?" do
-    let(:expiration) { DateTime.now + 2.days }
-    subject { Factory(:access_token, :expires_at => expiration) }
+  describe "token expiration" do
+    subject { Factory(:access_token, :expires_in => 2.hours) }
 
-    before { subject }
-
-    it "is false when is not expired" do
-      subject.should_not be_expired
+    context "when expiration time has not passed" do
+      it { should_not be_expired }
+      it { should     be_accessible }
     end
 
-    it "is true when is expired" do
-      Timecop.freeze(Date.today + 3.days) do
-        subject.should be_expired
+    context "when expiration time is over" do
+      around do |example|
+        subject # force creation
+        Timecop.freeze(Time.now + 3.hours) { example.call }
       end
-    end
 
-    it "is not accessible when expired" do
-      Timecop.freeze(Date.today + 3.days) do
-        subject.should_not be_accessible
-      end
+      it { should     be_expired }
+      it { should_not be_accessible }
     end
   end
 end
