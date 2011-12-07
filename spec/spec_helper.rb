@@ -9,6 +9,7 @@ require 'timecop'
 ENGINE_RAILS_ROOT = File.join(File.dirname(__FILE__), '../')
 
 # load schema to in memory sqlite
+ActiveRecord::Migration.verbose = false
 load Rails.root + "db/schema.rb"
 
 Dir[File.join(ENGINE_RAILS_ROOT, "spec/support/**/*.rb")].each { |f| require f }
