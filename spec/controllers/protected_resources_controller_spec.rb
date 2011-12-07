@@ -138,7 +138,9 @@ describe "Doorkeeper_for helper" do
 
   context "defined only for index action (old syntax)" do
     controller do
-      doorkeeper_for :only => :index
+      silence_warnings do
+        doorkeeper_for :only => :index
+      end
 
       include ControllerActions
     end
@@ -158,7 +160,9 @@ describe "Doorkeeper_for helper" do
 
   context "defined for actions except index (old syntax)" do
     controller do
-      doorkeeper_for :except => :index
+      silence_warnings do
+        doorkeeper_for :except => :index
+      end
 
       include ControllerActions
     end
