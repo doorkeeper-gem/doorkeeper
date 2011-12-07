@@ -16,6 +16,7 @@ feature "Access Token Request" do
     parsed_response.should_not have_key('error')
 
     parsed_response['access_token'].should == token.token
+    parsed_response['expires_in'].should   == token.expires_in
     parsed_response['token_type'].should   == "bearer"
   end
 

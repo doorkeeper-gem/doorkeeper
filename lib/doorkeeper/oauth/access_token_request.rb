@@ -31,7 +31,8 @@ module Doorkeeper::OAuth
 
     def authorization
       { 'access_token' => access_token,
-        'token_type'   => token_type
+        'token_type'   => token_type,
+        'expires_in'   => @access_token.expires_in,
       }
     end
 
@@ -69,7 +70,8 @@ module Doorkeeper::OAuth
       @access_token = AccessToken.create!({
         :application_id    => client.id,
         :resource_owner_id => grant.resource_owner_id,
-        :scopes            => grant.scopes_string
+        :scopes            => grant.scopes_string,
+        :expires_in        => configuration.access_token_expires_in,
       })
     end
 
@@ -87,6 +89,10 @@ module Doorkeeper::OAuth
 
     def validate_grant_type
       grant_type == "authorization_code"
+    end
+
+    def configuration
+      Doorkeeper.configuration
     end
   end
 end
