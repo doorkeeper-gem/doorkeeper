@@ -16,6 +16,7 @@ module Doorkeeper::OAuth
     validate :client,        :error => :invalid_client
     validate :redirect_uri,  :error => :invalid_redirect_uri
     validate :response_type, :error => :unsupported_response_type
+    validate :scope,         :error => :invalid_scope
 
     attr_accessor *ATTRIBUTES
     attr_accessor :resource_owner, :error
@@ -24,6 +25,7 @@ module Doorkeeper::OAuth
       ATTRIBUTES.each { |attr| instance_variable_set("@#{attr}", attributes[attr]) }
       @resource_owner = resource_owner
       @grant          = nil
+      @scope          ||= Doorkeeper.configuration.default_scope_string
       validate
     end
 
@@ -56,6 +58,10 @@ module Doorkeeper::OAuth
       @client ||= Application.find_by_uid(client_id)
     end
 
+    def scopes
+      Doorkeeper.configuration.scopes.with_names(*scope.split(" "))
+    end
+
     private
 
     def create_authorization
@@ -63,7 +69,8 @@ module Doorkeeper::OAuth
         :application_id    => client.id,
         :resource_owner_id => resource_owner.id,
         :expires_in        => DEFAULT_EXPIRATION_TIME,
-        :redirect_uri      => redirect_uri
+        :redirect_uri      => redirect_uri,
+        :scopes            => scope
       )
     end
 
@@ -95,6 +102,10 @@ module Doorkeeper::OAuth
 
     def validate_response_type
       response_type == "code"
+    end
+
+    def validate_scope
+      scope.present? && scope !~ /[\n|\r|\t]/
     end
   end
 end
