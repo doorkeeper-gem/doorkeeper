@@ -12,7 +12,7 @@ module Doorkeeper
     end
 
     def [](name)
-      @scopes.select do |scope|
+      select do |scope|
         scope.name.to_sym == name.to_sym
       end.first
     end
@@ -27,7 +27,7 @@ module Doorkeeper
     end
 
     def defaults
-      @scopes.select do |scope|
+      select do |scope|
         scope.default
       end
     end
@@ -38,7 +38,7 @@ module Doorkeeper
 
     def with_names(*names)
       names = names.map(&:to_sym)
-      @scopes.select do |scope|
+      select do |scope|
         names.include? scope.name.to_sym
       end
     end
