@@ -1,5 +1,5 @@
 class SemiProtectedResourcesController < ApplicationController
-  doorkeeper_for :only => [:index]
+  doorkeeper_for :index
 
   def index
     render :text => "protected index"
