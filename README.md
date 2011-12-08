@@ -4,9 +4,9 @@
 
 Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider functionality to your application.
 
-So far it supports only Authorization Code flow, but we will [gradually introduce other flows](https://github.com/applicake/doorkeeper/wiki/Supported-Features).
+The gem is under constant development. It is based in the [version 22 of the OAuth specification](http://tools.ietf.org/html/draft-ietf-oauth-v2-22) and it still does not support all OAuth features.
 
-For more information about OAuth 2 go to [OAuth 2 Specs (Draft)](http://tools.ietf.org/html/draft-ietf-oauth-v2-22).
+For more information about the supported features, check out the related [page in the wiki](https://github.com/applicake/doorkeeper/wiki/Supported-Features). For more information about OAuth 2 go to [OAuth 2 Specs (Draft)](http://tools.ietf.org/html/draft-ietf-oauth-v2-22).
 
 ## Installation
 
@@ -20,13 +20,13 @@ Run the installation generator with:
 
     rails generate doorkeeper:install
 
-This will generate the doorkeeper initializer and the oauth tables migration. Don't forget to run the migration in your application:
+This will generate the doorkeeper initializer and the OAuth tables migration. Don't forget to run the migration in your application:
 
     rake db:migrate
 
 ## Configuration
 
-The installation will mount the Doorkeeper routes to your app like this:
+The installation script will automatically add the Doorkeeper routes into your app, like this:
 
 ``` ruby
 Rails.application.routes.draw do
@@ -53,7 +53,7 @@ Doorkeeper.configure do
 end
 ```
 
-If you use devise, you may want to use warden to authenticate the block:
+If you use [devise](https://github.com/plataformatec/devise), you may want to use warden to authenticate the block:
 
 ``` ruby
 resource_owner_authenticator do |routes|
@@ -61,15 +61,17 @@ resource_owner_authenticator do |routes|
 end
 ```
 
-## Protecting resources (a.k.a your API endpoint)
+## Protecting resources with OAuth (a.k.a your API endpoint)
 
-In your api controller, add the `doorkeeper_for` to require the oauth token:
+To protect your API with OAuth, doorkeeper only requires you to call `doorkeeper_for` helper, specifying the actions you want to protect.
+
+For example, if you have a products controller under api/v1, you can require the OAuth authentication with:
 
 ``` ruby
-class Api::V1::ProtectedResourcesController < Api::V1::ApiController
-  doorkeeper_for :all                    # Require access token for all actions
-  doorkeeper_for :index                  # Only for index action
-  doorkeeper_for :all, :except => :show  # All actions except show
+class Api::V1::ProductsController < Api::V1::ApiController
+  doorkeeper_for :all                     # Require access token for all actions
+  doorkeeper_for :all, :except => :index  # All actions except show
+  doorkeeper_for :index, :show            # Only for index and show action
 
   # your actions
 end
@@ -77,16 +79,29 @@ end
 
 You don't need to setup any before filter, `doorkeeper_for` will handle that for you.
 
-## Authenticated resource owner
+### Access Token Scopes
 
-If you want to return data based on the current resource owner for example, the access token user credentials, you'll need to define a method in your controller to return the resource owner instance:
+You can also require the access token to have specific scopes in certain actions:
+
+```ruby
+class Api::V1::ProductsController < Api::V1::ApiController
+  doorkeeper_for :index, :show,    :scopes => [:public]
+  doorkeeper_for :update, :create, :scopes => [:admin, :write]
+end
+```
+
+For a more detailed explanation about scopes usage, check out the related [page in the wiki](https://github.com/applicake/doorkeeper/wiki/Using-Scopes).
+
+### Authenticated resource owner
+
+If you want to return data based on the current resource owner, in other words, the access token owner, you may want to define a method in your controller that returns the resource owner instance:
 
 ``` ruby
 class Api::V1::CredentialsController < Api::V1::ApiController
   doorkeeper_for :all
   respond_to     :json
 
-  # GET /api/v1/me.json
+  # GET /me.json
   def me
     respond_with current_resource_owner
   end
@@ -99,6 +114,8 @@ class Api::V1::CredentialsController < Api::V1::ApiController
   end
 end
 ```
+
+In this example, we're returning the credentials (`me.json`) of the access token owner.
 
 ## Other resources
 
@@ -119,3 +136,14 @@ Also, check out our [contributing guidelines page](https://github.com/applicake/
 ### Supported ruby versions
 
 All supported ruby versions are [listed here](https://github.com/applicake/doorkeeper/wiki/Supported-Ruby-versions)
+
+## Additional information
+
+### Maintainers
+
+- Felipe Elias Philipp ([github.com/felipeelias](https://github.com/felipeelias))
+- Piotr Jakubowski ([github.com/piotrj](https://github.com/piotrj))
+
+### License
+
+MIT License. Copyright 2011 Applicake. [http://applicake.com](http://applicake.com)
