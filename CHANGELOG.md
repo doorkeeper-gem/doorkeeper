@@ -4,8 +4,9 @@
 
 - enhancements
   - [#4] Add authorized applications endpoint
-  - [#11] Add access token scopes
+  - [#5, #11] Add access token scopes
   - [#10] Add access token expiration by default
+  - [#9, #12] Add refresh token flow
 - internals
   - [#7] Improve configuration options with :default
   - Improve configuration options with :builder
