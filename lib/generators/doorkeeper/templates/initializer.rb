@@ -26,4 +26,11 @@ Doorkeeper.configure do
 
   # Issue access tokens with refresh token (disabled by default)
   # use_refresh_token
+
+  # Define access token scopes for your provider
+  # For more information go to https://github.com/applicake/doorkeeper/wiki/Using-Scopes
+  # authorization_scopes do
+  #   scope :public, :default => true, :description => "The public one"
+  #   scope :write,  :description => "Updating information"
+  # end
 end
