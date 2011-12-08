@@ -19,7 +19,7 @@ RSpec.configure do |config|
 
   config.infer_base_class_for_anonymous_controllers = false
 
-  config.after(:each) do
+  config.after do
     Doorkeeper.configure {}
   end
 end

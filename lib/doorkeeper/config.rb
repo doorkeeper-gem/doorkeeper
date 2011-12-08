@@ -25,6 +25,10 @@ module Doorkeeper
       def build
         @config
       end
+
+      def use_refresh_token
+        @config.instance_variable_set("@refresh_token_enabled", true)
+      end
     end
 
     module Option
@@ -96,5 +100,9 @@ module Doorkeeper
     option :admin_authenticator,          :as      => :authenticate_admin
     option :access_token_expires_in,      :default => 7200
     option :authorization_scopes,         :as      => :scopes, :builder_class => ScopesBuilder
+
+    def refresh_token_enabled?
+      !!@refresh_token_enabled
+    end
   end
 end

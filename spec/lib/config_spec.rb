@@ -49,4 +49,15 @@ describe Doorkeeper, "configuration" do
       subject.scopes[:public].default.should == true
     end
   end
+
+  describe "use_refresh_token" do
+    it "is false by default" do
+      subject.refresh_token_enabled?.should be_false
+    end
+
+    it "can change the value" do
+      Doorkeeper.configure { use_refresh_token }
+      subject.refresh_token_enabled?.should be_true
+    end
+  end
 end

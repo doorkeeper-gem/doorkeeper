@@ -9,7 +9,10 @@ class AccessToken < ActiveRecord::Base
 
   validates :application_id, :resource_owner_id, :token, :presence => true
 
+  attr_accessor :use_refresh_token
+
   before_validation :generate_token, :on => :create
+  before_validation :generate_refresh_token, :on => :create, :if => :use_refresh_token?
 
   def self.authorized_for(application_id, resource_owner_id)
     accessible.where(:application_id => application_id, :resource_owner_id => resource_owner_id).first
@@ -35,10 +38,22 @@ class AccessToken < ActiveRecord::Base
     self[:scopes].split(" ").map(&:to_sym)
   end
 
+  def scopes_string
+    self[:scopes]
+  end
+
+  def use_refresh_token?
+    self.use_refresh_token
+  end
+
   private
 
   def expired_time
     self.created_at + expires_in.seconds
+  end
+
+  def generate_refresh_token
+    self.refresh_token = unique_random_string_for(:refresh_token)
   end
 
   def generate_token
