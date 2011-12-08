@@ -11,6 +11,10 @@ module AccessTokenRequestHelper
     page.driver.header header, value
   end
 
+  def with_access_token_header(token)
+    page.driver.header 'Authorization', "Bearer #{token}"
+  end
+
   def response_status_should_be(status)
     page.driver.response.status.to_i.should == status
   end
