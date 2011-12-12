@@ -18,7 +18,7 @@ module Doorkeeper
 
     class Builder
       def initialize(&block)
-        @config = Config.new(self)
+        @config = Config.new
         instance_eval(&block)
       end
 
@@ -89,12 +89,6 @@ module Doorkeeper
     end
 
     extend Option
-
-    attr_accessor :builder
-
-    def initialize(builder)
-      @builder = builder
-    end
 
     option :resource_owner_authenticator, :as      => :authenticate_resource_owner
     option :admin_authenticator,          :as      => :authenticate_admin
