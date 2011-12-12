@@ -27,9 +27,7 @@ feature 'Private API' do
   end
 
   scenario 'access token with no scopes' do
-    Doorkeeper.configuration.builder.authorization_scopes do
-      scope :admin, :description => "admin"
-    end
+    scope_exist :admin, :description => "admin"
     @token.update_attribute :scopes, nil
     with_access_token_header @token.token
     visit '/full_protected_resources/1.json'
