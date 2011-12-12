@@ -34,8 +34,7 @@ module Doorkeeper::OAuth
     end
 
     def access_token_exists?
-      token = AccessToken.accessible.where(:application_id => client.id, :resource_owner_id => resource_owner.id)
-      !token.first.nil?
+      access_token.present? && access_token_scope_matches?
     end
 
     def deny
@@ -110,6 +109,14 @@ module Doorkeeper::OAuth
 
     def validate_scope
       scope.present? && scope !~ /[\n|\r|\t]/ && scope.split(" ").all? { |s| Doorkeeper.configuration.scopes.exists?(s) }
+    end
+
+    def access_token
+      AccessToken.accessible.where(:application_id => client.id, :resource_owner_id => resource_owner.id).first
+    end
+
+    def access_token_scope_matches?
+      access_token.scopes - scope.split(" ").map(&:to_sym) == []
     end
   end
 end
