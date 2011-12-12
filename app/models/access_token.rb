@@ -35,7 +35,8 @@ class AccessToken < ActiveRecord::Base
   end
 
   def scopes
-    self[:scopes].split(" ").map(&:to_sym)
+    scope_string = self[:scopes] || ""
+    scope_string.split(" ").map(&:to_sym)
   end
 
   def scopes_string
