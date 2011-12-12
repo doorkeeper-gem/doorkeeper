@@ -14,6 +14,10 @@ module Doorkeeper::OAuth
       }
     end
 
+    before :each do
+      Doorkeeper.stub_chain(:configuration, :scopes, :exists?).and_return(true)
+    end
+
     describe "with valid attributes" do
       subject { AuthorizationRequest.new(resource_owner, attributes) }
 
@@ -41,11 +45,9 @@ module Doorkeeper::OAuth
 
       describe :scopes  do
         it "returns scopes objects returned by Doorkeeper::Scopes with names specified by scopes" do
-          scopes = double(Array)
           scopes_object = double(Doorkeeper::Scopes)
-          scopes_object.should_receive(:with_names).with("public", "write").and_return(scopes)
-          Doorkeeper.stub_chain(:configuration, :scopes).and_return(scopes_object)
-          subject.scopes.should == scopes
+          Doorkeeper.stub_chain(:configuration, :scopes, :with_names).with("public", "write").and_return(scopes_object)
+          subject.scopes.should == scopes_object
         end
       end
 
@@ -64,7 +66,6 @@ module Doorkeeper::OAuth
         it "returns object thath has scopes attribtue same as scope attribute of authorization request" do
           subject.scopes == authorization_request.scope
         end
-
       end
 
     end
@@ -74,7 +75,6 @@ module Doorkeeper::OAuth
         Doorkeeper.stub_chain(:configuration, :default_scope_string).and_return("public email")
         request = AuthorizationRequest.new(resource_owner, attributes.except(:scope))
         request.scope.should == "public email"
-
       end
     end
 
@@ -105,7 +105,16 @@ module Doorkeeper::OAuth
         its(:error) { should == :unsupported_response_type }
       end
 
-      [nil, "", " ", "\r\n", "\t", "\rsth\n"].each do |invalid_value|
+      describe "when :scope contains scopes that are note registered in the provider" do
+        before :each do
+          Doorkeeper.stub_chain(:configuration, :scopes, :exists?).and_return(false)
+        end
+
+        subject     { auth(attributes.merge(:scope => "public strange")) }
+        its(:error) { should == :invalid_scope }
+      end
+
+      ["", " ", "\r\n", "\t", "\rsth\n"].each do |invalid_value|
         describe "when :scope has #{invalid_value.inspect}" do
           subject     { auth(attributes.merge(:scope => invalid_value)) }
           its(:error) { should == :invalid_scope }

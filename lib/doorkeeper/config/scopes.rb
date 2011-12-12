@@ -17,6 +17,10 @@ module Doorkeeper
       end.first
     end
 
+    def exists? (scope)
+      self[scope].present?
+    end
+
     def add (scope)
       raise IllegalElement unless valid_element?(scope)
       @scopes << scope
