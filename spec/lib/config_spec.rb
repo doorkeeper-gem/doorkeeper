@@ -48,6 +48,14 @@ describe Doorkeeper, "configuration" do
       subject.scopes[:public].description.should == "Public"
       subject.scopes[:public].default.should == true
     end
+
+    it "returns empty Scopes collection if no scopes were defined" do
+      Doorkeeper.configure do
+      end
+
+      subject.scopes.should be_a(Doorkeeper::Scopes)
+      subject.scopes.all.should == []
+    end
   end
 
   describe "use_refresh_token" do
