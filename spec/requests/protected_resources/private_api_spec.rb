@@ -25,4 +25,14 @@ feature 'Private API' do
     visit '/full_protected_resources'
     response_status_should_be 401
   end
+
+  scenario 'access token with no scopes' do
+    Doorkeeper.configuration.builder.authorization_scopes do
+      scope :admin, :description => "admin"
+    end
+    @token.update_attribute :scopes, nil
+    with_access_token_header @token.token
+    visit '/full_protected_resources/1.json'
+    response_status_should_be 401
+  end
 end

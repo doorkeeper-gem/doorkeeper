@@ -99,7 +99,7 @@ module Doorkeeper
     option :resource_owner_authenticator, :as      => :authenticate_resource_owner
     option :admin_authenticator,          :as      => :authenticate_admin
     option :access_token_expires_in,      :default => 7200
-    option :authorization_scopes,         :as      => :scopes, :builder_class => ScopesBuilder
+    option :authorization_scopes,         :as      => :scopes, :builder_class => ScopesBuilder, :default => Scopes.new
 
     def refresh_token_enabled?
       !!@refresh_token_enabled

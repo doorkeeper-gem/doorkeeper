@@ -1,5 +1,6 @@
 class FullProtectedResourcesController < ApplicationController
-  doorkeeper_for :all
+  doorkeeper_for :index
+  doorkeeper_for :show, :scopes => [:admin]
 
   def index
     render :text => "index"
