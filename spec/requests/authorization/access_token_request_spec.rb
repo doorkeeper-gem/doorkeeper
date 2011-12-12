@@ -13,6 +13,9 @@ feature "Access Token Request" do
     token.should_not be_nil
     token.scopes.should == [:public]
 
+    should_have_header 'Pragma', 'no-cache'
+    should_have_header 'Cache-Control', 'no-store'
+
     parsed_response.should_not have_key('error')
 
     parsed_response['access_token'].should  == token.token
@@ -26,6 +29,9 @@ feature "Access Token Request" do
 
     token = AccessToken.where(:application_id => @client.id).first
     token.should be_nil
+
+    should_have_header 'Pragma', 'no-cache'
+    should_have_header 'Cache-Control', 'no-store'
 
     parsed_response.should_not have_key('access_token')
     parsed_response['error'].should == 'invalid_grant'
