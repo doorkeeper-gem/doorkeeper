@@ -40,8 +40,22 @@ feature "Refresh token" do
       @token.reload.should be_revoked
     end
 
+    scenario "client request a token with expired access token" do
+      @token.update_attribute :expires_in, -100
+      post refresh_token_endpoint_url(:client => @client, :refresh_token => @token.refresh_token)
+      parsed_response['refresh_token'].should_not be_nil
+      @token.reload.should be_revoked
+    end
+
     scenario "client gets an error for invalid refresh token" do
       post refresh_token_endpoint_url(:client => @client, :refresh_token => "invalid")
+      parsed_response['error'].should == "invalid_grant"
+      parsed_response['refresh_token'].should be_nil
+    end
+
+    scenario "client gets an error for revoked acccess token" do
+      @token.revoke
+      post refresh_token_endpoint_url(:client => @client, :refresh_token => @token.refresh_token)
       parsed_response['error'].should == "invalid_grant"
       parsed_response['refresh_token'].should be_nil
     end

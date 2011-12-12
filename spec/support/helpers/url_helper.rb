@@ -26,7 +26,6 @@ module UrlHelper
       :refresh_token => options[:refresh_token],
       :client_id     => options[:client_id]     || options[:client].uid,
       :client_secret => options[:client_secret] || options[:client].secret,
-      :redirect_uri  => options[:redirect_uri]  || options[:client].redirect_uri,
       :grant_type    => options[:grant_type]    || "refresh_token",
     }
     "/oauth/token?#{build_query(parameters)}"

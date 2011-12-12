@@ -111,7 +111,8 @@ module Doorkeeper::OAuth
     end
 
     def validate_grant
-      base_token && base_token.accessible? && base_token.application_id == client.id
+      return false unless base_token && base_token.application_id == client.id
+      refresh_token? ? !base_token.revoked? : base_token.accessible?
     end
 
     def validate_redirect_uri
