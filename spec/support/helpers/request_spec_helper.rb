@@ -26,6 +26,10 @@ module RequestSpecHelper
   def current_uri
     URI.parse(page.current_url)
   end
+
+  def should_have_header(header, value)
+    headers[header].should == value
+  end
 end
 
 RSpec.configuration.send :include, RequestSpecHelper, :type => :request
