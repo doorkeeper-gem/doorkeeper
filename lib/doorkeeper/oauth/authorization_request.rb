@@ -116,7 +116,7 @@ module Doorkeeper::OAuth
     end
 
     def access_token_scope_matches?
-      access_token.scopes - scope.split(" ").map(&:to_sym) == []
+      (access_token.scopes - scope.split(" ").map(&:to_sym)).empty?
     end
   end
 end
