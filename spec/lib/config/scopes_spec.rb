@@ -53,6 +53,29 @@ module Doorkeeper
       end
     end
 
+    describe :exists do
+      subject do
+        Scopes.new.tap do |scopes|
+          scopes.add scope_double("public", false)
+        end
+      end
+
+      it 'returns true if scope with given name is present' do
+        subject.exists?("public").should be_true
+      end
+
+      it 'returns false if scope with given name does not exist' do
+        subject.exists?("other").should be_false
+      end
+
+      it 'handles symbols and strings' do
+        subject.exists?(:public).should be_true
+        subject.exists?("public").should be_true
+        subject.exists?(:other).should be_false
+        subject.exists?("other").should be_false
+      end
+    end
+
     describe :all do
       let :scopes_array do
         create_scopes_array "scope1", true,

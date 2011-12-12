@@ -109,7 +109,7 @@ module Doorkeeper::OAuth
     end
 
     def validate_scope
-      scope.present? && scope !~ /[\n|\r|\t]/
+      scope.present? && scope !~ /[\n|\r|\t]/ && scope.split(" ").all? { |s| Doorkeeper.configuration.scopes.exists?(s) }
     end
   end
 end
