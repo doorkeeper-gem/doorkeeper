@@ -38,8 +38,8 @@ feature 'Authorization endpoint' do
     background do
       create_resource_owner
       sign_in
-      scope_exists :public, :default => true, :description => "Access your public data"
-      scope_exists :write,  :description => "Update your data"
+      default_scopes_exist  :public
+      optional_scopes_exist :write
     end
 
     scenario "displays default scopes when no scope was requested" do

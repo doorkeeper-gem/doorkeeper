@@ -53,9 +53,9 @@ module Doorkeeper
     describe '.matching_token_for' do
       let(:resource_owner_id) { 100 }
       let(:application)       { FactoryGirl.create :application }
-      let(:scopes)            { "public write" }
+      let(:scopes)            { Doorkeeper::OAuth::Scopes.from_string("public write") }
       let(:default_attributes) do
-        { :application => application, :resource_owner_id => resource_owner_id, :scopes => scopes }
+        { :application => application, :resource_owner_id => resource_owner_id, :scopes => scopes.to_s }
       end
 
       it 'returns only one token' do

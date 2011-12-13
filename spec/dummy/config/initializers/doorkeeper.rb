@@ -21,14 +21,14 @@ Doorkeeper.configure do
   #   Admin.find_by_id(session[:admin_id]) || redirect_to(routes.new_admin_session_url)
   # end
 
-  authorization_scopes do
-    scope :public, :default => true, :description => "The public one"
-    scope :write, :description => "Updating information"
-  end
-
   # Access token expiration time (default 2 hours)
   # access_token_expires_in 2.hours
 
   # Issue access tokens with refresh token (disabled by default)
   use_refresh_token
+
+  # Define access token scopes for your provider
+  # For more information go to https://github.com/applicake/doorkeeper/wiki/Using-Scopes
+  default_scopes  :public
+  optional_scopes :write, :update
 end
