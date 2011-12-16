@@ -5,6 +5,7 @@
 
 
 <div class="span16">
+  <% if @authorization.scopes %>
   <p>
     This application will be able to:
   </p>
@@ -13,6 +14,7 @@
       <li><%= scope.description %></li>
     <% end %>
   </ul>
+  <% end %>
 
   <div class="inline_block">
     <%= form_tag authorization_path do %>
