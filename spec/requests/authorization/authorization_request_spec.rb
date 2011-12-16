@@ -110,3 +110,15 @@ feature "Authorization Request", "when resource owner is not authenticated" do
     i_should_be_on "/"
   end
 end
+
+feature "Authorization Request", "with no scopes" do
+  background do
+    resource_owner_is_authenticated
+    client_exists
+  end
+
+  scenario "resource owner gets redirected to authentication" do
+    visit authorization_endpoint_url(:client => @client)
+    i_should_see "Authorize"
+  end
+end

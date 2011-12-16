@@ -16,6 +16,7 @@ module Doorkeeper::OAuth
 
     before :each do
       Doorkeeper.stub_chain(:configuration, :scopes, :exists?).and_return(true)
+      Doorkeeper.stub_chain(:configuration, :scopes, :all).and_return([Doorkeeper::Scope.new(:public)])
     end
 
     describe "with valid attributes" do
@@ -81,6 +82,7 @@ module Doorkeeper::OAuth
     describe "with errors" do
       before do
         AccessGrant.should_not_receive(:create)
+        Doorkeeper.stub_chain(:configuration, :scopes, :all).and_return([Doorkeeper::Scope.new(:public)])
       end
 
       [:response_type, :client_id, :redirect_uri].each do |attribute|
