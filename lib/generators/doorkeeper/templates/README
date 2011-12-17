@@ -7,6 +7,9 @@ Go to config/initializers/doorkeeper.rb and configure
 resource_owner_authenticator block.
 
 Step 2.
+Migrate your database
+
+Step 3.
 That's it, that's all. Enjoy!
 
 ===============================================================================
