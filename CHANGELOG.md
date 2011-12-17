@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 (unreleased)
+## 0.2.0
 
 - enhancements
   - [#4] Add authorized applications endpoint
@@ -13,6 +13,7 @@
   - Refactor config class
   - Improve coverage of authorization request integration
 - bug fixes
+  - [#6, #20] Fix access token response headers
   - Fix issue with state parameter
 - deprecation
   - deprecate :only and :except options in doorkeeper_for
