@@ -62,7 +62,7 @@ module Doorkeeper::OAuth
     end
 
     def scopes
-      Doorkeeper.configuration.scopes.with_names(*scope.split(" "))
+      Doorkeeper.configuration.scopes.with_names(*scope.split(" ")) if has_scope?
     end
 
     private
@@ -79,6 +79,10 @@ module Doorkeeper::OAuth
 
     def has_state?
       state.present?
+    end
+
+    def has_scope?
+      Doorkeeper.configuration.scopes.all.present?
     end
 
     def token
@@ -108,6 +112,7 @@ module Doorkeeper::OAuth
     end
 
     def validate_scope
+      return true unless has_scope?
       scope.present? && scope !~ /[\n|\r|\t]/ && scope.split(" ").all? { |s| Doorkeeper.configuration.scopes.exists?(s) }
     end
 
