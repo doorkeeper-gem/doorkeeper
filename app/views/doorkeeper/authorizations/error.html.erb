@@ -1,1 +1,6 @@
-<p>An error has occurred</p>
+<div class="span16">
+  <h2>An error has occurred</h2>
+  <p>
+    <pre><%= t @authorization.error, :scope => [:doorkeeper, :errors, :messages] %></pre>
+  </p>
+</div>

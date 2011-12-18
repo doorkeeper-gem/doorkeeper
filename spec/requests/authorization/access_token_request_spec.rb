@@ -35,6 +35,7 @@ feature "Access Token Request" do
 
     parsed_response.should_not have_key('access_token')
     parsed_response['error'].should == 'invalid_grant'
+    parsed_response['error_description'].should == I18n.translate('doorkeeper.errors.messages.invalid_grant')
   end
 
   scenario "get error when posting an already revoked grant code" do
