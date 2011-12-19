@@ -24,7 +24,7 @@ describe 'Doorkeeper::InstallGenerator' do
       assert_file 'config/initializers/doorkeeper.rb'
     end
 
-    it "copys the locale file" do
+    it "copies the locale file" do
       assert_file 'config/locales/doorkeeper.en.yml'
     end
 
