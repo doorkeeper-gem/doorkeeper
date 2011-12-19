@@ -7,6 +7,7 @@ class Doorkeeper::InstallGenerator < Rails::Generators::Base
   def install
     migration_template 'migration.rb', 'db/migrate/create_doorkeeper_tables.rb'
     template "initializer.rb", "config/initializers/doorkeeper.rb"
+    copy_file "../../../../config/locales/en.yml", "config/locales/doorkeeper.en.yml"
     route "mount Doorkeeper::Engine => '/oauth'"
     readme "README"
   end
