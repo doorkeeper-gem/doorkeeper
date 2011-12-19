@@ -91,10 +91,18 @@ feature "Authorization Request", "when resource owner is authenticated" do
       client_should_not_be_authorized(@client)
     end
 
-    [:client_id, :redirect_uri, :response_type, :scope].each do |parameter|
-      scenario "recieves an error for invalid #{parameter}" do
+    [
+      [:client_id,     :invalid_client],
+      [:redirect_uri,  :invalid_redirect_uri],
+      [:response_type, :unsupported_response_type],
+      [:scope,         :invalid_scope]
+    ].each do |error|
+      scenario "recieves an error for invalid #{error.first}" do
+        parameter       = error.first
+        translation_key = error.last
         visit authorization_endpoint_url(:client => @client, parameter => "invalid")
         i_should_see "An error has occurred"
+        i_should_see I18n.translate translation_key, :scope => [:doorkeeper, :errors, :messages]
       end
     end
   end
