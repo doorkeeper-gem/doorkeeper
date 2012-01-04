@@ -8,6 +8,8 @@ class CreateDoorkeeperTables < ActiveRecord::Migration
       t.timestamps
     end
 
+    add_index :oauth_applications, :uid, :unique => true
+
     create_table :oauth_access_grants do |t|
       t.integer  :resource_owner_id, :null => false
       t.integer  :application_id,    :null => false
@@ -19,6 +21,8 @@ class CreateDoorkeeperTables < ActiveRecord::Migration
       t.string   :scopes
     end
 
+    add_index :oauth_access_grants, :token, :unique => true
+
     create_table :oauth_access_tokens do |t|
       t.integer  :resource_owner_id, :null => false
       t.integer  :application_id,    :null => false
@@ -29,5 +33,11 @@ class CreateDoorkeeperTables < ActiveRecord::Migration
       t.datetime :created_at,        :null => false
       t.string   :scopes
     end
+
+    add_index :oauth_access_tokens, :token, :unique => true
+    add_index :oauth_access_tokens, :resource_owner_id
+    add_index :oauth_access_tokens, [:application_id, :revoked_at, :resource_owner_id ], :name => 'index_oauth_access_tokens_on_app_id_and_others' 
+    add_index :oauth_access_tokens, :refresh_token, :unique => true
+
   end
 end
