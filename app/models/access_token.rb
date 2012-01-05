@@ -1,7 +1,7 @@
 class AccessToken < ActiveRecord::Base
   include Doorkeeper::OAuth::RandomString
 
-  set_table_name :oauth_access_tokens
+  self.table_name = :oauth_access_tokens
 
   belongs_to :application
 
