@@ -104,7 +104,11 @@ module Doorkeeper::OAuth
     end
 
     def validate_redirect_uri
-      client.redirect_uri == redirect_uri
+      uri = URI.parse(redirect_uri)
+      return false unless uri.fragment.nil?
+      return false if uri.scheme.nil?
+      return false if uri.host.nil?
+      client.is_matching_redirect_uri?(redirect_uri)
     end
 
     def validate_response_type
