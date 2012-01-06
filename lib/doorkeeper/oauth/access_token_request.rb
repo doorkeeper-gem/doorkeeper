@@ -34,7 +34,7 @@ module Doorkeeper::OAuth
     def authorization
       auth = {
         'access_token' => access_token.token,
-        'token_type'   => token_type,
+        'token_type'   => access_token.token_type,
         'expires_in'   => access_token.expires_in,
       }
       auth.merge!({'refresh_token' => access_token.refresh_token}) if refresh_token_enabled?
