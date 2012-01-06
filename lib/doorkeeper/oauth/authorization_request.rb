@@ -30,27 +30,32 @@ module Doorkeeper::OAuth
     end
 
     def authorize
-      create_authorization if valid?
+      return false unless valid?
+      if is_code_request?
+        create_access_grant_for_code_request
+      elsif is_token_request?
+        create_access_token_for_token_request
+      end
     end
 
     def access_token_exists?
-      access_token.present? && access_token_scope_matches?
+      access_token.present? && access_token.accessible? && access_token_scope_matches?
     end
 
     def deny
       self.error = :access_denied
     end
 
-    def success_redirect_uri
+    def success_redirect_uri_for_code_request
       build_uri do |uri|
         query = uri.query.nil? ? "" : uri.query + "&"
-        query << "code=#{token}"
+        query << "code=#{authorization_code}"
         query << "&state=#{state}" if has_state?
         uri.query = query
       end
     end
 
-    def invalid_redirect_uri
+    def invalid_redirect_uri_for_code_request
       build_uri do |uri|
         query = uri.query.nil? ? "" : uri.query + "&"
         query << "error=#{error}"
@@ -58,6 +63,41 @@ module Doorkeeper::OAuth
         uri.query = query
       end
     end
+
+    def success_redirect_uri_for_token_request
+      build_uri do |uri|
+        fragment = "access_token=#{access_token.token}"
+        fragment << "&token_type=#{access_token.token_type}"
+        fragment << "&expires_in=#{access_token.time_left}"
+        fragment << "&state=#{state}" if has_state?
+        uri.fragment = fragment
+      end
+    end
+
+    def invalid_redirect_uri_for_token_request
+      build_uri do |uri|
+        fragment = "error=#{error}"
+        fragment << "&state=#{state}" if has_state?
+        uri.fragment = fragment
+      end
+    end
+
+    def success_redirect_uri
+      if is_code_request?
+        success_redirect_uri_for_code_request
+      elsif is_token_request?
+        success_redirect_uri_for_token_request
+      end
+    end
+
+    def invalid_redirect_uri
+      if is_code_request?
+        invalid_redirect_uri_for_code_request
+      elsif is_token_request?
+        invalid_redirect_uri_for_token_request
+      end
+    end
+
 
     def client
       @client ||= Application.find_by_uid(client_id)
@@ -69,7 +109,7 @@ module Doorkeeper::OAuth
 
     private
 
-    def create_authorization
+    def create_access_grant_for_code_request
       @grant = AccessGrant.create!(
         :application_id    => client.id,
         :resource_owner_id => resource_owner.id,
@@ -87,12 +127,12 @@ module Doorkeeper::OAuth
       Doorkeeper.configuration.scopes.all.present?
     end
 
-    def token
+    def authorization_code
       @grant.token
     end
 
     def build_uri
-      uri = URI.parse(redirect_uri)
+      uri = URI.parse(redirect_uri || client.redirect_uri)
       yield uri
       uri.to_s
     end
@@ -114,12 +154,20 @@ module Doorkeeper::OAuth
     end
 
     def validate_response_type
-      response_type == "code"
+      is_code_request? || is_token_request?
     end
 
     def validate_scope
       return true unless has_scope?
       scope.present? && scope !~ /[\n|\r|\t]/ && scope.split(" ").all? { |s| Doorkeeper.configuration.scopes.exists?(s) }
+    end
+
+    def is_code_request?
+      response_type == "code"
+    end
+
+    def is_token_request?
+      response_type == "token"
     end
 
     def access_token
@@ -129,5 +177,24 @@ module Doorkeeper::OAuth
     def access_token_scope_matches?
       (access_token.scopes - scope.split(" ").map(&:to_sym)).empty?
     end
+
+    def create_access_token_for_token_request
+      if access_token_exists?
+        access_token
+      else
+        AccessToken.create!({
+          :application_id    => client.id,
+          :resource_owner_id => resource_owner.id,
+          :scopes            => scope,
+          :expires_in        => configuration.access_token_expires_in,
+          :use_refresh_token => false
+        }) 
+      end
+    end
+
+    def configuration
+      Doorkeeper.configuration
+    end
+
   end
 end
