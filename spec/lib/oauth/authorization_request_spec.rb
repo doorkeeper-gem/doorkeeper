@@ -71,6 +71,39 @@ module Doorkeeper::OAuth
 
     end
 
+    describe "with a redirect_uri with query params" do
+      let(:original_query_params) { "abc=123&def=456" }
+      let(:attributes_with_query_params) { 
+        u = URI.parse(client.redirect_uri)
+        u.query = original_query_params
+        attributes[:redirect_uri] = u.to_s
+        attributes
+      }
+      subject { AuthorizationRequest.new(resource_owner, attributes_with_query_params) }
+
+      describe "after authorization" do
+        before { subject.authorize }
+
+        describe ".success_redirect_uri" do
+          let(:query) { URI.parse(subject.success_redirect_uri).query }
+
+          it "includes the grant code" do
+            query.should =~ %r{code=\w+}
+          end
+
+          it "includes the state previous assumed" do
+            query.should =~ %r{state=return-this}
+          end
+
+          it "preserves the original query parameters" do
+            query.should =~ Regexp.new(original_query_params)
+          end
+
+        end
+
+      end
+    end
+
     describe "if no scope given" do
       it "sets the scope to the default one" do
         Doorkeeper.stub_chain(:configuration, :default_scope_string).and_return("public email")

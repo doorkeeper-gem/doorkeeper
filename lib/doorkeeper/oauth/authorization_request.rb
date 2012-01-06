@@ -43,7 +43,8 @@ module Doorkeeper::OAuth
 
     def success_redirect_uri
       build_uri do |uri|
-        query = "code=#{token}"
+        query = uri.query.nil? ? "" : uri.query + "&"
+        query << "code=#{token}"
         query << "&state=#{state}" if has_state?
         uri.query = query
       end
@@ -51,7 +52,8 @@ module Doorkeeper::OAuth
 
     def invalid_redirect_uri
       build_uri do |uri|
-        query = "error=#{error}"
+        query = uri.query.nil? ? "" : uri.query + "&"
+        query << "error=#{error}"
         query << "&state=#{state}" if has_state?
         uri.query = query
       end
@@ -90,7 +92,7 @@ module Doorkeeper::OAuth
     end
 
     def build_uri
-      uri = URI.parse(client.redirect_uri)
+      uri = URI.parse(redirect_uri)
       yield uri
       uri.to_s
     end
