@@ -130,6 +130,26 @@ module Doorkeeper::OAuth
         its(:error) { should == :invalid_client }
       end
 
+      describe "when :redirect_uri has a fragment" do
+        it "should produce an invalid_redirect_uri error "do
+          new_client = Application.find_by_uid(client.uid)
+          Application.should_receive(:find_by_uid).with(client.uid).and_return(new_client)
+          new_client.should_not_receive(:is_matching_redirect_uri?)
+          subject = auth(attributes.merge(:redirect_uri => client.redirect_uri + "#xyz"))
+          subject.error.should == :invalid_redirect_uri 
+        end
+      end
+
+      describe "when :redirect_uri is a relative URI" do
+        it "should produce an invalid_redirect_uri error "do
+          new_client = Application.find_by_uid(client.uid)
+          Application.should_receive(:find_by_uid).with(client.uid).and_return(new_client)
+          new_client.should_not_receive(:is_matching_redirect_uri?)
+          subject = auth(attributes.merge(:redirect_uri => "/abcdef"))
+          subject.error.should == :invalid_redirect_uri 
+        end
+      end
+
       describe "when :redirect_uri mismatches" do
         subject     { auth(attributes.merge(:redirect_uri => "mismatch")) }
         its(:error) { should == :invalid_redirect_uri }
