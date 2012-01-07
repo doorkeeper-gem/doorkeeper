@@ -1,7 +1,7 @@
 class Application < ActiveRecord::Base
   include Doorkeeper::OAuth::RandomString
 
-  set_table_name :oauth_applications
+  self.table_name = :oauth_applications
 
   has_many :access_grants
   has_many :authorized_tokens, :class_name => "AccessToken", :conditions => { :revoked_at => nil }
