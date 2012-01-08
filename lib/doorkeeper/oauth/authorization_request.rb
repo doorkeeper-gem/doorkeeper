@@ -12,9 +12,9 @@ module Doorkeeper::OAuth
       :state
     ]
 
-    validate :attributes,    :error => :invalid_request
     validate :client,        :error => :invalid_client
     validate :redirect_uri,  :error => :invalid_redirect_uri
+    validate :attributes,    :error => :invalid_request
     validate :response_type, :error => :unsupported_response_type
     validate :scope,         :error => :invalid_scope
 
@@ -59,6 +59,7 @@ module Doorkeeper::OAuth
       build_uri do |uri|
         query = uri.query.nil? ? "" : uri.query + "&"
         query << "error=#{error}"
+        query << "&error_description=#{CGI::escape(error_description)}"
         query << "&state=#{state}" if has_state?
         uri.query = query
       end
@@ -77,6 +78,7 @@ module Doorkeeper::OAuth
     def invalid_redirect_uri_for_token_request
       build_uri do |uri|
         fragment = "error=#{error}"
+        fragment << "&error_description=#{CGI::escape(error_description)}"
         fragment << "&state=#{state}" if has_state?
         uri.fragment = fragment
       end
@@ -91,13 +93,16 @@ module Doorkeeper::OAuth
     end
 
     def invalid_redirect_uri
-      if is_code_request?
-        invalid_redirect_uri_for_code_request
-      elsif is_token_request?
+      if is_token_request?
         invalid_redirect_uri_for_token_request
+      else
+        invalid_redirect_uri_for_code_request
       end
     end
 
+    def redirect_on_error?
+      (error != :invalid_redirect_uri) && (error != :invalid_client)
+    end
 
     def client
       @client ||= Application.find_by_uid(client_id)
@@ -138,7 +143,7 @@ module Doorkeeper::OAuth
     end
 
     def validate_attributes
-      %w(response_type client_id redirect_uri).all? { |attr| send(attr).present? }
+      response_type.present?
     end
 
     def validate_client
@@ -146,11 +151,13 @@ module Doorkeeper::OAuth
     end
 
     def validate_redirect_uri
-      uri = URI.parse(redirect_uri)
-      return false unless uri.fragment.nil?
-      return false if uri.scheme.nil?
-      return false if uri.host.nil?
-      client.is_matching_redirect_uri?(redirect_uri)
+      if redirect_uri  
+        uri = URI.parse(redirect_uri)
+        return false unless uri.fragment.nil?
+        return false if uri.scheme.nil?
+        return false if uri.host.nil?
+        client.is_matching_redirect_uri?(redirect_uri)
+      end
     end
 
     def validate_response_type
@@ -190,6 +197,10 @@ module Doorkeeper::OAuth
           :use_refresh_token => false
         }) 
       end
+    end
+
+    def error_description
+      I18n.translate error, :scope => [:doorkeeper, :errors, :messages]
     end
 
     def configuration

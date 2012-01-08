@@ -7,6 +7,8 @@ class Doorkeeper::AuthorizationsController < Doorkeeper::ApplicationController
         authorization.authorize
         redirect_to authorization.success_redirect_uri
       end
+    elsif authorization.redirect_on_error?
+      redirect_to authorization.invalid_redirect_uri
     else
       render :error
     end

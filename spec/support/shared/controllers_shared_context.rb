@@ -51,7 +51,7 @@ end
 
 shared_context "invalid authorization request" do
   let :authorization do
-    double(:authorization, :valid? => false, :authorize => false)
+    double(:authorization, :valid? => false, :authorize => false, :redirect_on_error? => false)
   end
 
   before do

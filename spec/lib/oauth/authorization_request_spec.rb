@@ -120,11 +120,21 @@ module Doorkeeper::OAuth
           Doorkeeper.stub_chain(:configuration, :scopes, :all).and_return([Doorkeeper::Scope.new(:public)])
         end
 
-        [:response_type, :client_id, :redirect_uri].each do |attribute|
+        [:response_type].each do |attribute|
           describe "when :#{attribute} is missing" do
             subject     { auth(attributes.except(attribute)) }
             its(:error) { should == :invalid_request }
           end
+        end
+
+        describe "when :redirect_uri is missing" do
+          subject     { auth(attributes.except(:redirect_uri)) }
+          its(:error) { should == :invalid_redirect_uri }
+        end
+
+        describe "when :client_id is missing" do
+          subject     { auth(attributes.except(:client_id)) }
+          its(:error) { should == :invalid_client }
         end
 
         describe "when :client_id does not match" do
@@ -259,11 +269,21 @@ module Doorkeeper::OAuth
           Doorkeeper.stub_chain(:configuration, :scopes, :all).and_return([Doorkeeper::Scope.new(:public)])
         end
 
-        [:response_type, :client_id, :redirect_uri].each do |attribute|
+        [:response_type].each do |attribute|
           describe "when :#{attribute} is missing" do
             subject     { auth(attributes.except(attribute)) }
             its(:error) { should == :invalid_request }
           end
+        end
+
+        describe "when :redirect_uri is missing" do
+          subject     { auth(attributes.except(:redirect_uri)) }
+          its(:error) { should == :invalid_redirect_uri }
+        end
+
+        describe "when :client_id is missing" do
+          subject     { auth(attributes.except(:client_id)) }
+          its(:error) { should == :invalid_client }
         end
 
         describe "when :client_id does not match" do
