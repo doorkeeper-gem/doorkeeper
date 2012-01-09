@@ -12,6 +12,7 @@ module Doorkeeper
 
 
     def validate_token(token)
+      return true unless required?
       return false unless token
       token.accessible? and validate_token_scopes(token)
     end
@@ -28,6 +29,15 @@ module Doorkeeper
     def validate_token_scopes(token)
       return true if @scopes.blank?
       token.scopes.any? { |scope| @scopes.include? scope}
+    end
+
+    def required(required)
+      @required = required
+    end
+
+    def required?
+      return true if @required.nil?
+      @required
     end
   end
 
@@ -113,8 +123,8 @@ module Doorkeeper
       token = params[:access_token] || params[:bearer_token] || request.env['HTTP_AUTHORIZATION']
       if token
         token.gsub!(/Bearer /, '')
+        AccessToken.find_by_token(token)
       end
-      AccessToken.find_by_token(token)
     end
   end
 end

@@ -196,4 +196,62 @@ describe "Doorkeeper_for helper" do
       response.status.should == 401
     end
   end
+
+  context "defined with required set to false" do
+    controller do
+      doorkeeper_for :all, :required => false
+
+      include ControllerActions
+    end
+
+    let :token_string do
+      "1A2DUWE"
+    end
+
+    it "allows if no token is specified" do
+      get :index
+      response.should be_success
+    end
+
+    it "allows if a token exists and it sets up the doorkeeper_token value" do
+      token = double(AccessToken, :accessible? => true, :scopes => [:write, :public])
+      AccessToken.should_receive(:find_by_token).with(token_string).and_return(token)
+      get :index, :access_token => token_string
+      response.should be_success
+    end
+
+  end
+
+  context "defined for all actions with required set to true" do
+    controller do
+      doorkeeper_for :all, :required => true
+
+      include ControllerActions
+    end
+
+    context "with valid token", :token => :valid do
+      it "allows into index action" do
+        get :index, :access_token => token_string
+        response.should be_success
+      end
+
+      it "allows into show action" do
+        get :show, :id => "4", :access_token => token_string
+        response.should be_success
+      end
+    end
+
+    context "with invalid token", :token => :invalid do
+      it "does not allow into index action" do
+        get :index, :access_token => token_string
+        response.status.should == 401
+      end
+
+      it "does not allow into show action" do
+        get :show, :id => "4", :access_token => token_string
+        response.status.should == 401
+      end
+    end
+  end
+
 end
