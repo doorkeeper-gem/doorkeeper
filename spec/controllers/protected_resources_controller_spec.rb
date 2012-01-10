@@ -207,7 +207,7 @@ describe "Doorkeeper_for helper" do
 
     context "with a JSON custom render", :token => :invalid do
       before do
-        controller.should_receive(:doorkeeper_unauthorized_render_options).and_return({ :json => { :error => "Unauthorized" }.to_json  } )
+        controller.should_receive(:doorkeeper_unauthorized_render_options).and_return({ :json => ActiveSupport::JSON.encode({ :error => "Unauthorized" })  } )
       end
 
       it "it renders a custom JSON response", :token => :invalid do
