@@ -60,7 +60,7 @@ describe Doorkeeper::AuthorizationsController do
       client_exists
       scope_exist(:public, :default => true, :description => "Access your public data")
       scope_exist(:write, :description => "Update your data")
-      @access_token = Factory :access_token, :application => @client, :resource_owner_id => @user.id, 
+      @access_token = Factory :access_token, :application => @client, :resource_owner_id => @user.id
     end
 
     it "returns the existing access token in a fragment" do
