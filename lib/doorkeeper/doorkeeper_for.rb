@@ -101,6 +101,7 @@ module Doorkeeper
             head :unauthorized
           else
             render_options[:status] = :unauthorized
+            render_options[:layout] = false if render_options[:layout].nil?
             render render_options
           end
         end
