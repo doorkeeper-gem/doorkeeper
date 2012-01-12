@@ -90,6 +90,7 @@ describe "Doorkeeper_for helper" do
     end
 
     it "Authorization header" do
+      AccessToken.should_receive(:find_by_token).with(token_string)
       request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
       get :index
     end
@@ -196,4 +197,44 @@ describe "Doorkeeper_for helper" do
       response.status.should == 401
     end
   end
+
+  context "when custom unauthorized render options are configured" do
+    controller do
+      doorkeeper_for :all
+
+      include ControllerActions
+    end
+
+    context "with a JSON custom render", :token => :invalid do
+      before do
+        controller.should_receive(:doorkeeper_unauthorized_render_options).and_return({ :json => ActiveSupport::JSON.encode({ :error => "Unauthorized" })  } )
+      end
+
+      it "it renders a custom JSON response", :token => :invalid do
+        get :index, :access_token => token_string
+        response.status.should == 401
+        response.content_type.should == 'application/json'
+        parsed_body = JSON.parse(response.body)
+        parsed_body.should_not be_nil
+        parsed_body['error'].should == 'Unauthorized'
+      end
+
+    end
+
+    context "with a text custom render", :token => :invalid do
+      before do
+        controller.should_receive(:doorkeeper_unauthorized_render_options).and_return({ :text => "Unauthorized"  } )
+      end
+
+      it "it renders a custom JSON response", :token => :invalid do
+        get :index, :access_token => token_string
+        response.status.should == 401
+        response.content_type.should == 'text/html'
+        response.body.should == 'Unauthorized'
+      end
+
+    end
+
+  end
+
 end
