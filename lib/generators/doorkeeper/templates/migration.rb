@@ -36,7 +36,6 @@ class CreateDoorkeeperTables < ActiveRecord::Migration
 
     add_index :oauth_access_tokens, :token, :unique => true
     add_index :oauth_access_tokens, :resource_owner_id
-    add_index :oauth_access_tokens, [:application_id, :revoked_at, :resource_owner_id ], :name => 'index_oauth_access_tokens_on_app_id_and_others' 
     add_index :oauth_access_tokens, :refresh_token, :unique => true
 
   end
