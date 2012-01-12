@@ -18,6 +18,10 @@ class AccessToken < ActiveRecord::Base
     accessible.where(:application_id => application_id, :resource_owner_id => resource_owner_id).first
   end
 
+  def token_type
+    "bearer"
+  end
+
   def revoke
     update_attribute :revoked_at, DateTime.now
   end
@@ -28,6 +32,11 @@ class AccessToken < ActiveRecord::Base
 
   def expired?
     expires_in.present? && Time.now > expired_time
+  end
+
+  def time_left
+    time_left = (expired_time - Time.now)
+    time_left > 0 ? time_left : 0
   end
 
   def accessible?

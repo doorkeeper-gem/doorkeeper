@@ -33,6 +33,18 @@ module AuthorizationRequestHelper
   def i_should_be_on_client_callback(client)
     client.redirect_uri.should == "#{current_uri.scheme}://#{current_uri.host}#{current_uri.path}"
   end
+
+  def parse_fragment_params(uri)
+    params = {}
+    return params unless uri
+    fragment = URI.parse(uri).fragment
+    pairs = fragment.split('&')
+    pairs.each do |pair|
+      key, value = pair.split('=')
+      params[key] = CGI.unescape(value) if key && value
+    end
+    params
+  end
 end
 
 RSpec.configuration.send :include, AuthorizationRequestHelper, :type => :request
