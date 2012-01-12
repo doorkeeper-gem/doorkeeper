@@ -95,7 +95,15 @@ module Doorkeeper
         doorkeeper_for = DoorkeeperForBuilder.create_doorkeeper_for(*args)
 
         before_filter doorkeeper_for.filter_options do
-          head :unauthorized unless doorkeeper_for.validate_token(doorkeeper_token)
+          return if doorkeeper_for.validate_token(doorkeeper_token)
+          render_options = doorkeeper_unauthorized_render_options
+          if render_options.nil? || render_options.empty?
+            head :unauthorized
+          else
+            render_options[:status] = :unauthorized
+            render_options[:layout] = false if render_options[:layout].nil?
+            render render_options
+          end
         end
       end
     end
@@ -113,8 +121,12 @@ module Doorkeeper
       token = params[:access_token] || params[:bearer_token] || request.env['HTTP_AUTHORIZATION']
       if token
         token.gsub!(/Bearer /, '')
+        AccessToken.find_by_token(token)
       end
-      AccessToken.find_by_token(token)
+    end
+
+    def doorkeeper_unauthorized_render_options
+      nil
     end
   end
 end
