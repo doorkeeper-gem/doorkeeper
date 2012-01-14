@@ -66,6 +66,10 @@ module Doorkeeper::OAuth
       Doorkeeper.configuration.scopes.with_names(*scope.split(" ")) if has_scope?
     end
 
+    def access_token
+      AccessToken.authorized_for(client.id, resource_owner.id)
+    end
+
     private
 
     def has_scope?
@@ -105,10 +109,6 @@ module Doorkeeper::OAuth
 
     def is_token_request?
       response_type == "token"
-    end
-
-    def access_token
-      AccessToken.accessible.where(:application_id => client.id, :resource_owner_id => resource_owner.id).first
     end
 
     def access_token_scope_matches?

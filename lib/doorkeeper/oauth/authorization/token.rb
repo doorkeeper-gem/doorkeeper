@@ -4,7 +4,7 @@ module Doorkeeper
       class Token
         include URIBuilder
 
-        attr_accessor :authorization
+        attr_accessor :authorization, :access_token
 
         def initialize(authorization)
           @authorization = authorization
@@ -20,8 +20,8 @@ module Doorkeeper
         end
 
         def issue_token
-          if access_token_exists?
-            access_token
+          @access_token ||= if authorization.access_token_exists?
+            authorization.access_token
           else
             AccessToken.create!({
               :application_id    => authorization.client.id,
@@ -31,18 +31,6 @@ module Doorkeeper
               :use_refresh_token => false
             })
           end
-        end
-
-        def access_token_exists?
-          access_token.present? && access_token.accessible? && access_token_scope_matches?
-        end
-
-        def access_token_scope_matches?
-          (access_token.scopes - authorization.scope.split(" ").map(&:to_sym)).empty?
-        end
-
-        def access_token
-          AccessToken.accessible.where(:application_id => authorization.client.id, :resource_owner_id => authorization.resource_owner.id).first
         end
 
         def configuration
