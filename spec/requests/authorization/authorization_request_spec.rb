@@ -1,4 +1,4 @@
-require "spec_helper"
+require 'spec_helper_integration'
 
 feature "Authorization Request", "when resource owner is authenticated" do
   background do

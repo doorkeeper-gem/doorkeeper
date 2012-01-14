@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'spec_helper_integration'
 
 describe AccessToken do
   subject { Factory.build(:access_token) }

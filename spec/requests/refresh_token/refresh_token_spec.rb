@@ -1,4 +1,4 @@
-require "spec_helper"
+require 'spec_helper_integration'
 
 feature "Refresh token" do
   before do
