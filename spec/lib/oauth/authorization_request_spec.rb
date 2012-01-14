@@ -75,13 +75,15 @@ module Doorkeeper::OAuth
 
       describe "with a redirect_uri with query params" do
         let(:original_query_params) { "abc=123&def=456" }
-        let(:attributes_with_query_params) { 
+        let(:attributes_with_query_params) {
           u = URI.parse(client.redirect_uri)
           u.query = original_query_params
           attributes[:redirect_uri] = u.to_s
           attributes
         }
         subject { AuthorizationRequest.new(resource_owner, attributes_with_query_params) }
+
+        it "preservers the original query when error"
 
         describe "after authorization" do
           before { subject.authorize }
@@ -297,7 +299,7 @@ module Doorkeeper::OAuth
           Application.should_receive(:find_by_uid).with(client.uid).and_return(new_client)
           new_client.should_not_receive(:is_matching_redirect_uri?)
           subject = auth(attributes.merge(:redirect_uri => client.redirect_uri + "#xyz"))
-          subject.error.should == :invalid_redirect_uri 
+          subject.error.should == :invalid_redirect_uri
         end
       end
 
@@ -307,7 +309,7 @@ module Doorkeeper::OAuth
           Application.should_receive(:find_by_uid).with(client.uid).and_return(new_client)
           new_client.should_not_receive(:is_matching_redirect_uri?)
           subject = auth(attributes.merge(:redirect_uri => "/abcdef"))
-          subject.error.should == :invalid_redirect_uri 
+          subject.error.should == :invalid_redirect_uri
         end
       end
 

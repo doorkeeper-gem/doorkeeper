@@ -3,8 +3,6 @@ module Doorkeeper::OAuth
     include Doorkeeper::Validations
     include Doorkeeper::OAuth::Authorization::URIBuilder
 
-    DEFAULT_EXPIRATION_TIME = 600
-
     ATTRIBUTES = [
       :response_type,
       :client_id,
@@ -31,11 +29,14 @@ module Doorkeeper::OAuth
     end
 
     def authorize
-      return false unless valid?
       if is_code_request?
-        create_access_grant_for_code_request
+        @authorization = Doorkeeper::OAuth::Authorization::Code.new(client, resource_owner, redirect_uri, scope, state)
+        return false unless valid?
+        @authorization.issue_token
       elsif is_token_request?
-        create_access_token_for_token_request
+        @authorization = Doorkeeper::OAuth::Authorization::Token.new(client, resource_owner, redirect_uri, scope, state)
+        return false unless valid?
+        @authorization.issue_token
       end
     end
 
@@ -47,26 +48,10 @@ module Doorkeeper::OAuth
       self.error = :access_denied
     end
 
-    def success_redirect_uri_for_code_request
-      uri_with_query(redirect_uri, {
-        :code  => authorization_code,
-        :state => state
-      })
-    end
-
     def invalid_redirect_uri_for_code_request
       uri_with_query(redirect_uri, {
         :error => error,
         :error_description => error_description,
-        :state => state
-      })
-    end
-
-    def success_redirect_uri_for_token_request
-      uri_with_fragment(redirect_uri, {
-        :access_token => access_token.token,
-        :token_type => access_token.token_type,
-        :expires_in => access_token.time_left,
         :state => state
       })
     end
@@ -80,11 +65,7 @@ module Doorkeeper::OAuth
     end
 
     def success_redirect_uri
-      if is_code_request?
-        success_redirect_uri_for_code_request
-      elsif is_token_request?
-        success_redirect_uri_for_token_request
-      end
+      @authorization.callback
     end
 
     def invalid_redirect_uri
@@ -108,16 +89,6 @@ module Doorkeeper::OAuth
     end
 
     private
-
-    def create_access_grant_for_code_request
-      @grant = AccessGrant.create!(
-        :application_id    => client.id,
-        :resource_owner_id => resource_owner.id,
-        :expires_in        => DEFAULT_EXPIRATION_TIME,
-        :redirect_uri      => redirect_uri,
-        :scopes            => scope
-      )
-    end
 
     def has_state?
       state.present?
@@ -172,20 +143,6 @@ module Doorkeeper::OAuth
 
     def access_token_scope_matches?
       (access_token.scopes - scope.split(" ").map(&:to_sym)).empty?
-    end
-
-    def create_access_token_for_token_request
-      if access_token_exists?
-        access_token
-      else
-        AccessToken.create!({
-          :application_id    => client.id,
-          :resource_owner_id => resource_owner.id,
-          :scopes            => scope,
-          :expires_in        => configuration.access_token_expires_in,
-          :use_refresh_token => false
-        })
-      end
     end
 
     def error_description
