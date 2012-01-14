@@ -75,10 +75,6 @@ module Doorkeeper::OAuth
 
     private
 
-    def has_state?
-      state.present?
-    end
-
     def has_scope?
       Doorkeeper.configuration.scopes.all.present?
     end
