@@ -28,8 +28,8 @@ module Doorkeeper::OAuth
     end
 
     def authorize
-      @authorization = authorization_method.new(client, resource_owner, redirect_uri, scope, state)
       return false unless valid?
+      @authorization = authorization_method.new(client, resource_owner, redirect_uri, scope, state)
       @authorization.issue_token
     end
 
