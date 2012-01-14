@@ -48,32 +48,17 @@ module Doorkeeper::OAuth
       self.error = :access_denied
     end
 
-    def invalid_redirect_uri_for_code_request
-      uri_with_query(redirect_uri, {
-        :error => error,
-        :error_description => error_description,
-        :state => state
-      })
-    end
-
-    def invalid_redirect_uri_for_token_request
-      uri_with_fragment(redirect_uri, {
-        :error => error,
-        :error_description => error_description,
-        :state => state
-      })
-    end
-
     def success_redirect_uri
       @authorization.callback
     end
 
     def invalid_redirect_uri
-      if is_token_request?
-        invalid_redirect_uri_for_token_request
-      else
-        invalid_redirect_uri_for_code_request
-      end
+      uri_builder = is_token_request? ? :uri_with_fragment : :uri_with_query
+      send(uri_builder, redirect_uri, {
+        :error => error,
+        :error_description => error_description,
+        :state => state
+      })
     end
 
     def redirect_on_error?
