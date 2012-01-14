@@ -29,15 +29,9 @@ module Doorkeeper::OAuth
     end
 
     def authorize
-      if is_code_request?
-        @authorization = Doorkeeper::OAuth::Authorization::Code.new(client, resource_owner, redirect_uri, scope, state)
-        return false unless valid?
-        @authorization.issue_token
-      elsif is_token_request?
-        @authorization = Doorkeeper::OAuth::Authorization::Token.new(client, resource_owner, redirect_uri, scope, state)
-        return false unless valid?
-        @authorization.issue_token
-      end
+      @authorization = authorization_method.new(client, resource_owner, redirect_uri, scope, state)
+      return false unless valid?
+      @authorization.issue_token
     end
 
     def access_token_exists?
@@ -134,5 +128,9 @@ module Doorkeeper::OAuth
       Doorkeeper.configuration
     end
 
+    def authorization_method
+      klass = is_code_request? ? "Code" : "Token"
+      "Doorkeeper::OAuth::Authorization::#{klass}".constantize
+    end
   end
 end
