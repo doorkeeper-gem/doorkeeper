@@ -23,7 +23,6 @@ module Doorkeeper::OAuth
     def initialize(resource_owner, attributes)
       ATTRIBUTES.each { |attr| instance_variable_set("@#{attr}", attributes[attr]) }
       @resource_owner = resource_owner
-      @grant          = nil
       @scope          ||= Doorkeeper.configuration.default_scope_string
       validate
     end
@@ -71,10 +70,6 @@ module Doorkeeper::OAuth
 
     def has_scope?
       Doorkeeper.configuration.scopes.all.present?
-    end
-
-    def authorization_code
-      @grant.token
     end
 
     def validate_attributes

@@ -52,7 +52,6 @@ module Doorkeeper
         def configuration
           Doorkeeper.configuration
         end
-
       end
     end
   end

@@ -30,18 +30,6 @@ module Doorkeeper
             :state => state
           })
         end
-
-        # def error_callback
-        #   uri_with_query(redirect_uri, {
-        #     :error => error,
-        #     :error_description => error_description,
-        #     :state => state
-        #   })
-        # end
-
-        # def error_description
-        #   I18n.translate error, :scope => [:doorkeeper, :errors, :messages]
-        # end
       end
     end
   end
