@@ -4,22 +4,18 @@ module Doorkeeper
       class Token
         include URIBuilder
 
-        attr_accessor :client, :resource_owner, :redirect_uri, :scope, :state, :grant
+        attr_accessor :authorization
 
-        def initialize(client, resource_owner, redirect_uri, scope, state)
-          @client         = client
-          @resource_owner = resource_owner
-          @redirect_uri   = redirect_uri
-          @scope          = scope
-          @state          = state
+        def initialize(authorization)
+          @authorization = authorization
         end
 
         def callback
-          uri_with_fragment(redirect_uri, {
+          uri_with_fragment(authorization.redirect_uri, {
             :access_token => access_token.token,
-            :token_type => access_token.token_type,
-            :expires_in => access_token.time_left,
-            :state => state
+            :token_type   => access_token.token_type,
+            :expires_in   => access_token.time_left,
+            :state => authorization.state
           })
         end
 
@@ -28,9 +24,9 @@ module Doorkeeper
             access_token
           else
             AccessToken.create!({
-              :application_id    => client.id,
-              :resource_owner_id => resource_owner.id,
-              :scopes            => scope,
+              :application_id    => authorization.client.id,
+              :resource_owner_id => authorization.resource_owner.id,
+              :scopes            => authorization.scope,
               :expires_in        => configuration.access_token_expires_in,
               :use_refresh_token => false
             })
@@ -42,11 +38,11 @@ module Doorkeeper
         end
 
         def access_token_scope_matches?
-          (access_token.scopes - scope.split(" ").map(&:to_sym)).empty?
+          (access_token.scopes - authorization.scope.split(" ").map(&:to_sym)).empty?
         end
 
         def access_token
-          AccessToken.accessible.where(:application_id => client.id, :resource_owner_id => resource_owner.id).first
+          AccessToken.accessible.where(:application_id => authorization.client.id, :resource_owner_id => authorization.resource_owner.id).first
         end
 
         def configuration
