@@ -1,6 +1,7 @@
 module Doorkeeper::OAuth
   class AuthorizationRequest
     include Doorkeeper::Validations
+    include Doorkeeper::OAuth::Authorization::URIBuilder
 
     DEFAULT_EXPIRATION_TIME = 600
 
@@ -47,41 +48,35 @@ module Doorkeeper::OAuth
     end
 
     def success_redirect_uri_for_code_request
-      build_uri do |uri|
-        query = uri.query.nil? ? "" : uri.query + "&"
-        query << "code=#{authorization_code}"
-        query << "&state=#{state}" if has_state?
-        uri.query = query
-      end
+      uri_with_query(redirect_uri, {
+        :code  => authorization_code,
+        :state => state
+      })
     end
 
     def invalid_redirect_uri_for_code_request
-      build_uri do |uri|
-        query = uri.query.nil? ? "" : uri.query + "&"
-        query << "error=#{error}"
-        query << "&error_description=#{CGI::escape(error_description)}"
-        query << "&state=#{state}" if has_state?
-        uri.query = query
-      end
+      uri_with_query(redirect_uri, {
+        :error => error,
+        :error_description => error_description,
+        :state => state
+      })
     end
 
     def success_redirect_uri_for_token_request
-      build_uri do |uri|
-        fragment = "access_token=#{access_token.token}"
-        fragment << "&token_type=#{access_token.token_type}"
-        fragment << "&expires_in=#{access_token.time_left}"
-        fragment << "&state=#{state}" if has_state?
-        uri.fragment = fragment
-      end
+      uri_with_fragment(redirect_uri, {
+        :access_token => access_token.token,
+        :token_type => access_token.token_type,
+        :expires_in => access_token.time_left,
+        :state => state
+      })
     end
 
     def invalid_redirect_uri_for_token_request
-      build_uri do |uri|
-        fragment = "error=#{error}"
-        fragment << "&error_description=#{CGI::escape(error_description)}"
-        fragment << "&state=#{state}" if has_state?
-        uri.fragment = fragment
-      end
+      uri_with_fragment(redirect_uri, {
+        :error => error,
+        :error_description => error_description,
+        :state => state
+      })
     end
 
     def success_redirect_uri
@@ -136,12 +131,6 @@ module Doorkeeper::OAuth
       @grant.token
     end
 
-    def build_uri
-      uri = URI.parse(redirect_uri || client.redirect_uri)
-      yield uri
-      uri.to_s
-    end
-
     def validate_attributes
       response_type.present?
     end
@@ -151,7 +140,7 @@ module Doorkeeper::OAuth
     end
 
     def validate_redirect_uri
-      if redirect_uri  
+      if redirect_uri
         uri = URI.parse(redirect_uri)
         return false unless uri.fragment.nil?
         return false if uri.scheme.nil?
@@ -195,7 +184,7 @@ module Doorkeeper::OAuth
           :scopes            => scope,
           :expires_in        => configuration.access_token_expires_in,
           :use_refresh_token => false
-        }) 
+        })
       end
     end
 
