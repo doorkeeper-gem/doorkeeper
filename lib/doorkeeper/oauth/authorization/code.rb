@@ -2,6 +2,8 @@ module Doorkeeper
   module OAuth
     module Authorization
       class Code
+        include URIBuilder
+
         DEFAULT_EXPIRATION_TIME = 600
 
         attr_accessor :authorization, :grant

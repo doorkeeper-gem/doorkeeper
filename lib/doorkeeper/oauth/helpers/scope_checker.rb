@@ -2,10 +2,9 @@ module Doorkeeper
   module OAuth
     module Helpers
       module ScopeChecker
-        def self.matches?(scopes, scopes_as_string)
-          return false if scopes.nil? || scopes_as_string.nil?
-          scopes_as_array = scopes_as_string.split(" ").map(&:to_sym)
-          scopes.sort == scopes_as_array.sort
+        def self.matches?(current_scopes, scopes)
+          return false if current_scopes.nil? || scopes.nil?
+          current_scopes.map(&:to_s).sort == scopes.split(" ").sort
         end
       end
     end

@@ -100,7 +100,8 @@ module Doorkeeper::OAuth
             end
 
             it "preserves the original query parameters" do
-              query.should =~ Regexp.new(original_query_params)
+              query.should =~ /abc=123/
+              query.should =~ /def=456/
             end
 
           end
