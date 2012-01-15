@@ -142,6 +142,35 @@ module Doorkeeper
 
     end
 
+    describe :all_included? do
+      subject do
+        Scopes.new.tap do |s|
+          s.add scope_double("public", true)
+          s.add scope_double("write", false)
+        end
+      end
+
+      it "is true if any scopes is included" do
+        subject.all_included?("public").should be_true
+      end
+
+      it "is true if all scopes are included" do
+        subject.all_included?("public write").should be_true
+      end
+
+      it "is true if all scopes are included in any order" do
+        subject.all_included?("write public").should be_true
+      end
+
+      it "is false if no scopes are included" do
+        subject.all_included?("notexistent").should be_false
+      end
+
+      it "is false if no scopes are included even for existing ones" do
+        subject.all_included?("public write notexistent").should be_false
+      end
+    end
+
     def create_scopes_array(*args)
       args.each_slice(2).map do |slice|
         scope_double(*slice)

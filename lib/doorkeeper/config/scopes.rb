@@ -21,6 +21,10 @@ module Doorkeeper
       self[scope].present?
     end
 
+    def all_included?(scopes_string)
+      scopes_string.split(" ").all? { |s| self.exists?(s) }
+    end
+
     def add (scope)
       raise IllegalElement unless valid_element?(scope)
       @scopes << scope
