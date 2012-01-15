@@ -2,6 +2,7 @@ module Doorkeeper::OAuth
   class AuthorizationRequest
     include Doorkeeper::Validations
     include Doorkeeper::OAuth::Authorization::URIBuilder
+    include Doorkeeper::OAuth::Helpers
 
     ATTRIBUTES = [
       :response_type,
@@ -96,7 +97,7 @@ module Doorkeeper::OAuth
 
     def validate_scope
       return true unless has_scope?
-      scope.present? && scope !~ /[\n|\r|\t]/ && scope.split(" ").all? { |s| Doorkeeper.configuration.scopes.exists?(s) }
+      ScopeChecker.valid?(scope, configuration.scopes)
     end
 
     def is_code_request?

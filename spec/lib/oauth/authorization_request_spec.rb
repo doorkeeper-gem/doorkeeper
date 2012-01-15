@@ -14,7 +14,7 @@ module Doorkeeper::OAuth
     end
 
     before :each do
-      Doorkeeper.stub_chain(:configuration, :scopes, :exists?).and_return(true)
+      Doorkeeper::OAuth::Helpers::ScopeChecker.stub(:valid?).and_return(true)
       Doorkeeper.stub_chain(:configuration, :scopes, :all).and_return([Doorkeeper::Scope.new(:public)])
     end
 
@@ -166,19 +166,12 @@ module Doorkeeper::OAuth
         end
 
         describe "when :scope contains scopes that are note registered in the provider" do
-          before :each do
-            Doorkeeper.stub_chain(:configuration, :scopes, :exists?).and_return(false)
+          before do
+            Doorkeeper::OAuth::Helpers::ScopeChecker.stub(:valid?).and_return(false)
           end
 
           subject     { auth(attributes.merge(:scope => "public strange")) }
           its(:error) { should == :invalid_scope }
-        end
-
-        ["", " ", "\r\n", "\t", "\rsth\n"].each do |invalid_value|
-          describe "when :scope has #{invalid_value.inspect}" do
-            subject     { auth(attributes.merge(:scope => invalid_value)) }
-            its(:error) { should == :invalid_scope }
-          end
         end
       end
     end
@@ -335,19 +328,12 @@ module Doorkeeper::OAuth
         end
 
         describe "when :scope contains scopes that are note registered in the provider" do
-          before :each do
-            Doorkeeper.stub_chain(:configuration, :scopes, :exists?).and_return(false)
+          before do
+            Doorkeeper::OAuth::Helpers::ScopeChecker.stub(:valid?).and_return(false)
           end
 
           subject     { auth(attributes.merge(:scope => "public strange")) }
           its(:error) { should == :invalid_scope }
-        end
-
-        ["", " ", "\r\n", "\t", "\rsth\n"].each do |invalid_value|
-          describe "when :scope has #{invalid_value.inspect}" do
-            subject     { auth(attributes.merge(:scope => invalid_value)) }
-            its(:error) { should == :invalid_scope }
-          end
         end
       end
 
