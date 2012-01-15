@@ -1,4 +1,7 @@
-require 'spec_helper_integration'
+require 'spec_helper'
+require 'active_support/core_ext/module/delegation'
+require 'active_support/core_ext/string'
+require 'doorkeeper/config/scopes'
 
 module Doorkeeper
   describe Scopes do
