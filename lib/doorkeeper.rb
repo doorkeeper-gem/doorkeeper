@@ -11,6 +11,11 @@ module Doorkeeper
     autoload :RandomString,         "doorkeeper/oauth/random_string"
     autoload :AuthorizationRequest, "doorkeeper/oauth/authorization_request"
     autoload :AccessTokenRequest,   "doorkeeper/oauth/access_token_request"
+    autoload :Authorization,        "doorkeeper/oauth/authorization"
+
+    module Helpers
+      autoload :ScopeChecker, "doorkeeper/oauth/helpers/scope_checker"
+    end
   end
 
   def self.setup

@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'spec_helper_integration'
 
 describe 'Application' do
   let(:new_application) { Factory.build(:application) }
