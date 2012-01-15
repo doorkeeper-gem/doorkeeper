@@ -60,10 +60,11 @@ describe Doorkeeper::AuthorizationsController do
       client_exists
       scope_exist(:public, :default => true, :description => "Access your public data")
       scope_exist(:write, :description => "Update your data")
-      @access_token = Factory :access_token, :application => @client, :resource_owner_id => @user.id
+      @access_token = Factory :access_token, :application => @client, :resource_owner_id => @user.id, :scopes => "public"
     end
 
     it "returns the existing access token in a fragment" do
+      pending "It seems that authorization server should always issue a new token"
       lambda {
         get :new, :client_id => @client.uid, :response_type => "token", :redirect_uri => @client.redirect_uri, :use_route => :doorkeeper
         response.should be_redirect
@@ -136,7 +137,8 @@ describe Doorkeeper::AuthorizationsController do
     end
 
     it "returns the existing access token in a fragment if a token exists" do
-      @access_token = Factory :access_token, :application => @client, :resource_owner_id => @user.id
+      pending "It seems that authorization server should always issue a new token"
+      @access_token = Factory :access_token, :application => @client, :resource_owner_id => @user.id, :scopes => "public"
       lambda {
         post :create, :client_id => @client.uid, :response_type => "token", :redirect_uri => @client.redirect_uri, :use_route => :doorkeeper
         response.should be_redirect

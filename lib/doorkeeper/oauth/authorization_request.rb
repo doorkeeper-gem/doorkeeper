@@ -34,7 +34,7 @@ module Doorkeeper::OAuth
     end
 
     def access_token_exists?
-      access_token.present? && access_token.accessible? && access_token_scope_matches?
+      AccessToken.has_authorized_token_for?(client, resource_owner, scope)
     end
 
     def deny
@@ -64,10 +64,6 @@ module Doorkeeper::OAuth
 
     def scopes
       Doorkeeper.configuration.scopes.with_names(*scope.split(" ")) if has_scope?
-    end
-
-    def access_token
-      AccessToken.authorized_for(client.id, resource_owner.id)
     end
 
     private
@@ -109,10 +105,6 @@ module Doorkeeper::OAuth
 
     def is_token_request?
       response_type == "token"
-    end
-
-    def access_token_scope_matches?
-      (access_token.scopes - scope.split(" ").map(&:to_sym)).empty?
     end
 
     def error_description
