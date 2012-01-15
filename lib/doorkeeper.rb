@@ -15,6 +15,7 @@ module Doorkeeper
 
     module Helpers
       autoload :ScopeChecker, "doorkeeper/oauth/helpers/scope_checker"
+      autoload :URIChecker,   "doorkeeper/oauth/helpers/uri_checker"
     end
   end
 

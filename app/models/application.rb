@@ -27,13 +27,8 @@ class Application < ActiveRecord::Base
     errors.add(:redirect_uri, "must be a valid URI.")
   end
 
-  def is_matching_redirect_uri?(uri_string)
-    uri = URI.parse(uri_string)
-    uri.query = nil
-    uri.to_s == redirect_uri
-  end
-
   private
+
   def generate_uid
     self.uid = unique_random_string_for(:uid)
   end
