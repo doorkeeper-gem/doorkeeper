@@ -22,7 +22,8 @@ module Doorkeeper::OAuth::Authorization
 
       it 'preserves original query parameters' do
         uri = subject.uri_with_query 'http://example.com/?query1=value', :parameter => 'value'
-        uri.should == 'http://example.com/?query1=value&parameter=value'
+        uri.should =~ /query1=value/
+        uri.should =~ /parameter=value/
       end
     end
 
