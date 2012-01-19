@@ -1,5 +1,5 @@
 class Application < ActiveRecord::Base
-  include Doorkeeper::OAuth::RandomString
+  include Doorkeeper::OAuth::Helpers
 
   self.table_name = :oauth_applications
 
@@ -30,10 +30,10 @@ class Application < ActiveRecord::Base
   private
 
   def generate_uid
-    self.uid = unique_random_string_for(:uid)
+    self.uid = UniqueToken.generate_for :uid, self.class
   end
 
   def generate_secret
-    self.secret = random_string
+    self.secret = UniqueToken.generate_for :secret, self.class
   end
 end

@@ -6,7 +6,6 @@ module Doorkeeper
   autoload :Validations, "doorkeeper/validations"
 
   module OAuth
-    autoload :RandomString,         "doorkeeper/oauth/random_string"
     autoload :AuthorizationRequest, "doorkeeper/oauth/authorization_request"
     autoload :AccessTokenRequest,   "doorkeeper/oauth/access_token_request"
     autoload :Authorization,        "doorkeeper/oauth/authorization"
@@ -14,6 +13,7 @@ module Doorkeeper
     module Helpers
       autoload :ScopeChecker, "doorkeeper/oauth/helpers/scope_checker"
       autoload :URIChecker,   "doorkeeper/oauth/helpers/uri_checker"
+      autoload :UniqueToken,  "doorkeeper/oauth/helpers/unique_token"
     end
   end
 
