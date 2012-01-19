@@ -1,5 +1,5 @@
 class Application < ActiveRecord::Base
-  include Doorkeeper::OAuth::RandomString
+  include Doorkeeper::OAuth::Helpers
 
   self.table_name = :oauth_applications
 
@@ -27,18 +27,13 @@ class Application < ActiveRecord::Base
     errors.add(:redirect_uri, "must be a valid URI.")
   end
 
-  def is_matching_redirect_uri?(uri_string)
-    uri = URI.parse(uri_string)
-    uri.query = nil
-    uri.to_s == redirect_uri
-  end
-
   private
+
   def generate_uid
-    self.uid = unique_random_string_for(:uid)
+    self.uid = UniqueToken.generate_for :uid, self.class
   end
 
   def generate_secret
-    self.secret = random_string
+    self.secret = UniqueToken.generate_for :secret, self.class
   end
 end

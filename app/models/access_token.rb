@@ -1,6 +1,7 @@
 class AccessToken < ActiveRecord::Base
-  include Doorkeeper::OAuth::RandomString
   include Doorkeeper::OAuth::Helpers
+  include Doorkeeper::Models::Expirable
+  include Doorkeeper::Models::Revocable
 
   self.table_name = :oauth_access_tokens
 
@@ -33,23 +34,6 @@ class AccessToken < ActiveRecord::Base
     "bearer"
   end
 
-  def revoke
-    update_attribute :revoked_at, DateTime.now
-  end
-
-  def revoked?
-    self.revoked_at.present?
-  end
-
-  def expired?
-    expires_in.present? && Time.now > expired_time
-  end
-
-  def time_left
-    time_left = (expired_time - Time.now)
-    time_left > 0 ? time_left : 0
-  end
-
   def accessible?
     !expired? && !revoked?
   end
@@ -69,15 +53,11 @@ class AccessToken < ActiveRecord::Base
 
   private
 
-  def expired_time
-    self.created_at + expires_in.seconds
-  end
-
   def generate_refresh_token
-    self.refresh_token = unique_random_string_for(:refresh_token)
+    self.refresh_token = UniqueToken.generate_for :refresh_token, self.class
   end
 
   def generate_token
-    self.token = unique_random_string_for(:token)
+    self.token = UniqueToken.generate_for :token, self.class
   end
 end
