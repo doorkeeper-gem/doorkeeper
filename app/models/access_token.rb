@@ -2,6 +2,7 @@ class AccessToken < ActiveRecord::Base
   include Doorkeeper::OAuth::RandomString
   include Doorkeeper::OAuth::Helpers
   include Doorkeeper::Models::Expirable
+  include Doorkeeper::Models::Revocable
 
   self.table_name = :oauth_access_tokens
 
@@ -32,14 +33,6 @@ class AccessToken < ActiveRecord::Base
 
   def token_type
     "bearer"
-  end
-
-  def revoke
-    update_attribute :revoked_at, DateTime.now
-  end
-
-  def revoked?
-    self.revoked_at.present?
   end
 
   def accessible?

@@ -19,5 +19,6 @@ module Doorkeeper
 
   module Models
     autoload :Expirable, "doorkeeper/models/expirable"
+    autoload :Revocable, "doorkeeper/models/revocable"
   end
 end

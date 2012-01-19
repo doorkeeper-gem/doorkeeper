@@ -6,6 +6,7 @@ describe AccessToken do
   it { should be_valid }
 
   it_behaves_like "an accessible token"
+  it_behaves_like "a revocable token"
 
   describe "validations" do
     it "is invalid without resource_owner_id" do
@@ -30,21 +31,6 @@ describe AccessToken do
 
     it "is generated before validation" do
       expect { subject.valid? }.to change { subject.token }.from(nil)
-    end
-  end
-
-  describe "revoke" do
-    subject { Factory(:access_token) }
-
-    it "updates the revoked attribute" do
-      expect {
-        subject.revoke
-      }.to change { subject.revoked? }.from(false).to(true)
-    end
-
-    it "is not accessible" do
-      subject.revoke
-      subject.should_not be_accessible
     end
   end
 

@@ -6,6 +6,7 @@ describe AccessGrant do
   it { should be_valid }
 
   it_behaves_like "an accessible token"
+  it_behaves_like "a revocable token"
 
   describe "validations" do
     it "is invalid without resource_owner_id" do
@@ -41,21 +42,6 @@ describe AccessGrant do
 
     it "is generated before validation" do
       expect { subject.valid? }.to change { subject.token }.from(nil)
-    end
-  end
-
-  describe "revoke token" do
-    before { subject.save! }
-
-    describe "for new grants" do
-      it { should_not be_revoked }
-      it { should     be_accessible }
-    end
-
-    describe "when is revoked" do
-      before { subject.revoke }
-      it { should     be_revoked }
-      it { should_not be_accessible }
     end
   end
 

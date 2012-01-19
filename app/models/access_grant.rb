@@ -1,6 +1,7 @@
 class AccessGrant < ActiveRecord::Base
   include Doorkeeper::OAuth::RandomString
   include Doorkeeper::Models::Expirable
+  include Doorkeeper::Models::Revocable
 
   self.table_name = :oauth_access_grants
 
@@ -12,14 +13,6 @@ class AccessGrant < ActiveRecord::Base
 
   def accessible?
     !expired? && !revoked?
-  end
-
-  def revoke
-    update_attribute :revoked_at, DateTime.now
-  end
-
-  def revoked?
-    revoked_at.present?
   end
 
   def scopes
