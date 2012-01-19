@@ -1,5 +1,6 @@
 class AccessGrant < ActiveRecord::Base
   include Doorkeeper::OAuth::RandomString
+  include Doorkeeper::Models::Expirable
 
   self.table_name = :oauth_access_grants
 
@@ -8,10 +9,6 @@ class AccessGrant < ActiveRecord::Base
   validates :resource_owner_id, :application_id, :token, :expires_in, :redirect_uri, :presence => true
 
   before_validation :generate_token, :on => :create
-
-  def expired?
-    expires_in.present? && Time.now > expired_time
-  end
 
   def accessible?
     !expired? && !revoked?
@@ -34,10 +31,6 @@ class AccessGrant < ActiveRecord::Base
   end
 
   private
-
-  def expired_time
-    self.created_at + expires_in.seconds
-  end
 
   def generate_token
     self.token = unique_random_string_for(:token)

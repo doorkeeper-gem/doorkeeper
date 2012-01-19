@@ -5,6 +5,8 @@ describe AccessGrant do
 
   it { should be_valid }
 
+  it_behaves_like "an accessible token"
+
   describe "validations" do
     it "is invalid without resource_owner_id" do
       subject.resource_owner_id = nil
@@ -39,22 +41,6 @@ describe AccessGrant do
 
     it "is generated before validation" do
       expect { subject.valid? }.to change { subject.token }.from(nil)
-    end
-  end
-
-  describe "expired?" do
-    it "is not expired when" do
-      grant = Factory(:access_grant, :expires_in => 1000)
-      grant.should_not be_expired
-      grant.should be_accessible
-    end
-
-    it "is true if expired" do
-      grant = Factory(:access_grant, :expires_in => 400)
-      Timecop.freeze(Time.now + 600.seconds) do
-        grant.should be_expired
-        grant.should_not be_accessible
-      end
     end
   end
 

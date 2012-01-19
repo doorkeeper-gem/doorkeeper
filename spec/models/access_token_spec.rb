@@ -5,6 +5,8 @@ describe AccessToken do
 
   it { should be_valid }
 
+  it_behaves_like "an accessible token"
+
   describe "validations" do
     it "is invalid without resource_owner_id" do
       subject.resource_owner_id = nil
@@ -43,25 +45,6 @@ describe AccessToken do
     it "is not accessible" do
       subject.revoke
       subject.should_not be_accessible
-    end
-  end
-
-  describe "token expiration" do
-    subject { Factory(:access_token, :expires_in => 2.hours) }
-
-    context "when expiration time has not passed" do
-      it { should_not be_expired }
-      it { should     be_accessible }
-    end
-
-    context "when expiration time is over" do
-      around do |example|
-        subject # force creation
-        Timecop.freeze(Time.now + 3.hours) { example.call }
-      end
-
-      it { should     be_expired }
-      it { should_not be_accessible }
     end
   end
 

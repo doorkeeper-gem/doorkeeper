@@ -16,4 +16,8 @@ module Doorkeeper
       autoload :URIChecker,   "doorkeeper/oauth/helpers/uri_checker"
     end
   end
+
+  module Models
+    autoload :Expirable, "doorkeeper/models/expirable"
+  end
 end
