@@ -7,6 +7,9 @@ describe AccessGrant do
 
   it_behaves_like "an accessible token"
   it_behaves_like "a revocable token"
+  it_behaves_like "an unique token" do
+    let(:factory_name) { :access_grant }
+  end
 
   describe "validations" do
     it "is invalid without resource_owner_id" do
@@ -28,20 +31,6 @@ describe AccessGrant do
     it "is invalid without expires_in" do
       subject.expires_in = nil
       should_not be_valid
-    end
-  end
-
-  describe "token" do
-    it "is unique" do
-      tokens = []
-      3.times do
-        token = Factory(:access_grant).token
-        tokens.should_not include(token)
-      end
-    end
-
-    it "is generated before validation" do
-      expect { subject.valid? }.to change { subject.token }.from(nil)
     end
   end
 

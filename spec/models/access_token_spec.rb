@@ -7,6 +7,9 @@ describe AccessToken do
 
   it_behaves_like "an accessible token"
   it_behaves_like "a revocable token"
+  it_behaves_like "an unique token" do
+    let(:factory_name) { :access_token }
+  end
 
   describe "validations" do
     it "is invalid without resource_owner_id" do
@@ -17,20 +20,6 @@ describe AccessToken do
     it "is invalid without application_id" do
       subject.application_id = nil
       should_not be_valid
-    end
-  end
-
-  describe "token" do
-    it "is unique" do
-      tokens = []
-      3.times do
-        token = Factory(:access_token).token
-        tokens.should_not include(token)
-      end
-    end
-
-    it "is generated before validation" do
-      expect { subject.valid? }.to change { subject.token }.from(nil)
     end
   end
 
