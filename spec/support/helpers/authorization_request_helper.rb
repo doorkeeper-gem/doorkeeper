@@ -8,10 +8,6 @@ module AuthorizationRequestHelper
     Doorkeeper.configuration.instance_variable_set(:@authenticate_resource_owner, proc { redirect_to("/sign_in") })
   end
 
-  def client_exists(client_attributes = {})
-    @client = Factory(:application, client_attributes)
-  end
-
   def scope_exist(*args)
     scopes = Doorkeeper.configuration.instance_variable_get(:@scopes) || Doorkeeper::Scopes.new
     scopes.add(Doorkeeper::Scope.new(*args))
@@ -24,10 +20,6 @@ module AuthorizationRequestHelper
 
   def client_should_not_be_authorized(client)
     client.should have(0).access_grants
-  end
-
-  def authorization_code_exists(options)
-    @authorization = Factory(:access_grant, :application => options[:client], :scopes => options[:scopes])
   end
 
   def i_should_be_on_client_callback(client)
