@@ -9,20 +9,6 @@ feature "Authorization Request", "when resource owner is authenticated" do
   end
 
   context "with valid client credentials and parameters" do
-    context "display authorization scopes" do
-      scenario "default scopes" do
-        visit authorization_endpoint_url(:client => @client)
-        i_should_see "Access your public data"
-        i_should_not_see "Update your data"
-      end
-
-      scenario "with scopes specified in param" do
-        visit authorization_endpoint_url(:client => @client, :scope => "public write")
-        i_should_see "Access your public data"
-        i_should_see "Update your data"
-      end
-    end
-
     context "with state parameter" do
       scenario "returns the state to client's callback url" do
         visit authorization_endpoint_url(:client => @client, :state => "return-this")
@@ -145,17 +131,6 @@ feature "Authorization Request", "when resource owner is authenticated" do
     end
   end
 
-end
-
-feature "Authorization Request", "when resource owner is not authenticated" do
-  background do
-    resource_owner_is_not_authenticated
-  end
-
-  scenario "resource owner gets redirected to authentication" do
-    visit authorization_endpoint_url(:client_id => "1", :redirect_uri => "r")
-    i_should_be_on "/"
-  end
 end
 
 feature "Authorization Request", "with no scopes" do
