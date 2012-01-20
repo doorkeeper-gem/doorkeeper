@@ -30,6 +30,19 @@ module RequestSpecHelper
   def should_have_header(header, value)
     headers[header].should == value
   end
+
+  def sign_in
+    visit '/'
+    click_on "Sign in"
+  end
+
+  def i_should_see_translated_error_message(key)
+    i_should_see translated_error_message(key)
+  end
+
+  def translated_error_message(key)
+    I18n.translate key, :scope => [:doorkeeper, :errors, :messages]
+  end
 end
 
 RSpec.configuration.send :include, RequestSpecHelper, :type => :request
