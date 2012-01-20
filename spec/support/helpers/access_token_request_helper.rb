@@ -1,6 +1,10 @@
 module AccessTokenRequestHelper
-  def client_is_authorized(client, resource_owner, scopes = nil)
-    Factory(:access_token, :application => client, :resource_owner_id => resource_owner.id, :scopes => scopes)
+  def client_is_authorized(client, resource_owner, access_token_attributes = {})
+    attributes = {
+      :application => client,
+      :resource_owner_id => resource_owner.id
+    }.merge(access_token_attributes)
+    Factory(:access_token, attributes)
   end
 
   def with_access_token_header(token)

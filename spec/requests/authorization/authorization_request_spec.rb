@@ -41,25 +41,6 @@ feature "Authorization Request", "when resource owner is authenticated" do
       url_should_have_param("code", grant.token)
     end
 
-    scenario "skips authorization for previously authorized clients" do
-      client_is_authorized(@client, User.last, Doorkeeper.configuration.default_scope_string)
-      visit authorization_endpoint_url(:client => @client)
-
-      client_should_be_authorized(@client)
-
-      grant = @client.access_grants.first
-
-      i_should_be_on_client_callback(@client)
-      url_should_have_param("code", grant.token)
-    end
-
-    scenario "does not skip authorization if the scopes differ" do
-      client_is_authorized(@client, User.last, "public")
-      visit authorization_endpoint_url(:client => @client, :scope => "write")
-
-      i_should_see "Authorize"
-    end
-
     scenario "resource owner denies client access" do
       visit authorization_endpoint_url(:client => @client)
 
