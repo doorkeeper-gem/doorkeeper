@@ -10,35 +10,11 @@ feature "Authorization Request", "when resource owner is authenticated" do
 
   context "with valid client credentials and parameters" do
     context "with state parameter" do
-      scenario "returns the state to client's callback url" do
-        visit authorization_endpoint_url(:client => @client, :state => "return-this")
-        click_on "Authorize"
-        url_should_have_param("state", "return-this")
-      end
-
-      scenario "omit the state if no one was specified" do
-        visit authorization_endpoint_url(:client => @client)
-        click_on "Authorize"
-        url_should_not_have_param("state")
-      end
-
       scenario "returns the state if client access was denied" do
         visit authorization_endpoint_url(:client => @client, :state => "return-that")
         click_on "Deny"
         url_should_have_param("state", "return-that")
       end
-    end
-
-    scenario "resource owner authorizes the client" do
-      visit authorization_endpoint_url(:client => @client)
-
-      click_on "Authorize"
-      client_should_be_authorized(@client)
-
-      grant = @client.access_grants.first
-
-      i_should_be_on_client_callback(@client)
-      url_should_have_param("code", grant.token)
     end
 
     scenario "resource owner denies client access" do
