@@ -1,10 +1,13 @@
 class HomeController < ApplicationController
   def index
-
   end
 
   def sign_in
-    session[:user_id] = User.first || User.create!
+    session[:user_id] = if Rails.env.development?
+      User.first || User.create!
+    else
+      User.first
+    end
     redirect_to '/'
   end
 
