@@ -27,6 +27,10 @@ module ModelHelper
     AccessGrant.all.should be_empty
   end
 
+  def access_token_should_not_exists
+    AccessToken.all.should be_empty
+  end
+
   def access_grant_should_have_scopes(*args)
     grant = AccessGrant.first
     grant.scopes.should == args
