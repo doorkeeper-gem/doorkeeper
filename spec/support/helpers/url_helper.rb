@@ -2,9 +2,9 @@ module UrlHelper
   def token_endpoint_url(options = {})
     parameters = {
       :code          => options[:code],
-      :client_id     => options[:client_id]     || options[:client].uid,
-      :client_secret => options[:client_secret] || options[:client].secret,
-      :redirect_uri  => options[:redirect_uri]  || options[:client].redirect_uri,
+      :client_id     => options[:client_id]     || (options[:client] ? options[:client].uid : nil),
+      :client_secret => options[:client_secret] || (options[:client] ? options[:client].secret : nil),
+      :redirect_uri  => options[:redirect_uri]  || (options[:client] ? options[:client].redirect_uri : nil),
       :grant_type    => options[:grant_type]    || "authorization_code",
     }
     "/oauth/token?#{build_query(parameters)}"
@@ -33,6 +33,10 @@ module UrlHelper
 
   def build_query(hash)
     Rack::Utils.build_query(hash)
+  end
+
+  def basic_auth_header_for_client(client)
+    "Basic #{ActiveSupport::Base64.encode64("#{client.uid}:#{client.secret}")}"
   end
 end
 

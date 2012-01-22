@@ -1,4 +1,8 @@
 require 'spec_helper'
+require 'active_support/core_ext/module/delegation'
+require 'active_support/core_ext/string'
+require 'doorkeeper/config/scopes'
+require 'doorkeeper/config/scope'
 
 module Doorkeeper
   describe Scopes do
@@ -10,12 +14,9 @@ module Doorkeeper
       end
     end
 
-    let :scope do
-      scope_double("public", false)
-    end
-
     describe :add do
       it 'allows you to add scopes' do
+        scope = create_scope "public", false
         subject.add scope
         subject.all.should == [scope]
       end
@@ -29,11 +30,11 @@ module Doorkeeper
 
     describe :[] do
       let :public_scope do
-        scope_double("public", false)
+        create_scope "public", false
       end
 
       let :write_scope do
-        scope_double("write", false)
+        create_scope "write", false
       end
 
       subject do
@@ -53,10 +54,10 @@ module Doorkeeper
       end
     end
 
-    describe :exists do
+    describe :exists? do
       subject do
         Scopes.new.tap do |scopes|
-          scopes.add scope_double("public", false)
+          scopes.add create_scope "public", false
         end
       end
 
@@ -68,11 +69,9 @@ module Doorkeeper
         subject.exists?("other").should be_false
       end
 
-      it 'handles symbols and strings' do
+      it 'handles symbols' do
         subject.exists?(:public).should be_true
-        subject.exists?("public").should be_true
         subject.exists?(:other).should be_false
-        subject.exists?("other").should be_false
       end
     end
 
@@ -139,14 +138,43 @@ module Doorkeeper
 
     end
 
-    def create_scopes_array(*args)
-      args.each_slice(2).map do |slice|
-        scope_double(*slice)
+    describe :all_included? do
+      subject do
+        Scopes.new.tap do |s|
+          s.add create_scope("public", true)
+          s.add create_scope("write", false)
+        end
+      end
+
+      it "is true if any scopes is included" do
+        subject.all_included?("public").should be_true
+      end
+
+      it "is true if all scopes are included" do
+        subject.all_included?("public write").should be_true
+      end
+
+      it "is true if all scopes are included in any order" do
+        subject.all_included?("write public").should be_true
+      end
+
+      it "is false if no scopes are included" do
+        subject.all_included?("notexistent").should be_false
+      end
+
+      it "is false if no scopes are included even for existing ones" do
+        subject.all_included?("public write notexistent").should be_false
       end
     end
 
-    def scope_double(name, default)
-      double(name, :name => name, :default => default)
+    def create_scopes_array(*args)
+      args.each_slice(2).map do |slice|
+        create_scope(*slice)
+      end
+    end
+
+    def create_scope(name, default)
+      Scope.new(name, :default => default)
     end
   end
 end

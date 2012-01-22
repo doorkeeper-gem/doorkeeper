@@ -1,4 +1,7 @@
 class Doorkeeper::TokensController < Doorkeeper::ApplicationController
+
+  before_filter :parse_client_info_from_basic_auth, :only => :create
+
   def create
     response.headers.merge!({
       'Pragma'        => 'no-cache',

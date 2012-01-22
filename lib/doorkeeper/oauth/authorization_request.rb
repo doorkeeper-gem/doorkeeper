@@ -1,8 +1,8 @@
 module Doorkeeper::OAuth
   class AuthorizationRequest
     include Doorkeeper::Validations
-
-    DEFAULT_EXPIRATION_TIME = 600
+    include Doorkeeper::OAuth::Authorization::URIBuilder
+    include Doorkeeper::OAuth::Helpers
 
     ATTRIBUTES = [
       :response_type,
@@ -12,9 +12,9 @@ module Doorkeeper::OAuth
       :state
     ]
 
-    validate :attributes,    :error => :invalid_request
     validate :client,        :error => :invalid_client
     validate :redirect_uri,  :error => :invalid_redirect_uri
+    validate :attributes,    :error => :invalid_request
     validate :response_type, :error => :unsupported_response_type
     validate :scope,         :error => :invalid_scope
 
@@ -24,17 +24,18 @@ module Doorkeeper::OAuth
     def initialize(resource_owner, attributes)
       ATTRIBUTES.each { |attr| instance_variable_set("@#{attr}", attributes[attr]) }
       @resource_owner = resource_owner
-      @grant          = nil
       @scope          ||= Doorkeeper.configuration.default_scope_string
       validate
     end
 
     def authorize
-      create_authorization if valid?
+      return false unless valid?
+      @authorization = authorization_method.new(self)
+      @authorization.issue_token
     end
 
     def access_token_exists?
-      access_token.present? && access_token_scope_matches?
+      AccessToken.has_authorized_token_for?(client, resource_owner, scope)
     end
 
     def deny
@@ -42,21 +43,20 @@ module Doorkeeper::OAuth
     end
 
     def success_redirect_uri
-      build_uri do |uri|
-        query = uri.query.nil? ? "" : uri.query + "&"
-        query << "code=#{token}"
-        query << "&state=#{state}" if has_state?
-        uri.query = query
-      end
+      @authorization.callback
     end
 
     def invalid_redirect_uri
-      build_uri do |uri|
-        query = uri.query.nil? ? "" : uri.query + "&"
-        query << "error=#{error}"
-        query << "&state=#{state}" if has_state?
-        uri.query = query
-      end
+      uri_builder = is_token_request? ? :uri_with_fragment : :uri_with_query
+      send(uri_builder, redirect_uri, {
+        :error => error,
+        :error_description => error_description,
+        :state => state
+      })
+    end
+
+    def redirect_on_error?
+      (error != :invalid_redirect_uri) && (error != :invalid_client)
     end
 
     def client
@@ -69,36 +69,12 @@ module Doorkeeper::OAuth
 
     private
 
-    def create_authorization
-      @grant = AccessGrant.create!(
-        :application_id    => client.id,
-        :resource_owner_id => resource_owner.id,
-        :expires_in        => DEFAULT_EXPIRATION_TIME,
-        :redirect_uri      => redirect_uri,
-        :scopes            => scope
-      )
-    end
-
-    def has_state?
-      state.present?
-    end
-
     def has_scope?
       Doorkeeper.configuration.scopes.all.present?
     end
 
-    def token
-      @grant.token
-    end
-
-    def build_uri
-      uri = URI.parse(redirect_uri)
-      yield uri
-      uri.to_s
-    end
-
     def validate_attributes
-      %w(response_type client_id redirect_uri).all? { |attr| send(attr).present? }
+      response_type.present?
     end
 
     def validate_client
@@ -106,28 +82,38 @@ module Doorkeeper::OAuth
     end
 
     def validate_redirect_uri
-      uri = URI.parse(redirect_uri)
-      return false unless uri.fragment.nil?
-      return false if uri.scheme.nil?
-      return false if uri.host.nil?
-      client.is_matching_redirect_uri?(redirect_uri)
+      return false unless redirect_uri
+      URIChecker.valid_for_authorization?(redirect_uri, client.redirect_uri)
     end
 
     def validate_response_type
-      response_type == "code"
+      is_code_request? || is_token_request?
     end
 
     def validate_scope
       return true unless has_scope?
-      scope.present? && scope !~ /[\n|\r|\t]/ && scope.split(" ").all? { |s| Doorkeeper.configuration.scopes.exists?(s) }
+      ScopeChecker.valid?(scope, configuration.scopes)
     end
 
-    def access_token
-      AccessToken.accessible.where(:application_id => client.id, :resource_owner_id => resource_owner.id).first
+    def is_code_request?
+      response_type == "code"
     end
 
-    def access_token_scope_matches?
-      (access_token.scopes - scope.split(" ").map(&:to_sym)).empty?
+    def is_token_request?
+      response_type == "token"
+    end
+
+    def error_description
+      I18n.translate error, :scope => [:doorkeeper, :errors, :messages]
+    end
+
+    def configuration
+      Doorkeeper.configuration
+    end
+
+    def authorization_method
+      klass = is_code_request? ? "Code" : "Token"
+      "Doorkeeper::OAuth::Authorization::#{klass}".constantize
     end
   end
 end
