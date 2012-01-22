@@ -5,7 +5,7 @@ module Doorkeeper
     def parse_client_info_from_basic_auth
       auth_header = request.env['HTTP_AUTHORIZATION']
       return unless auth_header && auth_header =~ /^Basic (.*)/m
-      client_info = ActiveSupport::Base64.decode64($1).split(/:/, 2)
+      client_info = Base64.decode64($1).split(/:/, 2)
       client_id = client_info[0]
       client_secret = client_info[1]
       return if client_id.nil? || client_secret.nil?
