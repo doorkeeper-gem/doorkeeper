@@ -26,7 +26,6 @@ feature "Access Token Request" do
 
   scenario "get access token for valid grant code with basic auth header" do
     post token_endpoint_url(:code => @authorization.token, :redirect_uri => @client.redirect_uri), {} , { 'HTTP_AUTHORIZATION' => basic_auth_header_for_client(@client)}
-
     token = AccessToken.where(:application_id => @client.id).first
     token.should_not be_nil
     token.scopes.should == [:public]
@@ -40,6 +39,49 @@ feature "Access Token Request" do
     parsed_response['token_type'].should    == "bearer"
     parsed_response['expires_in'].should    == token.expires_in
     parsed_response['refresh_token'].should be_nil
+  end
+
+  scenario "get one access token for two valid grant codes" do
+    resource_owner_id = @authorization.resource_owner_id
+    post token_endpoint_url(:code => @authorization.token, :client => @client)
+
+    tokens = AccessToken.where(:application_id => @client.id)
+    tokens.size.should be(1)
+    current_token = tokens.first
+
+    current_token.expired?.should be_false
+    current_token.revoked_at.should be_nil
+
+    new_authorization = authorization_code_exists(:client => @client, :scopes => "public")
+    @authorization.resource_owner_id = resource_owner_id
+    post token_endpoint_url(:code => @authorization.token, :client => @client)
+
+    tokens = AccessToken.where(:application_id => @client.id)
+    tokens.size.should eq(1)
+  end
+
+  scenario "get a new access token for a valid grant code if the first access token is expired" do
+    resource_owner_id = @authorization.resource_owner_id
+    post token_endpoint_url(:code => @authorization.token, :client => @client)
+
+    tokens = AccessToken.where(:application_id => @client.id)
+
+    tokens.size.should be(1)
+
+    current_token = tokens.first
+    current_token.created_at = Time.now - current_token.expires_in - 1.second
+    current_token.save
+
+    current_token.expired?.should be_true
+
+    id = current_token.id
+    new_authorization = authorization_code_exists(:client => @client, :scopes => "public")
+    @authorization.resource_owner_id = resource_owner_id
+    post token_endpoint_url(:code => @authorization.token, :client => @client)
+    tokens = AccessToken.where(:application_id => @client.id)
+
+    tokens.size.should eq(2)
+    AccessToken.find(id).revoked_at.should_not be_nil
   end
 
   scenario "get access token for valid grant code with no client information" do
