@@ -3,6 +3,7 @@ require 'spec_helper_integration'
 describe Doorkeeper::AuthorizationsController do
   include Doorkeeper::OAuth
   include AuthorizationRequestHelper
+  include ModelHelper
 
   describe "when resource owner is not authenticated" do
     include_context "not authenticated resource owner"
