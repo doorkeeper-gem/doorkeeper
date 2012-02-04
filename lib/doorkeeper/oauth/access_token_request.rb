@@ -46,7 +46,8 @@ module Doorkeeper::OAuth
     end
 
     def access_token
-      @access_token ||= AccessToken.find_by_application_id(client.id, :conditions => {:revoked_at => nil})
+      @access_token ||= AccessToken.find_by_application_id(client.id,
+          :conditions => {:revoked_at => nil, :resource_owner_id => base_token.resource_owner_id, :scopes => base_token.scopes } )
     end
 
     def token_type
