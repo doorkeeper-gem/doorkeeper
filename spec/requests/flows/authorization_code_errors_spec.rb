@@ -78,3 +78,34 @@ feature 'Authorization Code Flow Errors' do
     end
   end
 end
+
+feature 'Authorization Code Flow Errors', 'after authorization' do
+  background do
+    client_exists
+    authorization_code_exists :client => @client
+  end
+
+  scenario "returns :invalid_grant error when posting an already revoked grant code" do
+    # First successful request
+    post token_endpoint_url(:code => @authorization.token, :client => @client)
+
+    # Second attempt with same token
+    expect {
+      post token_endpoint_url(:code => @authorization.token, :client => @client)
+    }.to_not change { AccessToken.count }
+
+    should_not_have_json 'access_token'
+    should_have_json 'error', 'invalid_grant'
+    should_have_json 'error_description', translated_error_message('invalid_grant')
+  end
+
+  scenario "returns :invalid_grant error for invalid grant code" do
+    post token_endpoint_url(:code => "invalid", :client => @client)
+
+    access_token_should_not_exists
+
+    should_not_have_json 'access_token'
+    should_have_json 'error', 'invalid_grant'
+    should_have_json 'error_description', translated_error_message('invalid_grant')
+  end
+end
