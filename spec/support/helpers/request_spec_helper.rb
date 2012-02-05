@@ -31,6 +31,14 @@ module RequestSpecHelper
     headers[header].should == value
   end
 
+  def should_have_json(key, value)
+    JSON.parse(response.body).fetch(key).should == value
+  end
+
+  def should_not_have_json(key)
+    JSON.parse(response.body).should_not have_key(key)
+  end
+
   def sign_in
     visit '/'
     click_on "Sign in"

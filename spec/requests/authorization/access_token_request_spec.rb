@@ -13,27 +13,6 @@ feature "Access Token Request" do
     token.should_not be_nil
     token.scopes.should == [:public]
 
-    should_have_header 'Pragma', 'no-cache'
-    should_have_header 'Cache-Control', 'no-store'
-
-    parsed_response.should_not have_key('error')
-
-    parsed_response['access_token'].should  == token.token
-    parsed_response['token_type'].should    == "bearer"
-    parsed_response['expires_in'].should    == token.expires_in
-    parsed_response['refresh_token'].should be_nil
-  end
-
-  scenario "get access token for valid grant code with basic auth header" do
-    post token_endpoint_url(:code => @authorization.token, :redirect_uri => @client.redirect_uri), {} , { 'HTTP_AUTHORIZATION' => basic_auth_header_for_client(@client)}
-
-    token = AccessToken.where(:application_id => @client.id).first
-    token.should_not be_nil
-    token.scopes.should == [:public]
-
-    should_have_header 'Pragma', 'no-cache'
-    should_have_header 'Cache-Control', 'no-store'
-
     parsed_response.should_not have_key('error')
 
     parsed_response['access_token'].should  == token.token
@@ -48,9 +27,6 @@ feature "Access Token Request" do
     token = AccessToken.where(:application_id => @client.id).first
     token.should be_nil
 
-    should_have_header 'Pragma', 'no-cache'
-    should_have_header 'Cache-Control', 'no-store'
-
     parsed_response.should_not have_key('access_token')
     parsed_response['error'].should == 'invalid_client'
     parsed_response['error_description'].should == I18n.translate('doorkeeper.errors.messages.invalid_client')
@@ -61,9 +37,6 @@ feature "Access Token Request" do
 
     token = AccessToken.where(:application_id => @client.id).first
     token.should be_nil
-
-    should_have_header 'Pragma', 'no-cache'
-    should_have_header 'Cache-Control', 'no-store'
 
     parsed_response.should_not have_key('access_token')
     parsed_response['error'].should == 'invalid_grant'
