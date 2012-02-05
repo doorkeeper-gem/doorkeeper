@@ -36,6 +36,14 @@ feature 'Authorization Code Flow' do
     post token_endpoint_url(:code => authorization_code, :client => @client)
 
     access_token_should_exists_for(@client, @resource_owner)
+
+    should_not_have_json 'error'
+
+    should_have_json 'access_token', AccessToken.first.token
+    should_have_json 'token_type',   "bearer"
+    should_have_json 'expires_in',   AccessToken.first.expires_in
+
+    should_not_have_json 'refresh_token'
   end
 
   context 'with scopes' do

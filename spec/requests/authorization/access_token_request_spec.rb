@@ -6,21 +6,6 @@ feature "Access Token Request" do
     authorization_code_exists(:client => @client, :scopes => "public")
   end
 
-  scenario "get access token for valid grant code" do
-    post token_endpoint_url(:code => @authorization.token, :client => @client)
-
-    token = AccessToken.where(:application_id => @client.id).first
-    token.should_not be_nil
-    token.scopes.should == [:public]
-
-    parsed_response.should_not have_key('error')
-
-    parsed_response['access_token'].should  == token.token
-    parsed_response['token_type'].should    == "bearer"
-    parsed_response['expires_in'].should    == token.expires_in
-    parsed_response['refresh_token'].should be_nil
-  end
-
   scenario "get access token for valid grant code with no client information" do
     post token_endpoint_url(:code => @authorization.token, :redirect_uri => @client.redirect_uri)
 
