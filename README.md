@@ -144,6 +144,10 @@ All supported ruby versions are [listed here](https://github.com/applicake/doork
 - Felipe Elias Philipp ([github.com/felipeelias](https://github.com/felipeelias))
 - Piotr Jakubowski ([github.com/piotrj](https://github.com/piotrj))
 
+### Contributors
+
+Thanks to all our [awesome contributors](https://github.com/applicake/doorkeeper/contributors)!
+
 ### License
 
 MIT License. Copyright 2011 Applicake. [http://applicake.com](http://applicake.com)
