@@ -31,6 +31,18 @@ module RequestSpecHelper
     headers[header].should == value
   end
 
+  def with_access_token_header(token)
+    with_header 'Authorization', "Bearer #{token}"
+  end
+
+  def with_header(header, value)
+    page.driver.header header, value
+  end
+
+  def basic_auth_header_for_client(client)
+    "Basic #{Base64.encode64("#{client.uid}:#{client.secret}")}"
+  end
+
   def should_have_json(key, value)
     JSON.parse(response.body).fetch(key).should == value
   end
@@ -50,6 +62,10 @@ module RequestSpecHelper
 
   def translated_error_message(key)
     I18n.translate key, :scope => [:doorkeeper, :errors, :messages]
+  end
+
+  def response_status_should_be(status)
+    page.driver.response.status.to_i.should == status
   end
 end
 

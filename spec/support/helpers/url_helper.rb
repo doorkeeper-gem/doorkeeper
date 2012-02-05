@@ -34,10 +34,6 @@ module UrlHelper
   def build_query(hash)
     Rack::Utils.build_query(hash)
   end
-
-  def basic_auth_header_for_client(client)
-    "Basic #{ActiveSupport::Base64.encode64("#{client.uid}:#{client.secret}")}"
-  end
 end
 
 RSpec.configuration.send :include, UrlHelper, :type => :request
