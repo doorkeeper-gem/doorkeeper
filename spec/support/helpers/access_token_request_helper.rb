@@ -22,10 +22,6 @@ module AccessTokenRequestHelper
   def response_status_should_be(status)
     page.driver.response.status.to_i.should == status
   end
-
-  def parsed_response
-    JSON.parse(response.body)
-  end
 end
 
 RSpec.configuration.send :include, AccessTokenRequestHelper, :type => :request
