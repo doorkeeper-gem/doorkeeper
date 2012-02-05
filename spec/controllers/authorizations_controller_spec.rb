@@ -2,19 +2,25 @@ require 'spec_helper_integration'
 
 describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
   include AuthorizationRequestHelper
-  include ModelHelper
 
   def fragments(param)
     fragment = URI.parse(response.location).fragment
     Rack::Utils.parse_query(fragment)[param]
   end
 
-  describe "POST #create" do
-    let(:client) { Factory :application }
-    let(:user)   { double(:user, :id => 9) }
+  def translated_error_message(key)
+    I18n.translate key, :scope => [:doorkeeper, :errors, :messages]
+  end
 
+  let(:client) { Factory :application }
+  let(:user)   { double(:user, :id => 9) }
+
+  before do
+    controller.stub :current_resource_owner => user
+  end
+
+  describe "POST #create" do
     before do
-      controller.stub :current_resource_owner => user
       post :create, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uri, :use_route => :doorkeeper
     end
 
@@ -48,79 +54,79 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     end
   end
 
-  describe "#new with token response type" do
+  describe "POST #create with errors" do
     before do
-      @user   = User.create!
-      resource_owner_is_authenticated @user
-      client_exists
-      scope_exist(:public, :default => true, :description => "Access your public data")
-      scope_exist(:write, :description => "Update your data")
-      @access_token = Factory :access_token, :application => @client, :resource_owner_id => @user.id, :scopes => "public"
+      scope_exist :public
+      post :create, :client_id => client.uid, :response_type => "token", :scope => "invalid", :redirect_uri => client.redirect_uri, :use_route => :doorkeeper
     end
 
-    it "returns the existing access token in a fragment" do
-      pending "It seems that authorization server should always issue a new token"
-      lambda {
-        get :new, :client_id => @client.uid, :response_type => "token", :redirect_uri => @client.redirect_uri, :use_route => :doorkeeper
-        response.should be_redirect
-        uri = response.location
-        fragment_params = parse_fragment_params(uri)
-        fragment_params.should_not be_empty
-        fragment_params["access_token"].should == @access_token.token
-        fragment_params["expires_in"].should_not be_nil
-        fragment_params["token_type"].should == "bearer"
-      }.should_not change(AccessToken, :count).by(1)
+    it "redirects after authorization" do
+      response.should be_redirect
     end
 
-    it "returns an error in a fragment for an invalid request" do
-      @access_token = Factory :access_token, :application => @client, :resource_owner_id => @user.id
-      lambda {
-        get :new, :client_id => @client.uid, :response_type => "token", :redirect_uri => @client.redirect_uri, :scope => "invalid", :use_route => :doorkeeper
-        response.should be_redirect
-        uri = response.location
-        fragment_params = parse_fragment_params(uri)
-        fragment_params.should_not be_empty
-        fragment_params["error"].should == "invalid_scope"
-        fragment_params["error_description"].should == (I18n.translate :invalid_scope, :scope => [:doorkeeper, :errors, :messages])
-      }.should_not change(AccessToken, :count)
+    it "redirects to client redirect uri" do
+      response.location.should =~ %r[^#{client.redirect_uri}]
+    end
+
+    it "does not include access token in fragment" do
+      fragments("access_token").should be_nil
+    end
+
+    it "includes error in fragment" do
+      fragments("error").should == "invalid_scope"
+    end
+
+    it "includes error description in fragment" do
+      fragments("error_description").should == translated_error_message(:invalid_scope)
+    end
+
+    it "does not issue any access token" do
+      AccessToken.all.should be_empty
     end
   end
 
-  describe "#create with token response type" do
+  describe "POST #create with application already authorized" do
+    it "returns the existing access token in a fragment"
+  end
+
+  describe "GET #new" do
     before do
-      @user   = User.create!
-      resource_owner_is_authenticated @user
-      client_exists
-      scope_exist(:public, :default => true, :description => "Access your public data")
-      scope_exist(:write, :description => "Update your data")
+      get :new, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uri, :use_route => :doorkeeper
     end
 
-    it "returns the existing access token in a fragment if a token exists" do
-      pending "It seems that authorization server should always issue a new token"
-      @access_token = Factory :access_token, :application => @client, :resource_owner_id => @user.id, :scopes => "public"
-      lambda {
-        post :create, :client_id => @client.uid, :response_type => "token", :redirect_uri => @client.redirect_uri, :use_route => :doorkeeper
-        response.should be_redirect
-        uri = response.location
-        fragment_params = parse_fragment_params(uri)
-        fragment_params.should_not be_empty
-        fragment_params["access_token"].should == @access_token.token
-        fragment_params["expires_in"].should_not be_nil
-        fragment_params["token_type"].should == "bearer"
-      }.should_not change(AccessToken, :count)
+    it 'renders new template' do
+      response.should render_template(:new)
+    end
+  end
+
+  describe "GET #new with errors" do
+    before do
+      scope_exist :public
+      get :new, :client_id => client.uid, :response_type => "token", :scope => "invalid", :redirect_uri => client.redirect_uri, :use_route => :doorkeeper
     end
 
-    it "returns an error in a fragment for an invalid request" do
-      @access_token = Factory :access_token, :application => @client, :resource_owner_id => @user.id
-      lambda {
-        post :create, :client_id => @client.uid, :response_type => "token", :redirect_uri => @client.redirect_uri, :scope => "invalid", :use_route => :doorkeeper
-        response.should be_redirect
-        uri = response.location
-        fragment_params = parse_fragment_params(uri)
-        fragment_params.should_not be_empty
-        fragment_params["error"].should == "invalid_scope"
-        fragment_params["error_description"].should == (I18n.translate :invalid_scope, :scope => [:doorkeeper, :errors, :messages])
-      }.should_not change(AccessToken, :count)
+    it "redirects after authorization" do
+      response.should be_redirect
+    end
+
+    it "redirects to client redirect uri" do
+      response.location.should =~ %r[^#{client.redirect_uri}]
+    end
+
+    it "does not include access token in fragment" do
+      fragments("access_token").should be_nil
+    end
+
+    it "includes error in fragment" do
+      fragments("error").should == "invalid_scope"
+    end
+
+    it "includes error description in fragment" do
+      fragments("error_description").should == translated_error_message(:invalid_scope)
+    end
+
+    it "does not issue any access token" do
+      AccessToken.all.should be_empty
     end
   end
 end
