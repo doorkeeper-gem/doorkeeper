@@ -36,7 +36,7 @@ module UrlHelper
   end
 
   def basic_auth_header_for_client(client)
-    "Basic #{ActiveSupport::Base64.encode64("#{client.uid}:#{client.secret}")}"
+    "Basic #{Base64.encode64("#{client.uid}:#{client.secret}")}"
   end
 end
 

@@ -16,7 +16,7 @@ class AccessGrant < ActiveRecord::Base
   end
 
   def scopes
-    self[:scopes].split(" ").map(&:to_sym)
+    self[:scopes].split(" ").map(&:to_sym) if self[:scopes]
   end
 
   def scopes_string
