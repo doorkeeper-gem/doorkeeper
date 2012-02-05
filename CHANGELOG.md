@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.0 (unreleased)
+
+- enhancements
+  - [#17, #31] Add support for client credentials in basic auth header [@GoldsteinTechPartners](https://github.com/GoldsteinTechPartners)
+  - [#28] Add indices to migration [@GoldsteinTechPartners](https://github.com/GoldsteinTechPartners)
+  - [#29] Allow doorkeeper to run with rails 3.2 [@john-griffin](https://github.com/john-griffin)
+  - [#30] Improve client's redirect uri validation [@GoldsteinTechPartners](https://github.com/GoldsteinTechPartners)
+  - [#32] Add token (implicit grant) flow [@GoldsteinTechPartners](https://github.com/GoldsteinTechPartners)
+  - [#34] Add support for custom unathorized responses [@GoldsteinTechPartners](https://github.com/GoldsteinTechPartners)
+  - Error messages now can be translated
+  - Install generator copies the error messages localization file
+- internals
+  - Depends on railties instead of whole rails framework
+  - CI now integrates with rails 3.1 and 3.2
+
 ## 0.2.0
 
 - enhancements
