@@ -15,11 +15,11 @@ Gem::Specification.new do |s|
 
   s.add_dependency "rails", ">= 3.1.1", "< 4.0"
 
-  s.add_development_dependency "sqlite3"
+  s.add_development_dependency "sqlite3", "~> 1.3.5"
   s.add_development_dependency "rspec-rails", "~> 2.8.1"
-  s.add_development_dependency "capybara"
-  s.add_development_dependency "generator_spec"
+  s.add_development_dependency "capybara", "~> 1.1.2"
+  s.add_development_dependency "generator_spec", "~> 0.8.5"
   s.add_development_dependency "factory_girl_rails", "~> 1.4.0"
-  s.add_development_dependency "timecop"
-  s.add_development_dependency "database_cleaner"
+  s.add_development_dependency "timecop", "~> 0.3.5"
+  s.add_development_dependency "database_cleaner", "~> 0.7.1"
 end
