@@ -66,4 +66,36 @@ describe 'Application' do
     new_application.secret = nil
     new_application.should_not be_valid
   end
+
+  describe :authorized_for do
+    let(:resource_owner) { double(:resource_owner, :id => 10) }
+
+    it "is empty if the application is not authorized for anyone" do
+      Application.authorized_for(resource_owner).should be_empty
+    end
+
+    it "returns only application for a specific resource owner" do
+      Factory(:access_token, :resource_owner_id => resource_owner.id + 1)
+      token = Factory(:access_token, :resource_owner_id => resource_owner.id)
+      Application.authorized_for(resource_owner).should == [token.application]
+    end
+
+    it "excludes revoked tokens" do
+      Factory(:access_token, :resource_owner_id => resource_owner.id, :revoked_at => 2.days.ago)
+      Application.authorized_for(resource_owner).should be_empty
+    end
+
+    it "returns all applications that have been authorized" do
+      token1 = Factory(:access_token, :resource_owner_id => resource_owner.id)
+      token2 = Factory(:access_token, :resource_owner_id => resource_owner.id)
+      Application.authorized_for(resource_owner).should == [token1.application, token2.application]
+    end
+
+    it "returns only one application even if it has been authorized twice" do
+      application = Factory(:application)
+      Factory(:access_token, :resource_owner_id => resource_owner.id, :application => application)
+      Factory(:access_token, :resource_owner_id => resource_owner.id, :application => application)
+      Application.authorized_for(resource_owner).should == [application]
+    end
+  end
 end
