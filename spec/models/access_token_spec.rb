@@ -23,6 +23,32 @@ describe AccessToken do
     end
   end
 
+  describe '.revoke_all_for' do
+    let(:resource_owner) { stub(:id => 100) }
+    let(:application)    { Factory :application }
+    let(:default_attributes) do
+      { :application => application, :resource_owner_id => resource_owner.id }
+    end
+
+    it 'revokes all tokens for given application and resource owner' do
+      Factory :access_token, default_attributes
+      AccessToken.revoke_all_for application.id, resource_owner
+      AccessToken.all.should be_empty
+    end
+
+    it 'matches application' do
+      Factory :access_token, default_attributes.merge(:application => Factory(:application))
+      AccessToken.revoke_all_for application.id, resource_owner
+      AccessToken.all.should_not be_empty
+    end
+
+    it 'matches resource owner' do
+      Factory :access_token, default_attributes.merge(:resource_owner_id => 90)
+      AccessToken.revoke_all_for application.id, resource_owner
+      AccessToken.all.should_not be_empty
+    end
+  end
+
   describe '.matching_token_for' do
     let(:resource_owner) { stub(:id => 100) }
     let(:application)    { Factory :application }

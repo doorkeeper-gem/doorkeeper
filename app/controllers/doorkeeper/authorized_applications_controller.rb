@@ -6,8 +6,7 @@ class Doorkeeper::AuthorizedApplicationsController < Doorkeeper::ApplicationCont
   end
 
   def destroy
-    token = AccessToken.authorized_for(params[:id], current_resource_owner)
-    token.revoke
+    AccessToken.revoke_all_for params[:id], current_resource_owner
     redirect_to authorized_applications_path, :notice => "Application revoked."
   end
 end

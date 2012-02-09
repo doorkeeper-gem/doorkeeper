@@ -16,6 +16,11 @@ class AccessToken < ActiveRecord::Base
   before_validation :generate_token, :on => :create
   before_validation :generate_refresh_token, :on => :create, :if => :use_refresh_token?
 
+  def self.revoke_all_for(application_id, resource_owner)
+    where(:application_id => application_id,
+            :resource_owner_id => resource_owner.id).delete_all
+  end
+
   def self.matching_token_for(application, resource_owner_or_id, scopes)
     token = last_authorized_token_for(application, resource_owner_or_id)
     token if token && ScopeChecker.matches?(token.scopes, scopes)
