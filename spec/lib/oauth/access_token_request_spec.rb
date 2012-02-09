@@ -44,6 +44,58 @@ module Doorkeeper::OAuth
       end
     end
 
+    describe "with a valid authorization code, client and existing valid access token" do
+      subject { AccessTokenRequest.new(params) }
+
+      before { subject.authorize }
+      it { should be_valid }
+      its(:error)         { should be_nil }
+
+      it "will not create a new token" do
+        subject.should_not_receive(:create_access_token)
+        subject.authorize
+      end
+    end
+
+    describe "with a valid authorization code, client and existing expired access token" do
+      subject { AccessTokenRequest.new(params) }
+
+      it "will create a new token" do
+        subject.authorize
+        expired_access_token = subject.access_token.dup
+        subject.access_token.created_at = Time.now - subject.access_token.expires_in - 1.second
+        subject.should_receive(:create_access_token)
+        subject.access_token.should_receive(:revoke)
+        subject.authorize
+        subject.access_token.should_not eq(expired_access_token)
+      end
+    end
+
+    describe "finding the current access token" do
+      subject { AccessTokenRequest.new(params) }
+      it { should be_valid }
+      its(:error)         { should be_nil }
+
+      before { subject.authorize }
+
+      it "should find the access token and not create a new one" do
+        subject.should_not_receive(:create_access_token)
+        access_token = subject.authorize
+        subject.access_token.should eq(access_token)
+      end
+    end
+
+    describe "creating the first access_token" do
+      subject { AccessTokenRequest.new(params) }
+      it { should be_valid }
+      its(:error)         { should be_nil }
+
+      it "should create a new access token" do
+        subject.should_receive(:create_access_token)
+        subject.authorize
+      end
+    end
+
     describe "with errors" do
       def token(params)
         AccessTokenRequest.new(params)

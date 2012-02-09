@@ -23,49 +23,82 @@ describe AccessToken do
     end
   end
 
-  describe ".has_authorized_token_for?" do
-    let(:resource_owner) { stub(:id => 1) }
+  describe '.revoke_all_for' do
+    let(:resource_owner) { stub(:id => 100) }
     let(:application)    { Factory :application }
-    let(:scopes)         { "public write" }
     let(:default_attributes) do
-      { :application => application, :resource_owner_id => resource_owner.id, :scopes => scopes }
+      { :application => application, :resource_owner_id => resource_owner.id }
     end
 
-    it "is authorized if application, resource owner and scopes matches" do
+    it 'revokes all tokens for given application and resource owner' do
       Factory :access_token, default_attributes
-      token = AccessToken.has_authorized_token_for?(application, resource_owner, scopes)
-      token.should be_true
+      AccessToken.revoke_all_for application.id, resource_owner
+      AccessToken.all.should be_empty
     end
 
-    it "is not authorized if application does not match" do
+    it 'matches application' do
       Factory :access_token, default_attributes.merge(:application => Factory(:application))
-      token = AccessToken.has_authorized_token_for?(application, resource_owner, scopes)
-      token.should be_false
+      AccessToken.revoke_all_for application.id, resource_owner
+      AccessToken.all.should_not be_empty
     end
 
-    it "is not authorized if resource_owner does not match" do
+    it 'matches resource owner' do
+      Factory :access_token, default_attributes.merge(:resource_owner_id => 90)
+      AccessToken.revoke_all_for application.id, resource_owner
+      AccessToken.all.should_not be_empty
+    end
+  end
+
+  describe '.matching_token_for' do
+    let(:resource_owner_id) { 100 }
+    let(:application)       { Factory :application }
+    let(:scopes)            { "public write" }
+    let(:default_attributes) do
+      { :application => application, :resource_owner_id => resource_owner_id, :scopes => scopes }
+    end
+
+    it 'returns only one token' do
+      token = Factory :access_token, default_attributes
+      last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
+      last_token.should == token
+    end
+
+    it 'accepts resource owner as object' do
+      resource_owner = stub(:kind_of? => true, :id => 100)
+      token = Factory :access_token, default_attributes
+      last_token = AccessToken.matching_token_for(application, resource_owner, scopes)
+      last_token.should == token
+    end
+
+    it 'excludes revoked tokens' do
+      Factory :access_token, default_attributes.merge(:revoked_at => 1.day.ago)
+      last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
+      last_token.should be_nil
+    end
+
+    it 'matches the application' do
+      token = Factory :access_token, default_attributes.merge(:application => Factory(:application))
+      last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
+      last_token.should be_nil
+    end
+
+    it 'matches the resource owner' do
       Factory :access_token, default_attributes.merge(:resource_owner_id => 2)
-      token = AccessToken.has_authorized_token_for?(application, resource_owner, scopes)
-      token.should be_false
+      last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
+      last_token.should be_nil
     end
 
-    it "is not authorized if token was revoked" do
-      Factory :access_token, default_attributes.merge(:revoked_at => 1.hour.ago)
-      token = AccessToken.has_authorized_token_for?(application, resource_owner, scopes)
-      token.should be_false
+    it 'matches the scopes' do
+      Factory :access_token, default_attributes.merge(:scopes => 'public email')
+      last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
+      last_token.should be_nil
     end
 
-    it "is not authorized if scopes differs" do
-      Factory :access_token, default_attributes.merge(:scopes => "public email")
-      token = AccessToken.has_authorized_token_for?(application, resource_owner, scopes)
-      token.should be_false
-    end
-
-    it "validates scopes against the most recent token" do
-      Factory :access_token, default_attributes.merge(:created_at => 2.days.ago, :scopes => "another scope")
-      Factory :access_token, default_attributes
-      token = AccessToken.has_authorized_token_for?(application, resource_owner, scopes)
-      token.should be_true
+    it 'returns the last created token' do
+      Factory :access_token, default_attributes.merge(:created_at => 1.day.ago)
+      token = Factory :access_token, default_attributes
+      last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
+      last_token.should == token
     end
   end
 end

@@ -28,6 +28,33 @@ feature 'Authorization Code Flow' do
     url_should_have_param("state", "return-me")
   end
 
+  scenario 'returns the same token if it is still accessible' do
+    client_is_authorized(@client, @resource_owner)
+    visit authorization_endpoint_url(:client => @client)
+
+    authorization_code = AccessGrant.first.token
+    post token_endpoint_url(:code => authorization_code, :client => @client)
+
+    AccessToken.count.should be(1)
+
+    should_have_json 'access_token', AccessToken.first.token
+  end
+
+  scenario 'revokes and return new token if it is has expired' do
+    client_is_authorized(@client, @resource_owner)
+    token = AccessToken.first
+    token.update_attribute :expires_in, -100
+    visit authorization_endpoint_url(:client => @client)
+
+    authorization_code = AccessGrant.first.token
+    post token_endpoint_url(:code => authorization_code, :client => @client)
+
+    token.reload.should be_revoked
+    AccessToken.count.should be(2)
+
+    should_have_json 'access_token', AccessToken.last.token
+  end
+
   scenario 'resource owner requests an access token with authorization code' do
     visit authorization_endpoint_url(:client => @client)
     click_on "Authorize"
@@ -74,6 +101,19 @@ feature 'Authorization Code Flow' do
 
       access_token_should_exists_for(@client, @resource_owner)
       access_token_should_have_scopes :public, :write
+    end
+
+    scenario 'returns new token if scopes have changed' do
+      client_is_authorized(@client, @resource_owner, :scopes => "public write")
+      visit authorization_endpoint_url(:client => @client, :scope => "public")
+      click_on "Authorize"
+
+      authorization_code = AccessGrant.first.token
+      post token_endpoint_url(:code => authorization_code, :client => @client)
+
+      AccessToken.count.should be(2)
+
+      should_have_json 'access_token', AccessToken.last.token
     end
   end
 end

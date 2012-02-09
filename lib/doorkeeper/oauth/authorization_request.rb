@@ -35,7 +35,7 @@ module Doorkeeper::OAuth
     end
 
     def access_token_exists?
-      AccessToken.has_authorized_token_for?(client, resource_owner, scope)
+      AccessToken.matching_token_for(client, resource_owner, scope).present?
     end
 
     def deny

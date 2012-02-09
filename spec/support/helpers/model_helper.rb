@@ -7,8 +7,8 @@ module ModelHelper
     @resource_owner = User.create!
   end
 
-  def authorization_code_exists(options)
-    @authorization = Factory(:access_grant, :application => options[:client], :scopes => options[:scopes])
+  def authorization_code_exists(options = {})
+    @authorization = Factory(:access_grant, options)
   end
 
   def access_grant_should_exists_for(client, resource_owner)

@@ -82,7 +82,7 @@ end
 feature 'Authorization Code Flow Errors', 'after authorization' do
   background do
     client_exists
-    authorization_code_exists :client => @client
+    authorization_code_exists :application => @client
   end
 
   scenario "returns :invalid_grant error when posting an already revoked grant code" do

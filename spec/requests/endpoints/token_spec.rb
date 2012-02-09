@@ -3,7 +3,7 @@ require 'spec_helper_integration'
 feature 'Token endpoint' do
   background do
     client_exists
-    authorization_code_exists :client => @client, :scopes => "public"
+    authorization_code_exists :application => @client, :scopes => "public"
   end
 
   scenario 'respond with correct headers' do

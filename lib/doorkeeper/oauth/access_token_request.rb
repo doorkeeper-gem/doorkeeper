@@ -27,7 +27,7 @@ module Doorkeeper::OAuth
     def authorize
       if valid?
         revoke_base_token
-        create_access_token
+        find_or_create_access_token
       end
     end
 
@@ -46,7 +46,7 @@ module Doorkeeper::OAuth
     end
 
     def access_token
-      @access_token
+      @access_token ||= AccessToken.matching_token_for client, base_token.resource_owner_id, base_token.scopes_string
     end
 
     def token_type
@@ -61,6 +61,19 @@ module Doorkeeper::OAuth
     end
 
     private
+
+    def find_or_create_access_token
+      if access_token
+        access_token.expired? ? revoke_and_create_access_token : access_token
+      else
+        create_access_token
+      end
+    end
+
+    def revoke_and_create_access_token
+      access_token.revoke
+      create_access_token
+    end
 
     def revoke_base_token
       base_token.revoke

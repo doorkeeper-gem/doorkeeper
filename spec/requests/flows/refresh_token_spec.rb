@@ -8,7 +8,7 @@ feature "Refresh Token Flow" do
 
   context "issuing a refresh token" do
     before do
-      authorization_code_exists :client => @client
+      authorization_code_exists :application => @client
     end
 
     scenario "client gets the refresh token and refreshses it" do
