@@ -18,9 +18,9 @@ class Application < ActiveRecord::Base
   end
 
   def self.authorized_for(resource_owner)
-    joins(:authorized_applications)
-      .where(:oauth_access_tokens => { :resource_owner_id => resource_owner.id })
-      .group(column_names_with_table.join(','))
+    joins(:authorized_applications).
+      where(:oauth_access_tokens => { :resource_owner_id => resource_owner.id }).
+      group(column_names_with_table.join(','))
   end
 
   def validate_redirect_uri

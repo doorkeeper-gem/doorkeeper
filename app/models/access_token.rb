@@ -27,7 +27,7 @@ class AccessToken < ActiveRecord::Base
   end
 
   def self.last_authorized_token_for(application, resource_owner_or_id)
-    resource_owner_id = resource_owner_or_id.respond_to?(:id) ? resource_owner_or_id.id : resource_owner_or_id
+    resource_owner_id = resource_owner_or_id.kind_of?(ActiveRecord::Base) ? resource_owner_or_id.id : resource_owner_or_id
     accessible.
       where(:application_id => application.id,
             :resource_owner_id => resource_owner_id).
