@@ -34,11 +34,18 @@ describe AccessGrant do
     end
   end
 
-  describe :scopes, "returns an array of scopes" do
-    subject { Factory(:access_grant, :scopes => "public write").scopes }
+  describe :scopes do
+    it "is nil when scopes are not set" do
+      subject.scopes = nil
+      subject.scopes.should be_nil
+    end
 
-    it { should be_kind_of(Array) }
-    its(:count) { should == 2 }
-    it { should include(:public, :write) }
+    describe "returns an array of scopes" do
+      subject { Factory(:access_grant, :scopes => "public write").scopes }
+
+      it { should be_kind_of(Array) }
+      its(:count) { should == 2 }
+      it { should include(:public, :write) }
+    end
   end
 end
