@@ -16,19 +16,21 @@ class AccessToken < ActiveRecord::Base
   before_validation :generate_token, :on => :create
   before_validation :generate_refresh_token, :on => :create, :if => :use_refresh_token?
 
-  def self.authorized_for(application_id, resource_owner_id)
-    accessible.where(:application_id => application_id, :resource_owner_id => resource_owner_id).first
+  def self.matching_token_for(application, resource_owner_or_id, scopes)
+    token = last_authorized_token_for(application, resource_owner_or_id)
+    token if token && ScopeChecker.matches?(token.scopes, scopes)
   end
 
-  def self.has_authorized_token_for?(application, resource_owner, scopes)
-    token = accessible.
-            where(:application_id => application.id,
-                  :resource_owner_id => resource_owner.id).
-            order("created_at desc").
-            limit(1).
-            first
-    token && ScopeChecker.matches?(token.scopes, scopes)
+  def self.last_authorized_token_for(application, resource_owner_or_id)
+    resource_owner_id = resource_owner_or_id.respond_to?(:id) ? resource_owner_or_id.id : resource_owner_or_id
+    accessible.
+      where(:application_id => application.id,
+            :resource_owner_id => resource_owner_id).
+      order("created_at desc").
+      limit(1).
+      first
   end
+  private_class_method :last_authorized_token_for
 
   def token_type
     "bearer"
