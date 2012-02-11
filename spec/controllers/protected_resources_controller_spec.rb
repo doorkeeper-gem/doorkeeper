@@ -1,6 +1,5 @@
 require 'spec_helper_integration'
 
-
 module ControllerActions
   def index
     render :text => "index"
@@ -137,18 +136,6 @@ describe "Doorkeeper_for helper" do
     include_examples "specified for particular actions"
   end
 
-  context "defined only for index action (old syntax)" do
-    controller do
-      silence_warnings do
-        doorkeeper_for :only => :index
-      end
-
-      include ControllerActions
-    end
-
-    include_examples "specified for particular actions"
-  end
-
   context "defined for actions except index" do
     controller do
       doorkeeper_for :all, :except => :index
@@ -157,19 +144,6 @@ describe "Doorkeeper_for helper" do
     end
 
     include_examples "specified with except"
-  end
-
-  context "defined for actions except index (old syntax)" do
-    controller do
-      silence_warnings do
-        doorkeeper_for :except => :index
-      end
-
-      include ControllerActions
-    end
-
-    include_examples "specified with except"
-
   end
 
   context "defined with scopes" do
@@ -232,9 +206,6 @@ describe "Doorkeeper_for helper" do
         response.content_type.should == 'text/html'
         response.body.should == 'Unauthorized'
       end
-
     end
-
   end
-
 end

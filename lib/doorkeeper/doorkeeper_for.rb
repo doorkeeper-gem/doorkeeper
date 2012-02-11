@@ -64,28 +64,11 @@ module Doorkeeper
       case args.first
       when :all
         AllDoorkeeperFor.new(args[1] || {})
-      when Hash
-        handle_hash(args.first)
-      when nil
+      when Hash, nil
         raise InvalidSyntax
       else
         SelectedDoorkeeperFor.new(*args)
       end
-    end
-
-    def self.handle_hash(hash)
-      if hash.has_key?(:only)
-        warn "DEPRECATED: :only option. Put the actions you want doorkeeper to take care of after doorkeeper_for eg: doorkeeper_for :index, :new"
-        args = [hash[:only], hash.except(:only)]
-        return create_doorkeeper_for(*args)
-      end
-
-      if hash.has_key?(:except)
-        warn "DEPRECATED: :except option. Use in connection with :all -> doorkeeper_for :all, :except => "
-        return create_doorkeeper_for(:all, hash)
-      end
-
-      raise InvalidSyntax
     end
   end
 
