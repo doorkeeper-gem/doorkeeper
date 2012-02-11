@@ -14,6 +14,7 @@
   - Error messages now can be translated
   - Install generator copies the error messages localization file
 - internals
+  - Fix deprecation warnings in ActiveSupport::Base64
   - Remove deprecation in doorkeeper_for that handles hash arguments
   - Depends on railties instead of whole rails framework
   - CI now integrates with rails 3.1 and 3.2

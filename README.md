@@ -13,7 +13,7 @@ For more information about the supported features, check out the related [page i
 Put this in your Gemfile:
 
 ``` ruby
-gem 'doorkeeper'
+gem 'doorkeeper', '~> 0.3.0'
 ```
 
 Run the installation generator with:
