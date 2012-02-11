@@ -9,9 +9,12 @@
   - [#30] Improve client's redirect uri validation [@GoldsteinTechPartners](https://github.com/GoldsteinTechPartners)
   - [#32] Add token (implicit grant) flow [@GoldsteinTechPartners](https://github.com/GoldsteinTechPartners)
   - [#34] Add support for custom unathorized responses [@GoldsteinTechPartners](https://github.com/GoldsteinTechPartners)
+  - [#36] Remove repetitions from the Authorised Applications view [@carvil](https://github.com/carvil)
+  - When user revoke an application, all tokens for that application are revoked
   - Error messages now can be translated
   - Install generator copies the error messages localization file
 - internals
+  - Remove deprecation in doorkeeper_for that handles hash arguments
   - Depends on railties instead of whole rails framework
   - CI now integrates with rails 3.1 and 3.2
 
