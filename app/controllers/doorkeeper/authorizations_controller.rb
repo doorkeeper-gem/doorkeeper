@@ -32,6 +32,7 @@ class Doorkeeper::AuthorizationsController < Doorkeeper::ApplicationController
   private
 
   def authorization
-    @authorization ||= Doorkeeper::OAuth::AuthorizationRequest.new(current_resource_owner, params)
+    authorization_params = params.has_key?(:authorization) ? params[:authorization] : params
+    @authorization ||= Doorkeeper::OAuth::AuthorizationRequest.new(current_resource_owner, authorization_params)
   end
 end
