@@ -7,7 +7,7 @@ Doorkeeper.configure do
     # If you want to use named routes from your app you need
     # to call them on routes object eg.
     # routes.new_user_session_path
-    # e.g. User.find_by_id(session[:user_id]) || redirect_to routes.new_user_seesion_path
+    # e.g. User.find_by_id(session[:user_id]) || redirect_to(routes.new_user_session_path)
   end
 
   # If you want to restrict the access to the web interface for
@@ -18,7 +18,7 @@ Doorkeeper.configure do
   #   # If you want to use named routes from your app you need
   #   # to call them on routes object eg.
   #   # routes.new_admin_session_path
-  #   Admin.find_by_id(session[:admin_id]) || redirect_to routes.new_admin_session_path
+  #   Admin.find_by_id(session[:admin_id]) || redirect_to(routes.new_admin_session_path)
   # end
 
   # Access token expiration time (default 2 hours)
