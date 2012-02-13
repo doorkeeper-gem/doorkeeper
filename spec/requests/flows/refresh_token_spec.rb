@@ -14,7 +14,7 @@ feature "Refresh Token Flow" do
     scenario "client gets the refresh token and refreshses it" do
       post token_endpoint_url(:code => @authorization.token, :client => @client)
 
-      token = AccessToken.first
+      token = Doorkeeper::AccessToken.first
 
       should_have_json 'access_token',  token.token
       should_have_json 'refresh_token', token.refresh_token
@@ -23,7 +23,7 @@ feature "Refresh Token Flow" do
 
       post refresh_token_endpoint_url(:client => @client, :refresh_token => token.refresh_token)
 
-      new_token = AccessToken.last
+      new_token = Doorkeeper::AccessToken.last
       should_have_json 'access_token',  new_token.token
       should_have_json 'refresh_token', new_token.refresh_token
 
@@ -39,14 +39,14 @@ feature "Refresh Token Flow" do
 
     scenario "client request a token with refresh token" do
       post refresh_token_endpoint_url(:client => @client, :refresh_token => @token.refresh_token)
-      should_have_json 'refresh_token', AccessToken.last.refresh_token
+      should_have_json 'refresh_token', Doorkeeper::AccessToken.last.refresh_token
       @token.reload.should be_revoked
     end
 
     scenario "client request a token with expired access token" do
       @token.update_attribute :expires_in, -100
       post refresh_token_endpoint_url(:client => @client, :refresh_token => @token.refresh_token)
-      should_have_json 'refresh_token', AccessToken.last.refresh_token
+      should_have_json 'refresh_token', Doorkeeper::AccessToken.last.refresh_token
       @token.reload.should be_revoked
     end
 

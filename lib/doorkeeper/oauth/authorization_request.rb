@@ -35,7 +35,7 @@ module Doorkeeper::OAuth
     end
 
     def access_token_exists?
-      AccessToken.matching_token_for(client, resource_owner, scope).present?
+      Doorkeeper::AccessToken.matching_token_for(client, resource_owner, scope).present?
     end
 
     def deny
@@ -60,7 +60,7 @@ module Doorkeeper::OAuth
     end
 
     def client
-      @client ||= Application.find_by_uid(client_id)
+      @client ||= Doorkeeper::Application.find_by_uid(client_id)
     end
 
     def scopes

@@ -33,7 +33,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     end
 
     it "includes access token in fragment" do
-      fragments("access_token").should == AccessToken.first.token
+      fragments("access_token").should == Doorkeeper::AccessToken.first.token
     end
 
     it "includes token type in fragment" do
@@ -46,11 +46,11 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     end
 
     it "issues the token for the current client" do
-      AccessToken.first.application_id.should == client.id
+      Doorkeeper::AccessToken.first.application_id.should == client.id
     end
 
     it "issues the token for the current resource owner" do
-      AccessToken.first.resource_owner_id.should == user.id
+      Doorkeeper::AccessToken.first.resource_owner_id.should == user.id
     end
   end
 
@@ -81,7 +81,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     end
 
     it "does not issue any access token" do
-      AccessToken.all.should be_empty
+      Doorkeeper::AccessToken.all.should be_empty
     end
   end
 
@@ -126,7 +126,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     end
 
     it "does not issue any access token" do
-      AccessToken.all.should be_empty
+      Doorkeeper::AccessToken.all.should be_empty
     end
   end
 end

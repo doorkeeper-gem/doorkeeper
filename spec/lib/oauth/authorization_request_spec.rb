@@ -58,8 +58,8 @@ module Doorkeeper::OAuth
           let(:authorization_request) { AuthorizationRequest.new(resource_owner, attributes) }
           subject { authorization_request.authorize }
 
-          it "returns AccessGrant object" do
-            subject.is_a? AccessGrant
+          it "returns Doorkeeper::AccessGrant object" do
+            subject.is_a? Doorkeeper::AccessGrant
           end
 
           it "returns instance saved in the database" do
@@ -119,7 +119,7 @@ module Doorkeeper::OAuth
 
       describe "with errors" do
         before do
-          AccessGrant.should_not_receive(:create)
+          Doorkeeper::AccessGrant.should_not_receive(:create)
           Doorkeeper.stub_chain(:configuration, :scopes, :all).and_return([Doorkeeper::Scope.new(:public)])
         end
 
@@ -236,8 +236,8 @@ module Doorkeeper::OAuth
           let(:authorization_request) { AuthorizationRequest.new(resource_owner, attributes) }
           subject { authorization_request.authorize }
 
-          it "returns AccessGrant object" do
-            subject.is_a? AccessGrant
+          it "returns Doorkeeper::AccessGrant object" do
+            subject.is_a? Doorkeeper::AccessGrant
           end
 
           it "returns instance saved in the database" do
@@ -261,7 +261,7 @@ module Doorkeeper::OAuth
 
       describe "with errors" do
         before do
-          AccessGrant.should_not_receive(:create)
+          Doorkeeper::AccessGrant.should_not_receive(:create)
           Doorkeeper.stub_chain(:configuration, :scopes, :all).and_return([Doorkeeper::Scope.new(:public)])
         end
 
