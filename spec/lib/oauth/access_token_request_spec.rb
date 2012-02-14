@@ -33,7 +33,7 @@ module Doorkeeper::OAuth
       subject { AccessTokenRequest.new(params) }
 
       it "creates with correct params" do
-        AccessToken.should_receive(:create!).with({
+        Doorkeeper::AccessToken.should_receive(:create!).with({
           :application_id    => client.id,
           :resource_owner_id => grant.resource_owner_id,
           :expires_in        => 2.hours,

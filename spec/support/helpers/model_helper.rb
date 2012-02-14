@@ -12,32 +12,32 @@ module ModelHelper
   end
 
   def access_grant_should_exists_for(client, resource_owner)
-    grant = AccessGrant.first
+    grant = Doorkeeper::AccessGrant.first
     grant.application.should == client
     grant.resource_owner_id  == resource_owner.id
   end
 
   def access_token_should_exists_for(client, resource_owner)
-    grant = AccessToken.first
+    grant = Doorkeeper::AccessToken.first
     grant.application.should == client
     grant.resource_owner_id  == resource_owner.id
   end
 
   def access_grant_should_not_exists
-    AccessGrant.all.should be_empty
+    Doorkeeper::AccessGrant.all.should be_empty
   end
 
   def access_token_should_not_exists
-    AccessToken.all.should be_empty
+    Doorkeeper::AccessToken.all.should be_empty
   end
 
   def access_grant_should_have_scopes(*args)
-    grant = AccessGrant.first
+    grant = Doorkeeper::AccessGrant.first
     grant.scopes.should == args
   end
 
   def access_token_should_have_scopes(*args)
-    grant = AccessToken.first
+    grant = Doorkeeper::AccessToken.first
     grant.scopes.should == args
   end
 end

@@ -4,11 +4,11 @@ shared_context "valid token", :token => :valid do
   end
 
   let :token do
-    double(AccessToken, :accessible? => true)
+    double(Doorkeeper::AccessToken, :accessible? => true)
   end
 
   before :each do
-    AccessToken.stub(:find_by_token).with(token_string).and_return(token)
+    Doorkeeper::AccessToken.stub(:find_by_token).with(token_string).and_return(token)
   end
 end
 
@@ -18,11 +18,11 @@ shared_context "invalid token", :token => :invalid do
   end
 
   let :token do
-    double(AccessToken, :accessible? => false)
+    double(Doorkeeper::AccessToken, :accessible? => false)
   end
 
   before :each do
-    AccessToken.stub(:find_by_token).with(token_string).and_return(token)
+    Doorkeeper::AccessToken.stub(:find_by_token).with(token_string).and_return(token)
   end
 end
 

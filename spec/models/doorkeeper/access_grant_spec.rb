@@ -1,6 +1,6 @@
 require 'spec_helper_integration'
 
-describe AccessGrant do
+describe Doorkeeper::AccessGrant do
   subject { Factory.build(:access_grant) }
 
   it { should be_valid }

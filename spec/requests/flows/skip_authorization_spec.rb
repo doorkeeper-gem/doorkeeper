@@ -21,7 +21,7 @@ feature 'Skip authorization form' do
       i_should_not_see "Authorize"
       client_should_be_authorized @client
       i_should_be_on_client_callback @client
-      url_should_have_param "code", AccessGrant.first.token
+      url_should_have_param "code", Doorkeeper::AccessGrant.first.token
     end
 
     scenario 'does not skip authorization when scopes differ' do
