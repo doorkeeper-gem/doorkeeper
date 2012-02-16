@@ -208,4 +208,88 @@ describe "Doorkeeper_for helper" do
       end
     end
   end
+
+  context "when defined with conditional if block" do
+    controller do
+      doorkeeper_for :index, :if => lambda { the_false }
+      doorkeeper_for :show, :if => lambda { the_true }
+
+      include ControllerActions
+
+      private
+      def the_true
+        true
+      end
+
+      def the_false
+        false
+      end
+    end
+
+    context "with valid token", :token => :valid do
+      it "enables access if passed block evaluates to false" do
+        get :index, :access_token => token_string
+        response.should be_success
+      end
+
+      it "enables access if passed block evaluates to true" do
+        get :show, :id => 1, :access_token => token_string
+        response.should be_success
+      end
+    end
+
+    context "with invalid token", :token => :invalid do
+      it "enables access if passed block evaluates to false" do
+        get :index, :access_token => token_string
+        response.should be_success
+      end
+
+      it "does not enable access if passed block evaluates to true" do
+        get :show, :id => 3, :access_token => token_string
+        response.status.should == 401
+      end
+    end
+  end
+
+  context "when defined with conditional unless block" do
+    controller do
+      doorkeeper_for :index, :unless => lambda { the_false }
+      doorkeeper_for :show, :unless => lambda { the_true }
+
+      include ControllerActions
+
+      def the_true
+        true
+      end
+
+      private
+
+      def the_false
+        false
+      end
+    end
+
+    context "with valid token", :token => :valid do
+      it "allows access if passed block evaluates to false" do
+        get :index, :access_token => token_string
+        response.should be_success
+      end
+
+      it "allows access if passed block evaluates to true" do
+        get :show, :id => 1, :access_token => token_string
+        response.should be_success
+      end
+    end
+
+    context "with invalid token", :token => :invalid do
+      it "does not allow access if passed block evaluates to false" do
+        get :index, :access_token => token_string
+      end
+
+      it "allows access if passed block evaluates to true" do
+        get :show, :id => 3, :access_token => token_string
+        response.should be_success
+      end
+    end
+  end
 end

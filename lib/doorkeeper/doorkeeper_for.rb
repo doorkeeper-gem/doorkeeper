@@ -4,12 +4,12 @@ module Doorkeeper
     def initialize(options)
       options ||= {}
       raise InvalidSyntax unless options.is_a? Hash
+      @filter_options = {}
 
       options.each do |k, v|
         self.send(k, v)
       end
     end
-
 
     def validate_token(token)
       return false unless token
@@ -17,12 +17,20 @@ module Doorkeeper
     end
 
     def filter_options
-      {}
+      @filter_options
     end
 
     private
     def scopes(scopes)
       @scopes = scopes
+    end
+
+    def if(if_block)
+      @filter_options[:if] = if_block
+    end
+
+    def unless(unless_block)
+      @filter_options[:unless] = unless_block
     end
 
     def validate_token_scopes(token)
@@ -32,30 +40,22 @@ module Doorkeeper
   end
 
   class AllDoorkeeperFor < DoorkeeperFor
-    def filter_options
-      @except ? {:except => @except} : {}
-    end
-
     private
     def except(actions)
-      @except = actions
+      @filter_options[:except] = actions
     end
   end
 
   class SelectedDoorkeeperFor < DoorkeeperFor
     def initialize(*args)
       options = args.pop if args.last.is_a? Hash
-      only(args)
       super(options)
-    end
-
-    def filter_options
-      {:only => @only}
+      only(args)
     end
 
     private
     def only(actions)
-      @only = actions
+      @filter_options[:only] = actions
     end
   end
 
