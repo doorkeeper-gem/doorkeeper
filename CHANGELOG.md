@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+
+- enhancements
+  - [#48] Add if, else options to doorkeeper_for
+
 ## 0.3.0
 
 - enhancements
