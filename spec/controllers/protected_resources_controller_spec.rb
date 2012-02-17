@@ -79,17 +79,17 @@ describe "Doorkeeper_for helper" do
     end
 
     it "access_token param" do
-      AccessToken.should_receive(:find_by_token).with(token_string)
+      Doorkeeper::AccessToken.should_receive(:find_by_token).with(token_string)
       get :index, :access_token => token_string
     end
 
     it "beareer_token param" do
-      AccessToken.should_receive(:find_by_token).with(token_string)
+      Doorkeeper::AccessToken.should_receive(:find_by_token).with(token_string)
       get :index, :bearer_token => token_string
     end
 
     it "Authorization header" do
-      AccessToken.should_receive(:find_by_token).with(token_string)
+      Doorkeeper::AccessToken.should_receive(:find_by_token).with(token_string)
       request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
       get :index
     end
@@ -158,15 +158,15 @@ describe "Doorkeeper_for helper" do
     end
 
     it "allows if the token has particular scopes" do
-      token = double(AccessToken, :accessible? => true, :scopes => [:write, :public])
-      AccessToken.should_receive(:find_by_token).with(token_string).and_return(token)
+      token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => [:write, :public])
+      Doorkeeper::AccessToken.should_receive(:find_by_token).with(token_string).and_return(token)
       get :index, :access_token => token_string
       response.should be_success
     end
 
     it "does not allow if the token does not include given scope" do
-      token = double(AccessToken, :accessible? => true, :scopes => [:public])
-      AccessToken.should_receive(:find_by_token).with(token_string).and_return(token)
+      token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => [:public])
+      Doorkeeper::AccessToken.should_receive(:find_by_token).with(token_string).and_return(token)
       get :index, :access_token => token_string
       response.status.should == 401
     end
@@ -205,6 +205,90 @@ describe "Doorkeeper_for helper" do
         response.status.should == 401
         response.content_type.should == 'text/html'
         response.body.should == 'Unauthorized'
+      end
+    end
+  end
+
+  context "when defined with conditional if block" do
+    controller do
+      doorkeeper_for :index, :if => lambda { the_false }
+      doorkeeper_for :show, :if => lambda { the_true }
+
+      include ControllerActions
+
+      private
+      def the_true
+        true
+      end
+
+      def the_false
+        false
+      end
+    end
+
+    context "with valid token", :token => :valid do
+      it "enables access if passed block evaluates to false" do
+        get :index, :access_token => token_string
+        response.should be_success
+      end
+
+      it "enables access if passed block evaluates to true" do
+        get :show, :id => 1, :access_token => token_string
+        response.should be_success
+      end
+    end
+
+    context "with invalid token", :token => :invalid do
+      it "enables access if passed block evaluates to false" do
+        get :index, :access_token => token_string
+        response.should be_success
+      end
+
+      it "does not enable access if passed block evaluates to true" do
+        get :show, :id => 3, :access_token => token_string
+        response.status.should == 401
+      end
+    end
+  end
+
+  context "when defined with conditional unless block" do
+    controller do
+      doorkeeper_for :index, :unless => lambda { the_false }
+      doorkeeper_for :show, :unless => lambda { the_true }
+
+      include ControllerActions
+
+      def the_true
+        true
+      end
+
+      private
+
+      def the_false
+        false
+      end
+    end
+
+    context "with valid token", :token => :valid do
+      it "allows access if passed block evaluates to false" do
+        get :index, :access_token => token_string
+        response.should be_success
+      end
+
+      it "allows access if passed block evaluates to true" do
+        get :show, :id => 1, :access_token => token_string
+        response.should be_success
+      end
+    end
+
+    context "with invalid token", :token => :invalid do
+      it "does not allow access if passed block evaluates to false" do
+        get :index, :access_token => token_string
+      end
+
+      it "allows access if passed block evaluates to true" do
+        get :show, :id => 3, :access_token => token_string
+        response.should be_success
       end
     end
   end

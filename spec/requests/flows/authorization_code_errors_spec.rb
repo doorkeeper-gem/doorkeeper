@@ -92,7 +92,7 @@ feature 'Authorization Code Flow Errors', 'after authorization' do
     # Second attempt with same token
     expect {
       post token_endpoint_url(:code => @authorization.token, :client => @client)
-    }.to_not change { AccessToken.count }
+    }.to_not change { Doorkeeper::AccessToken.count }
 
     should_not_have_json 'access_token'
     should_have_json 'error', 'invalid_grant'

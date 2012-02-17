@@ -17,6 +17,6 @@ feature 'Token endpoint' do
                             {} ,
                             { 'HTTP_AUTHORIZATION' => basic_auth_header_for_client(@client) }
 
-    should_have_json 'access_token', AccessToken.first.token
+    should_have_json 'access_token', Doorkeeper::AccessToken.first.token
   end
 end

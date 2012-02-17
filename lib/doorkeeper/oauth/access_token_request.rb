@@ -46,7 +46,7 @@ module Doorkeeper::OAuth
     end
 
     def access_token
-      @access_token ||= AccessToken.matching_token_for client, base_token.resource_owner_id, base_token.scopes_string
+      @access_token ||= Doorkeeper::AccessToken.matching_token_for client, base_token.resource_owner_id, base_token.scopes_string
     end
 
     def token_type
@@ -80,7 +80,7 @@ module Doorkeeper::OAuth
     end
 
     def client
-      @client ||= Application.find_by_uid_and_secret(@client_id, @client_secret)
+      @client ||= Doorkeeper::Application.find_by_uid_and_secret(@client_id, @client_secret)
     end
 
     def base_token
@@ -88,15 +88,15 @@ module Doorkeeper::OAuth
     end
 
     def token_via_authorization_code
-      AccessGrant.find_by_token(code)
+      Doorkeeper::AccessGrant.find_by_token(code)
     end
 
     def token_via_refresh_token
-      AccessToken.find_by_refresh_token(refresh_token)
+      Doorkeeper::AccessToken.find_by_refresh_token(refresh_token)
     end
 
     def create_access_token
-      @access_token = AccessToken.create!({
+      @access_token = Doorkeeper::AccessToken.create!({
         :application_id    => client.id,
         :resource_owner_id => base_token.resource_owner_id,
         :scopes            => base_token.scopes_string,

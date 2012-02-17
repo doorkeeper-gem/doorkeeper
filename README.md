@@ -79,6 +79,14 @@ end
 
 You don't need to setup any before filter, `doorkeeper_for` will handle that for you.
 
+You can pass `if` or `unless` blocks that would specify when doorkeeper has to guard the access.
+
+``` ruby
+class Api::V1::ProductsController < Api::V1::ApiController
+  doorkeeper_for :all, :if => lambda { request.xhr? }
+end
+```
+
 ### Access Token Scopes
 
 You can also require the access token to have specific scopes in certain actions:
