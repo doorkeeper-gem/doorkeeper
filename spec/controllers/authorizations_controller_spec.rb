@@ -21,7 +21,9 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   describe "POST #create" do
     before do
-      post :create, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uri, :use_route => :doorkeeper
+      Timecop.freeze(Time.now) do
+        post :create, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uri, :use_route => :doorkeeper
+      end
     end
 
     it "redirects after authorization" do
@@ -41,8 +43,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     end
 
     it "includes token expiration in fragment" do
-      pending "expiration time is given by the expired time - Time.now, which leads to a weird number"
-      fragments("expires_in").should == 2.hours.to_i
+      fragments("expires_in").to_f.should == 2.hours.to_f
     end
 
     it "issues the token for the current client" do
