@@ -14,7 +14,7 @@ module Doorkeeper
           uri_with_fragment(authorization.redirect_uri, {
             :access_token => access_token.token,
             :token_type   => access_token.token_type,
-            :expires_in   => access_token.time_left,
+            :expires_in   => access_token.expires_in,
             :state => authorization.state
           })
         end

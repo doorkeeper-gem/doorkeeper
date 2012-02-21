@@ -41,8 +41,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     end
 
     it "includes token expiration in fragment" do
-      pending "expiration time is given by the expired time - Time.now, which leads to a weird number"
-      fragments("expires_in").should == 2.hours.to_i
+      fragments("expires_in").to_i.should == 2.hours.to_i
     end
 
     it "issues the token for the current client" do
