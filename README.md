@@ -71,7 +71,7 @@ For example, if you have a products controller under api/v1, you can require the
 ``` ruby
 class Api::V1::ProductsController < Api::V1::ApiController
   doorkeeper_for :all                     # Require access token for all actions
-  doorkeeper_for :all, :except => :index  # All actions except show
+  doorkeeper_for :all, :except => :index  # All actions except index
   doorkeeper_for :index, :show            # Only for index and show action
 
   # your actions
