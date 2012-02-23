@@ -1,9 +1,21 @@
 # Changelog
 
+## 0.3.2 (unreleased)
+
+- enhancements
+  - [#54] Ignore Authorization: headers that are not Bearer [@miyagawa](https://github.com/miyagawa)
+- internals
+  - [#51] Updated the factory_girl_rails dependency, fix expires_in response which returned a float number instead of integer [@antekpiechnik](https://github.com/antekpiechnik)
+  - [#50] Fix typos [@tomekw](https://github.com/tomekw)
+  - [#49] Add Gemnasium status image to README [@laserlemon](https://github.com/laserlemon)
+
 ## 0.3.1
 
 - enhancements
   - [#48] Add if, else options to doorkeeper_for
+  - Add views generator
+- internals
+  - Namespace models
 
 ## 0.3.0
 
