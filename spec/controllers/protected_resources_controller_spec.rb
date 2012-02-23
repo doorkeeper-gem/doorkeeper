@@ -83,7 +83,7 @@ describe "Doorkeeper_for helper" do
       get :index, :access_token => token_string
     end
 
-    it "beareer_token param" do
+    it "bearer_token param" do
       Doorkeeper::AccessToken.should_receive(:find_by_token).with(token_string)
       get :index, :bearer_token => token_string
     end
@@ -91,6 +91,12 @@ describe "Doorkeeper_for helper" do
     it "Authorization header" do
       Doorkeeper::AccessToken.should_receive(:find_by_token).with(token_string)
       request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
+      get :index
+    end
+
+    it "different kind of Authorization header" do
+      Doorkeeper::AccessToken.should_not_receive(:find_by_token)
+      request.env["HTTP_AUTHORIZATION"] = "Basic #{Base64.encode64("foo:bar")}"
       get :index
     end
   end
