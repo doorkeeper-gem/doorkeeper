@@ -101,11 +101,15 @@ module Doorkeeper
     end
 
     def get_doorkeeper_token
-      token = params[:access_token] || params[:bearer_token] || request.env['HTTP_AUTHORIZATION']
+      token = params[:access_token] || params[:bearer_token] || authorization_bearer_token
       if token
-        token.gsub!(/Bearer /, '')
         AccessToken.find_by_token(token)
       end
+    end
+
+    def authorization_bearer_token
+      header = request.env['HTTP_AUTHORIZATION']
+      header.gsub!(/^Bearer /, '') unless header.nil?
     end
 
     def doorkeeper_unauthorized_render_options
