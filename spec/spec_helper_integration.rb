@@ -8,6 +8,7 @@ require 'rspec/rails'
 require 'rspec/autorun'
 require 'generator_spec/test_case'
 require 'timecop'
+require 'database_cleaner'
 require "support/orm/#{DOORKEEPER_ORM}"
 
 puts "====> Doorkeeper.orm = #{DOORKEEPER_ORM.inspect}"
@@ -24,6 +25,11 @@ RSpec.configure do |config|
   config.infer_base_class_for_anonymous_controllers = false
 
   config.before do
+    DatabaseCleaner.start
     Doorkeeper.configure {}
+  end
+
+  config.after do
+    DatabaseCleaner.clean
   end
 end

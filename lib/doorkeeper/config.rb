@@ -1,10 +1,20 @@
 module Doorkeeper
   def self.configure(&block)
     @config = Config::Builder.new(&block).build
+    enable_orm
   end
 
   def self.configuration
     @config
+  end
+
+  def self.enable_orm
+    require "doorkeeper/models/#{@config.orm}/access_grant"
+    require "doorkeeper/models/#{@config.orm}/access_token"
+    require "doorkeeper/models/#{@config.orm}/application"
+    require 'doorkeeper/models/access_grant'
+    require 'doorkeeper/models/access_token'
+    require 'doorkeeper/models/application'
   end
 
   class Config
