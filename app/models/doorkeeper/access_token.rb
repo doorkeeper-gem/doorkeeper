@@ -1,11 +1,11 @@
+require "doorkeeper/models/#{DOORKEEPER_ORM}/access_token"
+
 module Doorkeeper
-  class AccessToken < ActiveRecord::Base
+  class AccessToken
     include Doorkeeper::OAuth::Helpers
     include Doorkeeper::Models::Expirable
     include Doorkeeper::Models::Revocable
     include Doorkeeper::Models::Scopes
-
-    self.table_name = :oauth_access_tokens
 
     belongs_to :application
 

@@ -1,11 +1,22 @@
-class User < ActiveRecord::Base
-  has_secure_password
-  validates_presence_of :password, :on => :create
+if defined? ActiveRecord
+  class User < ActiveRecord::Base
+  end
+end
 
+if defined? Mongoid
+  class User
+    include Mongoid::Document
+    include Mongoid::Timestamps
+
+    field :name, :type => String
+    field :password, :type => String
+  end
+end
+
+class User
   attr_accessible :name, :password
 
   def self.authenticate!(name, password)
-    owner = User.find_by_name(name)
-    owner.authenticate(password) if owner
+    User.where(:name => name, :password => password).first
   end
 end

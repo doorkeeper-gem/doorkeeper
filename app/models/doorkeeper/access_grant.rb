@@ -1,11 +1,11 @@
+require "doorkeeper/models/#{DOORKEEPER_ORM}/access_grant"
+
 module Doorkeeper
-  class AccessGrant < ActiveRecord::Base
+  class AccessGrant
     include Doorkeeper::OAuth::Helpers
     include Doorkeeper::Models::Expirable
     include Doorkeeper::Models::Revocable
     include Doorkeeper::Models::Scopes
-
-    self.table_name = :oauth_access_grants
 
     belongs_to :application
 
