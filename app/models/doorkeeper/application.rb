@@ -23,16 +23,6 @@ module Doorkeeper
       find_by_uid_and_secret(uid, secret)
     end
 
-    def self.column_names_with_table
-      self.column_names.map { |c| "oauth_applications.#{c}" }
-    end
-
-    def self.authorized_for(resource_owner)
-      joins(:authorized_applications).
-        where(:oauth_access_tokens => { :resource_owner_id => resource_owner.id }).
-        group(column_names_with_table.join(','))
-    end
-
     def validate_redirect_uri
       return unless redirect_uri
       uri = URI.parse(redirect_uri)
