@@ -7,7 +7,7 @@ module Doorkeeper
     include Doorkeeper::Models::Revocable
     include Doorkeeper::Models::Scopes
 
-    belongs_to :application
+    belongs_to :application, :class_name => "Doorkeeper::Application"
 
     attr_accessible :resource_owner_id, :application_id, :expires_in, :redirect_uri, :scopes
 

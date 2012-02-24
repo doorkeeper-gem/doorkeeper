@@ -7,7 +7,7 @@ module Doorkeeper
     include Doorkeeper::Models::Revocable
     include Doorkeeper::Models::Scopes
 
-    belongs_to :application
+    belongs_to :application, :class_name => "Doorkeeper::Application"
 
     scope :accessible, where(:revoked_at => nil)
 
