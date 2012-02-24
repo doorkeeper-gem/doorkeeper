@@ -5,12 +5,19 @@ module Doorkeeper
 
     store_in = :oauth_access_tokens
 
-    field :resource_owner_id, :type => Hash
-    field :application_id, :type => Hash
+    field :resource_owner_id, :type => Integer
     field :token, :type => String
     field :refresh_token, :type => String
     field :expires_in, :type => Integer
     field :revoked_at, :type => DateTime
-    field :scopes, :type => String
+    field :scopes, :type => Array
+
+    def self.find_by_token(token)
+      where(:token => token).first
+    end
+
+    def self.find_by_refresh_token(refresh_token)
+      where(:refresh_token => refresh_token).first
+    end
   end
 end

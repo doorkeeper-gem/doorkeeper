@@ -12,5 +12,9 @@ module Doorkeeper
     field :redirect_uri, :type => String
     field :revoked_at, :type => DateTime
     field :scopes, :type => String
+
+    def self.find_by_token(token)
+      where(:token => token).first
+    end
   end
 end
