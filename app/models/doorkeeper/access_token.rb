@@ -34,7 +34,7 @@ module Doorkeeper
     end
 
     def self.last_authorized_token_for(application, resource_owner_or_id)
-      resource_owner_id = resource_owner_or_id.kind_of?(ActiveRecord::Base) ? resource_owner_or_id.id : resource_owner_or_id
+      resource_owner_id = resource_owner_or_id.respond_to?(:to_key) ? resource_owner_or_id.id : resource_owner_or_id
       accessible.
         where(:application_id => application.id,
               :resource_owner_id => resource_owner_id).

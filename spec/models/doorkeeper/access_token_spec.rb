@@ -66,7 +66,7 @@ module Doorkeeper
       end
 
       it 'accepts resource owner as object' do
-        resource_owner = stub(:kind_of? => true, :id => 100)
+        resource_owner = stub(:to_key => true, :id => 100)
         token = FactoryGirl.create :access_token, default_attributes
         last_token = AccessToken.matching_token_for(application, resource_owner, scopes)
         last_token.should == token
