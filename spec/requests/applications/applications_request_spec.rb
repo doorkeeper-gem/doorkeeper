@@ -68,3 +68,18 @@ feature 'Edit application' do
     i_should_see 'Whoops! Check your form for possible errors'
   end
 end
+
+feature 'Destroy application' do
+  let :app do
+    Factory :application, :name => 'Very Deletable'
+  end
+  
+  background do
+    visit "/oauth/applications/#{app.id}"
+  end
+  
+  scenario 'deleting an app' do
+    click_link 'Remove'
+    i_should_see "Application deleted"
+  end
+end

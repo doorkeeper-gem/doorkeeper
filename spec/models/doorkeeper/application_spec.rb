@@ -67,6 +67,13 @@ module Doorkeeper
       new_application.secret = nil
       new_application.should_not be_valid
     end
+    
+    it 'should reduce application count on destroy' do
+      new_application.save
+      expect { new_application.destroy }.to change(Application, :count).by -1
+    end
+    
+    it 'should destroy authorized_tokens and access_grants on delete' 
 
     describe :authorized_for do
       let(:resource_owner) { double(:resource_owner, :id => 10) }
