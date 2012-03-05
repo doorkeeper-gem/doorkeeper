@@ -144,7 +144,7 @@ Also, check out our [contributing guidelines page](https://github.com/applicake/
 
 ### Supported ruby versions
 
-All supported ruby versions are [listed here](https://github.com/applicake/doorkeeper/wiki/Supported-Ruby-versions)
+All supported ruby versions are [listed here](https://github.com/applicake/doorkeeper/wiki/Supported-Ruby-&-Rails-versions)
 
 ## Additional information
 
