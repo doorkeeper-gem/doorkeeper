@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.summary     = "Doorkeeper is an OAuth 2 provider for Rails."
   s.description = "Doorkeeper is an OAuth 2 provider for Rails."
 
-  s.files = Dir["{app,config,db,lib}/**/*"] + ["MIT-LICENSE", "Rakefile", "README.md"]
+  s.files = Dir["{app,config,lib,spec}/**/*"] + ["MIT-LICENSE", "Rakefile", "README.md"]
 
   s.add_dependency "railties", "~> 3.1"
 
