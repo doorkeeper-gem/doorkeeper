@@ -1,5 +1,6 @@
 ENV["RAILS_ENV"] ||= 'test'
 DOORKEEPER_ORM = (ENV["DOORKEEPER_ORM"] || :active_record).to_sym
+DOORKEEPER_ORM = (ENV['DOORKEEPER_ORM'] || :active_record).to_sym
 
 $:.unshift File.dirname(__FILE__)
 
@@ -9,11 +10,12 @@ require 'rspec/autorun'
 require 'generator_spec/test_case'
 require 'timecop'
 require 'database_cleaner'
-require "support/orm/#{DOORKEEPER_ORM}"
 
-puts "====> Doorkeeper.orm = #{DOORKEEPER_ORM.inspect}"
+puts "====> Doorkeeper.orm = #{Doorkeeper.configuration.orm.inspect}"
 puts "====> Rails version: #{Rails.version}"
 puts "====> Ruby version: #{RUBY_VERSION}"
+
+require "support/orm/#{Doorkeeper.configuration.orm}"
 
 ENGINE_RAILS_ROOT = File.join(File.dirname(__FILE__), '../')
 

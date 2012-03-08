@@ -1,5 +1,3 @@
-require "doorkeeper/models/#{DOORKEEPER_ORM}/access_grant"
-
 module Doorkeeper
   class AccessGrant
     include Doorkeeper::OAuth::Helpers

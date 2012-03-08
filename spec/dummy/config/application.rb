@@ -7,7 +7,6 @@ require "sprockets/railtie"
 Bundler.require :default, DOORKEEPER_ORM
 
 require "#{DOORKEEPER_ORM}/railtie"
-require "doorkeeper"
 
 module Dummy
   class Application < Rails::Application

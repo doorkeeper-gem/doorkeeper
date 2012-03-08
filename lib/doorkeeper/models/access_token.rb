@@ -1,5 +1,3 @@
-require "doorkeeper/models/#{DOORKEEPER_ORM}/access_token"
-
 module Doorkeeper
   class AccessToken
     include Doorkeeper::OAuth::Helpers

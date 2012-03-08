@@ -44,4 +44,7 @@ Doorkeeper.configure do
   # fallsback to `:access_token` or `:bearer_token` from `params` object
   # Check out the wiki for mor information on customization
   # access_token_methods :from_bearer_authorization, :from_access_token_param, :from_bearer_param
+
+  # Customize the ORM
+  orm DOORKEEPER_ORM
 end

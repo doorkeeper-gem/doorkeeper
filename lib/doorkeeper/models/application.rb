@@ -1,5 +1,3 @@
-require "doorkeeper/models/#{DOORKEEPER_ORM}/application"
-
 module Doorkeeper
   class Application
     include Doorkeeper::OAuth::Helpers
