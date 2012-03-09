@@ -55,7 +55,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   describe "POST #create with errors" do
     before do
-      scope_exist :public
+      scope_exists :public
       post :create, :client_id => client.uid, :response_type => "token", :scope => "invalid", :redirect_uri => client.redirect_uri, :use_route => :doorkeeper
     end
 
@@ -100,7 +100,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   describe "GET #new with errors" do
     before do
-      scope_exist :public
+      scope_exists :public
       get :new, :client_id => client.uid, :response_type => "token", :scope => "invalid", :redirect_uri => client.redirect_uri, :use_route => :doorkeeper
     end
 
