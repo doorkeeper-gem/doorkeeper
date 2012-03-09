@@ -8,7 +8,7 @@ module Doorkeeper::OAuth
       :grant_type,
       :code,
       :redirect_uri,
-      :refresh_token,
+      :refresh_token
     ]
 
     validate :attributes,   :error => :invalid_request
