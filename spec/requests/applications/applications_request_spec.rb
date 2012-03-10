@@ -70,15 +70,22 @@ feature 'Edit application' do
 end
 
 feature 'Destroy application' do
-  let :app do
-    Factory :application, :name => 'Very Deletable'
-  end
-  
   background do
-    visit "/oauth/applications/#{app.id}"
+    @app = Factory :application
   end
-  
-  scenario 'deleting an app' do
+
+  scenario 'deleting an application from list' do
+    visit "/oauth/applications"
+    i_should_see @app.name
+    within(:css, "tr#application_#{@app.id}") do
+      click_link "Destroy"
+    end
+    i_should_see "Application deleted"
+    i_should_not_see @app.name
+  end
+
+  scenario 'deleting an application from show' do
+    visit "/oauth/applications/#{@app.id}"
     click_link 'Remove'
     i_should_see "Application deleted"
   end

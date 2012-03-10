@@ -67,13 +67,23 @@ module Doorkeeper
       new_application.secret = nil
       new_application.should_not be_valid
     end
-    
-    it 'should reduce application count on destroy' do
-      new_application.save
-      expect { new_application.destroy }.to change(Application, :count).by -1
+
+    describe 'destroy related models on cascade' do
+      before(:each) do
+        new_application.save
+      end
+
+      it 'should destroy its access grants' do
+        Factory(:access_grant, :application => new_application)
+        expect { new_application.destroy }.to change { Doorkeeper::AccessGrant.count }.by(-1)
+      end
+
+      it 'should destroy its access tokens' do
+        Factory(:access_token, :application => new_application)
+        Factory(:access_token, :application => new_application, :revoked_at => Time.now)
+        expect { new_application.destroy }.to change { Doorkeeper::AccessToken.count }.by(-2)
+      end
     end
-    
-    it 'should destroy authorized_tokens and access_grants on delete' 
 
     describe :authorized_for do
       let(:resource_owner) { double(:resource_owner, :id => 10) }

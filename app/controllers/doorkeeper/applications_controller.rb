@@ -31,11 +31,11 @@ module Doorkeeper
       flash[:notice] = "Application updated" if @application.update_attributes(params[:application])
       respond_with @application
     end
-    
+
     def destroy
       @application = Application.find(params[:id])
       flash[:notice] = "Application deleted" if @application.destroy
-      respond_with @application
+      redirect_to applications_url
     end
   end
 end
