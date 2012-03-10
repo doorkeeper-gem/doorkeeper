@@ -16,7 +16,7 @@
     </thead>
     <tbody>
       <% @applications.each do |application| %>
-        <tr>
+        <tr id="application_<%= application.id %>">
           <td><%= link_to application.name, application %></td>
           <td><%= application.redirect_uri %></td>
           <td><%= link_to 'Edit', edit_application_path(application) %></td>
