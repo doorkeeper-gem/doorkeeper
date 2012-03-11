@@ -5,13 +5,13 @@ module Doorkeeper
     context "when admin is not authenticated" do
       before(:each) do
         Doorkeeper.configuration.stub(:authenticate_admin => proc do
-          redirect_to main_app.root_path
+          redirect_to main_app.root_url
         end)
       end
 
       it "redirects as set in Doorkeeper.authenticate_admin" do
         get :index, :use_route => :doorkeeper
-        response.should redirect_to(controller.main_app.root_path)
+        response.should redirect_to(controller.main_app.root_url)
       end
     end
   end
