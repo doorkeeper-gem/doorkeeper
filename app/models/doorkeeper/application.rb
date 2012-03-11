@@ -4,8 +4,8 @@ module Doorkeeper
 
     self.table_name = :oauth_applications
 
-    has_many :access_grants
-    has_many :authorized_tokens, :class_name => "AccessToken", :conditions => { :revoked_at => nil }
+    has_many :access_grants, :dependent => :destroy
+    has_many :authorized_tokens, :dependent => :destroy, :class_name => "AccessToken", :conditions => { :revoked_at => nil }
     has_many :authorized_applications, :through => :authorized_tokens, :source => :application
 
     validates :name, :secret, :redirect_uri, :presence => true
