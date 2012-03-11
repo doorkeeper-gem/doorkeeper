@@ -11,23 +11,23 @@ module ModelHelper
     @authorization = Factory(:access_grant, options)
   end
 
-  def access_grant_should_exists_for(client, resource_owner)
+  def access_grant_should_exist_for(client, resource_owner)
     grant = Doorkeeper::AccessGrant.first
     grant.application.should == client
     grant.resource_owner_id  == resource_owner.id
   end
 
-  def access_token_should_exists_for(client, resource_owner)
+  def access_token_should_exist_for(client, resource_owner)
     grant = Doorkeeper::AccessToken.first
     grant.application.should == client
     grant.resource_owner_id  == resource_owner.id
   end
 
-  def access_grant_should_not_exists
+  def access_grant_should_not_exist
     Doorkeeper::AccessGrant.all.should be_empty
   end
 
-  def access_token_should_not_exists
+  def access_token_should_not_exist
     Doorkeeper::AccessToken.all.should be_empty
   end
 

@@ -8,7 +8,7 @@ module AuthorizationRequestHelper
     Doorkeeper.configuration.instance_variable_set(:@authenticate_resource_owner, proc { redirect_to("/sign_in") })
   end
 
-  def scope_exist(*args)
+  def scope_exists(*args)
     scopes = Doorkeeper.configuration.instance_variable_get(:@scopes) || Doorkeeper::Scopes.new
     scopes.add(Doorkeeper::Scope.new(*args))
     Doorkeeper.configuration.instance_variable_set(:@scopes, scopes)
