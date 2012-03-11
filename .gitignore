@@ -9,3 +9,4 @@ spec/dummy/tmp/
 Gemfile.lock
 gemfiles/*.lock
 spec/generators/tmp
+.rvmrc
