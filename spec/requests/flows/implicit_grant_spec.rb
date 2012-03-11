@@ -12,7 +12,7 @@ feature 'Implicit Grant Flow' do
     visit authorization_endpoint_url(:client => @client, :response_type => 'token')
     click_on "Authorize"
 
-    access_token_should_exists_for @client, @resource_owner
+    access_token_should_exist_for @client, @resource_owner
 
     i_should_be_on_client_callback @client
   end

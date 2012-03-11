@@ -4,8 +4,8 @@ feature 'Skip authorization form' do
   background do
     config_is_set(:authenticate_resource_owner) { User.first || redirect_to('/sign_in') }
     client_exists
-    scope_exist :public, :default => true, :description => "Access your public data"
-    scope_exist :write, :description => "Update your data"
+    scope_exists :public, :default => true, :description => "Access your public data"
+    scope_exists :write, :description => "Update your data"
   end
 
   context 'for previously authorized clients' do

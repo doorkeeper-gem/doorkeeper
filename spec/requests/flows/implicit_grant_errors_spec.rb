@@ -9,7 +9,7 @@ feature 'Implicit Grant Flow Errors' do
   end
 
   after do
-    access_token_should_not_exists
+    access_token_should_not_exist
   end
 
   [

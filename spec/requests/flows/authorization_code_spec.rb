@@ -12,7 +12,7 @@ feature 'Authorization Code Flow' do
     visit authorization_endpoint_url(:client => @client)
     click_on "Authorize"
 
-    access_grant_should_exists_for(@client, @resource_owner)
+    access_grant_should_exist_for(@client, @resource_owner)
 
     i_should_be_on_client_callback(@client)
 
@@ -62,7 +62,7 @@ feature 'Authorization Code Flow' do
     authorization_code = Doorkeeper::AccessGrant.first.token
     post token_endpoint_url(:code => authorization_code, :client => @client)
 
-    access_token_should_exists_for(@client, @resource_owner)
+    access_token_should_exist_for(@client, @resource_owner)
 
     should_not_have_json 'error'
 
@@ -75,14 +75,14 @@ feature 'Authorization Code Flow' do
 
   context 'with scopes' do
     background do
-      scope_exist :public, :default => true, :description => "Access your public data"
-      scope_exist :write,  :description => "Update your data"
+      scope_exists :public, :default => true, :description => "Access your public data"
+      scope_exists :write,  :description => "Update your data"
     end
 
     scenario 'resource owner authorizes the client with default scopes' do
       visit authorization_endpoint_url(:client => @client)
       click_on "Authorize"
-      access_grant_should_exists_for(@client, @resource_owner)
+      access_grant_should_exist_for(@client, @resource_owner)
       access_grant_should_have_scopes :public
     end
 
@@ -99,7 +99,7 @@ feature 'Authorization Code Flow' do
       authorization_code = Doorkeeper::AccessGrant.first.token
       post token_endpoint_url(:code => authorization_code, :client => @client)
 
-      access_token_should_exists_for(@client, @resource_owner)
+      access_token_should_exist_for(@client, @resource_owner)
       access_token_should_have_scopes :public, :write
     end
 

@@ -9,7 +9,7 @@ feature 'Authorization Code Flow Errors' do
   end
 
   after do
-    access_grant_should_not_exists
+    access_grant_should_not_exist
   end
 
   scenario "redirects with :invalid_request error when :response_type is missing" do
@@ -66,7 +66,7 @@ feature 'Authorization Code Flow Errors' do
 
   context 'with scopes' do
     background do
-      scope_exist :write, :description => "Update your data"
+      scope_exists :write, :description => "Update your data"
     end
 
     scenario "redirects with :invalid_scope error when scope does not exists" do
@@ -102,7 +102,7 @@ feature 'Authorization Code Flow Errors', 'after authorization' do
   scenario "returns :invalid_grant error for invalid grant code" do
     post token_endpoint_url(:code => "invalid", :client => @client)
 
-    access_token_should_not_exists
+    access_token_should_not_exist
 
     should_not_have_json 'access_token'
     should_have_json 'error', 'invalid_grant'
