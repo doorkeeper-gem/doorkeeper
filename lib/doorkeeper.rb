@@ -6,9 +6,10 @@ module Doorkeeper
   autoload :Validations, "doorkeeper/validations"
 
   module OAuth
-    autoload :AuthorizationRequest, "doorkeeper/oauth/authorization_request"
-    autoload :AccessTokenRequest,   "doorkeeper/oauth/access_token_request"
-    autoload :Authorization,        "doorkeeper/oauth/authorization"
+    autoload :AuthorizationRequest,       "doorkeeper/oauth/authorization_request"
+    autoload :AccessTokenRequest,         "doorkeeper/oauth/access_token_request"
+    autoload :PasswordAccessTokenRequest, "doorkeeper/oauth/password_access_token_request"
+    autoload :Authorization,              "doorkeeper/oauth/authorization"
 
     module Helpers
       autoload :ScopeChecker, "doorkeeper/oauth/helpers/scope_checker"

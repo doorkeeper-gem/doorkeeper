@@ -22,4 +22,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency "factory_girl_rails", "~> 1.7.0"
   s.add_development_dependency "timecop", "~> 0.3.5"
   s.add_development_dependency "database_cleaner", "~> 0.7.1"
+  s.add_development_dependency "bcrypt-ruby", "~> 3.0.1"
 end

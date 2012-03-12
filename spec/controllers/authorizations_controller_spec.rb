@@ -13,7 +13,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
   end
 
   let(:client) { Factory :application }
-  let(:user)   { User.create! }
+  let(:user)   { User.create!(:name => "Joe", :password => "sekret") }
 
   before do
     controller.stub :current_resource_owner => user
