@@ -15,12 +15,11 @@
     <tbody>
       <% @applications.each do |application| %>
         <tr>
-          <td><%= link_to application.name, application %></td>
+          <td><%= application.name %></td>
           <td><%= application.created_at %></td>
           <td><%= link_to 'Revoke', authorized_application_path(application), :confirm => 'Are you sure?', :method => :delete, :class => 'btn danger' %></td>
         </tr>
       <% end %>
     </tbody>
   </table>
-
 </div>
