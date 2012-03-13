@@ -28,6 +28,7 @@ describe Doorkeeper::TokensController do
     it "returns the error response" do
       token.should_receive(:error_response)
       post :create, :use_route => :doorkeeper
+      response.status.should == 401
     end
   end
 end
