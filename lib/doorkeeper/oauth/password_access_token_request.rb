@@ -4,7 +4,6 @@
 #
 # - it validates the owner is not null (should it verify it is valid?)
 # - it doesn't need a redirect_uri
-# - what about refresh_token?
 # - it should it verify grant_type is "password"
 # - do we need ":code" attribute?
 
@@ -17,7 +16,6 @@ module Doorkeeper::OAuth
       :client_secret,
       :grant_type,
       :code,
-      :refresh_token,
       :username,
       :password
     ]
@@ -48,7 +46,6 @@ module Doorkeeper::OAuth
         'token_type'   => access_token.token_type,
         'expires_in'   => access_token.expires_in,
       }
-      auth.merge!({'refresh_token' => access_token.refresh_token}) if refresh_token_enabled?
       auth
     end
 
@@ -94,36 +91,16 @@ module Doorkeeper::OAuth
       @client ||= Doorkeeper::Application.find_by_uid_and_secret(@client_id, @client_secret)
     end
 
-    def token_via_refresh_token
-      Doorkeeper::AccessToken.find_by_refresh_token(refresh_token)
-    end
-
     def create_access_token
       @access_token = Doorkeeper::AccessToken.create!({
         :application_id    => client.id,
         :resource_owner_id => resource_owner.id,
-        :expires_in        => configuration.access_token_expires_in,
-        :use_refresh_token => refresh_token_enabled?
+        :expires_in        => configuration.access_token_expires_in
       })
     end
 
     def validate_attributes
-      return false unless grant_type.present?
-      if refresh_token_enabled? && refresh_token?
-        refresh_token.present?
-      else
-        # TODO: do we need a code for this password access token request?
-        #code.present?
-        true
-      end
-    end
-
-    def refresh_token_enabled?
-      configuration.refresh_token_enabled?
-    end
-
-    def refresh_token?
-      grant_type == "refresh_token"
+      grant_type.present?
     end
 
     def validate_client
