@@ -68,3 +68,25 @@ feature 'Edit application' do
     i_should_see 'Whoops! Check your form for possible errors'
   end
 end
+
+feature 'Destroy application' do
+  background do
+    @app = Factory :application
+  end
+
+  scenario 'deleting an application from list' do
+    visit "/oauth/applications"
+    i_should_see @app.name
+    within(:css, "tr#application_#{@app.id}") do
+      click_link "Destroy"
+    end
+    i_should_see "Application deleted"
+    i_should_not_see @app.name
+  end
+
+  scenario 'deleting an application from show' do
+    visit "/oauth/applications/#{@app.id}"
+    click_link 'Remove'
+    i_should_see "Application deleted"
+  end
+end
