@@ -15,13 +15,15 @@ module Doorkeeper::OAuth
       :client_secret,
       :grant_type,
       :username,
-      :password
+      :password,
+      :scope
     ]
 
     validate :attributes,     :error => :invalid_request
     validate :grant_type,     :error => :unsupported_grant_type
     validate :client,         :error => :invalid_client
     validate :resource_owner, :error => :invalid_resource_owner
+    validate :scope,          :error => :invalid_scope
 
     attr_accessor *ATTRIBUTES
     attr_accessor :resource_owner
@@ -29,6 +31,7 @@ module Doorkeeper::OAuth
     def initialize(owner, attributes = {})
       ATTRIBUTES.each { |attr| instance_variable_set("@#{attr}", attributes[attr]) }
       @resource_owner = owner
+      @scope ||= Doorkeeper.configuration.default_scope_string
       validate
     end
 
@@ -91,10 +94,15 @@ module Doorkeeper::OAuth
 
     def create_access_token
       @access_token = Doorkeeper::AccessToken.create!({
-        :application_id    => client.id,
-        :resource_owner_id => resource_owner.id,
-        :expires_in        => configuration.access_token_expires_in
+        :application_id     => client.id,
+        :resource_owner_id  => resource_owner.id,
+        :scopes             => @scope,
+        :expires_in         => configuration.access_token_expires_in
       })
+    end
+
+    def has_scope?
+      Doorkeeper.configuration.scopes.all.present?
     end
 
     def validate_attributes
@@ -103,6 +111,11 @@ module Doorkeeper::OAuth
 
     def validate_client
       !!client
+    end
+
+    def validate_scope
+      return true unless has_scope?
+      ScopeChecker.valid?(scope, configuration.scopes)
     end
 
     def validate_grant_type
