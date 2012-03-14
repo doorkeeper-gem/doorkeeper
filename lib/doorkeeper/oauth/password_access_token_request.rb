@@ -5,7 +5,6 @@
 # - it validates the owner is not null (should it verify it is valid?)
 # - it doesn't need a redirect_uri
 # - it should it verify grant_type is "password"
-# - do we need ":code" attribute?
 
 module Doorkeeper::OAuth
   class PasswordAccessTokenRequest
@@ -15,7 +14,6 @@ module Doorkeeper::OAuth
       :client_id,
       :client_secret,
       :grant_type,
-      :code,
       :username,
       :password
     ]
