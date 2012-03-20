@@ -36,8 +36,7 @@ require 'spec_helper_integration'
 
 feature 'Resource Owner Password Credentials Flow' do
   background do
-    config_is_set(:resource_owner_from_credentials) { owner = User.find_by_name(params[:username])
-                                                      owner.authenticate(params[:password]) if owner }
+    config_is_set(:resource_owner_from_credentials) { User.authenticate! params[:username], params[:password] }
     client_exists
     create_resource_owner
   end
