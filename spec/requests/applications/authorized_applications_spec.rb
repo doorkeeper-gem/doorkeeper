@@ -1,4 +1,5 @@
 require 'spec_helper_integration'
+require 'doorkeeper/oauth/authorization'
 
 feature 'Authorized applications' do
   background do
