@@ -21,7 +21,8 @@ Doorkeeper.configure do
   #   Admin.find_by_id(session[:admin_id]) || redirect_to(routes.new_admin_session_url)
   # end
 
-  # Access token expiration time (default 2 hours)
+  # Access token expiration time (default 2 hours).
+  # If you want to disable expiration, set this to nil.
   # access_token_expires_in 2.hours
 
   # Issue access tokens with refresh token (disabled by default)
