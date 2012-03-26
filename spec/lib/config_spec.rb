@@ -34,6 +34,13 @@ describe Doorkeeper, "configuration" do
       end
       subject.access_token_expires_in.should == 4.hours
     end
+
+    it "can be set to nil" do
+      Doorkeeper.configure do
+        access_token_expires_in nil
+      end
+      subject.access_token_expires_in.should be_nil
+    end
   end
 
   describe "scopes" do
