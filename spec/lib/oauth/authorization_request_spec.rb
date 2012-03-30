@@ -16,6 +16,7 @@ module Doorkeeper::OAuth
     before :each do
       Doorkeeper::OAuth::Helpers::ScopeChecker.stub(:valid?).and_return(true)
       Doorkeeper.stub_chain(:configuration, :scopes, :all).and_return([Doorkeeper::Scope.new(:public)])
+      Doorkeeper.stub_chain(:configuration, :confirm_application_owner?).and_return(false)
     end
 
     describe "with a code response_type" do
