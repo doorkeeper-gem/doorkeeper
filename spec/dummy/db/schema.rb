@@ -40,6 +40,8 @@ ActiveRecord::Schema.define(:version => 20111206151426) do
     t.string   "uid",          :null => false
     t.string   "secret",       :null => false
     t.string   "redirect_uri", :null => false
+    t.integer  "owner_id",     :null => true
+    t.string   "owner_type",   :null => true
     t.datetime "created_at"
     t.datetime "updated_at"
   end

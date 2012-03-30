@@ -8,10 +8,12 @@ module Doorkeeper
     has_many :access_tokens, :dependent => :destroy
     has_many :authorized_tokens, :class_name => "AccessToken", :conditions => { :revoked_at => nil }
     has_many :authorized_applications, :through => :authorized_tokens, :source => :application
+    belongs_to :owner, :polymorphic => true
 
     validates :name, :secret, :redirect_uri, :presence => true
     validates :uid, :presence => true, :uniqueness => true
     validate :validate_redirect_uri
+    validates :owner, :presence => true, :if => :validate_owner?
 
     before_validation :generate_uid, :generate_secret, :on => :create
 
@@ -33,6 +35,10 @@ module Doorkeeper
       errors.add(:redirect_uri, "cannot contain a query parameter.") unless uri.query.nil?
     rescue URI::InvalidURIError => e
       errors.add(:redirect_uri, "must be a valid URI.")
+    end
+
+    def validate_owner?
+      Doorkeeper.configuration.confirm_application_owner?
     end
 
     private

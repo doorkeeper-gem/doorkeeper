@@ -26,6 +26,10 @@ module Doorkeeper
         @config
       end
 
+      def confirm_application_owner
+        @config.instance_variable_set("@confirm_application_owner", true)
+      end
+
       def use_refresh_token
         @config.instance_variable_set("@refresh_token_enabled", true)
       end
@@ -97,6 +101,10 @@ module Doorkeeper
 
     def refresh_token_enabled?
       !!@refresh_token_enabled
+    end
+
+    def confirm_application_owner?
+      !!@confirm_application_owner
     end
   end
 end
