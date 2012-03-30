@@ -11,7 +11,6 @@ class CreateDoorkeeperTables < ActiveRecord::Migration
     end
 
     add_index :oauth_applications, :uid, :unique => true
-    add_index :oauth_applications, :uid, :unique => true
     add_index :oauth_applications, [:owner_id, :owner_type]
 
     create_table :oauth_access_grants do |t|
