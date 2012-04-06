@@ -115,6 +115,12 @@ module Doorkeeper
         Factory(:access_token, :resource_owner_id => resource_owner.id, :application => application)
         Application.authorized_for(resource_owner).should == [application]
       end
+
+      it "should fail to mass assign a new application" do
+        mass_assign = { name: 'Something', redirect_uri: 'http://somewhere.com/something', uid: 123, secret: 'something'   }
+        Application.create(mass_assign).uid.should_not == 123
+      end
+
     end
   end
 end
