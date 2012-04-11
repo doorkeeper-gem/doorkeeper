@@ -16,7 +16,8 @@ module Doorkeeper::OAuth
       :grant_type,
       :username,
       :password,
-      :scope
+      :scope,
+      :refresh_token
     ]
 
     validate :attributes,     :error => :invalid_request
@@ -47,6 +48,7 @@ module Doorkeeper::OAuth
         'token_type'   => access_token.token_type,
         'expires_in'   => access_token.expires_in,
       }
+      auth.merge!({'refresh_token' => access_token.refresh_token}) if refresh_token_enabled?
       auth
     end
 
@@ -97,7 +99,8 @@ module Doorkeeper::OAuth
         :application_id     => client.id,
         :resource_owner_id  => resource_owner.id,
         :scopes             => @scope,
-        :expires_in         => configuration.access_token_expires_in
+        :expires_in         => configuration.access_token_expires_in,
+        :use_refresh_token  => refresh_token_enabled?
       })
     end
 
@@ -107,6 +110,10 @@ module Doorkeeper::OAuth
 
     def validate_attributes
       grant_type.present?
+    end
+
+    def refresh_token_enabled?
+      configuration.refresh_token_enabled?
     end
 
     def validate_client

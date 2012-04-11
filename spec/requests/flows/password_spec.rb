@@ -51,6 +51,16 @@ feature 'Resource Owner Password Credentials Flow' do
 
       should_have_json 'access_token',  token.token
     end
+
+    scenario "should issue a refresh token if enabled" do
+      config_is_set(:refresh_token_enabled, true)
+
+      post password_token_endpoint_url(:client => @client, :resource_owner => @resource_owner)
+
+      token = Doorkeeper::AccessToken.first
+
+      should_have_json 'refresh_token',  token.refresh_token
+    end
   end
 
   context "with invalid user credentials" do
