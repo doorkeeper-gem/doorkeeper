@@ -1,5 +1,5 @@
 module Doorkeeper
-  class ApplicationsController < ApplicationController
+  class ApplicationsController < Doorkeeper::ApplicationController
     respond_to :html
 
     before_filter :authenticate_admin!
