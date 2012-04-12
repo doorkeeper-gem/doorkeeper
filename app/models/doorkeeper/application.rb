@@ -15,6 +15,8 @@ module Doorkeeper
 
     before_validation :generate_uid, :generate_secret, :on => :create
 
+    attr_accessible :name, :redirect_uri
+
     def self.column_names_with_table
       self.column_names.map { |c| "oauth_applications.#{c}" }
     end
