@@ -3,7 +3,7 @@ require 'spec_helper_integration'
 module Doorkeeper::OAuth
   describe AuthorizationRequest do
     let(:resource_owner) { double(:resource_owner, :id => 1) }
-    let(:client)         { Factory(:application) }
+    let(:client)         { FactoryGirl.create(:application) }
     let(:base_attributes) do
       {
         :client_id     => client.uid,

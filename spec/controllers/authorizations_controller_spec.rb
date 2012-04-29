@@ -12,7 +12,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     I18n.translate key, :scope => [:doorkeeper, :errors, :messages]
   end
 
-  let(:client) { Factory :application }
+  let(:client) { FactoryGirl.create :application }
   let(:user)   { User.create! }
 
   before do

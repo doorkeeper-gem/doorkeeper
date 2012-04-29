@@ -1,7 +1,7 @@
 require 'spec_helper_integration'
 
 describe Doorkeeper::AccessGrant do
-  subject { Factory.build(:access_grant) }
+  subject { FactoryGirl.build(:access_grant) }
 
   it { should be_valid }
 
@@ -41,7 +41,7 @@ describe Doorkeeper::AccessGrant do
     end
 
     describe "returns an array of scopes" do
-      subject { Factory(:access_grant, :scopes => "public write").scopes }
+      subject { FactoryGirl.create(:access_grant, :scopes => "public write").scopes }
 
       it { should be_kind_of(Array) }
       its(:count) { should == 2 }

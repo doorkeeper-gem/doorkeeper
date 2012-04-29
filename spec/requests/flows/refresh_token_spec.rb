@@ -34,7 +34,7 @@ feature "Refresh Token Flow" do
 
   context "refreshing the token" do
     before do
-      @token = Factory(:access_token, :application => @client, :resource_owner_id => 1, :use_refresh_token => true)
+      @token = FactoryGirl.create(:access_token, :application => @client, :resource_owner_id => 1, :use_refresh_token => true)
     end
 
     scenario "client request a token with refresh token" do

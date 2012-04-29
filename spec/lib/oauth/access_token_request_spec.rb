@@ -2,8 +2,8 @@ require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
   describe AccessTokenRequest do
-    let(:client) { Factory(:application) }
-    let(:grant)  { Factory(:access_grant, :application => client) }
+    let(:client) { FactoryGirl.create(:application) }
+    let(:grant)  { FactoryGirl.create(:access_grant, :application => client) }
     let(:params) {
       {
         :client_id     => client.uid,
@@ -142,7 +142,7 @@ module Doorkeeper::OAuth
         subject { token(params) }
 
         before do
-          grant.application = Factory(:application)
+          grant.application = FactoryGirl.create(:application)
           grant.save!
         end
 
@@ -162,8 +162,8 @@ module Doorkeeper::OAuth
   end
 
   describe AccessTokenRequest, "refresh token" do
-    let(:client) { Factory(:application) }
-    let(:access) { Factory(:access_token, :application => client, :use_refresh_token => true) }
+    let(:client) { FactoryGirl.create(:application) }
+    let(:access) { FactoryGirl.create(:access_token, :application => client, :use_refresh_token => true) }
     let(:params) {
       {
         :client_id     => client.uid,
@@ -235,7 +235,7 @@ module Doorkeeper::OAuth
         subject { token(params) }
 
         before do
-          access.application = Factory(:application)
+          access.application = FactoryGirl.create(:application)
           access.save!
         end
 

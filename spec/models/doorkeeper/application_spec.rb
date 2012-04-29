@@ -2,7 +2,7 @@ require 'spec_helper_integration'
 
 module Doorkeeper
   describe Application do
-    let(:new_application) { Factory.build(:application) }
+    let(:new_application) { FactoryGirl.build(:application) }
 
     it 'is valid given valid attributes' do
       new_application.should be_valid
@@ -50,8 +50,8 @@ module Doorkeeper
     end
 
     it 'checks uniqueness of uid' do
-      app1 = Factory(:application)
-      app2 = Factory(:application)
+      app1 = FactoryGirl.create(:application)
+      app2 = FactoryGirl.create(:application)
       app2.uid = app1.uid
       app2.should_not be_valid
     end
@@ -74,13 +74,13 @@ module Doorkeeper
       end
 
       it 'should destroy its access grants' do
-        Factory(:access_grant, :application => new_application)
+        FactoryGirl.create(:access_grant, :application => new_application)
         expect { new_application.destroy }.to change { Doorkeeper::AccessGrant.count }.by(-1)
       end
 
       it 'should destroy its access tokens' do
-        Factory(:access_token, :application => new_application)
-        Factory(:access_token, :application => new_application, :revoked_at => Time.now)
+        FactoryGirl.create(:access_token, :application => new_application)
+        FactoryGirl.create(:access_token, :application => new_application, :revoked_at => Time.now)
         expect { new_application.destroy }.to change { Doorkeeper::AccessToken.count }.by(-2)
       end
     end
@@ -93,26 +93,26 @@ module Doorkeeper
       end
 
       it "returns only application for a specific resource owner" do
-        Factory(:access_token, :resource_owner_id => resource_owner.id + 1)
-        token = Factory(:access_token, :resource_owner_id => resource_owner.id)
+        FactoryGirl.create(:access_token, :resource_owner_id => resource_owner.id + 1)
+        token = FactoryGirl.create(:access_token, :resource_owner_id => resource_owner.id)
         Application.authorized_for(resource_owner).should == [token.application]
       end
 
       it "excludes revoked tokens" do
-        Factory(:access_token, :resource_owner_id => resource_owner.id, :revoked_at => 2.days.ago)
+        FactoryGirl.create(:access_token, :resource_owner_id => resource_owner.id, :revoked_at => 2.days.ago)
         Application.authorized_for(resource_owner).should be_empty
       end
 
       it "returns all applications that have been authorized" do
-        token1 = Factory(:access_token, :resource_owner_id => resource_owner.id)
-        token2 = Factory(:access_token, :resource_owner_id => resource_owner.id)
+        token1 = FactoryGirl.create(:access_token, :resource_owner_id => resource_owner.id)
+        token2 = FactoryGirl.create(:access_token, :resource_owner_id => resource_owner.id)
         Application.authorized_for(resource_owner).should == [token1.application, token2.application]
       end
 
       it "returns only one application even if it has been authorized twice" do
-        application = Factory(:application)
-        Factory(:access_token, :resource_owner_id => resource_owner.id, :application => application)
-        Factory(:access_token, :resource_owner_id => resource_owner.id, :application => application)
+        application = FactoryGirl.create(:application)
+        FactoryGirl.create(:access_token, :resource_owner_id => resource_owner.id, :application => application)
+        FactoryGirl.create(:access_token, :resource_owner_id => resource_owner.id, :application => application)
         Application.authorized_for(resource_owner).should == [application]
       end
 

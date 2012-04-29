@@ -1,6 +1,6 @@
 module ModelHelper
   def client_exists(client_attributes = {})
-    @client = Factory(:application, client_attributes)
+    @client = FactoryGirl.create(:application, client_attributes)
   end
 
   def create_resource_owner
@@ -8,7 +8,7 @@ module ModelHelper
   end
 
   def authorization_code_exists(options = {})
-    @authorization = Factory(:access_grant, options)
+    @authorization = FactoryGirl.create(:access_grant, options)
   end
 
   def access_grant_should_exist_for(client, resource_owner)
