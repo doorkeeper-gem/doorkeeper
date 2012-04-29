@@ -27,6 +27,9 @@ Doorkeeper.configure do
   # Issue access tokens with refresh token (disabled by default)
   # use_refresh_token
 
+  # Require an owner to be assigned to each registered application (disabled by default)
+  # confirm_application_owner
+
   # Define access token scopes for your provider
   # For more information go to https://github.com/applicake/doorkeeper/wiki/Using-Scopes
   # authorization_scopes do
