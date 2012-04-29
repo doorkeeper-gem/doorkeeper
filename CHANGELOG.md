@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.2 (unreleased)
+## 0.3.2
 
 - enhancements
   - [#54] Ignore Authorization: headers that are not Bearer [@miyagawa](https://github.com/miyagawa)
