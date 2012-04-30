@@ -1,11 +1,6 @@
 # coding: utf-8
 
 # TODO: refactor to DRY up, this is very similar to AccessTokenRequest
-#
-# - it validates the owner is not null (should it verify it is valid?)
-# - it doesn't need a redirect_uri
-# - it should it verify grant_type is "password"
-
 module Doorkeeper::OAuth
   class PasswordAccessTokenRequest
     include Doorkeeper::Validations
