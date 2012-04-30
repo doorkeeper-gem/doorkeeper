@@ -77,7 +77,11 @@ module Doorkeeper
         end
 
         define_method attribute do |*args|
-          instance_variable_get(:"@#{attribute}") || options[:default]
+          if instance_variable_defined?(:"@#{attribute}")
+            instance_variable_get(:"@#{attribute}")
+          else
+            options[:default]
+          end
         end
 
         public attribute
