@@ -4,7 +4,7 @@ class HomeController < ApplicationController
 
   def sign_in
     session[:user_id] = if Rails.env.development?
-      User.first || User.create!
+      User.first || User.create!(:name => "Joe", :password => "sekret")
     else
       User.first
     end
