@@ -109,7 +109,7 @@ module Doorkeeper
 
     def authorization_bearer_token
       header = request.env['HTTP_AUTHORIZATION']
-      header.gsub!(/^Bearer /, '') unless header.nil?
+      header.gsub(/^Bearer /, '') if header && header.match(/^Bearer /)
     end
 
     def doorkeeper_unauthorized_render_options
