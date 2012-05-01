@@ -26,6 +26,13 @@ feature 'Private API' do
     response_status_should_be 401
   end
 
+  scenario 'client requests protected resource with permanent token' do
+    @token.update_attribute :expires_in, nil # never expires
+    with_access_token_header @token.token
+    visit '/full_protected_resources'
+    page.body.should have_content("index")
+  end
+
   scenario 'access token with no scopes' do
     scope_exists :admin, :description => "admin"
     @token.update_attribute :scopes, nil
