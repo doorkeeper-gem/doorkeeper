@@ -99,6 +99,13 @@ describe "Doorkeeper_for helper" do
       request.env["HTTP_AUTHORIZATION"] = "Basic #{Base64.encode64("foo:bar")}"
       get :index
     end
+
+    it "doesn't change Authorization header value" do
+      Doorkeeper::AccessToken.should_receive(:find_by_token).exactly(2).times
+      request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
+      get :index
+      get :index
+    end
   end
 
   context "defined for all actions" do
