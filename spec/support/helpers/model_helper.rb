@@ -33,12 +33,12 @@ module ModelHelper
 
   def access_grant_should_have_scopes(*args)
     grant = Doorkeeper::AccessGrant.first
-    grant.scopes.should == args
+    grant.scopes.should == Doorkeeper::OAuth::Scopes.from_array(args)
   end
 
   def access_token_should_have_scopes(*args)
     grant = Doorkeeper::AccessToken.first
-    grant.scopes.should == args
+    grant.scopes.should == Doorkeeper::OAuth::Scopes.from_array(args)
   end
 end
 

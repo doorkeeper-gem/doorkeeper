@@ -18,7 +18,7 @@ module Doorkeeper
             :resource_owner_id => authorization.resource_owner.id,
             :expires_in        => DEFAULT_EXPIRATION_TIME,
             :redirect_uri      => authorization.redirect_uri,
-            :scopes            => authorization.scope
+            :scopes            => authorization.scopes.to_s
           )
         end
 

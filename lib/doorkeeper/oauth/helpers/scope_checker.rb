@@ -4,13 +4,13 @@ module Doorkeeper
       module ScopeChecker
         def self.matches?(current_scopes, scopes)
           return false if current_scopes.nil? || scopes.nil?
-          current_scopes.map(&:to_s).sort == scopes.split(" ").sort
+          current_scopes == scopes
         end
 
         def self.valid?(scope, server_scopes)
           scope.present? &&
           scope !~ /[\n|\r|\t]/ &&
-          server_scopes.all_included?(scope)
+          server_scopes.has_scopes?(Doorkeeper::OAuth::Scopes.from_string(scope))
         end
       end
     end

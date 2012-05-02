@@ -1,30 +1,35 @@
 require 'spec_helper'
 require 'active_support/core_ext/string'
 require 'doorkeeper/oauth/helpers/scope_checker'
+require 'doorkeeper/oauth/scopes'
 
 module Doorkeeper::OAuth::Helpers
   describe ScopeChecker, ".matches?" do
+    def new_scope(*args)
+      Doorkeeper::OAuth::Scopes.from_array args
+    end
+
     it "true if scopes matches" do
-      scopes = [:public]
-      scopes_to_match = "public"
+      scopes = new_scope :public
+      scopes_to_match = new_scope :public
       ScopeChecker.matches?(scopes, scopes_to_match).should be_true
     end
 
     it "is false when scopes differs" do
-      scopes = [:public]
-      scopes_to_match = "write"
+      scopes = new_scope :public
+      scopes_to_match = new_scope :write
       ScopeChecker.matches?(scopes, scopes_to_match).should be_false
     end
 
     it "is false when scope in array is missing" do
-      scopes = [:public]
-      scopes_to_match = "public write"
+      scopes = new_scope :public
+      scopes_to_match = new_scope :public, :write
       ScopeChecker.matches?(scopes, scopes_to_match).should be_false
     end
 
     it "is false when scope in string is missing" do
-      scopes = [:public, :write]
-      scopes_to_match = "public"
+      scopes = new_scope :public, :write
+      scopes_to_match = new_scope :public
       ScopeChecker.matches?(scopes, scopes_to_match).should be_false
     end
 
@@ -35,9 +40,10 @@ module Doorkeeper::OAuth::Helpers
   end
 
   describe ScopeChecker, ".valid?" do
-    let(:server_scopes) { double :all_included? => true }
+    let(:server_scopes) { Doorkeeper::OAuth::Scopes.new }
 
     it "is valid if scope is present" do
+      server_scopes.add :scope
       ScopeChecker.valid?("scope", server_scopes).should be_true
     end
 
@@ -62,7 +68,6 @@ module Doorkeeper::OAuth::Helpers
     end
 
     it "is invalid if any scope is not included in server scopes" do
-      server_scopes.stub(:all_included?).and_return(false)
       ScopeChecker.valid?("scope another", server_scopes).should be_false
     end
   end

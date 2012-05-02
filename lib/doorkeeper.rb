@@ -6,6 +6,7 @@ module Doorkeeper
   autoload :Validations, "doorkeeper/validations"
 
   module OAuth
+    autoload :Scopes,                     "doorkeeper/oauth/scopes"
     autoload :AuthorizationRequest,       "doorkeeper/oauth/authorization_request"
     autoload :AccessTokenRequest,         "doorkeeper/oauth/access_token_request"
     autoload :PasswordAccessTokenRequest, "doorkeeper/oauth/password_access_token_request"
@@ -21,5 +22,6 @@ module Doorkeeper
   module Models
     autoload :Expirable, "doorkeeper/models/expirable"
     autoload :Revocable, "doorkeeper/models/revocable"
+    autoload :Scopes,    "doorkeeper/models/scopes"
   end
 end

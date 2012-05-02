@@ -3,6 +3,7 @@ module Doorkeeper
     include Doorkeeper::OAuth::Helpers
     include Doorkeeper::Models::Expirable
     include Doorkeeper::Models::Revocable
+    include Doorkeeper::Models::Scopes
 
     self.table_name = :oauth_access_tokens
 
@@ -44,15 +45,6 @@ module Doorkeeper
 
     def accessible?
       !expired? && !revoked?
-    end
-
-    def scopes
-      scope_string = self[:scopes] || ""
-      scope_string.split(" ").map(&:to_sym)
-    end
-
-    def scopes_string
-      self[:scopes]
     end
 
     def use_refresh_token?
