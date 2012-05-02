@@ -53,7 +53,7 @@ module Doorkeeper
       end
 
       def <=>(other)
-        self.all.sort <=> other.all.sort
+        self.map(&:to_s).sort <=> other.map(&:to_s).sort
       end
     end
   end
