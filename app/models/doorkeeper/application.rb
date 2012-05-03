@@ -17,6 +17,10 @@ module Doorkeeper
 
     attr_accessible :name, :redirect_uri
 
+    def self.authenticate(uid, secret)
+      find_by_uid_and_secret(uid, secret)
+    end
+
     def self.column_names_with_table
       self.column_names.map { |c| "oauth_applications.#{c}" }
     end

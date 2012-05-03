@@ -6,14 +6,12 @@ module Doorkeeper::OAuth
     let(:owner)  { User.create!(:name => "Joe", :password => "sekret") }
     let(:params) {
       {
-        :client_id     => client.uid,
-        :client_secret => client.secret,
         :grant_type    => "password"
       }
     }
 
     describe "with a valid owner and client" do
-      subject { PasswordAccessTokenRequest.new(owner, params) }
+      subject { PasswordAccessTokenRequest.new(client, owner, params) }
 
       before { subject.authorize }
 
@@ -29,29 +27,29 @@ module Doorkeeper::OAuth
     end
 
     describe "with a valid client but an invalid owner" do
-      subject { PasswordAccessTokenRequest.new(nil, params) }
+      subject { PasswordAccessTokenRequest.new(client, nil, params) }
 
       before { subject.authorize }
 
       it { should_not be_valid }
-      its(:error)         { should_not be_nil }
+      its(:error)         { should == :invalid_resource_owner }
       its(:access_token)  { should be_nil }
       its(:refresh_token) { should be_nil }
     end
 
     describe "with a valid owner but an invalid client" do
-      subject { PasswordAccessTokenRequest.new(owner, {:client_id => 'bad', :client_secret => 'bad'}) }
+      subject { PasswordAccessTokenRequest.new(nil, owner, params) }
 
       before { subject.authorize }
 
       it { should_not be_valid }
-      its(:error)         { should_not be_nil }
+      its(:error)         { should == :invalid_client }
       its(:access_token)  { should be_nil }
       its(:refresh_token) { should be_nil }
     end
 
     describe "creating the access token" do
-      subject { PasswordAccessTokenRequest.new(owner, params) }
+      subject { PasswordAccessTokenRequest.new(client, owner, params) }
 
       it "creates with correct params" do
         Doorkeeper::AccessToken.should_receive(:create!).with({
@@ -79,7 +77,7 @@ module Doorkeeper::OAuth
     end
 
     describe "with an existing valid access token" do
-      subject { PasswordAccessTokenRequest.new(owner, params) }
+      subject { PasswordAccessTokenRequest.new(client, owner, params) }
 
       before { subject.authorize }
       it { should be_valid }
@@ -92,7 +90,7 @@ module Doorkeeper::OAuth
     end
 
     describe "with an existing expired access token" do
-      subject { PasswordAccessTokenRequest.new(owner, params) }
+      subject { PasswordAccessTokenRequest.new(client, owner, params) }
 
       it "will create a new token" do
         subject.authorize
@@ -106,7 +104,7 @@ module Doorkeeper::OAuth
     end
 
     describe "finding the current access token" do
-      subject { PasswordAccessTokenRequest.new(owner, params) }
+      subject { PasswordAccessTokenRequest.new(client, owner, params) }
       it { should be_valid }
       its(:error)         { should be_nil }
 
@@ -120,7 +118,7 @@ module Doorkeeper::OAuth
     end
 
     describe "creating the first access_token" do
-      subject { PasswordAccessTokenRequest.new(owner, params) }
+      subject { PasswordAccessTokenRequest.new(client, owner, params) }
       it { should be_valid }
       its(:error)         { should be_nil }
 
@@ -132,7 +130,7 @@ module Doorkeeper::OAuth
 
     describe "with errors" do
       def token(params)
-        PasswordAccessTokenRequest.new(owner, params)
+        PasswordAccessTokenRequest.new(client, owner, params)
       end
 
       it "includes the error in the response" do
@@ -140,13 +138,8 @@ module Doorkeeper::OAuth
         access_token.error_response['error'].should == "invalid_request"
       end
 
-      describe "when :client_id does not match" do
-        subject     { token(params.merge(:client_id => "inexistent")) }
-        its(:error) { should == :invalid_client }
-      end
-
-      describe "when :client_secret does not match" do
-        subject     { token(params.merge(:client_secret => "inexistent")) }
+      describe "when client is not present" do
+        subject     { PasswordAccessTokenRequest.new(nil, owner, params) }
         its(:error) { should == :invalid_client }
       end
 

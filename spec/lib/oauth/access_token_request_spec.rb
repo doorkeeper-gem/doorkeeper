@@ -6,8 +6,6 @@ module Doorkeeper::OAuth
     let(:grant)  { FactoryGirl.create(:access_grant, :application => client) }
     let(:params) {
       {
-        :client_id     => client.uid,
-        :client_secret => client.secret,
         :code          => grant.token,
         :grant_type    => "authorization_code",
         :redirect_uri  => client.redirect_uri
@@ -15,7 +13,7 @@ module Doorkeeper::OAuth
     }
 
     describe "with a valid authorization code and client" do
-      subject { AccessTokenRequest.new(params) }
+      subject { AccessTokenRequest.new(client, params) }
 
       before { subject.authorize }
 
@@ -30,7 +28,7 @@ module Doorkeeper::OAuth
     end
 
     describe "creating the access token" do
-      subject { AccessTokenRequest.new(params) }
+      subject { AccessTokenRequest.new(client, params) }
 
       it "creates with correct params" do
         Doorkeeper::AccessToken.should_receive(:create!).with({
@@ -45,7 +43,7 @@ module Doorkeeper::OAuth
     end
 
     describe "with a valid authorization code, client and existing valid access token" do
-      subject { AccessTokenRequest.new(params) }
+      subject { AccessTokenRequest.new(client, params) }
 
       before { subject.authorize }
       it { should be_valid }
@@ -58,7 +56,7 @@ module Doorkeeper::OAuth
     end
 
     describe "with a valid authorization code, client and existing expired access token" do
-      subject { AccessTokenRequest.new(params) }
+      subject { AccessTokenRequest.new(client, params) }
 
       it "will create a new token" do
         subject.authorize
@@ -72,7 +70,7 @@ module Doorkeeper::OAuth
     end
 
     describe "finding the current access token" do
-      subject { AccessTokenRequest.new(params) }
+      subject { AccessTokenRequest.new(client, params) }
       it { should be_valid }
       its(:error)         { should be_nil }
 
@@ -86,7 +84,7 @@ module Doorkeeper::OAuth
     end
 
     describe "creating the first access_token" do
-      subject { AccessTokenRequest.new(params) }
+      subject { AccessTokenRequest.new(client, params) }
       it { should be_valid }
       its(:error)         { should be_nil }
 
@@ -98,7 +96,7 @@ module Doorkeeper::OAuth
 
     describe "with errors" do
       def token(params)
-        AccessTokenRequest.new(params)
+        AccessTokenRequest.new(client, params)
       end
 
       it "includes the error in the response" do
@@ -113,13 +111,8 @@ module Doorkeeper::OAuth
         end
       end
 
-      describe "when :client_id does not match" do
-        subject     { token(params.merge(:client_id => "inexistent")) }
-        its(:error) { should == :invalid_client }
-      end
-
-      describe "when :client_secret does not match" do
-        subject     { token(params.merge(:client_secret => "inexistent")) }
+      describe "when client is not present" do
+        subject     { AccessTokenRequest.new(nil, params) }
         its(:error) { should == :invalid_client }
       end
 
@@ -166,8 +159,6 @@ module Doorkeeper::OAuth
     let(:access) { FactoryGirl.create(:access_token, :application => client, :use_refresh_token => true) }
     let(:params) {
       {
-        :client_id     => client.uid,
-        :client_secret => client.secret,
         :refresh_token => access.refresh_token,
         :grant_type    => "refresh_token",
       }
@@ -178,7 +169,7 @@ module Doorkeeper::OAuth
     end
 
     describe "with a valid authorization code and client" do
-      subject { AccessTokenRequest.new(params) }
+      subject { AccessTokenRequest.new(client, params) }
 
       before do
         subject.authorize
@@ -196,7 +187,7 @@ module Doorkeeper::OAuth
 
     describe "with errors" do
       def token(params)
-        AccessTokenRequest.new(params)
+        AccessTokenRequest.new(client, params)
       end
 
       it "includes the error in the response" do
@@ -211,13 +202,8 @@ module Doorkeeper::OAuth
         end
       end
 
-      describe "when :client_id does not match" do
-        subject     { token(params.merge(:client_id => "inexistent")) }
-        its(:error) { should == :invalid_client }
-      end
-
-      describe "when :client_secret does not match" do
-        subject     { token(params.merge(:client_secret => "inexistent")) }
+      describe "when client is not present" do
+        subject     { AccessTokenRequest.new(nil, params) }
         its(:error) { should == :invalid_client }
       end
 

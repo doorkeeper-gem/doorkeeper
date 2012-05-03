@@ -6,7 +6,6 @@ module Doorkeeper::OAuth
 
     ATTRIBUTES = [
       :response_type,
-      :client_id,
       :redirect_uri,
       :scope,
       :state
@@ -19,11 +18,12 @@ module Doorkeeper::OAuth
     validate :scope,         :error => :invalid_scope
 
     attr_accessor *ATTRIBUTES
-    attr_accessor :resource_owner, :error
+    attr_accessor :resource_owner, :client, :error
 
-    def initialize(resource_owner, attributes)
+    def initialize(client, resource_owner, attributes)
       ATTRIBUTES.each { |attr| instance_variable_set("@#{attr}", attributes[attr]) }
       @resource_owner = resource_owner
+      @client         = client
       validate
     end
 
@@ -58,16 +58,16 @@ module Doorkeeper::OAuth
       (error != :invalid_redirect_uri) && (error != :invalid_client)
     end
 
-    def client
-      @client ||= Doorkeeper::Application.find_by_uid(client_id)
-    end
-
     def scopes
       @scopes ||= if scope.present?
         Doorkeeper::OAuth::Scopes.from_string(scope)
       else
         Doorkeeper.configuration.default_scopes
       end
+    end
+
+    def client_id
+      client.uid
     end
 
     private

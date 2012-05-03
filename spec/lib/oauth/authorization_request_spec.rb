@@ -6,7 +6,6 @@ module Doorkeeper::OAuth
     let(:client)         { FactoryGirl.create(:application) }
     let(:base_attributes) do
       {
-        :client_id     => client.uid,
         :redirect_uri  => client.redirect_uri,
         :scope         => "public write",
         :state         => "return-this"
@@ -21,7 +20,7 @@ module Doorkeeper::OAuth
       let(:attributes) { base_attributes.merge!(:response_type => "code") }
 
       describe "with valid attributes" do
-        subject { AuthorizationRequest.new(resource_owner, attributes) }
+        subject { AuthorizationRequest.new(client, resource_owner, attributes) }
 
         describe "after authorization" do
           before { subject.authorize }
@@ -46,7 +45,7 @@ module Doorkeeper::OAuth
         end
 
         describe :authorize do
-          let(:authorization_request) { AuthorizationRequest.new(resource_owner, attributes) }
+          let(:authorization_request) { AuthorizationRequest.new(client, resource_owner, attributes) }
           subject { authorization_request.authorize }
 
           it "returns Doorkeeper::AccessGrant object" do
@@ -71,7 +70,7 @@ module Doorkeeper::OAuth
           attributes[:redirect_uri] = u.to_s
           attributes
         }
-        subject { AuthorizationRequest.new(resource_owner, attributes_with_query_params) }
+        subject { AuthorizationRequest.new(client, resource_owner, attributes_with_query_params) }
 
         it "preservers the original query when error"
 
@@ -99,7 +98,7 @@ module Doorkeeper::OAuth
 
       describe "if no scope given" do
         it "sets the scope to the default one" do
-          request = AuthorizationRequest.new(resource_owner, attributes.except(:scope))
+          request = AuthorizationRequest.new(client, resource_owner, attributes.except(:scope))
           request.scopes.to_s.should == "public write"
         end
       end
@@ -119,13 +118,8 @@ module Doorkeeper::OAuth
           its(:error) { should == :invalid_redirect_uri }
         end
 
-        describe "when :client_id is missing" do
-          subject     { auth(attributes.except(:client_id)) }
-          its(:error) { should == :invalid_client }
-        end
-
-        describe "when :client_id does not match" do
-          subject     { auth(attributes.merge(:client_id => "invalid")) }
+        describe "when client is not present" do
+          subject     { AuthorizationRequest.new(nil, resource_owner, attributes) }
           its(:error) { should == :invalid_client }
         end
 
@@ -164,13 +158,12 @@ module Doorkeeper::OAuth
       let(:attributes) { base_attributes.merge!(:response_type => "token") }
 
       describe "with valid attributes" do
-        subject { AuthorizationRequest.new(resource_owner, attributes) }
+        subject { AuthorizationRequest.new(client, resource_owner, attributes) }
 
         describe "after authorization" do
           before { subject.authorize }
 
           its(:response_type) { should == "token" }
-          its(:client_id)     { should == client.uid }
           its(:scope)         { should == "public write" }
           its(:state)         { should == "return-this" }
           its(:error)         { should be_nil }
@@ -205,7 +198,7 @@ module Doorkeeper::OAuth
         end
 
         describe :authorize do
-          let(:authorization_request) { AuthorizationRequest.new(resource_owner, attributes) }
+          let(:authorization_request) { AuthorizationRequest.new(client, resource_owner, attributes) }
           subject { authorization_request.authorize }
 
           it "returns Doorkeeper::AccessGrant object" do
@@ -224,7 +217,7 @@ module Doorkeeper::OAuth
 
       describe "if no scope given" do
         it "sets the scope to the default one" do
-          request = AuthorizationRequest.new(resource_owner, attributes.except(:scope))
+          request = AuthorizationRequest.new(client, resource_owner, attributes.except(:scope))
           request.scopes.to_s.should == "public write"
         end
       end
@@ -244,13 +237,8 @@ module Doorkeeper::OAuth
           its(:error) { should == :invalid_redirect_uri }
         end
 
-        describe "when :client_id is missing" do
-          subject     { auth(attributes.except(:client_id)) }
-          its(:error) { should == :invalid_client }
-        end
-
-        describe "when :client_id does not match" do
-          subject     { auth(attributes.merge(:client_id => "invalid")) }
+        describe "when client is not present" do
+          subject     { AuthorizationRequest.new(nil, resource_owner, attributes) }
           its(:error) { should == :invalid_client }
         end
 
@@ -292,7 +280,7 @@ module Doorkeeper::OAuth
     end
 
     def auth(attributes)
-      AuthorizationRequest.new(resource_owner, attributes)
+      AuthorizationRequest.new(client, resource_owner, attributes)
     end
   end
 end

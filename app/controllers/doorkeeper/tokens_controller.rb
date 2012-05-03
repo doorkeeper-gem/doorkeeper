@@ -1,7 +1,4 @@
 class Doorkeeper::TokensController < Doorkeeper::ApplicationController
-
-  before_filter :parse_client_info_from_basic_auth, :only => :create
-
   def create
     response.headers.merge!({
       'Pragma'        => 'no-cache',
@@ -16,12 +13,20 @@ class Doorkeeper::TokensController < Doorkeeper::ApplicationController
 
   private
 
+  def client
+    @client ||= Doorkeeper::OAuth::Client.authenticate(credentials)
+  end
+
+  def credentials
+    @credentials ||= Doorkeeper::OAuth::Client::Credentials.from_request(request)
+  end
+
   def token
     if params[:grant_type] == 'password'
       owner = resource_owner_from_credentials
-      @token ||= Doorkeeper::OAuth::PasswordAccessTokenRequest.new(owner, params)
+      @token ||= Doorkeeper::OAuth::PasswordAccessTokenRequest.new(client, owner, params)
     else
-      @token ||= Doorkeeper::OAuth::AccessTokenRequest.new(params)
+      @token ||= Doorkeeper::OAuth::AccessTokenRequest.new(client, params)
     end
   end
 end

@@ -6,8 +6,6 @@ module Doorkeeper::OAuth
     include Doorkeeper::Validations
 
     ATTRIBUTES = [
-      :client_id,
-      :client_secret,
       :grant_type,
       :username,
       :password,
@@ -22,11 +20,12 @@ module Doorkeeper::OAuth
     validate :scope,          :error => :invalid_scope
 
     attr_accessor *ATTRIBUTES
-    attr_accessor :resource_owner
+    attr_accessor :resource_owner, :client
 
-    def initialize(owner, attributes = {})
+    def initialize(client, owner, attributes = {})
       ATTRIBUTES.each { |attr| instance_variable_set("@#{attr}", attributes[attr]) }
       @resource_owner = owner
+      @client = client
       validate
     end
 
@@ -90,10 +89,6 @@ module Doorkeeper::OAuth
 
     def revoke_base_token
       base_token.revoke
-    end
-
-    def client
-      @client ||= Doorkeeper::Application.find_by_uid_and_secret(@client_id, @client_secret)
     end
 
     def create_access_token
