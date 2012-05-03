@@ -22,9 +22,12 @@ class Doorkeeper::TokensController < Doorkeeper::ApplicationController
   end
 
   def token
-    if params[:grant_type] == 'password'
+    case params[:grant_type]
+    when 'password'
       owner = resource_owner_from_credentials
       @token ||= Doorkeeper::OAuth::PasswordAccessTokenRequest.new(client, owner, params)
+    when 'client_credentials'
+      @token ||= Doorkeeper::OAuth::ClientCredentialsRequest.new(Doorkeeper.configuration, client, params)
     else
       @token ||= Doorkeeper::OAuth::AccessTokenRequest.new(client, params)
     end
