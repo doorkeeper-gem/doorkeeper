@@ -1,7 +1,3 @@
-require 'doorkeeper/config/scopes'
-require 'doorkeeper/config/scope'
-require 'doorkeeper/config/scopes_builder'
-
 module Doorkeeper
   def self.configure(&block)
     @config = Config::Builder.new(&block).build
@@ -12,10 +8,6 @@ module Doorkeeper
   end
 
   class Config
-    def default_scope_string
-      @scopes.try(:default_scope_string) || ""
-    end
-
     class Builder
       def initialize(&block)
         @config = Config.new
@@ -24,6 +16,14 @@ module Doorkeeper
 
       def build
         @config
+      end
+
+      def default_scopes(*scopes)
+        @config.instance_variable_set("@default_scopes", Doorkeeper::OAuth::Scopes.from_array(scopes))
+      end
+
+      def optional_scopes(*scopes)
+        @config.instance_variable_set("@optional_scopes", Doorkeeper::OAuth::Scopes.from_array(scopes))
       end
 
       def use_refresh_token
@@ -98,10 +98,21 @@ module Doorkeeper
     option :admin_authenticator,          :as      => :authenticate_admin
     option :resource_owner_from_credentials
     option :access_token_expires_in,      :default => 7200
-    option :authorization_scopes,         :as      => :scopes, :builder_class => ScopesBuilder, :default => Scopes.new
 
     def refresh_token_enabled?
       !!@refresh_token_enabled
+    end
+
+    def default_scopes
+      @default_scopes ||= Doorkeeper::OAuth::Scopes.new
+    end
+
+    def optional_scopes
+      @optional_scopes ||= Doorkeeper::OAuth::Scopes.new
+    end
+
+    def scopes
+      @scopes ||= default_scopes + optional_scopes
     end
   end
 end

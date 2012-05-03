@@ -34,7 +34,7 @@ feature 'Private API' do
   end
 
   scenario 'access token with no scopes' do
-    scope_exists :admin, :description => "admin"
+    optional_scopes_exist :admin
     @token.update_attribute :scopes, nil
     with_access_token_header @token.token
     visit '/full_protected_resources/1.json'

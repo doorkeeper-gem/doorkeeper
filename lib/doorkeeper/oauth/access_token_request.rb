@@ -46,7 +46,7 @@ module Doorkeeper::OAuth
     end
 
     def access_token
-      @access_token ||= Doorkeeper::AccessToken.matching_token_for client, base_token.resource_owner_id, base_token.scopes_string
+      @access_token ||= Doorkeeper::AccessToken.matching_token_for client, base_token.resource_owner_id, base_token.scopes
     end
 
     def token_type

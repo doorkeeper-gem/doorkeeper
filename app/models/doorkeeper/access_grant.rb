@@ -3,6 +3,7 @@ module Doorkeeper
     include Doorkeeper::OAuth::Helpers
     include Doorkeeper::Models::Expirable
     include Doorkeeper::Models::Revocable
+    include Doorkeeper::Models::Scopes
 
     self.table_name = :oauth_access_grants
 
@@ -14,14 +15,6 @@ module Doorkeeper
 
     def accessible?
       !expired? && !revoked?
-    end
-
-    def scopes
-      self[:scopes].split(" ").map(&:to_sym) if self[:scopes]
-    end
-
-    def scopes_string
-      self[:scopes]
     end
 
     private

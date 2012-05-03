@@ -27,7 +27,6 @@ module Doorkeeper::OAuth
     def initialize(owner, attributes = {})
       ATTRIBUTES.each { |attr| instance_variable_set("@#{attr}", attributes[attr]) }
       @resource_owner = owner
-      @scope ||= Doorkeeper.configuration.default_scope_string
       validate
     end
 
@@ -66,6 +65,14 @@ module Doorkeeper::OAuth
       }
     end
 
+    def scopes
+      @scopes ||= if scope.present?
+        Doorkeeper::OAuth::Scopes.from_string(scope)
+      else
+        Doorkeeper.configuration.default_scopes
+      end
+    end
+
     private
 
     def find_or_create_access_token
@@ -93,14 +100,10 @@ module Doorkeeper::OAuth
       @access_token = Doorkeeper::AccessToken.create!({
         :application_id     => client.id,
         :resource_owner_id  => resource_owner.id,
-        :scopes             => @scope,
+        :scopes             => scopes.to_s,
         :expires_in         => configuration.access_token_expires_in,
         :use_refresh_token  => refresh_token_enabled?
       })
-    end
-
-    def has_scope?
-      Doorkeeper.configuration.scopes.all.present?
     end
 
     def validate_attributes
@@ -116,7 +119,7 @@ module Doorkeeper::OAuth
     end
 
     def validate_scope
-      return true unless has_scope?
+      return true unless scope.present?
       ScopeChecker.valid?(scope, configuration.scopes)
     end
 

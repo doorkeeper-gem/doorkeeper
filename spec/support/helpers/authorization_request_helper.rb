@@ -8,10 +8,12 @@ module AuthorizationRequestHelper
     Doorkeeper.configuration.instance_variable_set(:@authenticate_resource_owner, proc { redirect_to("/sign_in") })
   end
 
-  def scope_exists(*args)
-    scopes = Doorkeeper.configuration.instance_variable_get(:@scopes) || Doorkeeper::Scopes.new
-    scopes.add(Doorkeeper::Scope.new(*args))
-    Doorkeeper.configuration.instance_variable_set(:@scopes, scopes)
+  def default_scopes_exist(*scopes)
+    Doorkeeper.configuration.instance_variable_set(:@default_scopes, Doorkeeper::OAuth::Scopes.from_array(scopes))
+  end
+
+  def optional_scopes_exist(*scopes)
+    Doorkeeper.configuration.instance_variable_set(:@optional_scopes, Doorkeeper::OAuth::Scopes.from_array(scopes))
   end
 
   def client_should_be_authorized(client)
