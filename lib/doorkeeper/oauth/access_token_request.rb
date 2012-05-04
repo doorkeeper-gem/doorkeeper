@@ -54,10 +54,7 @@ module Doorkeeper::OAuth
     end
 
     def error_response
-      {
-        'error' => error.to_s,
-        'error_description' => error_description
-      }
+      Doorkeeper::OAuth::ErrorResponse.from_request(self)
     end
 
     private
@@ -133,10 +130,6 @@ module Doorkeeper::OAuth
 
     def validate_grant_type
       %w(authorization_code refresh_token).include? grant_type
-    end
-
-    def error_description
-      I18n.translate error, :scope => [:doorkeeper, :errors, :messages]
     end
 
     def configuration

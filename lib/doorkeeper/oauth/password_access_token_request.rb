@@ -58,10 +58,7 @@ module Doorkeeper::OAuth
     end
 
     def error_response
-      {
-        'error' => error.to_s,
-        'error_description' => error_description
-      }
+      Doorkeeper::OAuth::ErrorResponse.from_request(self)
     end
 
     def scopes
@@ -124,10 +121,6 @@ module Doorkeeper::OAuth
 
     def validate_resource_owner
       !!resource_owner
-    end
-
-    def error_description
-      I18n.translate error, :scope => [:doorkeeper, :errors, :messages]
     end
 
     def configuration

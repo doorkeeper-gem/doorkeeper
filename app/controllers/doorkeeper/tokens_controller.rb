@@ -7,7 +7,7 @@ class Doorkeeper::TokensController < Doorkeeper::ApplicationController
     if token.authorize
       render :json => token.authorization
     else
-      render :json => token.error_response, :status => :unauthorized
+      render :json => token.error_response, :status => token.error_response.status
     end
   end
 

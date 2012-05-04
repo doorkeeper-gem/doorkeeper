@@ -101,7 +101,7 @@ module Doorkeeper::OAuth
 
       it "includes the error in the response" do
         access_token = token(params.except(:grant_type))
-        access_token.error_response['error'].should == "invalid_request"
+        access_token.error_response.name.should == :invalid_request
       end
 
       [:grant_type, :code, :redirect_uri].each do |param|
@@ -192,7 +192,7 @@ module Doorkeeper::OAuth
 
       it "includes the error in the response" do
         access_token = token(params.except(:grant_type))
-        access_token.error_response['error'].should == "invalid_request"
+        access_token.error_response.name.should == :invalid_request
       end
 
       [:grant_type, :refresh_token].each do |param|

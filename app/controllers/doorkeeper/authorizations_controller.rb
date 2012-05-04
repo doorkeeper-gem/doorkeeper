@@ -10,6 +10,7 @@ class Doorkeeper::AuthorizationsController < Doorkeeper::ApplicationController
     elsif authorization.redirect_on_error?
       redirect_to authorization.invalid_redirect_uri
     else
+      @error = authorization.error_response
       render :error
     end
   end
@@ -20,6 +21,7 @@ class Doorkeeper::AuthorizationsController < Doorkeeper::ApplicationController
     elsif authorization.redirect_on_error?
       redirect_to authorization.invalid_redirect_uri
     else
+      @error = authorization.error_response
       render :error
     end
   end

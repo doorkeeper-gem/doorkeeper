@@ -135,7 +135,7 @@ module Doorkeeper::OAuth
 
       it "includes the error in the response" do
         access_token = token(params.except(:grant_type))
-        access_token.error_response['error'].should == "invalid_request"
+        access_token.error_response.name.should == :invalid_request
       end
 
       describe "when client is not present" do
