@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.3
+
+- [#86] shrink gem package size
+
 ## 0.3.2
 
 - enhancements
