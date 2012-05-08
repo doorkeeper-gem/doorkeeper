@@ -6,6 +6,10 @@
   - [#83] Add Resource Owner Password Credentials flow [@jaimeiniesta](https://github.com/jaimeiniesta)
   - [#76] Allow token expiration to be disabled [@mattgreen](https://github.com/mattgreen)
 
+## 0.3.3
+
+- [#86] shrink gem package size
+
 ## 0.3.2
 
 - enhancements
