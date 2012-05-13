@@ -6,7 +6,6 @@ module Doorkeeper::OAuth
 
     ATTRIBUTES = [
       :response_type,
-      :client_id,
       :redirect_uri,
       :scope,
       :state
@@ -19,11 +18,12 @@ module Doorkeeper::OAuth
     validate :scope,         :error => :invalid_scope
 
     attr_accessor *ATTRIBUTES
-    attr_accessor :resource_owner, :error
+    attr_accessor :resource_owner, :client, :error
 
-    def initialize(resource_owner, attributes)
+    def initialize(client, resource_owner, attributes)
       ATTRIBUTES.each { |attr| instance_variable_set("@#{attr}", attributes[attr]) }
       @resource_owner = resource_owner
+      @client         = client
       validate
     end
 
@@ -41,25 +41,21 @@ module Doorkeeper::OAuth
       self.error = :access_denied
     end
 
+    def error_response
+      Doorkeeper::OAuth::ErrorResponse.from_request(self)
+    end
+
     def success_redirect_uri
       @authorization.callback
     end
 
     def invalid_redirect_uri
       uri_builder = is_token_request? ? :uri_with_fragment : :uri_with_query
-      send(uri_builder, redirect_uri, {
-        :error => error,
-        :error_description => error_description,
-        :state => state
-      })
+      send(uri_builder, redirect_uri, error_response.attributes)
     end
 
     def redirect_on_error?
       (error != :invalid_redirect_uri) && (error != :invalid_client)
-    end
-
-    def client
-      @client ||= Doorkeeper::Application.find_by_uid(client_id)
     end
 
     def scopes
@@ -68,6 +64,10 @@ module Doorkeeper::OAuth
       else
         Doorkeeper.configuration.default_scopes
       end
+    end
+
+    def client_id
+      client.uid
     end
 
     private
@@ -100,10 +100,6 @@ module Doorkeeper::OAuth
 
     def is_token_request?
       response_type == "token"
-    end
-
-    def error_description
-      I18n.translate error, :scope => [:doorkeeper, :errors, :messages]
     end
 
     def configuration

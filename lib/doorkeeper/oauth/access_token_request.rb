@@ -3,8 +3,6 @@ module Doorkeeper::OAuth
     include Doorkeeper::Validations
 
     ATTRIBUTES = [
-      :client_id,
-      :client_secret,
       :grant_type,
       :code,
       :redirect_uri,
@@ -18,9 +16,11 @@ module Doorkeeper::OAuth
     validate :redirect_uri, :error => :invalid_grant
 
     attr_accessor *ATTRIBUTES
+    attr_accessor :client
 
-    def initialize(attributes = {})
+    def initialize(client, attributes = {})
       ATTRIBUTES.each { |attr| instance_variable_set("@#{attr}", attributes[attr]) }
+      @client = client
       validate
     end
 
@@ -54,10 +54,7 @@ module Doorkeeper::OAuth
     end
 
     def error_response
-      {
-        'error' => error.to_s,
-        'error_description' => error_description
-      }
+      Doorkeeper::OAuth::ErrorResponse.from_request(self)
     end
 
     private
@@ -77,10 +74,6 @@ module Doorkeeper::OAuth
 
     def revoke_base_token
       base_token.revoke
-    end
-
-    def client
-      @client ||= Doorkeeper::Application.find_by_uid_and_secret(@client_id, @client_secret)
     end
 
     def base_token
@@ -137,10 +130,6 @@ module Doorkeeper::OAuth
 
     def validate_grant_type
       %w(authorization_code refresh_token).include? grant_type
-    end
-
-    def error_description
-      I18n.translate error, :scope => [:doorkeeper, :errors, :messages]
     end
 
     def configuration
