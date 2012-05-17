@@ -13,13 +13,15 @@ module Doorkeeper
         end
 
         def issue_token
-          @grant ||= AccessGrant.create!(
-            :application_id    => authorization.client.id,
-            :resource_owner_id => authorization.resource_owner.id,
-            :expires_in        => DEFAULT_EXPIRATION_TIME,
-            :redirect_uri      => authorization.redirect_uri,
-            :scopes            => authorization.scopes.to_s
-          )
+          return @grant unless @grant.nil? 
+          @grant                   = AccessGrant.new
+          @grant.application_id    = authorization.client.id,
+          @grant.resource_owner_id = authorization.resource_owner.id,
+          @grant.expires_in        = DEFAULT_EXPIRATION_TIME,
+          @grant.redirect_uri      = authorization.redirect_uri,
+          @grant.scopes            = authorization.scopes.to_s
+          @grant.save
+          @grant
         end
 
         def callback
