@@ -19,7 +19,7 @@ module Doorkeeper
       end
 
       def attributes
-        { :error => name, :error_description => description, :state => state }.reject { |k, v| v.blank? }
+        { 'error' => name, 'error_description' => description, 'state' => state }.reject { |k, v| v.blank? }
       end
 
       def status

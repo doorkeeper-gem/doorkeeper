@@ -32,9 +32,9 @@ module Doorkeeper::OAuth
     context 'json response' do
       subject { ErrorResponse.new(:name => :some_error, :state => :some_state).as_json }
 
-      it { should have_key(:error) }
-      it { should have_key(:error_description) }
-      it { should have_key(:state) }
+      it { should have_key('error') }
+      it { should have_key('error_description') }
+      it { should have_key('state') }
     end
   end
 end
