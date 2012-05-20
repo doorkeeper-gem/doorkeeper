@@ -40,7 +40,7 @@ module RequestSpecHelper
   end
 
   def basic_auth_header_for_client(client)
-    "Basic #{Base64.encode64("#{client.uid}:#{client.secret}")}"
+    ActionController::HttpAuthentication::Basic.encode_credentials client.uid, client.secret
   end
 
   def should_have_json(key, value)
