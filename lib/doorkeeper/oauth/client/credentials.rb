@@ -1,5 +1,3 @@
-require 'doorkeeper/oauth/client/methods'
-
 module Doorkeeper
   module OAuth
     class Client

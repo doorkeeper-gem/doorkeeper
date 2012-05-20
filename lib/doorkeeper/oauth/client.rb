@@ -1,5 +1,3 @@
-require 'doorkeeper/oauth/client/credentials'
-
 module Doorkeeper
   module OAuth
     class Client
