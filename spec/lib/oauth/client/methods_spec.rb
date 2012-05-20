@@ -35,7 +35,7 @@ class Doorkeeper::OAuth::Client
       let(:credentials) { Base64.encode64("#{client_id}:#{client_secret}") }
 
       it 'decodes the credentials' do
-        request     = stub :env => { 'HTTP_AUTHORIZATION' => "Basic #{credentials}" }
+        request     = stub :authorization => "Basic #{credentials}"
         uid, secret = subject.from_basic(request)
 
         uid.should    == "some-uid"
@@ -43,7 +43,7 @@ class Doorkeeper::OAuth::Client
       end
 
       it 'is blank if Authorization is not Basic' do
-        request     = stub :env => { 'HTTP_AUTHORIZATION' => "#{credentials}" }
+        request     = stub :authorization => "#{credentials}"
         uid, secret = subject.from_basic(request)
 
         uid.should    be_blank

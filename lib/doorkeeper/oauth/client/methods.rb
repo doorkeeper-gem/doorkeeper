@@ -7,7 +7,7 @@ module Doorkeeper
         end
 
         def from_basic(request)
-          authorization = request.env['HTTP_AUTHORIZATION']
+          authorization = request.authorization
           if authorization.present? && authorization =~ /^Basic (.*)/m
             Base64.decode64($1).split(/:/, 2)
           end
