@@ -26,6 +26,10 @@ module Doorkeeper
         @config.instance_variable_set("@optional_scopes", Doorkeeper::OAuth::Scopes.from_array(scopes))
       end
 
+      def client_credentials(*methods)
+        @config.instance_variable_set("@client_credentials", methods)
+      end
+
       def use_refresh_token
         @config.instance_variable_set("@refresh_token_enabled", true)
       end
@@ -94,8 +98,8 @@ module Doorkeeper
 
     extend Option
 
-    option :resource_owner_authenticator, :as      => :authenticate_resource_owner
-    option :admin_authenticator,          :as      => :authenticate_admin
+    option :resource_owner_authenticator, :as => :authenticate_resource_owner
+    option :admin_authenticator,          :as => :authenticate_admin
     option :resource_owner_from_credentials
     option :access_token_expires_in,      :default => 7200
 
@@ -113,6 +117,10 @@ module Doorkeeper
 
     def scopes
       @scopes ||= default_scopes + optional_scopes
+    end
+
+    def client_credentials_methods
+      @client_credentials ||= [:from_basic, :from_params]
     end
   end
 end
