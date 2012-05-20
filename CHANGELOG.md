@@ -5,6 +5,9 @@
 - enhancements
   - [#83] Add Resource Owner Password Credentials flow [@jaimeiniesta](https://github.com/jaimeiniesta)
   - [#76] Allow token expiration to be disabled [@mattgreen](https://github.com/mattgreen)
+  - [#b6470a] Add Client Credentials flow
+- internals
+  - [#2ece8d, #f93778] Introduce Client and ErrorResponse classes
 
 ## 0.3.3
 
