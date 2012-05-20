@@ -6,9 +6,10 @@ module Doorkeeper
       class Credentials < Struct.new(:uid, :secret)
         extend Methods
 
-        def self.from_request(request, *methods)
-          methods.inject(nil) do |credentials, method|
-            credentials = Credentials.new *self.send(method, request)
+        def self.from_request(request, *credentials_methods)
+          credentials_methods.inject(nil) do |credentials, method|
+            method = self.method(method) if method.is_a?(Symbol)
+            credentials = Credentials.new *method.call(request)
             break credentials unless credentials.blank?
           end
         end

@@ -10,24 +10,37 @@ class Doorkeeper::OAuth::Client
     end
 
     describe :from_request do
-      let(:credentials) { Base64.encode64("id-from-header:secret-from-header") }
+      let(:request) { stub.as_null_object }
 
-      let(:request) do
-        stub :env => { 'HTTP_AUTHORIZATION' => "Basic #{credentials}" },
-             :parameters => {
-               :client_id => 'id-from-params',
-               :client_secret => 'secret-from-params'
-             }
+      let(:method) do
+        lambda { |request| return 'uid', 'secret' }
       end
 
-      it 'attempts to find credentials with methods order' do
-        credentials = Credentials.from_request(request, :from_params, :from_basic)
-        credentials.uid.should    == 'id-from-params'
-        credentials.secret.should == 'secret-from-params'
+      it 'accepts anything that responds to #call' do
+        method.should_receive(:call).with(request)
+        Credentials.from_request request, method
+      end
 
-        credentials = Credentials.from_request(request, :from_basic, :from_params)
-        credentials.uid.should    == 'id-from-header'
-        credentials.secret.should == 'secret-from-header'
+      it 'delegates methods received as symbols to Credentials class' do
+        Credentials.should_receive(:from_params).with(request)
+        Credentials.from_request request, :from_params
+      end
+
+      it 'stops at the first credentials found' do
+        not_called_method = mock
+        not_called_method.should_not_receive(:call)
+        credentials = Credentials.from_request request, lambda { |r| }, method, not_called_method
+      end
+
+      it 'returns new Credentials' do
+        credentials = Credentials.from_request request, method
+        credentials.should be_a(Credentials)
+      end
+
+      it 'returns uid and secret from extractor method' do
+        credentials = Credentials.from_request request, method
+        credentials.uid.should    == 'uid'
+        credentials.secret.should == 'secret'
       end
     end
   end
