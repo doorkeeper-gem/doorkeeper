@@ -8,6 +8,8 @@ require 'timecop'
 
 ENGINE_RAILS_ROOT = File.join(File.dirname(__FILE__), '../')
 
+puts "====> Rails.version: #{Rails.version}"
+
 # load schema to in memory sqlite
 ActiveRecord::Migration.verbose = false
 load Rails.root + "db/schema.rb"
