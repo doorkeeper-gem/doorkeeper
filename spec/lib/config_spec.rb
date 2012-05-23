@@ -73,4 +73,15 @@ describe Doorkeeper, "configuration" do
       subject.refresh_token_enabled?.should be_true
     end
   end
+
+  describe 'client_credentials' do
+    it 'has defaults order' do
+      subject.client_credentials_methods.should == [:from_basic, :from_params]
+    end
+
+    it "can change the value" do
+      Doorkeeper.configure { client_credentials :from_digest, :from_params }
+      subject.client_credentials_methods.should == [:from_digest, :from_params]
+    end
+  end
 end

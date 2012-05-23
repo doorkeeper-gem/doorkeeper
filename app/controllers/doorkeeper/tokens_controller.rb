@@ -18,7 +18,8 @@ class Doorkeeper::TokensController < Doorkeeper::ApplicationController
   end
 
   def credentials
-    @credentials ||= Doorkeeper::OAuth::Client::Credentials.from_request(request)
+    methods = Doorkeeper.configuration.client_credentials_methods
+    @credentials ||= Doorkeeper::OAuth::Client::Credentials.from_request(request, *methods)
   end
 
   def token
