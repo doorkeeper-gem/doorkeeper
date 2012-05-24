@@ -1,7 +1,6 @@
 require 'spec_helper'
 require 'active_support/core_ext/string'
-require 'doorkeeper/oauth/client/methods'
-require 'doorkeeper/oauth/client/credentials'
+require 'doorkeeper/oauth/client'
 
 class Doorkeeper::OAuth::Client
   describe Credentials do

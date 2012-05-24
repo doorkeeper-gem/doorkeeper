@@ -2,8 +2,6 @@ require 'spec_helper'
 require 'active_support/core_ext/module/delegation'
 require 'active_support/core_ext/string'
 require 'doorkeeper/oauth/client'
-require 'doorkeeper/oauth/client/methods'
-require 'doorkeeper/oauth/client/credentials'
 
 module Doorkeeper::OAuth
   class Doorkeeper::Application
