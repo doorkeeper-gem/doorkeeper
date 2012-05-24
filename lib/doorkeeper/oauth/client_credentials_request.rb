@@ -1,6 +1,7 @@
 require 'doorkeeper/oauth/error'
 require 'doorkeeper/oauth/error_response'
 require 'doorkeeper/oauth/scopes'
+require 'doorkeeper/oauth/client_credentials/creator'
 require 'doorkeeper/oauth/client_credentials/issuer'
 require 'doorkeeper/oauth/client_credentials/response'
 require 'doorkeeper/oauth/client_credentials/validation'

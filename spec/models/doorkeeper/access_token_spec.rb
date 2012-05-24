@@ -13,9 +13,10 @@ module Doorkeeper
     end
 
     describe "validations" do
-      it "is invalid without resource_owner_id" do
+      it "is valid without resource_owner_id" do
+        # For client credentials flow
         subject.resource_owner_id = nil
-        should_not be_valid
+        should be_valid
       end
 
       it "is invalid without application_id" do
@@ -68,6 +69,12 @@ module Doorkeeper
         resource_owner = stub(:kind_of? => true, :id => 100)
         token = FactoryGirl.create :access_token, default_attributes
         last_token = AccessToken.matching_token_for(application, resource_owner, scopes)
+        last_token.should == token
+      end
+
+      it 'accepts nil as resource owner' do
+        token = FactoryGirl.create :access_token, default_attributes.merge(:resource_owner_id => nil)
+        last_token = AccessToken.matching_token_for(application, nil, scopes)
         last_token.should == token
       end
 
