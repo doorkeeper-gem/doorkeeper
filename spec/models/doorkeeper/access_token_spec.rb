@@ -13,9 +13,10 @@ module Doorkeeper
     end
 
     describe "validations" do
-      it "is invalid without resource_owner_id" do
+      it "is valid without resource_owner_id" do
+        # For client credentials flow
         subject.resource_owner_id = nil
-        should_not be_valid
+        should be_valid
       end
 
       it "is invalid without application_id" do
