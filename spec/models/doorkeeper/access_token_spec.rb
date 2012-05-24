@@ -72,6 +72,12 @@ module Doorkeeper
         last_token.should == token
       end
 
+      it 'accepts nil as resource owner' do
+        token = FactoryGirl.create :access_token, default_attributes.merge(:resource_owner_id => nil)
+        last_token = AccessToken.matching_token_for(application, nil, scopes)
+        last_token.should == token
+      end
+
       it 'excludes revoked tokens' do
         FactoryGirl.create :access_token, default_attributes.merge(:revoked_at => 1.day.ago)
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
