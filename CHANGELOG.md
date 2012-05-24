@@ -9,6 +9,10 @@
 - internals
   - [#2ece8d, #f93778] Introduce Client and ErrorResponse classes
 
+## 0.3.4
+
+- Fix attr_accessible for rails 3.2.x
+
 ## 0.3.3
 
 - [#86] shrink gem package size
