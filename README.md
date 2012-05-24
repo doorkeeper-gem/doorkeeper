@@ -150,8 +150,8 @@ All supported ruby versions are [listed here](https://github.com/applicake/doork
 
 ### Maintainers
 
-- Felipe Elias Philipp ([github.com/felipeelias](https://github.com/felipeelias))
-- Piotr Jakubowski ([github.com/piotrj](https://github.com/piotrj))
+- Felipe Elias Philipp ([github.com/felipeelias](https://github.com/felipeelias), [twitter.com/felipeelias](https://twitter.com/felipeelias))
+- Piotr Jakubowski ([github.com/piotrj](https://github.com/piotrj), [twitter.com/piotrjakubowski](https://twitter.com/piotrjakubowski))
 
 ### Contributors
 
