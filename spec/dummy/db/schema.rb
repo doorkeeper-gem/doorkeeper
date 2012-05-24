@@ -24,6 +24,8 @@ ActiveRecord::Schema.define(:version => 20120312140401) do
     t.string   "scopes"
   end
 
+  add_index "oauth_access_grants", ["token"], :name => "index_oauth_access_grants_on_token", :unique => true
+
   create_table "oauth_access_tokens", :force => true do |t|
     t.integer  "resource_owner_id", :null => false
     t.integer  "application_id",    :null => false
@@ -35,6 +37,10 @@ ActiveRecord::Schema.define(:version => 20120312140401) do
     t.string   "scopes"
   end
 
+  add_index "oauth_access_tokens", ["refresh_token"], :name => "index_oauth_access_tokens_on_refresh_token", :unique => true
+  add_index "oauth_access_tokens", ["resource_owner_id"], :name => "index_oauth_access_tokens_on_resource_owner_id"
+  add_index "oauth_access_tokens", ["token"], :name => "index_oauth_access_tokens_on_token", :unique => true
+
   create_table "oauth_applications", :force => true do |t|
     t.string   "name",         :null => false
     t.string   "uid",          :null => false
@@ -43,6 +49,8 @@ ActiveRecord::Schema.define(:version => 20120312140401) do
     t.datetime "created_at",   :null => false
     t.datetime "updated_at",   :null => false
   end
+
+  add_index "oauth_applications", ["uid"], :name => "index_oauth_applications_on_uid", :unique => true
 
   create_table "users", :force => true do |t|
     t.string   "name"
