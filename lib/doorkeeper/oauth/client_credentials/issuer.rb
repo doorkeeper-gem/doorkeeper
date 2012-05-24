@@ -26,7 +26,6 @@ module Doorkeeper
         def create_token(client, scopes, creator)
           creator.call({
             :application_id    => client.id,
-            :resource_owner_id => client.id,
             :scopes            => scopes.to_s,
             :use_refresh_token => false,
             :expires_in        => @server.access_token_expires_in

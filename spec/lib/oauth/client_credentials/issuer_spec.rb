@@ -24,7 +24,6 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
       it 'creates with correct token parameters' do
         creator.should_receive(:call).with({
           :application_id    => 'some-id',
-          :resource_owner_id => 'some-id',
           :scopes            => 'some scope',
           :expires_in        => 100,
           :use_refresh_token => false
