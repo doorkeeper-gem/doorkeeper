@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120312140401) do
+ActiveRecord::Schema.define(:version => 20120524202412) do
 
   create_table "oauth_access_grants", :force => true do |t|
     t.integer  "resource_owner_id", :null => false
@@ -27,7 +27,7 @@ ActiveRecord::Schema.define(:version => 20120312140401) do
   add_index "oauth_access_grants", ["token"], :name => "index_oauth_access_grants_on_token", :unique => true
 
   create_table "oauth_access_tokens", :force => true do |t|
-    t.integer  "resource_owner_id", :null => false
+    t.integer  "resource_owner_id"
     t.integer  "application_id",    :null => false
     t.string   "token",             :null => false
     t.string   "refresh_token"
