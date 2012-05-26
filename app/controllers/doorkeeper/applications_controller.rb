@@ -35,7 +35,7 @@ module Doorkeeper
     def destroy
       @application = Application.find(params[:id])
       flash[:notice] = "Application deleted" if @application.destroy
-      redirect_to applications_url
+      redirect_to oauth_applications_url
     end
   end
 end

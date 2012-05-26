@@ -17,7 +17,7 @@
 
 <div class="span6">
   <h3>Actions</h3>
-  <p><%= link_to 'List all', applications_path %></p>
-  <p><%= link_to 'Edit', edit_application_path(@application) %></p>
-  <p><%= link_to 'Remove', @application, :method => :delete, :confirm => "Are you sure?" %></p>
+  <p><%= link_to 'List all', oauth_applications_path %></p>
+  <p><%= link_to 'Edit', edit_oauth_application_path(@application) %></p>
+  <p><%= link_to 'Remove', [:oauth, @application], :method => :delete, :confirm => "Are you sure?" %></p>
 </div>
