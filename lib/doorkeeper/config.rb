@@ -9,6 +9,29 @@ module Doorkeeper
 
   class Config
     class Builder
+      # Helper class to migrate scopes using authorization_scopes block
+      # It will be removed in v0.5.x
+      class ScopesMigrator
+        attr_accessor :default_scopes, :optional_scopes, :translations
+
+        def initialize
+          @default_scopes, @optional_scopes, @translations = [], [], {}
+        end
+
+        def scope(scope, options = {})
+          if options[:default]
+            @optional_scopes << scope
+          else
+            @default_scopes << scope
+          end
+          @translations[scope] = options[:description]
+        end
+
+        def migrate(&block)
+          self.instance_eval(&block)
+        end
+      end
+
       def initialize(&block)
         @config = Config.new
         instance_eval(&block)
@@ -32,6 +55,15 @@ module Doorkeeper
 
       def use_refresh_token
         @config.instance_variable_set("@refresh_token_enabled", true)
+      end
+
+      # DEPRECATED: use default/optional scopes
+      def authorization_scopes(&block)
+        migrator = ScopesMigrator.new
+        migrator.migrate(&block)
+        self.default_scopes *migrator.default_scopes
+        self.optional_scopes *migrator.optional_scopes
+        @config.instance_variable_set("@authorization_scopes", migrator)
       end
     end
 
@@ -121,6 +153,11 @@ module Doorkeeper
 
     def client_credentials_methods
       @client_credentials ||= [:from_basic, :from_params]
+    end
+
+    # DEPRECATED: use default/optional scopes
+    def authorization_scopes
+      @authorization_scopes
     end
   end
 end
