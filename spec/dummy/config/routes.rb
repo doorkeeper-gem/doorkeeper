@@ -2,7 +2,9 @@ Rails.application.routes.draw do
   use_doorkeeper
 
   scope 'space' do
-    use_doorkeeper
+    use_doorkeeper do
+      controllers :authorization => 'custom_authorizations'
+    end
   end
 
   get '/callback', :to => "home#callback"

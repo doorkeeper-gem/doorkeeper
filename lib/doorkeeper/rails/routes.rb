@@ -21,13 +21,16 @@ module Doorkeeper
       end
 
       def generate_routes!(options)
-        mapper.scope 'oauth', :module => :doorkeeper, :as => 'oauth' do
-          mapper.get    'authorize', :to => "authorizations#new",     :as => :authorization
-          mapper.post   'authorize', :to => "authorizations#create",  :as => :authorization
-          mapper.delete 'authorize', :to => "authorizations#destroy", :as => :authorization
-          mapper.post   'token',     :to => "tokens#create",          :as => :token
-          mapper.resources :applications
-          mapper.resources :authorized_applications, :only => [:index, :destroy]
+        mapping = Mapper.new.map(&@options)
+        mapper.scope 'oauth', :as => 'oauth' do
+          mapper.scope :controller => mapping.controllers[:authorization] do
+            mapper.match 'authorize', :via => :get,    :action => :new,     :as => :authorization
+            mapper.match 'authorize', :via => :post,   :action => :create,  :as => :authorization
+            mapper.match 'authorize', :via => :delete, :action => :destroy, :as => :authorization
+          end
+          mapper.post 'token', :to => "doorkeeper/tokens#create", :as => :token
+          mapper.resources :applications, :module => :doorkeeper
+          mapper.resources :authorized_applications, :only => [:index, :destroy], :module => :doorkeeper
         end
       end
     end

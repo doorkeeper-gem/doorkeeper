@@ -1,0 +1,2 @@
+class CustomAuthorizationsController < ::ApplicationController
+end
