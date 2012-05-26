@@ -14,8 +14,12 @@ module Doorkeeper
 
     def create
       @application = Application.new(params[:application])
-      flash[:notice] = "Application created" if @application.save
-      respond_with @application
+      if @application.save
+        flash[:notice] = "Application created"
+        respond_with [:oauth, @application]
+      else
+        render :new
+      end
     end
 
     def show
@@ -28,8 +32,12 @@ module Doorkeeper
 
     def update
       @application = Application.find(params[:id])
-      flash[:notice] = "Application updated" if @application.update_attributes(params[:application])
-      respond_with @application
+      if @application.update_attributes(params[:application])
+        flash[:notice] = "Application updated"
+        respond_with [:oauth, @application]
+      else
+        render :edit
+      end
     end
 
     def destroy
