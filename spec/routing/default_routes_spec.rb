@@ -24,4 +24,10 @@ describe 'Default routes' do
   it 'GET /oauth/authorized_applications routes to authorized applications controller' do
     get('/oauth/authorized_applications').should route_to('doorkeeper/authorized_applications#index')
   end
+
+  context 'namespaced' do
+    it 'GET /space/oauth/authorize routes to default authorizations controller' do
+      get('/space/oauth/authorize').should route_to('doorkeeper/authorizations#new')
+    end
+  end
 end
