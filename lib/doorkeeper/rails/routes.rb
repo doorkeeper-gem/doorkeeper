@@ -1,9 +1,12 @@
+require 'doorkeeper/rails/routes/mapping'
+require 'doorkeeper/rails/routes/mapper'
+
 module Doorkeeper
   module Rails
     class Routes
       module Helper
-        def use_doorkeeper(options = {})
-          Doorkeeper::Rails::Routes.new(self).generate_routes!(options)
+        def use_doorkeeper(options = {}, &block)
+          Doorkeeper::Rails::Routes.new(self, &block).generate_routes!(options)
         end
       end
 
@@ -13,8 +16,8 @@ module Doorkeeper
 
       attr_accessor :mapper
 
-      def initialize(mapper)
-        @mapper = mapper
+      def initialize(mapper, &options)
+        @mapper, @options = mapper, options
       end
 
       def generate_routes!(options)
