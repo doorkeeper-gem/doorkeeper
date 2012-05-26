@@ -21,7 +21,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   describe "POST #create" do
     before do
-      post :create, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uri, :use_route => :doorkeeper
+      post :create, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uri
     end
 
     it "redirects after authorization" do
@@ -56,7 +56,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
   describe "POST #create with errors" do
     before do
       default_scopes_exist :public
-      post :create, :client_id => client.uid, :response_type => "token", :scope => "invalid", :redirect_uri => client.redirect_uri, :use_route => :doorkeeper
+      post :create, :client_id => client.uid, :response_type => "token", :scope => "invalid", :redirect_uri => client.redirect_uri
     end
 
     it "redirects after authorization" do
@@ -90,7 +90,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   describe "GET #new" do
     before do
-      get :new, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uri, :use_route => :doorkeeper
+      get :new, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uri
     end
 
     it 'renders new template' do
@@ -101,7 +101,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
   describe "GET #new with errors" do
     before do
       default_scopes_exist :public
-      get :new, :client_id => client.uid, :response_type => "token", :scope => "invalid", :redirect_uri => client.redirect_uri, :use_route => :doorkeeper
+      get :new, :client_id => client.uid, :response_type => "token", :scope => "invalid", :redirect_uri => client.redirect_uri
     end
 
     it "redirects after authorization" do
