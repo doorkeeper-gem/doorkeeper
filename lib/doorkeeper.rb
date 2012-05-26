@@ -29,4 +29,16 @@ module Doorkeeper
     autoload :Revocable, "doorkeeper/models/revocable"
     autoload :Scopes,    "doorkeeper/models/scopes"
   end
+
+  def self.configured?
+    @config.present?
+  end
+
+  def self.database_installed?
+    [AccessToken, AccessGrant, Application].all? { |model| model.table_exists? }
+  end
+
+  def self.installed?
+    configured? && database_installed?
+  end
 end
