@@ -23,14 +23,16 @@ module Doorkeeper
       def generate_routes!(options)
         mapping = Mapper.new.map(&@options)
         mapper.scope 'oauth', :as => 'oauth' do
-          mapper.scope :controller => mapping.controllers[:authorization] do
-            mapper.match 'authorize', :via => :get,    :action => :new,     :as => :authorization
-            mapper.match 'authorize', :via => :post,   :action => :create,  :as => :authorization
-            mapper.match 'authorize', :via => :delete, :action => :destroy, :as => :authorization
+          mapper.scope :controller => mapping.controllers[:authorizations] do
+            mapper.match 'authorize', :via => :get,    :action => :new, :as => mapping.as[:authorizations]
+            mapper.match 'authorize', :via => :post,   :action => :create, :as => mapping.as[:authorizations]
+            mapper.match 'authorize', :via => :delete, :action => :destroy, :as => mapping.as[:authorizations]
           end
-          mapper.post 'token', :to => "doorkeeper/tokens#create", :as => :token
-          mapper.resources :applications, :module => :doorkeeper
-          mapper.resources :authorized_applications, :only => [:index, :destroy], :module => :doorkeeper
+          mapper.scope :controller => mapping.controllers[:tokens] do
+            mapper.match 'token', :via => :post, :action => :create, :as => mapping.as[:tokens]
+          end
+          mapper.resources :applications, :controller => mapping.controllers[:applications]
+          mapper.resources :authorized_applications, :only => [:index, :destroy], :controller => mapping.controllers[:authorized_applications]
         end
       end
     end

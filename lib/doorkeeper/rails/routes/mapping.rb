@@ -2,11 +2,19 @@ module Doorkeeper
   module Rails
     class Routes
       class Mapping
-        attr_accessor :controllers
+        attr_accessor :controllers, :as
 
         def initialize
           @controllers = {
-            :authorization => 'doorkeeper/authorizations'
+            :authorizations => 'doorkeeper/authorizations',
+            :applications => 'doorkeeper/applications',
+            :authorized_applications => 'doorkeeper/authorized_applications',
+            :tokens => 'doorkeeper/tokens',
+          }
+
+          @as = {
+            :authorizations => :authorization,
+            :tokens => :token,
           }
         end
       end

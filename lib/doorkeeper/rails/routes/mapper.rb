@@ -14,6 +14,10 @@ module Doorkeeper
         def controllers(controller_names = {})
           @mapping.controllers.merge!(controller_names)
         end
+
+        def as(alias_names = {})
+          @mapping.as.merge!(alias_names)
+        end
       end
     end
   end
