@@ -1,6 +1,6 @@
 module Doorkeeper
   module Generators
-    class ViewsGenerator < Rails::Generators::Base
+    class ViewsGenerator < ::Rails::Generators::Base
       source_root File.expand_path('../../../../app/views/doorkeeper', __FILE__)
 
       desc "Copies default Doorkeeper views to your application."

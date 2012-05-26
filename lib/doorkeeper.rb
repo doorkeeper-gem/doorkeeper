@@ -41,4 +41,8 @@ module Doorkeeper
   def self.installed?
     configured? && database_installed?
   end
+
+  module Rails
+    autoload :Routes, "doorkeeper/rails/routes"
+  end
 end

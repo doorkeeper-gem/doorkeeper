@@ -29,7 +29,7 @@ describe 'Doorkeeper::InstallGenerator' do
     end
 
     it "adds sample route" do
-      assert_file "config/routes.rb", /mount Doorkeeper::Engine/
+      assert_file "config/routes.rb", /use_doorkeeper/
     end
   end
 end
