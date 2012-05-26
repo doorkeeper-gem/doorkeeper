@@ -1,6 +1,6 @@
 <%= form_for([:oauth, application]) do |f| %>
   <fieldset>
-    <% if @application.errors.any? %>
+    <% if application.errors.any? %>
       <div class="alert-message error" data-alert><a class="close" href="#">×</a><p>Whoops! Check your form for possible errors</p></div>
     <% end %>
 
