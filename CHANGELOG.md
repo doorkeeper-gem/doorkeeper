@@ -1,7 +1,11 @@
 # Changelog
 
-## 0.4.0 (unreleased)
+## 0.4.0
 
+- deprecation
+  - Deprecate authorization_scopes
+- database changes
+  - AccessToken#resource_owner_id is not nullable
 - enhancements
   - [#83] Add Resource Owner Password Credentials flow [@jaimeiniesta](https://github.com/jaimeiniesta)
   - [#76] Allow token expiration to be disabled [@mattgreen](https://github.com/mattgreen)
