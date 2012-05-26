@@ -22,6 +22,14 @@ WARN
           puts "      #{scope}: #{translation}"
         end
       end
+
+      if Doorkeeper::AccessToken.columns_hash["resource_owner_id"].null == false
+        warn <<-WARN
+[DOORKEEPER]
+  In order to use the Client Credentials flow, you have to migrate the oauth_access_tokens table:
+  change_column :oauth_access_tokens, :resource_owner_id, :integer, :null => true
+WARN
+      end
     end
   end
 end
