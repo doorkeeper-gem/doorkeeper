@@ -14,7 +14,7 @@ For more information about the supported features, check out the related [page i
 Put this in your Gemfile:
 
 ``` ruby
-gem 'doorkeeper', '~> 0.3.0'
+gem 'doorkeeper', '~> 0.4.0'
 ```
 
 Run the installation generator with:
@@ -49,10 +49,12 @@ You need to configure Doorkeeper in order to provide resource_owner model and au
 ``` ruby
 Doorkeeper.configure do
   resource_owner_authenticator do |routes|
-    current_user || redirect_to('/sign_in', :alert => "Needs sign in.") # returns nil if current_user is not logged in
+    current_user || redirect_to(routes.login_url) # returns nil if current_user is not logged in
   end
 end
 ```
+
+This block runs into the context of your Rails application, and it has access to `current_user` method, for example.
 
 If you use [devise](https://github.com/plataformatec/devise), you may want to use warden to authenticate the block:
 
@@ -61,6 +63,8 @@ resource_owner_authenticator do |routes|
   current_user || warden.authenticate!(:scope => :user)
 end
 ```
+
+If you are not using devise, you may want to check other ways of authentication [here](https://github.com/applicake/doorkeeper/wiki/Authenticating-using-Clearance-DIY).
 
 ## Protecting resources with OAuth (a.k.a your API endpoint)
 
@@ -91,6 +95,17 @@ end
 ### Access Token Scopes
 
 You can also require the access token to have specific scopes in certain actions:
+
+First configure the scopes in `initializers/doorkeeper.rb`
+
+```ruby
+Doorkeeper.configure do
+  default_scope :public # if no scope was requested, this will be the default
+  optional_scope :admin, :write
+end
+```
+
+The in your controllers:
 
 ```ruby
 class Api::V1::ProductsController < Api::V1::ApiController
@@ -126,11 +141,23 @@ end
 
 In this example, we're returning the credentials (`me.json`) of the access token owner.
 
+## Upgrading
+
+If you want to upgrade doorkeeper to a new version, check out the [upgrading notes](https://github.com/applicake/doorkeeper/wiki/Migration-from-old-versions) and take a look at the [changelog](https://github.com/applicake/doorkeeper/blob/master/CHANGELOG.md).
+
 ## Other resources
+
+### Wiki
+
+You can find everything about doorkeeper in our [wiki here](https://github.com/applicake/doorkeeper/wiki).
 
 ### Live demo
 
 Check out this [live demo](http://doorkeeper-provider.herokuapp.com) hosted on heroku. For more demos check out [the wiki](https://github.com/applicake/doorkeeper/wiki/Example-Applications).
+
+### Screencast
+
+Check out this screencast from [railscasts.com](http://railscasts.com/): [#353 OAuth with Doorkeeper](http://railscasts.com/episodes/353-oauth-with-doorkeeper)
 
 ### Client applications
 
@@ -144,7 +171,7 @@ Also, check out our [contributing guidelines page](https://github.com/applicake/
 
 ### Supported ruby versions
 
-All supported ruby versions are [listed here](https://github.com/applicake/doorkeeper/wiki/Supported-Ruby-&-Rails-versions)
+All supported ruby versions are [listed here](https://github.com/applicake/doorkeeper/wiki/Supported-Ruby-&-Rails-versions).
 
 ## Additional information
 
