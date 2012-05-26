@@ -15,7 +15,7 @@
   <% end %>
 
   <div class="inline_block">
-    <%= form_for @authorization, :as => :authorization, :url => authorization_path, :method => :post do |f| %>
+    <%= form_for @authorization, :as => :authorization, :url => oauth_authorization_path, :method => :post do |f| %>
       <%= f.hidden_field :client_id %>
       <%= f.hidden_field :redirect_uri %>
       <%= f.hidden_field :state %>
@@ -25,7 +25,7 @@
     <% end %>
   </div>
   <div class="inline_block">
-    <%= form_for @authorization, :as => :authorization, :url => authorization_path, :method => :delete do |f| %>
+    <%= form_for @authorization, :as => :authorization, :url => oauth_authorization_path, :method => :delete do |f| %>
       <%= f.hidden_field :client_id %>
       <%= f.hidden_field :redirect_uri %>
       <%= f.hidden_field :state %>

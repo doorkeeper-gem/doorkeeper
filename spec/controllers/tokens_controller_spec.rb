@@ -12,7 +12,7 @@ describe Doorkeeper::TokensController do
 
     it "returns the authorization" do
       token.should_receive(:authorization)
-      post :create, :use_route => :doorkeeper
+      post :create
     end
   end
 
@@ -27,7 +27,7 @@ describe Doorkeeper::TokensController do
 
     it "returns the error response" do
       token.stub(:error_response => stub(:to_json => [], :status => :unauthorized))
-      post :create, :use_route => :doorkeeper
+      post :create
       response.status.should == 401
     end
   end
