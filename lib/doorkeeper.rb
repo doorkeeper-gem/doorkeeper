@@ -30,6 +30,10 @@ module Doorkeeper
     autoload :Scopes,    "doorkeeper/models/scopes"
   end
 
+  module Helpers
+    autoload :Controller, "doorkeeper/helpers/controller"
+  end
+
   module Rails
     autoload :Routes, "doorkeeper/rails/routes"
   end
