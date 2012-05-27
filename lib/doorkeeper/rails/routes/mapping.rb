@@ -17,6 +17,13 @@ module Doorkeeper
             :tokens => :token,
           }
         end
+
+        def [](routes)
+          {
+            :controllers => @controllers[routes],
+            :as => @as[routes]
+          }
+        end
       end
     end
   end
