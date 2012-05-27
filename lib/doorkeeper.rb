@@ -31,6 +31,7 @@ module Doorkeeper
   end
 
   module Helpers
+    autoload :Filter, "doorkeeper/helpers/filter"
     autoload :Controller, "doorkeeper/helpers/controller"
   end
 
