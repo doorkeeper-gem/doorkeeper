@@ -30,6 +30,10 @@ module Doorkeeper
     autoload :Scopes,    "doorkeeper/models/scopes"
   end
 
+  module Helpers
+    autoload :Filter, "doorkeeper/helpers/filter"
+  end
+
   def self.configured?
     @config.present?
   end
