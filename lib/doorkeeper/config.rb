@@ -30,6 +30,10 @@ module Doorkeeper
         @config.instance_variable_set("@client_credentials", methods)
       end
 
+      def access_token_methods(*methods)
+        @config.instance_variable_set("@access_token_methods", methods)
+      end
+
       def use_refresh_token
         @config.instance_variable_set("@refresh_token_enabled", true)
       end
@@ -121,6 +125,10 @@ module Doorkeeper
 
     def client_credentials_methods
       @client_credentials ||= [:from_basic, :from_params]
+    end
+
+    def access_token_methods
+      @access_token_methods ||= [:from_bearer_authorization, :from_access_token_param, :from_bearer_param]
     end
   end
 end

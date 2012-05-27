@@ -21,27 +21,12 @@ module Doorkeeper
 
       def self.included(base)
         base.extend ClassMethods
-        base.send :private,
-                  :doorkeeper_token,
-                  :get_doorkeeper_token,
-                  :authorization_bearer_token,
-                  :doorkeeper_unauthorized_render_options
+        base.send :private, :doorkeeper_token, :doorkeeper_unauthorized_render_options
       end
 
       def doorkeeper_token
-        @token ||= get_doorkeeper_token
-      end
-
-      def get_doorkeeper_token
-        token = params[:access_token] || params[:bearer_token] || authorization_bearer_token
-        if token
-          AccessToken.find_by_token(token)
-        end
-      end
-
-      def authorization_bearer_token
-        header = request.env['HTTP_AUTHORIZATION']
-        header.gsub(/^Bearer /, '') if header && header.match(/^Bearer /)
+        methods = Doorkeeper.configuration.access_token_methods
+        @token ||= OAuth::Token.authenticate request, *methods
       end
 
       def doorkeeper_unauthorized_render_options

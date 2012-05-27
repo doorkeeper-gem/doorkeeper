@@ -13,6 +13,13 @@ feature 'Private API' do
     page.body.should have_content("index")
   end
 
+  scenario 'client requests protected resource with disabled header authentication' do
+    config_is_set :access_token_methods, [:from_access_token_param]
+    with_access_token_header @token.token
+    visit '/full_protected_resources'
+    response_status_should_be 401
+  end
+
   scenario 'client attempts to request protected resource with invalid token' do
     with_access_token_header "invalid"
     visit '/full_protected_resources'

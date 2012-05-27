@@ -19,6 +19,10 @@ module Doorkeeper
     before_validation :generate_token, :on => :create
     before_validation :generate_refresh_token, :on => :create, :if => :use_refresh_token?
 
+    def self.authenticate(token)
+      find_by_token token
+    end
+
     def self.revoke_all_for(application_id, resource_owner)
       where(:application_id => application_id,
               :resource_owner_id => resource_owner.id).delete_all
