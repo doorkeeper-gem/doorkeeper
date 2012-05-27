@@ -84,4 +84,15 @@ describe Doorkeeper, "configuration" do
       subject.client_credentials_methods.should == [:from_digest, :from_params]
     end
   end
+
+  describe 'access_token_credentials' do
+    it 'has defaults order' do
+      subject.access_token_methods.should == [:from_bearer_authorization, :from_access_token_param, :from_bearer_param]
+    end
+
+    it "can change the value" do
+      Doorkeeper.configure { access_token_methods :from_access_token_param, :from_bearer_param }
+      subject.access_token_methods.should == [:from_access_token_param, :from_bearer_param]
+    end
+  end
 end

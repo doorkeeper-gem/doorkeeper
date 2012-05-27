@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.0 (unreleased)
+
+- enhancements
+  - Configure the way access token is retrieved from request (default to bearer header)
+
 ## 0.4.0
 
 - deprecation
@@ -9,6 +14,7 @@
 - enhancements
   - [#83] Add Resource Owner Password Credentials flow [@jaimeiniesta](https://github.com/jaimeiniesta)
   - [#76] Allow token expiration to be disabled [@mattgreen](https://github.com/mattgreen)
+  - [#89] Configure the way client credentials are retrieved from request
   - [#b6470a] Add Client Credentials flow
 - internals
   - [#2ece8d, #f93778] Introduce Client and ErrorResponse classes

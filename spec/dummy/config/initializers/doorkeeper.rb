@@ -38,4 +38,10 @@ Doorkeeper.configure do
   # fallsback to `:client_id` and `:client_secret` from `params` object
   # Check out the wiki for mor information on customization
   # client_credentials :from_basic, :from_params
+
+  # Change the way access token is authenticated from the request object.
+  # By default it retrieves first from `HTTP_AUTHORIZATION` header and
+  # fallsback to `:access_token` or `:bearer_token` from `params` object
+  # Check out the wiki for mor information on customization
+  # access_token_methods :from_bearer_authorization, :from_access_token_param, :from_bearer_param
 end
