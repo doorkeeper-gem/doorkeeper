@@ -30,6 +30,10 @@ module Doorkeeper
     autoload :Scopes,    "doorkeeper/models/scopes"
   end
 
+  module Rails
+    autoload :Routes, "doorkeeper/rails/routes"
+  end
+
   def self.configured?
     @config.present?
   end
