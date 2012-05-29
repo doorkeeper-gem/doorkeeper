@@ -12,9 +12,6 @@ module Doorkeeper
     field :revoked_at, :type => DateTime
     field :scopes, :type => Array
 
-    def self.find_by_token(token)
-      where(:token => token).first
-    end
 
     def self.find_by_refresh_token(refresh_token)
       where(:refresh_token => refresh_token).first
