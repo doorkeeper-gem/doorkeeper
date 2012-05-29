@@ -81,7 +81,7 @@ module Doorkeeper::OAuth
     end
 
     def token_via_authorization_code
-      Doorkeeper::AccessGrant.find_by_token(code)
+      Doorkeeper::AccessGrant.authenticate(code)
     end
 
     def token_via_refresh_token

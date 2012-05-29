@@ -13,6 +13,10 @@ module Doorkeeper
 
     before_validation :generate_token, :on => :create
 
+    def self.authenticate(token)
+      where(:token => token).first
+    end
+
     def accessible?
       !expired? && !revoked?
     end
