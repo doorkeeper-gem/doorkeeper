@@ -3,9 +3,12 @@ set -e
 
 RBENV_VERSION=1.8.7-p352 bundle install --quiet
 RBENV_VERSION=1.8.7-p352 bundle exec rake
+RBENV_VERSION=1.8.7-p352 DOORKEEPER_ORM=mongoid bundle exec rake
 
 RBENV_VERSION=1.9.2-p290 bundle install --quiet
 RBENV_VERSION=1.9.2-p290 bundle exec rake
+RBENV_VERSION=1.9.2-p290 DOORKEEPER_ORM=mongoid bundle exec rake
 
 RBENV_VERSION=1.9.3-p0 bundle install --quiet
 RBENV_VERSION=1.9.3-p0 bundle exec rake
+RBENV_VERSION=1.9.3-p0 DOORKEEPER_ORM=mongoid bundle exec rake
