@@ -5,8 +5,7 @@ module Doorkeeper
 
     store_in = :oauth_applications
 
-    has_many :authorized_tokens, :class_name => "AccessToken"
-    has_many :authorized_applications
+    has_many :authorized_tokens, :class_name => "Doorkeeper::AccessToken"
 
     field :name, :type => String
     field :uid, :type => String

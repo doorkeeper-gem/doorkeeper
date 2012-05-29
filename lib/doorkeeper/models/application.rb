@@ -3,7 +3,7 @@ module Doorkeeper
     include Doorkeeper::OAuth::Helpers
 
     has_many :access_grants, :dependent => :destroy, :class_name => "Doorkeeper::AccessGrant"
-    has_many :access_tokens, :dependent => :destroy
+    has_many :access_tokens, :dependent => :destroy, :class_name => "Doorkeeper::AccessToken"
 
     validates :name, :secret, :uid, :redirect_uri, :presence => true
     validates :uid, :uniqueness => true
