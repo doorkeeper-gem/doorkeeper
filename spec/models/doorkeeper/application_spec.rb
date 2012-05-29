@@ -31,24 +31,6 @@ module Doorkeeper
       new_application.should_not be_valid
     end
 
-    it 'is invalid with a redirect_uri that is relative' do
-      new_application.save
-      new_application.redirect_uri = "/abcd"
-      new_application.should_not be_valid
-    end
-
-    it 'is invalid with a redirect_uri that has a fragment' do
-      new_application.save
-      new_application.redirect_uri = "http://example.com/abcd#xyz"
-      new_application.should_not be_valid
-    end
-
-    it 'is invalid with a redirect_uri that has a query parameter' do
-      new_application.save
-      new_application.redirect_uri = "http://example.com/abcd?xyz=123"
-      new_application.should_not be_valid
-    end
-
     it 'checks uniqueness of uid' do
       app1 = FactoryGirl.create(:application)
       app2 = FactoryGirl.create(:application)
