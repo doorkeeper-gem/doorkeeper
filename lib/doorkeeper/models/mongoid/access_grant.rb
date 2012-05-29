@@ -11,9 +11,11 @@ module Doorkeeper
     field :expires_in, :type => Integer
     field :redirect_uri, :type => String
     field :revoked_at, :type => DateTime
-    field :scopes, :type => String
 
     index :token, :unique => true
 
+    def scopes=(value)
+      write_attribute :scopes, value
+    end
   end
 end

@@ -9,23 +9,26 @@ module Doorkeeper
     field :token, :type => String
     field :expires_in, :type => Integer
     field :revoked_at, :type => DateTime
-    field :scopes, :type => Array
 
     index :token, :unique => true
     index :refresh_token, :unique => true, :sparse => true
 
     def self.last_authorized_token_for(application, resource_owner_id)
-      accessible.
-        where(:application_id => application.id,
-              :resource_owner_id => resource_owner_id).
-        order_by([:created_at, :desc]).
-        limit(1).
-        first
+      where(:application_id => application.id,
+            :resource_owner_id => resource_owner_id,
+            :revoked_at => nil).
+      order_by([:created_at, :desc]).
+      limit(1).
+      first
     end
     private_class_method :last_authorized_token_for
 
     def refresh_token
       self[:refresh_token]
+    end
+
+    def scopes=(value)
+      write_attribute :scopes, value
     end
   end
 end

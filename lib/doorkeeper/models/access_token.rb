@@ -8,8 +8,6 @@ module Doorkeeper
 
     belongs_to :application, :class_name => "Doorkeeper::Application"
 
-    scope :accessible, where(:revoked_at => nil)
-
     validates :application_id, :token, :presence => true
     validates :token, :uniqueness => true
     validates :refresh_token, :uniqueness => true, :if => :use_refresh_token?
@@ -36,7 +34,7 @@ module Doorkeeper
     def self.matching_token_for(application, resource_owner_or_id, scopes)
       resource_owner_id = resource_owner_or_id.respond_to?(:to_key) ? resource_owner_or_id.id : resource_owner_or_id
       token = last_authorized_token_for(application, resource_owner_id)
-      token if token && ScopeChecker.matches?(token.oauth_scopes, scopes)
+      token if token && ScopeChecker.matches?(token.scopes, scopes)
     end
 
     def token_type
