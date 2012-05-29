@@ -3,6 +3,7 @@ module Doorkeeper
     include Doorkeeper::OAuth::Helpers
     include Doorkeeper::Models::Expirable
     include Doorkeeper::Models::Revocable
+    include Doorkeeper::Models::Accessible
     include Doorkeeper::Models::Scopes
 
     belongs_to :application, :class_name => "Doorkeeper::Application"
@@ -16,10 +17,6 @@ module Doorkeeper
 
     def self.authenticate(token)
       where(:token => token).first
-    end
-
-    def accessible?
-      !expired? && !revoked?
     end
 
     private

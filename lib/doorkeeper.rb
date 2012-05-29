@@ -26,9 +26,10 @@ module Doorkeeper
   end
 
   module Models
-    autoload :Expirable, "doorkeeper/models/expirable"
-    autoload :Revocable, "doorkeeper/models/revocable"
-    autoload :Scopes,    "doorkeeper/models/scopes"
+    autoload :Scopes,     'doorkeeper/models/scopes'
+    autoload :Expirable,  'doorkeeper/models/expirable'
+    autoload :Revocable,  'doorkeeper/models/revocable'
+    autoload :Accessible, 'doorkeeper/models/accessible'
   end
 
   module Helpers

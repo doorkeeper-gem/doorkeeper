@@ -3,6 +3,7 @@ module Doorkeeper
     include Doorkeeper::OAuth::Helpers
     include Doorkeeper::Models::Expirable
     include Doorkeeper::Models::Revocable
+    include Doorkeeper::Models::Accessible
     include Doorkeeper::Models::Scopes
 
     belongs_to :application, :class_name => "Doorkeeper::Application"
@@ -46,10 +47,6 @@ module Doorkeeper
 
     def token_type
       "bearer"
-    end
-
-    def accessible?
-      !expired? && !revoked?
     end
 
     def use_refresh_token?
