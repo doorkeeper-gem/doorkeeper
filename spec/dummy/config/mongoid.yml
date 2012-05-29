@@ -1,0 +1,5 @@
+development:
+  database: doorkeeper-development
+
+test:
+  database: doorkeeper-test-suite

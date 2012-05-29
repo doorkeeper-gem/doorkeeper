@@ -1,6 +1,5 @@
 ENV["RAILS_ENV"] ||= 'test'
 DOORKEEPER_ORM = (ENV["DOORKEEPER_ORM"] || :active_record).to_sym
-DOORKEEPER_ORM = (ENV['DOORKEEPER_ORM'] || :active_record).to_sym
 
 $:.unshift File.dirname(__FILE__)
 
