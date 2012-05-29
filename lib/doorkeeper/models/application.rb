@@ -21,6 +21,10 @@ module Doorkeeper
       self.where(:uid => uid, :secret => secret).first
     end
 
+    def self.by_uid(uid)
+      self.where(:uid => uid).first
+    end
+
     private
 
     def generate_uid

@@ -4,8 +4,8 @@ require 'doorkeeper/oauth/client/credentials'
 module Doorkeeper
   module OAuth
     class Client
-      def self.find(uid)
-        if application = Doorkeeper::Application.find_by_uid(uid)
+      def self.find(uid, method = Doorkeeper::Application.method(:by_uid))
+        if application = method.call(uid)
           new(application)
         end
       end

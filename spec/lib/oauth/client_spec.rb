@@ -4,22 +4,19 @@ require 'active_support/core_ext/string'
 require 'doorkeeper/oauth/client'
 
 module Doorkeeper::OAuth
-  class Doorkeeper::Application
-  end
-
   describe Client do
     describe :find do
-      let(:uid) { "some-uid" }
+      let(:method) { mock }
 
       it 'finds the client via uid' do
         client = stub
-        Doorkeeper::Application.should_receive(:find_by_uid).with(uid).and_return(client)
-        Client.find(uid).should be_a(Client)
+        method.should_receive(:call).with('uid').and_return(client)
+        Client.find('uid', method).should be_a(Client)
       end
 
       it 'returns nil if client was not found' do
-        Doorkeeper::Application.should_receive(:find_by_uid).with(uid).and_return(nil)
-        Client.find(uid).should be_nil
+        method.should_receive(:call).with('uid').and_return(nil)
+        Client.find('uid', method).should be_nil
       end
     end
 
