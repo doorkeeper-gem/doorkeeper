@@ -4,7 +4,7 @@ require "action_controller/railtie"
 require "active_resource/railtie"
 require "sprockets/railtie"
 
-Bundler.require :default, DOORKEEPER_ORM
+Bundler.require :default
 
 require "#{DOORKEEPER_ORM}/railtie"
 
