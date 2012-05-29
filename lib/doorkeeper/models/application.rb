@@ -24,11 +24,11 @@ module Doorkeeper
     private
 
     def generate_uid
-      self.uid = UniqueToken.generate_for :uid, self.class
+      self.uid = UniqueToken.generate
     end
 
     def generate_secret
-      self.secret = UniqueToken.generate_for :secret, self.class
+      self.secret = UniqueToken.generate
     end
   end
 end

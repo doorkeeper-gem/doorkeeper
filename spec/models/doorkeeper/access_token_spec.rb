@@ -12,6 +12,34 @@ module Doorkeeper
       let(:factory_name) { :access_token }
     end
 
+    describe :refresh_token do
+      it 'has empty refresh token if it was not required' do
+        token = FactoryGirl.create :access_token
+        token.refresh_token.should be_nil
+      end
+
+      it 'generates a refresh token if it was requested' do
+        token = FactoryGirl.create :access_token, :use_refresh_token => true
+        token.refresh_token.should_not be_nil
+      end
+
+      it "is not valid if token exists" do
+        token1 = FactoryGirl.create :access_token, :use_refresh_token => true
+        token2 = FactoryGirl.create :access_token, :use_refresh_token => true
+        token2.send :write_attribute, :refresh_token, token1.refresh_token
+        token2.should_not be_valid
+      end
+
+      it 'expects database to raise an error if refresh tokens are the same' do
+        token1 = FactoryGirl.create :access_token, :use_refresh_token => true
+        token2 = FactoryGirl.create :access_token, :use_refresh_token => true
+        expect {
+          token2.write_attribute :refresh_token, token1.refresh_token
+          token2.save(:validate => false)
+        }.to raise_error
+      end
+    end
+
     describe "validations" do
       it "is valid without resource_owner_id" do
         # For client credentials flow

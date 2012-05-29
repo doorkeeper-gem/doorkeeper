@@ -13,6 +13,8 @@ module Doorkeeper
     field :secret, :type => String
     field :redirect_uri, :type => String
 
+    index :uid, :unique => true
+
     def self.find_by_uid(uid)
       self.where(:uid => uid).first
     end

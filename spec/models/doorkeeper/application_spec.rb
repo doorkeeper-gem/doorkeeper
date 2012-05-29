@@ -38,6 +38,15 @@ module Doorkeeper
       app2.should_not be_valid
     end
 
+    it 'expects database to throw an error when uids are the same' do
+      app1 = FactoryGirl.create(:application)
+      app2 = FactoryGirl.create(:application)
+      app2.uid = app1.uid
+      expect {
+        app2.save!(:validate => false)
+      }.to raise_error
+    end
+
     it 'generate secret on create' do
       new_application.secret.should be_nil
       new_application.save

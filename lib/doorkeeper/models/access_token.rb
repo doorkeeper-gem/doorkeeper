@@ -10,6 +10,8 @@ module Doorkeeper
     scope :accessible, where(:revoked_at => nil)
 
     validates :application_id, :token, :presence => true
+    validates :token, :uniqueness => true
+    validates :refresh_token, :uniqueness => true, :if => :use_refresh_token?
 
     attr_accessor :use_refresh_token
     attr_accessible :application_id, :resource_owner_id, :expires_in, :scopes, :use_refresh_token
@@ -57,11 +59,11 @@ module Doorkeeper
     private
 
     def generate_refresh_token
-      self.refresh_token = UniqueToken.generate_for :refresh_token, self.class
+      write_attribute :refresh_token, UniqueToken.generate
     end
 
     def generate_token
-      self.token = UniqueToken.generate_for :token, self.class
+      self.token = UniqueToken.generate
     end
   end
 end

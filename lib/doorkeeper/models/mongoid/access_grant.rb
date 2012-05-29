@@ -13,5 +13,7 @@ module Doorkeeper
     field :revoked_at, :type => DateTime
     field :scopes, :type => String
 
+    index :token, :unique => true
+
   end
 end

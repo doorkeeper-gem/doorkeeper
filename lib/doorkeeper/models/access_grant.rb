@@ -10,6 +10,7 @@ module Doorkeeper
     attr_accessible :resource_owner_id, :application_id, :expires_in, :redirect_uri, :scopes
 
     validates :resource_owner_id, :application_id, :token, :expires_in, :redirect_uri, :presence => true
+    validates :token, :uniqueness => true
 
     before_validation :generate_token, :on => :create
 
@@ -24,7 +25,7 @@ module Doorkeeper
     private
 
     def generate_token
-      self.token = UniqueToken.generate_for :token, self.class
+      self.token = UniqueToken.generate
     end
   end
 end
