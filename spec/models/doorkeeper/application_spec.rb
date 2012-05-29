@@ -123,7 +123,14 @@ module Doorkeeper
                         :secret => 'something' }
         Application.create(mass_assign).uid.should_not == 123
       end
+    end
 
+    describe :authenticate do
+      it 'finds the application via uid/secret' do
+        app = FactoryGirl.create :application
+        authenticated = Application.authenticate(app.uid, app.secret)
+        authenticated.should == app
+      end
     end
   end
 end

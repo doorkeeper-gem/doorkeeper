@@ -18,7 +18,7 @@ module Doorkeeper
     end
 
     def self.authenticate(uid, secret)
-      find_by_uid_and_secret(uid, secret)
+      self.where(:uid => uid, :secret => secret).first
     end
 
     def validate_redirect_uri
