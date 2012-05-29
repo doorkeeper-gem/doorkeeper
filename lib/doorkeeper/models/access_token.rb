@@ -34,20 +34,10 @@ module Doorkeeper
     end
 
     def self.matching_token_for(application, resource_owner_or_id, scopes)
-      token = last_authorized_token_for(application, resource_owner_or_id)
-      token if token && ScopeChecker.matches?(token.scopes, scopes)
-    end
-
-    def self.last_authorized_token_for(application, resource_owner_or_id)
       resource_owner_id = resource_owner_or_id.respond_to?(:to_key) ? resource_owner_or_id.id : resource_owner_or_id
-      accessible.
-        where(:application_id => application.id,
-              :resource_owner_id => resource_owner_id).
-        order("created_at desc").
-        limit(1).
-        first
+      token = last_authorized_token_for(application, resource_owner_id)
+      token if token && ScopeChecker.matches?(token.oauth_scopes, scopes)
     end
-    private_class_method :last_authorized_token_for
 
     def token_type
       "bearer"
