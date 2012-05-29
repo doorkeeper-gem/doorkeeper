@@ -85,7 +85,7 @@ module Doorkeeper::OAuth
     end
 
     def token_via_refresh_token
-      Doorkeeper::AccessToken.find_by_refresh_token(refresh_token)
+      Doorkeeper::AccessToken.by_refresh_token(refresh_token)
     end
 
     def create_access_token

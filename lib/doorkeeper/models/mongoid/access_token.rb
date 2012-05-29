@@ -17,9 +17,5 @@ module Doorkeeper
     def refresh_token
       self[:refresh_token]
     end
-
-    def self.find_by_refresh_token(refresh_token)
-      where(:refresh_token => refresh_token).first
-    end
   end
 end
