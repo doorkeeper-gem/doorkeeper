@@ -1,4 +1,8 @@
 Doorkeeper.configure do
+  # Change the ORM that doorkeeper will use
+  # Currently supported => :active_record, :mongoid
+  orm DOORKEEPER_ORM
+
   # This block will be called to check whether the
   # resource owner is authenticated or not
   resource_owner_authenticator do |routes|
@@ -44,7 +48,4 @@ Doorkeeper.configure do
   # fallsback to `:access_token` or `:bearer_token` from `params` object
   # Check out the wiki for mor information on customization
   # access_token_methods :from_bearer_authorization, :from_access_token_param, :from_bearer_param
-
-  # Customize the ORM
-  orm DOORKEEPER_ORM
 end

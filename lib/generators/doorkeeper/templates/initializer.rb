@@ -1,4 +1,8 @@
 Doorkeeper.configure do
+  # Change the ORM that doorkeeper will use
+  # Currently supported => :active_record, :mongoid
+  orm :active_record
+
   # This block will be called to check whether the
   # resource owner is authenticated or not
   resource_owner_authenticator do |routes|
