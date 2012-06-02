@@ -5,6 +5,11 @@
 - enhancements
   - Configure the way access token is retrieved from request (default to bearer header)
 
+## 0.4.1
+
+- enhancements:
+  - Backport: Move doorkeeper_for extension to Filter helper
+
 ## 0.4.0
 
 - deprecation
