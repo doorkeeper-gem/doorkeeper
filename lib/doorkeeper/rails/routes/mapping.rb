@@ -2,7 +2,7 @@ module Doorkeeper
   module Rails
     class Routes
       class Mapping
-        attr_accessor :controllers, :as
+        attr_accessor :controllers, :as, :skips
 
         def initialize
           @controllers = {
@@ -16,6 +16,9 @@ module Doorkeeper
             :authorizations => :authorization,
             :tokens => :token,
           }
+
+          @skips = []
+
         end
 
         def [](routes)
@@ -23,6 +26,10 @@ module Doorkeeper
             :controllers => @controllers[routes],
             :as => @as[routes]
           }
+        end
+
+        def skipped?(controller)
+          return @skips.include?(controller)
         end
       end
     end

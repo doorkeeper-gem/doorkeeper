@@ -21,18 +21,23 @@ module Doorkeeper
       end
 
       def generate_routes!(options)
-        mapping = Mapper.new.map(&@options)
+        @mapping = Mapper.new.map(&@options)
         routes.scope 'oauth', :as => 'oauth' do
-          authorizaton_routes mapping[:authorizations]
-          token_routes mapping[:tokens]
-          application_routes mapping[:applications]
-          authorized_applications_routes mapping[:authorized_applications]
+          map_route(:authorizations, :authorization_routes)
+          map_route(:tokens, :token_routes)
+          map_route(:applications, :application_routes)
+          map_route(:authorized_applications, :authorized_applications_routes)
         end
       end
 
     private
+      def map_route(name, method)
+        unless @mapping.skipped?(name)
+          send method, @mapping[name]
+        end
+      end
 
-      def authorizaton_routes(mapping)
+      def authorization_routes(mapping)
         routes.scope :controller => mapping[:controllers] do
           routes.match 'authorize', :via => :get,    :action => :new, :as => mapping[:as]
           routes.match 'authorize', :via => :post,   :action => :create, :as => mapping[:as]

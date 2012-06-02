@@ -20,4 +20,16 @@ describe 'Custom controller for routes' do
   it 'GET /space/oauth/applications routes to applications controller' do
     get('/space/oauth/applications').should route_to('custom_authorizations#index')
   end
+
+  it 'POST /outer_space/oauth/token is not be routable' do
+    post('/outer_space/oauth/token').should_not be_routable
+  end
+
+  it 'GET /outer_space/oauth/authorize routes to custom authorizations controller' do
+    get('/outer_space/oauth/authorize').should be_routable
+  end
+
+  it 'GET /outer_space/oauth/applications is not routable' do
+    get('/outer_space/oauth/applications').should_not be_routable
+  end
 end
