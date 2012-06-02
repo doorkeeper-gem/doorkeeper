@@ -12,7 +12,20 @@ Rails.application.routes.draw do
     end
   end
 
+  scope 'outer_space' do
+    use_doorkeeper do
+      controllers :authorizations => 'custom_authorizations',
+                  :tokens => 'custom_authorizations'
+
+      as :authorizations => 'custom_auth',
+         :tokens => 'custom_token'
+
+      skip_controllers :tokens, :applications
+    end
+  end
+
   get 'metal.json' => 'metal#index'
+
   get '/callback', :to => "home#callback"
   get '/sign_in',  :to => "home#sign_in"
   resources :semi_protected_resources
