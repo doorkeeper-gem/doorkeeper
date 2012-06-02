@@ -43,7 +43,7 @@ This will install the doorkeeper initializer into `config/initializers/doorkeepe
 
 By default doorkeeper is configured to use active record, so to start you have to generate the migration tables:
 
-    rails generate doorkeeper:models
+    rails generate doorkeeper:migration
 
 Don't forget to run the migration with:
 
