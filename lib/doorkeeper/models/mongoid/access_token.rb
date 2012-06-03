@@ -3,7 +3,7 @@ module Doorkeeper
     include Mongoid::Document
     include Mongoid::Timestamps
 
-    store_in = :oauth_access_tokens
+    self.store_in :oauth_access_tokens
 
     field :resource_owner_id, :type => Integer
     field :token, :type => String

@@ -3,7 +3,7 @@ module Doorkeeper
     include Mongoid::Document
     include Mongoid::Timestamps
 
-    store_in = :oauth_applications
+    self.store_in :oauth_applications
 
     has_many :authorized_tokens, :class_name => "Doorkeeper::AccessToken"
 
