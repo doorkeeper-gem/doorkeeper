@@ -74,6 +74,7 @@ module Doorkeeper
 
         Builder.instance_eval do
           define_method name do |*args, &block|
+            # TODO: is builder_class option being used?
             value = unless attribute_builder
               block ? block : args.first
             else

@@ -4,6 +4,7 @@ module Doorkeeper
       class Code
         include URIBuilder
 
+        # TODO: make this configurable
         DEFAULT_EXPIRATION_TIME = 600
 
         attr_accessor :authorization, :grant

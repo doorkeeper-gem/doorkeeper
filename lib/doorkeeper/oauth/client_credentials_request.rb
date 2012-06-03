@@ -34,6 +34,7 @@ module Doorkeeper
         end
       end
 
+      # TODO: duplicated code in all flows
       def scopes
         @scopes ||= if @original_scopes.present?
           Doorkeeper::OAuth::Scopes.from_string(@original_scopes)
