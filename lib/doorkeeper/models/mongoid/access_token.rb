@@ -1,7 +1,10 @@
+require 'doorkeeper/models/mongoid/scopes'
+
 module Doorkeeper
   class AccessToken
     include Mongoid::Document
     include Mongoid::Timestamps
+    include Doorkeeper::Models::Mongoid::Scopes
 
     self.store_in :oauth_access_tokens
 
@@ -25,10 +28,6 @@ module Doorkeeper
 
     def refresh_token
       self[:refresh_token]
-    end
-
-    def scopes=(value)
-      write_attribute :scopes, value
     end
   end
 end

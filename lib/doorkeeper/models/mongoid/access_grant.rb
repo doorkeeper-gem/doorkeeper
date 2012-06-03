@@ -1,7 +1,10 @@
+require 'doorkeeper/models/mongoid/scopes'
+
 module Doorkeeper
   class AccessGrant
     include Mongoid::Document
     include Mongoid::Timestamps
+    include Doorkeeper::Models::Mongoid::Scopes
 
     self.store_in :oauth_access_grants
 
@@ -13,9 +16,5 @@ module Doorkeeper
     field :revoked_at, :type => DateTime
 
     index :token, :unique => true
-
-    def scopes=(value)
-      write_attribute :scopes, value
-    end
   end
 end
