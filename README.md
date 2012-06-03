@@ -59,6 +59,11 @@ Doorkeeper.configure do
 end
 ```
 
+**Note:** Make sure you create indexes for doorkeeper models. You can do this either by running `db:mongoid:create_indexes`
+or by adding `autocreate_indexes: true` to your `config/mongoid.yml`
+
+### Routes
+
 The installation script will also automatically add the Doorkeeper routes into your app, like this:
 
 ``` ruby
@@ -75,6 +80,8 @@ This will mount following routes:
     DELETE    /oauth/authorize
     POST      /oauth/token
     resources /oauth/applications
+
+### Authenticating
 
 You need to configure Doorkeeper in order to provide resource_owner model and authentication block `initializers/doorkeeper.rb`
 
