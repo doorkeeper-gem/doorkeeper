@@ -8,7 +8,7 @@ shared_context "valid token", :token => :valid do
   end
 
   before :each do
-    Doorkeeper::AccessToken.stub(:find_by_token).with(token_string).and_return(token)
+    Doorkeeper::AccessToken.stub(:authenticate).with(token_string).and_return(token)
   end
 end
 
@@ -22,7 +22,7 @@ shared_context "invalid token", :token => :invalid do
   end
 
   before :each do
-    Doorkeeper::AccessToken.stub(:find_by_token).with(token_string).and_return(token)
+    Doorkeeper::AccessToken.stub(:authenticate).with(token_string).and_return(token)
   end
 end
 

@@ -9,6 +9,20 @@ The gem is under constant development. It is based in the [version 22 of the OAu
 
 For more information about the supported features, check out the related [page in the wiki](https://github.com/applicake/doorkeeper/wiki/Supported-Features). For more information about OAuth 2 go to [OAuth 2 Specs (Draft)](http://tools.ietf.org/html/draft-ietf-oauth-v2-22).
 
+## Requirements
+
+### Ruby
+
+- 1.8.7, 1.9.2, 1.9.3 or rubinius
+
+### Rails
+
+- 3.1.x or 3.2.x
+
+### ORM
+
+- ActiveRecord or Mongoid
+
 ## Installation
 
 Put this in your Gemfile:
@@ -21,13 +35,36 @@ Run the installation generator with:
 
     rails generate doorkeeper:install
 
-This will generate the doorkeeper initializer and the OAuth tables migration. Don't forget to run the migration in your application:
-
-    rake db:migrate
+This will install the doorkeeper initializer into `config/initializers/doorkeeper.rb`.
 
 ## Configuration
 
-The installation script will automatically add the Doorkeeper routes into your app, like this:
+### Active Record
+
+By default doorkeeper is configured to use active record, so to start you have to generate the migration tables:
+
+    rails generate doorkeeper:migration
+
+Don't forget to run the migration with:
+
+    rake db:migrate
+
+### Mongoid
+
+If you want to use Mongoid, you have to set the `orm` configuration:
+
+``` ruby
+Doorkeeper.configure do
+  orm :mongoid
+end
+```
+
+**Note:** Make sure you create indexes for doorkeeper models. You can do this either by running `db:mongoid:create_indexes`
+or by adding `autocreate_indexes: true` to your `config/mongoid.yml`
+
+### Routes
+
+The installation script will also automatically add the Doorkeeper routes into your app, like this:
 
 ``` ruby
 Rails.application.routes.draw do
@@ -43,6 +80,8 @@ This will mount following routes:
     DELETE    /oauth/authorize
     POST      /oauth/token
     resources /oauth/applications
+
+### Authenticating
 
 You need to configure Doorkeeper in order to provide resource_owner model and authentication block `initializers/doorkeeper.rb`
 

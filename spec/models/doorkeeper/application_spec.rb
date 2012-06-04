@@ -31,29 +31,20 @@ module Doorkeeper
       new_application.should_not be_valid
     end
 
-    it 'is invalid with a redirect_uri that is relative' do
-      new_application.save
-      new_application.redirect_uri = "/abcd"
-      new_application.should_not be_valid
-    end
-
-    it 'is invalid with a redirect_uri that has a fragment' do
-      new_application.save
-      new_application.redirect_uri = "http://example.com/abcd#xyz"
-      new_application.should_not be_valid
-    end
-
-    it 'is invalid with a redirect_uri that has a query parameter' do
-      new_application.save
-      new_application.redirect_uri = "http://example.com/abcd?xyz=123"
-      new_application.should_not be_valid
-    end
-
     it 'checks uniqueness of uid' do
       app1 = FactoryGirl.create(:application)
       app2 = FactoryGirl.create(:application)
       app2.uid = app1.uid
       app2.should_not be_valid
+    end
+
+    it 'expects database to throw an error when uids are the same' do
+      app1 = FactoryGirl.create(:application)
+      app2 = FactoryGirl.create(:application)
+      app2.uid = app1.uid
+      expect {
+        app2.save!(:validate => false)
+      }.to raise_error
     end
 
     it 'generate secret on create' do
@@ -123,7 +114,14 @@ module Doorkeeper
                         :secret => 'something' }
         Application.create(mass_assign).uid.should_not == 123
       end
+    end
 
+    describe :authenticate do
+      it 'finds the application via uid/secret' do
+        app = FactoryGirl.create :application
+        authenticated = Application.authenticate(app.uid, app.secret)
+        authenticated.should == app
+      end
     end
   end
 end

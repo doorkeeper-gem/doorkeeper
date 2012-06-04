@@ -40,5 +40,21 @@ shared_examples "an unique token" do
     it "is generated before validation" do
       expect { subject.valid? }.to change { subject.token }.from(nil)
     end
+
+    it "is not valid if token exists" do
+      token1 = FactoryGirl.create factory_name
+      token2 = FactoryGirl.create factory_name
+      token2.token = token1.token
+      token2.should_not be_valid
+    end
+
+    it 'expects database to throw an error when tokens are the same' do
+      token1 = FactoryGirl.create factory_name
+      token2 = FactoryGirl.create factory_name
+      token2.token = token1.token
+      expect {
+        token2.save!(:validate => false)
+      }.to raise_error
+    end
   end
 end

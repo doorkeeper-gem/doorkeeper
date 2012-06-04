@@ -79,29 +79,29 @@ describe "Doorkeeper_for helper" do
     end
 
     it "access_token param" do
-      Doorkeeper::AccessToken.should_receive(:find_by_token).with(token_string)
+      Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string)
       get :index, :access_token => token_string
     end
 
     it "bearer_token param" do
-      Doorkeeper::AccessToken.should_receive(:find_by_token).with(token_string)
+      Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string)
       get :index, :bearer_token => token_string
     end
 
     it "Authorization header" do
-      Doorkeeper::AccessToken.should_receive(:find_by_token).with(token_string)
+      Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string)
       request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
       get :index
     end
 
     it "different kind of Authorization header" do
-      Doorkeeper::AccessToken.should_not_receive(:find_by_token)
+      Doorkeeper::AccessToken.should_not_receive(:authenticate)
       request.env["HTTP_AUTHORIZATION"] = "Basic #{Base64.encode64("foo:bar")}"
       get :index
     end
 
     it "doesn't change Authorization header value" do
-      Doorkeeper::AccessToken.should_receive(:find_by_token).exactly(2).times
+      Doorkeeper::AccessToken.should_receive(:authenticate).exactly(2).times
       request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
       get :index
       get :index
@@ -172,14 +172,14 @@ describe "Doorkeeper_for helper" do
 
     it "allows if the token has particular scopes" do
       token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => [:write, :public])
-      Doorkeeper::AccessToken.should_receive(:find_by_token).with(token_string).and_return(token)
+      Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string).and_return(token)
       get :index, :access_token => token_string
       response.should be_success
     end
 
     it "does not allow if the token does not include given scope" do
       token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => [:public])
-      Doorkeeper::AccessToken.should_receive(:find_by_token).with(token_string).and_return(token)
+      Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string).and_return(token)
       get :index, :access_token => token_string
       response.status.should == 401
     end

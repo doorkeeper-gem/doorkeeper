@@ -1,17 +1,16 @@
 module Doorkeeper
-  class AccessToken < ActiveRecord::Base
+  class AccessToken
     include Doorkeeper::OAuth::Helpers
     include Doorkeeper::Models::Expirable
     include Doorkeeper::Models::Revocable
+    include Doorkeeper::Models::Accessible
     include Doorkeeper::Models::Scopes
 
-    self.table_name = :oauth_access_tokens
-
-    belongs_to :application
-
-    scope :accessible, where(:revoked_at => nil)
+    belongs_to :application, :class_name => "Doorkeeper::Application"
 
     validates :application_id, :token, :presence => true
+    validates :token, :uniqueness => true
+    validates :refresh_token, :uniqueness => true, :if => :use_refresh_token?
 
     attr_accessor :use_refresh_token
     attr_accessible :application_id, :resource_owner_id, :expires_in, :scopes, :use_refresh_token
@@ -20,7 +19,11 @@ module Doorkeeper
     before_validation :generate_refresh_token, :on => :create, :if => :use_refresh_token?
 
     def self.authenticate(token)
-      find_by_token token
+      where(:token => token).first
+    end
+
+    def self.by_refresh_token(refresh_token)
+      where(:refresh_token => refresh_token).first
     end
 
     def self.revoke_all_for(application_id, resource_owner)
@@ -29,27 +32,13 @@ module Doorkeeper
     end
 
     def self.matching_token_for(application, resource_owner_or_id, scopes)
-      token = last_authorized_token_for(application, resource_owner_or_id)
+      resource_owner_id = resource_owner_or_id.respond_to?(:to_key) ? resource_owner_or_id.id : resource_owner_or_id
+      token = last_authorized_token_for(application, resource_owner_id)
       token if token && ScopeChecker.matches?(token.scopes, scopes)
     end
 
-    def self.last_authorized_token_for(application, resource_owner_or_id)
-      resource_owner_id = resource_owner_or_id.kind_of?(ActiveRecord::Base) ? resource_owner_or_id.id : resource_owner_or_id
-      accessible.
-        where(:application_id => application.id,
-              :resource_owner_id => resource_owner_id).
-        order("created_at desc").
-        limit(1).
-        first
-    end
-    private_class_method :last_authorized_token_for
-
     def token_type
       "bearer"
-    end
-
-    def accessible?
-      !expired? && !revoked?
     end
 
     def use_refresh_token?
@@ -59,11 +48,11 @@ module Doorkeeper
     private
 
     def generate_refresh_token
-      self.refresh_token = UniqueToken.generate_for :refresh_token, self.class
+      write_attribute :refresh_token, UniqueToken.generate
     end
 
     def generate_token
-      self.token = UniqueToken.generate_for :token, self.class
+      self.token = UniqueToken.generate
     end
   end
 end

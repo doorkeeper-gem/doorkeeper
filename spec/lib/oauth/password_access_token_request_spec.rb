@@ -92,14 +92,17 @@ module Doorkeeper::OAuth
     describe "with an existing expired access token" do
       subject { PasswordAccessTokenRequest.new(client, owner, params) }
 
+      before do
+        PasswordAccessTokenRequest.new(client, owner, params).authorize
+        last_token = Doorkeeper::AccessToken.last
+        # TODO: make this better, maybe with an expire! method?
+        last_token.update_attribute :created_at, 10.days.ago
+      end
+
       it "will create a new token" do
-        subject.authorize
-        expired_access_token = subject.access_token.dup
-        subject.access_token.created_at = Time.now - subject.access_token.expires_in - 1.second
-        subject.should_receive(:create_access_token)
-        subject.access_token.should_receive(:revoke)
-        subject.authorize
-        subject.access_token.should_not eq(expired_access_token)
+        expect {
+          subject.authorize
+        }.to change { Doorkeeper::AccessToken.count }.by(1)
       end
     end
 
