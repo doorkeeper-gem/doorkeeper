@@ -28,7 +28,7 @@ For more information about the supported features, check out the related [page i
 Put this in your Gemfile:
 
 ``` ruby
-gem 'doorkeeper', '~> 0.4.0'
+gem 'doorkeeper', '~> 0.5.0.dev'
 ```
 
 Run the installation generator with:
@@ -68,7 +68,7 @@ The installation script will also automatically add the Doorkeeper routes into y
 
 ``` ruby
 Rails.application.routes.draw do
-  mount Doorkeeper::Engine => "/oauth"
+  use_doorkeeper
   # your routes
 end
 ```
@@ -80,6 +80,8 @@ This will mount following routes:
     DELETE    /oauth/authorize
     POST      /oauth/token
     resources /oauth/applications
+
+For more information on how to customize routes, check out [this page on the wiki](https://github.com/applicake/doorkeeper/wiki/Customizing-routes).
 
 ### Authenticating
 
