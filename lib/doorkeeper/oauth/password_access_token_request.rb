@@ -4,6 +4,7 @@
 module Doorkeeper::OAuth
   class PasswordAccessTokenRequest
     include Doorkeeper::Validations
+    include Doorkeeper::OAuth::Helpers
 
     ATTRIBUTES = [
       :grant_type,
