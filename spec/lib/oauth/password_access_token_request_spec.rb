@@ -131,6 +131,25 @@ module Doorkeeper::OAuth
       end
     end
 
+    describe "with scopes" do
+      subject do
+        PasswordAccessTokenRequest.new(client, owner, params.merge(:scope => 'public'))
+      end
+
+      before do
+        Doorkeeper.configure do
+          default_scopes :public
+        end
+      end
+
+      it 'creates the token with scopes' do
+        expect {
+          subject.authorize
+        }.to change { Doorkeeper::AccessToken.count }.by(1)
+        Doorkeeper::AccessToken.last.scopes.should include(:public)
+      end
+    end
+
     describe "with errors" do
       def token(params)
         PasswordAccessTokenRequest.new(client, owner, params)
