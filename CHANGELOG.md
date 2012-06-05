@@ -4,6 +4,7 @@
 
 - enhancements
   - Configure the way access token is retrieved from request (default to bearer header)
+  - Authorization Code expiration time is now configurable
 
 ## 0.4.2
 

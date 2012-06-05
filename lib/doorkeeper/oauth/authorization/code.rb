@@ -4,9 +4,6 @@ module Doorkeeper
       class Code
         include URIBuilder
 
-        # TODO: make this configurable
-        DEFAULT_EXPIRATION_TIME = 600
-
         attr_accessor :authorization, :grant
 
         def initialize(authorization)
@@ -17,7 +14,7 @@ module Doorkeeper
           @grant ||= AccessGrant.create!(
             :application_id    => authorization.client.id,
             :resource_owner_id => authorization.resource_owner.id,
-            :expires_in        => DEFAULT_EXPIRATION_TIME,
+            :expires_in        => configuration.authorization_code_expires_in,
             :redirect_uri      => authorization.redirect_uri,
             :scopes            => authorization.scopes.to_s
           )
@@ -28,6 +25,10 @@ module Doorkeeper
             :code  => grant.token,
             :state => authorization.state
           })
+        end
+
+        def configuration
+          Doorkeeper.configuration
         end
       end
     end
