@@ -41,6 +41,11 @@ module Doorkeeper
         @config
       end
 
+      def enable_application_owner(opts={})
+        Doorkeeper::Application.send :include, Doorkeeper::Models::Ownership
+        confirm_application_owner if opts[:confirmation].present? && opts[:confirmation]
+      end
+
       def confirm_application_owner
         @config.instance_variable_set("@confirm_application_owner", true)
       end

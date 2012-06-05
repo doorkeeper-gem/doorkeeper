@@ -1,12 +1,12 @@
 require 'rails/generators/active_record'
 
-class Doorkeeper::UpdateGenerator < Rails::Generators::Base
+class Doorkeeper::ApplicationOwnerGenerator < Rails::Generators::Base
   include Rails::Generators::Migration
   source_root File.expand_path('../templates', __FILE__)
-  desc "Updates Doorkeeper Migrations."
+  desc "Provide support for client application ownership."
 
-  def update
-    migration_template 'update_migration.rb', 'db/migrate/add_owner_to_application_table.rb'
+  def application_owner
+    migration_template 'add_owner_to_appication_migration.rb', 'db/migrate/add_owner_to_application_table.rb'
   end
 
   def self.next_migration_number(dirname)
