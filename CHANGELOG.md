@@ -5,6 +5,11 @@
 - enhancements
   - Configure the way access token is retrieved from request (default to bearer header)
 
+## 0.4.2
+
+- bugfixes:
+  - [#94] Uninitialized Constant in Password Flow
+
 ## 0.4.1
 
 - enhancements:
