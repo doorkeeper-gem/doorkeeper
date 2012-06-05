@@ -66,7 +66,7 @@ feature 'Authorization Code Flow Errors' do
 
   context 'with scopes' do
     background do
-      scope_exists :write, :description => "Update your data"
+      optional_scopes_exist :write
     end
 
     scenario "redirects with :invalid_scope error when scope does not exists" do

@@ -10,6 +10,7 @@ class Doorkeeper::AuthorizationsController < Doorkeeper::ApplicationController
     elsif authorization.redirect_on_error?
       redirect_to authorization.invalid_redirect_uri
     else
+      @error = authorization.error_response
       render :error
     end
   end
@@ -20,6 +21,7 @@ class Doorkeeper::AuthorizationsController < Doorkeeper::ApplicationController
     elsif authorization.redirect_on_error?
       redirect_to authorization.invalid_redirect_uri
     else
+      @error = authorization.error_response
       render :error
     end
   end
@@ -31,8 +33,15 @@ class Doorkeeper::AuthorizationsController < Doorkeeper::ApplicationController
 
   private
 
+  def authorization_params
+    params.has_key?(:authorization) ? params[:authorization] : params
+  end
+
+  def client
+    @client ||= Doorkeeper::OAuth::Client.find(authorization_params[:client_id])
+  end
+
   def authorization
-    authorization_params = params.has_key?(:authorization) ? params[:authorization] : params
-    @authorization ||= Doorkeeper::OAuth::AuthorizationRequest.new(current_resource_owner, authorization_params)
+    @authorization ||= Doorkeeper::OAuth::AuthorizationRequest.new(client, current_resource_owner, authorization_params)
   end
 end

@@ -12,8 +12,8 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     I18n.translate key, :scope => [:doorkeeper, :errors, :messages]
   end
 
-  let(:client) { Factory :application }
-  let(:user)   { User.create! }
+  let(:client) { FactoryGirl.create :application }
+  let(:user)   { User.create!(:name => "Joe", :password => "sekret") }
 
   before do
     controller.stub :current_resource_owner => user
@@ -55,7 +55,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   describe "POST #create with errors" do
     before do
-      scope_exists :public
+      default_scopes_exist :public
       post :create, :client_id => client.uid, :response_type => "token", :scope => "invalid", :redirect_uri => client.redirect_uri, :use_route => :doorkeeper
     end
 
@@ -100,7 +100,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   describe "GET #new with errors" do
     before do
-      scope_exists :public
+      default_scopes_exist :public
       get :new, :client_id => client.uid, :response_type => "token", :scope => "invalid", :redirect_uri => client.redirect_uri, :use_route => :doorkeeper
     end
 

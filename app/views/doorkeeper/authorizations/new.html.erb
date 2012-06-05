@@ -9,7 +9,7 @@
   </p>
   <ul>
     <% @authorization.scopes.each do |scope| %>
-      <li><%= scope.description %></li>
+      <li><%= t scope, :scope => [:doorkeeper, :scopes]  %></li>
     <% end %>
   </ul>
   <% end %>

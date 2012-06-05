@@ -1,7 +1,3 @@
-require 'doorkeeper/config/scopes'
-require 'doorkeeper/config/scope'
-require 'doorkeeper/config/scopes_builder'
-
 module Doorkeeper
   def self.configure(&block)
     @config = Config::Builder.new(&block).build
@@ -12,11 +8,30 @@ module Doorkeeper
   end
 
   class Config
-    def default_scope_string
-      @scopes.try(:default_scope_string) || ""
-    end
-
     class Builder
+      # Helper class to migrate scopes using authorization_scopes block
+      # It will be removed in v0.5.x
+      class ScopesMigrator
+        attr_accessor :default_scopes, :optional_scopes, :translations
+
+        def initialize
+          @default_scopes, @optional_scopes, @translations = [], [], {}
+        end
+
+        def scope(scope, options = {})
+          if options[:default]
+            @optional_scopes << scope
+          else
+            @default_scopes << scope
+          end
+          @translations[scope] = options[:description]
+        end
+
+        def migrate(&block)
+          self.instance_eval(&block)
+        end
+      end
+
       def initialize(&block)
         @config = Config.new
         instance_eval(&block)
@@ -30,8 +45,29 @@ module Doorkeeper
         @config.instance_variable_set("@confirm_application_owner", true)
       end
 
+      def default_scopes(*scopes)
+        @config.instance_variable_set("@default_scopes", Doorkeeper::OAuth::Scopes.from_array(scopes))
+      end
+
+      def optional_scopes(*scopes)
+        @config.instance_variable_set("@optional_scopes", Doorkeeper::OAuth::Scopes.from_array(scopes))
+      end
+
+      def client_credentials(*methods)
+        @config.instance_variable_set("@client_credentials", methods)
+      end
+
       def use_refresh_token
         @config.instance_variable_set("@refresh_token_enabled", true)
+      end
+
+      # DEPRECATED: use default/optional scopes
+      def authorization_scopes(&block)
+        migrator = ScopesMigrator.new
+        migrator.migrate(&block)
+        self.default_scopes *migrator.default_scopes
+        self.optional_scopes *migrator.optional_scopes
+        @config.instance_variable_set("@authorization_scopes", migrator)
       end
     end
 
@@ -81,7 +117,11 @@ module Doorkeeper
         end
 
         define_method attribute do |*args|
-          instance_variable_get(:"@#{attribute}") || options[:default]
+          if instance_variable_defined?(:"@#{attribute}")
+            instance_variable_get(:"@#{attribute}")
+          else
+            options[:default]
+          end
         end
 
         public attribute
@@ -94,10 +134,10 @@ module Doorkeeper
 
     extend Option
 
-    option :resource_owner_authenticator, :as      => :authenticate_resource_owner
-    option :admin_authenticator,          :as      => :authenticate_admin
+    option :resource_owner_authenticator, :as => :authenticate_resource_owner
+    option :admin_authenticator,          :as => :authenticate_admin
+    option :resource_owner_from_credentials
     option :access_token_expires_in,      :default => 7200
-    option :authorization_scopes,         :as      => :scopes, :builder_class => ScopesBuilder, :default => Scopes.new
 
     def refresh_token_enabled?
       !!@refresh_token_enabled
@@ -105,6 +145,27 @@ module Doorkeeper
 
     def confirm_application_owner?
       !!@confirm_application_owner
+    end
+
+    def default_scopes
+      @default_scopes ||= Doorkeeper::OAuth::Scopes.new
+    end
+
+    def optional_scopes
+      @optional_scopes ||= Doorkeeper::OAuth::Scopes.new
+    end
+
+    def scopes
+      @scopes ||= default_scopes + optional_scopes
+    end
+
+    def client_credentials_methods
+      @client_credentials ||= [:from_basic, :from_params]
+    end
+
+    # DEPRECATED: use default/optional scopes
+    def authorization_scopes
+      @authorization_scopes
     end
   end
 end

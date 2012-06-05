@@ -34,27 +34,32 @@ describe Doorkeeper, "configuration" do
       end
       subject.access_token_expires_in.should == 4.hours
     end
+
+    it "can be set to nil" do
+      Doorkeeper.configure do
+        access_token_expires_in nil
+      end
+      subject.access_token_expires_in.should be_nil
+    end
   end
 
   describe "scopes" do
-    it "can be set with authorization_scopes method in DSL" do
-      Doorkeeper.configure do
-        authorization_scopes do
-          scope :public, :default => true, :description => "Public"
-        end
-      end
-
-      subject.scopes[:public].should_not be_nil
-      subject.scopes[:public].description.should == "Public"
-      subject.scopes[:public].default.should == true
+    it "has default scopes" do
+      Doorkeeper.configure { default_scopes :public }
+      subject.default_scopes.should include(:public)
     end
 
-    it "returns empty Scopes collection if no scopes were defined" do
-      Doorkeeper.configure do
-      end
+    it 'has optional scopes' do
+      Doorkeeper.configure { optional_scopes :write, :update }
+      subject.optional_scopes.should include(:write, :update)
+    end
 
-      subject.scopes.should be_a(Doorkeeper::Scopes)
-      subject.scopes.all.should == []
+    it 'has all scopes' do
+      Doorkeeper.configure do
+        default_scopes  :normal
+        optional_scopes :admin
+      end
+      subject.scopes.should include(:normal, :admin)
     end
   end
 
@@ -66,6 +71,17 @@ describe Doorkeeper, "configuration" do
     it "can change the value" do
       Doorkeeper.configure { use_refresh_token }
       subject.refresh_token_enabled?.should be_true
+    end
+  end
+
+  describe 'client_credentials' do
+    it 'has defaults order' do
+      subject.client_credentials_methods.should == [:from_basic, :from_params]
+    end
+
+    it "can change the value" do
+      Doorkeeper.configure { client_credentials :from_digest, :from_params }
+      subject.client_credentials_methods.should == [:from_digest, :from_params]
     end
   end
 end

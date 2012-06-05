@@ -1,13 +1,41 @@
 # Changelog
 
-## 0.3.2 (unreleased)
+## 0.4.0
+
+- deprecation
+  - Deprecate authorization_scopes
+- database changes
+  - AccessToken#resource_owner_id is not nullable
+- enhancements
+  - [#83] Add Resource Owner Password Credentials flow [@jaimeiniesta](https://github.com/jaimeiniesta)
+  - [#76] Allow token expiration to be disabled [@mattgreen](https://github.com/mattgreen)
+  - [#b6470a] Add Client Credentials flow
+- internals
+  - [#2ece8d, #f93778] Introduce Client and ErrorResponse classes
+
+## 0.3.4
+
+- Fix attr_accessible for rails 3.2.x
+
+## 0.3.3
+
+- [#86] shrink gem package size
+
+## 0.3.2
 
 - enhancements
   - [#54] Ignore Authorization: headers that are not Bearer [@miyagawa](https://github.com/miyagawa)
+  - [#58, #64] Add destroy action to applications endpoint [@jaimeiniesta](https://github.com/jaimeiniesta), [@davidfrey](https://github.com/davidfrey)
+  - [#63] TokensController responds with `401 unauthorized` [@jaimeiniesta](https://github.com/jaimeiniesta)
+  - [#67, #72] Fix for mass-assignment [@cicloid](https://github.com/cicloid)
 - internals
-  - [#51] Updated the factory_girl_rails dependency, fix expires_in response which returned a float number instead of integer [@antekpiechnik](https://github.com/antekpiechnik)
-  - [#50] Fix typos [@tomekw](https://github.com/tomekw)
   - [#49] Add Gemnasium status image to README [@laserlemon](https://github.com/laserlemon)
+  - [#50] Fix typos [@tomekw](https://github.com/tomekw)
+  - [#51] Updated the factory_girl_rails dependency, fix expires_in response which returned a float number instead of integer [@antekpiechnik](https://github.com/antekpiechnik)
+  - [#62] Typos, .gitignore [@jaimeiniesta](https://github.com/jaimeiniesta)
+  - [#65] Change _path redirections to _url redirections [@jaimeiniesta](https://github.com/jaimeiniesta)
+  - [#75] Fix unknown method #authenticate_admin! [@mattgreen](https://github.com/mattgreen)
+  - Remove application link in authorized app view
 
 ## 0.3.1
 

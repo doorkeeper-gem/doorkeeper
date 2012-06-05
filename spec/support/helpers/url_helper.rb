@@ -10,6 +10,18 @@ module UrlHelper
     "/oauth/token?#{build_query(parameters)}"
   end
 
+  def password_token_endpoint_url(options = {})
+    parameters = {
+      :code          => options[:code],
+      :client_id     => options[:client_id]     || (options[:client] ? options[:client].uid : nil),
+      :client_secret => options[:client_secret] || (options[:client] ? options[:client].secret : nil),
+      :username      => options[:resource_owner_username] || (options[:resource_owner] ? options[:resource_owner].name : nil),
+      :password      => options[:resource_owner_password] || (options[:resource_owner] ? options[:resource_owner].password : nil),
+      :grant_type    => "password",
+    }
+    "/oauth/token?#{build_query(parameters)}"
+  end
+
   def authorization_endpoint_url(options = {})
     parameters = {
       :client_id     => options[:client_id]     || options[:client].uid,

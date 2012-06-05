@@ -6,7 +6,6 @@ module Doorkeeper::OAuth
 
     ATTRIBUTES = [
       :response_type,
-      :client_id,
       :redirect_uri,
       :scope,
       :state
@@ -19,12 +18,12 @@ module Doorkeeper::OAuth
     validate :scope,         :error => :invalid_scope
 
     attr_accessor *ATTRIBUTES
-    attr_accessor :resource_owner, :error
+    attr_accessor :resource_owner, :client, :error
 
-    def initialize(resource_owner, attributes)
+    def initialize(client, resource_owner, attributes)
       ATTRIBUTES.each { |attr| instance_variable_set("@#{attr}", attributes[attr]) }
       @resource_owner = resource_owner
-      @scope          ||= Doorkeeper.configuration.default_scope_string
+      @client         = client
       validate
     end
 
@@ -35,11 +34,15 @@ module Doorkeeper::OAuth
     end
 
     def access_token_exists?
-      Doorkeeper::AccessToken.matching_token_for(client, resource_owner, scope).present?
+      Doorkeeper::AccessToken.matching_token_for(client, resource_owner, scopes).present?
     end
 
     def deny
       self.error = :access_denied
+    end
+
+    def error_response
+      Doorkeeper::OAuth::ErrorResponse.from_request(self)
     end
 
     def success_redirect_uri
@@ -48,30 +51,26 @@ module Doorkeeper::OAuth
 
     def invalid_redirect_uri
       uri_builder = is_token_request? ? :uri_with_fragment : :uri_with_query
-      send(uri_builder, redirect_uri, {
-        :error => error,
-        :error_description => error_description,
-        :state => state
-      })
+      send(uri_builder, redirect_uri, error_response.attributes)
     end
 
     def redirect_on_error?
       (error != :invalid_redirect_uri) && (error != :invalid_client)
     end
 
-    def client
-      @client ||= Doorkeeper::Application.find_by_uid(client_id)
+    def scopes
+      @scopes ||= if scope.present?
+        Doorkeeper::OAuth::Scopes.from_string(scope)
+      else
+        Doorkeeper.configuration.default_scopes
+      end
     end
 
-    def scopes
-      Doorkeeper.configuration.scopes.with_names(*scope.split(" ")) if has_scope?
+    def client_id
+      client.uid
     end
 
     private
-
-    def has_scope?
-      Doorkeeper.configuration.scopes.all.present?
-    end
 
     def validate_attributes
       response_type.present?
@@ -91,7 +90,7 @@ module Doorkeeper::OAuth
     end
 
     def validate_scope
-      return true unless has_scope?
+      return true unless scope.present?
       ScopeChecker.valid?(scope, configuration.scopes)
     end
 
@@ -101,10 +100,6 @@ module Doorkeeper::OAuth
 
     def is_token_request?
       response_type == "token"
-    end
-
-    def error_description
-      I18n.translate error, :scope => [:doorkeeper, :errors, :messages]
     end
 
     def configuration

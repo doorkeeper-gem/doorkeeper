@@ -1,7 +1,4 @@
 class Doorkeeper::TokensController < Doorkeeper::ApplicationController
-
-  before_filter :parse_client_info_from_basic_auth, :only => :create
-
   def create
     response.headers.merge!({
       'Pragma'        => 'no-cache',
@@ -10,13 +7,30 @@ class Doorkeeper::TokensController < Doorkeeper::ApplicationController
     if token.authorize
       render :json => token.authorization
     else
-      render :json => token.error_response, :status => :unauthorized
+      render :json => token.error_response, :status => token.error_response.status
     end
   end
 
   private
 
+  def client
+    @client ||= Doorkeeper::OAuth::Client.authenticate(credentials)
+  end
+
+  def credentials
+    methods = Doorkeeper.configuration.client_credentials_methods
+    @credentials ||= Doorkeeper::OAuth::Client::Credentials.from_request(request, *methods)
+  end
+
   def token
-    @token ||= Doorkeeper::OAuth::AccessTokenRequest.new(params)
+    case params[:grant_type]
+    when 'password'
+      owner = resource_owner_from_credentials
+      @token ||= Doorkeeper::OAuth::PasswordAccessTokenRequest.new(client, owner, params)
+    when 'client_credentials'
+      @token ||= Doorkeeper::OAuth::ClientCredentialsRequest.new(Doorkeeper.configuration, client, params)
+    else
+      @token ||= Doorkeeper::OAuth::AccessTokenRequest.new(client, params)
+    end
   end
 end

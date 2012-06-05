@@ -75,8 +75,8 @@ feature 'Authorization Code Flow' do
 
   context 'with scopes' do
     background do
-      scope_exists :public, :default => true, :description => "Access your public data"
-      scope_exists :write,  :description => "Update your data"
+      default_scopes_exist  :public
+      optional_scopes_exist :write
     end
 
     scenario 'resource owner authorizes the client with default scopes' do
@@ -90,6 +90,12 @@ feature 'Authorization Code Flow' do
       visit authorization_endpoint_url(:client => @client, :scope => "public write")
       click_on "Authorize"
       access_grant_should_have_scopes :public, :write
+    end
+
+    scenario 'resource owner authorizes the client with required scopes (without defaults)' do
+      visit authorization_endpoint_url(:client => @client, :scope => "write")
+      click_on "Authorize"
+      access_grant_should_have_scopes :write
     end
 
     scenario 'new access token matches required scopes' do

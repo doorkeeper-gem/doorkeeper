@@ -1,14 +1,14 @@
 module ModelHelper
   def client_exists(client_attributes = {})
-    @client = Factory(:application, client_attributes)
+    @client = FactoryGirl.create(:application, client_attributes)
   end
 
   def create_resource_owner
-    @resource_owner = User.create!
+    @resource_owner = User.create!(:name => "Joe", :password => "sekret")
   end
 
   def authorization_code_exists(options = {})
-    @authorization = Factory(:access_grant, options)
+    @authorization = FactoryGirl.create(:access_grant, options)
   end
 
   def access_grant_should_exist_for(client, resource_owner)
@@ -33,12 +33,12 @@ module ModelHelper
 
   def access_grant_should_have_scopes(*args)
     grant = Doorkeeper::AccessGrant.first
-    grant.scopes.should == args
+    grant.scopes.should == Doorkeeper::OAuth::Scopes.from_array(args)
   end
 
   def access_token_should_have_scopes(*args)
     grant = Doorkeeper::AccessToken.first
-    grant.scopes.should == args
+    grant.scopes.should == Doorkeeper::OAuth::Scopes.from_array(args)
   end
 end
 

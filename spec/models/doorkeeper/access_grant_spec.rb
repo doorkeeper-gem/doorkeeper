@@ -1,7 +1,7 @@
 require 'spec_helper_integration'
 
 describe Doorkeeper::AccessGrant do
-  subject { Factory.build(:access_grant) }
+  subject { FactoryGirl.build(:access_grant) }
 
   it { should be_valid }
 
@@ -31,21 +31,6 @@ describe Doorkeeper::AccessGrant do
     it "is invalid without expires_in" do
       subject.expires_in = nil
       should_not be_valid
-    end
-  end
-
-  describe :scopes do
-    it "is nil when scopes are not set" do
-      subject.scopes = nil
-      subject.scopes.should be_nil
-    end
-
-    describe "returns an array of scopes" do
-      subject { Factory(:access_grant, :scopes => "public write").scopes }
-
-      it { should be_kind_of(Array) }
-      its(:count) { should == 2 }
-      it { should include(:public, :write) }
     end
   end
 end

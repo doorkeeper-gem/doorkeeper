@@ -32,7 +32,7 @@ shared_examples "an unique token" do
     it "is unique" do
       tokens = []
       3.times do
-        token = Factory(factory_name).token
+        token = FactoryGirl.create(factory_name).token
         tokens.should_not include(token)
       end
     end
