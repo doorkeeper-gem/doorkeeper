@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.2
+
+- bugfixes:
+  - [#94] Uninitialized Constant in Password Flow
+
 ## 0.4.1
 
 - enhancements:
