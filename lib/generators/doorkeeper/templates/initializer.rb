@@ -31,7 +31,7 @@ Doorkeeper.configure do
   # Provide support for an owner to be assigned to each registered application (disabled by default)
   # Optional parameter :confirmation => true (default false) if you want to enforce ownership of
   # a registered application
-  # Note: you must also run the rails g application_owner generator to provide the necessary support
+  # Note: you must also run the rails g doorkeeper:application_owner generator to provide the necessary support
   # enable_application_owner :confirmation => false
 
   # Define access token scopes for your provider
