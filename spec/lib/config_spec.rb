@@ -84,4 +84,39 @@ describe Doorkeeper, "configuration" do
       subject.client_credentials_methods.should == [:from_digest, :from_params]
     end
   end
+
+  describe "enable_application_owner" do
+    it "is disabled by default" do
+      Doorkeeper::Application.new.should_not respond_to :owner
+    end
+
+    context "when enabled without confirmation" do
+      before do
+        Doorkeeper.configure do
+          enable_application_owner
+        end
+      end
+      it "adds support for application owner" do
+        Doorkeeper::Application.new.should respond_to :owner
+      end
+      it "Doorkeeper.configuration.confirm_application_owner? returns false" do
+        Doorkeeper.configuration.confirm_application_owner?.should_not be_true
+      end
+    end
+
+    context "when enabled with confirmation set to true" do
+      before do
+        Doorkeeper.configure do
+          enable_application_owner :confirmation => true
+        end
+      end
+      it "adds support for application owner" do
+        Doorkeeper::Application.new.should respond_to :owner
+      end
+      it "Doorkeeper.configuration.confirm_application_owner? returns true" do
+        Doorkeeper.configuration.confirm_application_owner?.should be_true
+      end
+    end
+
+  end
 end

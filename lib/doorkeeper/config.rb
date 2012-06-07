@@ -42,6 +42,7 @@ module Doorkeeper
       end
 
       def enable_application_owner(opts={})
+        require File.join(File.dirname(__FILE__), 'models', 'ownership')
         Doorkeeper::Application.send :include, Doorkeeper::Models::Ownership
         confirm_application_owner if opts[:confirmation].present? && opts[:confirmation]
       end
