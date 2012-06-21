@@ -8,6 +8,12 @@ module Doorkeeper
       def expired_time
         created_at + expires_in.seconds
       end
+
+      def expires_in_seconds
+        expires = (created_at + expires_in.seconds) - Time.now
+        expires_sec = expires.seconds.round(0)
+        expires_sec > 0 ? expires_sec : 0  
+      end
       private :expired_time
     end
   end
