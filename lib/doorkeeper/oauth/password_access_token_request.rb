@@ -86,10 +86,6 @@ module Doorkeeper::OAuth
       create_access_token
     end
 
-    def revoke_base_token
-      base_token.revoke
-    end
-
     def create_access_token
       @access_token = Doorkeeper::AccessToken.create!({
         :application_id     => client.id,
