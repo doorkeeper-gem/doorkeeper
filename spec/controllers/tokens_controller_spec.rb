@@ -34,7 +34,7 @@ describe Doorkeeper::TokensController do
 
   describe "when requesting tokeninfo with valid token" do
 
-    let(:doorkeeper_token) { Factory(:access_token) }
+    let(:doorkeeper_token) { FactoryGirl.create(:access_token) }
 
     before(:each) do
       controller.stub(:doorkeeper_token) { doorkeeper_token }  
