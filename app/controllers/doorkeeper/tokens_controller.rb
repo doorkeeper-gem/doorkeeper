@@ -11,6 +11,12 @@ class Doorkeeper::TokensController < Doorkeeper::ApplicationController
     end
   end
 
+  def tokeninfo
+    if doorkeeper_token && doorkeeper_token.valid? && !doorkeeper_token.expired? 
+      render :json => doorkeeper_token, :status => :ok
+    end
+  end
+
   private
 
   def client

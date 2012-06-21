@@ -31,4 +31,31 @@ describe Doorkeeper::TokensController do
       response.status.should == 401
     end
   end
+
+  describe "when requesting tokeninfo with valid token" do
+    require 'spec_helper'
+    
+    describe "successful request" do
+      let(:doorkeeper_token) { Factory(:access_token) }
+
+      before(:each) do
+        controller.stub(:doorkeeper_token) { doorkeeper_token }  
+      end
+
+      def do_get
+        get :tokeninfo
+      end
+
+      it "responds with tokeninfo" do
+        do_get  
+        response.body.should eq doorkeeper_token.to_json
+      end
+
+      it "responds with a 200 status" do
+        do_get  
+        response.status.should eq 200  
+      end
+    end
+
+  end
 end
