@@ -17,6 +17,10 @@ describe 'Default routes' do
     post('/oauth/token').should route_to('doorkeeper/tokens#create')
   end
 
+  it "GET /oauth/tokeninfo routes to tokens controller" do
+    get('/oauth/tokeninfo').should route_to('doorkeeper/tokens#tokeninfo')
+  end
+
   it 'GET /oauth/applications routes to applications controller' do
     get('/oauth/applications').should route_to('doorkeeper/applications#index')
   end
