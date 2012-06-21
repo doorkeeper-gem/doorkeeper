@@ -33,18 +33,18 @@ describe Doorkeeper::TokensController do
   end
 
   describe "when requesting tokeninfo with valid token" do
-    require 'spec_helper'
-    
+
+    let(:doorkeeper_token) { Factory(:access_token) }
+
+    before(:each) do
+      controller.stub(:doorkeeper_token) { doorkeeper_token }  
+    end
+
+    def do_get
+      get :tokeninfo
+    end
+
     describe "successful request" do
-      let(:doorkeeper_token) { Factory(:access_token) }
-
-      before(:each) do
-        controller.stub(:doorkeeper_token) { doorkeeper_token }  
-      end
-
-      def do_get
-        get :tokeninfo
-      end
 
       it "responds with tokeninfo" do
         do_get  
@@ -54,6 +54,35 @@ describe Doorkeeper::TokensController do
       it "responds with a 200 status" do
         do_get  
         response.status.should eq 200  
+      end
+    end
+
+    describe "invalid token response" do
+
+      it "responds with 401 when doorkeeper_token is not valid" do
+        controller.stub(:doorkeeper_token => nil)
+        do_get
+        response.status.should eq 401  
+      end
+
+      it "responds with 401 when doorkeeper_token is not valid" do
+        doorkeeper_token.stub(:valid? => false) 
+        do_get
+        response.status.should eq 401  
+      end
+
+      it "responds with 401 when doorkeeper_token is expired" do
+        doorkeeper_token.stub(:expired? => true) 
+        do_get
+        response.status.should eq 401  
+      end
+
+      it "responds body message for error" do
+        error_response = { :error => 'invalid_token' }
+        doorkeeper_token.stub(:valid? => false) 
+        do_get
+        response.status.should eq 401
+        response.body.should eq error_response.to_json
       end
     end
 
