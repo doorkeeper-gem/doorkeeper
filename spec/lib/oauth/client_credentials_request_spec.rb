@@ -27,7 +27,7 @@ module Doorkeeper::OAuth
 
     it 'has an error response if issue was not created' do
       subject.issuer = stub :create => false, :error => :invalid
-      subject.authorize
+      subject.authorize.should == false
       subject.response.should be_a(Doorkeeper::OAuth::ErrorResponse)
     end
 

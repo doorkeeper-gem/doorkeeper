@@ -27,10 +27,12 @@ module Doorkeeper
       end
 
       def authorize
-        @response = if issuer.create(client, scopes)
-          Response.new(issuer.token)
+        if issuer.create(client, scopes)
+          @response = Response.new(issuer.token)
+          true
         else
-          ErrorResponse.from_request(self)
+          @response = ErrorResponse.from_request(self)
+          false
         end
       end
 
