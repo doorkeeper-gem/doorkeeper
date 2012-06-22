@@ -15,7 +15,7 @@ class Doorkeeper::TokensController < Doorkeeper::ApplicationController
     if doorkeeper_token && doorkeeper_token.valid? && !doorkeeper_token.expired? 
       render :json => doorkeeper_token, :status => :ok
     else
-      render :json => { :error => 'invalid_token' }, :status => :unauthorized
+      render :json => Doorkeeper::OAuth::ErrorResponse.new(:name => :invalid_request), :status => :unauthorized
     end 
   end
 

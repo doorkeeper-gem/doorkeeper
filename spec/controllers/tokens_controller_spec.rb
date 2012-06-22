@@ -78,11 +78,9 @@ describe Doorkeeper::TokensController do
       end
 
       it "responds body message for error" do
-        error_response = { :error => 'invalid_token' }
         doorkeeper_token.stub(:valid? => false) 
         do_get
-        response.status.should eq 401
-        response.body.should eq error_response.to_json
+        response.body.should eq Doorkeeper::OAuth::ErrorResponse.new(:name => :invalid_request, :status => :unauthorized).attributes.to_json
       end
     end
 
