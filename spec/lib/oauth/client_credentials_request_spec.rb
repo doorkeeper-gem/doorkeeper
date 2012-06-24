@@ -25,16 +25,22 @@ module Doorkeeper::OAuth
       subject.response.should be_a(ClientCredentialsRequest::Response)
     end
 
-    it 'has an error response if issue was not created' do
-      subject.issuer = stub :create => false, :error => :invalid
-      subject.authorize.should == false
-      subject.response.should be_a(Doorkeeper::OAuth::ErrorResponse)
-    end
+    context 'if issue was not created' do
+      before do
+        subject.issuer = stub :create => false, :error => :invalid
+      end
 
-    it 'delegates the error to issuer' do
-      subject.issuer = stub :create => false, :error => :invalid
-      subject.authorize
-      subject.error.should == :invalid
+      its(:authorize) { should be_false }
+
+      it 'has an error response' do
+        subject.authorize
+        subject.response.should be_a(Doorkeeper::OAuth::ErrorResponse)
+      end
+
+      it 'delegates the error to issuer' do
+        subject.authorize
+        subject.error.should == :invalid
+      end
     end
 
     context 'with scopes' do
