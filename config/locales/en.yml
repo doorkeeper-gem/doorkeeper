@@ -21,3 +21,9 @@ en:
 
         # Password Access token errors
         invalid_resource_owner: 'The provided resource owner credentials are not valid, or resource owner cannot be found'
+
+    flashes:
+      application_revoked: 'Application revoked'
+      application_updated: 'Application updated'
+      application_created: 'Application created'
+      application_deleted: 'Application deleted'
