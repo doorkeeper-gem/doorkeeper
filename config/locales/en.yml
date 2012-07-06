@@ -22,6 +22,12 @@ en:
         # Password Access token errors
         invalid_resource_owner: 'The provided resource owner credentials are not valid, or resource owner cannot be found'
 
+      validations:
+        cannot_contain_fragment: 'cannot contain a fragment.'
+        must_be_an_absolute_url: 'must be an absolute URL.'
+        cannot_contain_query_parameter: 'cannot contain a query parameter.'
+        must_be_a_valid_uri: 'must be a valid URI.'
+
     flashes:
       application_revoked: 'Application revoked'
       application_updated: 'Application updated'
