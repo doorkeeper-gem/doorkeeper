@@ -141,8 +141,8 @@ First configure the scopes in `initializers/doorkeeper.rb`
 
 ```ruby
 Doorkeeper.configure do
-  default_scope :public # if no scope was requested, this will be the default
-  optional_scope :admin, :write
+  default_scopes :public # if no scope was requested, this will be the default
+  optional_scopes :admin, :write
 end
 ```
 
