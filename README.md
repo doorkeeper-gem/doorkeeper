@@ -2,6 +2,7 @@
 
 [![Build Status](https://secure.travis-ci.org/applicake/doorkeeper.png)](http://travis-ci.org/applicake/doorkeeper)
 [![Dependency Status](https://gemnasium.com/applicake/doorkeeper.png)](https://gemnasium.com/applicake/doorkeeper)
+[![Code Climate](https://codeclimate.com/badge.png)](https://codeclimate.com/github/applicake/doorkeeper)
 
 Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider functionality to your application.
 
