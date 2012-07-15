@@ -2,9 +2,16 @@
 
 ## 0.5.0 (unreleased)
 
+Official support for rubinius was removed.
+
 - enhancements
   - Configure the way access token is retrieved from request (default to bearer header)
   - Authorization Code expiration time is now configurable
+  - [#92] Allow users to skip controllers
+  - Add support for mongoid
+  - [#99] Remove deprecated warnings for data-* attributes [@towerhe](https://github.com/towerhe)
+  - [#104] Changed access token scopes example code to default_scopes and optional_scopes [@amkirwan](https://github.com/amkirwan)
+  - [#107] Fix typos in initializer
 
 ## 0.4.2
 
