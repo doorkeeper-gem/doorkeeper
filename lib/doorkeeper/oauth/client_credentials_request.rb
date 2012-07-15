@@ -27,11 +27,13 @@ module Doorkeeper
       end
 
       def authorize
-        @response = if issuer.create(client, scopes)
+        status = issuer.create(client, scopes)
+        @response = if status
           Response.new(issuer.token)
         else
           ErrorResponse.from_request(self)
         end
+        status
       end
 
       # TODO: duplicated code in all flows
