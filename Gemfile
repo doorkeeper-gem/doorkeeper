@@ -12,7 +12,3 @@ group :active_record do
 end
 
 gemspec
-
-# jquery-rails is used by the dummy application
-gem 'jquery-rails'
-
