@@ -135,6 +135,22 @@ class Api::V1::ProductsController < Api::V1::ApiController
 end
 ```
 
+### ActionController::Metal integration and other integrations
+
+The `doorkeeper_for` filter is intended to work with ActionController::Metal too. You only need to include the required `ActionController` modules:
+
+```ruby
+class MetalController < ActionController::Metal
+  include AbstractController::Callbacks
+  include ActionController::Head
+  include Doorkeeper::Helpers::Filter
+
+  doorkeeper_for :all
+end
+```
+
+For more information about integration and other integrations, check out [the related wiki page](https://github.com/applicake/doorkeeper/wiki/ActionController::Metal-with-doorkeeper).
+
 ### Access Token Scopes
 
 You can also require the access token to have specific scopes in certain actions:
