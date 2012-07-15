@@ -22,7 +22,8 @@ For more information about the supported features, check out the related [page i
 
 ### ORM
 
-- ActiveRecord or Mongoid
+- ActiveRecord
+- Mongoid 2 (only for doorkeeper v0.5+)
 
 ## Installation
 
@@ -50,9 +51,9 @@ Don't forget to run the migration with:
 
     rake db:migrate
 
-### Mongoid
+### Mongoid (only doorkeeper v0.5+)
 
-If you want to use Mongoid, you have to set the `orm` configuration:
+Doorkeeper currently supports Mongoid 2. To start using it, you have to set the `orm` configuration:
 
 ``` ruby
 Doorkeeper.configure do
