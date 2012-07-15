@@ -13,7 +13,7 @@ For more information about the supported features, check out the related [page i
 
 ### Ruby
 
-- 1.8.7, 1.9.2, 1.9.3 or rubinius
+- 1.8.7, 1.9.2 or 1.9.3
 
 ### Rails
 
