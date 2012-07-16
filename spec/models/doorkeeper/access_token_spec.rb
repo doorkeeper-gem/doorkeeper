@@ -150,7 +150,6 @@ module Doorkeeper
 
       it 'returns the amount of time in seconds remaining that the token is valid for'do
         token = FactoryGirl.create :access_token, default_attributes
-
         
       end
     end
