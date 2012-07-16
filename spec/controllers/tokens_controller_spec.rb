@@ -58,27 +58,20 @@ describe Doorkeeper::TokensController do
     end
 
     describe "invalid token response" do
-
       it "responds with 401 when doorkeeper_token is not valid" do
         controller.stub(:doorkeeper_token => nil)
         do_get
         response.status.should eq 401  
       end
 
-      it "responds with 401 when doorkeeper_token is not valid" do
-        doorkeeper_token.stub(:valid? => false) 
-        do_get
-        response.status.should eq 401  
-      end
-
-      it "responds with 401 when doorkeeper_token is expired" do
-        doorkeeper_token.stub(:expired? => true) 
+      it "responds with 401 when doorkeeper_token is not accessible" do
+        doorkeeper_token.stub(:accessible? => false) 
         do_get
         response.status.should eq 401  
       end
 
       it "responds body message for error" do
-        doorkeeper_token.stub(:valid? => false) 
+        doorkeeper_token.stub(:accessible? => false) 
         do_get
         response.body.should eq Doorkeeper::OAuth::ErrorResponse.new(:name => :invalid_request, :status => :unauthorized).attributes.to_json
       end
