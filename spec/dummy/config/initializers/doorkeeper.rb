@@ -1,6 +1,6 @@
 Doorkeeper.configure do
   # Change the ORM that doorkeeper will use
-  # Currently supported => :active_record, :mongoid
+  # Currently supported => :active_record, :mongoid, :mongo_mapper
   orm DOORKEEPER_ORM
 
   # This block will be called to check whether the
