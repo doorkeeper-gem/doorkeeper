@@ -5,6 +5,7 @@ gem 'jquery-rails'
 
 group :mongoid do
   gem 'mongoid', '~> 2.4'
+  gem 'mongo', '= 1.6.2'
   gem 'bson_ext', '~> 1.6.0'
 end
 
