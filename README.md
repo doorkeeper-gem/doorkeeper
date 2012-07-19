@@ -24,6 +24,7 @@ For more information about the supported features, check out the related [page i
 
 - ActiveRecord
 - Mongoid 2 (only for doorkeeper v0.5+)
+- MongoMapper git HEAD (only for doorkeeper v0.5+)
 
 ## Installation
 
@@ -63,6 +64,18 @@ end
 
 **Note:** Make sure you create indexes for doorkeeper models. You can do this either by running `db:mongoid:create_indexes`
 or by adding `autocreate_indexes: true` to your `config/mongoid.yml`
+
+### MongoMapper (only doorkeeper v0.5+)
+
+Doorkeeper currently supports MongoMapper git HEAD. To start using it, you have to set the `orm` configuration:
+
+``` ruby
+Doorkeeper.configure do
+  orm :mongo_mapper
+end
+```
+
+**Note:** Make sure you create indexes for doorkeeper models. You can do this by running `rake db:index`.
 
 ### Routes
 
