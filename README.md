@@ -18,7 +18,7 @@ For more information about the supported features, check out the related [page i
 
 ### Rails
 
-- 3.1.x or 3.2.x
+- ~> 3.0
 
 ### ORM
 
@@ -246,3 +246,4 @@ Thanks to all our [awesome contributors](https://github.com/applicake/doorkeeper
 ### License
 
 MIT License. Copyright 2011 Applicake. [http://applicake.com](http://applicake.com)
+

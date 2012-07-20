@@ -1,4 +1,4 @@
-<%= form_for([:oauth, application]) do |f| %>
+<%= form_for(application, :url => oauth_applications_path) do |f| %>
   <fieldset>
     <% if application.errors.any? %>
       <div class="alert-message error" data-alert><a class="close" href="#">×</a><p>Whoops! Check your form for possible errors</p></div>

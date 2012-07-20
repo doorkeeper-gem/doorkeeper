@@ -1,5 +1,6 @@
 source 'http://rubygems.org'
 
+gem 'rails', '~> 3.0.0'
 gem 'jquery-rails'
 
 group :mongoid do
@@ -11,4 +12,7 @@ group :active_record do
   gem 'activerecord', '~> 3.0'
 end
 
-gemspec
+gem 'doorkeeper', :path => '../'
+
+gemspec :path => '../'
+

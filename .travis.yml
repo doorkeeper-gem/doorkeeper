@@ -6,5 +6,6 @@ env:
   - DOORKEEPER_ORM=active_record
   - DOORKEEPER_ORM=mongoid
 gemfile:
+  - gemfiles/gemfile.rails-3.0.x
   - gemfiles/gemfile.rails-3.1.x
   - gemfiles/gemfile.rails-3.2.x

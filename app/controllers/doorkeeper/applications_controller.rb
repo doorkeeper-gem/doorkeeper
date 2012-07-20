@@ -13,10 +13,10 @@ module Doorkeeper
     end
 
     def create
-      @application = Application.new(params[:application])
+      @application = Application.new(params[:application] || params[:doorkeeper_application].slice(:name, :redirect_uri))
       if @application.save
         flash[:notice] = "Application created"
-        respond_with [:oauth, @application]
+        respond_with @application, :location => oauth_application_path(@application)
       else
         render :new
       end
@@ -32,9 +32,9 @@ module Doorkeeper
 
     def update
       @application = Application.find(params[:id])
-      if @application.update_attributes(params[:application])
+      if @application.update_attributes(params[:application] || params[:doorkeeper_application].slice(:name, :redirect_uri))
         flash[:notice] = "Application updated"
-        respond_with [:oauth, @application]
+        respond_with @application, :location => oauth_application_path(@application)
       else
         render :edit
       end
