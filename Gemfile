@@ -3,7 +3,7 @@ source 'http://rubygems.org'
 gem 'jquery-rails'
 
 group :mongoid do
-  gem 'mongoid', '~> 2.4'
+  gem 'mongoid', '~> 3.0'
   gem 'bson_ext', '~> 1.6.0'
 end
 
