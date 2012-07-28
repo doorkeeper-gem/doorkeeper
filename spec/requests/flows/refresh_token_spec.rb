@@ -44,7 +44,7 @@ feature "Refresh Token Flow" do
     end
 
     scenario "client request a token with expired access token" do
-      @token.update_attribute :expires_in, -100
+      @token.update_column :expires_in, -100
       post refresh_token_endpoint_url(:client => @client, :refresh_token => @token.refresh_token)
       should_have_json 'refresh_token', Doorkeeper::AccessToken.last.refresh_token
       @token.reload.should be_revoked
