@@ -8,3 +8,17 @@ env:
 gemfile:
   - gemfiles/gemfile.rails-3.1.x
   - gemfiles/gemfile.rails-3.2.x
+matrix:
+  exclude:
+    - rvm: 1.8.7
+      env: DOORKEEPER_ORM=mongoid
+      gemfile: gemfiles/gemfile.rails-3.1.x
+    - rvm: 1.8.7
+      env: DOORKEEPER_ORM=mongoid
+      gemfile: gemfiles/gemfile.rails-3.2.x
+    - rvm: 1.9.2
+      env: DOORKEEPER_ORM=mongoid
+      gemfile: gemfiles/gemfile.rails-3.1.x
+    - rvm: 1.9.2
+      env: DOORKEEPER_ORM=mongoid
+      gemfile: gemfiles/gemfile.rails-3.2.x
