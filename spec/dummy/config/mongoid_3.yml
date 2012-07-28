@@ -19,7 +19,7 @@ development:
         # :eventual will send reads to secondaries, :strong sends everything
         # to master. (default: :eventual)
         consistency: :strong
-        persist_in_safe_mode: true
+        safe: true
   # Configure Mongoid specific options. (optional)
   options:
     # Configuration for whether or not to allow access to fields that do
@@ -67,4 +67,4 @@ test:
         - localhost:27017
       options:
         consistency: :strong
-        persist_in_safe_mode: true
+        safe: true
