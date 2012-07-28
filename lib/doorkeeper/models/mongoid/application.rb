@@ -1,9 +1,10 @@
+require 'doorkeeper/models/mongoid/version_check'
+
 module Doorkeeper
   class Application
     include Mongoid::Document
     include Mongoid::Timestamps
-
-    self.store_in :oauth_applications
+    include Doorkeeper::Models::Mongoid::VersionCheck
 
     has_many :authorized_tokens, :class_name => "Doorkeeper::AccessToken"
 
@@ -12,7 +13,14 @@ module Doorkeeper
     field :secret, :type => String
     field :redirect_uri, :type => String
 
-    index :uid, :unique => true
+    if is_mongoid_3_x?
+      self.store_in collection: :oauth_applications
+      index({ uid: 1 }, { unique: true })
+    else
+      self.store_in :oauth_applications
+
+      index :uid, :unique => true
+    end
 
     def self.authorized_for(resource_owner)
       ids = AccessToken.where(:resource_owner_id => resource_owner.id, :revoked_at => nil).map(&:application_id)

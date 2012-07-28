@@ -1,20 +1,36 @@
+require 'doorkeeper/models/mongoid/revocable'
 require 'doorkeeper/models/mongoid/scopes'
+require 'doorkeeper/models/mongoid/version_check'
 
 module Doorkeeper
   class AccessToken
     include Mongoid::Document
     include Mongoid::Timestamps
+    include Doorkeeper::Models::Mongoid::Revocable
     include Doorkeeper::Models::Mongoid::Scopes
+    include Doorkeeper::Models::Mongoid::VersionCheck
 
-    self.store_in :oauth_access_tokens
+    if is_mongoid_3_x?
+      self.store_in collection: :oauth_access_tokens
 
-    field :resource_owner_id, :type => Integer
+      field :resource_owner_id, :type => Moped::BSON::ObjectId
+    else
+      self.store_in :oauth_access_tokens
+
+      field :resource_owner_id, :type => Integer
+    end
+
     field :token, :type => String
     field :expires_in, :type => Integer
     field :revoked_at, :type => DateTime
 
-    index :token, :unique => true
-    index :refresh_token, :unique => true, :sparse => true
+    if is_mongoid_3_x?
+      index({ token: 1 }, { unique: true })
+      index({ refresh_token: 1 }, { unique: true, sparse: true })
+    else
+      index :token, :unique => true
+      index :refresh_token, :unique => true, :sparse => true
+    end
 
     def self.last_authorized_token_for(application, resource_owner_id)
       where(:application_id => application.id,
