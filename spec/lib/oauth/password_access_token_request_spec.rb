@@ -2,7 +2,7 @@ require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
   describe PasswordAccessTokenRequest do
-    let(:client) { Factory(:application) }
+    let(:client) { FactoryGirl.create(:application) }
     let(:owner)  { User.create!(:name => "Joe", :password => "sekret") }
     let(:params) {
       {
