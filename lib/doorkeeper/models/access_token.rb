@@ -46,11 +46,12 @@ module Doorkeeper
     end
 
     def as_json(options={})
-      super(
-        :only => [:resource_owner_id, :scopes],
-        :methods => :expires_in_seconds,
-        :include => { :application => { :only => :uid } }
-      )
+      {
+        :resource_owner_id => self.resource_owner_id,
+        :scopes => self.scopes,
+        :expires_in_seconds => self.expires_in_seconds,
+        :application => { :uid => self.application.uid }
+      }
     end
 
     private
