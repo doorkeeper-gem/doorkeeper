@@ -136,6 +136,18 @@ module Doorkeeper
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         last_token.should == token
       end
+
+      it 'returns as_json hash'   do
+        token = FactoryGirl.create :access_token, default_attributes
+        token_hash = {
+                      "resource_owner_id" => token.resource_owner_id,
+                      "scopes" => token.scopes,
+                      :expires_in_seconds => token.expires_in_seconds, 
+                      :application => { "uid" => token.application.uid }
+                     }
+        token.as_json.should eq token_hash
+      end
     end
+
   end
 end
