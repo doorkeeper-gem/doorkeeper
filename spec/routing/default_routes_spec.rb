@@ -24,4 +24,9 @@ describe 'Default routes' do
   it 'GET /oauth/authorized_applications routes to authorized applications controller' do
     get('/oauth/authorized_applications').should route_to('doorkeeper/authorized_applications#index')
   end
+
+  it 'GET /oauth/token/info route to authorzed tokeninfo controller' do
+    get('/oauth/token/info').should route_to('doorkeeper/token_info#show')    
+  end
+
 end

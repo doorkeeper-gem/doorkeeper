@@ -30,4 +30,17 @@ describe 'Expirable' do
       subject.should_not be_expired
     end
   end
+
+  describe :expires_in_seconds do
+    it "should return the amount of time remaining until the token is expired" do
+      subject.stub :expires_in => 2.minutes
+      subject.expires_in_seconds.should == 60 
+    end
+
+    it "should return 0 when expired" do
+      subject.stub :expires_in => 30.seconds
+      subject.expires_in_seconds.should == 0 
+    end
+    
+  end
 end

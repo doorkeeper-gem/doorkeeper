@@ -45,6 +45,14 @@ module Doorkeeper
       self.use_refresh_token
     end
 
+    def as_json(options={})
+      super(
+        :only => [:resource_owner_id, :scopes],
+        :methods => :expires_in_seconds,
+        :include => { :application => { :only => :uid } }
+      )
+    end
+
     private
 
     def generate_refresh_token
@@ -54,5 +62,6 @@ module Doorkeeper
     def generate_token
       self.token = UniqueToken.generate
     end
+
   end
 end
