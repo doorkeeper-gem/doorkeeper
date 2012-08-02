@@ -9,7 +9,7 @@ group :mongoid do
 end
 
 group :mongo_mapper do
-  gem 'mongo_mapper', :github => "jnunemaker/mongomapper"
+  gem 'mongo_mapper', "~> 0.11.2"
 end
 
 group :active_record do
