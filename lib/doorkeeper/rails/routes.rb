@@ -28,6 +28,7 @@ module Doorkeeper
           map_route(:tokens, :token_routes)
           map_route(:applications, :application_routes)
           map_route(:authorized_applications, :authorized_applications_routes)
+          map_route(:token_info, :token_info_routes)
         end
       end
 
@@ -49,6 +50,12 @@ module Doorkeeper
       def token_routes(mapping)
         routes.scope :controller => mapping[:controllers] do
           routes.match 'token', :via => :post, :action => :create, :as => mapping[:as]
+        end
+      end
+
+      def token_info_routes(mapping)
+        routes.scope :controller => mapping[:controllers] do
+          routes.match 'token/info', :via => :get, :action => :show, :as => mapping[:as]
         end
       end
 
