@@ -8,3 +8,19 @@ RSpec.configure do |config|
     Doorkeeper::AccessToken.create_indexes
   end
 end
+
+module Doorkeeper
+  class PlaceholderApplicationOwner
+    include Mongoid::Document
+
+    self.store_in :placeholder_application_owners
+    has_many :applications
+
+  end
+
+  module OrmHelper
+  	def mock_application_owner
+  		PlaceholderApplicationOwner.new
+  	end
+  end
+end
