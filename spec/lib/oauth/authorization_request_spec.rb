@@ -13,6 +13,7 @@ module Doorkeeper::OAuth
     end
 
     before :each do
+      Doorkeeper.configuration.stub(:confirm_application_owner?).and_return(false)
       Doorkeeper.configuration.stub(:default_scopes).and_return(Doorkeeper::OAuth::Scopes.from_string('public write'))
     end
 
