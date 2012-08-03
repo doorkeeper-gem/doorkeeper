@@ -28,6 +28,16 @@ module Doorkeeper
         @config
       end
 
+      def enable_application_owner(opts={})
+        require File.join(File.dirname(__FILE__), 'models', 'ownership')
+        Doorkeeper::Application.send :include, Doorkeeper::Models::Ownership
+        confirm_application_owner if opts[:confirmation].present? && opts[:confirmation]
+      end
+
+      def confirm_application_owner
+        @config.instance_variable_set("@confirm_application_owner", true)
+      end
+
       def default_scopes(*scopes)
         @config.instance_variable_set("@default_scopes", Doorkeeper::OAuth::Scopes.from_array(scopes))
       end
@@ -122,6 +132,10 @@ module Doorkeeper
 
     def refresh_token_enabled?
       !!@refresh_token_enabled
+    end
+
+    def confirm_application_owner?
+      !!@confirm_application_owner
     end
 
     def default_scopes
