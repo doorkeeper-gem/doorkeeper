@@ -50,6 +50,7 @@ module Doorkeeper
       def token_routes(mapping)
         routes.scope :controller => mapping[:controllers] do
           routes.match 'token', :via => :post, :action => :create, :as => mapping[:as]
+          routes.match 'token', :via => :options, :action => :create, :as => mapping[:as]
         end
       end
 

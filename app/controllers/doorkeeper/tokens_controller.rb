@@ -1,4 +1,7 @@
 class Doorkeeper::TokensController < Doorkeeper::ApplicationController
+  before_filter :cors_options_check
+  after_filter :cors_set_access_control_headers
+
   def create
     response.headers.merge!({
       'Pragma'        => 'no-cache',
@@ -6,12 +9,33 @@ class Doorkeeper::TokensController < Doorkeeper::ApplicationController
     })
     if token.authorize
       render :json => token.authorization
+    elsif request.method == 'OPTIONS'
+      render :nothing => true
     else
       render :json => token.error_response, :status => token.error_response.status
     end
   end
 
   private
+
+  def cors_set_access_control_headers
+    response.headers.merge!({
+      'Access-Control-Allow-Origin' => '*',
+      'Access-Control-Allow-Methods' => 'POST, OPTIONS',
+      'Access-Control-Max-Age' => '1728000'
+    })
+  end
+
+  def cors_options_check
+    if request.method == 'OPTIONS'
+      response.headers.merge!({
+        'Access-Control-Allow-Origin' => '*',
+        'Access-Control-Allow-Methods' => 'POST, OPTIONS',
+        'Access-Control-Allow-Headers' => 'Content-Type',
+        'Access-Control-Max-Age' => '1728000'
+      })
+    end
+  end
 
   def client
     @client ||= Doorkeeper::OAuth::Client.authenticate(credentials)
