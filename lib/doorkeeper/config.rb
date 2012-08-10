@@ -29,6 +29,12 @@ module Doorkeeper
       end
 
       def enable_application_owner(opts={})
+        require "doorkeeper/models/#{@config.orm}/access_grant"
+        require "doorkeeper/models/#{@config.orm}/access_token"
+        require "doorkeeper/models/#{@config.orm}/application"
+        require 'doorkeeper/models/access_grant'
+        require 'doorkeeper/models/access_token'
+        require 'doorkeeper/models/application'
         require File.join(File.dirname(__FILE__), 'models', 'ownership')
         Doorkeeper::Application.send :include, Doorkeeper::Models::Ownership
         confirm_application_owner if opts[:confirmation].present? && opts[:confirmation]
