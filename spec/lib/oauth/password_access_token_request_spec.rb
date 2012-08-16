@@ -63,7 +63,10 @@ module Doorkeeper::OAuth
       end
 
       it "creates a refresh token if Doorkeeper is configured to do so" do
-        Doorkeeper.configure { use_refresh_token }
+        Doorkeeper.configure { 
+          orm DOORKEEPER_ORM
+          use_refresh_token 
+        }
 
         Doorkeeper::AccessToken.should_receive(:create!).with({
           :application_id    => client.id,
@@ -138,6 +141,7 @@ module Doorkeeper::OAuth
 
       before do
         Doorkeeper.configure do
+          orm DOORKEEPER_ORM
           default_scopes :public
         end
       end

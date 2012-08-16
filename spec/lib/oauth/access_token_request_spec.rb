@@ -168,7 +168,10 @@ module Doorkeeper::OAuth
     }
 
     before do
-      Doorkeeper.configure { use_refresh_token }
+      Doorkeeper.configure { 
+        orm DOORKEEPER_ORM
+        use_refresh_token 
+      }
     end
 
     describe "with a valid authorization code and client" do
