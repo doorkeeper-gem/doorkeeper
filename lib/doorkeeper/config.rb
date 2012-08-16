@@ -128,7 +128,7 @@ module Doorkeeper
     option :resource_owner_from_credentials
     option :access_token_expires_in,      :default => 7200
     option :authorization_code_expires_in,:default => 600
-    option :orm
+    option :orm, :default => :active_record
 
     def refresh_token_enabled?
       !!@refresh_token_enabled
