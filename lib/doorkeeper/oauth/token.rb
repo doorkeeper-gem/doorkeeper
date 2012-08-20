@@ -3,6 +3,7 @@ module Doorkeeper
     class Token
       module Methods
         def from_access_token_param(request)
+          raise request.to_yaml
           request.parameters[:access_token]
         end
 
