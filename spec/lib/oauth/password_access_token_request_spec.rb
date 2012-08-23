@@ -2,7 +2,7 @@ require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
   describe PasswordAccessTokenRequest do
-    let(:client) { Factory(:application) }
+    let(:client) { FactoryGirl.create(:application) }
     let(:owner)  { User.create!(:name => "Joe", :password => "sekret") }
     let(:params) {
       {
@@ -96,7 +96,7 @@ module Doorkeeper::OAuth
         PasswordAccessTokenRequest.new(client, owner, params).authorize
         last_token = Doorkeeper::AccessToken.last
         # TODO: make this better, maybe with an expire! method?
-        last_token.update_attribute :created_at, 10.days.ago
+        last_token.update_column :created_at, 10.days.ago
       end
 
       it "will create a new token" do

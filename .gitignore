@@ -10,3 +10,5 @@ Gemfile.lock
 gemfiles/*.lock
 spec/generators/tmp
 .rvmrc
+*.swp
+

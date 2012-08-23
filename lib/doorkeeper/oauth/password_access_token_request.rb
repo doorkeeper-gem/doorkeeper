@@ -51,7 +51,8 @@ module Doorkeeper::OAuth
     end
 
     def access_token
-      @access_token
+      return unless client.present? && resource_owner.present?
+      @access_token ||= Doorkeeper::AccessToken.matching_token_for client, resource_owner.id, scopes
     end
 
     def token_type
@@ -83,10 +84,6 @@ module Doorkeeper::OAuth
     def revoke_and_create_access_token
       access_token.revoke
       create_access_token
-    end
-
-    def revoke_base_token
-      base_token.revoke
     end
 
     def create_access_token

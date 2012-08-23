@@ -2,6 +2,7 @@
 
 [![Build Status](https://secure.travis-ci.org/applicake/doorkeeper.png)](http://travis-ci.org/applicake/doorkeeper)
 [![Dependency Status](https://gemnasium.com/applicake/doorkeeper.png)](https://gemnasium.com/applicake/doorkeeper)
+[![Code Climate](https://codeclimate.com/badge.png)](https://codeclimate.com/github/applicake/doorkeeper)
 
 Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider functionality to your application.
 
@@ -13,7 +14,7 @@ For more information about the supported features, check out the related [page i
 
 ### Ruby
 
-- 1.8.7, 1.9.2, 1.9.3 or rubinius
+- 1.8.7, 1.9.2 or 1.9.3
 
 ### Rails
 
@@ -21,7 +22,8 @@ For more information about the supported features, check out the related [page i
 
 ### ORM
 
-- ActiveRecord or Mongoid
+- ActiveRecord
+- Mongoid 2 (only for doorkeeper v0.5+)
 
 ## Installation
 
@@ -49,9 +51,9 @@ Don't forget to run the migration with:
 
     rake db:migrate
 
-### Mongoid
+### Mongoid (only doorkeeper v0.5+)
 
-If you want to use Mongoid, you have to set the `orm` configuration:
+Doorkeeper currently supports Mongoid 2. To start using it, you have to set the `orm` configuration:
 
 ``` ruby
 Doorkeeper.configure do
@@ -133,6 +135,22 @@ class Api::V1::ProductsController < Api::V1::ApiController
 end
 ```
 
+### ActionController::Metal integration and other integrations
+
+The `doorkeeper_for` filter is intended to work with ActionController::Metal too. You only need to include the required `ActionController` modules:
+
+```ruby
+class MetalController < ActionController::Metal
+  include AbstractController::Callbacks
+  include ActionController::Head
+  include Doorkeeper::Helpers::Filter
+
+  doorkeeper_for :all
+end
+```
+
+For more information about integration and other integrations, check out [the related wiki page](https://github.com/applicake/doorkeeper/wiki/ActionController::Metal-with-doorkeeper).
+
 ### Access Token Scopes
 
 You can also require the access token to have specific scopes in certain actions:
@@ -141,8 +159,8 @@ First configure the scopes in `initializers/doorkeeper.rb`
 
 ```ruby
 Doorkeeper.configure do
-  default_scope :public # if no scope was requested, this will be the default
-  optional_scope :admin, :write
+  default_scopes :public # if no scope was requested, this will be the default
+  optional_scopes :admin, :write
 end
 ```
 

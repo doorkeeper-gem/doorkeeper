@@ -1,9 +1,11 @@
+require 'doorkeeper/models/mongoid/revocable'
 require 'doorkeeper/models/mongoid/scopes'
 
 module Doorkeeper
   class AccessGrant
     include Mongoid::Document
     include Mongoid::Timestamps
+    include Doorkeeper::Models::Mongoid::Revocable
     include Doorkeeper::Models::Mongoid::Scopes
 
     self.store_in :oauth_access_grants

@@ -43,7 +43,7 @@ feature 'Authorization Code Flow' do
   scenario 'revokes and return new token if it is has expired' do
     client_is_authorized(@client, @resource_owner)
     token = Doorkeeper::AccessToken.first
-    token.update_attribute :expires_in, -100
+    token.update_column :expires_in, -100
     visit authorization_endpoint_url(:client => @client)
 
     authorization_code = Doorkeeper::AccessGrant.first.token
