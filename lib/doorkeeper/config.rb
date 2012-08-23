@@ -125,12 +125,18 @@ module Doorkeeper
 
     option :resource_owner_authenticator,
            :as => :authenticate_resource_owner,
-           :default => Proc.new{ }
+           :default => lambda{|routes|
+             logger.warn(I18n.translate('doorkeeper.errors.messages.resource_owner_authenticator_not_configured'))
+             nil
+           }
     option :admin_authenticator,
            :as => :authenticate_admin,
-           :default => Proc.new{ }
+           :default => lambda{|routes| }
     option :resource_owner_from_credentials,
-           :default => Proc.new{ }
+           :default => lambda{|routes|
+             logger.warn(I18n.translate('doorkeeper.errors.messages.credential_flow_not_configured'))
+             nil
+           }
     option :access_token_expires_in,      :default => 7200
     option :authorization_code_expires_in,:default => 600
     option :orm
