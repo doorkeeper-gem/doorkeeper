@@ -123,9 +123,14 @@ module Doorkeeper
 
     extend Option
 
-    option :resource_owner_authenticator, :as => :authenticate_resource_owner
-    option :admin_authenticator,          :as => :authenticate_admin
-    option :resource_owner_from_credentials
+    option :resource_owner_authenticator,
+           :as => :authenticate_resource_owner,
+           :default => Proc.new{ }
+    option :admin_authenticator,
+           :as => :authenticate_admin,
+           :default => Proc.new{ }
+    option :resource_owner_from_credentials,
+           :default => Proc.new{ }
     option :access_token_expires_in,      :default => 7200
     option :authorization_code_expires_in,:default => 600
     option :orm
