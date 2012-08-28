@@ -234,6 +234,16 @@ All supported ruby versions are [listed here](https://github.com/applicake/doork
 
 ## Additional information
 
+### Cross Origin Resource Sharing
+
+You might want to use Doorkeeper to protect an API and want an other application running in a different context (like a mobile application) to request on your API.
+
+For mobile application, you might have to setup Cross Origin Resource Sharing. More info [here](http://www.nczonline.net/blog/2010/05/25/cross-domain-ajax-with-cross-origin-resource-sharing/)
+
+In order to setup the bahavior, you can take a look at [rack-cors](https://github.com/cyu/rack-cors). It's a rack middleware that will set http headers for you in order to be able to make cross domain requests to your doorkeeper protected application (usualy your API).
+
+[Here](https://github.com/gottfrois/doorkeeper-provider-app) is a demo application where rack-cors has been setup.
+
 ### Maintainers
 
 - Felipe Elias Philipp ([github.com/felipeelias](https://github.com/felipeelias), [twitter.com/felipeelias](https://twitter.com/felipeelias))
