@@ -2,7 +2,10 @@ require 'spec_helper_integration'
 
 feature "Refresh Token Flow" do
   before do
-    Doorkeeper.configure { use_refresh_token }
+    Doorkeeper.configure { 
+      orm DOORKEEPER_ORM
+      use_refresh_token 
+    }
     client_exists
   end
 
