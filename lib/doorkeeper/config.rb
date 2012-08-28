@@ -123,9 +123,20 @@ module Doorkeeper
 
     extend Option
 
-    option :resource_owner_authenticator, :as => :authenticate_resource_owner
-    option :admin_authenticator,          :as => :authenticate_admin
-    option :resource_owner_from_credentials
+    option :resource_owner_authenticator,
+           :as => :authenticate_resource_owner,
+           :default => lambda{|routes|
+             logger.warn(I18n.translate('doorkeeper.errors.messages.resource_owner_authenticator_not_configured'))
+             nil
+           }
+    option :admin_authenticator,
+           :as => :authenticate_admin,
+           :default => lambda{|routes| }
+    option :resource_owner_from_credentials,
+           :default => lambda{|routes|
+             logger.warn(I18n.translate('doorkeeper.errors.messages.credential_flow_not_configured'))
+             nil
+           }
     option :access_token_expires_in,      :default => 7200
     option :authorization_code_expires_in,:default => 600
     option :orm, :default => :active_record
