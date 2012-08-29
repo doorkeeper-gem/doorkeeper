@@ -22,9 +22,7 @@ module Doorkeeper
       end
 
       def authenticate_admin!
-        if block = Doorkeeper.configuration.authenticate_admin
-          instance_eval &block
-        end
+        instance_eval &Doorkeeper.configuration.authenticate_admin
       end
     end
   end
