@@ -8,3 +8,5 @@ env:
 gemfile:
   - gemfiles/gemfile.rails-3.1.x
   - gemfiles/gemfile.rails-3.2.x
+services:
+  - mongodb
