@@ -2,6 +2,7 @@ module Doorkeeper
   def self.configure(&block)
     @config = Config::Builder.new(&block).build
     enable_orm
+    setup_application_owner if @config.enable_application_owner?
   end
 
   def self.configuration
@@ -17,6 +18,11 @@ module Doorkeeper
     require 'doorkeeper/models/application'
   end
 
+  def self.setup_application_owner
+    require File.join(File.dirname(__FILE__), 'models', 'ownership')
+    Doorkeeper::Application.send :include, Doorkeeper::Models::Ownership
+  end
+
   class Config
     class Builder
       def initialize(&block)
@@ -29,8 +35,7 @@ module Doorkeeper
       end
 
       def enable_application_owner(opts={})
-        require File.join(File.dirname(__FILE__), 'models', 'ownership')
-        Doorkeeper::Application.send :include, Doorkeeper::Models::Ownership
+        @config.instance_variable_set("@enable_application_owner", true)
         confirm_application_owner if opts[:confirmation].present? && opts[:confirmation]
       end
 
@@ -132,6 +137,10 @@ module Doorkeeper
 
     def refresh_token_enabled?
       !!@refresh_token_enabled
+    end
+
+    def enable_application_owner?
+      !!@enable_application_owner
     end
 
     def confirm_application_owner?
