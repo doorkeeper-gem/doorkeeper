@@ -75,7 +75,10 @@ Doorkeeper.configure do
 end
 ```
 
-**Note:** Make sure you create indexes for doorkeeper models. You can do this by running `rake db:index`.
+Then generate the `db/indexes.rb` file and create indexes for the doorkeeper models:
+
+    rails generate doorkeeper:mongo_mapper:indexes
+    rake db:index
 
 ### Routes
 
