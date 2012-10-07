@@ -20,10 +20,6 @@ describe 'Doorkeeper::InstallGenerator' do
       assert_file 'config/initializers/doorkeeper.rb'
     end
 
-    it "creates a MongoMapper index file" do
-      assert_file 'db/indexes.rb'
-    end
-
     it "copies the locale file" do
       assert_file 'config/locales/doorkeeper.en.yml'
     end
