@@ -118,7 +118,7 @@ describe Doorkeeper, "configuration" do
 
   describe "enable_application_owner" do
     it "is disabled by default" do
-      Doorkeeper::Application.new.should_not respond_to :owner
+      Doorkeeper.configuration.enable_application_owner?.should_not be_true
     end
 
     context "when enabled without confirmation" do
