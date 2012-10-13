@@ -1,6 +1,7 @@
 module Doorkeeper
   class Engine < Rails::Engine
     initializer "doorkeeper.routes" do
+      Doorkeeper::Rails::Routes.warn_if_using_mount_method!
       Doorkeeper::Rails::Routes.install!
     end
 

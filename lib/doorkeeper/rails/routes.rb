@@ -15,6 +15,12 @@ module Doorkeeper
         ActionDispatch::Routing::Mapper.send :include, Doorkeeper::Rails::Routes::Helper
       end
 
+      def self.warn_if_using_mount_method!
+        if File.read(::Rails.root + 'config/routes.rb') =~ %r[mount Doorkeeper::Engine]
+          warn "\n[DOORKEEPER] `mount Doorkeeper::Engine` is not being used anymore. Please replace it with `use_doorkeeper` in your /config/routes.rb file\n"
+        end
+      end
+
       attr_accessor :routes
 
       def initialize(routes, &options)
