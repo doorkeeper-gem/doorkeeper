@@ -49,17 +49,17 @@ describe Doorkeeper, "configuration" do
 
   describe "scopes" do
     it "has default scopes" do
-      Doorkeeper.configure { 
+      Doorkeeper.configure {
         orm DOORKEEPER_ORM
-        default_scopes :public 
+        default_scopes :public
       }
       subject.default_scopes.should include(:public)
     end
 
     it 'has optional scopes' do
-      Doorkeeper.configure { 
+      Doorkeeper.configure {
         orm DOORKEEPER_ORM
-        optional_scopes :write, :update 
+        optional_scopes :write, :update
       }
       subject.optional_scopes.should include(:write, :update)
     end
@@ -80,9 +80,9 @@ describe Doorkeeper, "configuration" do
     end
 
     it "can change the value" do
-      Doorkeeper.configure { 
+      Doorkeeper.configure {
         orm DOORKEEPER_ORM
-        use_refresh_token 
+        use_refresh_token
       }
       subject.refresh_token_enabled?.should be_true
     end
@@ -94,9 +94,9 @@ describe Doorkeeper, "configuration" do
     end
 
     it "can change the value" do
-      Doorkeeper.configure { 
+      Doorkeeper.configure {
         orm DOORKEEPER_ORM
-        client_credentials :from_digest, :from_params 
+        client_credentials :from_digest, :from_params
       }
       subject.client_credentials_methods.should == [:from_digest, :from_params]
     end
@@ -108,9 +108,9 @@ describe Doorkeeper, "configuration" do
     end
 
     it "can change the value" do
-      Doorkeeper.configure { 
+      Doorkeeper.configure {
         orm DOORKEEPER_ORM
-        access_token_methods :from_access_token_param, :from_bearer_param 
+        access_token_methods :from_access_token_param, :from_bearer_param
       }
       subject.access_token_methods.should == [:from_access_token_param, :from_bearer_param]
     end
