@@ -200,6 +200,21 @@ end
 
 In this example, we're returning the credentials (`me.json`) of the access token owner.
 
+### Applications list
+
+By default, the applications list (`/oauth/applications`) is public available. To protect the endpoint you should uncomment these lines:
+
+```ruby
+# config/initializers/doorkeeper.rb
+Doorkeeper.configure do
+  admin_authenticator do |routes|
+    Admin.find_by_id(session[:admin_id]) || redirect_to(routes.new_admin_session_url)
+  end
+end
+```
+
+The logic is the same as the `resource_owner_authenticator` block. **Note:** since the application list is just a scaffold, it's recommended to either customize the controller used by the list or skip the controller at all. For more information see the page [in the wiki](https://github.com/applicake/doorkeeper/wiki/Customizing-routes).
+
 ## Upgrading
 
 If you want to upgrade doorkeeper to a new version, check out the [upgrading notes](https://github.com/applicake/doorkeeper/wiki/Migration-from-old-versions) and take a look at the [changelog](https://github.com/applicake/doorkeeper/blob/master/CHANGELOG.md).
@@ -240,7 +255,7 @@ You might want to use Doorkeeper to protect an API and want an other application
 
 For mobile application, you might have to setup Cross Origin Resource Sharing. More info [here](http://www.nczonline.net/blog/2010/05/25/cross-domain-ajax-with-cross-origin-resource-sharing/)
 
-In order to setup the bahavior, you can take a look at [rack-cors](https://github.com/cyu/rack-cors). It's a rack middleware that will set http headers for you in order to be able to make cross domain requests to your doorkeeper protected application (usualy your API).
+In order to setup the behavior, you can take a look at [rack-cors](https://github.com/cyu/rack-cors). It's a rack middleware that will set http headers for you in order to be able to make cross domain requests to your doorkeeper protected application (usualy your API).
 
 [Here](https://github.com/gottfrois/doorkeeper-provider-app) is a demo application where rack-cors has been setup.
 
