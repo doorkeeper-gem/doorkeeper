@@ -25,6 +25,7 @@ For more information about the supported features, check out the related [page i
 - ActiveRecord
 - Mongoid 2 (only for doorkeeper v0.5+)
 - Mongoid 3 (only for doorkeeper v0.6+)
+- MongoMapper (only for doorkeeper v0.6+)
 
 ## Installation
 
@@ -71,6 +72,21 @@ To run the test suite with Mongoid you can run `DOORKEEPER_ORM=mongoid bundle ex
 2. Replace the spec/dummy/config/mongoid.yml file with the spec/dummy/config/mongoid_2.yml file.
 
 With these changes the test suite will run with Mongoid 2.4.x
+
+### MongoMapper (only doorkeeper v0.5+)
+
+Doorkeeper currently supports MongoMapper git HEAD. To start using it, you have to set the `orm` configuration:
+
+``` ruby
+Doorkeeper.configure do
+  orm :mongo_mapper
+end
+```
+
+Then generate the `db/indexes.rb` file and create indexes for the doorkeeper models:
+
+    rails generate doorkeeper:mongo_mapper:indexes
+    rake db:index
 
 ### Routes
 

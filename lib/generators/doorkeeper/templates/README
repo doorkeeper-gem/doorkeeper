@@ -17,11 +17,25 @@ And run
 
   rake db:migrate
 
-If you want to use Mongoid, configure the orm in initializers/doorkeeper.rb
+If you want to use Mongoid, configure the orm in initializers/doorkeeper.rb:
 
+# Mongoid
 Doorkeeper.configure do
   orm :mongoid
 end
+
+If you want to use MongoMapper, configure the orm in
+initializers/doorkeeper.rb:
+
+# MongoMapper
+Doorkeeper.configure do
+  orm :mongo_mapper
+end
+
+And run
+
+  rails generate doorkeeper:mongo_mapper:indexes
+  rake db:index
 
 Step 3.
 That's it, that's all. Enjoy!

@@ -27,8 +27,7 @@ module Doorkeeper
     end
 
     def self.revoke_all_for(application_id, resource_owner)
-      where(:application_id => application_id,
-              :resource_owner_id => resource_owner.id).delete_all
+      delete_all_for(application_id, resource_owner)
     end
 
     def self.matching_token_for(application, resource_owner_or_id, scopes)

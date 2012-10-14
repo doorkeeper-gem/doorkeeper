@@ -5,7 +5,12 @@ gem 'jquery-rails'
 
 group :mongoid do
   gem 'mongoid', '~> 3.0'
+  gem 'mongo', '= 1.6.2'
   gem 'bson_ext', '~> 1.6.0'
+end
+
+group :mongo_mapper do
+  gem 'mongo_mapper', :github => "jnunemaker/mongomapper"
 end
 
 group :active_record do
