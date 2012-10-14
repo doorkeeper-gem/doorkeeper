@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.6.0.dev
+
 ## 0.5.0.rc1
 
 Official support for rubinius was removed.
