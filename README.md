@@ -23,7 +23,8 @@ For more information about the supported features, check out the related [page i
 ### ORM
 
 - ActiveRecord
-- Mongoid 2, 3 (only for doorkeeper v0.5+)
+- Mongoid 2 (only for doorkeeper v0.5+)
+- Mongoid 3 (only for doorkeeper v0.6+)
 
 ## Installation
 
