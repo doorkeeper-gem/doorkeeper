@@ -239,6 +239,11 @@ end
 
 The logic is the same as the `resource_owner_authenticator` block. **Note:** since the application list is just a scaffold, it's recommended to either customize the controller used by the list or skip the controller at all. For more information see the page [in the wiki](https://github.com/applicake/doorkeeper/wiki/Customizing-routes).
 
+## Other customizations
+
+- [Associate users to OAuth applications (ownership)](https://github.com/applicake/doorkeeper/wiki/Associate-users-to-OAuth-applications-%28ownership%29)
+- [CORS - Cross Origin Resource Sharing](https://github.com/applicake/doorkeeper/wiki/%5BCORS%5D-Cross-Origin-Resource-Sharing)
+
 ## Upgrading
 
 If you want to upgrade doorkeeper to a new version, check out the [upgrading notes](https://github.com/applicake/doorkeeper/wiki/Migration-from-old-versions) and take a look at the [changelog](https://github.com/applicake/doorkeeper/blob/master/CHANGELOG.md).
@@ -271,22 +276,10 @@ Also, check out our [contributing guidelines page](https://github.com/applicake/
 
 All supported ruby versions are [listed here](https://github.com/applicake/doorkeeper/wiki/Supported-Ruby-&-Rails-versions).
 
-## Additional information
-
-### Cross Origin Resource Sharing
-
-You might want to use Doorkeeper to protect an API and want an other application running in a different context (like a mobile application) to request on your API.
-
-For mobile application, you might have to setup Cross Origin Resource Sharing. More info [here](http://www.nczonline.net/blog/2010/05/25/cross-domain-ajax-with-cross-origin-resource-sharing/)
-
-In order to setup the behavior, you can take a look at [rack-cors](https://github.com/cyu/rack-cors). It's a rack middleware that will set http headers for you in order to be able to make cross domain requests to your doorkeeper protected application (usualy your API).
-
-[Here](https://github.com/gottfrois/doorkeeper-provider-app) is a demo application where rack-cors has been setup.
-
 ### Maintainers
 
-- Felipe Elias Philipp ([github.com/felipeelias](https://github.com/felipeelias), [twitter.com/felipeelias](https://twitter.com/felipeelias))
-- Piotr Jakubowski ([github.com/piotrj](https://github.com/piotrj), [twitter.com/piotrjakubowski](https://twitter.com/piotrjakubowski))
+- Felipe Elias Philipp - [coderwall.com/felipeelias](http://coderwall.com/felipeelias)
+- Piotr Jakubowski - [coderwall.com/piotrj](http://coderwall.com/piotrj)
 
 ### Contributors
 
