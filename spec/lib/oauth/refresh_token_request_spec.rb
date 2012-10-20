@@ -7,7 +7,6 @@ module Doorkeeper::OAuth
     let(:params) {
       {
         :refresh_token => access.refresh_token,
-        :grant_type    => "refresh_token",
       }
     }
 
@@ -40,16 +39,9 @@ module Doorkeeper::OAuth
         RefreshTokenRequest.new(client, params)
       end
 
-      it "includes the error in the response" do
-        access_token = token(params.except(:grant_type))
-        access_token.error_response.name.should == :invalid_request
-      end
-
-      [:grant_type, :refresh_token].each do |param|
-        describe "when :#{param} is missing" do
-          subject     { token(params.except(param)) }
-          its(:error) { should == :invalid_request }
-        end
+      describe "when :refresh_token is missing" do
+        subject     { token(params.except(:refresh_token)) }
+        its(:error) { should == :invalid_request }
       end
 
       describe "when client is not present" do
@@ -60,11 +52,6 @@ module Doorkeeper::OAuth
       describe "when :refresh_token does not exist" do
         subject     { token(params.merge(:refresh_token => "inexistent")) }
         its(:error) { should == :invalid_grant }
-      end
-
-      describe "when :grant_type is not 'refresh_token'" do
-        subject     { token(params.merge(:grant_type => "invalid")) }
-        its(:error) { should == :invalid_request }
       end
 
       describe "when granted application does not match" do

@@ -1,19 +1,16 @@
 module Doorkeeper::OAuth
+  # TODO: Validate if refresh token is enabled in config
   class RefreshTokenRequest
     include Doorkeeper::Validations
 
     ATTRIBUTES = [
-      :grant_type,
       :code,
-      :redirect_uri,
       :refresh_token
     ]
 
     validate :attributes,   :error => :invalid_request
-    validate :grant_type,   :error => :unsupported_grant_type
     validate :client,       :error => :invalid_client
     validate :grant,        :error => :invalid_grant
-    validate :redirect_uri, :error => :invalid_grant
 
     attr_accessor *ATTRIBUTES
     attr_accessor :client
@@ -77,11 +74,7 @@ module Doorkeeper::OAuth
     end
 
     def base_token
-      @base_token ||= refresh_token? ? token_via_refresh_token : token_via_authorization_code
-    end
-
-    def token_via_authorization_code
-      Doorkeeper::AccessGrant.authenticate(code)
+      @base_token ||= token_via_refresh_token
     end
 
     def token_via_refresh_token
@@ -99,20 +92,11 @@ module Doorkeeper::OAuth
     end
 
     def validate_attributes
-      return false unless grant_type.present?
-      if refresh_token_enabled? && refresh_token?
-        refresh_token.present?
-      else
-        code.present? && redirect_uri.present?
-      end
+      refresh_token.present?
     end
 
     def refresh_token_enabled?
       configuration.refresh_token_enabled?
-    end
-
-    def refresh_token?
-      grant_type == "refresh_token"
     end
 
     def validate_client
@@ -121,15 +105,7 @@ module Doorkeeper::OAuth
 
     def validate_grant
       return false unless base_token && base_token.application_id == client.id
-      refresh_token? ? !base_token.revoked? : base_token.accessible?
-    end
-
-    def validate_redirect_uri
-      refresh_token? ? true : base_token.redirect_uri == redirect_uri
-    end
-
-    def validate_grant_type
-      %w(authorization_code refresh_token).include? grant_type
+      !base_token.revoked?
     end
 
     def configuration
