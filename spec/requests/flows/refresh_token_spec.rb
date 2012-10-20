@@ -2,9 +2,9 @@ require 'spec_helper_integration'
 
 feature "Refresh Token Flow" do
   before do
-    Doorkeeper.configure { 
+    Doorkeeper.configure {
       orm DOORKEEPER_ORM
-      use_refresh_token 
+      use_refresh_token
     }
     client_exists
   end
@@ -53,17 +53,19 @@ feature "Refresh Token Flow" do
       @token.reload.should be_revoked
     end
 
+    # TODO: verify proper error code for this (previously was invalid_grant)
     scenario "client gets an error for invalid refresh token" do
       post refresh_token_endpoint_url(:client => @client, :refresh_token => "invalid")
       should_not_have_json 'refresh_token'
-      should_have_json 'error', 'invalid_grant'
+      should_have_json 'error', 'invalid_request'
     end
 
+    # TODO: verify proper error code for this (previously was invalid_grant)
     scenario "client gets an error for revoked acccess token" do
       @token.revoke
       post refresh_token_endpoint_url(:client => @client, :refresh_token => @token.refresh_token)
       should_not_have_json 'refresh_token'
-      should_have_json 'error', 'invalid_grant'
+      should_have_json 'error', 'invalid_request'
     end
   end
 end
