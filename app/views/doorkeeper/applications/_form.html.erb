@@ -15,8 +15,13 @@
       <%= f.label :redirect_uri %>
       <div class="input">
         <%= f.text_field :redirect_uri %>
+        <% if Doorkeeper.configuration.test_redirect_uri %>
+          <span class="help-inline">Use <%= Doorkeeper.configuration.test_redirect_uri %> for local tests</span>
+        <% end %>
       </div>
-    </div class="clearfix">
+    </div>
+
+    <div class="clearfix"></div>
 
     <div class="actions">
       <%= f.submit :Submit, :class => "btn primary" %>
