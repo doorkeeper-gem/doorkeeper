@@ -1,7 +1,3 @@
-require 'spec_helper'
-require 'active_model'
-require 'validators/redirect_uri_validator'
-
 require 'spec_helper_integration'
 
 describe RedirectUriValidator do
@@ -12,6 +8,17 @@ describe RedirectUriValidator do
   it 'is valid when the uri is a uri' do
     subject.redirect_uri = "http://example.com/callback"
     subject.should be_valid
+  end
+
+  it 'accepts test redirect uri' do
+    subject.redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
+    subject.should be_valid
+  end
+
+  it 'rejects if test uri is disabled' do
+    RedirectUriValidator.stub :test_redirect_uri => nil
+    subject.redirect_uri = "urn:some:test"
+    subject.should_not be_valid
   end
 
   it 'is invalid when the uri is not a uri' do
