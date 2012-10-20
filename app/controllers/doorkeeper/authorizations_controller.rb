@@ -8,7 +8,7 @@ class Doorkeeper::AuthorizationsController < Doorkeeper::ApplicationController
         if authorization.success_redirect_uri.present?
           redirect_to authorization.success_redirect_uri
         else
-          redirect_to oauth_authorization_code_path(code: auth.token)
+          redirect_to oauth_authorization_code_path(:code => auth.token)
         end
       end
     elsif authorization.redirect_on_error?
@@ -27,7 +27,7 @@ class Doorkeeper::AuthorizationsController < Doorkeeper::ApplicationController
       if authorization.success_redirect_uri.present?
         redirect_to authorization.success_redirect_uri
       else
-        redirect_to oauth_authorization_code_path(code: auth.token)
+        redirect_to oauth_authorization_code_path(:code => auth.token)
       end
     elsif authorization.redirect_on_error?
       redirect_to authorization.invalid_redirect_uri
