@@ -17,6 +17,14 @@ class Doorkeeper::AuthorizationsController < Doorkeeper::ApplicationController
       @error = authorization.error_response
       render :error
     end
+  rescue Doorkeeper::Errors::InvalidRequestStrategy
+    error = Doorkeeper::OAuth::ErrorResponse.new :name => :unsupported_response_type
+    to = Doorkeeper::OAuth::Authorization::URIBuilder.uri_with_query server.client_via_uid.redirect_uri, error.attributes
+    redirect_to to
+  rescue Doorkeeper::Errors::MissingRequestStrategy
+    error = Doorkeeper::OAuth::ErrorResponse.new :name => :invalid_request
+    to = Doorkeeper::OAuth::Authorization::URIBuilder.uri_with_query server.client_via_uid.redirect_uri, error.attributes
+    redirect_to to
   end
 
   def show
@@ -42,17 +50,17 @@ class Doorkeeper::AuthorizationsController < Doorkeeper::ApplicationController
     redirect_to authorization.invalid_redirect_uri
   end
 
-  private
-
-  def authorization_params
-    params.has_key?(:authorization) ? params[:authorization] : params
-  end
-
-  def client
-    @client ||= Doorkeeper::OAuth::Client.find(authorization_params[:client_id])
-  end
+private
 
   def authorization
-    @authorization ||= Doorkeeper::OAuth::AuthorizationRequest.new(client, current_resource_owner, authorization_params)
+    @authorization ||= strategy.request
+  end
+
+  def server
+    @server ||= Doorkeeper::Server.new(self)
+  end
+
+  def strategy
+    @strategy ||= server.request params[:response_type]
   end
 end

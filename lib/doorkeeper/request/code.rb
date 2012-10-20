@@ -1,8 +1,8 @@
 module Doorkeeper
   module Request
-    class AuthorizationCode
+    class Code
       def self.build(server)
-        new(server.client, server)
+        new(server.client_via_uid, server)
       end
 
       attr_accessor :client, :server
@@ -12,7 +12,7 @@ module Doorkeeper
       end
 
       def request
-        @request ||= OAuth::AuthorizationCodeRequest.new(client, server.parameters)
+        @request ||= OAuth::CodeRequest.new(client, server.current_resource_owner, server.parameters)
       end
 
       def authorize

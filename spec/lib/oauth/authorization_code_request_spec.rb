@@ -1,7 +1,7 @@
 require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
-  describe AccessTokenRequest do
+  describe AuthorizationCodeRequest do
     let(:client) { FactoryGirl.create(:application) }
     let(:grant)  { FactoryGirl.create(:access_grant, :application => client) }
     let(:params) {
@@ -12,7 +12,7 @@ module Doorkeeper::OAuth
     }
 
     describe "with a valid authorization code and client" do
-      subject { AccessTokenRequest.new(client, params) }
+      subject { AuthorizationCodeRequest.new(client, params) }
 
       before { subject.authorize }
 
@@ -26,7 +26,7 @@ module Doorkeeper::OAuth
     end
 
     describe "creating the access token" do
-      subject { AccessTokenRequest.new(client, params) }
+      subject { AuthorizationCodeRequest.new(client, params) }
 
       it "creates with correct params" do
         Doorkeeper::AccessToken.should_receive(:create!).with({
@@ -41,7 +41,7 @@ module Doorkeeper::OAuth
     end
 
     describe "with a valid authorization code, client and existing valid access token" do
-      subject { AccessTokenRequest.new(client, params) }
+      subject { AuthorizationCodeRequest.new(client, params) }
 
       before { subject.authorize }
       it { should be_valid }
@@ -55,7 +55,7 @@ module Doorkeeper::OAuth
 
     describe "with a valid authorization code, client and existing expired access token" do
       before do
-        AccessTokenRequest.new(client, params).authorize
+        AuthorizationCodeRequest.new(client, params).authorize
         last_token = Doorkeeper::AccessToken.last
         # TODO: make this better, maybe with an expire! method?
         last_token.update_column :created_at, 10.days.ago
@@ -63,7 +63,7 @@ module Doorkeeper::OAuth
 
       it "will create a new token" do
         grant = FactoryGirl.create(:access_grant, :application => client)
-        authorization = AccessTokenRequest.new(client, params.merge(:code => grant.token))
+        authorization = AuthorizationCodeRequest.new(client, params.merge(:code => grant.token))
         expect {
           authorization.authorize
         }.to change { Doorkeeper::AccessToken.count }.by(1)
@@ -71,7 +71,7 @@ module Doorkeeper::OAuth
     end
 
     describe "finding the current access token" do
-      subject { AccessTokenRequest.new(client, params) }
+      subject { AuthorizationCodeRequest.new(client, params) }
       it { should be_valid }
       its(:error)         { should be_nil }
 
@@ -85,7 +85,7 @@ module Doorkeeper::OAuth
     end
 
     describe "creating the first access_token" do
-      subject { AccessTokenRequest.new(client, params) }
+      subject { AuthorizationCodeRequest.new(client, params) }
       it { should be_valid }
       its(:error)         { should be_nil }
 
@@ -97,7 +97,7 @@ module Doorkeeper::OAuth
 
     describe "with errors" do
       def token(params)
-        AccessTokenRequest.new(client, params)
+        AuthorizationCodeRequest.new(client, params)
       end
 
       [:code, :redirect_uri].each do |param|
@@ -108,7 +108,7 @@ module Doorkeeper::OAuth
       end
 
       describe "when client is not present" do
-        subject     { AccessTokenRequest.new(nil, params) }
+        subject     { AuthorizationCodeRequest.new(nil, params) }
         its(:error) { should == :invalid_client }
       end
 

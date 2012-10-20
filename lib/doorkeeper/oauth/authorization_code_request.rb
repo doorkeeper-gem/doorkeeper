@@ -1,6 +1,5 @@
 module Doorkeeper::OAuth
-  # TODO: rename to AuthorizationCodeRequest
-  class AccessTokenRequest
+  class AuthorizationCodeRequest
     include Doorkeeper::Validations
 
     ATTRIBUTES = [

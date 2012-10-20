@@ -15,23 +15,23 @@
   <% end %>
 
   <div class="inline_block">
-    <%= form_for @authorization, :as => :authorization, :url => oauth_authorization_path, :method => :post do |f| %>
-      <%= f.hidden_field :client_id %>
-      <%= f.hidden_field :redirect_uri %>
-      <%= f.hidden_field :state %>
-      <%= f.hidden_field :response_type %>
-      <%= f.hidden_field :scope %>
-      <%= f.submit "Authorize", :class => "btn success" %> or
+    <%= form_tag oauth_authorization_path, :method => :post do %>
+      <%= hidden_field_tag :client_id, @authorization.client_id %>
+      <%= hidden_field_tag :redirect_uri, @authorization.redirect_uri %>
+      <%= hidden_field_tag :state, @authorization.state %>
+      <%= hidden_field_tag :response_type, @authorization.response_type %>
+      <%= hidden_field_tag :scope, @authorization.scope %>
+      <%= submit_tag "Authorize", :class => "btn success" %> or
     <% end %>
   </div>
   <div class="inline_block">
-    <%= form_for @authorization, :as => :authorization, :url => oauth_authorization_path, :method => :delete do |f| %>
-      <%= f.hidden_field :client_id %>
-      <%= f.hidden_field :redirect_uri %>
-      <%= f.hidden_field :state %>
-      <%= f.hidden_field :response_type %>
-      <%= f.hidden_field :scope %>
-      <%= f.submit "Deny", :class => "btn" %>
+    <%= form_tag oauth_authorization_path, :method => :delete do %>
+      <%= hidden_field_tag :client_id, @authorization.client_id %>
+      <%= hidden_field_tag :redirect_uri, @authorization.redirect_uri %>
+      <%= hidden_field_tag :state, @authorization.state %>
+      <%= hidden_field_tag :response_type, @authorization.response_type %>
+      <%= hidden_field_tag :scope, @authorization.scope %>
+      <%= submit_tag "Deny", :class => "btn" %>
     <% end %>
   </div>
 </div>
