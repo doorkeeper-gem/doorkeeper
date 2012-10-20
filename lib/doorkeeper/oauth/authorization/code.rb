@@ -21,6 +21,7 @@ module Doorkeeper
         end
 
         def callback
+          return if Doorkeeper::OAuth::Helpers::URIChecker.test_uri? authorization.redirect_uri
           uri_with_query(authorization.redirect_uri, {
             :code  => grant.token,
             :state => authorization.state

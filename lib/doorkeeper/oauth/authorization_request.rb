@@ -82,6 +82,7 @@ module Doorkeeper::OAuth
 
     def validate_redirect_uri
       return false unless redirect_uri
+      URIChecker.test_uri?(redirect_uri) ||
       URIChecker.valid_for_authorization?(redirect_uri, client.redirect_uri)
     end
 

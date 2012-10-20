@@ -47,9 +47,10 @@ module Doorkeeper
 
       def authorization_routes(mapping)
         routes.scope :controller => mapping[:controllers] do
-          routes.match 'authorize', :via => :get,    :action => :new, :as => mapping[:as]
-          routes.match 'authorize', :via => :post,   :action => :create, :as => mapping[:as]
-          routes.match 'authorize', :via => :delete, :action => :destroy, :as => mapping[:as]
+          routes.match 'authorize/:code', :via => :get,    :action => :show,    :as => "#{mapping[:as]}_code"
+          routes.match 'authorize',       :via => :get,    :action => :new,     :as => mapping[:as]
+          routes.match 'authorize',       :via => :post,   :action => :create,  :as => mapping[:as]
+          routes.match 'authorize',       :via => :delete, :action => :destroy, :as => mapping[:as]
         end
       end
 

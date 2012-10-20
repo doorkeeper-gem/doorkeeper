@@ -6,13 +6,16 @@
 
 <div class="span10">
   <h4>Callback url:</h4>
-  <p><%= @application.redirect_uri %></p>
+  <p><code><%= @application.redirect_uri %></code></p>
 
   <h4>Application Id:</h4>
   <p><code><%= @application.uid %></code></p>
 
   <h4>Secret:</h4>
   <p><code><%= @application.secret %></code></p>
+
+  <h4>Link to authorization code:</h4>
+  <p><%= link_to 'Authorize', oauth_authorization_path(:client_id => @application.uid, :redirect_uri => @application.redirect_uri, :response_type => 'code' ) %></p>
 </div>
 
 <div class="span6">

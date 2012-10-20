@@ -4,8 +4,12 @@ class Doorkeeper::AuthorizationsController < Doorkeeper::ApplicationController
   def new
     if authorization.valid?
       if authorization.access_token_exists?
-        authorization.authorize
-        redirect_to authorization.success_redirect_uri
+        auth = authorization.authorize
+        if authorization.success_redirect_uri.present?
+          redirect_to authorization.success_redirect_uri
+        else
+          redirect_to oauth_authorization_code_path(:code => auth.token)
+        end
       end
     elsif authorization.redirect_on_error?
       redirect_to authorization.invalid_redirect_uri
@@ -15,9 +19,16 @@ class Doorkeeper::AuthorizationsController < Doorkeeper::ApplicationController
     end
   end
 
+  def show
+  end
+
   def create
-    if authorization.authorize
-      redirect_to authorization.success_redirect_uri
+    if auth = authorization.authorize
+      if authorization.success_redirect_uri.present?
+        redirect_to authorization.success_redirect_uri
+      else
+        redirect_to oauth_authorization_code_path(:code => auth.token)
+      end
     elsif authorization.redirect_on_error?
       redirect_to authorization.invalid_redirect_uri
     else
