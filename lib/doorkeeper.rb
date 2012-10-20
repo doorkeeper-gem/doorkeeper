@@ -24,7 +24,7 @@ module Doorkeeper
     autoload :PasswordAccessTokenRequest, "doorkeeper/oauth/password_access_token_request"
     autoload :ClientCredentialsRequest,   "doorkeeper/oauth/client_credentials_request"
     autoload :Authorization,              "doorkeeper/oauth/authorization"
-    autoload :AuthorizationCodeRequest,   "doorkeeper/oauth/authorization_code_request"
+    autoload :CodeRequest,                "doorkeeper/oauth/code_request"
     autoload :TokenRequest,               "doorkeeper/oauth/token_request"
     autoload :Client,                     "doorkeeper/oauth/client"
     autoload :Token,                      "doorkeeper/oauth/token"

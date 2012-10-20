@@ -1,7 +1,7 @@
 require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
-  describe AuthorizationCodeRequest do
+  describe CodeRequest do
     let(:resource_owner) { double(:resource_owner, :id => 1) }
     let(:client)         { FactoryGirl.create(:application) }
     let(:attributes) do
@@ -18,7 +18,7 @@ module Doorkeeper::OAuth
     end
 
     describe "with valid attributes" do
-      subject { AuthorizationCodeRequest.new(client, resource_owner, attributes) }
+      subject { CodeRequest.new(client, resource_owner, attributes) }
 
       describe "after authorization" do
         before { subject.authorize }
@@ -42,7 +42,7 @@ module Doorkeeper::OAuth
       end
 
       describe :authorize do
-        let(:authorization_request) { AuthorizationCodeRequest.new(client, resource_owner, attributes) }
+        let(:authorization_request) { CodeRequest.new(client, resource_owner, attributes) }
         subject { authorization_request.authorize }
 
         it "returns Doorkeeper::AccessGrant object" do
@@ -67,7 +67,7 @@ module Doorkeeper::OAuth
         attributes[:redirect_uri] = u.to_s
         attributes
       }
-      subject { AuthorizationCodeRequest.new(client, resource_owner, attributes_with_query_params) }
+      subject { CodeRequest.new(client, resource_owner, attributes_with_query_params) }
 
       it "preservers the original query when error"
 
@@ -95,7 +95,7 @@ module Doorkeeper::OAuth
 
     describe "if no scope given" do
       it "sets the scope to the default one" do
-        request = AuthorizationCodeRequest.new(client, resource_owner, attributes.except(:scope))
+        request = CodeRequest.new(client, resource_owner, attributes.except(:scope))
         request.scopes.to_s.should == "public write"
       end
     end
@@ -112,7 +112,7 @@ module Doorkeeper::OAuth
       end
 
       describe "when client is not present" do
-        subject     { AuthorizationCodeRequest.new(nil, resource_owner, attributes) }
+        subject     { CodeRequest.new(nil, resource_owner, attributes) }
         its(:error) { should == :invalid_client }
       end
 
@@ -138,7 +138,7 @@ module Doorkeeper::OAuth
     end
 
     def auth(attributes)
-      AuthorizationCodeRequest.new(client, resource_owner, attributes)
+      CodeRequest.new(client, resource_owner, attributes)
     end
   end
 end

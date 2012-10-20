@@ -1,6 +1,6 @@
 module Doorkeeper
   module OAuth
-    class AuthorizationCodeRequest
+    class CodeRequest
       include Doorkeeper::Validations
       include Doorkeeper::OAuth::Authorization::URIBuilder
       include Doorkeeper::OAuth::Helpers
