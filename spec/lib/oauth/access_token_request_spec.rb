@@ -7,7 +7,6 @@ module Doorkeeper::OAuth
     let(:params) {
       {
         :code          => grant.token,
-        :grant_type    => "authorization_code",
         :redirect_uri  => client.redirect_uri
       }
     }
@@ -20,7 +19,6 @@ module Doorkeeper::OAuth
       it { should be_valid }
       its(:token_type)    { should == "bearer" }
       its(:error)         { should be_nil }
-      its(:refresh_token) { should be_nil }
 
       it "has an access token" do
         subject.access_token.token.should =~ /\w+/
@@ -102,12 +100,7 @@ module Doorkeeper::OAuth
         AccessTokenRequest.new(client, params)
       end
 
-      it "includes the error in the response" do
-        access_token = token(params.except(:grant_type))
-        access_token.error_response.name.should == :invalid_request
-      end
-
-      [:grant_type, :code, :redirect_uri].each do |param|
+      [:code, :redirect_uri].each do |param|
         describe "when :#{param} is missing" do
           subject     { token(params.except(param)) }
           its(:error) { should == :invalid_request }
@@ -127,11 +120,6 @@ module Doorkeeper::OAuth
       describe "when :redirect_uri does not match with grant's one" do
         subject     { token(params.merge(:redirect_uri => "another")) }
         its(:error) { should == :invalid_grant }
-      end
-
-      describe "when :grant_type is not 'authorization_code'" do
-        subject     { token(params.merge(:grant_type => "invalid")) }
-        its(:error) { should == :unsupported_grant_type }
       end
 
       describe "when granted application does not match" do
