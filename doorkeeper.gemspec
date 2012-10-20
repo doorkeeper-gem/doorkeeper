@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "capybara", "~> 1.1.2"
   s.add_development_dependency "generator_spec", "~> 0.8.5"
   s.add_development_dependency "factory_girl", "~> 2.6.4"
-  s.add_development_dependency "timecop", "~> 0.4.3"
+  s.add_development_dependency "timecop", "~> 0.5.2"
   s.add_development_dependency "database_cleaner", "~> 0.8"
   s.add_development_dependency "bcrypt-ruby", "~> 3.0.1"
 end
