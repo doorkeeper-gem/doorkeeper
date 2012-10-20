@@ -12,7 +12,7 @@ module Doorkeeper
       end
 
       def request
-        @request ||= Doorkeeper::OAuth::AccessTokenRequest.new(client, server.parameters)
+        @request ||= OAuth::AccessTokenRequest.new(client, server.parameters)
       end
 
       def authorize

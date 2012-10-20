@@ -9,10 +9,10 @@ module Doorkeeper
     # Available strategies:
     # :code, :token, :password, :client_credentials, :authorization_code, :refresh_token
     def strategy_for(strategy)
-      raise Doorkeeper::Errors::MissingRequestStrategy unless strategy.present?
+      raise Errors::MissingRequestStrategy unless strategy.present?
       "Doorkeeper::Request::#{strategy.to_s.camelize}".constantize
     rescue NameError
-      raise Doorkeeper::Errors::InvalidRequestStrategy
+      raise Errors::InvalidRequestStrategy
     end
 
     def request(strategy)
@@ -26,11 +26,11 @@ module Doorkeeper
     end
 
     def client
-      @client ||= Doorkeeper::OAuth::Client.authenticate(credentials)
+      @client ||= OAuth::Client.authenticate(credentials)
     end
 
     def client_via_uid
-      @client_via_uid ||= Doorkeeper::OAuth::Client.find(parameters[:client_id])
+      @client_via_uid ||= OAuth::Client.find(parameters[:client_id])
     end
 
     def current_resource_owner
@@ -44,7 +44,7 @@ module Doorkeeper
 
     def credentials
       methods = Doorkeeper.configuration.client_credentials_methods
-      @credentials ||= Doorkeeper::OAuth::Client::Credentials.from_request(context.request, *methods)
+      @credentials ||= OAuth::Client::Credentials.from_request(context.request, *methods)
     end
   end
 end
