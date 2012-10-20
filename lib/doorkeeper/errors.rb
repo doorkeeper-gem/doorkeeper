@@ -5,5 +5,8 @@ module Doorkeeper
 
     class InvalidRequestStrategy < DoorkeeperError
     end
+
+    class MissingRequestStrategy < DoorkeeperError
+    end
   end
 end
