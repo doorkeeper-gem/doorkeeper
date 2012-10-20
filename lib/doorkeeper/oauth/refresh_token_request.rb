@@ -1,33 +1,29 @@
-# coding: utf-8
-
-# TODO: refactor to DRY up, this is very similar to AccessTokenRequest
 module Doorkeeper::OAuth
-  class PasswordAccessTokenRequest
+  # TODO: Validate if refresh token is enabled in config
+  class RefreshTokenRequest
     include Doorkeeper::Validations
-    include Doorkeeper::OAuth::Helpers
 
     ATTRIBUTES = [
-      :username,
-      :password,
-      :scope
+      :code,
+      :refresh_token
     ]
 
-    validate :client,         :error => :invalid_client
-    validate :resource_owner, :error => :invalid_resource_owner
-    validate :scope,          :error => :invalid_scope
+    validate :attributes,   :error => :invalid_request
+    validate :client,       :error => :invalid_client
+    validate :grant,        :error => :invalid_grant
 
     attr_accessor *ATTRIBUTES
-    attr_accessor :resource_owner, :client
+    attr_accessor :client
 
-    def initialize(client, owner, attributes = {})
+    def initialize(client, attributes = {})
       ATTRIBUTES.each { |attr| instance_variable_set("@#{attr}", attributes[attr]) }
-      @resource_owner = owner
       @client = client
       validate
     end
 
     def authorize
       if valid?
+        revoke_base_token
         find_or_create_access_token
       end
     end
@@ -47,8 +43,7 @@ module Doorkeeper::OAuth
     end
 
     def access_token
-      return unless client.present? && resource_owner.present?
-      @access_token ||= Doorkeeper::AccessToken.matching_token_for client, resource_owner.id, scopes
+      @access_token ||= Doorkeeper::AccessToken.matching_token_for client, base_token.resource_owner_id, base_token.scopes
     end
 
     def token_type
@@ -57,14 +52,6 @@ module Doorkeeper::OAuth
 
     def error_response
       Doorkeeper::OAuth::ErrorResponse.from_request(self)
-    end
-
-    def scopes
-      @scopes ||= if scope.present?
-        Doorkeeper::OAuth::Scopes.from_string(scope)
-      else
-        Doorkeeper.configuration.default_scopes
-      end
     end
 
     private
@@ -82,14 +69,30 @@ module Doorkeeper::OAuth
       create_access_token
     end
 
+    def revoke_base_token
+      base_token.revoke
+    end
+
+    def base_token
+      @base_token ||= token_via_refresh_token
+    end
+
+    def token_via_refresh_token
+      Doorkeeper::AccessToken.by_refresh_token(refresh_token)
+    end
+
     def create_access_token
       @access_token = Doorkeeper::AccessToken.create!({
-        :application_id     => client.id,
-        :resource_owner_id  => resource_owner.id,
-        :scopes             => scopes.to_s,
-        :expires_in         => configuration.access_token_expires_in,
-        :use_refresh_token  => refresh_token_enabled?
+        :application_id    => client.id,
+        :resource_owner_id => base_token.resource_owner_id,
+        :scopes            => base_token.scopes_string,
+        :expires_in        => configuration.access_token_expires_in,
+        :use_refresh_token => refresh_token_enabled?
       })
+    end
+
+    def validate_attributes
+      refresh_token.present?
     end
 
     def refresh_token_enabled?
@@ -100,13 +103,9 @@ module Doorkeeper::OAuth
       !!client
     end
 
-    def validate_scope
-      return true unless scope.present?
-      ScopeChecker.valid?(scope, configuration.scopes)
-    end
-
-    def validate_resource_owner
-      !!resource_owner
+    def validate_grant
+      return false unless base_token && base_token.application_id == client.id
+      !base_token.revoked?
     end
 
     def configuration

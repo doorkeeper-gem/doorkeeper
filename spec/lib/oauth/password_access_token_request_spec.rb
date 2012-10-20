@@ -4,11 +4,7 @@ module Doorkeeper::OAuth
   describe PasswordAccessTokenRequest do
     let(:client) { FactoryGirl.create(:application) }
     let(:owner)  { User.create!(:name => "Joe", :password => "sekret") }
-    let(:params) {
-      {
-        :grant_type    => "password"
-      }
-    }
+    let(:params) { {} }
 
     describe "with a valid owner and client" do
       subject { PasswordAccessTokenRequest.new(client, owner, params) }
@@ -19,7 +15,6 @@ module Doorkeeper::OAuth
 
       its(:token_type)    { should == "bearer" }
       its(:error)         { should be_nil }
-      its(:refresh_token) { should be_nil }
 
       it "has an access token" do
         subject.access_token.token.should =~ /\w+/
@@ -34,7 +29,6 @@ module Doorkeeper::OAuth
       it { should_not be_valid }
       its(:error)         { should == :invalid_resource_owner }
       its(:access_token)  { should be_nil }
-      its(:refresh_token) { should be_nil }
     end
 
     describe "with a valid owner but an invalid client" do
@@ -45,7 +39,6 @@ module Doorkeeper::OAuth
       it { should_not be_valid }
       its(:error)         { should == :invalid_client }
       its(:access_token)  { should be_nil }
-      its(:refresh_token) { should be_nil }
     end
 
     describe "creating the access token" do
@@ -63,9 +56,9 @@ module Doorkeeper::OAuth
       end
 
       it "creates a refresh token if Doorkeeper is configured to do so" do
-        Doorkeeper.configure { 
+        Doorkeeper.configure {
           orm DOORKEEPER_ORM
-          use_refresh_token 
+          use_refresh_token
         }
 
         Doorkeeper::AccessToken.should_receive(:create!).with({
@@ -155,23 +148,9 @@ module Doorkeeper::OAuth
     end
 
     describe "with errors" do
-      def token(params)
-        PasswordAccessTokenRequest.new(client, owner, params)
-      end
-
-      it "includes the error in the response" do
-        access_token = token(params.except(:grant_type))
-        access_token.error_response.name.should == :invalid_request
-      end
-
       describe "when client is not present" do
         subject     { PasswordAccessTokenRequest.new(nil, owner, params) }
         its(:error) { should == :invalid_client }
-      end
-
-      describe "when :grant_type is not 'password'" do
-        subject     { token(params.merge(:grant_type => "invalid")) }
-        its(:error) { should == :unsupported_grant_type }
       end
     end
   end
