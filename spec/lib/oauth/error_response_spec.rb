@@ -24,17 +24,17 @@ module Doorkeeper::OAuth
       end
     end
 
-    it 'ignores empty attributes' do
+    it 'ignores empty error values' do
       subject = ErrorResponse.new(:error => :some_error, :state => nil)
-      subject.attributes.should_not have_key(:state)
+      subject.body.should_not have_key(:state)
     end
 
-    context 'json response' do
-      subject { ErrorResponse.new(:name => :some_error, :state => :some_state).as_json }
+    describe '.body' do
+      subject { ErrorResponse.new(:name => :some_error, :state => :some_state) }
 
-      it { should have_key('error') }
-      it { should have_key('error_description') }
-      it { should have_key('state') }
+      its(:body) { should have_key(:error) }
+      its(:body) { should have_key(:error_description) }
+      its(:body) { should have_key(:state) }
     end
   end
 end
