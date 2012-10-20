@@ -48,7 +48,7 @@ module Doorkeeper
       end
 
       def invalid_redirect_uri
-        uri_with_query(redirect_uri, error_response.attributes)
+        uri_with_query(redirect_uri, error_response.body)
       end
 
       def redirect_on_error?

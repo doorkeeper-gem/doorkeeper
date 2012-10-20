@@ -3,7 +3,10 @@ module Doorkeeper
     class DoorkeeperError < StandardError
     end
 
-    class InvalidRequestStrategy < DoorkeeperError
+    class InvalidAuthorizationStrategy < DoorkeeperError
+    end
+
+    class InvalidTokenStrategy < DoorkeeperError
     end
 
     class MissingRequestStrategy < DoorkeeperError
