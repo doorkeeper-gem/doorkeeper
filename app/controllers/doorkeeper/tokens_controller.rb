@@ -11,23 +11,14 @@ module Doorkeeper
         error = strategy.request.error_response
         render :json => error.body, :status => error.status
       end
-    rescue Errors::DoorkeeperError => error
-      handle_invalid_request(error)
+    rescue Errors::DoorkeeperError => e
+      handle_token_exception e
     end
 
   private
 
     def strategy
-      @strategy ||= server.request params[:grant_type]
-    end
-
-    def handle_invalid_request(error)
-      error_name = case error
-        when Errors::InvalidRequestStrategy then :unsupported_grant_type
-        when Errors::MissingRequestStrategy then :invalid_request
-      end
-      response = OAuth::ErrorResponse.new :name => error_name, :state => params[:state]
-      render :json => response.body, :status => response.status
+      @strategy ||= server.token_request params[:grant_type]
     end
   end
 end

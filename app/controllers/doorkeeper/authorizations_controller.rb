@@ -18,8 +18,8 @@ module Doorkeeper
         @error = authorization.error_response.body
         render :error
       end
-    rescue Errors::DoorkeeperError => error
-      handle_invalid_request(error)
+    rescue Errors::DoorkeeperError => e
+      handle_authorization_exception e
     end
 
     def show
@@ -52,19 +52,7 @@ module Doorkeeper
     end
 
     def strategy
-      @strategy ||= server.request params[:response_type]
-    end
-
-    def handle_invalid_request(error)
-      error_name = case error
-        when Errors::InvalidRequestStrategy then :unsupported_response_type
-        when Errors::MissingRequestStrategy then :invalid_request
-      end
-
-      error = OAuth::ErrorResponse.new :name => error_name, :state => params[:state]
-      path  = OAuth::Authorization::URIBuilder.uri_with_query server.client_via_uid.redirect_uri, error.body
-
-      redirect_to path
+      @strategy ||= server.authorization_request params[:response_type]
     end
   end
 end

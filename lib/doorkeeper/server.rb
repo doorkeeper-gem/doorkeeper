@@ -6,17 +6,13 @@ module Doorkeeper
       @context = context
     end
 
-    # Available strategies:
-    # :code, :token, :password, :client_credentials, :authorization_code, :refresh_token
-    def strategy_for(strategy)
-      raise Errors::MissingRequestStrategy unless strategy.present?
-      "Doorkeeper::Request::#{strategy.to_s.camelize}".constantize
-    rescue NameError
-      raise Errors::InvalidRequestStrategy
+    def authorization_request(strategy)
+      klass = Request.authorization_strategy strategy
+      klass.build self
     end
 
-    def request(strategy)
-      klass = strategy_for strategy
+    def token_request(strategy)
+      klass = Request.token_strategy strategy
       klass.build self
     end
 
