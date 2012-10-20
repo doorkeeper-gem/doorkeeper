@@ -26,4 +26,20 @@ feature 'Token endpoint' do
     should_have_json 'access_token', Doorkeeper::AccessToken.first.token
     should_have_json 'expires_in', nil
   end
+
+  scenario 'returns unsupported_grant_type for invalid grant_type param' do
+    post token_endpoint_url(:code => @authorization.token, :client => @client, :grant_type => 'nothing')
+
+    should_not_have_json 'access_token'
+    should_have_json 'error', 'unsupported_grant_type'
+    should_have_json 'error_description', translated_error_message('unsupported_grant_type')
+  end
+
+  scenario 'returns invalid_request if grant_type is missing' do
+    post token_endpoint_url(:code => @authorization.token, :client => @client, :grant_type => '')
+
+    should_not_have_json 'access_token'
+    should_have_json 'error', 'invalid_request'
+    should_have_json 'error_description', translated_error_message('invalid_request')
+  end
 end

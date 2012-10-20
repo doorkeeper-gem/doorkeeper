@@ -9,6 +9,7 @@ module Doorkeeper
     # Available strategies:
     # :code, :token, :password, :client_credentials, :authorization_code, :refresh_token
     def strategy_for(strategy)
+      raise Doorkeeper::Errors::MissingRequestStrategy unless strategy.present?
       "Doorkeeper::Request::#{strategy.to_s.camelize}".constantize
     rescue NameError
       raise Doorkeeper::Errors::InvalidRequestStrategy

@@ -9,6 +9,12 @@ class Doorkeeper::TokensController < Doorkeeper::ApplicationController
     else
       render :json => strategy.request.error_response, :status => strategy.request.error_response.status
     end
+  rescue Doorkeeper::Errors::InvalidRequestStrategy
+    error = Doorkeeper::OAuth::ErrorResponse.new :name => :unsupported_grant_type
+    render :json => error, :status => error.status
+  rescue Doorkeeper::Errors::MissingRequestStrategy
+    error = Doorkeeper::OAuth::ErrorResponse.new :name => :invalid_request
+    render :json => error, :status => error.status
   end
 
   private
