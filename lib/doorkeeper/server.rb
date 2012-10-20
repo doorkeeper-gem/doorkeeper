@@ -29,6 +29,14 @@ module Doorkeeper
       @client ||= Doorkeeper::OAuth::Client.authenticate(credentials)
     end
 
+    def client_via_uid
+      @client_via_uid ||= Doorkeeper::OAuth::Client.find(parameters[:client_id])
+    end
+
+    def current_resource_owner
+      context.send :current_resource_owner
+    end
+
     # TODO: Use configuration and evaluate proper context on block
     def resource_owner
       context.send :resource_owner_from_credentials

@@ -9,6 +9,8 @@ require 'doorkeeper/request/authorization_code'
 require 'doorkeeper/request/password'
 require 'doorkeeper/request/client_credentials'
 require 'doorkeeper/request/refresh_token'
+require 'doorkeeper/request/code'
+require 'doorkeeper/request/token'
 
 module Doorkeeper
   autoload :Validations, "doorkeeper/validations"
@@ -17,12 +19,13 @@ module Doorkeeper
     autoload :Scopes,                     "doorkeeper/oauth/scopes"
     autoload :Error,                      "doorkeeper/oauth/error"
     autoload :ErrorResponse,              "doorkeeper/oauth/error_response"
-    autoload :AuthorizationRequest,       "doorkeeper/oauth/authorization_request"
     autoload :AccessTokenRequest,         "doorkeeper/oauth/access_token_request"
     autoload :RefreshTokenRequest,        "doorkeeper/oauth/refresh_token_request"
     autoload :PasswordAccessTokenRequest, "doorkeeper/oauth/password_access_token_request"
     autoload :ClientCredentialsRequest,   "doorkeeper/oauth/client_credentials_request"
     autoload :Authorization,              "doorkeeper/oauth/authorization"
+    autoload :AuthorizationCodeRequest,   "doorkeeper/oauth/authorization_code_request"
+    autoload :TokenRequest,               "doorkeeper/oauth/token_request"
     autoload :Client,                     "doorkeeper/oauth/client"
     autoload :Token,                      "doorkeeper/oauth/token"
 
