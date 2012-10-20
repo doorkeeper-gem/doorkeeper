@@ -7,15 +7,12 @@ module Doorkeeper::OAuth
     include Doorkeeper::OAuth::Helpers
 
     ATTRIBUTES = [
-      :grant_type,
       :username,
       :password,
       :scope,
       :refresh_token
     ]
 
-    validate :attributes,     :error => :invalid_request
-    validate :grant_type,     :error => :unsupported_grant_type
     validate :client,         :error => :invalid_client
     validate :resource_owner, :error => :invalid_resource_owner
     validate :scope,          :error => :invalid_scope
@@ -96,10 +93,6 @@ module Doorkeeper::OAuth
       })
     end
 
-    def validate_attributes
-      grant_type.present?
-    end
-
     def refresh_token_enabled?
       configuration.refresh_token_enabled?
     end
@@ -111,10 +104,6 @@ module Doorkeeper::OAuth
     def validate_scope
       return true unless scope.present?
       ScopeChecker.valid?(scope, configuration.scopes)
-    end
-
-    def validate_grant_type
-      grant_type == 'password'
     end
 
     def validate_resource_owner
