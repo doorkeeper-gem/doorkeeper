@@ -9,8 +9,7 @@ module Doorkeeper::OAuth
     ATTRIBUTES = [
       :username,
       :password,
-      :scope,
-      :refresh_token
+      :scope
     ]
 
     validate :client,         :error => :invalid_client

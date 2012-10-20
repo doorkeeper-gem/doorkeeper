@@ -15,7 +15,6 @@ module Doorkeeper::OAuth
 
       its(:token_type)    { should == "bearer" }
       its(:error)         { should be_nil }
-      its(:refresh_token) { should be_nil }
 
       it "has an access token" do
         subject.access_token.token.should =~ /\w+/
@@ -30,7 +29,6 @@ module Doorkeeper::OAuth
       it { should_not be_valid }
       its(:error)         { should == :invalid_resource_owner }
       its(:access_token)  { should be_nil }
-      its(:refresh_token) { should be_nil }
     end
 
     describe "with a valid owner but an invalid client" do
@@ -41,7 +39,6 @@ module Doorkeeper::OAuth
       it { should_not be_valid }
       its(:error)         { should == :invalid_client }
       its(:access_token)  { should be_nil }
-      its(:refresh_token) { should be_nil }
     end
 
     describe "creating the access token" do
