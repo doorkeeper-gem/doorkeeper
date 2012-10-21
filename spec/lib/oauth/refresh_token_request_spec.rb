@@ -2,58 +2,55 @@ require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
   describe RefreshTokenRequest do
-    let(:server)        { mock :server, :access_token_expires_in => 2.minutes }
-    let(:refresh_token) { FactoryGirl.create(:access_token, :use_refresh_token => true) }
-    let(:client)        { refresh_token.application }
+    let(:server)         { mock :server, :access_token_expires_in => 2.minutes }
+    let!(:refresh_token) { FactoryGirl.create(:access_token, :use_refresh_token => true) }
+    let(:client)         { refresh_token.application }
 
-    it 'creates a new token' do
-      request = RefreshTokenRequest.new(server, refresh_token, client)
+    subject do
+      RefreshTokenRequest.new server, refresh_token, client
+    end
+
+    it 'issues a new token for the client' do
       expect do
-        request.authorize
-      end.to change { Doorkeeper::AccessToken.count }.by(1)
-    end
-
-    describe "with a valid authorization code and client" do
-      subject { RefreshTokenRequest.new(server, refresh_token, client) }
-
-      before do
         subject.authorize
-      end
-
-      it { should be_valid }
-      its(:token_type)    { should == "bearer" }
-      its(:error)         { should be_nil }
-      its(:refresh_token) { should_not be_nil }
-
-      it "has an access token" do
-        subject.access_token.token.should =~ /\w+/
-      end
+      end.to change { client.access_tokens.count }.by(1)
     end
 
-    describe "with errors" do
-      describe "when :refresh_token is missing" do
-        subject     { RefreshTokenRequest.new(server, nil, client) }
-        its(:error) { should == :invalid_request }
-      end
+    it 'revokes the previous token' do
+      expect do
+        subject.authorize
+      end.to change { refresh_token.revoked? }.from(false).to(true)
+    end
 
-      describe "when client is not present" do
-        subject     { RefreshTokenRequest.new(server, refresh_token, nil) }
-        its(:error) { should == :invalid_client }
-      end
+    it 'requires the refresh token' do
+      subject.refresh_token = nil
+      subject.validate
+      subject.error.should == :invalid_request
+    end
 
-      describe "when granted application does not match" do
-        subject { RefreshTokenRequest.new(server, refresh_token, FactoryGirl.create(:application)) }
+    it 'requires client' do
+      subject.client = nil
+      subject.validate
+      subject.error.should == :invalid_client
+    end
 
-        its(:error) { should == :invalid_client }
-      end
+    it "requires the token's client and current client to match" do
+      subject.client = FactoryGirl.create(:application)
+      subject.validate
+      subject.error.should == :invalid_client
+    end
 
-      describe "when :refresh_token is revoked" do
-        it "error is :invalid_request" do
-          refresh_token.revoke # create grant instance
-          revoked = RefreshTokenRequest.new(server, refresh_token, client)
-          revoked.error.should == :invalid_request
-        end
-      end
+    it 'rejects revoked tokens' do
+      refresh_token.revoke
+      subject.validate
+      subject.error.should == :invalid_request
+    end
+
+    it 'accepts expired tokens' do
+      refresh_token.expires_in = -1
+      refresh_token.save
+      subject.validate
+      subject.should be_valid
     end
   end
 end

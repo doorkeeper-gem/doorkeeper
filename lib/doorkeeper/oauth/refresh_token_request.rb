@@ -13,10 +13,10 @@ module Doorkeeper
         @server        = server
         @refresh_token = refresh_token
         @client        = client
-        validate
       end
 
       def authorize
+        validate
         revoke_and_create_access_token if valid?
       end
 
@@ -31,10 +31,6 @@ module Doorkeeper
 
       def valid?
         self.error.nil?
-      end
-
-      def token_type
-        "bearer"
       end
 
       def error_response
