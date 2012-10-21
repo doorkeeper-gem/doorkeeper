@@ -1,6 +1,7 @@
 module Doorkeeper
   class TokensController < ::Doorkeeper::ApplicationController
     def create
+      # TODO: use headers and status from response object
       response.headers.merge!({
         'Pragma'        => 'no-cache',
         'Cache-Control' => 'no-store',

@@ -13,6 +13,7 @@ module Doorkeeper
   module OAuth
     autoload :Scopes,                     "doorkeeper/oauth/scopes"
     autoload :Error,                      "doorkeeper/oauth/error"
+    autoload :TokenResponse,              "doorkeeper/oauth/token_response"
     autoload :ErrorResponse,              "doorkeeper/oauth/error_response"
     autoload :AuthorizationCodeRequest,   "doorkeeper/oauth/authorization_code_request"
     autoload :RefreshTokenRequest,        "doorkeeper/oauth/refresh_token_request"

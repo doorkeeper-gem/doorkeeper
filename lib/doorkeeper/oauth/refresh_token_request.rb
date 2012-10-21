@@ -17,24 +17,26 @@ module Doorkeeper
 
       def authorize
         validate
-        revoke_and_create_access_token if valid?
+        @response = if valid?
+          revoke_and_create_access_token
+          OAuth::TokenResponse.new access_token
+        else
+          OAuth::ErrorResponse.from_request(self)
+        end
       end
 
+      # TODO: remove this when API is consistent
       def authorization
-        {
-          'access_token'  => access_token.token,
-          'token_type'    => access_token.token_type,
-          'expires_in'    => access_token.expires_in,
-          'refresh_token' => access_token.refresh_token,
-        }
+        @response.body
       end
 
       def valid?
         self.error.nil?
       end
 
+      # TODO: remove this when API is consistent
       def error_response
-        Doorkeeper::OAuth::ErrorResponse.from_request(self)
+        @response
       end
 
     private
