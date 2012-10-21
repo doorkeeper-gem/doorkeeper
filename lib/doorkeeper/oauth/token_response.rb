@@ -13,6 +13,7 @@ module Doorkeeper
           'token_type'    => token.token_type,
           'expires_in'    => token.expires_in,
           'refresh_token' => token.refresh_token,
+          'scope'         => token.scopes_string
         }
       end
 
