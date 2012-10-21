@@ -22,7 +22,7 @@ module Doorkeeper::OAuth
 
     it 'has successful response when issue was created' do
       subject.authorize
-      subject.response.should be_a(ClientCredentialsRequest::Response)
+      subject.response.should be_a(TokenResponse)
     end
 
     context 'if issue was not created' do

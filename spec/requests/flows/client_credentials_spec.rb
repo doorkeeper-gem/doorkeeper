@@ -13,10 +13,10 @@ describe 'Client Credentials Request' do
       should_have_json 'access_token', Doorkeeper::AccessToken.first.token
       should_have_json 'expires_in', Doorkeeper.configuration.access_token_expires_in
       should_have_json 'scope', ''
+      should_have_json 'refresh_token', nil
 
       should_not_have_json 'error'
       should_not_have_json 'error_description'
-      should_not_have_json 'refresh_token'
     end
 
     context 'with scopes' do

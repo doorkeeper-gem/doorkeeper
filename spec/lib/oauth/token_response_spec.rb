@@ -1,9 +1,9 @@
 require 'spec_helper'
-require 'doorkeeper/oauth/client_credentials/response'
+require 'doorkeeper/oauth/token_response'
 
-class Doorkeeper::OAuth::ClientCredentialsRequest
-  describe Response do
-    subject { Response.new(stub.as_null_object) }
+module Doorkeeper::OAuth
+  describe TokenResponse do
+    subject { TokenResponse.new(stub.as_null_object) }
 
     it 'includes access token response headers' do
       headers = subject.headers
@@ -15,24 +15,18 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
       subject.status.should == :success
     end
 
-    it 'token_type is bearer' do
-      subject.token_type.should == 'bearer'
-    end
-
-    it 'can be serialized to JSON' do
-      subject.should respond_to(:to_json)
-    end
-
-    context 'attributes' do
+    describe '.body' do
       let(:access_token) do
         mock :access_token, {
           :token => 'some-token',
           :expires_in => '3600',
-          :scopes_string => 'two scopes'
+          :scopes_string => 'two scopes',
+          :refresh_token => 'some-refresh-token',
+          :token_type => 'bearer'
         }
       end
 
-      subject { Response.new(access_token).attributes }
+      subject { TokenResponse.new(access_token).body }
 
       it 'includes :access_token' do
         subject['access_token'].should == 'some-token'
@@ -50,8 +44,8 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
         subject['scope'].should == 'two scopes'
       end
 
-      it 'does not include refresh_token (disabled in this flow)' do
-        subject.should_not have_key('refresh_token')
+      it 'includes :refresh_token' do
+        subject['refresh_token'].should == 'some-refresh-token'
       end
     end
   end
