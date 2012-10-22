@@ -30,8 +30,6 @@ module Doorkeeper::OAuth
         subject.issuer = stub :create => false, :error => :invalid
       end
 
-      its(:authorize) { should be_false }
-
       it 'has an error response' do
         subject.authorize
         subject.response.should be_a(Doorkeeper::OAuth::ErrorResponse)

@@ -32,7 +32,6 @@ module Doorkeeper
         else
           ErrorResponse.from_request(self)
         end
-        status
       end
 
       # TODO: remove this when API is consistent

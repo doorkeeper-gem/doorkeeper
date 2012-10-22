@@ -19,6 +19,10 @@ module Doorkeeper
       def status
         :unauthorized
       end
+
+      def headers
+        { 'Cache-Control' => 'no-store', 'Pragma' => 'no-cache' }
+      end
     end
   end
 end

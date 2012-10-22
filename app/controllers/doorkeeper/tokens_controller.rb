@@ -1,17 +1,12 @@
 module Doorkeeper
-  class TokensController < ::Doorkeeper::ApplicationController
+  class TokensController < ActionController::Metal
+    include Helpers::Controller
+
     def create
-      # TODO: use headers and status from response object
-      response.headers.merge!({
-        'Pragma'        => 'no-cache',
-        'Cache-Control' => 'no-store',
-      })
-      if strategy.authorize
-        render :json => strategy.request.authorization
-      else
-        error = strategy.request.error_response
-        render :json => error.body, :status => error.status
-      end
+      response = strategy.authorize
+      self.headers.merge! response.headers
+      self.response_body = response.body.to_json
+      self.status        = response.status
     rescue Errors::DoorkeeperError => e
       handle_token_exception e
     end

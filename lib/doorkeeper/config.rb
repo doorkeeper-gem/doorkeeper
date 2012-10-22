@@ -139,7 +139,7 @@ module Doorkeeper
            :default => lambda{|routes| }
     option :resource_owner_from_credentials,
            :default => lambda{|routes|
-             logger.warn(I18n.translate('doorkeeper.errors.messages.credential_flow_not_configured'))
+             warn(I18n.translate('doorkeeper.errors.messages.credential_flow_not_configured'))
              nil
            }
     option :access_token_expires_in,      :default => 7200
