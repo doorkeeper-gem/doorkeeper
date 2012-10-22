@@ -9,45 +9,40 @@ module Doorkeeper::OAuth
 
     attr_accessor :server, :resource_owner, :client
 
-    def initialize(server, client, owner, parameters = {})
+    def initialize(server, client, resource_owner, parameters = {})
       @server          = server
-      @resource_owner  = owner
+      @resource_owner  = resource_owner
       @client          = client
       @original_scopes = parameters[:scope]
-      validate
     end
 
     def authorize
-      if valid?
+      validate
+      @response = if valid?
         find_or_create_access_token
+        TokenResponse.new access_token
+      else
+        ErrorResponse.from_request self
       end
     end
 
+    # TODO: remove this when API is consistent
     def authorization
-      auth = {
-        'access_token' => access_token.token,
-        'token_type'   => access_token.token_type,
-        'expires_in'   => access_token.expires_in,
-      }
-      auth.merge!({'refresh_token' => access_token.refresh_token}) if server.refresh_token_enabled?
-      auth
+      @response.body
     end
 
     def valid?
       self.error.nil?
     end
 
+    # TODO: remove this when API is consistent
+    def error_response
+      @response
+    end
+
     def access_token
       return unless client.present? && resource_owner.present?
       @access_token ||= Doorkeeper::AccessToken.matching_token_for client, resource_owner.id, scopes
-    end
-
-    def token_type
-      "bearer"
-    end
-
-    def error_response
-      Doorkeeper::OAuth::ErrorResponse.from_request(self)
     end
 
     def scopes
