@@ -34,11 +34,6 @@ module Doorkeeper
         end
       end
 
-      # TODO: remove this when API is consistent
-      def authorization
-        @response.body
-      end
-
       # TODO: duplicated code in all flows
       def scopes
         @scopes ||= if @original_scopes.present?

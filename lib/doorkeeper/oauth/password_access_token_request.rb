@@ -26,18 +26,8 @@ module Doorkeeper::OAuth
       end
     end
 
-    # TODO: remove this when API is consistent
-    def authorization
-      @response.body
-    end
-
     def valid?
       self.error.nil?
-    end
-
-    # TODO: remove this when API is consistent
-    def error_response
-      @response
     end
 
     def access_token
