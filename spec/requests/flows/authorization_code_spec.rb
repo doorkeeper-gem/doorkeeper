@@ -81,8 +81,6 @@ feature 'Authorization Code Flow' do
     should_have_json 'access_token', Doorkeeper::AccessToken.first.token
     should_have_json 'token_type',   "bearer"
     should_have_json 'expires_in',   Doorkeeper::AccessToken.first.expires_in
-
-    should_not_have_json 'refresh_token'
   end
 
   context 'with scopes' do
