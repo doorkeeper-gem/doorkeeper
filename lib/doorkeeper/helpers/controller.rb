@@ -7,7 +7,7 @@ module Doorkeeper
                   :authenticate_admin!,
                   :current_resource_owner,
                   :resource_owner_from_credentials,
-                  :skip_authorization?
+                  :skip_authorization!
       end
 
       def authenticate_resource_owner!
@@ -26,8 +26,8 @@ module Doorkeeper
         instance_eval &Doorkeeper.configuration.authenticate_admin
       end
       
-      def skip_authorization?
-         Doorkeeper.configuration.skip_authorization
+      def skip_authorization!
+         instance_eval &Doorkeeper.configuration.skip_authorization
       end
     end
   end
