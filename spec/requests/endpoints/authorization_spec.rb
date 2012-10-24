@@ -23,41 +23,25 @@ feature 'Authorization endpoint' do
       i_should_see "Authorize MyApp to use your account?"
     end
 
-    scenario 'accepts "code" response type' do
-      visit authorization_endpoint_url(:client => @client, :response_type => "code")
-      i_should_see "Authorize"
-    end
-
-    scenario 'accepts "token" response type' do
-      visit authorization_endpoint_url(:client => @client, :response_type => "token")
-      i_should_see "Authorize"
-    end
-  end
-
-  context 'with scopes' do
-    background do
-      create_resource_owner
-      sign_in
-      default_scopes_exist  :public
-      optional_scopes_exist :write
-    end
-
-    scenario "displays default scopes when no scope was requested" do
-      visit authorization_endpoint_url(:client => @client)
-      i_should_see "Access your public data"
-      i_should_not_see "Update your data"
-    end
-
     scenario "displays all requested scopes" do
+      default_scopes_exist :public
+      optional_scopes_exist :write
       visit authorization_endpoint_url(:client => @client, :scope => "public write")
       i_should_see "Access your public data"
       i_should_see "Update your data"
     end
+  end
 
-    scenario "does not display default scope if it was not requested" do
-      visit authorization_endpoint_url(:client => @client, :scope => "write")
-      i_should_not_see "Access your public data"
-      i_should_see "Update your data"
+  context 'with a invalid request' do
+    background do
+      create_resource_owner
+      sign_in
+    end
+
+    scenario "displays the related error" do
+      visit authorization_endpoint_url(:client => @client, :response_type => "")
+      i_should_not_see "Authorize"
+      i_should_see_translated_error_message :unsupported_response_type
     end
   end
 end

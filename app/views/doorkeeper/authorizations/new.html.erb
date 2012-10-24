@@ -1,14 +1,14 @@
 <div class="span16">
-  <h2>Authorize <%= @authorization.client.name %> to use your account?</h2>
+  <h2>Authorize <%= @pre_auth.client.name %> to use your account?</h2>
 </div>
 
 <div class="span16">
-  <% if @authorization.scopes %>
+  <% if @pre_auth.scopes %>
   <p>
     This application will be able to:
   </p>
   <ul>
-    <% @authorization.scopes.each do |scope| %>
+    <% @pre_auth.scopes.each do |scope| %>
       <li><%= t scope, :scope => [:doorkeeper, :scopes]  %></li>
     <% end %>
   </ul>
@@ -16,21 +16,21 @@
 
   <div class="inline_block">
     <%= form_tag oauth_authorization_path, :method => :post do %>
-      <%= hidden_field_tag :client_id, @authorization.client_id %>
-      <%= hidden_field_tag :redirect_uri, @authorization.redirect_uri %>
-      <%= hidden_field_tag :state, @authorization.state %>
-      <%= hidden_field_tag :response_type, @authorization.response_type %>
-      <%= hidden_field_tag :scope, @authorization.scope %>
+      <%= hidden_field_tag :client_id, @pre_auth.client.uid %>
+      <%= hidden_field_tag :redirect_uri, @pre_auth.redirect_uri %>
+      <%= hidden_field_tag :state, @pre_auth.state %>
+      <%= hidden_field_tag :response_type, @pre_auth.response_type %>
+      <%= hidden_field_tag :scope, @pre_auth.scope %>
       <%= submit_tag "Authorize", :class => "btn success" %> or
     <% end %>
   </div>
   <div class="inline_block">
     <%= form_tag oauth_authorization_path, :method => :delete do %>
-      <%= hidden_field_tag :client_id, @authorization.client_id %>
-      <%= hidden_field_tag :redirect_uri, @authorization.redirect_uri %>
-      <%= hidden_field_tag :state, @authorization.state %>
-      <%= hidden_field_tag :response_type, @authorization.response_type %>
-      <%= hidden_field_tag :scope, @authorization.scope %>
+      <%= hidden_field_tag :client_id, @pre_auth.client.uid %>
+      <%= hidden_field_tag :redirect_uri, @pre_auth.redirect_uri %>
+      <%= hidden_field_tag :state, @pre_auth.state %>
+      <%= hidden_field_tag :response_type, @pre_auth.response_type %>
+      <%= hidden_field_tag :scope, @pre_auth.scope %>
       <%= submit_tag "Deny", :class => "btn" %>
     <% end %>
   </div>

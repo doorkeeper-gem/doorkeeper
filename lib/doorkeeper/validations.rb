@@ -13,6 +13,7 @@ module Doorkeeper
     end
 
     def valid?
+      validate
       @error.nil?
     end
 

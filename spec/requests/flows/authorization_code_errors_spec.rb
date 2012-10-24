@@ -12,37 +12,6 @@ feature 'Authorization Code Flow Errors' do
     access_grant_should_not_exist
   end
 
-  scenario "redirects with :invalid_request error when :response_type is missing" do
-    visit authorization_endpoint_url(:client => @client, :response_type => "")
-    i_should_be_on_client_callback @client
-    url_should_have_param "error", "invalid_request"
-    url_should_have_param "error_description", translated_error_message(:invalid_request)
-  end
-
-  scenario "redirects with :unsupported_response_type error for invalid :response_type" do
-    visit authorization_endpoint_url(:client => @client, :response_type => "invalid")
-    i_should_be_on_client_callback @client
-    url_should_have_param "error", "unsupported_response_type"
-    url_should_have_param "error_description", translated_error_message(:unsupported_response_type)
-  end
-
-  [
-    [:client_id,     :invalid_client],
-    [:redirect_uri,  :invalid_redirect_uri],
-  ].each do |error|
-    scenario "displays #{error.last.inspect} error for invalid #{error.first.inspect}" do
-      visit authorization_endpoint_url(:client => @client, error.first => "invalid")
-      i_should_not_see "Authorize"
-      i_should_see_translated_error_message error.last
-    end
-
-    scenario "displays #{error.last.inspect} error when #{error.first.inspect} is missing" do
-      visit authorization_endpoint_url(:client => @client, error.first => "")
-      i_should_not_see "Authorize"
-      i_should_see_translated_error_message error.last
-    end
-  end
-
   context 'when access was denied' do
     scenario 'redirects with error' do
       visit authorization_endpoint_url(:client => @client)
@@ -61,20 +30,6 @@ feature 'Authorization Code Flow Errors' do
       i_should_be_on_client_callback @client
       url_should_not_have_param "code"
       url_should_have_param "state", "return-this"
-    end
-  end
-
-  context 'with scopes' do
-    background do
-      optional_scopes_exist :write
-    end
-
-    scenario "redirects with :invalid_scope error when scope does not exists" do
-      visit authorization_endpoint_url(:client => @client, :scope => "invalid")
-
-      i_should_be_on_client_callback @client
-      url_should_have_param "error", "invalid_scope"
-      url_should_have_param "error_description", translated_error_message(:invalid_scope)
     end
   end
 end
