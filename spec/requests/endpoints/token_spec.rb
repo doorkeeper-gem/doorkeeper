@@ -10,6 +10,7 @@ feature 'Token endpoint' do
     post token_endpoint_url(:code => @authorization.token, :client => @client)
     should_have_header 'Pragma', 'no-cache'
     should_have_header 'Cache-Control', 'no-store'
+    should_have_header 'Content-Type', 'application/json; charset=utf-8'
   end
 
   scenario 'accepts client credentials with basic auth header' do
