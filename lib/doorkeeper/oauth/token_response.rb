@@ -18,7 +18,7 @@ module Doorkeeper
       end
 
       def status
-        :success
+        :ok
       end
 
       def headers
