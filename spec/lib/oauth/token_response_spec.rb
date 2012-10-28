@@ -11,8 +11,8 @@ module Doorkeeper::OAuth
       headers.fetch('Pragma').should == 'no-cache'
     end
 
-    it 'status is success' do
-      subject.status.should == :success
+    it 'status is ok' do
+      subject.status.should == :ok
     end
 
     describe '.body' do
