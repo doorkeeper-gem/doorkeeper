@@ -3,8 +3,8 @@ module Doorkeeper
     before_filter :authenticate_resource_owner!
 
     def new
-      if authorization.valid?
-        if authorization.access_token_exists?
+      if authorization.valid?      	
+        if authorization.access_token_exists? || skip_authorization!
           auth = authorization.authorize
           if authorization.success_redirect_uri.present?
             redirect_to authorization.success_redirect_uri
