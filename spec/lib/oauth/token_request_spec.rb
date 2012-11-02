@@ -8,6 +8,7 @@ module Doorkeeper::OAuth
         :redirect_uri => 'http://tst.com/cb',
         :state => nil,
         :scopes => nil,
+        :error => nil,
         :authorizable? => true
       })
     end
