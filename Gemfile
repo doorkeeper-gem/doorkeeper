@@ -1,6 +1,7 @@
 source 'http://rubygems.org'
 
 gem 'jquery-rails'
+gem 'pry'
 
 group :mongoid do
   gem 'mongoid', '~> 3.0'
