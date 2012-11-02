@@ -5,7 +5,12 @@ module Doorkeeper
     # TODO: finish skippable authorization
     def new
       if pre_auth.authorizable?
-        render :new
+        if Doorkeeper::AccessToken.matching_token_for pre_auth.client, current_resource_owner.id, pre_auth.scopes
+          auth = authorization.authorize
+          redirect_to auth.redirect_uri
+        else
+          render :new
+        end
       else
         render :error
       end
