@@ -3,56 +3,55 @@ module Doorkeeper
     before_filter :authenticate_resource_owner!
 
     def new
-      if authorization.valid?
-        if authorization.access_token_exists?
+      if pre_auth.authorizable?
+        # TODO: use configuration (like config.skip_authorization?)
+        if Doorkeeper::AccessToken.matching_token_for pre_auth.client, current_resource_owner.id, pre_auth.scopes
           auth = authorization.authorize
-          if authorization.success_redirect_uri.present?
-            redirect_to authorization.success_redirect_uri
-          else
-            redirect_to oauth_authorization_code_path(:code => auth.token)
-          end
+          redirect_to auth.redirect_uri
+        else
+          render :new
         end
-      elsif authorization.redirect_on_error?
-        redirect_to authorization.invalid_redirect_uri
       else
-        @error = authorization.error_response.body
         render :error
       end
-    rescue Errors::DoorkeeperError => e
-      handle_authorization_exception e
     end
 
     def show
     end
 
+    # TODO: Handle raise invalid authorization
     def create
-      if auth = authorization.authorize
-        if authorization.success_redirect_uri.present?
-          redirect_to authorization.success_redirect_uri
-        else
-          redirect_to oauth_authorization_code_path(:code => auth.token)
-        end
-      elsif authorization.redirect_on_error?
-        redirect_to authorization.invalid_redirect_uri
+      auth = authorization.authorize
+
+      if auth.redirectable?
+        redirect_to auth.redirect_uri
       else
-        @error = authorization.error_response
-        render :error
+        render :json => auth.body, :status => auth.status
       end
     end
 
     def destroy
-      authorization.deny
-      redirect_to authorization.invalid_redirect_uri
+      auth = authorization.deny
+
+      if auth.redirectable?
+        redirect_to auth.redirect_uri
+      else
+        render :json => auth.body, :status => auth.status
+      end
     end
 
   private
+
+    def pre_auth
+      @pre_auth ||= OAuth::PreAuthorization.new(Doorkeeper.configuration, server.client_via_uid, params)
+    end
 
     def authorization
       @authorization ||= strategy.request
     end
 
     def strategy
-      @strategy ||= server.authorization_request params[:response_type]
+      @strategy ||= server.authorization_request pre_auth.response_type
     end
   end
 end

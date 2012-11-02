@@ -101,31 +101,20 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
   describe "GET #new with errors" do
     before do
       default_scopes_exist :public
-      get :new, :client_id => client.uid, :response_type => "token", :scope => "invalid", :redirect_uri => client.redirect_uri
+      get :new, :an_invalid => 'request'
     end
 
-    it "redirects after authorization" do
-      response.should be_redirect
+    it "does not redirect" do
+      response.should_not be_redirect
     end
 
-    it "redirects to client redirect uri" do
-      response.location.should =~ %r[^#{client.redirect_uri}]
+    it 'renders error template' do
+      response.should render_template(:error)
     end
 
-    it "does not include access token in fragment" do
-      fragments("access_token").should be_nil
-    end
-
-    it "includes error in fragment" do
-      fragments("error").should == "invalid_scope"
-    end
-
-    it "includes error description in fragment" do
-      fragments("error_description").should == translated_error_message(:invalid_scope)
-    end
-
-    it "does not issue any access token" do
-      Doorkeeper::AccessToken.all.should be_empty
+    it 'does not issue any token' do
+      Doorkeeper::AccessGrant.count.should be 0
+      Doorkeeper::AccessToken.count.should be 0
     end
   end
 end

@@ -42,12 +42,6 @@ module Doorkeeper
         OAuth::ErrorResponse.new :name => error_name, :state => params[:state]
       end
 
-      def handle_authorization_exception(exception)
-        error = get_error_response_from_exception exception
-        url   = OAuth::Authorization::URIBuilder.uri_with_query server.client_via_uid.redirect_uri, error.body
-        redirect_to url
-      end
-
       def handle_token_exception(exception)
         error = get_error_response_from_exception exception
         self.headers.merge!  error.headers
