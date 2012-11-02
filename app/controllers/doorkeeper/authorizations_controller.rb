@@ -2,9 +2,9 @@ module Doorkeeper
   class AuthorizationsController < ::Doorkeeper::ApplicationController
     before_filter :authenticate_resource_owner!
 
-    # TODO: finish skippable authorization
     def new
       if pre_auth.authorizable?
+        # TODO: use configuration (like config.skip_authorization?)
         if Doorkeeper::AccessToken.matching_token_for pre_auth.client, current_resource_owner.id, pre_auth.scopes
           auth = authorization.authorize
           redirect_to auth.redirect_uri
