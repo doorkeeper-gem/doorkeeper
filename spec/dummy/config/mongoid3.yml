@@ -1,0 +1,18 @@
+development:
+  sessions:
+    default:
+      database: doorkeeper-mongoid3-development
+      hosts:
+        - localhost:27017
+      options:
+        consistency: :strong
+        safe: true
+test:
+  sessions:
+    default:
+      database: doorkeeper-mongoid3-test
+      hosts:
+        - localhost:27017
+      options:
+        consistency: :strong
+        safe: true

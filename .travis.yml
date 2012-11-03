@@ -1,27 +1,21 @@
+language: ruby
 rvm:
-  - 1.9.3
   - 1.8.7
   - 1.9.2
+  - 1.9.3
 env:
-  - DOORKEEPER_ORM=active_record
-  - DOORKEEPER_ORM=mongoid
-  - DOORKEEPER_ORM=mongo_mapper
-gemfile:
-  - gemfiles/gemfile.rails-3.1.x
-  - gemfiles/gemfile.rails-3.2.x
+  - rails=3.2.8
+  - rails=3.1.8
+  - orm=mongoid2
+  - orm=mongoid3
+  - orm=mongo_mapper
 services:
   - mongodb
 matrix:
+  allow_failures:
+    - env: orm=mongoid2
   exclude:
     - rvm: 1.8.7
-      env: DOORKEEPER_ORM=mongoid
-      gemfile: gemfiles/gemfile.rails-3.1.x
-    - rvm: 1.8.7
-      env: DOORKEEPER_ORM=mongoid
-      gemfile: gemfiles/gemfile.rails-3.2.x
+      env: orm=mongoid3
     - rvm: 1.9.2
-      env: DOORKEEPER_ORM=mongoid
-      gemfile: gemfiles/gemfile.rails-3.1.x
-    - rvm: 1.9.2
-      env: DOORKEEPER_ORM=mongoid
-      gemfile: gemfiles/gemfile.rails-3.2.x
+      env: orm=mongoid3

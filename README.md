@@ -53,37 +53,23 @@ Don't forget to run the migration with:
 
     rake db:migrate
 
-### Mongoid (only doorkeeper v0.5+)
+### Mongoid / MongoMapper (only doorkeeper v0.5+)
 
-Doorkeeper currently supports Mongoid 2 and 3. To start using it, you have to set the `orm` configuration:
-
-``` ruby
-Doorkeeper.configure do
-  orm :mongoid
-end
-```
-
-**Note:** Make sure you create indexes for doorkeeper models. You can do this either by running `rake db:mongoid:create_indexes`
-or (if you're using Mongoid 2) by adding `autocreate_indexes: true` to your `config/mongoid.yml`
-
-To run the test suite with Mongoid you can run `DOORKEEPER_ORM=mongoid bundle exec rake`.  Note that by default this runs the suite with Mongoid 3.0.x.  To run the test suite with Mongoid 2.4.x, you will need to do the following:
-
-1. Change the version in the :mongoid group in the Gemfile from 3.0 to 2.4
-2. Replace the spec/dummy/config/mongoid.yml file with the spec/dummy/config/mongoid_2.yml file.
-
-With these changes the test suite will run with Mongoid 2.4.x
-
-### MongoMapper (only doorkeeper v0.5+)
-
-Doorkeeper currently supports MongoMapper git HEAD. To start using it, you have to set the `orm` configuration:
+Doorkeeper currently supports MongoMapper, Mongoid 2 and 3. To start using it, you have to set the `orm` configuration:
 
 ``` ruby
 Doorkeeper.configure do
-  orm :mongo_mapper
+  orm :mongoid2 # or :mongoid3, :mongo_mapper
 end
 ```
 
-Then generate the `db/indexes.rb` file and create indexes for the doorkeeper models:
+#### Mongoid indexes
+
+Make sure you create indexes for doorkeeper models. You can do this either by running `rake db:mongoid:create_indexes` or (if you're using Mongoid 2) by adding `autocreate_indexes: true` to your `config/mongoid.yml`
+
+#### MongoMapper indexes
+
+Generate the `db/indexes.rb` file and create indexes for the doorkeeper models:
 
     rails generate doorkeeper:mongo_mapper:indexes
     rake db:index
@@ -248,6 +234,29 @@ The logic is the same as the `resource_owner_authenticator` block. **Note:** sin
 
 If you want to upgrade doorkeeper to a new version, check out the [upgrading notes](https://github.com/applicake/doorkeeper/wiki/Migration-from-old-versions) and take a look at the [changelog](https://github.com/applicake/doorkeeper/blob/master/CHANGELOG.md).
 
+### Development
+
+To run the local engine server:
+
+```
+rails=3.2.8 orm=active_record bundle install
+rails=3.2.8 orm=active_record bundle exec rails server
+````
+
+By default, it uses the latest Rails version with ActiveRecord. To run the tests:
+
+```
+rails=3.2.8 orm=active_record bundle exec rake
+```
+
+Or you might prefer to run `script/run_all` to integrate against all ORMs.
+
+### Contributing
+
+Want to contribute and don't know where to start? Check out [features we're missing](https://github.com/applicake/doorkeeper/wiki/Supported-Features), create [example apps](https://github.com/applicake/doorkeeper/wiki/Example-Applications), integrate the gem with your app and let us know!
+
+Also, check out our [contributing guidelines page](https://github.com/applicake/doorkeeper/wiki/Contributing).
+
 ## Other resources
 
 ### Wiki
@@ -265,12 +274,6 @@ Check out this screencast from [railscasts.com](http://railscasts.com/): [#353 O
 ### Client applications
 
 After you set up the provider, you may want to create a client application to test the integration. Check out these [client examples](https://github.com/applicake/doorkeeper/wiki/Example-Applications) in our wiki or follow this [tutorial here](https://github.com/applicake/doorkeeper/wiki/Testing-your-provider-with-OAuth2-gem).
-
-### Contributing/Development
-
-Want to contribute and don't know where to start? Check out [features we're missing](https://github.com/applicake/doorkeeper/wiki/Supported-Features), create [example apps](https://github.com/applicake/doorkeeper/wiki/Example-Applications), integrate the gem with your app and let us know!
-
-Also, check out our [contributing guidelines page](https://github.com/applicake/doorkeeper/wiki/Contributing).
 
 ### Supported ruby versions
 
