@@ -2,6 +2,22 @@
 
 ## 0.6.0.dev
 
+- enhancements
+  - Mongoid `orm` configuration accepts only :mongoid2 or :mongoid3
+  - Authorization endpoint does not redirect in #new action anymore. It wasn't specified by OAuth spec
+  - TokensController now inherits from ActionController::Metal. There might be performance upgrades
+  - Add link to authorization in Applications scaffold
+  - [#116] MongoMapper support [@carols10cents](https://github.com/carols10cents)
+  - [#122] Mongoid3 support [@petergoldstein](https://github.com/petergoldstein)
+  - [#150] Introduce test redirect uri for applications
+- bugfixes
+  - [#157] Response token status should be `:ok`, not `:success` [@theycallmeswift](https://github.com/theycallmeswift)
+- internals
+  - Update development dependencies
+  - Several refactorings
+  - Rails/ORM are easily swichable with env vars (rails and orm)
+  - Travis now tests against Mongoid v2
+
 ## 0.5.0.rc1
 
 Official support for rubinius was removed.
