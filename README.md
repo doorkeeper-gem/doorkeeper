@@ -234,6 +234,29 @@ The logic is the same as the `resource_owner_authenticator` block. **Note:** sin
 
 If you want to upgrade doorkeeper to a new version, check out the [upgrading notes](https://github.com/applicake/doorkeeper/wiki/Migration-from-old-versions) and take a look at the [changelog](https://github.com/applicake/doorkeeper/blob/master/CHANGELOG.md).
 
+### Development
+
+To run the local engine server:
+
+```
+rails=3.2.8 orm=active_record bundle install
+rails=3.2.8 orm=active_record bundle exec rails server
+````
+
+By default, it uses the latest Rails version with ActiveRecord. To run the tests:
+
+```
+rails=3.2.8 orm=active_record bundle exec rake
+```
+
+Or you might prefer to run `script/run_all` to integrate against all ORMs.
+
+### Contributing
+
+Want to contribute and don't know where to start? Check out [features we're missing](https://github.com/applicake/doorkeeper/wiki/Supported-Features), create [example apps](https://github.com/applicake/doorkeeper/wiki/Example-Applications), integrate the gem with your app and let us know!
+
+Also, check out our [contributing guidelines page](https://github.com/applicake/doorkeeper/wiki/Contributing).
+
 ## Other resources
 
 ### Wiki
@@ -251,12 +274,6 @@ Check out this screencast from [railscasts.com](http://railscasts.com/): [#353 O
 ### Client applications
 
 After you set up the provider, you may want to create a client application to test the integration. Check out these [client examples](https://github.com/applicake/doorkeeper/wiki/Example-Applications) in our wiki or follow this [tutorial here](https://github.com/applicake/doorkeeper/wiki/Testing-your-provider-with-OAuth2-gem).
-
-### Contributing/Development
-
-Want to contribute and don't know where to start? Check out [features we're missing](https://github.com/applicake/doorkeeper/wiki/Supported-Features), create [example apps](https://github.com/applicake/doorkeeper/wiki/Example-Applications), integrate the gem with your app and let us know!
-
-Also, check out our [contributing guidelines page](https://github.com/applicake/doorkeeper/wiki/Contributing).
 
 ### Supported ruby versions
 
