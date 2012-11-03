@@ -171,6 +171,10 @@ module Doorkeeper
       @scopes ||= default_scopes + optional_scopes
     end
 
+    def orm_name
+      [:mongoid2, :mongoid3].include?(orm) ? :mongoid : orm
+    end
+
     def client_credentials_methods
       @client_credentials ||= [:from_basic, :from_params]
     end

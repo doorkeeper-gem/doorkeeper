@@ -2,7 +2,7 @@ case DOORKEEPER_ORM
 when :active_record
   class User < ActiveRecord::Base
   end
-when :mongoid
+when :mongoid2, :mongoid3
   class User
     include Mongoid::Document
     include Mongoid::Timestamps

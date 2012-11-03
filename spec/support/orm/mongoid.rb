@@ -12,9 +12,8 @@ end
 module Doorkeeper
   class PlaceholderApplicationOwner
     include Mongoid::Document
-    include Doorkeeper::Models::Mongoid::VersionCheck
 
-    if is_mongoid_3_x?
+    if ::Mongoid::VERSION >= "3"
       self.store_in collection: :placeholder_application_owners
     else
       self.store_in :placeholder_application_owners

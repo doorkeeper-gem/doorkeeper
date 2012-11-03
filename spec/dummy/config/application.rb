@@ -6,7 +6,8 @@ require "sprockets/railtie"
 
 Bundler.require :default
 
-require "#{DOORKEEPER_ORM}/railtie"
+orm = [:mongoid2, :mongoid3].include?(DOORKEEPER_ORM) ? :mongoid : DOORKEEPER_ORM
+require "#{orm}/railtie"
 
 module Dummy
   class Application < Rails::Application
