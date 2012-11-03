@@ -53,37 +53,23 @@ Don't forget to run the migration with:
 
     rake db:migrate
 
-### Mongoid (only doorkeeper v0.5+)
+### Mongoid / MongoMapper (only doorkeeper v0.5+)
 
-Doorkeeper currently supports Mongoid 2 and 3. To start using it, you have to set the `orm` configuration:
-
-``` ruby
-Doorkeeper.configure do
-  orm :mongoid
-end
-```
-
-**Note:** Make sure you create indexes for doorkeeper models. You can do this either by running `rake db:mongoid:create_indexes`
-or (if you're using Mongoid 2) by adding `autocreate_indexes: true` to your `config/mongoid.yml`
-
-To run the test suite with Mongoid you can run `DOORKEEPER_ORM=mongoid bundle exec rake`.  Note that by default this runs the suite with Mongoid 3.0.x.  To run the test suite with Mongoid 2.4.x, you will need to do the following:
-
-1. Change the version in the :mongoid group in the Gemfile from 3.0 to 2.4
-2. Replace the spec/dummy/config/mongoid.yml file with the spec/dummy/config/mongoid_2.yml file.
-
-With these changes the test suite will run with Mongoid 2.4.x
-
-### MongoMapper (only doorkeeper v0.5+)
-
-Doorkeeper currently supports MongoMapper git HEAD. To start using it, you have to set the `orm` configuration:
+Doorkeeper currently supports MongoMapper, Mongoid 2 and 3. To start using it, you have to set the `orm` configuration:
 
 ``` ruby
 Doorkeeper.configure do
-  orm :mongo_mapper
+  orm :mongoid2 # or :mongoid3, :mongo_mapper
 end
 ```
 
-Then generate the `db/indexes.rb` file and create indexes for the doorkeeper models:
+#### Mongoid indexes
+
+Make sure you create indexes for doorkeeper models. You can do this either by running `rake db:mongoid:create_indexes` or (if you're using Mongoid 2) by adding `autocreate_indexes: true` to your `config/mongoid.yml`
+
+#### MongoMapper indexes
+
+Generate the `db/indexes.rb` file and create indexes for the doorkeeper models:
 
     rails generate doorkeeper:mongo_mapper:indexes
     rake db:index

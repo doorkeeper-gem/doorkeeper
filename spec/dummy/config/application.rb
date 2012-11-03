@@ -7,7 +7,7 @@ require "sprockets/railtie"
 Bundler.require :default
 
 orm = if [:mongoid2, :mongoid3].include?(DOORKEEPER_ORM)
-  Mongoid.load!("spec/dummy/config/#{DOORKEEPER_ORM}.yml")
+  Mongoid.load!(File.join(File.dirname(File.expand_path(__FILE__)), "#{DOORKEEPER_ORM}.yml"))
   :mongoid
 else
   DOORKEEPER_ORM

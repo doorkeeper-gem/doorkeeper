@@ -1,7 +1,7 @@
 development:
   sessions:
     default:
-      database: doorkeeper-development
+      database: doorkeeper-mongoid3-development
       hosts:
         - localhost:27017
       options:
