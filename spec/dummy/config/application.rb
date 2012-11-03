@@ -6,7 +6,13 @@ require "sprockets/railtie"
 
 Bundler.require :default
 
-orm = [:mongoid2, :mongoid3].include?(DOORKEEPER_ORM) ? :mongoid : DOORKEEPER_ORM
+orm = if [:mongoid2, :mongoid3].include?(DOORKEEPER_ORM)
+  Mongoid.load!("spec/dummy/config/#{DOORKEEPER_ORM}.yml")
+  :mongoid
+else
+  DOORKEEPER_ORM
+end
+
 require "#{orm}/railtie"
 
 module Dummy
