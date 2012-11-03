@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.6.0.dev
+## 0.6.0
 
 - enhancements
   - Mongoid `orm` configuration accepts only :mongoid2 or :mongoid3

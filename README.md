@@ -23,16 +23,16 @@ For more information about the supported features, check out the related [page i
 ### ORM
 
 - ActiveRecord
-- Mongoid 2 (only for doorkeeper v0.5+)
-- Mongoid 3 (only for doorkeeper v0.6+)
-- MongoMapper (only for doorkeeper v0.6+)
+- Mongoid 2
+- Mongoid 3
+- MongoMapper
 
 ## Installation
 
 Put this in your Gemfile:
 
 ``` ruby
-gem 'doorkeeper', '~> 0.5.0.rc1'
+gem 'doorkeeper', '~> 0.6.0.rc1'
 ```
 
 Run the installation generator with:
@@ -53,7 +53,7 @@ Don't forget to run the migration with:
 
     rake db:migrate
 
-### Mongoid / MongoMapper (only doorkeeper v0.5+)
+### Mongoid / MongoMapper
 
 Doorkeeper currently supports MongoMapper, Mongoid 2 and 3. To start using it, you have to set the `orm` configuration:
 
