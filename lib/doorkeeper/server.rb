@@ -22,11 +22,13 @@ module Doorkeeper
     end
 
     def client
-      @client ||= OAuth::Client.authenticate(credentials)
+      return unless client_credentials.present?
+      uid, secret = client_credentials.values
+      Doorkeeper.client.oauth_authenticate uid, secret
     end
 
     def client_via_uid
-      @client_via_uid ||= OAuth::Client.find(parameters[:client_id])
+      Doorkeeper.client.find_for_oauth_authentication parameters[:client_id]
     end
 
     def current_resource_owner
@@ -46,9 +48,18 @@ module Doorkeeper
       context.send :resource_owner_from_credentials
     end
 
-    def credentials
-      methods = Doorkeeper.configuration.client_credentials_methods
-      @credentials ||= OAuth::Client::Credentials.from_request(context.request, *methods)
+    def config
+      Doorkeeper.configuration
+    end
+
+  private
+
+    def credential_methods
+      config.client_credentials_methods
+    end
+
+    def client_credentials
+      OAuth::Client::Credentials.from_request context.request, *credential_methods
     end
   end
 end

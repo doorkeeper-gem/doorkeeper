@@ -63,7 +63,7 @@ feature 'Edit application' do
   end
 
   scenario 'updating an invalid app' do
-    fill_in :name, :with => ""
+    fill_in 'Redirect uri', :with => ""
     click_button 'Submit'
     i_should_see 'Whoops! Check your form for possible errors'
   end

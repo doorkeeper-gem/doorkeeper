@@ -27,4 +27,6 @@ when 'mongo_mapper'
 
 end
 
+gem 'pry'
+
 gemspec

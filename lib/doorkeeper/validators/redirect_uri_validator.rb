@@ -1,5 +1,3 @@
-require 'uri'
-
 class RedirectUriValidator < ActiveModel::EachValidator
   def self.test_redirect_uri
     Doorkeeper.configuration.test_redirect_uri

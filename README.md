@@ -232,7 +232,6 @@ The logic is the same as the `resource_owner_authenticator` block. **Note:** sin
 
 ## Other customizations
 
-- [Associate users to OAuth applications (ownership)](https://github.com/applicake/doorkeeper/wiki/Associate-users-to-OAuth-applications-%28ownership%29)
 - [CORS - Cross Origin Resource Sharing](https://github.com/applicake/doorkeeper/wiki/%5BCORS%5D-Cross-Origin-Resource-Sharing)
 
 ## Upgrading

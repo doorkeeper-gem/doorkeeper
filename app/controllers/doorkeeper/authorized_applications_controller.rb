@@ -2,7 +2,7 @@ class Doorkeeper::AuthorizedApplicationsController < Doorkeeper::ApplicationCont
   before_filter :authenticate_resource_owner!
 
   def index
-    @applications = Doorkeeper::Application.authorized_for(current_resource_owner)
+    @applications = Doorkeeper.client.authorized_for(current_resource_owner)
   end
 
   def destroy

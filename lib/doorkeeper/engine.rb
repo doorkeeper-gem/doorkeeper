@@ -10,5 +10,12 @@ module Doorkeeper
         include Doorkeeper::Helpers::Filter
       end
     end
+
+    initializer "doorkeeper.active_record.models" do
+      ActiveSupport.on_load(:active_record) do
+        require 'doorkeeper/models/active_record'
+        extend Doorkeeper::Models::ActiveRecord
+      end
+    end
   end
 end
