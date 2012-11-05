@@ -12,6 +12,7 @@
   - [#150] Introduce test redirect uri for applications
 - bugfixes
   - [#157] Response token status should be `:ok`, not `:success` [@theycallmeswift](https://github.com/theycallmeswift)
+  - [#159] Remove ActionView::Base.field_error_proc override (fixes #145)
 - internals
   - Update development dependencies
   - Several refactorings
