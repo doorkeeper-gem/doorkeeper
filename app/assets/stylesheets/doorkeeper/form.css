@@ -1,8 +1,13 @@
-.error input {
+.field_with_errors {
+  display: inline;
+}
+
+.field_with_errors input {
   color: #B94A48;
   border-color: #EE5F5B;
 }
 
-.error .help-inline {
+.input .help-inline.error {
   color: #B94A48;
 }
+
