@@ -101,7 +101,7 @@ You need to configure Doorkeeper in order to provide resource_owner model and au
 
 ``` ruby
 Doorkeeper.configure do
-  resource_owner_authenticator do |routes|
+  resource_owner_authenticator do
     User.find(session[:current_user_id]) || redirect_to(login_url)
   end
 end
@@ -114,7 +114,7 @@ to the methods defined over there.
 If you use [devise](https://github.com/plataformatec/devise), you may want to use warden to authenticate the block:
 
 ``` ruby
-resource_owner_authenticator do |routes|
+resource_owner_authenticator do
   current_user || warden.authenticate!(:scope => :user)
 end
 ```
