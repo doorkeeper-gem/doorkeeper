@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.1
+
+- bugfixes
+  - [#160] Removed |routes| argument from initializer authenticator blocks
+- documentation
+  - [#160] Fixed description of context of authenticator blocks
+
 ## 0.6.0
 
 - enhancements
