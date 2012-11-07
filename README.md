@@ -101,21 +101,25 @@ You need to configure Doorkeeper in order to provide resource_owner model and au
 
 ``` ruby
 Doorkeeper.configure do
-  resource_owner_authenticator do |routes|
-    current_user || redirect_to(routes.login_url) # returns nil if current_user is not logged in
+  resource_owner_authenticator do
+    User.find(session[:current_user_id]) || redirect_to(login_url)
   end
 end
 ```
 
-This block runs into the context of your Rails application, and it has access to `current_user` method, for example.
+This code is run in the context of your application so you have access to your models, session or routes helpers. However,
+since this code is not run in the context of your application's ApplicationController it doesn't have access
+to the methods defined over there.
 
 If you use [devise](https://github.com/plataformatec/devise), you may want to use warden to authenticate the block:
 
 ``` ruby
-resource_owner_authenticator do |routes|
+resource_owner_authenticator do
   current_user || warden.authenticate!(:scope => :user)
 end
 ```
+
+Side note: when using devise you have access to current_user as devise extends entire ActionController::Base with the current_#{mapping}.
 
 If you are not using devise, you may want to check other ways of authentication [here](https://github.com/applicake/doorkeeper/wiki/Authenticating-using-Clearance-DIY).
 
