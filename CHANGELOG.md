@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.2
+
+- bugfixes
+  - [#162] Remove ownership columns from base migration template [@rdsoze](https://github.com/rdsoze)
+
 ## 0.6.1
 
 - bugfixes
