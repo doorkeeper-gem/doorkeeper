@@ -4,8 +4,7 @@ module Doorkeeper
 
     def new
       if pre_auth.authorizable?
-        # TODO: use configuration (like config.skip_authorization?)
-        if Doorkeeper::AccessToken.matching_token_for pre_auth.client, current_resource_owner.id, pre_auth.scopes
+        if Doorkeeper::AccessToken.matching_token_for(pre_auth.client, current_resource_owner.id, pre_auth.scopes) || skip_authorization?
           auth = authorization.authorize
           redirect_to auth.redirect_uri
         else

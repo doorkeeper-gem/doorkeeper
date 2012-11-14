@@ -6,7 +6,8 @@ module Doorkeeper
                   :authenticate_resource_owner!,
                   :authenticate_admin!,
                   :current_resource_owner,
-                  :resource_owner_from_credentials
+                  :resource_owner_from_credentials,
+                  :skip_authorization?
       end
 
       def authenticate_resource_owner!
@@ -47,6 +48,10 @@ module Doorkeeper
         self.headers.merge!  error.headers
         self.response_body = error.body.to_json
         self.status        = error.status
+      end
+
+      def skip_authorization?
+        !!instance_eval(&Doorkeeper.configuration.skip_authorization)
       end
     end
   end
