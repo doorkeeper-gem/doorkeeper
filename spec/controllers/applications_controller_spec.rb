@@ -11,7 +11,7 @@ module Doorkeeper
 
       it "redirects as set in Doorkeeper.authenticate_admin" do
         get :index
-        response.should redirect_to(controller.main_app.root_url)
+        expect(response).to redirect_to(controller.main_app.root_url)
       end
     end
   end

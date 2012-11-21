@@ -30,7 +30,7 @@ describe Doorkeeper::TokensController do
       pending 'verify need of these specs'
       token.stub(:error_response => stub(:to_json => [], :status => :unauthorized))
       post :create
-      response.status.should == 401
+      expect(response.status).to eq 401
     end
   end
 end
