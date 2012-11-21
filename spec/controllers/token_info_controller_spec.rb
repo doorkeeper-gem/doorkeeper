@@ -18,12 +18,12 @@ describe Doorkeeper::TokenInfoController do
 
       it "responds with tokeninfo" do
         do_get
-        response.body.should eq doorkeeper_token.to_json
+        expect(response.body).to eq(doorkeeper_token.to_json)
       end
 
       it "responds with a 200 status" do
         do_get
-        response.status.should eq 200
+        expect(response.status).to eq 200
       end
     end
 
@@ -33,19 +33,19 @@ describe Doorkeeper::TokenInfoController do
       end
       it "responds with 401 when doorkeeper_token is not valid" do
         do_get
-        response.status.should eq 401
+        expect(response.status).to eq 401
       end
 
       it "responds with 401 when doorkeeper_token is invalid, expired or revoked" do
         controller.stub(:doorkeeper_token => doorkeeper_token)
         doorkeeper_token.stub(:accessible? => false)
         do_get
-        response.status.should eq 401
+        expect(response.status).to eq 401
       end
 
       it "responds body message for error" do
         do_get
-        response.body.should eq Doorkeeper::OAuth::ErrorResponse.new(:name => :invalid_request, :status => :unauthorized).body.to_json
+        expect(response.body).to eq(Doorkeeper::OAuth::ErrorResponse.new(:name => :invalid_request, :status => :unauthorized).body.to_json)
       end
     end
 
