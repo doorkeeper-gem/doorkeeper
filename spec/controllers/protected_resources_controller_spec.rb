@@ -14,12 +14,12 @@ shared_examples "specified for particular actions" do
   context "with valid token", :token => :valid do
     it "allows into index action" do
       get :index, :access_token => token_string
-      response.should be_success
+      expect(response).to be_success
     end
 
     it "allows into show action" do
       get :show, :id => "3", :access_token => token_string
-      response.should be_success
+      expect(response).to be_success
     end
   end
 
@@ -28,12 +28,12 @@ shared_examples "specified for particular actions" do
 
     it "does not allow into index action" do
       get :index, :access_token => token_string
-      response.status.should == 401
+      expect(response.status).to eq 401
     end
 
     it "allows into show action" do
       get :show, :id => "5", :access_token => token_string
-      response.should be_success
+      expect(response).to be_success
     end
   end
 end
@@ -42,24 +42,24 @@ shared_examples "specified with except" do
   context "with valid token", :token => :valid do
     it "allows into index action" do
       get :index, :access_token => token_string
-      response.should be_success
+      expect(response).to be_success
     end
 
     it "allows into show action" do
       get :show, :id => "4", :access_token => token_string
-      response.should be_success
+      expect(response).to be_success
     end
   end
 
   context "with invalid token", :token => :invalid do
     it "allows into index action" do
       get :index, :access_token => token_string
-      response.should be_success
+      expect(response).to be_success
     end
 
     it "does not allow into show action" do
       get :show, :id => "14", :access_token => token_string
-      response.status.should == 401
+      expect(response.status).to eq 401
     end
   end
 end
@@ -74,9 +74,7 @@ describe "Doorkeeper_for helper" do
       end
     end
 
-    let :token_string do
-      "1A2BC3"
-    end
+    let(:token_string) { "1A2BC3" }
 
     it "access_token param" do
       Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string)
@@ -118,24 +116,24 @@ describe "Doorkeeper_for helper" do
     context "with valid token", :token => :valid do
       it "allows into index action" do
         get :index, :access_token => token_string
-        response.should be_success
+        expect(response).to be_success
       end
 
       it "allows into show action" do
         get :show, :id => "4", :access_token => token_string
-        response.should be_success
+        expect(response).to be_success
       end
     end
 
     context "with invalid token", :token => :invalid do
       it "does not allow into index action" do
         get :index, :access_token => token_string
-        response.status.should == 401
+        expect(response.status).to eq 401
       end
 
       it "does not allow into show action" do
         get :show, :id => "4", :access_token => token_string
-        response.status.should == 401
+        expect(response.status).to eq 401
       end
     end
   end
@@ -166,22 +164,20 @@ describe "Doorkeeper_for helper" do
       include ControllerActions
     end
 
-    let :token_string do
-      "1A2DUWE"
-    end
+    let(:token_string) { "1A2DUWE" }
 
     it "allows if the token has particular scopes" do
       token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => [:write, :public])
       Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string).and_return(token)
       get :index, :access_token => token_string
-      response.should be_success
+      expect(response).to be_success
     end
 
     it "does not allow if the token does not include given scope" do
       token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => [:public])
       Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string).and_return(token)
       get :index, :access_token => token_string
-      response.status.should == 401
+      expect(response.status).to eq 401
     end
   end
 
@@ -199,11 +195,11 @@ describe "Doorkeeper_for helper" do
 
       it "it renders a custom JSON response", :token => :invalid do
         get :index, :access_token => token_string
-        response.status.should == 401
-        response.content_type.should == 'application/json'
+        expect(response.status).to eq 401
+        expect(response.content_type).to eq('application/json')
         parsed_body = JSON.parse(response.body)
-        parsed_body.should_not be_nil
-        parsed_body['error'].should == 'Unauthorized'
+        expect(parsed_body).not_to be_nil
+        expect(parsed_body['error']).to eq('Unauthorized')
       end
 
     end
@@ -215,9 +211,9 @@ describe "Doorkeeper_for helper" do
 
       it "it renders a custom JSON response", :token => :invalid do
         get :index, :access_token => token_string
-        response.status.should == 401
-        response.content_type.should == 'text/html'
-        response.body.should == 'Unauthorized'
+        expect(response.status).to eq 401
+        expect(response.content_type).to eq('text/html')
+        expect(response.body.should).to eq('Unauthorized')
       end
     end
   end
@@ -242,24 +238,24 @@ describe "Doorkeeper_for helper" do
     context "with valid token", :token => :valid do
       it "enables access if passed block evaluates to false" do
         get :index, :access_token => token_string
-        response.should be_success
+        expect(response).to be_success
       end
 
       it "enables access if passed block evaluates to true" do
         get :show, :id => 1, :access_token => token_string
-        response.should be_success
+        expect(response).to be_success
       end
     end
 
     context "with invalid token", :token => :invalid do
       it "enables access if passed block evaluates to false" do
         get :index, :access_token => token_string
-        response.should be_success
+        expect(response).to be_success
       end
 
       it "does not enable access if passed block evaluates to true" do
         get :show, :id => 3, :access_token => token_string
-        response.status.should == 401
+        expect(response.status).to eq 401
       end
     end
   end
@@ -285,12 +281,12 @@ describe "Doorkeeper_for helper" do
     context "with valid token", :token => :valid do
       it "allows access if passed block evaluates to false" do
         get :index, :access_token => token_string
-        response.should be_success
+        expect(response).to be_success
       end
 
       it "allows access if passed block evaluates to true" do
         get :show, :id => 1, :access_token => token_string
-        response.should be_success
+        expect(response).to be_success
       end
     end
 
@@ -301,7 +297,7 @@ describe "Doorkeeper_for helper" do
 
       it "allows access if passed block evaluates to true" do
         get :show, :id => 3, :access_token => token_string
-        response.should be_success
+        expect(response).to be_success
       end
     end
   end
