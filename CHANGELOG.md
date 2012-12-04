@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.3
+
+- bugfixes
+  - [#163] Error response content-type header should be application/json [@ggayan](https://github.com/ggayan)
+- enhancements
+  - [#166] Behavior to automatically authorize based on a configured proc
+- internals
+  - [#168] Using expectation syntax for controller specs [@rdsoze](https://github.com/rdsoze)
+
 ## 0.6.2
 
 - bugfixes
