@@ -98,6 +98,40 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     end
   end
 
+  describe "GET #new with skip_authorization true" do
+    before do
+      Doorkeeper.configuration.stub(:skip_authorization => proc do
+          true
+        end)
+      get :new, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uri
+    end
+
+    it "should redirect immediately" do
+      response.should be_redirect
+      response.location.should =~ %r[^#{client.redirect_uri}]
+    end
+
+    it "should issue a token" do
+      Doorkeeper::AccessToken.count.should be 1
+    end
+
+    it "includes token type in fragment" do
+      fragments("token_type").should == "bearer"
+    end
+
+    it "includes token expiration in fragment" do
+      fragments("expires_in").to_i.should == 2.hours.to_i
+    end
+
+    it "issues the token for the current client" do
+      Doorkeeper::AccessToken.first.application_id.should == client.id
+    end
+
+    it "issues the token for the current resource owner" do
+      Doorkeeper::AccessToken.first.resource_owner_id.should == user.id
+    end
+  end
+
   describe "GET #new with errors" do
     before do
       default_scopes_exist :public
