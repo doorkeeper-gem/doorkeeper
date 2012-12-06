@@ -4,8 +4,9 @@
 
 - bugfixes
   - [#163] Error response content-type header should be application/json [@ggayan](https://github.com/ggayan)
+  - [#175] Make token.expires_in_seconds return nil when expires_in is nil [@miyagawa](https://github.com/miyagawa)
 - enhancements
-  - [#166] Behavior to automatically authorize based on a configured proc
+  - [#166, #172, #174] Behavior to automatically authorize based on a configured proc
 - internals
   - [#168] Using expectation syntax for controller specs [@rdsoze](https://github.com/rdsoze)
 
