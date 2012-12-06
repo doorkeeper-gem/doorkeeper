@@ -57,4 +57,11 @@ Doorkeeper.configure do
   # (Similar behaviour: https://developers.google.com/accounts/docs/OAuth2InstalledApp#choosingredirecturi)
   #
   # test_redirect_uri 'urn:ietf:wg:oauth:2.0:oob'
+
+  # Under some circumstances you might want to have applications auto-approved,
+  # so that the user skips the authorization step.
+  # For example if dealing with trusted a application.
+  # skip_authorization do |resource_owner, client|
+  #   client.superapp? or resource_owner.admin?
+  # end
 end
