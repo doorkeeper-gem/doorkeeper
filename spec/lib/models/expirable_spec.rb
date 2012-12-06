@@ -41,6 +41,11 @@ describe 'Expirable' do
       subject.stub :expires_in => 30.seconds
       subject.expires_in_seconds.should == 0 
     end
+
+    it "should return nil when expires_in is nil" do
+      subject.stub :expires_in => nil
+      subject.expires_in_seconds.should be_nil
+    end
     
   end
 end
