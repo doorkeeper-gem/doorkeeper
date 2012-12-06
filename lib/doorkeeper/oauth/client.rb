@@ -22,6 +22,8 @@ module Doorkeeper
       def initialize(application)
         @application = application
       end
+
+      attr_accessor :application
     end
   end
 end
