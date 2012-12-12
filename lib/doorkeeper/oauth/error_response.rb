@@ -25,7 +25,7 @@ module Doorkeeper
       end
 
       def redirectable?
-        (name != :invalid_redirect_uri) && (name != :invalid_client)
+        (name != :invalid_redirect_uri) && (name != :invalid_client) && (name != :invalid_scope)
       end
 
       def redirect_uri
