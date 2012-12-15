@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.4
+
+- bug
+  - [#180] Add localization to authorized_applications destroy notice [@aalvarado](https://github.com/aalvarado)
+
 ## 0.6.3
 
 - bugfixes
