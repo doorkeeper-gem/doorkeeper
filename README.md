@@ -48,7 +48,13 @@ This will install the doorkeeper initializer into `config/initializers/doorkeepe
 
 By default doorkeeper is configured to use active record, so to start you have to generate the migration tables:
 
-    rails generate doorkeeper:migration
+    rails generate active_record:doorkeeper_tables
+
+You also have to create a model that will hold the OAuth client. You can either add this to an existing model or create a new one with the generator:
+
+    active_record:doorkeeper_client MODEL
+
+Replace `MODEL` with the model name you'd like. Usually it's called `Client`, but the naming it's up to you.
 
 Don't forget to run the migration with:
 
@@ -64,15 +70,24 @@ Doorkeeper.configure do
 end
 ```
 
+### Mongoid generators
+
+To generate the client for Mongoid, run the generator:
+
+    rails generate mongoid:doorkeeper_client MODEL
+
 #### Mongoid indexes
 
 Make sure you create indexes for doorkeeper models. You can do this either by running `rake db:mongoid:create_indexes` or (if you're using Mongoid 2) by adding `autocreate_indexes: true` to your `config/mongoid.yml`
 
-#### MongoMapper indexes
+### MongoMapper generators
 
-Generate the `db/indexes.rb` file and create indexes for the doorkeeper models:
+To generate the client for MongoMapper, use:
 
-    rails generate doorkeeper:mongo_mapper:indexes
+    rails generate mongo_mapper:doorkeeper_client MODEL
+
+This will automatically generate the `db/indexes.rb` file. Make sure you create indexes for doorkeeper models:
+
     rake db:index
 
 ### Routes
