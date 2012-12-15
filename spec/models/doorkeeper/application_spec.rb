@@ -19,13 +19,11 @@ module Doorkeeper
       end
 
       it 'should destroy its access grants' do
-        pending 'Create method for destroying grants for application'
         FactoryGirl.create(:access_grant, :application => new_application)
         expect { new_application.destroy }.to change { Doorkeeper::AccessGrant.count }.by(-1)
       end
 
       it 'should destroy its access tokens' do
-        pending 'Create method for destroying tokens for application'
         FactoryGirl.create(:access_token, :application => new_application)
         FactoryGirl.create(:access_token, :application => new_application, :revoked_at => Time.now)
         expect { new_application.destroy }.to change { Doorkeeper::AccessToken.count }.by(-2)

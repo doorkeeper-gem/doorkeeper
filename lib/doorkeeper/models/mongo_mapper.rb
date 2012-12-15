@@ -11,6 +11,16 @@ module DoorkeeperClient
 
     many :authorized_tokens, :class_name => "Doorkeeper::AccessToken"
 
+    many :access_grants,
+         :dependent => :destroy,
+         :class_name => "Doorkeeper::AccessGrant",
+         :foreign_key => 'application_id'
+
+    many :access_tokens,
+         :dependent => :destroy,
+         :class_name => "Doorkeeper::AccessToken",
+         :foreign_key => 'application_id'
+
     ensure_index :uid, :unique => true
   end
 

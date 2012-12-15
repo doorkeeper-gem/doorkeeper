@@ -6,6 +6,8 @@ module Doorkeeper
 
         included do
           has_many :authorized_tokens, :class_name => "Doorkeeper::AccessToken"
+          has_many :access_grants, :dependent => :destroy, :class_name => "Doorkeeper::AccessGrant", :foreign_key => 'application_id'
+          has_many :access_tokens, :dependent => :destroy, :class_name => "Doorkeeper::AccessToken", :foreign_key => 'application_id'
         end
 
         module ClassMethods
