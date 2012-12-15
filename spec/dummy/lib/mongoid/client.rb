@@ -9,5 +9,5 @@ class Client
   field :secret
   field :redirect_uri
 
-  attr_accessible :name
+  attr_accessible :name, :redirect_uri
 end
