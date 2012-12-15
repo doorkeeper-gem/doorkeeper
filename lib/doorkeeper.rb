@@ -37,12 +37,13 @@ module Doorkeeper
   end
 
   module Models
-    autoload :Scopes,          'doorkeeper/models/scopes'
-    autoload :Expirable,       'doorkeeper/models/expirable'
-    autoload :Revocable,       'doorkeeper/models/revocable'
-    autoload :Accessible,      'doorkeeper/models/accessible'
-    autoload :Registerable,    'doorkeeper/models/registerable'
-    autoload :Authenticatable, 'doorkeeper/models/authenticatable'
+    autoload :Scopes,            'doorkeeper/models/scopes'
+    autoload :Expirable,         'doorkeeper/models/expirable'
+    autoload :Revocable,         'doorkeeper/models/revocable'
+    autoload :Accessible,        'doorkeeper/models/accessible'
+    autoload :Registerable,      'doorkeeper/models/registerable'
+    autoload :Authenticatable,   'doorkeeper/models/authenticatable'
+    autoload :ClientAssociation, 'doorkeeper/models/client_association'
   end
 
   module Helpers

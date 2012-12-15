@@ -6,8 +6,8 @@ module DoorkeeperClient
     include Doorkeeper::Models::Authenticatable
 
     Doorkeeper.client = self
-    Doorkeeper::AccessToken.send :include, DoorkeeperClient::Association
-    Doorkeeper::AccessGrant.send :include, DoorkeeperClient::Association
+    Doorkeeper::AccessToken.send :include, Doorkeeper::Models::ClientAssociation
+    Doorkeeper::AccessGrant.send :include, Doorkeeper::Models::ClientAssociation
 
     many :authorized_tokens, :class_name => "Doorkeeper::AccessToken"
 
@@ -22,14 +22,6 @@ module DoorkeeperClient
 
     def create_indexes
       ensure_index :uid, :unique => true
-    end
-  end
-
-  module Association
-    extend ActiveSupport::Concern
-
-    included do
-      belongs_to :application, :class_name => "::#{Doorkeeper.client}", :foreign_key => 'application_id'
     end
   end
 end

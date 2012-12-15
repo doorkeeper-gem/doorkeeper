@@ -8,8 +8,8 @@ module Doorkeeper
         include Doorkeeper::Models::Mongoid2::Client
         include Doorkeeper::Models::Registerable
         include Doorkeeper::Models::Authenticatable
-        Doorkeeper::AccessToken.send :include, Association
-        Doorkeeper::AccessGrant.send :include, Association
+        Doorkeeper::AccessToken.send :include, ClientAssociation
+        Doorkeeper::AccessGrant.send :include, ClientAssociation
       end
     end
   end
