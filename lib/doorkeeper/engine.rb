@@ -26,5 +26,14 @@ module Doorkeeper
         Mongoid::Document::ClassMethods.send :include, extension
       end
     end
+
+    initializer "doorkeeper.mongo_mapper.models" do
+      if defined?(MongoMapper)
+        require "doorkeeper/models/#{Doorkeeper.configuration.orm}"
+        # extension = "Doorkeeper::Models::#{Doorkeeper.configuration.orm.to_s.camelize}".constantize
+        # binding.pry
+        # MongoMapper::Document.send :extend, extension
+      end
+    end
   end
 end
