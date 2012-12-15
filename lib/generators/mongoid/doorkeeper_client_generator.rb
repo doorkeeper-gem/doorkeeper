@@ -19,6 +19,12 @@ module Mongoid
   attr_accessible :name, :redirect_uri
 CONTENT
 
+        content += if Doorkeeper.configuration.orm == :mongoid2
+          "\n  index :uid, :unique => true"
+        else
+          "\n  index({ uid: 1 }, { unique: true })"
+        end
+
         inject_into_file model_path, content, :after => "include Mongoid::Document\n" if model_exists?
       end
 

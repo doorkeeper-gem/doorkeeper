@@ -6,8 +6,6 @@ module Doorkeeper
 
         included do
           has_many :authorized_tokens, :class_name => "Doorkeeper::AccessToken"
-
-          index({ uid: 1 }, { unique: true })
         end
 
         module ClassMethods
