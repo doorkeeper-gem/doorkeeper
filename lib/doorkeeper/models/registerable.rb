@@ -7,8 +7,6 @@ module Doorkeeper
         validates :redirect_uri, :redirect_uri => true, :presence => true
 
         before_create :generate_credentials
-
-        attr_accessible :redirect_uri
       end
 
       def credentials
