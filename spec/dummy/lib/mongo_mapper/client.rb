@@ -10,5 +10,5 @@ class Client
   key :secret,       String
   key :redirect_uri, String
 
-  attr_accessible :name
+  attr_accessible :name, :redirect_uri
 end
