@@ -1,6 +1,6 @@
 module Doorkeeper
   module Models
-    module Mongoid2
+    module Mongoid
       module Client
         extend ActiveSupport::Concern
 

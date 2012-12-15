@@ -20,9 +20,9 @@ module Doorkeeper
 
     initializer "doorkeeper.mongoid.models" do
       if defined?(Mongoid)
-        require "doorkeeper/models/#{Doorkeeper.configuration.orm}"
+        require "doorkeeper/models/#{Doorkeeper.configuration.orm_name}"
 
-        extension = "Doorkeeper::Models::#{Doorkeeper.configuration.orm.to_s.camelize}".constantize
+        extension = "Doorkeeper::Models::#{Doorkeeper.configuration.orm_name.to_s.camelize}".constantize
         Mongoid::Document::ClassMethods.send :include, extension
       end
     end

@@ -1,11 +1,11 @@
-require 'doorkeeper/models/mongoid2/client'
+require 'doorkeeper/models/mongoid/client'
 
 module Doorkeeper
   module Models
-    module Mongoid2
+    module Mongoid
       def doorkeeper_client!(options = {})
         Doorkeeper.client = self
-        include Doorkeeper::Models::Mongoid2::Client
+        include Doorkeeper::Models::Mongoid::Client
         include Doorkeeper::Models::Registerable
         include Doorkeeper::Models::Authenticatable
         Doorkeeper::AccessToken.send :include, ClientAssociation
