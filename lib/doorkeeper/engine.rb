@@ -17,5 +17,14 @@ module Doorkeeper
         extend Doorkeeper::Models::ActiveRecord
       end
     end
+
+    initializer "doorkeeper.mongoid.models" do
+      if defined?(Mongoid)
+        require "doorkeeper/models/#{Doorkeeper.configuration.orm}"
+
+        extension = "Doorkeeper::Models::#{Doorkeeper.configuration.orm.to_s.camelize}".constantize
+        Mongoid::Document::ClassMethods.send :include, extension
+      end
+    end
   end
 end

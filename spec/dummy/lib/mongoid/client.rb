@@ -8,4 +8,6 @@ class Client
   field :uid
   field :secret
   field :redirect_uri
+
+  attr_accessible :name
 end
