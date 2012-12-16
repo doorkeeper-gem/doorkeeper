@@ -52,7 +52,7 @@ By default doorkeeper is configured to use active record, so to start you have t
 
 You also have to create a model that will hold the OAuth client. You can either add this to an existing model or create a new one with the generator:
 
-    active_record:doorkeeper_client MODEL
+    rails generate active_record:doorkeeper_client MODEL
 
 Replace `MODEL` with the model name you'd like. Usually it's called `Client`, but the naming it's up to you.
 
