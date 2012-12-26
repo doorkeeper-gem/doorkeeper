@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.5
+
+- enhancements
+  - [#184] Vendor the Bootstrap CSS [@tylerhunt](https://github.com/tylerhunt)
+
 ## 0.6.4
 
 - bug
