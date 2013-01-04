@@ -1,4 +1,10 @@
 module Doorkeeper
+  class MissingConfiguration < StandardError
+    def initialize
+      super("Configuration for doorkeeper missing. Do you have doorkeeper initializer?")
+    end
+  end
+
   def self.configure(&block)
     @config = Config::Builder.new(&block).build
     enable_orm
@@ -6,7 +12,7 @@ module Doorkeeper
   end
 
   def self.configuration
-    @config
+    @config || (raise MissingConfiguration.new)
   end
 
   def self.enable_orm

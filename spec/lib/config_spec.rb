@@ -152,4 +152,19 @@ describe Doorkeeper, "configuration" do
     end
 
   end
+
+  it 'raises an exception when configuration is not set' do
+    old_config = Doorkeeper.configuration
+    Doorkeeper.module_eval do
+      @config = nil
+    end
+
+    expect do
+      Doorkeeper.configuration
+    end.to raise_error Doorkeeper::MissingConfiguration
+
+    Doorkeeper.module_eval do
+      @config = old_config
+    end
+  end
 end
