@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.6
+
+- enhancements
+  - [#187] Raise error if configuration is not set
+
 ## 0.6.5
 
 - enhancements
