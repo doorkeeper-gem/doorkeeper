@@ -16,32 +16,5 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
       created = subject.call(client, scopes)
       created.should be_false
     end
-
-    it 'does not create a new token if there is an accessible one' do
-      subject.call(client, scopes, :expires_in => 10.years)
-      expect do
-        subject.call(client, scopes)
-      end.to_not change { Doorkeeper::AccessToken.count }
-    end
-
-    it 'returns the existing token if there is an accessible one' do
-      existing = subject.call(client, scopes, :expires_in => 10.years)
-      created  = subject.call(client, scopes)
-      created.should == existing
-    end
-
-    it 'revokes old token if is not accessible' do
-      existing = subject.call(client, scopes, :expires_in => -1000)
-      subject.call(client, scopes)
-      existing.reload.should be_revoked
-    end
-
-    it 'returns a new token when the old one is not accessible' do
-      existing = subject.call(client, scopes, :expires_in => -1000)
-
-      expect do
-        subject.call(client, scopes)
-      end.to change { Doorkeeper::AccessToken.count }.by(1)
-    end
   end
 end
