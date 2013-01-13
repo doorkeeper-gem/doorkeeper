@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0
+
+- Only supports ruby 1.9.3
+- Supports only Mongoid >= 3.0
+
 ## 0.6.7
 
 - internals
