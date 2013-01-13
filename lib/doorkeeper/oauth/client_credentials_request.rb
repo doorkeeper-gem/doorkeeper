@@ -2,8 +2,6 @@ require 'doorkeeper/oauth/error'
 require 'doorkeeper/oauth/error_response'
 require 'doorkeeper/oauth/scopes'
 require 'doorkeeper/oauth/token_response'
-require 'doorkeeper/oauth/client_credentials/creator'
-require 'doorkeeper/oauth/client_credentials/issuer'
 require 'doorkeeper/oauth/client_credentials/validation'
 
 module Doorkeeper
@@ -13,15 +11,9 @@ module Doorkeeper
         new(Doorkeeper.configuration, server.client, server.parameters)
       end
 
-      attr_accessor :issuer, :server, :client, :original_scopes, :scopes
+      attr_accessor :server, :client, :original_scopes, :scopes, :access_token
       attr_reader   :response
       alias         :error_response :response
-
-      delegate :error, :to => :issuer
-
-      def issuer
-        @issuer ||= Issuer.new(server, Validation.new(server, self))
-      end
 
       def initialize(server, client, parameters = {})
         @client, @server = client, server
@@ -30,11 +22,12 @@ module Doorkeeper
       end
 
       def authorize
-        status = issuer.create(client, scopes)
-        @response = if status
-          TokenResponse.new(issuer.token)
+        validation.validate
+        @response = if validation.valid?
+          issue_token
+          TokenResponse.new access_token
         else
-          ErrorResponse.from_request(self)
+          ErrorResponse.from_request self
         end
       end
 
@@ -45,6 +38,20 @@ module Doorkeeper
         else
           server.default_scopes
         end
+      end
+
+      def issue_token
+        @access_token ||= Doorkeeper::AccessToken.create({
+          :application_id    => client.id,
+          :scopes            => scopes.to_s,
+          :use_refresh_token => false,
+          :expires_in        => server.access_token_expires_in
+        })
+      end
+
+      delegate :error, :to => :validation
+      def validation
+        @validation ||= Validation.new(server, self)
       end
     end
   end
