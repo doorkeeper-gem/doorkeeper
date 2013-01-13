@@ -1,13 +1,13 @@
 require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
-  describe PasswordAccessTokenRequest do
+  describe PasswordRequest do
     let(:server) { mock :server, :default_scopes => Doorkeeper::OAuth::Scopes.new, :access_token_expires_in => 2.hours, :refresh_token_enabled? => false }
     let(:client) { FactoryGirl.create(:application) }
     let(:owner)  { mock :owner, :id => 99 }
 
     subject do
-      PasswordAccessTokenRequest.new(server, client, owner)
+      PasswordRequest.new(server, client, owner)
     end
 
     it 'issues a new token for the client' do
@@ -30,7 +30,7 @@ module Doorkeeper::OAuth
 
     describe "with scopes" do
       subject do
-        PasswordAccessTokenRequest.new(server, client, owner, :scope => 'public')
+        PasswordRequest.new(server, client, owner, :scope => 'public')
       end
 
       it 'validates the current scope' do

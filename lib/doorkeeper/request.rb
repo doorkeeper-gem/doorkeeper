@@ -1,10 +1,3 @@
-require 'doorkeeper/request/authorization_code'
-require 'doorkeeper/request/client_credentials'
-require 'doorkeeper/request/code'
-require 'doorkeeper/request/password'
-require 'doorkeeper/request/refresh_token'
-require 'doorkeeper/request/token'
-
 module Doorkeeper
   module Request
     extend self
@@ -27,7 +20,7 @@ module Doorkeeper
 
     def get_strategy(strategy)
       raise Errors::MissingRequestStrategy unless strategy.present?
-      "Doorkeeper::Request::#{strategy.to_s.camelize}".constantize
+      "Doorkeeper::OAuth::#{strategy.to_s.camelize}Request".constantize
     end
   end
 end

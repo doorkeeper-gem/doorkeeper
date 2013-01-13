@@ -21,7 +21,7 @@ module Doorkeeper
     autoload :PreAuthorization,           "doorkeeper/oauth/pre_authorization"
     autoload :AuthorizationCodeRequest,   "doorkeeper/oauth/authorization_code_request"
     autoload :RefreshTokenRequest,        "doorkeeper/oauth/refresh_token_request"
-    autoload :PasswordAccessTokenRequest, "doorkeeper/oauth/password_access_token_request"
+    autoload :PasswordRequest,            "doorkeeper/oauth/password_request"
     autoload :ClientCredentialsRequest,   "doorkeeper/oauth/client_credentials_request"
     autoload :Authorization,              "doorkeeper/oauth/authorization"
     autoload :CodeRequest,                "doorkeeper/oauth/code_request"

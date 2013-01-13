@@ -9,6 +9,10 @@ require 'doorkeeper/oauth/client_credentials/validation'
 module Doorkeeper
   module OAuth
     class ClientCredentialsRequest
+      def self.build(server)
+        new(Doorkeeper.configuration, server.client, server.parameters)
+      end
+
       attr_accessor :issuer, :server, :client, :original_scopes, :scopes
       attr_reader   :response
       alias         :error_response :response

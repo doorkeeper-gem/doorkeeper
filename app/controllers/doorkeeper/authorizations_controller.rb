@@ -46,11 +46,7 @@ module Doorkeeper
     end
 
     def authorization
-      @authorization ||= strategy.request
-    end
-
-    def strategy
-      @strategy ||= server.authorization_request pre_auth.response_type
+      @authorization ||= server.authorization_request pre_auth.response_type
     end
   end
 end

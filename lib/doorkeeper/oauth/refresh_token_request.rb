@@ -1,6 +1,10 @@
 module Doorkeeper
   module OAuth
     class RefreshTokenRequest
+      def self.build(server)
+        new(Doorkeeper.configuration, server.current_refresh_token, server.client)
+      end
+
       include Doorkeeper::Validations
 
       validate :token,  :error => :invalid_request
