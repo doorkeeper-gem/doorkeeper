@@ -1,6 +1,10 @@
 module Doorkeeper
   module OAuth
     class AuthorizationCodeRequest
+      def self.build(server)
+        new Doorkeeper.configuration, server.grant, server.client, server.parameters
+      end
+
       include Doorkeeper::Validations
 
       validate :attributes,   :error => :invalid_request

@@ -1,8 +1,4 @@
-require 'doorkeeper/request/authorization_code'
-require 'doorkeeper/request/client_credentials'
 require 'doorkeeper/request/code'
-require 'doorkeeper/request/password'
-require 'doorkeeper/request/refresh_token'
 require 'doorkeeper/request/token'
 
 module Doorkeeper
@@ -20,7 +16,7 @@ module Doorkeeper
     # Available token strategies:
     # :password, :client_credentials, :authorization_code, :refresh_token
     def token_strategy(strategy)
-      get_strategy strategy
+      "Doorkeeper::OAuth::#{strategy.to_s.camelize}Request".constantize
     rescue NameError
       raise Errors::InvalidTokenStrategy
     end
