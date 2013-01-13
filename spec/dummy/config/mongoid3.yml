@@ -1,7 +1,7 @@
 development:
   sessions:
     default:
-      database: doorkeeper-mongoid3-development
+      database: doorkeeper-mongoid-development
       hosts:
         - localhost:27017
       options:
@@ -10,7 +10,7 @@ development:
 test:
   sessions:
     default:
-      database: doorkeeper-mongoid3-test
+      database: doorkeeper-mongoid-test
       hosts:
         - localhost:27017
       options:

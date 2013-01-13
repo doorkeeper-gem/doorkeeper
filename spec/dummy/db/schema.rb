@@ -41,18 +41,16 @@ ActiveRecord::Schema.define(:version => 20120524202412) do
   add_index "oauth_access_tokens", ["resource_owner_id"], :name => "index_oauth_access_tokens_on_resource_owner_id"
   add_index "oauth_access_tokens", ["token"], :name => "index_oauth_access_tokens_on_token", :unique => true
 
-  create_table "oauth_applications", :force => true do |t|
-    t.string   "name",         :null => false
-    t.string   "uid",          :null => false
-    t.string   "secret",       :null => false
-    t.string   "redirect_uri", :null => false
-    t.string   "owner_type",   :null => true, :default => "User"
-    t.integer  "owner_id",     :null => true
+  create_table "clients", :force => true do |t|
+    t.string   "name"
+    t.string   "uid"
+    t.string   "secret"
+    t.string   "redirect_uri"
     t.datetime "created_at",   :null => false
     t.datetime "updated_at",   :null => false
   end
 
-  add_index "oauth_applications", ["uid"], :name => "index_oauth_applications_on_uid", :unique => true
+  add_index "clients", ["uid"], :name => "index_clients_on_uid", :unique => true
 
   create_table "users", :force => true do |t|
     t.string   "name"
@@ -60,5 +58,4 @@ ActiveRecord::Schema.define(:version => 20120524202412) do
     t.datetime "updated_at", :null => false
     t.string   "password"
   end
-
 end

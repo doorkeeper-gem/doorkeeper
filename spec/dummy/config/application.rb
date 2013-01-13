@@ -52,6 +52,10 @@ module Dummy
 
     # Version of your assets, change this if you want to expire all your assets
     config.assets.version = '1.0'
+
+    config.after_initialize do
+      require Rails.root + "lib/#{Doorkeeper.configuration.orm_name}/client"
+      require Rails.root + "lib/#{Doorkeeper.configuration.orm_name}/user"
+    end
   end
 end
-

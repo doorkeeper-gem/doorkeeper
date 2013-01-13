@@ -3,7 +3,9 @@
 </div>
 
 <div class="span12">
-  <%= render 'form', :application => @application %>
+  <%= form_for :application, :url => oauth_application_path(@application), :html => { :method => :put } do |f| %>
+    <%= render 'form', :application => @application, :f => f %>
+  <% end %>
 </div>
 
 <div class="span4">

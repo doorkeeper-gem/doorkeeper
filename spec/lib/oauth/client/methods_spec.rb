@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'active_support/core_ext/string'
 require 'doorkeeper/oauth/client'
 
-class Doorkeeper::OAuth::Client
+module Doorkeeper::OAuth::Client
   describe 'Methods' do
     let(:client_id) { "some-uid" }
     let(:client_secret) { "some-secret" }
