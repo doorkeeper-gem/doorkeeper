@@ -36,11 +36,11 @@ feature 'Token endpoint' do
     should_have_json 'error_description', translated_error_message('unsupported_grant_type')
   end
 
-  scenario 'returns unsupported_grant_type if grant_type is missing' do
+  scenario 'returns invalid_request if grant_type is missing' do
     post token_endpoint_url(:code => @authorization.token, :client => @client, :grant_type => '')
 
     should_not_have_json 'access_token'
-    should_have_json 'error', 'unsupported_grant_type'
-    should_have_json 'error_description', translated_error_message('unsupported_grant_type')
+    should_have_json 'error', 'invalid_request'
+    should_have_json 'error_description', translated_error_message('invalid_request')
   end
 end
