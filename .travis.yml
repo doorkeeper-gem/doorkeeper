@@ -4,7 +4,7 @@ rvm:
 env:
   - rails=3.2.11
   - rails=3.1.10
-  - orm=mongoid3
+  - orm=mongoid
   - orm=mongo_mapper
 services:
   - mongodb
