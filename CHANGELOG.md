@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.7
+
+- internals
+  - [#188] Add IDs to the show views for integration testing [@egtann](https://github.com/egtann)
+
 ## 0.6.6
 
 - enhancements

@@ -33,7 +33,7 @@ For more information about the supported features, check out the related [page i
 Put this in your Gemfile:
 
 ``` ruby
-gem 'doorkeeper', '~> 0.6.6'
+gem 'doorkeeper', '~> 0.6.7'
 ```
 
 Run the installation generator with:
