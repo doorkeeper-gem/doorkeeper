@@ -1,6 +1,3 @@
-require 'doorkeeper/request/code'
-require 'doorkeeper/request/token'
-
 module Doorkeeper
   module Request
     extend self
@@ -8,7 +5,7 @@ module Doorkeeper
     # Available authorization strategies:
     # :code, :token
     def authorization_strategy(strategy)
-      get_strategy strategy
+      "Doorkeeper::OAuth::#{strategy.to_s.camelize}Request".constantize
     rescue NameError
       raise Errors::InvalidAuthorizationStrategy
     end

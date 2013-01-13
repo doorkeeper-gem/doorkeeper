@@ -1,6 +1,10 @@
 module Doorkeeper
   module OAuth
     class TokenRequest
+      def self.build(server)
+        new(server.context.send(:pre_auth), server.current_resource_owner)
+      end
+
       attr_accessor :pre_auth, :resource_owner, :client
 
       def initialize(pre_auth, resource_owner)
