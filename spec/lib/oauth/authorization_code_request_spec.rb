@@ -62,19 +62,5 @@ module Doorkeeper::OAuth
       subject.validate
       subject.error.should == :invalid_grant
     end
-
-    it 'skips token creation if there is a matching one' do
-      FactoryGirl.create(:access_token, :application_id => client.id, :resource_owner_id => grant.resource_owner_id, :scopes => "public write")
-      expect do
-        subject.authorize
-      end.to_not change { Doorkeeper::AccessToken.count }
-    end
-
-    it 'revokes matching token if expired' do
-      token = FactoryGirl.create(:access_token, :application_id => client.id, :resource_owner_id => grant.resource_owner_id, :scopes => "public write", :expires_in => -100)
-      expect do
-        subject.authorize
-      end.to change { token.reload.revoked? }
-    end
   end
 end
