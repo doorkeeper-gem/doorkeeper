@@ -1,7 +1,7 @@
 require 'spec_helper_integration'
 require 'generators/active_record/doorkeeper_client_generator'
 
-if Doorkeeper.configuration.orm_name == :active_record
+if Doorkeeper.configuration.orm == :active_record
   describe 'DoorkeeperClientGenerator', 'active record' do
     include GeneratorSpec::TestCase
 

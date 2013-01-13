@@ -14,11 +14,7 @@ case ENV['orm']
 when 'active_record'
   gem 'activerecord', rails_version
 
-when 'mongoid2'
-  gem 'mongoid', '2.5.1'
-  gem 'bson_ext', '~> 1.7'
-
-when 'mongoid3'
+when 'mongoid3', 'mongoid'
   gem 'mongoid', '3.0.10'
 
 when 'mongo_mapper'

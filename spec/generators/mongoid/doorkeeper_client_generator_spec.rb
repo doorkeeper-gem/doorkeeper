@@ -1,7 +1,7 @@
 require 'spec_helper_integration'
 require 'generators/mongoid/doorkeeper_client_generator'
 
-if Doorkeeper.configuration.orm_name == :mongoid
+if Doorkeeper.configuration.orm == :mongoid
   describe 'DoorkeeperClientGenerator', 'mongoid' do
     include GeneratorSpec::TestCase
 
@@ -17,18 +17,9 @@ if Doorkeeper.configuration.orm_name == :mongoid
       assert_file "app/models/batman.rb", /doorkeeper_client!/, /field :redirect_uri/, /attr_accessible (:[a-z_]+(, )?)+/
     end
 
-    if Doorkeeper.configuration.orm == :mongoid2
-      it 'adds mongoid2 indexes' do
-        run_generator %w(cat)
-        assert_file 'app/models/cat.rb', /index :uid, :unique => true/
-      end
-    end
-
-    if Doorkeeper.configuration.orm == :mongoid3
-      it 'adds mongoid3 indexes' do
-        run_generator %w(cat)
-        assert_file 'app/models/cat.rb', /#{Regexp.escape("index({ uid: 1 }, { unique: true })")}/
-      end
+    it 'adds mongoid indexes' do
+      run_generator %w(cat)
+      assert_file 'app/models/cat.rb', /#{Regexp.escape("index({ uid: 1 }, { unique: true })")}/
     end
   end
 end

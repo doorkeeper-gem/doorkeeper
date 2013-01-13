@@ -6,14 +6,7 @@ require "sprockets/railtie"
 
 Bundler.require :default
 
-orm = if [:mongoid2, :mongoid3].include?(DOORKEEPER_ORM)
-  Mongoid.load!(File.join(File.dirname(File.expand_path(__FILE__)), "#{DOORKEEPER_ORM}.yml"))
-  :mongoid
-else
-  DOORKEEPER_ORM
-end
-
-require "#{orm}/railtie"
+require "#{DOORKEEPER_ORM}/railtie"
 
 module Dummy
   class Application < Rails::Application
@@ -54,8 +47,8 @@ module Dummy
     config.assets.version = '1.0'
 
     config.after_initialize do
-      require Rails.root + "lib/#{Doorkeeper.configuration.orm_name}/client"
-      require Rails.root + "lib/#{Doorkeeper.configuration.orm_name}/user"
+      require Rails.root + "lib/#{Doorkeeper.configuration.orm}/client"
+      require Rails.root + "lib/#{Doorkeeper.configuration.orm}/user"
     end
   end
 end

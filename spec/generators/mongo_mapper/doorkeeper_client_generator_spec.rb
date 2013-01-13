@@ -1,7 +1,7 @@
 require 'spec_helper_integration'
 require 'generators/mongo_mapper/doorkeeper_client_generator'
 
-if Doorkeeper.configuration.orm_name == :mongo_mapper
+if Doorkeeper.configuration.orm == :mongo_mapper
   describe 'DoorkeeperClientGenerator', 'mongo_mapper' do
     include GeneratorSpec::TestCase
 

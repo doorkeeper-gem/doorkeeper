@@ -18,25 +18,16 @@ module Doorkeeper
       end
     end
 
-    initializer "doorkeeper.mongoid3.models" do
+    initializer "doorkeeper.mongoid.models" do
       ActiveSupport.on_load(:mongoid) do
-        require "doorkeeper/models/#{Doorkeeper.configuration.orm_name}"
-        extension = "Doorkeeper::Models::#{Doorkeeper.configuration.orm_name.to_s.camelize}".constantize
-        Mongoid::Document::ClassMethods.send :include, extension
-      end
-    end
-
-    initializer "doorkeeper.mongoid2.models" do
-      if defined?(Mongoid)
-        require "doorkeeper/models/#{Doorkeeper.configuration.orm_name}"
-        extension = "Doorkeeper::Models::#{Doorkeeper.configuration.orm_name.to_s.camelize}".constantize
-        Mongoid::Document::ClassMethods.send :include, extension
+        require "doorkeeper/models/mongoid"
+        Mongoid::Document::ClassMethods.send :include, Doorkeeper::Models::Mongoid
       end
     end
 
     initializer "doorkeeper.mongo_mapper.models" do
       if defined?(MongoMapper)
-        require "doorkeeper/models/#{Doorkeeper.configuration.orm}"
+        require "doorkeeper/models/mongo_mapper"
       end
     end
   end

@@ -4,9 +4,6 @@ set -e
 rails=3.2.8 orm=active_record bundle install --quiet
 rails=3.2.8 orm=active_record bundle exec rake
 
-rails=3.2.8 orm=mongoid2 bundle install --quiet
-rails=3.2.8 orm=mongoid2 bundle exec rake
-
 rails=3.2.8 orm=mongoid3 bundle install --quiet
 rails=3.2.8 orm=mongoid3 bundle exec rake
 

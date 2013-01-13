@@ -14,7 +14,7 @@ puts "====> Doorkeeper.orm = #{Doorkeeper.configuration.orm.inspect}"
 puts "====> Rails version: #{Rails.version}"
 puts "====> Ruby version: #{RUBY_VERSION}"
 
-require "support/orm/#{Doorkeeper.configuration.orm_name}"
+require "support/orm/#{Doorkeeper.configuration.orm}"
 
 ENGINE_RAILS_ROOT = File.join(File.dirname(__FILE__), '../')
 

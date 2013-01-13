@@ -15,7 +15,7 @@ For more information about the supported features, check out the related [page i
 
 ### Ruby
 
-- 1.8.7, 1.9.2 or 1.9.3
+- 1.9.3
 
 ### Rails
 
@@ -24,8 +24,7 @@ For more information about the supported features, check out the related [page i
 ### ORM
 
 - ActiveRecord
-- Mongoid 2
-- Mongoid 3
+- Mongoid >= 3.0
 - MongoMapper
 
 ## Installation
@@ -66,7 +65,7 @@ Doorkeeper currently supports MongoMapper, Mongoid 2 and 3. To start using it, y
 
 ``` ruby
 Doorkeeper.configure do
-  orm :mongoid2 # or :mongoid3, :mongo_mapper
+  orm :mongoid # or :mongo_mapper
 end
 ```
 
