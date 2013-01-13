@@ -1,9 +1,9 @@
 development:
-  database: doorkeeper-development
+  database: doorkeeper-mongoid-development
   persist_in_safe_mode: true
   autocreate_indexes: true
 
 test:
-  database: doorkeeper-mongoid2-test
+  database: doorkeeper-mongoid-test
   persist_in_safe_mode: true
   autocreate_indexes: true

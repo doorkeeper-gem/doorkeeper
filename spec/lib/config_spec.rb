@@ -116,43 +116,6 @@ describe Doorkeeper, "configuration" do
     end
   end
 
-  describe "enable_application_owner" do
-    it "is disabled by default" do
-      Doorkeeper.configuration.enable_application_owner?.should_not be_true
-    end
-
-    context "when enabled without confirmation" do
-      before do
-        Doorkeeper.configure do
-          orm DOORKEEPER_ORM
-          enable_application_owner
-        end
-      end
-      it "adds support for application owner" do
-        Doorkeeper::Application.new.should respond_to :owner
-      end
-      it "Doorkeeper.configuration.confirm_application_owner? returns false" do
-        Doorkeeper.configuration.confirm_application_owner?.should_not be_true
-      end
-    end
-
-    context "when enabled with confirmation set to true" do
-      before do
-        Doorkeeper.configure do
-          orm DOORKEEPER_ORM
-          enable_application_owner :confirmation => true
-        end
-      end
-      it "adds support for application owner" do
-        Doorkeeper::Application.new.should respond_to :owner
-      end
-      it "Doorkeeper.configuration.confirm_application_owner? returns true" do
-        Doorkeeper.configuration.confirm_application_owner?.should be_true
-      end
-    end
-
-  end
-
   it 'raises an exception when configuration is not set' do
     old_config = Doorkeeper.configuration
     Doorkeeper.module_eval do

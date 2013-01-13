@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'active_support/core_ext/string'
 require 'doorkeeper/oauth/client'
 
-class Doorkeeper::OAuth::Client
+module Doorkeeper::OAuth::Client
   describe Credentials do
     it 'is blank when any of the credentials is blank' do
       Credentials.new(nil, "something").should be_blank

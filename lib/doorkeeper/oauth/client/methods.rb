@@ -1,6 +1,6 @@
 module Doorkeeper
   module OAuth
-    class Client
+    module Client
       module Methods
         def from_params(request)
           request.parameters.values_at(:client_id, :client_secret)

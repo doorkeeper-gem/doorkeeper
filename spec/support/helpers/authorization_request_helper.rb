@@ -17,11 +17,11 @@ module AuthorizationRequestHelper
   end
 
   def client_should_be_authorized(client)
-    client.should have(1).access_grants
+    Doorkeeper::AccessGrant.where(:application_id => client.id).count.should be 1
   end
 
   def client_should_not_be_authorized(client)
-    client.should have(0).access_grants
+    Doorkeeper::AccessGrant.where(:application_id => client.id).count.should be 0
   end
 
   def i_should_be_on_client_callback(client)

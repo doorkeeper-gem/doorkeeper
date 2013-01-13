@@ -1,6 +1,6 @@
 module Doorkeeper
   module OAuth
-    class Client
+    module Client
       class Credentials < Struct.new(:uid, :secret)
         extend Methods
 

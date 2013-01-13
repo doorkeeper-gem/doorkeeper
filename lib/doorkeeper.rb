@@ -7,6 +7,8 @@ require 'doorkeeper/errors'
 require 'doorkeeper/server'
 require 'doorkeeper/request'
 
+require 'doorkeeper/validators/redirect_uri_validator'
+
 module Doorkeeper
   autoload :Validations, "doorkeeper/validations"
 
@@ -35,10 +37,13 @@ module Doorkeeper
   end
 
   module Models
-    autoload :Scopes,     'doorkeeper/models/scopes'
-    autoload :Expirable,  'doorkeeper/models/expirable'
-    autoload :Revocable,  'doorkeeper/models/revocable'
-    autoload :Accessible, 'doorkeeper/models/accessible'
+    autoload :Scopes,            'doorkeeper/models/scopes'
+    autoload :Expirable,         'doorkeeper/models/expirable'
+    autoload :Revocable,         'doorkeeper/models/revocable'
+    autoload :Accessible,        'doorkeeper/models/accessible'
+    autoload :Registerable,      'doorkeeper/models/registerable'
+    autoload :Authenticatable,   'doorkeeper/models/authenticatable'
+    autoload :ClientAssociation, 'doorkeeper/models/client_association'
   end
 
   module Helpers
@@ -60,5 +65,14 @@ module Doorkeeper
 
   def self.installed?
     configured? && database_installed?
+  end
+
+  def self.client
+    @client
+  end
+
+  def self.client=(model)
+    raise "You already have the model #{model} configured as doorkeeper client" if @client.present?
+    @client = model
   end
 end
