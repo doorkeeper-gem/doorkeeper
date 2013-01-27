@@ -21,7 +21,7 @@ module Doorkeeper
 
         module ClassMethods
           def column_names_with_table
-            self.column_names.map { |c| "clients.#{c}" }
+            self.column_names.map { |c| "#{self.table_name}.#{c}" }
           end
 
           # TODO: Authorized tokens should not be mixed in into client's class
