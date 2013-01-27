@@ -6,7 +6,7 @@ module Doorkeeper
     has_many :authorized_applications, :through => :authorized_tokens, :source => :application
 
     def self.column_names_with_table
-      self.column_names.map { |c| "oauth_applications.#{c}" }
+      self.column_names.map { |c| "#{self.table_name}.#{c}" }
     end
 
     def self.authorized_for(resource_owner)
