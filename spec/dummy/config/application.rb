@@ -1,7 +1,9 @@
 require File.expand_path('../boot', __FILE__)
 
 require "action_controller/railtie"
-require "active_resource/railtie"
+if Rails.version < "4"
+  require "active_resource/railtie"
+end
 require "sprockets/railtie"
 
 Bundler.require :default
