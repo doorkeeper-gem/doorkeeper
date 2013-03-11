@@ -67,14 +67,100 @@ module Doorkeeper::OAuth
       subject.should_not be_authorizable
     end
 
-    it 'requires a redirect uri' do
-      subject.redirect_uri = nil
-      subject.should_not be_authorizable
-    end
-
     it 'rejects non-valid scopes' do
       subject.scope = 'invalid'
       subject.should_not be_authorizable
+    end
+
+    context 'when the request has an invalid redirect uri' do
+      let :attributes do
+      {
+        :response_type => 'code',
+        :redirect_uri => 'http://invalid.com/auth',
+        :state => 'save-this'
+      }
+      end
+
+      it 'rejects the authorization' do
+        subject.should_not be_authorizable
+      end
+    end
+
+    context 'when neither request nor client has a redirect uri' do
+      let(:client) { mock :client, :redirect_uri => nil}
+
+      let :attributes do
+        {
+          :response_type => 'code',
+          :state => 'save-this'
+        }
+      end
+
+      it 'rejects the authorization' do
+        subject.should_not be_authorizable
+      end
+    end
+
+    
+    context "when the application has no redirect uri" do
+      let :attributes do
+        {
+          :response_type => 'code',
+          :state => 'save-this'
+        }
+      end
+
+      it 'rejects the authorization when both redirect uris are required' do
+        Doorkeeper.configure do
+          require_redirect_uri true
+        end
+
+        subject do
+          PreAuthorization.new(server, client, attributes)
+        end
+
+         subject.should_not be_authorizable
+      end
+
+       it 'accepts the authorization when redirect uris are optional' do
+          Doorkeeper.configure do
+            require_redirect_uri false
+          end
+
+          subject do
+            PreAuthorization.new(server, client, attributes)
+          end
+
+          subject.should be_authorizable
+          subject.redirect_uri.should eq 'http://tst.com/auth'
+        end
+    end
+
+    context "when the request has no redirect uri" do
+       let(:client) { mock :client, :redirect_uri => nil}
+
+        it 'rejects the authorization when both redirect uris are required' do
+          Doorkeeper.configure do
+            require_redirect_uri true
+          end
+
+          subject do
+            PreAuthorization.new(server, client, attributes)
+          end
+
+          subject.should_not be_authorizable
+        end
+
+        it 'accepts the authorization when redirect uris are optional' do
+          Doorkeeper.configure do
+            require_redirect_uri false
+          end
+
+          subject do
+            PreAuthorization.new(server, client, attributes)
+          end
+          subject.should be_authorizable
+        end
     end
   end
 end

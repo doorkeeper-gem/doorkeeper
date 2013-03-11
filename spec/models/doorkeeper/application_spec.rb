@@ -60,9 +60,27 @@ module Doorkeeper
       new_application.should_not be_valid
     end
 
-    it 'is invalid without redirect_uri' do
+    it 'is invalid with no redirect_uri when config forbids it' do
+      Doorkeeper.configure do
+          require_redirect_uri true
+      end
       new_application.save
       new_application.redirect_uri = nil
+      new_application.should_not be_valid
+    end
+
+    it 'is valid with no redirect_uri when config allows it' do
+      Doorkeeper.configure do
+          require_redirect_uri false
+      end
+      new_application.save
+      new_application.redirect_uri = nil
+      new_application.should be_valid
+    end
+
+    it 'is invalid with invalid redirect_uri' do
+      new_application.save
+      new_application.redirect_uri = "invalid_uri"
       new_application.should_not be_valid
     end
 

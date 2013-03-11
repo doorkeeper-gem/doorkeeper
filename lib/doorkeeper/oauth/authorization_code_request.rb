@@ -15,6 +15,10 @@ module Doorkeeper
         @client = client
         @grant  = grant
         @redirect_uri = parameters[:redirect_uri]
+
+        unless Doorkeeper.configuration.require_redirect_uri
+          @redirect_uri ||= grant && grant.redirect_uri
+        end
       end
 
       def authorize
@@ -75,7 +79,11 @@ module Doorkeeper
       end
 
       def validate_redirect_uri
-        grant.redirect_uri == redirect_uri
+        if grant.redirect_uri.present?
+          grant.redirect_uri == redirect_uri
+        else
+          !Doorkeeper.configuration.require_redirect_uri
+        end
       end
     end
   end
