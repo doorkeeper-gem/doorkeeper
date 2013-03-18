@@ -14,7 +14,6 @@ feature 'Implicit Grant Flow Errors' do
 
   [
     [:client_id,     :invalid_client],
-    [:redirect_uri,  :invalid_redirect_uri],
   ].each do |error|
     scenario "displays #{error.last.inspect} error for invalid #{error.first.inspect}" do
       visit authorization_endpoint_url(:client => @client, error.first => "invalid", :response_type => "token")
@@ -27,5 +26,19 @@ feature 'Implicit Grant Flow Errors' do
       i_should_not_see "Authorize"
       i_should_see_translated_error_message error.last
     end
+  end
+
+  scenario "displays :invalid_redirect_uri error when :redirect_uri does not match application" do
+    visit authorization_endpoint_url(:client => @client, :redirect_uri => "invalid",  :response_type => "token")
+    i_should_not_see "Authorize"
+    i_should_see_translated_error_message :invalid_redirect_uri
+  end
+
+  scenario "displays :invalid_redirect_uri error when :redirect_uri is missing from client and request" do
+    @client.redirect_uri = nil
+    @client.save
+    visit authorization_endpoint_url(:client => @client, :redirect_uri => "invalid",  :response_type => "token")
+    i_should_not_see "Authorize"
+    i_should_see_translated_error_message :invalid_redirect_uri
   end
 end

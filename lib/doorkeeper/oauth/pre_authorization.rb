@@ -18,6 +18,11 @@ module Doorkeeper
         @redirect_uri  = attrs[:redirect_uri]
         @scope         = attrs[:scope]
         @state         = attrs[:state]
+
+        # If the request has not specified a redirect, use the client-supplied one.
+        unless Doorkeeper.configuration.require_redirect_uri
+          @redirect_uri ||=  client && client.redirect_uri
+        end
       end
 
       def authorizable?
@@ -53,8 +58,27 @@ module Doorkeeper
 
       # TODO: test uri should be matched against the client's one
       def validate_redirect_uri
+        # As per spec section 4.2.1, the redirect_uri:
+        #  - is optional if application has defined its own redirect uri
+        #  - must match the application redirect if both are given
+        #  - can be used without extra validation if the app does not specify a redirect uri
+        # The test uri is also always valid.
         return false unless redirect_uri.present?
-        Helpers::URIChecker.test_uri?(redirect_uri) ||
+
+        is_test || optional_redirect_uri_valid || redirect_uris_match
+      end
+
+      private 
+
+      def is_test
+        Helpers::URIChecker.test_uri?(redirect_uri)
+      end
+
+      def optional_redirect_uri_valid
+        !Doorkeeper.configuration.require_redirect_uri && client.redirect_uri.nil? && Helpers::URIChecker.valid?(redirect_uri)
+      end
+
+      def redirect_uris_match
         Helpers::URIChecker.valid_for_authorization?(redirect_uri, client.redirect_uri)
       end
     end
