@@ -6,6 +6,7 @@ class RedirectUriValidator < ActiveModel::EachValidator
   end
 
   def validate_each(record, attribute, value)
+    return if value.nil? && !Doorkeeper.configuration.require_redirect_uri
     uri = ::URI.parse(value)
     return if test_redirect_uri?(uri)
     record.errors.add(attribute, :fragment_present) unless uri.fragment.nil?

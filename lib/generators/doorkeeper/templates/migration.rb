@@ -4,7 +4,7 @@ class CreateDoorkeeperTables < ActiveRecord::Migration
       t.string  :name,         :null => false
       t.string  :uid,          :null => false
       t.string  :secret,       :null => false
-      t.string  :redirect_uri, :null => false
+      t.string  :redirect_uri, :null => true
       t.timestamps
     end
 
