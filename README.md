@@ -9,24 +9,16 @@ Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider functionali
 
 The gem is under constant development. It is based in the [version 22 of the OAuth specification](http://tools.ietf.org/html/draft-ietf-oauth-v2-22) and it still does not support all OAuth features.
 
-For more information about the supported features, check out the related [page in the wiki](https://github.com/applicake/doorkeeper/wiki/Supported-Features). For more information about OAuth 2 go to [OAuth 2 Specs (Draft)](http://tools.ietf.org/html/draft-ietf-oauth-v2-22).
+## Useful links
+
+- For documentation, please check out our [wiki](https://github.com/applicake/doorkeeper/wiki)
+- For general questions, please post it in our [google groups](https://groups.google.com/forum/?fromgroups#!forum/doorkeeper-gem) or [stack overflow](http://stackoverflow.com/questions/tagged/doorkeeper)
 
 ## Requirements
 
-### Ruby
-
-- 1.8.7, 1.9.2 or 1.9.3
-
-### Rails
-
-- 3.1.x or 3.2.x
-
-### ORM
-
-- ActiveRecord
-- Mongoid 2
-- Mongoid 3
-- MongoMapper
+- Ruby 1.8.7, 1.9.2 or 1.9.3
+- Rails 3.1.x or 3.2.x
+- ORM ActiveRecord, Mongoid 2, Mongoid 3 or MongoMapper
 
 ## Installation
 
