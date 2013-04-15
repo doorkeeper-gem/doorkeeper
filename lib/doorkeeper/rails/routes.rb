@@ -16,8 +16,10 @@ module Doorkeeper
       end
 
       def self.warn_if_using_mount_method!
-        if File.read(::Rails.root + 'config/routes.rb') =~ %r[mount Doorkeeper::Engine]
-          warn "\n[DOORKEEPER] `mount Doorkeeper::Engine` is not being used anymore. Please replace it with `use_doorkeeper` in your /config/routes.rb file\n"
+        ::Rails.application.config.paths["config/routes"].each do |path|
+          if File.read(::Rails.root.join(path)) =~ %r[mount Doorkeeper::Engine]
+            warn "\n[DOORKEEPER] `mount Doorkeeper::Engine` is not being used anymore. Please replace it with `use_doorkeeper` in your #{path} file\n"
+          end
         end
       end
 
