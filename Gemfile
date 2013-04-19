@@ -7,12 +7,12 @@ source 'https://rubygems.org'
 gem 'jquery-rails'
 
 # Define Rails version
-rails_version = ENV['rails']
+rails_version = ENV['rails'].match(/edge/) ? {:github => 'rails/rails'} : ENV['rails']
 gem 'rails', rails_version
 
 case ENV['orm']
 when 'active_record'
-  gem 'activerecord', rails_version
+  gem 'activerecord'
 
 when 'mongoid2'
   gem 'mongoid', '2.5.1'
