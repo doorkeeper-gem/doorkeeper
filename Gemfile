@@ -2,7 +2,7 @@
 ENV['rails'] ||= '3.2.8'
 ENV['orm']   ||= 'active_record'
 
-source :rubygems
+source 'https://rubygems.org'
 
 gem 'jquery-rails'
 
