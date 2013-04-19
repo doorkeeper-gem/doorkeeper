@@ -10,6 +10,8 @@ gem 'jquery-rails'
 rails_version = ENV['rails'].match(/edge/) ? {:github => 'rails/rails'} : ENV['rails']
 gem 'rails', rails_version
 
+gem 'database_cleaner', '~> 1.0.0.RC1' if rails_version.is_a?(Hash)
+
 case ENV['orm']
 when 'active_record'
   gem 'activerecord'
