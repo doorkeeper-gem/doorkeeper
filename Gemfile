@@ -2,17 +2,19 @@
 ENV['rails'] ||= '3.2.8'
 ENV['orm']   ||= 'active_record'
 
-source :rubygems
+source 'https://rubygems.org'
 
 gem 'jquery-rails'
 
 # Define Rails version
-rails_version = ENV['rails']
+rails_version = ENV['rails'].match(/edge/) ? {:github => 'rails/rails'} : ENV['rails']
 gem 'rails', rails_version
+
+gem 'database_cleaner', '~> 1.0.0.RC1' if rails_version.is_a?(Hash)
 
 case ENV['orm']
 when 'active_record'
-  gem 'activerecord', rails_version
+  gem 'activerecord'
 
 when 'mongoid2'
   gem 'mongoid', '2.5.1'
