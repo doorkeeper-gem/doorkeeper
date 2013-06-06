@@ -7,10 +7,11 @@ module Doorkeeper
 
           before_filter doorkeeper_for.filter_options do
             unless doorkeeper_for.validate_token(doorkeeper_token)
-              # TODO: use ErrorRespose class for this
               render_options = doorkeeper_unauthorized_render_options
+              error = OAuth::InvalidTokenResponse.from_access_token(doorkeeper_token)
+
               if render_options.nil? || render_options.empty?
-                head :unauthorized
+                head :unauthorized, error.headers
               else
                 render_options[:status] = :unauthorized
                 render_options[:layout] = false if render_options[:layout].nil?
@@ -27,8 +28,9 @@ module Doorkeeper
       end
 
       def doorkeeper_token
+        return @token if instance_variable_defined?(:@token)
         methods = Doorkeeper.configuration.access_token_methods
-        @token ||= OAuth::Token.authenticate request, *methods
+        @token = OAuth::Token.authenticate request, *methods
       end
 
       def doorkeeper_unauthorized_render_options
