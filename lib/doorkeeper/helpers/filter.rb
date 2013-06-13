@@ -13,6 +13,7 @@ module Doorkeeper
               if render_options.nil? || render_options.empty?
                 head :unauthorized, error.headers
               else
+                response.headers.merge!(error.headers)
                 render_options[:status] = :unauthorized
                 render_options[:layout] = false if render_options[:layout].nil?
                 render render_options

@@ -15,20 +15,12 @@ module Doorkeeper
       end
 
       def initialize(attributes = {})
-        super(attributes.merge(:name => :invalid_token, :state => :unauthorize))
+        super(attributes.merge(:name => :invalid_token, :state => :unauthorized))
         @reason = attributes[:reason] || :unknown
       end
 
       def description
         @description ||= I18n.translate @reason, :scope => [:doorkeeper, :errors, :messages, :invalid_token]
-      end
-
-      def authenticate_info
-        %{Bearer error="#{body[:error]}", error_description="#{body[:error_description]}"}
-      end
-
-      def headers
-        super.merge('WWW-Authenticate' => authenticate_info)
       end
     end
   end

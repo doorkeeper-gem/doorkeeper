@@ -11,22 +11,13 @@ module Doorkeeper::OAuth
     describe :from_access_token do
       it 'revoked' do
         response = InvalidTokenResponse.from_access_token stub(:revoked? => true, :expired? => true)
-        expect(response.description).to match /revoked/
+        response.description.should include("revoked")
       end
 
       it 'expired' do
         response = InvalidTokenResponse.from_access_token stub(:revoked? => false, :expired? => true)
-        expect(response.description).to match /expired/
+        response.description.should include("expired")
       end
-    end
-
-    describe '.authenticate_info' do
-      subject { InvalidTokenResponse.from_access_token stub(:revoked? => true) }
-      its(:authenticate_info) { should == 'Bearer error="invalid_token", error_description="The access_token is revoked"' }
-    end
-    describe '.headers' do
-      subject { InvalidTokenResponse.from_access_token stub(:revoked? => true) }
-      its(:headers) { should have_key 'WWW-Authenticate' }
     end
   end
 end

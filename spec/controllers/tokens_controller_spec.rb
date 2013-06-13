@@ -31,6 +31,7 @@ describe Doorkeeper::TokensController do
       token.stub(:error_response => double(:to_json => [], :status => :unauthorized))
       post :create
       expect(response.status).to eq 401
+      expect(response.headers["WWW-Authenticate"]).to match(/Bearer/)
     end
   end
 end

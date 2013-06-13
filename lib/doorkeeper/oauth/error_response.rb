@@ -36,8 +36,23 @@ module Doorkeeper
         end
       end
 
+      def authenticate_info
+        %{Bearer realm="#{realm}", error="#{name}", error_description="#{description}"}
+      end
+
       def headers
-        { 'Cache-Control' => 'no-store', 'Pragma' => 'no-cache', 'Content-Type' => 'application/json; charset=utf-8' }
+        { 'Cache-Control' => 'no-store',
+          'Pragma' => 'no-cache',
+          'Content-Type' => 'application/json; charset=utf-8',
+          'WWW-Authenticate' => authenticate_info }
+      end
+
+      protected
+
+      delegate :realm, :to => :configuration
+
+      def configuration
+        Doorkeeper.configuration
       end
     end
   end

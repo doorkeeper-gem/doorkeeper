@@ -53,4 +53,7 @@ Doorkeeper.configure do
   # (Similar behaviour: https://developers.google.com/accounts/docs/OAuth2InstalledApp#choosingredirecturi)
   #
   # test_redirect_uri 'urn:ietf:wg:oauth:2.0:oob'
+
+  # WWW-Authenticate Realm (default "Doorkeeper").
+  realm "Doorkeeper"
 end
