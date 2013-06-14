@@ -9,11 +9,11 @@ module Doorkeeper
             unless doorkeeper_for.validate_token(doorkeeper_token)
               render_options = doorkeeper_unauthorized_render_options
               error = OAuth::InvalidTokenResponse.from_access_token(doorkeeper_token)
+              headers.merge!(error.headers.reject {|k, v| ['Content-Type'].include? k })
 
               if render_options.nil? || render_options.empty?
-                head :unauthorized, error.headers
+                head :unauthorized
               else
-                response.headers.merge!(error.headers)
                 render_options[:status] = :unauthorized
                 render_options[:layout] = false if render_options[:layout].nil?
                 render render_options
