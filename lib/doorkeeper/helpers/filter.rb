@@ -8,8 +8,8 @@ module Doorkeeper
           before_filter doorkeeper_for.filter_options do
             unless doorkeeper_for.validate_token(doorkeeper_token)
               render_options = doorkeeper_unauthorized_render_options
-              error = OAuth::InvalidTokenResponse.from_access_token(doorkeeper_token)
-              headers.merge!(error.headers.reject {|k, v| ['Content-Type'].include? k })
+              @error = OAuth::InvalidTokenResponse.from_access_token(doorkeeper_token)
+              headers.merge!(@error.headers.reject {|k, v| ['Content-Type'].include? k })
 
               if render_options.nil? || render_options.empty?
                 head :unauthorized
