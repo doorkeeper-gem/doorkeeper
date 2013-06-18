@@ -2,7 +2,7 @@ module Doorkeeper
   class Application < ActiveRecord::Base
     self.table_name = :oauth_applications
 
-    has_many :authorized_tokens, :class_name => "AccessToken", :conditions => { :revoked_at => nil }
+    has_many :authorized_tokens, -> {where(:revoked_at => nil)}, :class_name => "AccessToken"
     has_many :authorized_applications, :through => :authorized_tokens, :source => :application
 
     def self.column_names_with_table
