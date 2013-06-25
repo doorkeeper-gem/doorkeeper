@@ -116,10 +116,10 @@ Side note: when using devise you have access to current_user as devise extends e
 
 If you are not using devise, you may want to check other ways of authentication [here](https://github.com/applicake/doorkeeper/wiki/Authenticating-using-Clearance-DIY).
 
-## Authenticating with Assertion
+### Authenticating with Assertion
 
-You may want to configure Doorkeeper to handle authentication via Assertion. This will let you define your own way of authenticating
-resource owners via 3rd Party credentials (e.g. Facebook)
+You may want to configure Doorkeeper to handle authentication via assertion. This will let you define your own way of authenticating
+resource owners via 3rd Party applications (e.g. Facebook).
 
 ```ruby
 Doorkeeper.configure do
