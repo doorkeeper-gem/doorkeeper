@@ -9,7 +9,7 @@ feature 'Resource Owner Assertion Flow inproperly set up' do
   end
 
   context 'with valid user assertion' do
-    scenario "should issue new token" do
+    scenario "should not issue new token" do
       expect {
         post assertion_endpoint_url(:client => @client, :resource_owner => @resource_owner)
       }.to_not change { Doorkeeper::AccessToken.count }
