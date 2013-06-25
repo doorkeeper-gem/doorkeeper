@@ -46,6 +46,10 @@ module Doorkeeper
       context.send :resource_owner_from_credentials
     end
 
+    def resource_owner_from_assertion
+      context.send :resource_owner_from_assertion
+    end
+
     def credentials
       methods = Doorkeeper.configuration.client_credentials_methods
       @credentials ||= OAuth::Client::Credentials.from_request(context.request, *methods)

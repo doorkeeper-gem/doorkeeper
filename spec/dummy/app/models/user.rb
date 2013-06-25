@@ -9,14 +9,16 @@ when :mongoid2, :mongoid3
 
     field :name, :type => String
     field :password, :type => String
+    field :assertion, :type => String
   end
 when :mongo_mapper
   class User
     include MongoMapper::Document
     timestamps!
 
-    key :name,     String
-    key :password, String
+    key :name,      String
+    key :password,  String
+    key :assertion, String
   end
 end
 
