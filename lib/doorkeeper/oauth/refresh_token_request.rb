@@ -37,13 +37,13 @@ module Doorkeeper
       end
 
       def create_access_token
-        @access_token = Doorkeeper::AccessToken.create!({
-          :application_id    => refresh_token.application_id,
-          :resource_owner_id => refresh_token.resource_owner_id,
-          :scopes            => refresh_token.scopes_string,
-          :expires_in        => server.access_token_expires_in,
-          :use_refresh_token => true
-        })
+        @access_token = Doorkeeper::AccessToken.new
+        @access_token.application_id = refresh_token.application_id
+        @access_token.resource_owner_id = refresh_token.resource_owner_id
+        @access_token.scopes = refresh_token.scopes_string
+        @access_token.expires_in = server.access_token_expires_in
+        @access_token.use_refresh_token = true
+        @access_token.save!
       end
 
       def validate_token
