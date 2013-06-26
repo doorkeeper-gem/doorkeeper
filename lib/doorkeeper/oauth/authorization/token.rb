@@ -10,13 +10,14 @@ module Doorkeeper
         end
 
         def issue_token
-          @token ||= AccessToken.create!({
-            :application_id    => pre_auth.client.id,
-            :resource_owner_id => resource_owner.id,
-            :scopes            => pre_auth.scopes.to_s,
-            :expires_in        => configuration.access_token_expires_in,
-            :use_refresh_token => false
-          })
+          @token = Doorkeeper::AccessToken.new
+          @token.application_id = pre_auth.client.id
+          @token.resource_owner_id = resource_owner.id
+          @token.scopes = pre_auth.scopes.to_s
+          @token.expires_in = configuration.access_token_expires_in
+          @token.use_refresh_token = false
+          @token.save!
+          @token
         end
 
         def configuration
