@@ -18,13 +18,10 @@ module Doorkeeper
         end
 
         def create(client, scopes, attributes = {})
-          token = Doorkeeper::AccessToken.new
-          token.application_id = client.id
-          token.scopes = scopes.to_s
-          token.use_refresh_token = attributes[:use_refresh_token] if attributes[:use_refresh_token]
-          token.expires_in = attributes[:expires_in] if attributes[:expires_in]
-          token.save!
-          token
+          Doorkeeper::AccessToken.create(attributes.merge({
+            :application_id => client.id,
+            :scopes         => scopes.to_s
+          }))
         end
       end
     end
