@@ -11,6 +11,12 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
       end.to change { Doorkeeper::AccessToken.count }.by(1)
     end
 
+    it 'returns false if creation fails' do
+      Doorkeeper::AccessToken.should_receive(:create).and_return(false)
+      created = subject.call(client, scopes)
+      created.should be_false
+    end
+
     it 'does not create a new token if there is an accessible one' do
       subject.call(client, scopes, :expires_in => 10.years)
       expect do
