@@ -29,6 +29,9 @@ Doorkeeper.configure do
   # If you want to disable expiration, set this to nil.
   # access_token_expires_in 2.hours
 
+  # Oauth path prefix defaults to 'oauth'
+  # oauth_path 'oauth'
+
   # Issue access tokens with refresh token (disabled by default)
   # use_refresh_token
 
