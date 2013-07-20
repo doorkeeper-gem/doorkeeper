@@ -4,10 +4,10 @@ rvm:
   - 1.9.3
   - 2.0.0
 env:
+  - rails=3.1.8
   - rails=3.2.8
   - rails=3.2.13
-  - rails=3.1.8
-  - rails=edge
+  - rails=4.0.0
   - orm=mongoid2
   - orm=mongoid3
   - orm=mongo_mapper
@@ -20,4 +20,4 @@ matrix:
     - rvm: 1.9.2
       env: orm=mongoid3
     - rvm: 1.9.2
-      env: rails=edge
+      env: rails=4.0.0
