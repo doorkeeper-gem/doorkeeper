@@ -1,3 +1,7 @@
+# NOTE: This project was moved!
+
+## Official fork on: https://github.com/tute/doorkeeper
+
 # Doorkeeper - awesome oauth provider for your Rails app.
 
 [![Build Status](https://travis-ci.org/applicake/doorkeeper.png?branch=master)](https://travis-ci.org/applicake/doorkeeper)
