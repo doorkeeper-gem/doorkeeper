@@ -1,18 +1,19 @@
 # Defaults. For supported versions check .travis.yml
-ENV['rails'] ||= '3.2.8'
+ENV['rails'] ||= '3.2.13'
 ENV['orm']   ||= 'active_record'
 
-source :rubygems
+source 'https://rubygems.org'
 
 gem 'jquery-rails'
 
 # Define Rails version
-rails_version = ENV['rails']
-gem 'rails', rails_version
+gem 'rails', ENV['rails']
+
+gem 'database_cleaner', '~> 1.0.0.RC1' if ENV['rails'][0] == '4'
 
 case ENV['orm']
 when 'active_record'
-  gem 'activerecord', rails_version
+  gem 'activerecord'
 
 when 'mongoid2'
   gem 'mongoid', '2.5.1'

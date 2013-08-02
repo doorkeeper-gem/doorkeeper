@@ -7,13 +7,13 @@ module Doorkeeper
       def self.from_string(string)
         string ||= ""
         new.tap do |scope|
-          scope.add *string.split
+          scope.add(*string.split)
         end
       end
 
       def self.from_array(array)
         new.tap do |scope|
-          scope.add *array
+          scope.add(*array)
         end
       end
 
@@ -28,7 +28,7 @@ module Doorkeeper
       end
 
       def add(*scopes)
-        @scopes.push *scopes.map(&:to_sym)
+        @scopes.push(*scopes.map(&:to_sym))
         @scopes.uniq!
       end
 

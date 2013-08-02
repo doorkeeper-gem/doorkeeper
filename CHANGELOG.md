@@ -1,5 +1,47 @@
 # Changelog
 
+## 0.6.7
+
+- internals
+  - [#188] Add IDs to the show views for integration testing [@egtann](https://github.com/egtann)
+
+## 0.6.6
+
+- enhancements
+  - [#187] Raise error if configuration is not set
+
+## 0.6.5
+
+- enhancements
+  - [#184] Vendor the Bootstrap CSS [@tylerhunt](https://github.com/tylerhunt)
+
+## 0.6.4
+
+- bug
+  - [#180] Add localization to authorized_applications destroy notice [@aalvarado](https://github.com/aalvarado)
+
+## 0.6.3
+
+- bugfixes
+  - [#163] Error response content-type header should be application/json [@ggayan](https://github.com/ggayan)
+  - [#175] Make token.expires_in_seconds return nil when expires_in is nil [@miyagawa](https://github.com/miyagawa)
+- enhancements
+  - [#166, #172, #174] Behavior to automatically authorize based on a configured proc
+- internals
+  - [#168] Using expectation syntax for controller specs [@rdsoze](https://github.com/rdsoze)
+
+## 0.6.2
+
+- bugfixes
+  - [#162] Remove ownership columns from base migration template [@rdsoze](https://github.com/rdsoze)
+
+## 0.6.1
+
+- bugfixes
+  - [#160] Removed |routes| argument from initializer authenticator blocks
+- documentation
+  - [#160] Fixed description of context of authenticator blocks
+
 ## 0.6.0
 
 - enhancements

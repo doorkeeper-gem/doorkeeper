@@ -1,4 +1,10 @@
 module Doorkeeper
+  class MissingConfiguration < StandardError
+    def initialize
+      super("Configuration for doorkeeper missing. Do you have doorkeeper initializer?")
+    end
+  end
+
   def self.configure(&block)
     @config = Config::Builder.new(&block).build
     enable_orm
@@ -6,7 +12,7 @@ module Doorkeeper
   end
 
   def self.configuration
-    @config
+    @config || (raise MissingConfiguration.new)
   end
 
   def self.enable_orm
@@ -142,11 +148,13 @@ module Doorkeeper
              warn(I18n.translate('doorkeeper.errors.messages.credential_flow_not_configured'))
              nil
            }
+    option :skip_authorization, :default => lambda{|routes|}
     option :access_token_expires_in,      :default => 7200
     option :authorization_code_expires_in,:default => 600
     option :orm, :default => :active_record
     option :test_redirect_uri, :default => 'urn:ietf:wg:oauth:2.0:oob'
     option :oauth_path, :default => 'oauth'
+
 
     def refresh_token_enabled?
       !!@refresh_token_enabled

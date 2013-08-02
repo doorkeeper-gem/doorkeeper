@@ -1,38 +1,31 @@
 # Doorkeeper - awesome oauth provider for your Rails app.
 
-[![Build Status](https://secure.travis-ci.org/applicake/doorkeeper.png)](http://travis-ci.org/applicake/doorkeeper)
-[![Dependency Status](https://gemnasium.com/applicake/doorkeeper.png)](https://gemnasium.com/applicake/doorkeeper)
-[![Code Climate](https://codeclimate.com/badge.png)](https://codeclimate.com/github/applicake/doorkeeper)
+[![Build Status](https://travis-ci.org/applicake/doorkeeper.png?branch=master)](https://travis-ci.org/applicake/doorkeeper)
+[![Dependency Status](https://gemnasium.com/applicake/doorkeeper.png?travis)](https://gemnasium.com/applicake/doorkeeper)
+[![Code Climate](https://codeclimate.com/github/applicake/doorkeeper.png)](https://codeclimate.com/github/applicake/doorkeeper)
+[![Gem Version](https://badge.fury.io/rb/doorkeeper.png)](https://rubygems.org/gems/doorkeeper)
 
 Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider functionality to your application.
 
 The gem is under constant development. It is based in the [version 22 of the OAuth specification](http://tools.ietf.org/html/draft-ietf-oauth-v2-22) and it still does not support all OAuth features.
 
-For more information about the supported features, check out the related [page in the wiki](https://github.com/applicake/doorkeeper/wiki/Supported-Features). For more information about OAuth 2 go to [OAuth 2 Specs (Draft)](http://tools.ietf.org/html/draft-ietf-oauth-v2-22).
+## Useful links
+
+- For documentation, please check out our [wiki](https://github.com/applicake/doorkeeper/wiki)
+- For general questions, please post it in our [google groups](https://groups.google.com/forum/?fromgroups#!forum/doorkeeper-gem) or [stack overflow](http://stackoverflow.com/questions/tagged/doorkeeper)
 
 ## Requirements
 
-### Ruby
-
-- 1.8.7, 1.9.2 or 1.9.3
-
-### Rails
-
-- 3.1.x or 3.2.x
-
-### ORM
-
-- ActiveRecord
-- Mongoid 2
-- Mongoid 3
-- MongoMapper
+-- Ruby 1.9.3 or 2.0.0
+-- Rails 3.1, 3.2, 4.0 upcoming
+-- ORM ActiveRecord
 
 ## Installation
 
 Put this in your Gemfile:
 
 ``` ruby
-gem 'doorkeeper', '~> 0.6.0'
+gem 'doorkeeper', '~> 0.6.7'
 ```
 
 Run the installation generator with:
@@ -101,23 +94,27 @@ You need to configure Doorkeeper in order to provide resource_owner model and au
 
 ``` ruby
 Doorkeeper.configure do
-  resource_owner_authenticator do |routes|
-    current_user || redirect_to(routes.login_url) # returns nil if current_user is not logged in
+  resource_owner_authenticator do
+    User.find(session[:current_user_id]) || redirect_to(login_url)
   end
 end
 ```
 
-This block runs into the context of your Rails application, and it has access to `current_user` method, for example.
+This code is run in the context of your application so you have access to your models, session or routes helpers. However,
+since this code is not run in the context of your application's ApplicationController it doesn't have access
+to the methods defined over there.
 
 If you use [devise](https://github.com/plataformatec/devise), you may want to use warden to authenticate the block:
 
 ``` ruby
-resource_owner_authenticator do |routes|
+resource_owner_authenticator do
   current_user || warden.authenticate!(:scope => :user)
 end
 ```
 
-If you are not using devise, you may want to check other ways of authentication [here](https://github.com/applicake/doorkeeper/wiki/Authenticating-using-Clearance-DIY).
+Side note: when using devise you have access to current_user as devise extends entire ActionController::Base with the current_#{mapping}.
+
+If you are not using devise, you may want to check other ways of authentication [here](https://github.com/applicake/doorkeeper/wiki/Authenticating-using-Clearance-or-DIY).
 
 ## Protecting resources with OAuth (a.k.a your API endpoint)
 
