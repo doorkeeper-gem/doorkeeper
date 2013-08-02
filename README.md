@@ -1,11 +1,8 @@
 # Doorkeeper - awesome oauth provider for your Rails app.
 
-Fork from applicake's, after didn't receive responses for their future plans.
-Goal is to build a nice Rails 4 release.
-
-[![Build Status](https://travis-ci.org/tute/doorkeeper.png?branch=master)](https://travis-ci.org/tute/doorkeeper)
-[![Dependency Status](https://gemnasium.com/tute/doorkeeper.png?travis)](https://gemnasium.com/tute/doorkeeper)
-[![Code Climate](https://codeclimate.com/github/tute/doorkeeper.png)](https://codeclimate.com/github/tute/doorkeeper)
+[![Build Status](https://travis-ci.org/applicake/doorkeeper.png?branch=master)](https://travis-ci.org/applicake/doorkeeper)
+[![Dependency Status](https://gemnasium.com/applicake/doorkeeper.png?travis)](https://gemnasium.com/applicake/doorkeeper)
+[![Code Climate](https://codeclimate.com/github/applicake/doorkeeper.png)](https://codeclimate.com/github/applicake/doorkeeper)
 [![Gem Version](https://badge.fury.io/rb/doorkeeper.png)](https://rubygems.org/gems/doorkeeper)
 
 Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider functionality to your application.
@@ -19,9 +16,9 @@ The gem is under constant development. It is based in the [version 22 of the OAu
 
 ## Requirements
 
-- Ruby 1.9.2, 1.9.3 or 2.0.0
-- Rails 3.1.x or 3.2.x. 4.0.0 coming!
-- ORM ActiveRecord, Mongoid 2, Mongoid 3 or MongoMapper
+-- Ruby 1.9.3 or 2.0.0
+-- Rails 3.1, 3.2, 4.0 upcoming
+-- ORM ActiveRecord
 
 ## Installation
 
