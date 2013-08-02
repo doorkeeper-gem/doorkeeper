@@ -34,7 +34,7 @@ module Doorkeeper
 
       def generate_routes!(options)
         @mapping = Mapper.new.map(&@options)
-        routes.scope 'oauth', :as => 'oauth' do
+        routes.scope 'oauth', :as => Doorkeeper.configuration.oauth_path do
           map_route(:authorizations, :authorization_routes)
           map_route(:tokens, :token_routes)
           map_route(:applications, :application_routes)
