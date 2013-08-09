@@ -1,5 +1,9 @@
 module Doorkeeper
   class Application < ActiveRecord::Base
+    if Doorkeeper.configuration.active_record_options[:establish_connection]
+      establish_connection Doorkeeper.configuration.active_record_options[:establish_connection]
+    end
+
     self.table_name = :oauth_applications
 
     if ActiveRecord::VERSION::MAJOR >= 4

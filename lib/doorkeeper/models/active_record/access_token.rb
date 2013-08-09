@@ -1,5 +1,9 @@
 module Doorkeeper
   class AccessToken < ActiveRecord::Base
+    if Doorkeeper.configuration.active_record_options[:establish_connection]
+      establish_connection Doorkeeper.configuration.active_record_options[:establish_connection]
+    end
+
     self.table_name = :oauth_access_tokens
 
     def self.delete_all_for(application_id, resource_owner)
