@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.0
+
+- enhancements
+  - [#229] Rails 4!
+- internals
+  - [#203] Changing table name to be specific in column_names_with_table
+  - [#215] README update
+  - [#227] Use Rails.config.paths["config/routes"] instead of assuming "config/routes.rb" exists
+  - [#262] Add jquery as gem dependency
+  - [#263] Add a configuration for ActiveRecord.establish_connection
+  - Deprecation and Ruby warnings (PRs merged outside of GitHub).
+
 ## 0.6.7
 
 - internals

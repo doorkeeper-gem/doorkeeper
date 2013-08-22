@@ -16,16 +16,16 @@ The gem is under constant development. It is based in the [version 22 of the OAu
 
 ## Requirements
 
--- Ruby 1.9.3 or 2.0.0
--- Rails 3.1, 3.2, 4.0 upcoming
--- ORM ActiveRecord
+- Ruby 1.9.3 or 2.0.0
+- Rails 3.1, 3.2, 4.0
+- ORM ActiveRecord, Mongoid 2, Mongoid 3, MongoMapper
 
 ## Installation
 
 Put this in your Gemfile:
 
 ``` ruby
-gem 'doorkeeper', '~> 0.6.7'
+gem 'doorkeeper', '~> 0.7.0'
 ```
 
 Run the installation generator with:
