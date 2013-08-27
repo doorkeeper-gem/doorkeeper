@@ -11,7 +11,7 @@ module Doorkeeper
 
     before_validation :generate_uid, :generate_secret, :on => :create
 
-    if ::Rails.version < '4'
+    if ::Rails.version.to_i < 4
       attr_accessible :name, :redirect_uri
     end
 
