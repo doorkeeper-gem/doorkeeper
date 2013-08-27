@@ -4,7 +4,7 @@ module Doorkeeper
 
     before_filter :authenticate_admin!
     before_filter :set_application, :only => [:show, :edit, :update, :destroy]
-    
+
     def index
       @applications = Application.all
     end
@@ -44,11 +44,11 @@ module Doorkeeper
     end
 
     private
-    
+
     def set_application
       @application = Application.find(params[:id])
     end
-    
+
     def application_params
       if params.respond_to?(:permit)
         params.require(:application).permit(:name, :redirect_uri)

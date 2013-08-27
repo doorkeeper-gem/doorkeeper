@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.1
+
+- bug
+  - [#269] Rails 3.2 raised `ActiveModel::MassAssignmentSecurity::Error`.
+
 ## 0.7.0
 
 - enhancements

@@ -15,8 +15,3 @@ services:
 matrix:
   allow_failures:
     - env: orm=mongoid2
-  exclude:
-    - rvm: 1.9.2
-      env: orm=mongoid3
-    - rvm: 1.9.2
-      env: rails=4.0.0
