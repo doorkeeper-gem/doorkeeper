@@ -28,20 +28,6 @@ module Doorkeeper::OAuth
       subject.error.should == :invalid_client
     end
 
-    it 'skips token creation if there is already one' do
-      FactoryGirl.create(:access_token, :application_id => client.id, :resource_owner_id => owner.id)
-      expect do
-        subject.authorize
-      end.to_not change { Doorkeeper::AccessToken.count }
-    end
-
-    it 'revokes old token if expired' do
-      token = FactoryGirl.create(:access_token, :application_id => client.id, :resource_owner_id => owner.id, :expires_in => -100)
-      expect do
-        subject.authorize
-      end.to change { token.reload.revoked? }
-    end
-
     describe "with scopes" do
       subject do
         PasswordAccessTokenRequest.new(server, client, owner, :scope => 'public')
