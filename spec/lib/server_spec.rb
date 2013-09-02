@@ -15,6 +15,10 @@ describe Doorkeeper::Server do
       expect { subject.authorization_request(:duh) }.to raise_error(Doorkeeper::Errors::InvalidAuthorizationStrategy)
     end
 
+    it 'raises error when strategy does not match phase' do
+      expect { subject.token_request(:code) }.to raise_error(Doorkeeper::Errors::InvalidTokenStrategy)
+    end
+
     it 'builds the request with selected strategy' do
       stub_const 'Doorkeeper::Request::Code', fake_class
       fake_class.should_receive(:build).with(subject)
