@@ -85,6 +85,9 @@ This will mount following routes:
     DELETE    /oauth/authorize
     POST      /oauth/token
     resources /oauth/applications
+    GET       /oauth/authorized_applications
+    DELETE    /oauth/authorized_applications/:id
+    GET       /oauth/token/info
 
 For more information on how to customize routes, check out [this page on the wiki](https://github.com/applicake/doorkeeper/wiki/Customizing-routes).
 
