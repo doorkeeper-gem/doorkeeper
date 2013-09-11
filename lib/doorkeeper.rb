@@ -55,7 +55,13 @@ module Doorkeeper
   end
 
   def self.database_installed?
-    [AccessToken, AccessGrant, Application].all? { |model| model.table_exists? }
+    [AccessToken, AccessGrant, Application].all? do |model|
+      if model.respond_to?(:table_exists?)
+        model.table_exists?
+      elsif defined?(Sequel)
+        Sequel::Model.db.tables.include?(model.table_name)
+      end
+    end
   end
 
   def self.installed?

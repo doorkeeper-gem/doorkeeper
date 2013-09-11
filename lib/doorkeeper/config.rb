@@ -16,16 +16,24 @@ module Doorkeeper
   end
 
   def self.enable_orm
+    require "doorkeeper/models/sequel/sequel_compat" if @config.orm == :sequel
     require "doorkeeper/models/#{@config.orm}/access_grant"
     require "doorkeeper/models/#{@config.orm}/access_token"
     require "doorkeeper/models/#{@config.orm}/application"
-    require 'doorkeeper/models/access_grant'
-    require 'doorkeeper/models/access_token'
-    require 'doorkeeper/models/application'
+    unless @config.orm == :sequel
+      require 'doorkeeper/models/access_grant'
+      require 'doorkeeper/models/access_token'
+      require 'doorkeeper/models/application'
+    end
   end
 
   def self.setup_application_owner
-    require File.join(File.dirname(__FILE__), 'models', 'ownership')
+    orm_model = File.join(File.dirname(__FILE__), 'models', @config.orm.to_s, 'ownership')
+    if File.exist?(orm_model)
+      require orm_model
+    else
+      require File.join(File.dirname(__FILE__), 'models', 'ownership')
+    end
     Doorkeeper::Application.send :include, Doorkeeper::Models::Ownership
   end
 

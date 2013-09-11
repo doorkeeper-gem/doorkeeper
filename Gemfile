@@ -26,6 +26,8 @@ when 'mongo_mapper'
   gem 'mongo_mapper', '0.12.0'
   gem 'bson_ext', '~> 1.7'
 
+when 'sequel'
+  gem 'sequel'
 end
 
 gemspec
