@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.2
+
+- enhancements
+  - [#272] Allow issuing multiple access_tokens for one user/application for multiple devices
+  - [#170] Increase length of allowed redirect URIs
+  - [#239] Do not try to load unavailable Request class for the current phase.
+  - [#273] Relax jquery-rails gem dependency
+
 ## 0.7.1
 
 - bug
