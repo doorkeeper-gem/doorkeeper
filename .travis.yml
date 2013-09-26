@@ -11,6 +11,7 @@ env:
   - rails=edge
   - orm=mongoid2
   - orm=mongoid3
+  - orm=mongoid4
   - orm=mongo_mapper
 services:
   - mongodb
@@ -22,6 +23,12 @@ matrix:
       env: orm=mongoid3
     - rvm: 1.9.2
       env: orm=mongoid3
+    - rvm: 1.8.7
+      env: orm=mongoid4
+    - rvm: 1.9.2
+      env: orm=mongoid4
+    - rvm: 1.9.3
+      env: orm=mongoid4
     - rvm: 1.8.7
       env: rails=edge
     - rvm: 1.9.2
