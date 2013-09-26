@@ -10,5 +10,8 @@ rails=3.2.8 orm=mongoid2 bundle exec rake
 rails=3.2.8 orm=mongoid3 bundle install --quiet
 rails=3.2.8 orm=mongoid3 bundle exec rake
 
+rails=4.0.0 orm=mongoid4 bundle install --quiet
+rails=4.0.0 orm=mongoid4 bundle exec rake
+
 rails=3.2.8 orm=mongo_mapper bundle install --quiet
 rails=3.2.8 orm=mongo_mapper bundle exec rake

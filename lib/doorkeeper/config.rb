@@ -180,7 +180,7 @@ module Doorkeeper
     end
 
     def orm_name
-      [:mongoid2, :mongoid3].include?(orm) ? :mongoid : orm
+      [:mongoid2, :mongoid3, :mongoid4].include?(orm) ? :mongoid : orm
     end
 
     def client_credentials_methods
