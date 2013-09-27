@@ -18,7 +18,7 @@ The gem is under constant development. It is based in the [version 22 of the OAu
 
 - Ruby 1.8.7, 1.9.2 or 1.9.3
 - Rails 3.1.x or 3.2.x
-- ORM ActiveRecord, Mongoid 2, Mongoid 3 or MongoMapper
+- ORM ActiveRecord, Mongoid (version 2, 3 and _current_) or MongoMapper
 
 ## Installation
 
@@ -48,11 +48,11 @@ Don't forget to run the migration with:
 
 ### Mongoid / MongoMapper
 
-Doorkeeper currently supports MongoMapper, Mongoid 2 and 3. To start using it, you have to set the `orm` configuration:
+Doorkeeper currently supports MongoMapper and Mongoid (version 2, 3 and current). To start using it, you have to set the `orm` configuration:
 
 ``` ruby
 Doorkeeper.configure do
-  orm :mongoid2 # or :mongoid3, :mongo_mapper
+  orm :mongoid2 # or :mongoid3, :mongoid4, :mongo_mapper
 end
 ```
 
