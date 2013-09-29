@@ -8,16 +8,20 @@ module Doorkeeper
         plugin :association_proxies
       end
 
+      def to_param
+        id
+      end
+
       module ClassMethods
-        def self.create!(*args)
+        def create!(*args)
           create(*args)
         end
 
-        def self.find(id)
-          if id.respond_to?(:keys)
-            super
+        def find(id)
+          if id.kind_of?(Fixnum) || id.kind_of?(String)
+            self[id.to_i]
           else
-            self[id]
+            super
           end
         end
       end
