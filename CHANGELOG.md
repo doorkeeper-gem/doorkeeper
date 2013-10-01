@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.3 (Unreleased)
+
+- enhancements
+  - [#204] Allow to overwrite scope in routes
+- bug
+  - [#290] Support for Rails 4 when 'protected_attributes' gem is present.
+
+
 ## 0.7.2
 
 - enhancements
