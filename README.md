@@ -16,16 +16,16 @@ The gem is under constant development. It is based in the [version 22 of the OAu
 
 ## Requirements
 
-- Ruby 1.8.7, 1.9.2 or 1.9.3
-- Rails 3.1.x or 3.2.x
-- ORM ActiveRecord, Mongoid 2, Mongoid 3 or MongoMapper
+- Ruby 1.9.3 or 2.0.0
+- Rails 3.1, 3.2, 4.0
+- ORM ActiveRecord, Mongoid 2, Mongoid 3, MongoMapper
 
 ## Installation
 
 Put this in your Gemfile:
 
 ``` ruby
-gem 'doorkeeper', '~> 0.6.7'
+gem 'doorkeeper', '~> 0.7.2'
 ```
 
 Run the installation generator with:
@@ -85,6 +85,9 @@ This will mount following routes:
     DELETE    /oauth/authorize
     POST      /oauth/token
     resources /oauth/applications
+    GET       /oauth/authorized_applications
+    DELETE    /oauth/authorized_applications/:id
+    GET       /oauth/token/info
 
 For more information on how to customize routes, check out [this page on the wiki](https://github.com/applicake/doorkeeper/wiki/Customizing-routes).
 
@@ -114,7 +117,7 @@ end
 
 Side note: when using devise you have access to current_user as devise extends entire ActionController::Base with the current_#{mapping}.
 
-If you are not using devise, you may want to check other ways of authentication [here](https://github.com/applicake/doorkeeper/wiki/Authenticating-using-Clearance-DIY).
+If you are not using devise, you may want to check other ways of authentication [here](https://github.com/applicake/doorkeeper/wiki/Authenticating-using-Clearance-or-DIY).
 
 ## Protecting resources with OAuth (a.k.a your API endpoint)
 

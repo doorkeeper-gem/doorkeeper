@@ -28,13 +28,13 @@ module Doorkeeper
 
       attr_accessor :routes
 
-      def initialize(routes, &options)
-        @routes, @options = routes, options
+      def initialize(routes, &block)
+        @routes, @block = routes, block
       end
 
       def generate_routes!(options)
-        @mapping = Mapper.new.map(&@options)
-        routes.scope 'oauth', :as => 'oauth' do
+        @mapping = Mapper.new.map(&@block)
+        routes.scope options[:scope] || 'oauth', :as => 'oauth' do
           map_route(:authorizations, :authorization_routes)
           map_route(:tokens, :token_routes)
           map_route(:applications, :application_routes)

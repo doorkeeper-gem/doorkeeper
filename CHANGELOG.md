@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.7.3 (Unreleased)
+
+- enhancements
+  - [#204] Allow to overwrite scope in routes
+  - Returns only present keys in Token Response (may imply a backwards
+    incompatible change). https://github.com/applicake/doorkeeper/issues/220
+- bug
+  - [#290] Support for Rails 4 when 'protected_attributes' gem is present.
+
+
+## 0.7.2
+
+- enhancements
+  - [#272] Allow issuing multiple access_tokens for one user/application for multiple devices
+  - [#170] Increase length of allowed redirect URIs
+  - [#239] Do not try to load unavailable Request class for the current phase.
+  - [#273] Relax jquery-rails gem dependency
+
+## 0.7.1
+
+- bug
+  - [#269] Rails 3.2 raised `ActiveModel::MassAssignmentSecurity::Error`.
+
+## 0.7.0
+
+- enhancements
+  - [#229] Rails 4!
+- internals
+  - [#203] Changing table name to be specific in column_names_with_table
+  - [#215] README update
+  - [#227] Use Rails.config.paths["config/routes"] instead of assuming "config/routes.rb" exists
+  - [#262] Add jquery as gem dependency
+  - [#263] Add a configuration for ActiveRecord.establish_connection
+  - Deprecation and Ruby warnings (PRs merged outside of GitHub).
+
 ## 0.6.7
 
 - internals

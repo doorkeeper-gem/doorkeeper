@@ -1,6 +1,30 @@
 require 'spec_helper_integration'
 
 describe 'Custom controller for routes' do
+  it 'GET /space/scope/authorize routes to custom authorizations controller' do
+    get('/inner_space/scope/authorize').should route_to('custom_authorizations#new')
+  end
+
+  it 'POST /space/scope/authorize routes to custom authorizations controller' do
+    post('/inner_space/scope/authorize').should route_to('custom_authorizations#create')
+  end
+
+  it 'DELETE /space/scope/authorize routes to custom authorizations controller' do
+    delete('/inner_space/scope/authorize').should route_to('custom_authorizations#destroy')
+  end
+
+  it 'POST /space/scope/token routes to tokens controller' do
+    post('/inner_space/scope/token').should route_to('custom_authorizations#create')
+  end
+
+  it 'GET /space/scope/applications routes to applications controller' do
+    get('/inner_space/scope/applications').should route_to('custom_authorizations#index')
+  end
+
+  it 'GET /space/scope/token/info routes to the token_info controller' do
+    get('/inner_space/scope/token/info').should route_to('custom_authorizations#show')
+  end
+
   it 'GET /space/oauth/authorize routes to custom authorizations controller' do
     get('/space/oauth/authorize').should route_to('custom_authorizations#new')
   end
@@ -22,7 +46,7 @@ describe 'Custom controller for routes' do
   end
 
   it 'GET /space/oauth/token/info routes to the token_info controller' do
-    get('/space/oauth/token/info').should route_to('custom_authorizations#show')  
+    get('/space/oauth/token/info').should route_to('custom_authorizations#show')
   end
 
   it 'POST /outer_space/oauth/token is not be routable' do
@@ -40,5 +64,5 @@ describe 'Custom controller for routes' do
   it 'GET /outer_space/oauth/token_info is not routable' do
     get('/outer_space/oauth/token/info').should_not be_routable
   end
-    
+
 end

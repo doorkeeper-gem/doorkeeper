@@ -1,5 +1,19 @@
 Rails.application.routes.draw do
   use_doorkeeper
+  use_doorkeeper :scope => 'scope'
+
+  scope 'inner_space' do
+    use_doorkeeper :scope => 'scope' do
+      controllers :authorizations => 'custom_authorizations',
+                  :tokens => 'custom_authorizations',
+                  :applications => 'custom_authorizations',
+                  :token_info => 'custom_authorizations'
+
+      as :authorizations => 'custom_auth',
+         :tokens => 'custom_token',
+         :token_info => 'custom_token_info'
+    end
+  end
 
   scope 'space' do
     use_doorkeeper do

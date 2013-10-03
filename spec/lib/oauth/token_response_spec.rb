@@ -49,5 +49,31 @@ module Doorkeeper::OAuth
         subject['refresh_token'].should == 'some-refresh-token'
       end
     end
+
+    describe '.body filters out empty values' do
+      let(:access_token) do
+        mock :access_token, {
+          :token => 'some-token',
+          :expires_in => '',
+          :scopes_string => '',
+          :refresh_token => '',
+          :token_type => 'bearer'
+        }
+      end
+
+      subject { TokenResponse.new(access_token).body }
+
+      it 'includes :expires_in' do
+        subject['expires_in'].should be_nil
+      end
+
+      it 'includes :scope' do
+        subject['scope'].should be_nil
+      end
+
+      it 'includes :refresh_token' do
+        subject['refresh_token'].should be_nil
+      end
+    end
   end
 end

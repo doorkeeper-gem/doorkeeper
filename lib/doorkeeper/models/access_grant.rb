@@ -8,6 +8,10 @@ module Doorkeeper
 
     belongs_to :application, :class_name => "Doorkeeper::Application", :inverse_of => :access_grants
 
+    if ::Rails.version.to_i < 4 || defined?(ProtectedAttributes)
+      attr_accessible :resource_owner_id, :application_id, :expires_in, :redirect_uri, :scopes
+    end
+
     validates :resource_owner_id, :application_id, :token, :expires_in, :redirect_uri, :presence => true
     validates :token, :uniqueness => true
 
