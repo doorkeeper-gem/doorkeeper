@@ -18,6 +18,10 @@ when :mongo_mapper
     key :name,     String
     key :password, String
   end
+when :sequel
+  class User < Sequel::Model
+    include Doorkeeper::Models::SequelCompat
+  end
 end
 
 class User

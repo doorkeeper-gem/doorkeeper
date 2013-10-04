@@ -18,7 +18,7 @@ The gem is under constant development. It is based in the [version 22 of the OAu
 
 - Ruby 1.9.3 or 2.0.0
 - Rails 3.1, 3.2, 4.0
-- ORM ActiveRecord, Mongoid 2, Mongoid 3, MongoMapper
+- ORM ActiveRecord, Mongoid 2, Mongoid 3, MongoMapper, Sequel
 
 ## Installation
 
@@ -54,6 +54,27 @@ Doorkeeper currently supports MongoMapper, Mongoid 2 and 3. To start using it, y
 Doorkeeper.configure do
   orm :mongoid2 # or :mongoid3, :mongo_mapper
 end
+```
+
+### Sequel
+
+To use sequel, you have to set the `orm` configuration:
+
+``` ruby
+Doorkeeper.configure do
+  orm :mongoid2 # or :mongoid3, :mongo_mapper
+end
+```
+
+If you need load any plugins into `Sequel::Model`, you must do so before Doorkeeper
+is loaded, e.g. in `config/application.rb`:
+
+```ruby
+Sequel::Model.plugin :timestamps, update_on_create: true
+
+# Require the gems listed in Gemfile, including any gems
+# you've limited to :test, :development, or :production.
+Bundler.require(:default, Rails.env)
 ```
 
 #### Mongoid indexes
