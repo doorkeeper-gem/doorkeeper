@@ -20,6 +20,7 @@ module Doorkeeper::OAuth
         mock :access_token, {
           :token => 'some-token',
           :expires_in => '3600',
+          :expires_in_seconds => '300',
           :scopes_string => 'two scopes',
           :refresh_token => 'some-refresh-token',
           :token_type => 'bearer'
@@ -36,8 +37,10 @@ module Doorkeeper::OAuth
         subject['token_type'].should == 'bearer'
       end
 
+      # expires_in_seconds is returned as `expires_in` in order to match
+      # the OAuth spec (section 4.2.2)
       it 'includes :expires_in' do
-        subject['expires_in'].should == '3600'
+        subject['expires_in'].should == '300'
       end
 
       it 'includes :scope' do
@@ -53,7 +56,7 @@ module Doorkeeper::OAuth
       let(:access_token) do
         mock :access_token, {
           :token => 'some-token',
-          :expires_in => '',
+          :expires_in_seconds => '',
           :scopes_string => '',
           :refresh_token => '',
           :token_type => 'bearer'
