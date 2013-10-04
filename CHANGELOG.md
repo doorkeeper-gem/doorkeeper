@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.0 (Unreleased)
+
+- bug (spec)
+  - [#228] token response `expires_in` value is now in seconds, relative to
+    request time
+
 ## 0.7.3
 
 - enhancements
