@@ -25,7 +25,7 @@ The gem is under constant development. It is based in the [version 22 of the OAu
 Put this in your Gemfile:
 
 ``` ruby
-gem 'doorkeeper', '~> 0.7.2'
+gem 'doorkeeper', '~> 0.7.0'
 ```
 
 Run the installation generator with:

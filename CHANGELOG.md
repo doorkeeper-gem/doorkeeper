@@ -1,9 +1,10 @@
 # Changelog
 
-## 0.7.3 (Unreleased)
+## 0.7.3
 
 - enhancements
   - [#204] Allow to overwrite scope in routes
+- internals
   - Returns only present keys in Token Response (may imply a backwards
     incompatible change). https://github.com/applicake/doorkeeper/issues/220
 - bug
