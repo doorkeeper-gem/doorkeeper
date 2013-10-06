@@ -5,6 +5,8 @@
 - bug (spec)
   - [#228] token response `expires_in` value is now in seconds, relative to
     request time
+- enhancements
+  - [#293] ActionController::Instrumentation in TokensController
 
 ## 0.7.3
 
