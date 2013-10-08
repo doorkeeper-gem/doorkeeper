@@ -28,7 +28,7 @@ describe Doorkeeper::TokensController do
 
     it "returns the error response" do
       pending 'verify need of these specs'
-      token.stub(:error_response => stub(:to_json => [], :status => :unauthorized))
+      token.stub(:error_response => double(:to_json => [], :status => :unauthorized))
       post :create
       expect(response.status).to eq 401
     end

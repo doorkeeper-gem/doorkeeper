@@ -2,8 +2,8 @@ require "spec_helper_integration"
 
 module Doorkeeper::OAuth
   describe PreAuthorization do
-    let(:server) { mock :server, :default_scopes => Scopes.new, :scopes => Scopes.from_string('public') }
-    let(:client) { mock :client, :redirect_uri => 'http://tst.com/auth' }
+    let(:server) { double :server, :default_scopes => Scopes.new, :scopes => Scopes.from_string('public') }
+    let(:client) { double :client, :redirect_uri => 'http://tst.com/auth' }
 
     let :attributes do
       {

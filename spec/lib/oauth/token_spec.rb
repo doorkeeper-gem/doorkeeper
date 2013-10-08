@@ -11,7 +11,7 @@ module Doorkeeper
   module OAuth
     describe Token do
       describe :from_request do
-        let(:request) { stub.as_null_object }
+        let(:request) { double.as_null_object }
 
         let(:method) do
           lambda { |request| return 'token-value' }
@@ -28,7 +28,7 @@ module Doorkeeper
         end
 
         it 'stops at the first credentials found' do
-          not_called_method = mock
+          not_called_method = double
           not_called_method.should_not_receive(:call)
           credentials = Token.from_request request, lambda { |r| }, method, not_called_method
         end
@@ -41,7 +41,7 @@ module Doorkeeper
 
       describe :from_access_token_param do
         it 'returns token from access_token parameter' do
-          request = stub :parameters => { :access_token => 'some-token' }
+          request = double :parameters => { :access_token => 'some-token' }
           token   = Token.from_access_token_param(request)
           token.should == "some-token"
         end
@@ -49,7 +49,7 @@ module Doorkeeper
 
       describe :from_bearer_param do
         it 'returns token from bearer_token parameter' do
-          request = stub :parameters => { :bearer_token => 'some-token' }
+          request = double :parameters => { :bearer_token => 'some-token' }
           token   = Token.from_bearer_param(request)
           token.should == "some-token"
         end
@@ -57,25 +57,25 @@ module Doorkeeper
 
       describe :from_bearer_authorization do
         it 'returns token from authorization bearer' do
-          request = stub :authorization => "Bearer SomeToken"
+          request = double :authorization => "Bearer SomeToken"
           token   = Token.from_bearer_authorization(request)
           token.should == "SomeToken"
         end
 
         it 'does not return token if authorization is not bearer' do
-          request = stub :authorization => "MAC SomeToken"
+          request = double :authorization => "MAC SomeToken"
           token   = Token.from_bearer_authorization(request)
           token.should be_blank
         end
       end
 
       describe :authenticate do
-        let(:finder) { mock :finder }
+        let(:finder) { double :finder }
 
         it 'calls the finder if token was found' do
           token = lambda { |r| 'token' }
           AccessToken.should_receive(:authenticate).with('token')
-          Token.authenticate stub, token
+          Token.authenticate double, token
         end
       end
     end

@@ -9,17 +9,17 @@ module Doorkeeper::OAuth
 
     describe :from_request do
       it 'has the error from request' do
-        error = ErrorResponse.from_request stub(:error => :some_error)
+        error = ErrorResponse.from_request double(:error => :some_error)
         error.name.should == :some_error
       end
 
       it 'ignores state if request does not respond to state' do
-        error = ErrorResponse.from_request stub(:error => :some_error)
+        error = ErrorResponse.from_request double(:error => :some_error)
         error.state.should be_nil
       end
 
       it 'has state if request responds to state' do
-        error = ErrorResponse.from_request stub(:error => :some_error, :state => :hello)
+        error = ErrorResponse.from_request double(:error => :some_error, :state => :hello)
         error.state.should == :hello
       end
     end

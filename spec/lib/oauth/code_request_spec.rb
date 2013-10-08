@@ -3,8 +3,8 @@ require 'spec_helper_integration'
 module Doorkeeper::OAuth
   describe CodeRequest do
     let(:pre_auth) do
-      mock(:pre_auth, {
-        :client => mock(:application, :id => 9990),
+      double(:pre_auth, {
+        :client => double(:application, :id => 9990),
         :redirect_uri => 'http://tst.com/cb',
         :scopes => nil,
         :state => nil,
@@ -13,7 +13,7 @@ module Doorkeeper::OAuth
       })
     end
 
-    let(:owner) { mock :owner, :id => 8900 }
+    let(:owner) { double :owner, :id => 8900 }
 
     subject do
       CodeRequest.new(pre_auth, owner)

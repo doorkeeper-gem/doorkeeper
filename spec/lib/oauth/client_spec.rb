@@ -6,10 +6,10 @@ require 'doorkeeper/oauth/client'
 module Doorkeeper::OAuth
   describe Client do
     describe :find do
-      let(:method) { mock }
+      let(:method) { double }
 
       it 'finds the client via uid' do
-        client = stub
+        client = double
         method.should_receive(:call).with('uid').and_return(client)
         Client.find('uid', method).should be_a(Client)
       end
@@ -23,14 +23,14 @@ module Doorkeeper::OAuth
     describe :authenticate do
       it 'returns the authenticated client via credentials' do
         credentials = Client::Credentials.new("some-uid", "some-secret")
-        authenticator = mock
+        authenticator = double
         authenticator.should_receive(:call).with("some-uid", "some-secret").and_return(stub)
         Client.authenticate(credentials, authenticator).should be_a(Client)
       end
 
       it 'retunrs nil if client was not authenticated' do
         credentials = Client::Credentials.new("some-uid", "some-secret")
-        authenticator = mock
+        authenticator = double
         authenticator.should_receive(:call).with("some-uid", "some-secret").and_return(nil)
         Client.authenticate(credentials, authenticator).should be_nil
       end

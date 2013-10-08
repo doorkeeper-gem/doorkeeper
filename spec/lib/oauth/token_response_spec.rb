@@ -17,7 +17,7 @@ module Doorkeeper::OAuth
 
     describe '.body' do
       let(:access_token) do
-        mock :access_token, {
+        double :access_token, {
           :token => 'some-token',
           :expires_in => '3600',
           :expires_in_seconds => '300',
@@ -54,7 +54,7 @@ module Doorkeeper::OAuth
 
     describe '.body filters out empty values' do
       let(:access_token) do
-        mock :access_token, {
+        double :access_token, {
           :token => 'some-token',
           :expires_in_seconds => '',
           :scopes_string => '',

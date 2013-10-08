@@ -5,9 +5,9 @@ require 'doorkeeper/oauth/client_credentials_request'
 
 module Doorkeeper::OAuth
   describe ClientCredentialsRequest do
-    let(:server) { stub :default_scopes => nil }
-    let(:client) { stub }
-    let(:token_creator) { mock :issuer, :create => true, :token => stub }
+    let(:server) { double :default_scopes => nil }
+    let(:client) { double }
+    let(:token_creator) { double :issuer, :create => true, :token => double }
 
     subject { ClientCredentialsRequest.new(server, client) }
 
@@ -27,7 +27,7 @@ module Doorkeeper::OAuth
 
     context 'if issue was not created' do
       before do
-        subject.issuer = stub :create => false, :error => :invalid
+        subject.issuer = double :create => false, :error => :invalid
       end
 
       it 'has an error response' do

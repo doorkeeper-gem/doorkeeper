@@ -2,7 +2,7 @@ require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
   describe AuthorizationCodeRequest do
-    let(:server) { mock :server, :access_token_expires_in => 2.days, :refresh_token_enabled? => false }
+    let(:server) { double :server, :access_token_expires_in => 2.days, :refresh_token_enabled? => false }
     let(:grant)  { FactoryGirl.create :access_grant }
     let(:client) { grant.application }
 

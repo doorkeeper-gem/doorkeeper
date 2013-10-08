@@ -2,7 +2,7 @@ require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
   describe RefreshTokenRequest do
-    let(:server)         { mock :server, :access_token_expires_in => 2.minutes }
+    let(:server)         { double :server, :access_token_expires_in => 2.minutes }
     let!(:refresh_token) { FactoryGirl.create(:access_token, :use_refresh_token => true) }
     let(:client)         { refresh_token.application }
 

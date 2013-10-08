@@ -54,7 +54,7 @@ module Doorkeeper
     end
 
     describe '.revoke_all_for' do
-      let(:resource_owner) { stub(:id => 100) }
+      let(:resource_owner) { double(:id => 100) }
       let(:application)    { FactoryGirl.create :application }
       let(:default_attributes) do
         { :application => application, :resource_owner_id => resource_owner.id }
@@ -94,7 +94,7 @@ module Doorkeeper
       end
 
       it 'accepts resource owner as object' do
-        resource_owner = stub(:to_key => true, :id => 100)
+        resource_owner = double(:to_key => true, :id => 100)
         token = FactoryGirl.create :access_token, default_attributes
         last_token = AccessToken.matching_token_for(application, resource_owner, scopes)
         last_token.should == token
@@ -142,7 +142,7 @@ module Doorkeeper
         token_hash = {
                       :resource_owner_id => token.resource_owner_id,
                       :scopes => token.scopes,
-                      :expires_in_seconds => token.expires_in_seconds, 
+                      :expires_in_seconds => token.expires_in_seconds,
                       :application => { :uid => token.application.uid }
                      }
         token.as_json.should eq token_hash

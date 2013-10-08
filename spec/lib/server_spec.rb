@@ -4,7 +4,7 @@ require 'doorkeeper/errors'
 require 'doorkeeper/server'
 
 describe Doorkeeper::Server do
-  let(:fake_class) { mock :fake_class }
+  let(:fake_class) { double :fake_class }
 
   subject do
     described_class.new

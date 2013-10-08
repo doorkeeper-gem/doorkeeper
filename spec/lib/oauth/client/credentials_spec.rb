@@ -10,7 +10,7 @@ class Doorkeeper::OAuth::Client
     end
 
     describe :from_request do
-      let(:request) { stub.as_null_object }
+      let(:request) { double.as_null_object }
 
       let(:method) do
         lambda { |request| return 'uid', 'secret' }
@@ -27,7 +27,7 @@ class Doorkeeper::OAuth::Client
       end
 
       it 'stops at the first credentials found' do
-        not_called_method = mock
+        not_called_method = double
         not_called_method.should_not_receive(:call)
         credentials = Credentials.from_request request, lambda { |r| }, method, not_called_method
       end

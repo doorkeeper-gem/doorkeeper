@@ -4,14 +4,14 @@ require 'doorkeeper/oauth/client_credentials/issuer'
 
 class Doorkeeper::OAuth::ClientCredentialsRequest
   describe Issuer do
-    let(:creator) { mock :acces_token_creator }
-    let(:server)  { mock :server, :access_token_expires_in => 100 }
-    let(:validation) { mock :validation, :valid? => true }
+    let(:creator) { double :acces_token_creator }
+    let(:server)  { double :server, :access_token_expires_in => 100 }
+    let(:validation) { double :validation, :valid? => true }
 
     subject { Issuer.new(server, validation) }
 
     describe :create do
-      let(:client) { mock :client, :id => 'some-id' }
+      let(:client) { double :client, :id => 'some-id' }
       let(:scopes) { 'some scope' }
 
       it 'creates and sets the token' do

@@ -11,7 +11,7 @@ describe 'Revocable' do
 
   describe :revoke do
     it "updates :revoked_at attribute with current time" do
-      clock = double :now => stub
+      clock = double :now => double
       subject.should_receive(:update_column).with(:revoked_at, clock.now)
       subject.revoke(clock)
     end
@@ -19,7 +19,7 @@ describe 'Revocable' do
 
   describe :revoked? do
     it "is revoked if :revoked_at is set" do
-      subject.stub :revoked_at => stub
+      subject.stub :revoked_at => double
       subject.should be_revoked
     end
 
