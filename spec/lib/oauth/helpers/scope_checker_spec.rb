@@ -35,7 +35,7 @@ module Doorkeeper::OAuth::Helpers
 
     it "is false when any of attributes is nil" do
       ScopeChecker.matches?(nil, double).should be_false
-      ScopeChecker.matches?(stub, nil).should be_false
+      ScopeChecker.matches?(double, nil).should be_false
     end
   end
 

@@ -3,7 +3,7 @@ require 'doorkeeper/oauth/token_response'
 
 module Doorkeeper::OAuth
   describe TokenResponse do
-    subject { TokenResponse.new(stub.as_null_object) }
+    subject { TokenResponse.new(double.as_null_object) }
 
     it 'includes access token response headers' do
       headers = subject.headers

@@ -24,7 +24,7 @@ module Doorkeeper::OAuth
       it 'returns the authenticated client via credentials' do
         credentials = Client::Credentials.new("some-uid", "some-secret")
         authenticator = double
-        authenticator.should_receive(:call).with("some-uid", "some-secret").and_return(stub)
+        authenticator.should_receive(:call).with("some-uid", "some-secret").and_return(double)
         Client.authenticate(credentials, authenticator).should be_a(Client)
       end
 
