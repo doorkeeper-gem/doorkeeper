@@ -43,5 +43,12 @@ feature 'Authorization endpoint' do
       i_should_not_see 'Authorize'
       i_should_see_translated_error_message :unsupported_response_type
     end
+
+    scenario "displays unsupported_response_type error when using a disabled response type" do
+      config_is_set(:grant_flows, ['implicit'])
+      visit authorization_endpoint_url(client: @client, response_type: 'code')
+      i_should_not_see "Authorize"
+      i_should_see_translated_error_message :unsupported_response_type
+    end
   end
 end

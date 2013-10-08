@@ -10,13 +10,13 @@ module Doorkeeper
     module_function
 
     def authorization_strategy(strategy)
-      get_strategy strategy, %w(code token)
+      get_strategy strategy, Doorkeeper.configuration.authorization_response_types
     rescue NameError
       raise Errors::InvalidAuthorizationStrategy
     end
 
     def token_strategy(strategy)
-      get_strategy strategy, %w(password client_credentials authorization_code refresh_token)
+      get_strategy strategy, Doorkeeper.configuration.token_grant_types
     rescue NameError
       raise Errors::InvalidTokenStrategy
     end
