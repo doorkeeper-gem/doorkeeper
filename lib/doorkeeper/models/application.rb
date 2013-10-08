@@ -30,11 +30,11 @@ module Doorkeeper
     private
 
     def generate_uid
-      self.uid = UniqueToken.generate
+      self.uid ||= UniqueToken.generate
     end
 
     def generate_secret
-      self.secret = UniqueToken.generate
+      self.secret ||= UniqueToken.generate
     end
   end
 end

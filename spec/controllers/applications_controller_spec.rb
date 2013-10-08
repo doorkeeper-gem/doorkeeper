@@ -37,6 +37,15 @@ module Doorkeeper
         expect(response).to be_redirect
       end
 
+      it "does not allow mass assignment of uid or secret" do
+        application = FactoryGirl.create(:application)
+        put :update, id: application.id, application: {
+          uid: '1A2B3C4D',
+          secret: '1A2B3C4D' }
+
+        application.reload.uid.should_not eq '1A2B3C4D'
+      end
+
       it "updates application" do
         application = FactoryGirl.create(:application)
         put :update, id: application.id, application: {

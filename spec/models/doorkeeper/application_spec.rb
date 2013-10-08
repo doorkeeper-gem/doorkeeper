@@ -8,6 +8,9 @@ module Doorkeeper
     let(:unset_require_owner) { Doorkeeper.configuration.instance_variable_set("@confirm_application_owner", false) }
     let(:new_application) { FactoryGirl.build(:application) }
 
+    let(:uid) { SecureRandom.hex(8) }
+    let(:secret) { SecureRandom.hex(8) }
+
     context "application_owner is enabled" do
       before do
         Doorkeeper.configure do
@@ -54,6 +57,12 @@ module Doorkeeper
       new_application.uid.should_not be_nil
     end
 
+    it 'generates uid on create unless one is set' do
+      new_application.uid = uid
+      new_application.save
+      new_application.uid.should eq(uid)
+    end
+
     it 'is invalid without uid' do
       new_application.save
       new_application.uid = nil
@@ -86,6 +95,12 @@ module Doorkeeper
       new_application.secret.should be_nil
       new_application.save
       new_application.secret.should_not be_nil
+    end
+
+    it 'generate secret on create unless one is set' do
+      new_application.secret = secret
+      new_application.save
+      new_application.secret.should eq(secret)
     end
 
     it 'is invalid without secret' do
@@ -142,7 +157,7 @@ module Doorkeeper
         Application.authorized_for(resource_owner).should == [application]
       end
 
-      it "should fail to mass assign a new application" do
+      it "should fail to mass assign a new application", if: ::Rails::VERSION::MAJOR < 4 do
         mass_assign = { :name => 'Something',
                         :redirect_uri => 'http://somewhere.com/something',
                         :uid => 123,
