@@ -59,6 +59,24 @@ module Doorkeeper::OAuth::Helpers
         uri = client_uri = 'http://app.co/aaa'
         URIChecker.valid_for_authorization?(uri, client_uri).should be_true
       end
+
+      it "is false if valid and mismatches" do
+        uri = 'http://app.co/aaa'
+        client_uri = 'http://app.co/bbb'
+        URIChecker.valid_for_authorization?(uri, client_uri).should be_false
+      end
+
+      it "is true if valid and included in array" do
+        uri = 'http://app.co/aaa'
+        client_uri = "http://example.com/bbb\nhttp://app.co/aaa"
+        URIChecker.valid_for_authorization?(uri, client_uri).should be_true
+      end
+
+      it "is false if valid and not included in array" do
+        uri = 'http://app.co/aaa'
+        client_uri = "http://example.com/bbb\nhttp://app.co/cc"
+        URIChecker.valid_for_authorization?(uri, client_uri).should be_false
+      end
     end
   end
 end

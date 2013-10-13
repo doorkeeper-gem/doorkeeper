@@ -9,6 +9,7 @@
   - [#319] when client credentials present on password grant type, they are validated
 - enhancements
   - [#293] Adds ActionController::Instrumentation in TokensController
+  - [#298] Support for multiple redirect_uris added.
   - [#313] `AccessToken.revoke_all_for` actually revokes all non-revoked
     tokens for an application/owner instead of deleting them.
     [@bryanrite](https://github.com/bryanrite)

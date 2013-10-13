@@ -18,7 +18,7 @@ ActiveRecord::Schema.define(:version => 20130902175349) do
     t.integer  "application_id",                    :null => false
     t.string   "token",                             :null => false
     t.integer  "expires_in",                        :null => false
-    t.string   "redirect_uri",      :limit => 2048, :null => false
+    t.text     "redirect_uri",                      :null => false
     t.datetime "created_at",                        :null => false
     t.datetime "revoked_at"
     t.string   "scopes"
@@ -45,7 +45,7 @@ ActiveRecord::Schema.define(:version => 20130902175349) do
     t.string   "name",                         :null => false
     t.string   "uid",                          :null => false
     t.string   "secret",                       :null => false
-    t.string   "redirect_uri", :limit => 2048, :null => false
+    t.text     "redirect_uri",                 :null => false
     t.datetime "created_at",                   :null => false
     t.datetime "updated_at",                   :null => false
     t.integer  "owner_id"

@@ -5,8 +5,10 @@
 </div>
 
 <div class="span10">
-  <h4>Callback url:</h4>
-  <p><code id="callback_url"><%= @application.redirect_uri %></code></p>
+  <h4>Callback urls:</h4>
+  <p id="callback_url">
+    <% @application.redirect_uri.split.each do |uri| %><code><%= uri %></code> <% end %>
+  </p>
 
   <h4>Application Id:</h4>
   <p><code id="application_id"><%= @application.uid %></code></p>
