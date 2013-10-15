@@ -1,3 +1,5 @@
+require 'jquery-rails'
+
 module Doorkeeper
   class Engine < Rails::Engine
     initializer "doorkeeper.routes" do
