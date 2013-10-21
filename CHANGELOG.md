@@ -7,6 +7,8 @@
     request time
 - enhancements
   - [#293] ActionController::Instrumentation in TokensController
+- internals
+  - Removes jQuery dependency
 
 ## 0.7.3
 

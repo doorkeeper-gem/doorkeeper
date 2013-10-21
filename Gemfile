@@ -4,8 +4,6 @@ ENV['orm']   ||= 'active_record'
 
 source 'https://rubygems.org'
 
-gem 'jquery-rails'
-
 # Define Rails version
 gem 'rails', ENV['rails']
 

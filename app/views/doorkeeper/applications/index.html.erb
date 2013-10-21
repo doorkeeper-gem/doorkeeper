@@ -1,3 +1,8 @@
+<style>
+input[type=submit] {
+  margin-top: 15px;
+}
+</style>
 <div class="span16">
   <header class="page-header">
     <h2>Your applications</h2>
@@ -20,10 +25,9 @@
           <td><%= link_to application.name, [:oauth, application] %></td>
           <td><%= application.redirect_uri %></td>
           <td><%= link_to 'Edit', edit_oauth_application_path(application) %></td>
-          <td><%= link_to 'Destroy', [:oauth, application], :data => { :confirm => 'Are you sure?' }, :method => :delete %></td>
+          <td><%= render 'delete_form', application: application %></td>
         </tr>
       <% end %>
     </tbody>
   </table>
-
 </div>
