@@ -69,7 +69,7 @@ feature 'Edit application' do
   end
 end
 
-feature 'Destroy application' do
+feature 'Remove application' do
   background do
     @app = FactoryGirl.create :application
   end
@@ -78,7 +78,7 @@ feature 'Destroy application' do
     visit "/oauth/applications"
     i_should_see @app.name
     within(:css, "tr#application_#{@app.id}") do
-      click_link "Destroy"
+      click_button "Remove"
     end
     i_should_see "Application deleted"
     i_should_not_see @app.name
@@ -86,7 +86,7 @@ feature 'Destroy application' do
 
   scenario 'deleting an application from show' do
     visit "/oauth/applications/#{@app.id}"
-    click_link 'Remove'
+    click_button 'Remove'
     i_should_see "Application deleted"
   end
 end
