@@ -98,7 +98,7 @@ You need to configure Doorkeeper in order to provide resource_owner model and au
 ``` ruby
 Doorkeeper.configure do
   resource_owner_authenticator do
-    User.find(session[:current_user_id]) || redirect_to(login_url)
+    User.find_by_id(session[:current_user_id]) || redirect_to(login_url)
   end
 end
 ```
