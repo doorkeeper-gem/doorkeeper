@@ -46,11 +46,6 @@ module Doorkeeper
         subject.resource_owner_id = nil
         should be_valid
       end
-
-      it "is invalid without application_id" do
-        subject.application_id = nil
-        should_not be_valid
-      end
     end
 
     describe '.revoke_all_for' do

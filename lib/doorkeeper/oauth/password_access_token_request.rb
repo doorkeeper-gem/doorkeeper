@@ -3,7 +3,6 @@ module Doorkeeper::OAuth
     include Doorkeeper::Validations
     include Doorkeeper::OAuth::Helpers
 
-    validate :client,         :error => :invalid_client
     validate :resource_owner, :error => :invalid_resource_owner
     validate :scopes,         :error => :invalid_scope
 
@@ -41,17 +40,15 @@ module Doorkeeper::OAuth
   private
 
     def issue_token
+      application_id = client.id if client
+
       @access_token = Doorkeeper::AccessToken.create!({
-        :application_id     => client.id,
+        :application_id     => application_id,
         :resource_owner_id  => resource_owner.id,
         :scopes             => scopes.to_s,
         :expires_in         => server.access_token_expires_in,
         :use_refresh_token  => server.refresh_token_enabled?
       })
-    end
-
-    def validate_client
-      !!client
     end
 
     def validate_scopes

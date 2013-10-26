@@ -28,7 +28,7 @@ ActiveRecord::Schema.define(:version => 20130902175349) do
 
   create_table "oauth_access_tokens", :force => true do |t|
     t.integer  "resource_owner_id"
-    t.integer  "application_id",    :null => false
+    t.integer  "application_id"
     t.string   "token",             :null => false
     t.string   "refresh_token"
     t.integer  "expires_in"
