@@ -16,16 +16,22 @@ module Doorkeeper::OAuth
       end.to change { client.access_tokens.count }.by(1)
     end
 
+    it 'issues a new token without a client' do
+      expect do
+        subject.client = nil
+        subject.authorize
+      end.to change { Doorkeeper::AccessToken.count }.by(1)
+    end
+
     it "requires the owner" do
       subject.resource_owner = nil
       subject.validate
       subject.error.should == :invalid_resource_owner
     end
 
-    it 'requires the client' do
+    it 'optionally accepts the client' do
       subject.client = nil
-      subject.validate
-      subject.error.should == :invalid_client
+      subject.should be_valid
     end
 
     describe "with scopes" do
