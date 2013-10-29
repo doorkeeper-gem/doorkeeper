@@ -58,7 +58,9 @@ module Doorkeeper
       it 'revokes all tokens for given application and resource owner' do
         FactoryGirl.create :access_token, default_attributes
         AccessToken.revoke_all_for application.id, resource_owner
-        AccessToken.all.should be_empty
+        AccessToken.all.each do |token|
+          token.should be_revoked
+        end
       end
 
       it 'matches application' do

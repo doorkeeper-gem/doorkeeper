@@ -7,6 +7,7 @@
     request time
 - enhancements
   - [#293] ActionController::Instrumentation in TokensController
+  - [#313] `AccessToken.revoke_all_for` actually revokes all non-revoked tokens for an application/owner instead of deleting them. [@bryanrite](https://github.com/bryanrite)
 - internals
   - Removes jQuery dependency
 

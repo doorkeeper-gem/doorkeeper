@@ -29,7 +29,7 @@ module Doorkeeper
     end
 
     def self.revoke_all_for(application_id, resource_owner)
-      delete_all_for(application_id, resource_owner)
+      revoke_all_active_for(application_id, resource_owner)
     end
 
     def self.matching_token_for(application, resource_owner_or_id, scopes)

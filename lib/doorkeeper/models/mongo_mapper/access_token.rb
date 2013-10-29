@@ -23,6 +23,14 @@ module Doorkeeper
       self.sort(:created_at).last
     end
 
+    def self.revoke_all_active_for(application_id, resource_owner)
+      where(:application_id => application_id,
+            :resource_owner_id => resource_owner.id,
+            :revoked_at => nil)
+      .map(&:revoke)
+    end
+    private_class_method :revoke_all_active_for
+
     def self.delete_all_for(application_id, resource_owner)
       delete_all(:application_id => application_id,
                  :resource_owner_id => resource_owner.id)
