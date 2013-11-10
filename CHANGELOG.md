@@ -5,11 +5,17 @@
 - bug (spec)
   - [#228] token response `expires_in` value is now in seconds, relative to
     request time
+  - [#296] client is optional for password grant type.
+    [#319] when client credentials present on password grant type, they are validated
 - enhancements
-  - [#293] ActionController::Instrumentation in TokensController
-  - [#313] `AccessToken.revoke_all_for` actually revokes all non-revoked tokens for an application/owner instead of deleting them. [@bryanrite](https://github.com/bryanrite)
+  - [#293] Adds ActionController::Instrumentation in TokensController
+  - [#313] `AccessToken.revoke_all_for` actually revokes all non-revoked
+    tokens for an application/owner instead of deleting them.
+    [@bryanrite](https://github.com/bryanrite)
 - internals
-  - Removes jQuery dependency
+  - Removes jQuery dependency [fixes #300] [PR #312 is related]
+  - [#294] Client uid and secret will be generated only if not present.
+
 
 ## 0.7.3
 
