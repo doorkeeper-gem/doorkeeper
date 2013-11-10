@@ -3,16 +3,20 @@ module Doorkeeper::OAuth
     include Doorkeeper::Validations
     include Doorkeeper::OAuth::Helpers
 
+    validate :client,         :error => :invalid_client
     validate :resource_owner, :error => :invalid_resource_owner
     validate :scopes,         :error => :invalid_scope
 
-    attr_accessor :server, :resource_owner, :client, :access_token
+    attr_accessor :server, :resource_owner, :credentials, :access_token
+    attr_accessor :client
 
-    def initialize(server, client, resource_owner, parameters = {})
+    def initialize(server, credentials, resource_owner, parameters = {})
       @server          = server
       @resource_owner  = resource_owner
-      @client          = client
+      @credentials     = credentials
       @original_scopes = parameters[:scope]
+
+      @client = Doorkeeper::Application.authenticate(credentials.uid, credentials.secret) if credentials
     end
 
     def authorize
@@ -58,6 +62,10 @@ module Doorkeeper::OAuth
 
     def validate_resource_owner
       !!resource_owner
+    end
+
+    def validate_client
+      !credentials || !!client
     end
   end
 end
