@@ -98,11 +98,9 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     end
   end
 
-  describe "GET #new with skip_authorization true" do
+  describe "GET #new with application's auto_authorize being true" do
     before do
-      Doorkeeper.configuration.stub(:skip_authorization => proc do
-          true
-        end)
+      client.update_attribute :auto_authorize, true
       get :new, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uri
     end
 

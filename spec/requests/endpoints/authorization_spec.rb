@@ -30,6 +30,15 @@ feature 'Authorization endpoint' do
       i_should_see "Access your public data"
       i_should_see "Update your data"
     end
+
+    context 'with a client having auto authorize enabled' do
+      scenario 'does not display authoriztation request but immediately issues access grant' do
+        @client.update_attribute(:auto_authorize, true)
+        visit authorization_endpoint_url(:client => @client)
+        i_should_not_see "Authorize MyApp"
+        url_should_have_param("code", Doorkeeper::AccessGrant.first.token)
+      end
+    end
   end
 
   context 'with a invalid request' do

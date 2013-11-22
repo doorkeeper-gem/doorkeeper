@@ -12,7 +12,7 @@ module Doorkeeper
     before_validation :generate_uid, :generate_secret, :on => :create
 
     if ::Rails.version.to_i < 4 || defined?(ProtectedAttributes)
-      attr_accessible :name, :redirect_uri
+      attr_accessible :name, :redirect_uri, :auto_authorize
     end
 
     def self.model_name

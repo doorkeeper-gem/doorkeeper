@@ -14,6 +14,9 @@
   <h4>Secret:</h4>
   <p><code id="secret"><%= @application.secret %></code></p>
 
+  <h4>Auto authorize:</h4>
+  <p><code id="auto_authorize"><%= @application.auto_authorize? %></code></p>
+
   <h4>Link to authorization code:</h4>
   <p><%= link_to 'Authorize', oauth_authorization_path(:client_id => @application.uid, :redirect_uri => @application.redirect_uri, :response_type => 'code' ) %></p>
 </div>

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130902175349) do
+ActiveRecord::Schema.define(:version => 20131121165815) do
 
   create_table "oauth_access_grants", :force => true do |t|
     t.integer  "resource_owner_id",                 :null => false
@@ -42,14 +42,15 @@ ActiveRecord::Schema.define(:version => 20130902175349) do
   add_index "oauth_access_tokens", ["token"], :name => "index_oauth_access_tokens_on_token", :unique => true
 
   create_table "oauth_applications", :force => true do |t|
-    t.string   "name",                         :null => false
-    t.string   "uid",                          :null => false
-    t.string   "secret",                       :null => false
-    t.string   "redirect_uri", :limit => 2048, :null => false
-    t.datetime "created_at",                   :null => false
-    t.datetime "updated_at",                   :null => false
+    t.string   "name",                           :null => false
+    t.string   "uid",                            :null => false
+    t.string   "secret",                         :null => false
+    t.string   "redirect_uri",   :limit => 2048, :null => false
+    t.datetime "created_at",                     :null => false
+    t.datetime "updated_at",                     :null => false
     t.integer  "owner_id"
     t.string   "owner_type"
+    t.boolean  "auto_authorize"
   end
 
   add_index "oauth_applications", ["owner_id", "owner_type"], :name => "index_oauth_applications_on_owner_id_and_owner_type"

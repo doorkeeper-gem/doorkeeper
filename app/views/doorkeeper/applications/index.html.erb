@@ -15,6 +15,7 @@ input[type=submit] {
       <tr>
         <th>Name</th>
         <th>Callback url</th>
+        <th>Auto authorize?</th>
         <th></th>
         <th></th>
       </tr>
@@ -24,6 +25,7 @@ input[type=submit] {
         <tr id="application_<%= application.id %>">
           <td><%= link_to application.name, [:oauth, application] %></td>
           <td><%= application.redirect_uri %></td>
+          <td><%= application.auto_authorize? %></td>
           <td><%= link_to 'Edit', edit_oauth_application_path(application) %></td>
           <td><%= render 'delete_form', application: application %></td>
         </tr>

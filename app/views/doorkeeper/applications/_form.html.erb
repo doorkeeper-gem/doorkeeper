@@ -23,6 +23,16 @@
       </div>
     </div>
 
+    <div class="clearfix">
+      <%= f.label :auto_authorize %>
+      <div class="input">
+        <%= f.check_box :auto_authorize %>
+        <%= errors_for application, :auto_authorize %>
+        <span class="help-inline">Enable this to automatically authorize users for this application</span>
+      </div>
+    </div>
+
+
     <div class="clearfix"></div>
 
     <div class="actions">
