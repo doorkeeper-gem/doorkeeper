@@ -26,6 +26,7 @@ module Doorkeeper
     autoload :TokenRequest,               "doorkeeper/oauth/token_request"
     autoload :Client,                     "doorkeeper/oauth/client"
     autoload :Token,                      "doorkeeper/oauth/token"
+    autoload :InvalidTokenResponse,       "doorkeeper/oauth/invalid_token_response"
 
     module Helpers
       autoload :ScopeChecker, "doorkeeper/oauth/helpers/scope_checker"
