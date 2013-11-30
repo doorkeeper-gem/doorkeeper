@@ -3,25 +3,29 @@ module Doorkeeper
     class RefreshTokenRequest
       include Doorkeeper::Validations
 
-      validate :token,  :error => :invalid_request
-      validate :client, :error => :invalid_client
+      validate :token,        :error => :invalid_request
+      validate :client,       :error => :invalid_client
+      validate :client_match, :error => :invalid_grant
 
-      attr_accessor :server, :refresh_token, :client, :access_token
+      attr_accessor :server, :refresh_token, :credentials, :access_token
+      attr_accessor :client
 
       # TODO: refresh token can receive scope as parameters
-      def initialize(server, refresh_token, client)
+      def initialize(server, refresh_token, credentials)
         @server        = server
         @refresh_token = refresh_token
-        @client        = client
+        @credentials   = credentials
+
+        @client = Doorkeeper::Application.authenticate(credentials.uid, credentials.secret) if credentials
       end
 
       def authorize
         validate
         @response = if valid?
           revoke_and_create_access_token
-          OAuth::TokenResponse.new access_token
+          TokenResponse.new access_token
         else
-          OAuth::ErrorResponse.from_request(self)
+          ErrorResponse.from_request self
         end
       end
 
@@ -51,7 +55,11 @@ module Doorkeeper
       end
 
       def validate_client
-        client.present? && refresh_token.application_id == client.id
+        (!credentials || !!client)
+      end
+
+      def validate_client_match
+        !client || refresh_token.application_id == client.id
       end
     end
   end
