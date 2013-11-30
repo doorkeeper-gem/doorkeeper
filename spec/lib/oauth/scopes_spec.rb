@@ -8,18 +8,18 @@ module Doorkeeper::OAuth
     describe :add do
       it 'allows you to add scopes with symbols' do
         subject.add :public
-        subject.all.should == [:public]
+        subject.all.should == ['public']
       end
 
       it 'allows you to add scopes with strings' do
         subject.add "public"
-        subject.all.should == [:public]
+        subject.all.should == ['public']
       end
 
       it 'do not add already included scopes' do
         subject.add :public
         subject.add :public
-        subject.all.should == [:public]
+        subject.all.should == ['public']
       end
     end
 
@@ -48,13 +48,13 @@ module Doorkeeper::OAuth
       subject { Scopes.from_string(string) }
 
       it { should be_a(Scopes) }
-      its(:all) { should == [:public, :write] }
+      its(:all) { should == ['public', 'write'] }
     end
 
     describe :+ do
       it "can add to another scope object" do
         scopes = Scopes.from_string("public") + Scopes.from_string("admin")
-        scopes.all.should == [:public, :admin]
+        scopes.all.should == ['public', 'admin']
       end
 
       it "does not change the existing object" do

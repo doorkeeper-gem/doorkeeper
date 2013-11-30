@@ -24,11 +24,11 @@ module Doorkeeper
       end
 
       def exists?(scope)
-        @scopes.include? scope.to_sym
+        @scopes.include? scope.to_s
       end
 
       def add(*scopes)
-        @scopes.push(*scopes.map(&:to_sym))
+        @scopes.push(*scopes.map(&:to_s))
         @scopes.uniq!
       end
 
