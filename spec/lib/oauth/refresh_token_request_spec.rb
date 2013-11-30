@@ -68,5 +68,31 @@ module Doorkeeper::OAuth
       end
     end
 
+    context 'with scopes' do
+      let!(:refresh_token) { FactoryGirl.create(:access_token, :use_refresh_token => true, :scopes => 'public write') }
+      let(:parameters) { {} }
+      subject {
+        RefreshTokenRequest.new server, refresh_token, credentials, parameters
+      }
+
+      it 'transfers scopes from the old token to the new token' do
+        subject.authorize
+        Doorkeeper::AccessToken.last.scopes.should == [:public, :write]
+      end
+
+      it 'reduces scopes to the provided scopes' do
+        parameters[:scopes] = 'public'
+        subject.authorize
+        Doorkeeper::AccessToken.last.scopes.should == [:public]
+      end
+
+      it 'validates that scopes are included in the original access token' do
+        parameters[:scopes] = 'public update'
+
+        subject.validate
+        subject.error.should == :invalid_scope
+      end
+    end
+
   end
 end
