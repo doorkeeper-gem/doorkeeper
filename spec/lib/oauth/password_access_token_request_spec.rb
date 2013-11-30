@@ -60,7 +60,7 @@ module Doorkeeper::OAuth
         expect {
           subject.authorize
         }.to change { Doorkeeper::AccessToken.count }.by(1)
-        Doorkeeper::AccessToken.last.scopes.should include(:public)
+        Doorkeeper::AccessToken.last.scopes.should include('public')
       end
     end
   end

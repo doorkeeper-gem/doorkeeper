@@ -20,7 +20,7 @@ describe 'Doorkeeper::Models::Scopes' do
     end
 
     it 'includes scopes' do
-      subject.scopes.should include(:public)
+      subject.scopes.should include('public')
     end
   end
 

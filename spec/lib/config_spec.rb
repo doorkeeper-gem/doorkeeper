@@ -53,7 +53,7 @@ describe Doorkeeper, "configuration" do
         orm DOORKEEPER_ORM
         default_scopes :public
       }
-      subject.default_scopes.should include(:public)
+      subject.default_scopes.should include('public')
     end
 
     it 'has optional scopes' do
@@ -61,7 +61,7 @@ describe Doorkeeper, "configuration" do
         orm DOORKEEPER_ORM
         optional_scopes :write, :update
       }
-      subject.optional_scopes.should include(:write, :update)
+      subject.optional_scopes.should include('write', 'update')
     end
 
     it 'has all scopes' do
@@ -70,7 +70,7 @@ describe Doorkeeper, "configuration" do
         default_scopes  :normal
         optional_scopes :admin
       end
-      subject.scopes.should include(:normal, :admin)
+      subject.scopes.should include('normal', 'admin')
     end
   end
 
