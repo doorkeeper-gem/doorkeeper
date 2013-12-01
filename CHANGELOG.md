@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.4
+
+- bug
+  - Symbols instead of strings for user input.
+
 ## 0.7.3
 
 - enhancements
