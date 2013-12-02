@@ -14,7 +14,7 @@ feature 'Token endpoint' do
   end
 
   scenario 'accepts client credentials with basic auth header' do
-    post token_endpoint_url(:code => @authorization.token, :redirect_uri => @client.redirect_uri),
+    post token_endpoint_url(:code => @authorization.token, :redirect_uri => @client.redirect_uris),
                             {} ,
                             { 'HTTP_AUTHORIZATION' => basic_auth_header_for_client(@client) }
 

@@ -22,7 +22,7 @@ feature 'Authorization Code Flow' do
   end
 
   scenario 'resource owner authorizes using test url' do
-    @client.redirect_uri = Doorkeeper.configuration.test_redirect_uri
+    @client.redirect_uris = Doorkeeper.configuration.test_redirect_uri
     @client.save!
     visit authorization_endpoint_url(:client => @client)
     click_on "Authorize"

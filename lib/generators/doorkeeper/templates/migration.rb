@@ -1,10 +1,10 @@
 class CreateDoorkeeperTables < ActiveRecord::Migration
   def change
     create_table :oauth_applications do |t|
-      t.string  :name,         :null => false
-      t.string  :uid,          :null => false
-      t.string  :secret,       :null => false
-      t.text    :redirect_uri, :null => false
+      t.string  :name,          :null => false
+      t.string  :uid,           :null => false
+      t.string  :secret,        :null => false
+      t.text    :redirect_uris, :null => false
       t.timestamps
     end
 
@@ -15,7 +15,7 @@ class CreateDoorkeeperTables < ActiveRecord::Migration
       t.integer  :application_id,    :null => false
       t.string   :token,             :null => false
       t.integer  :expires_in,        :null => false
-      t.text     :redirect_uri,      :null => false
+      t.string   :redirect_uri,      :null => false, :limit => 2048
       t.datetime :created_at,        :null => false
       t.datetime :revoked_at
       t.string   :scopes

@@ -4,7 +4,7 @@ en:
       models:
         application:
           attributes:
-            redirect_uri:
+            redirect_uris:
               fragment_present: 'cannot contain a fragment.'
               has_query_parameter: 'cannot contain a query parameter.'
               invalid_uri: 'must be a valid URI.'
@@ -14,7 +14,7 @@ en:
       models:
         application:
           attributes:
-            redirect_uri:
+            redirect_uris:
               fragment_present: 'cannot contain a fragment.'
               has_query_parameter: 'cannot contain a query parameter.'
               invalid_uri: 'must be a valid URI.'
@@ -24,7 +24,7 @@ en:
       models:
         application:
           attributes:
-            redirect_uri:
+            redirect_uris:
               fragment_present: 'cannot contain a fragment.'
               has_query_parameter: 'cannot contain a query parameter.'
               invalid_uri: 'must be a valid URI.'
