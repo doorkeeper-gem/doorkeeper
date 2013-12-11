@@ -5,21 +5,22 @@ module Doorkeeper::OAuth
     let(:server)         { double :server, :access_token_expires_in => 2.minutes }
     let!(:refresh_token) { FactoryGirl.create(:access_token, :use_refresh_token => true) }
     let(:client)         { refresh_token.application }
+    let(:credentials)    { Client::Credentials.new(client.uid, client.secret) }
 
-    subject do
-      RefreshTokenRequest.new server, refresh_token, client
-    end
+    subject {
+      RefreshTokenRequest.new server, refresh_token, credentials
+    }
 
     it 'issues a new token for the client' do
-      expect do
+      expect {
         subject.authorize
-      end.to change { client.access_tokens.count }.by(1)
+      }.to change { client.access_tokens.count }.by(1)
     end
 
     it 'revokes the previous token' do
-      expect do
+      expect {
         subject.authorize
-      end.to change { refresh_token.revoked? }.from(false).to(true)
+      }.to change { refresh_token.revoked? }.from(false).to(true)
     end
 
     it 'requires the refresh token' do
@@ -28,7 +29,7 @@ module Doorkeeper::OAuth
       subject.error.should == :invalid_request
     end
 
-    it 'requires client' do
+    it 'requires credentials to be valid if provided' do
       subject.client = nil
       subject.validate
       subject.error.should == :invalid_client
@@ -37,7 +38,7 @@ module Doorkeeper::OAuth
     it "requires the token's client and current client to match" do
       subject.client = FactoryGirl.create(:application)
       subject.validate
-      subject.error.should == :invalid_client
+      subject.error.should == :invalid_grant
     end
 
     it 'rejects revoked tokens' do
@@ -52,5 +53,46 @@ module Doorkeeper::OAuth
       subject.validate
       subject.should be_valid
     end
+
+    context 'clientless access tokens' do
+      let!(:refresh_token) { FactoryGirl.create(:clientless_access_token, :use_refresh_token => true) }
+
+      subject {
+        RefreshTokenRequest.new server, refresh_token, nil
+      }
+
+      it 'issues a new token without a client' do
+        expect {
+          subject.authorize
+        }.to change { Doorkeeper::AccessToken.count }.by(1)
+      end
+    end
+
+    context 'with scopes' do
+      let!(:refresh_token) { FactoryGirl.create(:access_token, :use_refresh_token => true, :scopes => 'public write') }
+      let(:parameters) { {} }
+      subject {
+        RefreshTokenRequest.new server, refresh_token, credentials, parameters
+      }
+
+      it 'transfers scopes from the old token to the new token' do
+        subject.authorize
+        Doorkeeper::AccessToken.last.scopes.should == [:public, :write]
+      end
+
+      it 'reduces scopes to the provided scopes' do
+        parameters[:scopes] = 'public'
+        subject.authorize
+        Doorkeeper::AccessToken.last.scopes.should == [:public]
+      end
+
+      it 'validates that scopes are included in the original access token' do
+        parameters[:scopes] = 'public update'
+
+        subject.validate
+        subject.error.should == :invalid_scope
+      end
+    end
+
   end
 end
