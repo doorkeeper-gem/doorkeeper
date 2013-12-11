@@ -7,6 +7,12 @@
     request time
   - [#296] client is optional for password grant type.
   - [#319] when client credentials present on password grant type, they are validated
+  - [#326] If client credentials for refresh token are included, they are
+    validated.
+  - [#326] If authenticated client does not match original client that
+    obtained a refresh token it responds `invalid_grant` instead of
+    `invalid_client`. Previous usage was invalid according to Section 5.2 of
+    the spec.
 - enhancements
   - [#293] Adds ActionController::Instrumentation in TokensController
   - [#313] `AccessToken.revoke_all_for` actually revokes all non-revoked
