@@ -50,7 +50,7 @@ feature 'Private API' do
 
   scenario 'access token with default scope' do
     default_scopes_exist :admin
-    @token.update_column :scopes, :admin
+    @token.update_column :scopes, 'admin'
     with_access_token_header @token.token
     visit '/full_protected_resources/1.json'
     page.body.should have_content("show")
