@@ -1,14 +1,13 @@
 # Changelog
 
-## 1.0.0 (Unreleased)
+## 1.0.0.rc1
 
 - bug (spec)
   - [#228] token response `expires_in` value is now in seconds, relative to
     request time
   - [#296] client is optional for password grant type.
-  - [#319] when client credentials present on password grant type, they are validated
-  - [#326] If client credentials for refresh token are included, they are
-    validated.
+  - [#319] If client credentials are present on password grant type they are validated
+  - [#326] If client credentials are present in refresh token they are validated
   - [#326] If authenticated client does not match original client that
     obtained a refresh token it responds `invalid_grant` instead of
     `invalid_client`. Previous usage was invalid according to Section 5.2 of
