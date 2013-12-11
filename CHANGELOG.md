@@ -13,6 +13,8 @@
     obtained a refresh token it responds `invalid_grant` instead of
     `invalid_client`. Previous usage was invalid according to Section 5.2 of
     the spec.
+  - [#329] access tokens' `scopes` string wa being compared against
+    `default_scopes` symbols, always unauthorizing.
 - enhancements
   - [#293] Adds ActionController::Instrumentation in TokensController
   - [#313] `AccessToken.revoke_all_for` actually revokes all non-revoked

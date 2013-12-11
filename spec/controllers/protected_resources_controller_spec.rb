@@ -167,14 +167,14 @@ describe "Doorkeeper_for helper" do
     let(:token_string) { "1A2DUWE" }
 
     it "allows if the token has particular scopes" do
-      token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => [:write, :public])
+      token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => ['write', 'public'])
       Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string).and_return(token)
       get :index, :access_token => token_string
       expect(response).to be_success
     end
 
     it "does not allow if the token does not include given scope" do
-      token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => [:public])
+      token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => ['public'])
       Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string).and_return(token)
       get :index, :access_token => token_string
       expect(response.status).to eq 401

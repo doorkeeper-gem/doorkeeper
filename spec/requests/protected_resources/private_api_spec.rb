@@ -47,4 +47,12 @@ feature 'Private API' do
     visit '/full_protected_resources/1.json'
     response_status_should_be 401
   end
+
+  scenario 'access token with default scope' do
+    default_scopes_exist :admin
+    @token.update_column :scopes, :admin
+    with_access_token_header @token.token
+    visit '/full_protected_resources/1.json'
+    page.body.should have_content("show")
+  end
 end

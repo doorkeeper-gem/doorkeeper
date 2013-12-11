@@ -23,7 +23,7 @@ module Doorkeeper
 
     private
     def scopes(scopes)
-      @scopes = scopes
+      @scopes = scopes.map(&:to_s)
     end
 
     def if(if_block)
@@ -37,7 +37,7 @@ module Doorkeeper
     # TODO: move this to Token class
     def validate_token_scopes(token)
       return true if @scopes.blank?
-      token.scopes.any? { |scope| @scopes.include? scope}
+      token.scopes.any? { |scope| @scopes.include? scope }
     end
   end
 
