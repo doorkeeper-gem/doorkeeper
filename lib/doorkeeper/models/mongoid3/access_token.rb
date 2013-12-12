@@ -10,7 +10,7 @@ module Doorkeeper
 
     self.store_in collection: :oauth_access_tokens
 
-    field :resource_owner_id, :type => Moped::BSON::ObjectId
+    field :resource_owner_id, :type => BSON::ObjectId
     field :token, :type => String
     field :expires_in, :type => Integer
     field :revoked_at, :type => DateTime
