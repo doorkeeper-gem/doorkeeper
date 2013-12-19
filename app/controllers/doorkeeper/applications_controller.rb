@@ -50,10 +50,12 @@ module Doorkeeper
     end
 
     def application_params
+      allowed_params = [:name, :redirect_uri, :auto_authorize]
+
       if params.respond_to?(:permit)
-        params.require(:application).permit(:name, :redirect_uri)
+        params.require(:application).permit(*allowed_params)
       else
-        params[:application].slice(:name, :redirect_uri) rescue nil
+        params[:application].slice(*allowed_params) rescue nil
       end
     end
   end

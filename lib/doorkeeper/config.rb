@@ -148,7 +148,6 @@ module Doorkeeper
              warn(I18n.translate('doorkeeper.errors.messages.credential_flow_not_configured'))
              nil
            }
-    option :skip_authorization, :default => lambda{|routes|}
     option :access_token_expires_in,      :default => 7200
     option :authorization_code_expires_in,:default => 600
     option :orm, :default => :active_record

@@ -8,11 +8,12 @@ module Doorkeeper
 
     many :authorized_tokens, :class_name => "Doorkeeper::AccessToken"
 
-    key :name,         String
-    key :uid,          String
-    key :secret,       String
-    key :redirect_uri, String
-    key :scopes,       String
+    key :name,           String
+    key :uid,            String
+    key :secret,         String
+    key :redirect_uri,   String
+    key :scopes,         String
+    key :auto_authorize, Boolean
 
     def scopes=(value)
       write_attribute :scopes, value if value.present?

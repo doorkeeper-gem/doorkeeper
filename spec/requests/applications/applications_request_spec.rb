@@ -30,6 +30,7 @@ feature 'Listing applications' do
   scenario 'application list' do
     visit '/oauth/applications'
     i_should_see 'Awesome App'
+    i_should_see 'Auto authorize'
     i_should_see 'Oauth Dude'
   end
 end
@@ -42,6 +43,7 @@ feature 'Show application' do
   scenario 'visiting application page' do
     visit "/oauth/applications/#{app.id}"
     i_should_see 'Just another oauth app'
+    i_should_see 'Auto authorize'
   end
 end
 
@@ -56,9 +58,12 @@ feature 'Edit application' do
 
   scenario 'updating a valid app' do
     fill_in :name, :with => "Serious app"
+    check 'Auto authorize'
+
     click_button 'Submit'
     i_should_see "Application updated"
     i_should_see "Serious app"
+    i_should_see "Auto authorize: true"
     i_should_not_see "OMG my app"
   end
 
