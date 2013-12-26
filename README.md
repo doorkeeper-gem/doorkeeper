@@ -16,8 +16,8 @@ The gem is under constant development. It is based in the [version 22 of the OAu
 
 ## Requirements
 
-- Ruby 1.9.3 or 2.0.0
-- Rails 3.1, 3.2, 4.0
+- Ruby >1.9.3
+- Rails >3.1
 - ORM ActiveRecord, Mongoid 2, Mongoid 3, MongoMapper
 
 ## Installation
