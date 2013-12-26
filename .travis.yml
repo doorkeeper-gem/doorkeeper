@@ -6,8 +6,8 @@ rvm:
 env:
   - rails=3.1.8
   - rails=3.2.8
-  - rails=3.2.13
-  - rails=4.0.0
+  - rails=3.2.16
+  - rails=4.0.2
   - rails=4.1.0.beta1
   - orm=mongoid2
   - orm=mongoid3
