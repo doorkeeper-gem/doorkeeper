@@ -18,7 +18,7 @@
   - [#293] Adds ActionController::Instrumentation in TokensController
   - [#313] `AccessToken.revoke_all_for` actually revokes all non-revoked
     tokens for an application/owner instead of deleting them.
-    [@bryanrite](https://github.com/bryanrite)
+  - [#333] Rails 4.1 support
 - internals
   - Removes jQuery dependency [fixes #300] [PR #312 is related]
   - [#294] Client uid and secret will be generated only if not present.
