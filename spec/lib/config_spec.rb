@@ -150,7 +150,12 @@ describe Doorkeeper, "configuration" do
         expect(Doorkeeper.configuration.confirm_application_owner?).to be_true
       end
     end
+  end
 
+  describe "wildcard_redirect_uri" do
+    it "is disabled by default" do
+      Doorkeeper.configuration.wildcard_redirect_uri.should be_false
+    end
   end
 
   describe "realm" do
@@ -165,20 +170,20 @@ describe Doorkeeper, "configuration" do
       }
       expect(subject.realm).to eq("Example")
     end
-  end
 
-  it 'raises an exception when configuration is not set' do
-    old_config = Doorkeeper.configuration
-    Doorkeeper.module_eval do
-      @config = nil
-    end
+    it 'raises an exception when configuration is not set' do
+      old_config = Doorkeeper.configuration
+      Doorkeeper.module_eval do
+        @config = nil
+      end
 
-    expect do
-      Doorkeeper.configuration
-    end.to raise_error Doorkeeper::MissingConfiguration
+      expect do
+        Doorkeeper.configuration
+      end.to raise_error Doorkeeper::MissingConfiguration
 
-    Doorkeeper.module_eval do
-      @config = old_config
+      Doorkeeper.module_eval do
+        @config = old_config
+      end
     end
   end
 end

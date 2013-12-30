@@ -52,6 +52,18 @@ module Doorkeeper::OAuth::Helpers
         client_uri = 'http://app.co'
         expect(URIChecker.matches?(uri, client_uri)).to be_true
       end
+
+      context "allows wildcard redirect_uri" do
+        before do
+          Doorkeeper.configuration.stub(wildcard_redirect_uri: true )
+        end
+
+        it "does not ignores query parameter on comparsion" do
+          uri = 'http://app.co/?query=hello'
+          client_uri = 'http://app.co'
+          URIChecker.matches?(uri, client_uri).should be_true
+        end
+      end
     end
 
     describe ".valid_for_authorization?" do
@@ -76,6 +88,27 @@ module Doorkeeper::OAuth::Helpers
         uri = 'http://app.co/aaa'
         client_uri = "http://example.com/bbb\nhttp://app.co/cc"
         expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be_false
+      end
+
+      it "is true if valid and matches" do
+        uri = client_uri = 'http://app.co/aaa'
+        URIChecker.valid_for_authorization?(uri, client_uri).should be_true
+      end
+
+      it "is false if invalid" do
+        uri = client_uri = 'http://app.co/aaa?waffles=abc'
+        URIChecker.valid_for_authorization?(uri, client_uri).should be_false
+      end
+
+      context "allows wildcard redirect_uri" do
+        before do
+          Doorkeeper.configuration.stub(wildcard_redirect_uri: true )
+        end
+
+        it "is true if valid, matches and contains a query parameter" do
+          uri = client_uri = 'http://app.co/aaa?waffles=abc'
+          URIChecker.valid_for_authorization?(uri, client_uri).should be_true
+        end
       end
     end
   end
