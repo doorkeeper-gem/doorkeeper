@@ -3,12 +3,12 @@ module Doorkeeper
     class InvalidTokenResponse < ErrorResponse
       def self.from_access_token(access_token, attributes = {})
         reason = case
-          when access_token.nil?
-            :unknown
-          when access_token.respond_to?(:revoked?) && access_token.revoked?
+          when access_token.try(:revoked?)
             :revoked
-          when access_token.respond_to?(:expired?) && access_token.expired?
+          when access_token.try(:expired?)
             :expired
+          else
+            :unknown
           end
 
         new(attributes.merge(:reason => reason))
