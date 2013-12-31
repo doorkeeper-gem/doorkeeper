@@ -178,7 +178,7 @@ describe "Doorkeeper_for helper" do
     end
 
     it "does not allow if the token does not include given scope" do
-      token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => ['public'])
+      token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => ['public'], :revoked? => false, :expired? => false)
       Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string).and_return(token)
       get :index, :access_token => token_string
       expect(response.status).to eq 401

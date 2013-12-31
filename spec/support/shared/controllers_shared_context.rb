@@ -18,7 +18,7 @@ shared_context "invalid token", :token => :invalid do
   end
 
   let :token do
-    double(Doorkeeper::AccessToken, :accessible? => false)
+    double(Doorkeeper::AccessToken, :accessible? => false, :revoked? => false, :expired? => false)
   end
 
   before :each do
