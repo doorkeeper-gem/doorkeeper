@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0.rc1
+## 1.0.0.rc2
 
 - bug (spec)
   - [#228] token response `expires_in` value is now in seconds, relative to
@@ -14,6 +14,7 @@
     the spec.
   - [#329] access tokens' `scopes` string wa being compared against
     `default_scopes` symbols, always unauthorizing.
+  - [#318] Include "WWW-Authenticate" header with Unauthorized responses
 - enhancements
   - [#293] Adds ActionController::Instrumentation in TokensController
   - [#313] `AccessToken.revoke_all_for` actually revokes all non-revoked
