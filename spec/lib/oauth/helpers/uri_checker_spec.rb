@@ -58,10 +58,22 @@ module Doorkeeper::OAuth::Helpers
           Doorkeeper.configuration.stub(wildcard_redirect_uri: true )
         end
 
-        it "does not ignores query parameter on comparsion" do
+        it "ignores query parameter on comparison" do
           uri = 'http://app.co/?query=hello'
           client_uri = 'http://app.co'
           URIChecker.matches?(uri, client_uri).should be_true
+        end
+
+        it "doesn't allow non-matching domains through" do
+          uri = 'http://app.abc/?query=hello'
+          client_uri = 'http://app.co'
+          URIChecker.matches?(uri, client_uri).should be_false
+        end
+
+        it "doesn't allow non-matching domains that don't start at the beginning" do
+          uri = 'http://app.co/?query=hello'
+          client_uri = 'http://example.com?app.co=test'
+          URIChecker.matches?(uri, client_uri).should be_false
         end
       end
     end
