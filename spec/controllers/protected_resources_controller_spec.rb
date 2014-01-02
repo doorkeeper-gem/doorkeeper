@@ -29,6 +29,7 @@ shared_examples "specified for particular actions" do
     it "does not allow into index action" do
       get :index, :access_token => token_string
       expect(response.status).to eq 401
+      expect(response.headers["WWW-Authenticate"]).to match(/^Bearer/)
     end
 
     it "allows into show action" do
@@ -60,6 +61,7 @@ shared_examples "specified with except" do
     it "does not allow into show action" do
       get :show, :id => "14", :access_token => token_string
       expect(response.status).to eq 401
+      expect(response.headers["WWW-Authenticate"]).to match(/^Bearer/)
     end
   end
 end
@@ -102,6 +104,7 @@ describe "Doorkeeper_for helper" do
       Doorkeeper::AccessToken.should_receive(:authenticate).exactly(2).times
       request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
       get :index
+      controller.send(:remove_instance_variable, :@token)
       get :index
     end
   end
@@ -129,11 +132,13 @@ describe "Doorkeeper_for helper" do
       it "does not allow into index action" do
         get :index, :access_token => token_string
         expect(response.status).to eq 401
+        expect(response.header["WWW-Authenticate"]).to match(/^Bearer/)
       end
 
       it "does not allow into show action" do
         get :show, :id => "4", :access_token => token_string
         expect(response.status).to eq 401
+        expect(response.header["WWW-Authenticate"]).to match(/^Bearer/)
       end
     end
   end
@@ -153,7 +158,6 @@ describe "Doorkeeper_for helper" do
 
       include ControllerActions
     end
-
     include_examples "specified with except"
   end
 
@@ -174,10 +178,11 @@ describe "Doorkeeper_for helper" do
     end
 
     it "does not allow if the token does not include given scope" do
-      token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => ['public'])
+      token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => ['public'], :revoked? => false, :expired? => false)
       Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string).and_return(token)
       get :index, :access_token => token_string
       expect(response.status).to eq 401
+      expect(response.header["WWW-Authenticate"]).to match(/^Bearer/)
     end
   end
 
@@ -197,6 +202,7 @@ describe "Doorkeeper_for helper" do
         get :index, :access_token => token_string
         expect(response.status).to eq 401
         expect(response.content_type).to eq('application/json')
+        expect(response.header["WWW-Authenticate"]).to match(/^Bearer/)
         parsed_body = JSON.parse(response.body)
         expect(parsed_body).not_to be_nil
         expect(parsed_body['error']).to eq('Unauthorized')
@@ -213,6 +219,7 @@ describe "Doorkeeper_for helper" do
         get :index, :access_token => token_string
         expect(response.status).to eq 401
         expect(response.content_type).to eq('text/html')
+        expect(response.header["WWW-Authenticate"]).to match(/^Bearer/)
         expect(response.body.should).to eq('Unauthorized')
       end
     end
@@ -256,6 +263,7 @@ describe "Doorkeeper_for helper" do
       it "does not enable access if passed block evaluates to true" do
         get :show, :id => 3, :access_token => token_string
         expect(response.status).to eq 401
+        expect(response.header["WWW-Authenticate"]).to match(/^Bearer/)
       end
     end
   end

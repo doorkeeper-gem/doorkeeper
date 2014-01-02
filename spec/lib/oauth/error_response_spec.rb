@@ -36,5 +36,19 @@ module Doorkeeper::OAuth
       its(:body) { should have_key(:error_description) }
       its(:body) { should have_key(:state) }
     end
+
+    describe '.authenticate_info' do
+      subject { ErrorResponse.new(:name => :some_error, :state => :some_state) }
+
+      its(:authenticate_info) { should include("realm=\"#{subject.realm}\"") }
+      its(:authenticate_info) { should include("error=\"#{subject.name}\"") }
+      its(:authenticate_info) { should include("error_description=\"#{subject.description}\"") }
+    end
+
+    describe '.headers' do
+      subject { ErrorResponse.new(:name => :some_error, :state => :some_state) }
+
+      its(:headers) { should include "WWW-Authenticate" }
+    end
   end
 end

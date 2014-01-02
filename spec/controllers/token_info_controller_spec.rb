@@ -34,6 +34,7 @@ describe Doorkeeper::TokenInfoController do
       it "responds with 401 when doorkeeper_token is not valid" do
         do_get
         expect(response.status).to eq 401
+        expect(response.headers["WWW-Authenticate"]).to match(/^Bearer/)
       end
 
       it "responds with 401 when doorkeeper_token is invalid, expired or revoked" do
@@ -41,6 +42,7 @@ describe Doorkeeper::TokenInfoController do
         doorkeeper_token.stub(:accessible? => false)
         do_get
         expect(response.status).to eq 401
+        expect(response.headers["WWW-Authenticate"]).to match(/^Bearer/)
       end
 
       it "responds body message for error" do

@@ -68,6 +68,10 @@ module Doorkeeper
       def use_refresh_token
         @config.instance_variable_set("@refresh_token_enabled", true)
       end
+
+      def realm(realm)
+        @config.instance_variable_set("@realm", realm)
+      end
     end
 
     module Option
@@ -154,6 +158,7 @@ module Doorkeeper
     option :orm, :default => :active_record
     option :test_redirect_uri, :default => 'urn:ietf:wg:oauth:2.0:oob'
     option :active_record_options, :default => {}
+    option :realm, :default => "Doorkeeper"
 
     def refresh_token_enabled?
       !!@refresh_token_enabled
@@ -189,6 +194,10 @@ module Doorkeeper
 
     def access_token_methods
       @access_token_methods ||= [:from_bearer_authorization, :from_access_token_param, :from_bearer_param]
+    end
+
+    def realm
+      @realm ||= "Doorkeeper"
     end
   end
 end

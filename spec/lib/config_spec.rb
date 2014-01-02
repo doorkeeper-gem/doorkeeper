@@ -153,6 +153,20 @@ describe Doorkeeper, "configuration" do
 
   end
 
+  describe "realm" do
+    it "is \"Doorkeeper\" by default" do
+      Doorkeeper.configuration.realm.should == "Doorkeeper"
+    end
+
+    it "can change the value" do
+      Doorkeeper.configure {
+        orm DOORKEEPER_ORM
+        realm "Example"
+      }
+      subject.realm.should == "Example"
+    end
+  end
+
   it 'raises an exception when configuration is not set' do
     old_config = Doorkeeper.configuration
     Doorkeeper.module_eval do
