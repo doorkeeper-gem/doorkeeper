@@ -7,7 +7,7 @@ module Doorkeeper::OAuth
     let(:client) { grant.application }
 
     subject do
-      AuthorizationCodeRequest.new server, grant, client, :redirect_uri => client.redirect_uri
+      AuthorizationCodeRequest.new server, grant, client, :redirect_uri => client.redirect_uris
     end
 
     it 'issues a new token for the client' do

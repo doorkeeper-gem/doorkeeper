@@ -13,10 +13,11 @@
     </div>
 
     <div class="clearfix">
-      <%= f.label :redirect_uri %>
+      <%= f.label :redirect_uris %>
       <div class="input">
-        <%= f.text_field :redirect_uri %>
-        <%= errors_for application, :redirect_uri %>
+        <%= f.text_area :redirect_uris %>
+        <%= errors_for application, :redirect_uris %>
+        <span class="help-inline">Please use one line per URI.</span>
         <% if Doorkeeper.configuration.test_redirect_uri %>
           <span class="help-inline">Use <%= Doorkeeper.configuration.test_redirect_uri %> for local tests</span>
         <% end %>
