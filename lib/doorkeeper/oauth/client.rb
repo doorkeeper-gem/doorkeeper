@@ -17,7 +17,7 @@ module Doorkeeper
         end
       end
 
-      delegate :id, :name, :uid, :redirect_uris, :to => :@application
+      delegate :id, :name, :uid, :redirect_uri, :to => :@application
 
       def initialize(application)
         @application = application

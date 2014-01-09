@@ -69,9 +69,9 @@ module Doorkeeper
       new_application.should_not be_valid
     end
 
-    it 'is invalid without redirect_uris' do
+    it 'is invalid without redirect_uri' do
       new_application.save
-      new_application.redirect_uris = nil
+      new_application.redirect_uri = nil
       new_application.should_not be_valid
     end
 
@@ -159,7 +159,7 @@ module Doorkeeper
 
       it "should fail to mass assign a new application", if: ::Rails::VERSION::MAJOR < 4 do
         mass_assign = { :name => 'Something',
-                        :redirect_uris => 'http://somewhere.com/something',
+                        :redirect_uri => 'http://somewhere.com/something',
                         :uid => 123,
                         :secret => 'something' }
         Application.create(mass_assign).uid.should_not == 123

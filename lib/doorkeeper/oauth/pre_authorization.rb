@@ -55,7 +55,7 @@ module Doorkeeper
       def validate_redirect_uri
         return false unless redirect_uri.present?
         Helpers::URIChecker.test_uri?(redirect_uri) ||
-        Helpers::URIChecker.valid_for_authorization?(redirect_uri, client.redirect_uris)
+        Helpers::URIChecker.valid_for_authorization?(redirect_uri, client.redirect_uri)
       end
     end
   end

@@ -8,7 +8,7 @@ module Doorkeeper
     field :name, :type => String
     field :uid, :type => String
     field :secret, :type => String
-    field :redirect_uris, :type => String
+    field :redirect_uri, :type => String
 
     index({ uid: 1 }, { unique: true })
 

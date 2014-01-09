@@ -21,7 +21,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   describe "POST #create" do
     before do
-      post :create, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uris
+      post :create, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uri
     end
 
     it "redirects after authorization" do
@@ -29,7 +29,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     end
 
     it "redirects to client redirect uri" do
-      expect(response.location).to match(%r[^#{client.redirect_uris}])
+      expect(response.location).to match(%r[^#{client.redirect_uri}])
     end
 
     it "includes access token in fragment" do
@@ -56,7 +56,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
   describe "POST #create with errors" do
     before do
       default_scopes_exist :public
-      post :create, :client_id => client.uid, :response_type => "token", :scope => "invalid", :redirect_uri => client.redirect_uris
+      post :create, :client_id => client.uid, :response_type => "token", :scope => "invalid", :redirect_uri => client.redirect_uri
     end
 
     it "redirects after authorization" do
@@ -64,7 +64,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     end
 
     it "redirects to client redirect uri" do
-      expect(response.location).to match(%r[^#{client.redirect_uris}])
+      expect(response.location).to match(%r[^#{client.redirect_uri}])
     end
 
     it "does not include access token in fragment" do
@@ -90,7 +90,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   describe "GET #new" do
     before do
-      get :new, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uris
+      get :new, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uri
     end
 
     it 'renders new template' do
@@ -103,12 +103,12 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
       Doorkeeper.configuration.stub(:skip_authorization => proc do
           true
         end)
-      get :new, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uris
+      get :new, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uri
     end
 
     it "should redirect immediately" do
       response.should be_redirect
-      response.location.should =~ %r[^#{client.redirect_uris}]
+      response.location.should =~ %r[^#{client.redirect_uri}]
     end
 
     it "should issue a token" do

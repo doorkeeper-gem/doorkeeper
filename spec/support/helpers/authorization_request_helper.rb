@@ -25,7 +25,7 @@ module AuthorizationRequestHelper
   end
 
   def i_should_be_on_client_callback(client)
-    client.redirect_uris.should == "#{current_uri.scheme}://#{current_uri.host}#{current_uri.path}"
+    client.redirect_uri.should == "#{current_uri.scheme}://#{current_uri.host}#{current_uri.path}"
   end
 end
 
