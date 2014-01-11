@@ -4,7 +4,7 @@ module Doorkeeper
   describe ApplicationsController do
     context "when admin is not authenticated" do
       before do
-        Doorkeeper.configuration.stub(:authenticate_admin => proc do
+        allow(Doorkeeper.configuration).to receive(:authenticate_admin).and_return(proc do
           redirect_to main_app.root_url
         end)
       end
@@ -25,7 +25,7 @@ module Doorkeeper
 
     context "when admin is authenticated" do
       before do
-        Doorkeeper.configuration.stub(authenticate_admin: ->(arg) { true })
+        allow(Doorkeeper.configuration).to receive(:authenticate_admin).and_return(->(arg) { true })
       end
 
       it "creates application" do
@@ -43,7 +43,7 @@ module Doorkeeper
           uid: '1A2B3C4D',
           secret: '1A2B3C4D' }
 
-        application.reload.uid.should_not eq '1A2B3C4D'
+        expect(application.reload.uid).not_to eq '1A2B3C4D'
       end
 
       it "updates application" do
@@ -51,7 +51,7 @@ module Doorkeeper
         put :update, id: application.id, application: {
           name: 'Example',
           redirect_uri: 'http://example.com' }
-        application.reload.name.should eq 'Example'
+        expect(application.reload.name).to eq 'Example'
       end
     end
 

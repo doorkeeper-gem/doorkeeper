@@ -30,18 +30,18 @@ module Doorkeeper::OAuth
         subject.authorize
       }.to_not change { Doorkeeper::AccessToken.count }
 
-      subject.error.should == :invalid_client
+      expect(subject.error).to eq(:invalid_client)
     end
 
     it 'requires the owner' do
       subject.resource_owner = nil
       subject.validate
-      subject.error.should == :invalid_resource_owner
+      expect(subject.error).to eq(:invalid_resource_owner)
     end
 
     it 'optionally accepts the client' do
       subject.credentials = nil
-      subject.should be_valid
+      expect(subject).to be_valid
     end
 
     describe "with scopes" do
@@ -50,17 +50,17 @@ module Doorkeeper::OAuth
       end
 
       it 'validates the current scope' do
-        server.stub :scopes => Doorkeeper::OAuth::Scopes.from_string('another')
+        allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string('another'))
         subject.validate
-        subject.error.should == :invalid_scope
+        expect(subject.error).to eq(:invalid_scope)
       end
 
       it 'creates the token with scopes' do
-        server.stub :scopes => Doorkeeper::OAuth::Scopes.from_string("public")
+        allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("public"))
         expect {
           subject.authorize
         }.to change { Doorkeeper::AccessToken.count }.by(1)
-        Doorkeeper::AccessToken.last.scopes.should include('public')
+        expect(Doorkeeper::AccessToken.last.scopes).to include('public')
       end
     end
   end

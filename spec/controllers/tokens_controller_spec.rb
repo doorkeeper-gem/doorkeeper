@@ -7,12 +7,12 @@ describe Doorkeeper::TokensController do
     end
 
     before do
-      controller.stub(:token) { token }
+      allow(controller).to receive(:token) { token }
     end
 
     it "returns the authorization" do
       pending 'verify need of these specs'
-      token.should_receive(:authorization)
+      expect(token).to receive(:authorization)
       post :create
     end
   end
@@ -23,12 +23,12 @@ describe Doorkeeper::TokensController do
     end
 
     before do
-      controller.stub(:token) { token }
+      allow(controller).to receive(:token) { token }
     end
 
     it "returns the error response" do
       pending 'verify need of these specs'
-      token.stub(:error_response => double(:to_json => [], :status => :unauthorized))
+      allow(token).to receive(:error_response).and_return(double(:to_json => [], :status => :unauthorized))
       post :create
       expect(response.status).to eq 401
       expect(response.headers["WWW-Authenticate"]).to match(/Bearer/)

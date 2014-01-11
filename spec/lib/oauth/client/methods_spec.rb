@@ -18,16 +18,16 @@ class Doorkeeper::OAuth::Client
         request     = double :parameters => { :client_id => client_id, :client_secret => client_secret }
         uid, secret = subject.from_params(request)
 
-        uid.should    == "some-uid"
-        secret.should == "some-secret"
+        expect(uid).to    eq("some-uid")
+        expect(secret).to eq("some-secret")
       end
 
       it 'is blank when there are no credentials' do
         request     = double :parameters => {}
         uid, secret = subject.from_params(request)
 
-        uid.should    be_blank
-        secret.should be_blank
+        expect(uid).to    be_blank
+        expect(secret).to be_blank
       end
     end
 
@@ -38,16 +38,16 @@ class Doorkeeper::OAuth::Client
         request     = double :authorization => "Basic #{credentials}"
         uid, secret = subject.from_basic(request)
 
-        uid.should    == "some-uid"
-        secret.should == "some-secret"
+        expect(uid).to    eq("some-uid")
+        expect(secret).to eq("some-secret")
       end
 
       it 'is blank if Authorization is not Basic' do
         request     = double :authorization => "#{credentials}"
         uid, secret = subject.from_basic(request)
 
-        uid.should    be_blank
-        secret.should be_blank
+        expect(uid).to    be_blank
+        expect(secret).to be_blank
       end
     end
   end

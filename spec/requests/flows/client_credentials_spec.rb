@@ -47,7 +47,7 @@ describe 'Client Credentials Request' do
       should_have_json 'error_description', translated_error_message(:invalid_client)
       should_not_have_json 'access_token'
 
-      response.status.should == 401
+      expect(response.status).to eq(401)
     end
   end
 

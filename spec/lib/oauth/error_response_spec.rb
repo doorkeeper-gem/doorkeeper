@@ -5,50 +5,68 @@ require 'doorkeeper/oauth/error_response'
 
 module Doorkeeper::OAuth
   describe ErrorResponse do
-    its(:status) { should == :unauthorized }
+    describe '#status' do
+      subject { super().status }
+      it { should == :unauthorized }
+    end
 
     describe :from_request do
       it 'has the error from request' do
         error = ErrorResponse.from_request double(:error => :some_error)
-        error.name.should == :some_error
+        expect(error.name).to eq(:some_error)
       end
 
       it 'ignores state if request does not respond to state' do
         error = ErrorResponse.from_request double(:error => :some_error)
-        error.state.should be_nil
+        expect(error.state).to be_nil
       end
 
       it 'has state if request responds to state' do
         error = ErrorResponse.from_request double(:error => :some_error, :state => :hello)
-        error.state.should == :hello
+        expect(error.state).to eq(:hello)
       end
     end
 
     it 'ignores empty error values' do
       subject = ErrorResponse.new(:error => :some_error, :state => nil)
-      subject.body.should_not have_key(:state)
+      expect(subject.body).not_to have_key(:state)
     end
 
     describe '.body' do
       subject { ErrorResponse.new(:name => :some_error, :state => :some_state) }
 
-      its(:body) { should have_key(:error) }
-      its(:body) { should have_key(:error_description) }
-      its(:body) { should have_key(:state) }
+      describe '#body' do
+        subject { super().body }
+        it { should have_key(:error) }
+      end
+
+      describe '#body' do
+        subject { super().body }
+        it { should have_key(:error_description) }
+      end
+
+      describe '#body' do
+        subject { super().body }
+        it { should have_key(:state) }
+      end
     end
 
     describe '.authenticate_info' do
-      subject { ErrorResponse.new(:name => :some_error, :state => :some_state) }
+      let(:error_response) { ErrorResponse.new(:name => :some_error, :state => :some_state) }
+      subject { error_response.authenticate_info }
 
-      its(:authenticate_info) { should include("realm=\"#{subject.realm}\"") }
-      its(:authenticate_info) { should include("error=\"#{subject.name}\"") }
-      its(:authenticate_info) { should include("error_description=\"#{subject.description}\"") }
+      it { should include("realm=\"#{error_response.realm}\"") }
+      it { should include("error=\"#{error_response.name}\"") }
+      it { should include("error_description=\"#{error_response.description}\"") }
     end
 
     describe '.headers' do
       subject { ErrorResponse.new(:name => :some_error, :state => :some_state) }
 
-      its(:headers) { should include "WWW-Authenticate" }
+      describe '#headers' do
+        subject { super().headers }
+        it { should include "WWW-Authenticate" }
+      end
     end
   end
 end

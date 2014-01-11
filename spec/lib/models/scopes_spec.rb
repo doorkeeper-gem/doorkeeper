@@ -16,17 +16,17 @@ describe 'Doorkeeper::Models::Scopes' do
 
   describe :scopes do
     it 'is a `Scopes` class' do
-      subject.scopes.should be_a(Doorkeeper::OAuth::Scopes)
+      expect(subject.scopes).to be_a(Doorkeeper::OAuth::Scopes)
     end
 
     it 'includes scopes' do
-      subject.scopes.should include('public')
+      expect(subject.scopes).to include('public')
     end
   end
 
   describe :scopes_string do
     it 'is a `Scopes` class' do
-      subject.scopes_string.should == 'public admin'
+      expect(subject.scopes_string).to eq('public admin')
     end
   end
 end

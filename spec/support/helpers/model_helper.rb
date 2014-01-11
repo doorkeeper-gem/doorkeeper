@@ -13,32 +13,32 @@ module ModelHelper
 
   def access_grant_should_exist_for(client, resource_owner)
     grant = Doorkeeper::AccessGrant.first
-    grant.application.should == client
+    expect(grant.application).to eq(client)
     grant.resource_owner_id  == resource_owner.id
   end
 
   def access_token_should_exist_for(client, resource_owner)
     grant = Doorkeeper::AccessToken.first
-    grant.application.should == client
+    expect(grant.application).to eq(client)
     grant.resource_owner_id  == resource_owner.id
   end
 
   def access_grant_should_not_exist
-    Doorkeeper::AccessGrant.all.should be_empty
+    expect(Doorkeeper::AccessGrant.all).to be_empty
   end
 
   def access_token_should_not_exist
-    Doorkeeper::AccessToken.all.should be_empty
+    expect(Doorkeeper::AccessToken.all).to be_empty
   end
 
   def access_grant_should_have_scopes(*args)
     grant = Doorkeeper::AccessGrant.first
-    grant.scopes.should == Doorkeeper::OAuth::Scopes.from_array(args)
+    expect(grant.scopes).to eq(Doorkeeper::OAuth::Scopes.from_array(args))
   end
 
   def access_token_should_have_scopes(*args)
     grant = Doorkeeper::AccessToken.first
-    grant.scopes.should == Doorkeeper::OAuth::Scopes.from_array(args)
+    expect(grant.scopes).to eq(Doorkeeper::OAuth::Scopes.from_array(args))
   end
 end
 

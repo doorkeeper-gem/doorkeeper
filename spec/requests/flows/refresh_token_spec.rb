@@ -22,7 +22,7 @@ feature "Refresh Token Flow" do
       should_have_json 'access_token',  token.token
       should_have_json 'refresh_token', token.refresh_token
 
-      @authorization.reload.should be_revoked
+      expect(@authorization.reload).to be_revoked
 
       post refresh_token_endpoint_url(:client => @client, :refresh_token => token.refresh_token)
 
@@ -30,8 +30,8 @@ feature "Refresh Token Flow" do
       should_have_json 'access_token',  new_token.token
       should_have_json 'refresh_token', new_token.refresh_token
 
-      token.token.should_not         == new_token.token
-      token.refresh_token.should_not == new_token.refresh_token
+      expect(token.token).not_to         eq(new_token.token)
+      expect(token.refresh_token).not_to eq(new_token.refresh_token)
     end
   end
 
@@ -43,14 +43,14 @@ feature "Refresh Token Flow" do
     scenario "client request a token with refresh token" do
       post refresh_token_endpoint_url(:client => @client, :refresh_token => @token.refresh_token)
       should_have_json 'refresh_token', Doorkeeper::AccessToken.last.refresh_token
-      @token.reload.should be_revoked
+      expect(@token.reload).to be_revoked
     end
 
     scenario "client request a token with expired access token" do
       @token.update_column :expires_in, -100
       post refresh_token_endpoint_url(:client => @client, :refresh_token => @token.refresh_token)
       should_have_json 'refresh_token', Doorkeeper::AccessToken.last.refresh_token
-      @token.reload.should be_revoked
+      expect(@token.reload).to be_revoked
     end
 
     # TODO: verify proper error code for this (previously was invalid_grant)
@@ -82,7 +82,7 @@ feature "Refresh Token Flow" do
       post password_token_endpoint_url(:client => @client, :resource_owner => @resource_owner)
       post refresh_token_endpoint_url(:client => @client, :refresh_token => @token.refresh_token)
       should_have_json 'refresh_token', Doorkeeper::AccessToken.last.refresh_token
-      @token.reload.should be_revoked
+      expect(@token.reload).to be_revoked
     end
   end
 end

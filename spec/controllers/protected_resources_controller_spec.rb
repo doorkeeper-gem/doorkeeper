@@ -79,29 +79,29 @@ describe "Doorkeeper_for helper" do
     let(:token_string) { "1A2BC3" }
 
     it "access_token param" do
-      Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string)
+      expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string)
       get :index, :access_token => token_string
     end
 
     it "bearer_token param" do
-      Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string)
+      expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string)
       get :index, :bearer_token => token_string
     end
 
     it "Authorization header" do
-      Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string)
+      expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string)
       request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
       get :index
     end
 
     it "different kind of Authorization header" do
-      Doorkeeper::AccessToken.should_not_receive(:authenticate)
+      expect(Doorkeeper::AccessToken).not_to receive(:authenticate)
       request.env["HTTP_AUTHORIZATION"] = "Basic #{Base64.encode64("foo:bar")}"
       get :index
     end
 
     it "doesn't change Authorization header value" do
-      Doorkeeper::AccessToken.should_receive(:authenticate).exactly(2).times
+      expect(Doorkeeper::AccessToken).to receive(:authenticate).exactly(2).times
       request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
       get :index
       controller.send(:remove_instance_variable, :@token)
@@ -172,14 +172,14 @@ describe "Doorkeeper_for helper" do
 
     it "allows if the token has particular scopes" do
       token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => ['write', 'public'])
-      Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string).and_return(token)
+      expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string).and_return(token)
       get :index, :access_token => token_string
       expect(response).to be_success
     end
 
     it "does not allow if the token does not include given scope" do
       token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => ['public'], :revoked? => false, :expired? => false)
-      Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string).and_return(token)
+      expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string).and_return(token)
       get :index, :access_token => token_string
       expect(response.status).to eq 401
       expect(response.header["WWW-Authenticate"]).to match(/^Bearer/)
@@ -195,7 +195,7 @@ describe "Doorkeeper_for helper" do
 
     context "with a JSON custom render", :token => :invalid do
       before do
-        controller.should_receive(:doorkeeper_unauthorized_render_options).and_return({ :json => ActiveSupport::JSON.encode({ :error => "Unauthorized" })  } )
+        expect(controller).to receive(:doorkeeper_unauthorized_render_options).and_return({ :json => ActiveSupport::JSON.encode({ :error => "Unauthorized" })  } )
       end
 
       it "it renders a custom JSON response", :token => :invalid do
@@ -212,7 +212,7 @@ describe "Doorkeeper_for helper" do
 
     context "with a text custom render", :token => :invalid do
       before do
-        controller.should_receive(:doorkeeper_unauthorized_render_options).and_return({ :text => "Unauthorized"  } )
+        expect(controller).to receive(:doorkeeper_unauthorized_render_options).and_return({ :text => "Unauthorized"  } )
       end
 
       it "it renders a custom JSON response", :token => :invalid do
@@ -220,7 +220,7 @@ describe "Doorkeeper_for helper" do
         expect(response.status).to eq 401
         expect(response.content_type).to eq('text/html')
         expect(response.header["WWW-Authenticate"]).to match(/^Bearer/)
-        expect(response.body.should).to eq('Unauthorized')
+        expect(response.body).to eq('Unauthorized')
       end
     end
   end
