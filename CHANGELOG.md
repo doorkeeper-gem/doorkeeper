@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0.rc2
+## 1.0.0
 
 - bug (spec)
   - [#228] token response `expires_in` value is now in seconds, relative to
@@ -25,6 +25,7 @@
   - Removes jQuery dependency [fixes #300] [PR #312 is related]
   - [#294] Client uid and secret will be generated only if not present.
   - [#316] Test warnings addressed.
+  - [#338] Rspec 3 syntax.
 
 ## 0.7.4
 
