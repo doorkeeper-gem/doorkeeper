@@ -6,13 +6,11 @@ require 'doorkeeper/oauth/invalid_token_response'
 module Doorkeeper::OAuth
   describe InvalidTokenResponse do
     describe '#name' do
-      subject { super().name }
-      it  { should == :invalid_token }
+      it  { expect(subject.name).to eq(:invalid_token) }
     end
 
     describe '#status' do
-      subject { super().status }
-      it { should == :unauthorized }
+      it { expect(subject.status).to eq(:unauthorized) }
     end
 
     describe :from_access_token do

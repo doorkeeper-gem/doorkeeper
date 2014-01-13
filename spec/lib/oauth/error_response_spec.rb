@@ -6,8 +6,9 @@ require 'doorkeeper/oauth/error_response'
 module Doorkeeper::OAuth
   describe ErrorResponse do
     describe '#status' do
-      subject { super().status }
-      it { should == :unauthorized }
+      it 'should have a status of unauthorized' do
+        expect(subject.status).to eq(:unauthorized)
+      end
     end
 
     describe :from_request do
@@ -33,20 +34,11 @@ module Doorkeeper::OAuth
     end
 
     describe '.body' do
-      subject { ErrorResponse.new(:name => :some_error, :state => :some_state) }
+      subject { ErrorResponse.new(:name => :some_error, :state => :some_state).body }
 
       describe '#body' do
-        subject { super().body }
         it { should have_key(:error) }
-      end
-
-      describe '#body' do
-        subject { super().body }
         it { should have_key(:error_description) }
-      end
-
-      describe '#body' do
-        subject { super().body }
         it { should have_key(:state) }
       end
     end
@@ -61,12 +53,9 @@ module Doorkeeper::OAuth
     end
 
     describe '.headers' do
-      subject { ErrorResponse.new(:name => :some_error, :state => :some_state) }
+      subject { ErrorResponse.new(:name => :some_error, :state => :some_state).headers }
 
-      describe '#headers' do
-        subject { super().headers }
-        it { should include "WWW-Authenticate" }
-      end
+      it { should include "WWW-Authenticate" }
     end
   end
 end

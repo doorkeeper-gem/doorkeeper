@@ -50,8 +50,12 @@ module Doorkeeper::OAuth
       it { should be_a(Scopes) }
 
       describe '#all' do
-        subject { super().all }
-        it { should == ['public', 'write'] }
+        it 'should be an array of the expected scopes' do
+          scopes_array = subject.all
+          expect(scopes_array.size).to eq(2)
+          expect(scopes_array).to include('public')
+          expect(scopes_array).to include('write')
+        end
       end
     end
 
