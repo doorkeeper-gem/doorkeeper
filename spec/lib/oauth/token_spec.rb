@@ -18,24 +18,24 @@ module Doorkeeper
         end
 
         it 'accepts anything that responds to #call' do
-          method.should_receive(:call).with(request)
+          expect(method).to receive(:call).with(request)
           Token.from_request request, method
         end
 
         it 'delegates methods received as symbols to Token class' do
-          Token.should_receive(:from_params).with(request)
+          expect(Token).to receive(:from_params).with(request)
           Token.from_request request, :from_params
         end
 
         it 'stops at the first credentials found' do
           not_called_method = double
-          not_called_method.should_not_receive(:call)
+          expect(not_called_method).not_to receive(:call)
           credentials = Token.from_request request, lambda { |r| }, method, not_called_method
         end
 
         it 'returns the credential from extractor method' do
           credentials = Token.from_request request, method
-          credentials.should == 'token-value'
+          expect(credentials).to eq('token-value')
         end
       end
 
@@ -43,7 +43,7 @@ module Doorkeeper
         it 'returns token from access_token parameter' do
           request = double :parameters => { :access_token => 'some-token' }
           token   = Token.from_access_token_param(request)
-          token.should == "some-token"
+          expect(token).to eq("some-token")
         end
       end
 
@@ -51,7 +51,7 @@ module Doorkeeper
         it 'returns token from bearer_token parameter' do
           request = double :parameters => { :bearer_token => 'some-token' }
           token   = Token.from_bearer_param(request)
-          token.should == "some-token"
+          expect(token).to eq("some-token")
         end
       end
 
@@ -59,13 +59,13 @@ module Doorkeeper
         it 'returns token from authorization bearer' do
           request = double :authorization => "Bearer SomeToken"
           token   = Token.from_bearer_authorization(request)
-          token.should == "SomeToken"
+          expect(token).to eq("SomeToken")
         end
 
         it 'does not return token if authorization is not bearer' do
           request = double :authorization => "MAC SomeToken"
           token   = Token.from_bearer_authorization(request)
-          token.should be_blank
+          expect(token).to be_blank
         end
       end
 
@@ -74,7 +74,7 @@ module Doorkeeper
 
         it 'calls the finder if token was found' do
           token = lambda { |r| 'token' }
-          AccessToken.should_receive(:authenticate).with('token')
+          expect(AccessToken).to receive(:authenticate).with('token')
           Token.authenticate double, token
         end
       end

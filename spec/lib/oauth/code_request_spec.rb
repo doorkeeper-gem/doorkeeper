@@ -26,19 +26,19 @@ module Doorkeeper::OAuth
     end
 
     it 'returns a code response' do
-      subject.authorize.should be_a(CodeResponse)
+      expect(subject.authorize).to be_a(CodeResponse)
     end
 
     it 'does not create grant when not authorizable' do
-      pre_auth.stub :authorizable? => false
+      allow(pre_auth).to receive(:authorizable?).and_return(false)
       expect do
         subject.authorize
       end.to_not change { Doorkeeper::AccessGrant.count }
     end
 
     it 'returns a error response' do
-      pre_auth.stub :authorizable? => false
-      subject.authorize.should be_a(ErrorResponse)
+      allow(pre_auth).to receive(:authorizable?).and_return(false)
+      expect(subject.authorize).to be_a(ErrorResponse)
     end
   end
 end

@@ -25,7 +25,7 @@ module Doorkeeper
         end
 
         it 'is valid given valid attributes' do
-          new_application.should be_valid
+          expect(new_application).to be_valid
         end
       end
 
@@ -36,50 +36,50 @@ module Doorkeeper
         end
 
         it 'is invalid without an owner' do
-          new_application.should_not be_valid
+          expect(new_application).not_to be_valid
         end
 
         it 'is valid with an owner' do
           new_application.owner = @owner
-          new_application.should be_valid
+          expect(new_application).to be_valid
         end
       end
     end
 
     it 'is invalid without a name' do
       new_application.name = nil
-      new_application.should_not be_valid
+      expect(new_application).not_to be_valid
     end
 
     it 'generates uid on create' do
-      new_application.uid.should be_nil
+      expect(new_application.uid).to be_nil
       new_application.save
-      new_application.uid.should_not be_nil
+      expect(new_application.uid).not_to be_nil
     end
 
     it 'generates uid on create unless one is set' do
       new_application.uid = uid
       new_application.save
-      new_application.uid.should eq(uid)
+      expect(new_application.uid).to eq(uid)
     end
 
     it 'is invalid without uid' do
       new_application.save
       new_application.uid = nil
-      new_application.should_not be_valid
+      expect(new_application).not_to be_valid
     end
 
     it 'is invalid without redirect_uri' do
       new_application.save
       new_application.redirect_uri = nil
-      new_application.should_not be_valid
+      expect(new_application).not_to be_valid
     end
 
     it 'checks uniqueness of uid' do
       app1 = Factory(:application)
       app2 = Factory(:application)
       app2.uid = app1.uid
-      app2.should_not be_valid
+      expect(app2).not_to be_valid
     end
 
     it 'expects database to throw an error when uids are the same' do
@@ -92,21 +92,21 @@ module Doorkeeper
     end
 
     it 'generate secret on create' do
-      new_application.secret.should be_nil
+      expect(new_application.secret).to be_nil
       new_application.save
-      new_application.secret.should_not be_nil
+      expect(new_application.secret).not_to be_nil
     end
 
     it 'generate secret on create unless one is set' do
       new_application.secret = secret
       new_application.save
-      new_application.secret.should eq(secret)
+      expect(new_application.secret).to eq(secret)
     end
 
     it 'is invalid without secret' do
       new_application.save
       new_application.secret = nil
-      new_application.should_not be_valid
+      expect(new_application).not_to be_valid
     end
 
     describe 'destroy related models on cascade' do
@@ -130,31 +130,31 @@ module Doorkeeper
       let(:resource_owner) { double(:resource_owner, :id => 10) }
 
       it "is empty if the application is not authorized for anyone" do
-        Application.authorized_for(resource_owner).should be_empty
+        expect(Application.authorized_for(resource_owner)).to be_empty
       end
 
       it "returns only application for a specific resource owner" do
         FactoryGirl.create(:access_token, :resource_owner_id => resource_owner.id + 1)
         token = FactoryGirl.create(:access_token, :resource_owner_id => resource_owner.id)
-        Application.authorized_for(resource_owner).should == [token.application]
+        expect(Application.authorized_for(resource_owner)).to eq([token.application])
       end
 
       it "excludes revoked tokens" do
         FactoryGirl.create(:access_token, :resource_owner_id => resource_owner.id, :revoked_at => 2.days.ago)
-        Application.authorized_for(resource_owner).should be_empty
+        expect(Application.authorized_for(resource_owner)).to be_empty
       end
 
       it "returns all applications that have been authorized" do
         token1 = FactoryGirl.create(:access_token, :resource_owner_id => resource_owner.id)
         token2 = FactoryGirl.create(:access_token, :resource_owner_id => resource_owner.id)
-        Application.authorized_for(resource_owner).should == [token1.application, token2.application]
+        expect(Application.authorized_for(resource_owner)).to eq([token1.application, token2.application])
       end
 
       it "returns only one application even if it has been authorized twice" do
         application = FactoryGirl.create(:application)
         FactoryGirl.create(:access_token, :resource_owner_id => resource_owner.id, :application => application)
         FactoryGirl.create(:access_token, :resource_owner_id => resource_owner.id, :application => application)
-        Application.authorized_for(resource_owner).should == [application]
+        expect(Application.authorized_for(resource_owner)).to eq([application])
       end
 
       it "should fail to mass assign a new application", if: ::Rails::VERSION::MAJOR < 4 do
@@ -162,7 +162,7 @@ module Doorkeeper
                         :redirect_uri => 'http://somewhere.com/something',
                         :uid => 123,
                         :secret => 'something' }
-        Application.create(mass_assign).uid.should_not == 123
+        expect(Application.create(mass_assign).uid).not_to eq(123)
       end
     end
 
@@ -170,7 +170,7 @@ module Doorkeeper
       it 'finds the application via uid/secret' do
         app = FactoryGirl.create :application
         authenticated = Application.authenticate(app.uid, app.secret)
-        authenticated.should == app
+        expect(authenticated).to eq(app)
       end
     end
   end

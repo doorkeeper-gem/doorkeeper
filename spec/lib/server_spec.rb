@@ -21,7 +21,7 @@ describe Doorkeeper::Server do
 
     it 'builds the request with selected strategy' do
       stub_const 'Doorkeeper::Request::Code', fake_class
-      fake_class.should_receive(:build).with(subject)
+      expect(fake_class).to receive(:build).with(subject)
       subject.authorization_request :code
     end
   end

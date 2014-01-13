@@ -9,12 +9,12 @@ module Doorkeeper::OAuth::Helpers
 
     it "is able to customize the generator method" do
       token = UniqueToken.generate(:generator => generator)
-      token.should == "a" * 32
+      expect(token).to eq("a" * 32)
     end
 
     it "is able to customize the size of the token" do
       token = UniqueToken.generate(:generator => generator, :size => 2)
-      token.should == "aa"
+      expect(token).to eq("aa")
     end
   end
 end

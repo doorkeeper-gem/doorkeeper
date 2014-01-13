@@ -26,32 +26,32 @@ module Doorkeeper::OAuth
     it 'requires the refresh token' do
       subject.refresh_token = nil
       subject.validate
-      subject.error.should == :invalid_request
+      expect(subject.error).to eq(:invalid_request)
     end
 
     it 'requires credentials to be valid if provided' do
       subject.client = nil
       subject.validate
-      subject.error.should == :invalid_client
+      expect(subject.error).to eq(:invalid_client)
     end
 
     it "requires the token's client and current client to match" do
       subject.client = FactoryGirl.create(:application)
       subject.validate
-      subject.error.should == :invalid_grant
+      expect(subject.error).to eq(:invalid_grant)
     end
 
     it 'rejects revoked tokens' do
       refresh_token.revoke
       subject.validate
-      subject.error.should == :invalid_request
+      expect(subject.error).to eq(:invalid_request)
     end
 
     it 'accepts expired tokens' do
       refresh_token.expires_in = -1
       refresh_token.save
       subject.validate
-      subject.should be_valid
+      expect(subject).to be_valid
     end
 
     context 'clientless access tokens' do
@@ -77,20 +77,20 @@ module Doorkeeper::OAuth
 
       it 'transfers scopes from the old token to the new token' do
         subject.authorize
-        Doorkeeper::AccessToken.last.scopes.should == [:public, :write]
+        expect(Doorkeeper::AccessToken.last.scopes).to eq([:public, :write])
       end
 
       it 'reduces scopes to the provided scopes' do
         parameters[:scopes] = 'public'
         subject.authorize
-        Doorkeeper::AccessToken.last.scopes.should == [:public]
+        expect(Doorkeeper::AccessToken.last.scopes).to eq([:public])
       end
 
       it 'validates that scopes are included in the original access token' do
         parameters[:scopes] = 'public update'
 
         subject.validate
-        subject.error.should == :invalid_scope
+        expect(subject.error).to eq(:invalid_scope)
       end
     end
 

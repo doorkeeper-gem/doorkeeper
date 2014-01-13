@@ -100,7 +100,7 @@ feature 'Authorization Code Flow' do
       authorization_code = Doorkeeper::AccessGrant.first.token
       post token_endpoint_url(:code => authorization_code, :client => @client)
 
-      Doorkeeper::AccessToken.count.should be(2)
+      expect(Doorkeeper::AccessToken.count).to be(2)
 
       should_have_json 'access_token', Doorkeeper::AccessToken.last.token
     end

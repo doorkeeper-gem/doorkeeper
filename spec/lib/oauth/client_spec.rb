@@ -10,13 +10,13 @@ module Doorkeeper::OAuth
 
       it 'finds the client via uid' do
         client = double
-        method.should_receive(:call).with('uid').and_return(client)
-        Client.find('uid', method).should be_a(Client)
+        expect(method).to receive(:call).with('uid').and_return(client)
+        expect(Client.find('uid', method)).to be_a(Client)
       end
 
       it 'returns nil if client was not found' do
-        method.should_receive(:call).with('uid').and_return(nil)
-        Client.find('uid', method).should be_nil
+        expect(method).to receive(:call).with('uid').and_return(nil)
+        expect(Client.find('uid', method)).to be_nil
       end
     end
 
@@ -24,15 +24,15 @@ module Doorkeeper::OAuth
       it 'returns the authenticated client via credentials' do
         credentials = Client::Credentials.new("some-uid", "some-secret")
         authenticator = double
-        authenticator.should_receive(:call).with("some-uid", "some-secret").and_return(double)
-        Client.authenticate(credentials, authenticator).should be_a(Client)
+        expect(authenticator).to receive(:call).with("some-uid", "some-secret").and_return(double)
+        expect(Client.authenticate(credentials, authenticator)).to be_a(Client)
       end
 
       it 'retunrs nil if client was not authenticated' do
         credentials = Client::Credentials.new("some-uid", "some-secret")
         authenticator = double
-        authenticator.should_receive(:call).with("some-uid", "some-secret").and_return(nil)
-        Client.authenticate(credentials, authenticator).should be_nil
+        expect(authenticator).to receive(:call).with("some-uid", "some-secret").and_return(nil)
+        expect(Client.authenticate(credentials, authenticator)).to be_nil
       end
     end
   end

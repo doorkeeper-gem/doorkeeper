@@ -10,7 +10,7 @@ feature 'Private API' do
   scenario 'client requests protected resource with valid token' do
     with_access_token_header @token.token
     visit '/full_protected_resources'
-    page.body.should have_content("index")
+    expect(page.body).to have_content("index")
   end
 
   scenario 'client requests protected resource with disabled header authentication' do
@@ -37,7 +37,7 @@ feature 'Private API' do
     @token.update_column :expires_in, nil # never expires
     with_access_token_header @token.token
     visit '/full_protected_resources'
-    page.body.should have_content("index")
+    expect(page.body).to have_content("index")
   end
 
   scenario 'access token with no scopes' do
@@ -53,6 +53,6 @@ feature 'Private API' do
     @token.update_column :scopes, 'admin'
     with_access_token_header @token.token
     visit '/full_protected_resources/1.json'
-    page.body.should have_content("show")
+    expect(page.body).to have_content("show")
   end
 end
