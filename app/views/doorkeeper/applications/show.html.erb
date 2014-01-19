@@ -23,7 +23,7 @@
 
   <h4>Link to authorization code:</h4>
 
-  <p><%= link_to 'Authorize', oauth_authorization_path(:client_id => @application.uid, :redirect_uri => @application.redirect_uri, :response_type => 'code'), class: 'btn btn-success' %></p>
+  <p><%= link_to 'Authorize', oauth_authorization_path(:client_id => @application.uid, :redirect_uri => @application.redirect_uri, :response_type => 'code'), class: 'btn btn-success', target: '_blank' %></p>
 </div>
 
 <div class="col-md-2">
