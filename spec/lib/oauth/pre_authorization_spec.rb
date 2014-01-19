@@ -44,7 +44,7 @@ module Doorkeeper::OAuth
     end
 
     it 'accepts test uri' do
-      subject.redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
+      subject.redirect_uri = 'urn:ietf:wg:oauth:2.0:oob:test'
       expect(subject).to be_authorizable
     end
 

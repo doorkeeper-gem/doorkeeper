@@ -11,7 +11,7 @@ describe RedirectUriValidator do
   end
 
   it 'accepts test redirect uri' do
-    subject.redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
+    subject.redirect_uri = 'urn:ietf:wg:oauth:2.0:oob:test'
     expect(subject).to be_valid
   end
 

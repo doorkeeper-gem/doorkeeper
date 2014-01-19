@@ -156,7 +156,7 @@ module Doorkeeper
     option :access_token_expires_in,      :default => 7200
     option :authorization_code_expires_in,:default => 600
     option :orm, :default => :active_record
-    option :test_redirect_uri, :default => 'urn:ietf:wg:oauth:2.0:oob'
+    option :test_redirect_uri, :default => 'urn:ietf:wg:oauth:2.0:oob:test'
     option :active_record_options, :default => {}
     option :realm, :default => "Doorkeeper"
 
