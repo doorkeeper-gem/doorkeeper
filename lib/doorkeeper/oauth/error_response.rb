@@ -2,6 +2,7 @@ module Doorkeeper
   module OAuth
     class ErrorResponse
       include Doorkeeper::OAuth::Authorization::URIBuilder
+      include Doorkeeper::OAuth::Helpers
 
       def self.from_request(request, attributes = {})
         state = request.state if request.respond_to?(:state)
@@ -25,7 +26,7 @@ module Doorkeeper
       end
 
       def redirectable?
-        (name != :invalid_redirect_uri) && (name != :invalid_client)
+        (name != :invalid_redirect_uri) && (name != :invalid_client) && !URIChecker.test_uri?(@redirect_uri)
       end
 
       def redirect_uri

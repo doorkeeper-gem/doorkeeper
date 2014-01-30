@@ -1,16 +1,5 @@
-<style>
-input[type=submit] {
-  padding: 0;
-  border: none;
-  box-shadow: none;
-  background: none;
-  color: #0069d6;
-}
-input[type=submit]:hover {
-  text-decoration: underline;
-}
-</style>
-<%= form_for [:oauth, application] do |f| %>
+<%- submit_btn_css ||= 'btn btn-link' %>
+<%= form_tag [:oauth, application] do %>
   <input type="hidden" name="_method" value="delete">
-  <%= f.submit value: 'Remove', onclick: "return confirm('Are you sure?')" %>
+  <%= submit_tag 'Destroy', onclick: "return confirm('Are you sure?')", class: submit_btn_css %>
 <% end %>

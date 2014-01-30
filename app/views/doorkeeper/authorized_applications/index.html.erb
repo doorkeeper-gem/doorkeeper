@@ -1,25 +1,25 @@
-<div class="span16">
-  <header class="page-header">
-    <h2>Your authorized applications</h2>
-  </header>
+<header class="page-header">
+  <h1>Your authorized applications</h1>
+</header>
 
-  <table class="zebra-striped">
+<main role="main">
+  <table class="table table-striped">
     <thead>
-      <tr>
-        <th>Application</th>
-        <th>Created At</th>
-        <th></th>
-        <th></th>
-      </tr>
+    <tr>
+      <th>Application</th>
+      <th>Created At</th>
+      <th></th>
+      <th></th>
+    </tr>
     </thead>
     <tbody>
-      <% @applications.each do |application| %>
-        <tr>
-          <td><%= application.name %></td>
-          <td><%= application.created_at %></td>
-          <td><%= link_to 'Revoke', oauth_authorized_application_path(application), :data => { :confirm => 'Are you sure?' }, :method => :delete, :class => 'btn danger' %></td>
-        </tr>
-      <% end %>
+    <% @applications.each do |application| %>
+      <tr>
+        <td><%= application.name %></td>
+        <td><%= application.created_at.strftime('%Y-%m-%d %H:%M:%S') %></td>
+        <td><%= render 'delete_form', application: application %></td>
+      </tr>
+    <% end %>
     </tbody>
   </table>
-</div>
+</main>

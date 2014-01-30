@@ -5,9 +5,11 @@ module Doorkeeper
     has_many :access_grants, :dependent => :destroy, :class_name => "Doorkeeper::AccessGrant"
     has_many :access_tokens, :dependent => :destroy, :class_name => "Doorkeeper::AccessToken"
 
-    validates :name, :secret, :uid, :redirect_uri, :presence => true
+    validates :name, :secret, :uid, :presence => true
     validates :uid, :uniqueness => true
+    # redirect_uri also check blank, give `presence: true` will duplicate `Can't be blank` message.
     validates :redirect_uri, :redirect_uri => true
+
 
     before_validation :generate_uid, :generate_secret, :on => :create
 

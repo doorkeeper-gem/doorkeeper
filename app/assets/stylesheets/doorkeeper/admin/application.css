@@ -1,0 +1,14 @@
+/*
+ *= require doorkeeper/bootstrap.min
+ *
+ *= require_self
+ *= require_tree .
+*/
+
+body {
+  padding-top: 60px;
+}
+
+td {
+    vertical-align: middle !important;
+}

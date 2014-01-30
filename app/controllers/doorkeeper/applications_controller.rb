@@ -1,5 +1,6 @@
 module Doorkeeper
   class ApplicationsController < Doorkeeper::ApplicationController
+    layout 'doorkeeper/admin'
     respond_to :html
 
     before_filter :authenticate_admin!

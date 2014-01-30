@@ -1,37 +1,40 @@
-<div class="span16">
-  <h2>Authorize <%= @pre_auth.client.name %> to use your account?</h2>
-</div>
+<header class="page-header" role="banner">
+  <h1>Authorize required</h1>
+</header>
 
-<div class="span16">
-  <% if @pre_auth.scopes %>
-  <p>
-    This application will be able to:
+<main role="main">
+  <p class="h4">
+    Authorize <strong class="text-info"><%= @pre_auth.client.name %></strong> to use your account?
   </p>
-  <ul>
-    <% @pre_auth.scopes.each do |scope| %>
-      <li><%= t scope, :scope => [:doorkeeper, :scopes]  %></li>
-    <% end %>
-  </ul>
+
+  <% if @pre_auth.scopes %>
+    <div id="oauth-permissions">
+      <p>This application will be able to:</p>
+
+      <ul class="text-info">
+        <% @pre_auth.scopes.each do |scope| %>
+          <li><%= t scope, :scope => [:doorkeeper, :scopes] %></li>
+        <% end %>
+      </ul>
+    </div>
   <% end %>
 
-  <div class="inline_block">
+  <div class="actions">
     <%= form_tag oauth_authorization_path, :method => :post do %>
       <%= hidden_field_tag :client_id, @pre_auth.client.uid %>
       <%= hidden_field_tag :redirect_uri, @pre_auth.redirect_uri %>
       <%= hidden_field_tag :state, @pre_auth.state %>
       <%= hidden_field_tag :response_type, @pre_auth.response_type %>
       <%= hidden_field_tag :scope, @pre_auth.scope %>
-      <%= submit_tag "Authorize", :class => "btn success" %> or
+      <%= submit_tag "Authorize", :class => "btn btn-success btn-lg btn-block" %>
     <% end %>
-  </div>
-  <div class="inline_block">
     <%= form_tag oauth_authorization_path, :method => :delete do %>
       <%= hidden_field_tag :client_id, @pre_auth.client.uid %>
       <%= hidden_field_tag :redirect_uri, @pre_auth.redirect_uri %>
       <%= hidden_field_tag :state, @pre_auth.state %>
       <%= hidden_field_tag :response_type, @pre_auth.response_type %>
       <%= hidden_field_tag :scope, @pre_auth.scope %>
-      <%= submit_tag "Deny", :class => "btn" %>
+      <%= submit_tag "Deny", :class => "btn btn-danger btn-lg btn-block" %>
     <% end %>
   </div>
-</div>
+</main>
