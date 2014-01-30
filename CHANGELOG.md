@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1 (not yet released)
+
+- enhancements
+  - [#343] Bootstrap 3 for OAuth's admin.
+
 ## 1.0.0
 
 - bug (spec)
