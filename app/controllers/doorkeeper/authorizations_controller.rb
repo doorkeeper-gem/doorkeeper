@@ -25,7 +25,9 @@ module Doorkeeper
       if auth.redirectable?
         redirect_to auth.redirect_uri
       else
-        render :json => auth.body, :status => auth.status
+        self.headers.merge! auth.headers
+        self.response_body = auth.body.to_json
+        self.status        = auth.status
       end
     end
 

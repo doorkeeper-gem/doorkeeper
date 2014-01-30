@@ -48,6 +48,11 @@ module Doorkeeper::OAuth
       expect(subject).to be_authorizable
     end
 
+    it 'accepts native uri' do
+      subject.redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
+      expect(subject).to be_authorizable
+    end
+
     it "matches the redirect uri against client's one" do
       subject.redirect_uri = 'http://nothesame.com'
       expect(subject).not_to be_authorizable
