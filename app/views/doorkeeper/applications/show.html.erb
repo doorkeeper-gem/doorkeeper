@@ -9,7 +9,8 @@
   <h4>Callback urls:</h4>
 
   <p id="callback_url">
-    <% @application.redirect_uri.split.each do |uri| %><code><%= uri %></code>
+    <% @application.redirect_uri.split.each do |uri| %>
+      <code><%= uri %></code>
     <% end %>
   </p>
 
@@ -23,7 +24,9 @@
 
   <h4>Link to authorization code:</h4>
 
-  <p><%= link_to 'Authorize', oauth_authorization_path(:client_id => @application.uid, :redirect_uri => @application.redirect_uri, :response_type => 'code'), class: 'btn btn-success', target: '_blank' %></p>
+  <p>
+    <%= link_to 'Authorize', oauth_authorization_path(:client_id => @application.uid, :redirect_uri => @application.redirect_uri, :response_type => 'code'), class: 'btn btn-success', target: '_blank' %>
+  </p>
 </div>
 
 <div class="col-md-2">

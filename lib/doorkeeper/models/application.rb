@@ -7,7 +7,6 @@ module Doorkeeper
 
     validates :name, :secret, :uid, :presence => true
     validates :uid, :uniqueness => true
-    # redirect_uri also check blank, give `presence: true` will duplicate `Can't be blank` message.
     validates :redirect_uri, :redirect_uri => true
 
 
