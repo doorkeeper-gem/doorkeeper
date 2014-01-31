@@ -3,7 +3,7 @@
 ## 1.0.1 (not yet released)
 
 - enhancements
-  - [#343] Bootstrap 3 for OAuth's admin.
+  - [#343] separate OAuth's admin and user end-point to different layouts, upgrade theme to Bootstrap 3.1.
 
 ## 1.0.0
 
