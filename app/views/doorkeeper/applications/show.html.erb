@@ -4,14 +4,6 @@
 
 <div class="row">
   <div class="col-md-8">
-    <h4>Callback urls:</h4>
-
-    <p id="callback_url">
-      <% @application.redirect_uri.split.each do |uri| %>
-        <code><%= uri %></code>
-      <% end %>
-    </p>
-
     <h4>Application Id:</h4>
 
     <p><code id="application_id"><%= @application.uid %></code></p>
@@ -20,18 +12,27 @@
 
     <p><code id="secret"><%= @application.secret %></code></p>
 
-    <h4>Link to authorization code:</h4>
+    <h4>Callback urls:</h4>
 
-    <p>
+    <table>
       <% @application.redirect_uri.split.each do |uri| %>
-        <%= link_to "Authorize for #{uri}", oauth_authorization_path(:client_id => @application.uid, :redirect_uri => uri, :response_type => 'code'), class: 'btn btn-success', target: '_blank' %>
+        <tr>
+          <td>
+            <code><%= uri %></code>
+          </td>
+          <td>
+            <%= link_to 'Authorize', oauth_authorization_path(:client_id => @application.uid, :redirect_uri => uri, :response_type => 'code'), class: 'btn btn-success', target: '_blank' %>
+          </td>
+        </tr>
       <% end %>
-    </p>
+    </table>
   </div>
 
   <div class="col-md-4">
     <h3>Actions</h3>
+
     <p><%= link_to 'Edit', edit_oauth_application_path(@application), class: 'btn btn-primary' %></p>
+
     <p><%= render 'delete_form', application: @application, submit_btn_css: 'btn btn-danger' %></p>
   </div>
 </div>
