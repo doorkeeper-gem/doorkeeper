@@ -1,14 +1,16 @@
 module Doorkeeper
   module Generators
     class ViewsGenerator < ::Rails::Generators::Base
-      source_root File.expand_path('../../../../app/views/doorkeeper', __FILE__)
+      source_root File.expand_path('../../../../app', __FILE__)
 
-      desc "Copies default Doorkeeper views to your application."
+      desc "Copies default Doorkeeper views and asset to your application."
 
       def manifest
-        directory 'applications', 'app/views/doorkeeper/applications'
-        directory 'authorizations', 'app/views/doorkeeper/authorizations'
-        directory 'authorized_applications', 'app/views/doorkeeper/authorized_applications'
+        %w(new error).each do |filename|
+          copy_file "views/doorkeeper/authorizations/#{filename}.html.erb",
+                    "app/views/doorkeeper/authorizations/#{filename}.html.erb"
+        end
+        copy_file 'assets/stylesheets/doorkeeper/application.css', 'app/assets/stylesheets/doorkeeper/application.css'
       end
     end
   end
