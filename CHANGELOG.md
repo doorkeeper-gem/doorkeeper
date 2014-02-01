@@ -4,6 +4,8 @@
 
 - enhancements
   - [#343] separate OAuth's admin and user end-point to different layouts, upgrade theme to Bootstrap 3.1.
+- internals
+  - [#348] Move render_options in filter after `@error` has been set
 
 ## 1.0.0
 

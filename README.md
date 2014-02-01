@@ -12,7 +12,7 @@ The gem is under constant development. It is based in the [version 22 of the OAu
 ## Useful links
 
 - For documentation, please check out our [wiki](https://github.com/applicake/doorkeeper/wiki)
-- For general questions, please post it in our [google groups](https://groups.google.com/forum/?fromgroups#!forum/doorkeeper-gem) or [stack overflow](http://stackoverflow.com/questions/tagged/doorkeeper)
+- For general questions, please post it in [stack overflow](http://stackoverflow.com/questions/tagged/doorkeeper)
 
 ## Requirements
 
