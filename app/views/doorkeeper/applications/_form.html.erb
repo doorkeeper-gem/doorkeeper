@@ -20,9 +20,12 @@
          Use one line per URI
         </span>
       <% if Doorkeeper.configuration.test_redirect_uri %>
-          <span class="help-block">
-            Use <code><%= Doorkeeper.configuration.test_redirect_uri %></code> for local tests
-          </span>
+        <span class="help-block">
+          Use <code><%= Doorkeeper.configuration.native_redirect_uri %></code> for native apps
+        </span>
+        <span class="help-block">
+          Use <code><%= Doorkeeper.configuration.test_redirect_uri %></code> for local tests
+        </span>
       <% end %>
     </div>
   <% end %>
