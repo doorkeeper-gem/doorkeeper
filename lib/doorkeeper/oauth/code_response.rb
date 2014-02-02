@@ -25,7 +25,8 @@ module Doorkeeper
               :access_token => auth.token.token,
               :token_type   => auth.token.token_type,
               :expires_in   => auth.token.expires_in,
-              :state        => pre_auth.state
+              :state        => pre_auth.state,
+              :scope        => pre_auth.scope
             })
           else
             uri_with_query pre_auth.redirect_uri, :code => auth.token.token, :state => pre_auth.state
