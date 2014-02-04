@@ -47,6 +47,10 @@ module RequestSpecHelper
     expect(JSON.parse(response.body).fetch(key)).to eq(value)
   end
 
+  def should_have_json_within(key, value, range)
+    expect(JSON.parse(response.body).fetch(key)).to be_within(range).of(value)
+  end
+
   def should_not_have_json(key)
     expect(JSON.parse(response.body)).not_to have_key(key)
   end

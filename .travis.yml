@@ -16,6 +16,3 @@ env:
   - orm=mongo_mapper
 services:
   - mongodb
-matrix:
-  allow_failures:
-    - env: orm=mongoid2

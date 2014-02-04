@@ -11,7 +11,7 @@ describe 'Client Credentials Request' do
       post '/oauth/token', params, headers
 
       should_have_json 'access_token', Doorkeeper::AccessToken.first.token
-      should_have_json 'expires_in', Doorkeeper.configuration.access_token_expires_in
+      should_have_json_within 'expires_in', Doorkeeper.configuration.access_token_expires_in, 1
       should_not_have_json 'scope'
       should_not_have_json 'refresh_token'
 
