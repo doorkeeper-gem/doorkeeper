@@ -9,6 +9,37 @@ Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider functionali
 
 The gem is under constant development. It is based in the [version 22 of the OAuth specification](http://tools.ietf.org/html/draft-ietf-oauth-v2-22) and it still does not support all OAuth features.
 
+## Table of Contents
+
+- [Useful links](#useful-links)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Configuration](#configuration)
+    - [Active Record](#active-record)
+    - [Mongoid / MongoMapper](#mongoid--mongomapper)
+        - [Mongoid indexes](#mongoid-indexes)
+        - [MongoMapper indexes](#mongomapper-indexes)
+    - [Routes](#routes)
+    - [Authenticating](#authenticating)
+- [Protecting resources with OAuth (a.k.a your API endpoint)](#protecting-resources-with-oauth-aka-your-api-endpoint)
+    - [ActionController::Metal integration and other integrations](#actioncontrollermetal-integration-and-other-integrations)
+    - [Access Token Scopes](#access-token-scopes)
+    - [Authenticated resource owner](#authenticated-resource-owner)
+    - [Applications list](#applications-list)
+- [Other customizations](#other-customizations)
+- [Upgrading](#upgrading)
+    - [Development](#development)
+    - [Contributing](#contributing)
+- [Other resources](#other-resources)
+    - [Wiki](#wiki)
+    - [Live demo](#live-demo)
+    - [Screencast](#screencast)
+    - [Client applications](#client-applications)
+    - [Supported ruby versions](#supported-ruby-versions)
+    - [Maintainers](#maintainers)
+    - [Contributors](#contributors)
+    - [License](#license)
+
 ## Useful links
 
 - For documentation, please check out our [wiki](https://github.com/applicake/doorkeeper/wiki)
@@ -274,10 +305,6 @@ Check out this screencast from [railscasts.com](http://railscasts.com/): [#353 O
 ### Client applications
 
 After you set up the provider, you may want to create a client application to test the integration. Check out these [client examples](https://github.com/applicake/doorkeeper/wiki/Example-Applications) in our wiki or follow this [tutorial here](https://github.com/applicake/doorkeeper/wiki/Testing-your-provider-with-OAuth2-gem).
-
-### Supported ruby versions
-
-All supported ruby versions are [listed here](https://github.com/applicake/doorkeeper/wiki/Supported-Ruby-&-Rails-versions).
 
 ### Maintainers
 
