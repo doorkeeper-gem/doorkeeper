@@ -7,8 +7,6 @@
 
 Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider functionality to your application.
 
-The gem is under constant development. It is based in the [version 22 of the OAuth specification](http://tools.ietf.org/html/draft-ietf-oauth-v2-22) and it still does not support all OAuth features.
-
 ## Table of Contents
 
 - [Useful links](#useful-links)
