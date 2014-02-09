@@ -20,6 +20,10 @@ when 'mongoid2'
 when 'mongoid3'
   gem 'mongoid', '3.0.10'
 
+when 'mongoid4'
+  gem 'mongoid', '4.0.0.beta1'
+  gem 'moped'
+
 when 'mongo_mapper'
   gem 'mongo_mapper', '0.12.0'
   gem 'bson_ext', '~> 1.7'
