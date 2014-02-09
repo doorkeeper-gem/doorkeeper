@@ -1,5 +1,5 @@
 # Defaults. For supported versions check .travis.yml
-ENV['rails'] ||= '3.2.13'
+ENV['rails'] ||= ENV['orm'] == "mongoid4" ? '4.0.2' : '3.2.13'
 ENV['orm']   ||= 'active_record'
 
 source 'https://rubygems.org'
