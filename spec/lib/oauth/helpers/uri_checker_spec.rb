@@ -61,19 +61,19 @@ module Doorkeeper::OAuth::Helpers
         it "ignores query parameter on comparison" do
           uri = 'http://app.co/?query=hello'
           client_uri = 'http://app.co'
-          URIChecker.matches?(uri, client_uri).should be_true
+          expect(URIChecker.matches?(uri, client_uri)).to be true
         end
 
         it "doesn't allow non-matching domains through" do
           uri = 'http://app.abc/?query=hello'
           client_uri = 'http://app.co'
-          URIChecker.matches?(uri, client_uri).should be_false
+          expect(URIChecker.matches?(uri, client_uri)).to be false
         end
 
         it "doesn't allow non-matching domains that don't start at the beginning" do
           uri = 'http://app.co/?query=hello'
           client_uri = 'http://example.com?app.co=test'
-          URIChecker.matches?(uri, client_uri).should be_false
+          expect(URIChecker.matches?(uri, client_uri)).to be false
         end
       end
     end
@@ -104,12 +104,12 @@ module Doorkeeper::OAuth::Helpers
 
       it "is true if valid and matches" do
         uri = client_uri = 'http://app.co/aaa'
-        URIChecker.valid_for_authorization?(uri, client_uri).should be_true
+        expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be true
       end
 
       it "is false if invalid" do
         uri = client_uri = 'http://app.co/aaa?waffles=abc'
-        URIChecker.valid_for_authorization?(uri, client_uri).should be_false
+        expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be false
       end
 
       context "allows wildcard redirect_uri" do
@@ -119,7 +119,7 @@ module Doorkeeper::OAuth::Helpers
 
         it "is true if valid, matches and contains a query parameter" do
           uri = client_uri = 'http://app.co/aaa?waffles=abc'
-          URIChecker.valid_for_authorization?(uri, client_uri).should be_true
+          expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be true
         end
       end
     end
