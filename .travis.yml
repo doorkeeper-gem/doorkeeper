@@ -13,6 +13,7 @@ env:
   - rails=4.1.0.beta1
   - orm=mongoid2
   - orm=mongoid3
+  - orm=mongoid4
   - orm=mongo_mapper
 services:
   - mongodb

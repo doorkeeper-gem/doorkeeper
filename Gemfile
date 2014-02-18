@@ -1,5 +1,5 @@
 # Defaults. For supported versions check .travis.yml
-ENV['rails'] ||= '3.2.13'
+ENV['rails'] ||= ENV['orm'] == "mongoid4" ? '4.0.2' : '3.2.13'
 ENV['orm']   ||= 'active_record'
 
 source 'https://rubygems.org'
@@ -19,6 +19,10 @@ when 'mongoid2'
 
 when 'mongoid3'
   gem 'mongoid', '3.0.10'
+
+when 'mongoid4'
+  gem 'mongoid', '4.0.0.beta1'
+  gem 'moped'
 
 when 'mongo_mapper'
   gem 'mongo_mapper', '0.12.0'
