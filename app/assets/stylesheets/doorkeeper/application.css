@@ -2,7 +2,6 @@
  *= require doorkeeper/bootstrap.min
  *
  *= require_self
- *= require_tree .
 */
 
 body {
@@ -12,7 +11,6 @@ body {
 
 #container {
     background-color: #fff;
-    border: 1px solid #999;
     border: 1px solid rgba(0, 0, 0, 0.2);
     border-radius: 6px;
     -webkit-box-shadow: 0 3px 9px rgba(0, 0, 0, 0.5);

@@ -13,15 +13,10 @@ describe Doorkeeper::Generators::ViewsGenerator do
 
   it 'create all views' do
     run_generator
-    assert_file 'app/views/doorkeeper/applications/_form.html.erb'
-    assert_file 'app/views/doorkeeper/applications/edit.html.erb'
-    assert_file 'app/views/doorkeeper/applications/index.html.erb'
-    assert_file 'app/views/doorkeeper/applications/new.html.erb'
-    assert_file 'app/views/doorkeeper/applications/show.html.erb'
 
     assert_file 'app/views/doorkeeper/authorizations/error.html.erb'
     assert_file 'app/views/doorkeeper/authorizations/new.html.erb'
 
-    assert_file 'app/views/doorkeeper/authorized_applications/index.html.erb'
+    assert_file 'app/assets/stylesheets/doorkeeper/application.css'
   end
 end
