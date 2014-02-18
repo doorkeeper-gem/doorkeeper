@@ -79,7 +79,7 @@ Doorkeeper currently supports MongoMapper, Mongoid 2 and 3. To start using it, y
 
 ``` ruby
 Doorkeeper.configure do
-  orm :mongoid2 # or :mongoid3, :mongo_mapper
+  orm :mongoid2 # or :mongoid3, :mongoid4, :mongo_mapper
 end
 ```
 
