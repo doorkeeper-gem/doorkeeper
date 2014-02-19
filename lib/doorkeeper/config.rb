@@ -169,6 +169,7 @@ module Doorkeeper
     option :test_redirect_uri, :default => 'urn:ietf:wg:oauth:2.0:oob'
     option :active_record_options, :default => {}
     option :realm, :default => "Doorkeeper"
+    option :wildcard_redirect_uri, :default => false
 
     def refresh_token_enabled?
       !!@refresh_token_enabled

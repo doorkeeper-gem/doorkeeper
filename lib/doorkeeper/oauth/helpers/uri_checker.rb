@@ -11,8 +11,13 @@ module Doorkeeper
 
         def self.matches?(url, client_url)
           url, client_url = as_uri(url), as_uri(client_url)
-          url.query = nil
-          url == client_url
+          if Doorkeeper.configuration.wildcard_redirect_uri
+            return true if url.to_s =~ /^#{Regexp.escape(client_url.to_s)}/
+            false
+          else
+            url.query = nil
+            url == client_url
+          end
         end
 
         def self.valid_for_authorization?(url, client_url)

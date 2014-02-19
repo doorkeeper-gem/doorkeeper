@@ -150,7 +150,12 @@ describe Doorkeeper, "configuration" do
         expect(Doorkeeper.configuration.confirm_application_owner?).to be_true
       end
     end
+  end
 
+  describe "wildcard_redirect_uri" do
+    it "is disabled by default" do
+      Doorkeeper.configuration.wildcard_redirect_uri.should be_false
+    end
   end
 
   describe "realm" do
