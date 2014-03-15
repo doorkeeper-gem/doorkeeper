@@ -12,7 +12,7 @@ module Doorkeeper
 
     self.store_in collection: :oauth_access_tokens
 
-    if mongoid3?
+    if defined?(Moped::BSON)
       field :resource_owner_id, :type => Moped::BSON::ObjectId
     else
       field :resource_owner_id, :type => BSON::ObjectId
