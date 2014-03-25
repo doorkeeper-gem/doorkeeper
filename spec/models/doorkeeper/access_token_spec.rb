@@ -76,6 +76,38 @@ module Doorkeeper
       end
     end
 
+    describe '.revoke_for' do
+      let(:resource_owner) { double(:id => 100) }
+      let(:application)    { FactoryGirl.create :application }
+      let(:default_attributes) do
+        { :application => application, :resource_owner_id => resource_owner.id }
+      end
+
+      it 'revokes a single token for given application and resource owner' do
+        access_token = FactoryGirl.create :access_token, default_attributes
+        AccessToken.revoke_for application.id, resource_owner, access_token.token
+        AccessToken.all.each do |token|
+          if token.eql?(access_token)
+            expect(token).to be_revoked
+          else
+            expect(token).not_to be_revoked
+          end
+        end
+      end
+
+      it 'matches application' do
+        access_token = FactoryGirl.create :access_token, default_attributes.merge(:application => FactoryGirl.create(:application))
+        AccessToken.revoke_for application.id, resource_owner, access_token.token
+        expect(AccessToken.all).not_to be_empty
+      end
+
+      it 'matches resource owner' do
+        access_token = FactoryGirl.create :access_token, default_attributes.merge(:resource_owner_id => 90)
+        AccessToken.revoke_for application.id, resource_owner, access_token.token
+        expect(AccessToken.all).not_to be_empty
+      end
+    end
+
     describe '.matching_token_for' do
       let(:resource_owner_id) { 100 }
       let(:application)       { FactoryGirl.create :application }
