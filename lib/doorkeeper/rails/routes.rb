@@ -65,7 +65,7 @@ module Doorkeeper
       def token_routes(mapping)
         routes.resource(
           :token, :path => 'token',
-          :only => [:create], :as => mapping[:as],
+          :only => [:create, :destroy], :as => mapping[:as],
           :controller => mapping[:controllers]
         )
       end
