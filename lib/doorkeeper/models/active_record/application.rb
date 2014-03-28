@@ -4,7 +4,7 @@ module Doorkeeper
       establish_connection Doorkeeper.configuration.active_record_options[:establish_connection]
     end
 
-    self.table_name = :oauth_applications
+    self.table_name = "#{self.table_name_prefix}oauth_applications".to_sym
 
     if ActiveRecord::VERSION::MAJOR >= 4
       has_many :authorized_tokens, -> { where(revoked_at: nil) }, class_name: "AccessToken"
