@@ -45,7 +45,7 @@ Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider functionali
 
 - Ruby >1.9.3
 - Rails >3.1
-- ORM ActiveRecord, Mongoid 2, Mongoid 3, MongoMapper
+- ORM ActiveRecord, Mongoid, MongoMapper
 
 ## Installation
 
