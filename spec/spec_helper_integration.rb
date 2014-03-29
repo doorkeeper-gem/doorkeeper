@@ -14,8 +14,8 @@ require 'database_cleaner'
 
 puts "====> Doorkeeper.orm = #{Doorkeeper.configuration.orm.inspect}"
 if Doorkeeper.configuration.orm == :active_record
-    puts "======> active_record.table_name_prefix = #{Rails.configuration.active_record.table_name_prefix.inspect}"
-    puts "======> active_record.table_name_suffix = #{Rails.configuration.active_record.table_name_suffix.inspect}"
+  puts "======> active_record.table_name_prefix = #{Rails.configuration.active_record.table_name_prefix.inspect}"
+  puts "======> active_record.table_name_suffix = #{Rails.configuration.active_record.table_name_suffix.inspect}"
 end
 puts "====> Rails version: #{Rails.version}"
 puts "====> Ruby version: #{RUBY_VERSION}"

@@ -50,11 +50,7 @@ Dummy::Application.configure do
   config.eager_load = true
 
   if DOORKEEPER_ORM == :active_record
-    if TABLE_NAME_PREFIX
-      config.active_record.table_name_prefix = TABLE_NAME_PREFIX
-    end
-    if TABLE_NAME_SUFFIX
-      config.active_record.table_name_suffix = TABLE_NAME_SUFFIX
-    end
+    config.active_record.table_name_prefix = TABLE_NAME_PREFIX.to_s
+    config.active_record.table_name_suffix = TABLE_NAME_SUFFIX.to_s
   end
 end
