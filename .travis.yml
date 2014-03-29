@@ -15,5 +15,7 @@ env:
   - orm=mongoid3
   - orm=mongoid4
   - orm=mongo_mapper
+  - table_name_prefix=h_
+  - table_name_suffix=_h
 services:
   - mongodb
