@@ -4,6 +4,7 @@
 
 - enhancements
   - [#336] mongoid4 support.
+  - [#372] Allow users to set ActiveRecord table_name_prefix/suffix options
 - internals
   - [#343] separate OAuth's admin and user end-point to different layouts, upgrade theme to Bootstrap 3.1.
   - [#348] Move render_options in filter after `@error` has been set
