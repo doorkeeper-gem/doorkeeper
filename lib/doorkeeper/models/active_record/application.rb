@@ -19,7 +19,7 @@ module Doorkeeper
 
     def self.authorized_for(resource_owner)
       joins(:authorized_applications)
-        .where(oauth_access_tokens: { resource_owner_id: resource_owner.id, revoked_at: nil })
+        .where(Doorkeeper::AccessToken.table_name => { resource_owner_id: resource_owner.id, revoked_at: nil })
         .group(column_names_with_table.join(','))
     end
   end
