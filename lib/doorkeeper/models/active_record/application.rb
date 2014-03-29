@@ -4,7 +4,7 @@ module Doorkeeper
       establish_connection Doorkeeper.configuration.active_record_options[:establish_connection]
     end
 
-    self.table_name = :oauth_applications
+    self.table_name = "#{self.table_name_prefix}oauth_applications#{self.table_name_suffix}".to_sym
 
     if ActiveRecord::VERSION::MAJOR >= 4
       has_many :authorized_tokens, -> { where(revoked_at: nil) }, class_name: "AccessToken"
@@ -19,7 +19,7 @@ module Doorkeeper
 
     def self.authorized_for(resource_owner)
       joins(:authorized_applications)
-        .where(oauth_access_tokens: { resource_owner_id: resource_owner.id, revoked_at: nil })
+        .where(Doorkeeper::AccessToken.table_name => { resource_owner_id: resource_owner.id, revoked_at: nil })
         .group(column_names_with_table.join(','))
     end
   end
