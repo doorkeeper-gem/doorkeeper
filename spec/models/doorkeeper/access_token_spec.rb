@@ -48,6 +48,46 @@ module Doorkeeper
       end
     end
 
+    describe "#same_credential?" do
+
+      context "with default parameters" do
+
+        let(:resource_owner) { stub(:id => 100) }
+        let(:application)    { FactoryGirl.create :application }
+        let(:default_attributes) do
+          { :application => application, :resource_owner_id => resource_owner.id }
+        end
+        let(:access_token1) { FactoryGirl.create :access_token, default_attributes }
+        
+
+        context 'the second token have the same owner and app' do
+          let(:access_token2) { FactoryGirl.create :access_token, default_attributes }
+          it 'success' do
+            expect(access_token1.same_credential?(access_token2)).to be_true 
+          end
+        end
+
+        context 'the second token have same owner and different app' do
+          let(:other_application) { FactoryGirl.create :application }
+          let(:access_token2) { FactoryGirl.create :access_token, :application => other_application, :resource_owner_id => resource_owner.id }
+          
+          it 'fail' do
+            expect(access_token1.same_credential?(access_token2)).to be_false
+          end
+        end
+
+        context 'with a different owner and app' do
+
+          let(:other_application) { FactoryGirl.create :application }
+          let(:access_token2) { FactoryGirl.create :access_token, :application => other_application, :resource_owner_id => 42 }
+          
+          it 'fail' do
+            expect(access_token1.same_credential?(access_token2)).to be_false
+          end
+        end
+      end
+    end
+
     describe '.revoke_all_for' do
       let(:resource_owner) { double(:id => 100) }
       let(:application)    { FactoryGirl.create :application }
