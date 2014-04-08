@@ -1,8 +1,10 @@
 module Doorkeeper
   class TokensController < ActionController::Metal
     include Helpers::Controller
+    include Helpers::Filter
     include ActionController::RackDelegation
     include ActionController::Instrumentation
+    include ActionController::Head
 
     def create
       response = strategy.authorize
@@ -11,6 +13,15 @@ module Doorkeeper
       self.status        = response.status
     rescue Errors::DoorkeeperError => e
       handle_token_exception e
+    end
+
+    def destroy
+      if doorkeeper_token
+        doorkeeper_token.revoke
+        head :no_content
+      else
+        head :not_found
+      end
     end
 
   private
