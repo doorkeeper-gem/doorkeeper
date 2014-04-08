@@ -30,7 +30,7 @@ module Doorkeeper
         it 'stops at the first credentials found' do
           not_called_method = double
           expect(not_called_method).not_to receive(:call)
-          credentials = Token.from_request request, lambda { |r| }, method, not_called_method
+          Token.from_request request, lambda { |r| }, method, not_called_method
         end
 
         it 'returns the credential from extractor method' do
@@ -65,6 +65,20 @@ module Doorkeeper
         it 'does not return token if authorization is not bearer' do
           request = double :authorization => "MAC SomeToken"
           token   = Token.from_bearer_authorization(request)
+          expect(token).to be_blank
+        end
+      end
+
+      describe :from_basic_authorization do
+        it 'returns token from authorization basic' do
+          request = double :authorization => "Basic #{Base64.encode64 'SomeToken:'}"
+          token   = Token.from_basic_authorization(request)
+          expect(token).to eq("SomeToken")
+        end
+
+        it 'does not return token if authorization is not basic' do
+          request = double :authorization => "MAC #{Base64.encode64 'SomeToken:'}"
+          token   = Token.from_basic_authorization(request)
           expect(token).to be_blank
         end
       end
