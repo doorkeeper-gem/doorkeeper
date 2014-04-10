@@ -23,16 +23,18 @@ module Doorkeeper
       if doorkeeper_token && doorkeeper_token.accessible?
         # {token_type_hint}  OPTIONAL.  A hint about the type of the token submitted for revocation. 
         # Clients MAY pass this parameter in order to help the authorization server to optimize the token lookup.
-        
-        if params['token']
-          if params['token_type_hint'] == 'refresh_token'
-            revoke_refresh_token(params['token']) || revoke_access_token(params['token'])
-          elsif params['token_type_hint'] == 'access_token'
-            revoke_access_token(params['token']) || revoke_refresh_token(params['token'])
+        token = request.POST['token']
+        token_type_hint = request.POST['token_type_hint']
+
+        if token
+          if token_type_hint == 'refresh_token'
+            revoke_refresh_token(token) || revoke_access_token(token)
+          elsif token_type_hint == 'access_token'
+            revoke_access_token(token) || revoke_refresh_token(token)
           else
             # If the server is unable to locate the token using the given hint,
             # it MUST extend its search accross all of its supported token types.
-            revoke_access_token(params['token']) || revoke_refresh_token(params['token'])
+            revoke_access_token(token) || revoke_refresh_token(token)
           end
         end
         # The authorization server responds with HTTP status code 200 if the
