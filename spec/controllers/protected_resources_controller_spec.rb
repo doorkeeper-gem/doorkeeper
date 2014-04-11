@@ -96,7 +96,7 @@ describe "Doorkeeper_for helper" do
 
     it "different kind of Authorization header" do
       expect(Doorkeeper::AccessToken).not_to receive(:authenticate)
-      request.env["HTTP_AUTHORIZATION"] = "Basic #{Base64.encode64("foo:bar")}"
+      request.env["HTTP_AUTHORIZATION"] = "MAC #{token_string}"
       get :index
     end
 
