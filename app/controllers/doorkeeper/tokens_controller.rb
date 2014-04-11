@@ -21,22 +21,9 @@ module Doorkeeper
     def revoke
       # The authorization server first validates the client credentials
       if doorkeeper_token && doorkeeper_token.accessible?
-        # {token_type_hint}  OPTIONAL.  A hint about the type of the token submitted for revocation. 
-        # Clients MAY pass this parameter in order to help the authorization server to optimize the token lookup.
-        token = request.POST['token']
-        token_type_hint = request.POST['token_type_hint']
-
-        if token
-          if token_type_hint == 'refresh_token'
-            revoke_refresh_token(token) || revoke_access_token(token)
-          elsif token_type_hint == 'access_token'
-            revoke_access_token(token) || revoke_refresh_token(token)
-          else
-            # If the server is unable to locate the token using the given hint,
-            # it MUST extend its search accross all of its supported token types.
-            revoke_access_token(token) || revoke_refresh_token(token)
-          end
-        end
+        # Doorkeeper does not use the token_type_hint logic described in the RFC 7009
+        # due to the refresh token implementation that is a field in the access token model.
+        revoke_token(request.POST['token']) if request.POST['token']
         # The authorization server responds with HTTP status code 200 if the
         # token has been revoked sucessfully or if the client submitted an invalid token
         render json: {}, status: 200
@@ -48,18 +35,8 @@ module Doorkeeper
 
   private
 
-    def revoke_refresh_token(token)
-      token = Doorkeeper::AccessToken.by_refresh_token(token)
-      if token and doorkeeper_token.same_credential?(token)
-        token.revoke
-        true
-      else
-        false
-      end
-    end
-
-    def revoke_access_token(token)
-      token = Doorkeeper::AccessToken.authenticate(token)
+    def revoke_token(token)
+      token = Doorkeeper::AccessToken.where("token = ? OR refresh_token = ?", token, token).first
       if token and doorkeeper_token.same_credential?(token)
         token.revoke
         true
