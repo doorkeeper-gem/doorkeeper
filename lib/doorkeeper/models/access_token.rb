@@ -60,7 +60,7 @@ module Doorkeeper
 
     # It indicates whether the tokens have the same credential
     def same_credential?(access_token)
-      self.application_id == access_token.application_id && self.resource_owner_id == access_token.resource_owner_id
+      application_id == access_token.application_id && resource_owner_id == access_token.resource_owner_id
     end
 
     private

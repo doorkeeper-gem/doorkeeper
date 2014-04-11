@@ -53,7 +53,7 @@ feature "Revoke Token Flow" do
 
       scenario "client wants to revoke the given access token using the POST query string" do
 
-        post revocation_token_endpoint_url(:token => token_to_revoke.token), {}, headers
+        post "#{revocation_token_endpoint_url()}?#{Rack::Utils.build_query({:token => token_to_revoke.token})}", {}, headers
         
         token_to_revoke.reload
         authorization_access_token.reload
