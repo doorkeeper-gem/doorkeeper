@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0 (not yet released)
+- enhancements
+  - [#376] Allow users to enable basic header authorization for access tokens
+
 ## 1.1.0
 
 - enhancements
