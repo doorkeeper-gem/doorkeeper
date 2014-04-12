@@ -1,8 +1,12 @@
 # Changelog
 
 ## 1.2.0 (not yet released)
+
 - enhancements
-  - [#376] Allow users to enable basic header authorization for access tokens
+  - [#376] Allow users to enable basic header authorization for access tokens.
+- internals
+  - [#381] Locale source fix.
+  - [#380] Renames `errors_for` to `doorkeeper_errors_for`.
 
 ## 1.1.0
 
