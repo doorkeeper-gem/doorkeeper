@@ -24,13 +24,10 @@ module Doorkeeper
         # Doorkeeper does not use the token_type_hint logic described in the RFC 7009
         # due to the refresh token implementation that is a field in the access token model.
         revoke_token(request.POST['token']) if request.POST['token']
-        # The authorization server responds with HTTP status code 200 if the
-        # token has been revoked sucessfully or if the client submitted an invalid token
-        render json: {}, status: 200
-      else
-        error = OAuth::ErrorResponse.new(name: :invalid_request)
-        render json: error.body, status: error.status
       end
+      # The authorization server responds with HTTP status code 200 if the
+      # token has been revoked sucessfully or if the client submitted an invalid token
+      render json: {}, status: 200
     end
 
   private
