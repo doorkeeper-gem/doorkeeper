@@ -52,34 +52,42 @@ module Doorkeeper
 
       context "with default parameters" do
 
-        let(:resource_owner) { stub(:id => 100) }
+        let(:resource_owner_id) { 100 }
         let(:application)    { FactoryGirl.create :application }
         let(:default_attributes) do
-          { :application => application, :resource_owner_id => resource_owner.id }
+          { :application => application, :resource_owner_id => resource_owner_id }
         end
         let(:access_token1) { FactoryGirl.create :access_token, default_attributes }
         
-
-        context 'the second token have the same owner and app' do
+        context 'the second token has the same owner and same app' do
           let(:access_token2) { FactoryGirl.create :access_token, default_attributes }
           it 'success' do
             expect(access_token1.same_credential?(access_token2)).to be_true 
           end
         end
 
-        context 'the second token have same owner and different app' do
+        context 'the second token has same owner and different app' do
           let(:other_application) { FactoryGirl.create :application }
-          let(:access_token2) { FactoryGirl.create :access_token, :application => other_application, :resource_owner_id => resource_owner.id }
+          let(:access_token2) { FactoryGirl.create :access_token, :application => other_application, :resource_owner_id => resource_owner_id }
           
           it 'fail' do
             expect(access_token1.same_credential?(access_token2)).to be_false
           end
         end
 
-        context 'with a different owner and app' do
+        context 'the second token has different owner and different app' do
 
           let(:other_application) { FactoryGirl.create :application }
           let(:access_token2) { FactoryGirl.create :access_token, :application => other_application, :resource_owner_id => 42 }
+          
+          it 'fail' do
+            expect(access_token1.same_credential?(access_token2)).to be_false
+          end
+        end
+
+        context 'the second token has different owner and same app' do
+          let(:other_application) { FactoryGirl.create :application }
+          let(:access_token2) { FactoryGirl.create :access_token, :application => application, :resource_owner_id => 42 }
           
           it 'fail' do
             expect(access_token1.same_credential?(access_token2)).to be_false
