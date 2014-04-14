@@ -116,6 +116,7 @@ This will mount following routes:
     POST      /oauth/authorize
     DELETE    /oauth/authorize
     POST      /oauth/token
+    POST      /oauth/revoke
     resources /oauth/applications
     GET       /oauth/authorized_applications
     DELETE    /oauth/authorized_applications/:id
