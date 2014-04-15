@@ -30,15 +30,15 @@ module Doorkeeper
       render json: {}, status: 200
     end
 
-  private
+    private
 
     def revoke_token(token)
       token = Doorkeeper::AccessToken.authenticate(token) || Doorkeeper::AccessToken.by_refresh_token(token)
-      if token and doorkeeper_token.same_credential?(token)
-         token.revoke
-         true
+      if token && doorkeeper_token.same_credential?(token)
+        token.revoke
+        true
       else
-         false
+        false
       end
     end
 
