@@ -86,7 +86,6 @@ module Doorkeeper
         end
 
         context 'the second token has different owner and same app' do
-          let(:other_application) { FactoryGirl.create :application }
           let(:access_token2) { FactoryGirl.create :access_token, :application => application, :resource_owner_id => 42 }
           
           it 'fail' do
