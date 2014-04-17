@@ -58,6 +58,11 @@ module Doorkeeper
       }
     end
 
+    # It indicates whether the tokens have the same credential
+    def same_credential?(access_token)
+      application_id == access_token.application_id && resource_owner_id == access_token.resource_owner_id
+    end
+
     private
 
     def generate_refresh_token

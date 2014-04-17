@@ -4,6 +4,7 @@
 
 - enhancements
   - [#376] Allow users to enable basic header authorization for access tokens.
+  - [#374] Token revocation implementation [RFC 7009]
 - internals
   - [#381] Locale source fix.
   - [#380] Renames `errors_for` to `doorkeeper_errors_for`.
