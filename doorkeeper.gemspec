@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.version     = Doorkeeper::VERSION
   s.authors     = ["Felipe Elias Philipp", "Piotr Jakubowski"]
   s.email       = ["felipe@applicake.com", "piotr.jakubowski@applicake.com"]
-  s.homepage    = "https://github.com/applicake/doorkeeper"
+  s.homepage    = "https://github.com/doorkeeper-gem/doorkeeper"
   s.summary     = "Doorkeeper is an OAuth 2 provider for Rails."
   s.description = "Doorkeeper is an OAuth 2 provider for Rails."
   s.license     = 'MIT'

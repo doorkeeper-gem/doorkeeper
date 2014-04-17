@@ -55,7 +55,7 @@
   - [#204] Allow to overwrite scope in routes
 - internals
   - Returns only present keys in Token Response (may imply a backwards
-    incompatible change). https://github.com/applicake/doorkeeper/issues/220
+    incompatible change). https://github.com/doorkeeper-gem/doorkeeper/issues/220
 - bug
   - [#290] Support for Rails 4 when 'protected_attributes' gem is present.
 

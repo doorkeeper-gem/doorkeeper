@@ -30,7 +30,8 @@ Doorkeeper.configure do
   use_refresh_token
 
   # Define access token scopes for your provider
-  # For more information go to https://github.com/applicake/doorkeeper/wiki/Using-Scopes
+  # For more information go to
+  # https://github.com/doorkeeper-gem/doorkeeper/wiki/Using-Scopes
   default_scopes  :public
   optional_scopes :write, :update
 

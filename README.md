@@ -38,7 +38,7 @@ Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider functionali
 
 ## Useful links
 
-- For documentation, please check out our [wiki](https://github.com/applicake/doorkeeper/wiki)
+- For documentation, please check out our [wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki)
 - For general questions, please post it in [stack overflow](http://stackoverflow.com/questions/tagged/doorkeeper)
 
 ## Requirements
@@ -116,7 +116,7 @@ This will mount following routes:
     DELETE    /oauth/authorized_applications/:id
     GET       /oauth/token/info
 
-For more information on how to customize routes, check out [this page on the wiki](https://github.com/applicake/doorkeeper/wiki/Customizing-routes).
+For more information on how to customize routes, check out [this page on the wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki/Customizing-routes).
 
 ### Authenticating
 
@@ -144,7 +144,7 @@ end
 
 Side note: when using devise you have access to current_user as devise extends entire ActionController::Base with the current_#{mapping}.
 
-If you are not using devise, you may want to check other ways of authentication [here](https://github.com/applicake/doorkeeper/wiki/Authenticating-using-Clearance-or-DIY).
+If you are not using devise, you may want to check other ways of authentication [here](https://github.com/doorkeeper-gem/doorkeeper/wiki/Authenticating-using-Clearance-or-DIY).
 
 ## Protecting resources with OAuth (a.k.a your API endpoint)
 
@@ -186,7 +186,7 @@ class MetalController < ActionController::Metal
 end
 ```
 
-For more information about integration and other integrations, check out [the related wiki page](https://github.com/applicake/doorkeeper/wiki/ActionController::Metal-with-doorkeeper).
+For more information about integration and other integrations, check out [the related wiki page](https://github.com/doorkeeper-gem/doorkeeper/wiki/ActionController::Metal-with-doorkeeper).
 
 ### Access Token Scopes
 
@@ -210,7 +210,7 @@ class Api::V1::ProductsController < Api::V1::ApiController
 end
 ```
 
-For a more detailed explanation about scopes usage, check out the related [page in the wiki](https://github.com/applicake/doorkeeper/wiki/Using-Scopes).
+For a more detailed explanation about scopes usage, check out the related [page in the wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki/Using-Scopes).
 
 ### Authenticated resource owner
 
@@ -250,16 +250,16 @@ Doorkeeper.configure do
 end
 ```
 
-The logic is the same as the `resource_owner_authenticator` block. **Note:** since the application list is just a scaffold, it's recommended to either customize the controller used by the list or skip the controller at all. For more information see the page [in the wiki](https://github.com/applicake/doorkeeper/wiki/Customizing-routes).
+The logic is the same as the `resource_owner_authenticator` block. **Note:** since the application list is just a scaffold, it's recommended to either customize the controller used by the list or skip the controller at all. For more information see the page [in the wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki/Customizing-routes).
 
 ## Other customizations
 
-- [Associate users to OAuth applications (ownership)](https://github.com/applicake/doorkeeper/wiki/Associate-users-to-OAuth-applications-%28ownership%29)
-- [CORS - Cross Origin Resource Sharing](https://github.com/applicake/doorkeeper/wiki/%5BCORS%5D-Cross-Origin-Resource-Sharing)
+- [Associate users to OAuth applications (ownership)](https://github.com/doorkeeper-gem/doorkeeper/wiki/Associate-users-to-OAuth-applications-%28ownership%29)
+- [CORS - Cross Origin Resource Sharing](https://github.com/doorkeeper-gem/doorkeeper/wiki/%5BCORS%5D-Cross-Origin-Resource-Sharing)
 
 ## Upgrading
 
-If you want to upgrade doorkeeper to a new version, check out the [upgrading notes](https://github.com/applicake/doorkeeper/wiki/Migration-from-old-versions) and take a look at the [changelog](https://github.com/applicake/doorkeeper/blob/master/CHANGELOG.md).
+If you want to upgrade doorkeeper to a new version, check out the [upgrading notes](https://github.com/doorkeeper-gem/doorkeeper/wiki/Migration-from-old-versions) and take a look at the [changelog](https://github.com/doorkeeper-gem/doorkeeper/blob/master/CHANGELOG.md).
 
 ## Development
 
@@ -280,19 +280,19 @@ Or you might prefer to run `script/run_all` to integrate against all ORMs.
 
 ## Contributing
 
-Want to contribute and don't know where to start? Check out [features we're missing](https://github.com/applicake/doorkeeper/wiki/Supported-Features), create [example apps](https://github.com/applicake/doorkeeper/wiki/Example-Applications), integrate the gem with your app and let us know!
+Want to contribute and don't know where to start? Check out [features we're missing](https://github.com/doorkeeper-gem/doorkeeper/wiki/Supported-Features), create [example apps](https://github.com/doorkeeper-gem/doorkeeper/wiki/Example-Applications), integrate the gem with your app and let us know!
 
-Also, check out our [contributing guidelines page](https://github.com/applicake/doorkeeper/wiki/Contributing).
+Also, check out our [contributing guidelines page](https://github.com/doorkeeper-gem/doorkeeper/wiki/Contributing).
 
 ## Other resources
 
 ### Wiki
 
-You can find everything about doorkeeper in our [wiki here](https://github.com/applicake/doorkeeper/wiki).
+You can find everything about doorkeeper in our [wiki here](https://github.com/doorkeeper-gem/doorkeeper/wiki).
 
 ### Live demo
 
-Check out this [live demo](http://doorkeeper-provider.herokuapp.com) hosted on heroku. For more demos check out [the wiki](https://github.com/applicake/doorkeeper/wiki/Example-Applications).
+Check out this [live demo](http://doorkeeper-provider.herokuapp.com) hosted on heroku. For more demos check out [the wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki/Example-Applications).
 
 ### Screencast
 
@@ -300,11 +300,11 @@ Check out this screencast from [railscasts.com](http://railscasts.com/): [#353 O
 
 ### Client applications
 
-After you set up the provider, you may want to create a client application to test the integration. Check out these [client examples](https://github.com/applicake/doorkeeper/wiki/Example-Applications) in our wiki or follow this [tutorial here](https://github.com/applicake/doorkeeper/wiki/Testing-your-provider-with-OAuth2-gem).
+After you set up the provider, you may want to create a client application to test the integration. Check out these [client examples](https://github.com/doorkeeper-gem/doorkeeper/wiki/Example-Applications) in our wiki or follow this [tutorial here](https://github.com/doorkeeper-gem/doorkeeper/wiki/Testing-your-provider-with-OAuth2-gem).
 
 ### Contributors
 
-Thanks to all our [awesome contributors](https://github.com/applicake/doorkeeper/contributors)!
+Thanks to all our [awesome contributors](https://github.com/doorkeeper-gem/doorkeeper/contributors)!
 
 ### License
 
