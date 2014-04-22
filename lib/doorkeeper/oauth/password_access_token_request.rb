@@ -7,19 +7,22 @@ module Doorkeeper::OAuth
     validate :resource_owner, :error => :invalid_resource_owner
     validate :scopes,         :error => :invalid_scope
 
-    attr_accessor :server, :resource_owner, :client
+    attr_accessor :server, :resource_owner, :credentials, :access_token
+    attr_accessor :client
 
-    def initialize(server, client, resource_owner, parameters = {})
+    def initialize(server, credentials, resource_owner, parameters = {})
       @server          = server
       @resource_owner  = resource_owner
-      @client          = client
+      @credentials     = credentials
       @original_scopes = parameters[:scope]
+
+      @client = Doorkeeper::Application.authenticate(credentials.uid, credentials.secret) if credentials
     end
 
     def authorize
       validate
       @response = if valid?
-        find_or_create_access_token
+        issue_token
         TokenResponse.new access_token
       else
         ErrorResponse.from_request self
@@ -28,11 +31,6 @@ module Doorkeeper::OAuth
 
     def valid?
       self.error.nil?
-    end
-
-    def access_token
-      return unless client.present? && resource_owner.present?
-      @access_token ||= Doorkeeper::AccessToken.matching_token_for client, resource_owner.id, scopes
     end
 
     def scopes
@@ -45,31 +43,16 @@ module Doorkeeper::OAuth
 
   private
 
-    def find_or_create_access_token
-      if access_token
-        access_token.expired? ? revoke_and_create_access_token : access_token
-      else
-        create_access_token
-      end
-    end
+    def issue_token
+      application_id = client.id if client
 
-    def revoke_and_create_access_token
-      access_token.revoke
-      create_access_token
-    end
-
-    def create_access_token
       @access_token = Doorkeeper::AccessToken.create!({
-        :application_id     => client.id,
+        :application_id     => application_id,
         :resource_owner_id  => resource_owner.id,
         :scopes             => scopes.to_s,
         :expires_in         => server.access_token_expires_in,
         :use_refresh_token  => server.refresh_token_enabled?
       })
-    end
-
-    def validate_client
-      !!client
     end
 
     def validate_scopes
@@ -79,6 +62,10 @@ module Doorkeeper::OAuth
 
     def validate_resource_owner
       !!resource_owner
+    end
+
+    def validate_client
+      !credentials || !!client
     end
   end
 end

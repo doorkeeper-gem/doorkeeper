@@ -1,22 +1,22 @@
 module RequestSpecHelper
   def i_should_see(content)
-    page.should have_content(content)
+    expect(page).to have_content(content)
   end
 
   def i_should_not_see(content)
-    page.should have_no_content(content)
+    expect(page).to have_no_content(content)
   end
 
   def i_should_be_on(path)
-    current_path.should eq(path)
+    expect(current_path).to eq(path)
   end
 
   def url_should_have_param(param, value)
-    current_params[param].should == value
+    expect(current_params[param]).to eq(value)
   end
 
   def url_should_not_have_param(param)
-    current_params.should_not have_key(param)
+    expect(current_params).not_to have_key(param)
   end
 
   def current_params
@@ -28,7 +28,7 @@ module RequestSpecHelper
   end
 
   def should_have_header(header, value)
-    headers[header].should == value
+    expect(headers[header]).to eq(value)
   end
 
   def with_access_token_header(token)
@@ -44,11 +44,15 @@ module RequestSpecHelper
   end
 
   def should_have_json(key, value)
-    JSON.parse(response.body).fetch(key).should == value
+    expect(JSON.parse(response.body).fetch(key)).to eq(value)
+  end
+
+  def should_have_json_within(key, value, range)
+    expect(JSON.parse(response.body).fetch(key)).to be_within(range).of(value)
   end
 
   def should_not_have_json(key)
-    JSON.parse(response.body).should_not have_key(key)
+    expect(JSON.parse(response.body)).not_to have_key(key)
   end
 
   def sign_in
@@ -65,7 +69,7 @@ module RequestSpecHelper
   end
 
   def response_status_should_be(status)
-    page.driver.response.status.to_i.should == status
+    expect(page.driver.response.status.to_i).to eq(status)
   end
 end
 

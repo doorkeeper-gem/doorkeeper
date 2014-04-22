@@ -15,10 +15,20 @@ module Doorkeeper
     @config || (raise MissingConfiguration.new)
   end
 
+  def self.orm_model_dir
+    case configuration.orm
+    when :mongoid3, :mongoid4
+      "mongoid3_4"
+    else
+      configuration.orm
+    end
+
+  end
+
   def self.enable_orm
-    require "doorkeeper/models/#{@config.orm}/access_grant"
-    require "doorkeeper/models/#{@config.orm}/access_token"
-    require "doorkeeper/models/#{@config.orm}/application"
+    require "doorkeeper/models/#{orm_model_dir}/access_grant"
+    require "doorkeeper/models/#{orm_model_dir}/access_token"
+    require "doorkeeper/models/#{orm_model_dir}/application"
     require 'doorkeeper/models/access_grant'
     require 'doorkeeper/models/access_token'
     require 'doorkeeper/models/application'
@@ -67,6 +77,10 @@ module Doorkeeper
 
       def use_refresh_token
         @config.instance_variable_set("@refresh_token_enabled", true)
+      end
+
+      def realm(realm)
+        @config.instance_variable_set("@realm", realm)
       end
     end
 
@@ -158,7 +172,9 @@ module Doorkeeper
     option :authorization_code_expires_in,:default => 600
     option :orm, :default => :active_record
     option :test_redirect_uri, :default => 'urn:ietf:wg:oauth:2.0:oob'
-
+    option :active_record_options, :default => {}
+    option :realm, :default => "Doorkeeper"
+    option :wildcard_redirect_uri, :default => false
 
     def refresh_token_enabled?
       !!@refresh_token_enabled
@@ -185,7 +201,7 @@ module Doorkeeper
     end
 
     def orm_name
-      [:mongoid2, :mongoid3].include?(orm) ? :mongoid : orm
+      [:mongoid2, :mongoid3, :mongoid4].include?(orm) ? :mongoid : orm
     end
 
     def client_credentials_methods
@@ -194,6 +210,10 @@ module Doorkeeper
 
     def access_token_methods
       @access_token_methods ||= [:from_bearer_authorization, :from_access_token_param, :from_bearer_param]
+    end
+
+    def realm
+      @realm ||= "Doorkeeper"
     end
   end
 end

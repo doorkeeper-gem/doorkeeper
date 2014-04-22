@@ -28,15 +28,16 @@ module Doorkeeper
 
       attr_accessor :routes
 
-      def initialize(routes, &options)
-        @routes, @options = routes, options
+      def initialize(routes, &block)
+        @routes, @block = routes, block
       end
 
       def generate_routes!(options)
-        @mapping = Mapper.new.map(&@options)
-        routes.scope 'oauth', :as => 'oauth' do
+        @mapping = Mapper.new.map(&@block)
+        routes.scope options[:scope] || 'oauth', :as => 'oauth' do
           map_route(:authorizations, :authorization_routes)
           map_route(:tokens, :token_routes)
+          map_route(:tokens, :revoke_routes)
           map_route(:applications, :application_routes)
           map_route(:authorized_applications, :authorized_applications_routes)
           map_route(:token_info, :token_info_routes)
@@ -68,6 +69,10 @@ module Doorkeeper
           :only => [:create], :as => mapping[:as],
           :controller => mapping[:controllers]
         )
+      end
+      
+      def revoke_routes(mapping)
+        routes.post 'revoke', :controller => mapping[:controllers], :action => :revoke
       end
 
       def token_info_routes(mapping)

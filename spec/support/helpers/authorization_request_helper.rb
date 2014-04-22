@@ -17,15 +17,15 @@ module AuthorizationRequestHelper
   end
 
   def client_should_be_authorized(client)
-    client.should have(1).access_grants
+    expect(client).to have(1).access_grants
   end
 
   def client_should_not_be_authorized(client)
-    client.should have(0).access_grants
+    expect(client.size).to eq(0)
   end
 
   def i_should_be_on_client_callback(client)
-    client.redirect_uri.should == "#{current_uri.scheme}://#{current_uri.host}#{current_uri.path}"
+    expect(client.redirect_uri).to eq("#{current_uri.scheme}://#{current_uri.host}#{current_uri.path}")
   end
 end
 

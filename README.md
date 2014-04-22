@@ -1,31 +1,58 @@
 # Doorkeeper - awesome oauth provider for your Rails app.
 
-[![Build Status](https://travis-ci.org/applicake/doorkeeper.png?branch=master)](https://travis-ci.org/applicake/doorkeeper)
+[![Build Status](https://travis-ci.org/doorkeeper-gem/doorkeeper.png?branch=master)](https://travis-ci.org/doorkeeper-gem/doorkeeper)
 [![Dependency Status](https://gemnasium.com/applicake/doorkeeper.png?travis)](https://gemnasium.com/applicake/doorkeeper)
 [![Code Climate](https://codeclimate.com/github/applicake/doorkeeper.png)](https://codeclimate.com/github/applicake/doorkeeper)
 [![Gem Version](https://badge.fury.io/rb/doorkeeper.png)](https://rubygems.org/gems/doorkeeper)
 
 Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider functionality to your application.
 
-The gem is under constant development. It is based in the [version 22 of the OAuth specification](http://tools.ietf.org/html/draft-ietf-oauth-v2-22) and it still does not support all OAuth features.
+## Table of Contents
+
+- [Useful links](#useful-links)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Configuration](#configuration)
+    - [Active Record](#active-record)
+    - [Mongoid / MongoMapper](#mongoid--mongomapper)
+        - [Mongoid indexes](#mongoid-indexes)
+        - [MongoMapper indexes](#mongomapper-indexes)
+    - [Routes](#routes)
+    - [Authenticating](#authenticating)
+- [Protecting resources with OAuth (a.k.a your API endpoint)](#protecting-resources-with-oauth-aka-your-api-endpoint)
+    - [ActionController::Metal integration and other integrations](#actioncontrollermetal-integration-and-other-integrations)
+    - [Access Token Scopes](#access-token-scopes)
+    - [Authenticated resource owner](#authenticated-resource-owner)
+    - [Applications list](#applications-list)
+- [Other customizations](#other-customizations)
+- [Upgrading](#upgrading)
+- [Development](#development)
+- [Contributing](#contributing)
+- [Other resources](#other-resources)
+    - [Wiki](#wiki)
+    - [Live demo](#live-demo)
+    - [Screencast](#screencast)
+    - [Client applications](#client-applications)
+    - [Contributors](#contributors)
+    - [License](#license)
 
 ## Useful links
 
-- For documentation, please check out our [wiki](https://github.com/applicake/doorkeeper/wiki)
-- For general questions, please post it in our [google groups](https://groups.google.com/forum/?fromgroups#!forum/doorkeeper-gem) or [stack overflow](http://stackoverflow.com/questions/tagged/doorkeeper)
+- For documentation, please check out our [wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki)
+- For general questions, please post it in [stack overflow](http://stackoverflow.com/questions/tagged/doorkeeper)
 
 ## Requirements
 
-- Ruby 1.8.7, 1.9.2 or 1.9.3
-- Rails 3.1.x or 3.2.x
-- ORM ActiveRecord, Mongoid 2, Mongoid 3 or MongoMapper
+- Ruby >1.9.3
+- Rails >3.1
+- ORM ActiveRecord, Mongoid, MongoMapper
 
 ## Installation
 
 Put this in your Gemfile:
 
 ``` ruby
-gem 'doorkeeper', '~> 0.6.7'
+gem 'doorkeeper'
 ```
 
 Run the installation generator with:
@@ -38,7 +65,8 @@ This will install the doorkeeper initializer into `config/initializers/doorkeepe
 
 ### Active Record
 
-By default doorkeeper is configured to use active record, so to start you have to generate the migration tables:
+By default doorkeeper is configured to use active record, so to start you have
+to generate the migration tables:
 
     rails generate doorkeeper:migration
 
@@ -48,17 +76,20 @@ Don't forget to run the migration with:
 
 ### Mongoid / MongoMapper
 
-Doorkeeper currently supports MongoMapper, Mongoid 2 and 3. To start using it, you have to set the `orm` configuration:
+Doorkeeper currently supports MongoMapper, Mongoid 2 and 3. To start using it,
+you have to set the `orm` configuration:
 
 ``` ruby
 Doorkeeper.configure do
-  orm :mongoid2 # or :mongoid3, :mongo_mapper
+  orm :mongoid2 # or :mongoid3, :mongoid4, :mongo_mapper
 end
 ```
 
 #### Mongoid indexes
 
-Make sure you create indexes for doorkeeper models. You can do this either by running `rake db:mongoid:create_indexes` or (if you're using Mongoid 2) by adding `autocreate_indexes: true` to your `config/mongoid.yml`
+Make sure you create indexes for doorkeeper models. You can do this either by
+running `rake db:mongoid:create_indexes` or (if you're using Mongoid 2) by
+adding `autocreate_indexes: true` to your `config/mongoid.yml`
 
 #### MongoMapper indexes
 
@@ -69,7 +100,8 @@ Generate the `db/indexes.rb` file and create indexes for the doorkeeper models:
 
 ### Routes
 
-The installation script will also automatically add the Doorkeeper routes into your app, like this:
+The installation script will also automatically add the Doorkeeper routes into
+your app, like this:
 
 ``` ruby
 Rails.application.routes.draw do
@@ -84,27 +116,35 @@ This will mount following routes:
     POST      /oauth/authorize
     DELETE    /oauth/authorize
     POST      /oauth/token
+    POST      /oauth/revoke
     resources /oauth/applications
+    GET       /oauth/authorized_applications
+    DELETE    /oauth/authorized_applications/:id
+    GET       /oauth/token/info
 
-For more information on how to customize routes, check out [this page on the wiki](https://github.com/applicake/doorkeeper/wiki/Customizing-routes).
+For more information on how to customize routes, check out [this page on the
+wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki/Customizing-routes).
 
 ### Authenticating
 
-You need to configure Doorkeeper in order to provide resource_owner model and authentication block `initializers/doorkeeper.rb`
+You need to configure Doorkeeper in order to provide `resource_owner` model
+and authentication block `initializers/doorkeeper.rb`
 
 ``` ruby
 Doorkeeper.configure do
   resource_owner_authenticator do
-    User.find(session[:current_user_id]) || redirect_to(login_url)
+    User.find_by_id(session[:current_user_id]) || redirect_to(login_url)
   end
 end
 ```
 
-This code is run in the context of your application so you have access to your models, session or routes helpers. However,
-since this code is not run in the context of your application's ApplicationController it doesn't have access
-to the methods defined over there.
+This code is run in the context of your application so you have access to your
+models, session or routes helpers. However, since this code is not run in the
+context of your application's `ApplicationController` it doesn't have access to
+the methods defined over there.
 
-If you use [devise](https://github.com/plataformatec/devise), you may want to use warden to authenticate the block:
+If you use [devise](https://github.com/plataformatec/devise), you may want to
+use warden to authenticate the block:
 
 ``` ruby
 resource_owner_authenticator do
@@ -112,9 +152,12 @@ resource_owner_authenticator do
 end
 ```
 
-Side note: when using devise you have access to current_user as devise extends entire ActionController::Base with the current_#{mapping}.
+Side note: when using devise you have access to `current_user` as devise extends
+entire `ActionController::Base` with the `current_#{mapping}`.
 
-If you are not using devise, you may want to check other ways of authentication [here](https://github.com/applicake/doorkeeper/wiki/Authenticating-using-Clearance-DIY).
+If you are not using devise, you may want to check other ways of
+authentication
+[here](https://github.com/doorkeeper-gem/doorkeeper/wiki/Authenticating-using-Clearance-or-DIY).
 
 ### Authenticating with Assertion
 
@@ -134,23 +177,27 @@ end
 
 ## Protecting resources with OAuth (a.k.a your API endpoint)
 
-To protect your API with OAuth, doorkeeper only requires you to call `doorkeeper_for` helper, specifying the actions you want to protect.
+To protect your API with OAuth, doorkeeper only requires you to call
+`doorkeeper_for` helper, specifying the actions you want to protect.
 
-For example, if you have a products controller under api/v1, you can require the OAuth authentication with:
+For example, if you have a products controller under api/v1, you can require
+the OAuth authentication with:
 
 ``` ruby
 class Api::V1::ProductsController < Api::V1::ApiController
-  doorkeeper_for :all                     # Require access token for all actions
-  doorkeeper_for :all, :except => :index  # All actions except index
-  doorkeeper_for :index, :show            # Only for index and show action
+  doorkeeper_for :all                 # Require access token for all actions
+  doorkeeper_for :all, except: :index # All actions except index
+  doorkeeper_for :index, :show        # Only for index and show action
 
   # your actions
 end
 ```
 
-You don't need to setup any before filter, `doorkeeper_for` will handle that for you.
+You don't need to setup any before filter, `doorkeeper_for` will handle that
+for you.
 
-You can pass `if` or `unless` blocks that would specify when doorkeeper has to guard the access.
+You can pass `if` or `unless` blocks that would specify when doorkeeper has to
+guard the access.
 
 ``` ruby
 class Api::V1::ProductsController < Api::V1::ApiController
@@ -160,7 +207,8 @@ end
 
 ### ActionController::Metal integration and other integrations
 
-The `doorkeeper_for` filter is intended to work with ActionController::Metal too. You only need to include the required `ActionController` modules:
+The `doorkeeper_for` filter is intended to work with ActionController::Metal
+too. You only need to include the required `ActionController` modules:
 
 ```ruby
 class MetalController < ActionController::Metal
@@ -172,11 +220,14 @@ class MetalController < ActionController::Metal
 end
 ```
 
-For more information about integration and other integrations, check out [the related wiki page](https://github.com/applicake/doorkeeper/wiki/ActionController::Metal-with-doorkeeper).
+For more information about integration and other integrations, check out [the
+related wiki
+page](https://github.com/doorkeeper-gem/doorkeeper/wiki/ActionController::Metal-with-doorkeeper).
 
 ### Access Token Scopes
 
-You can also require the access token to have specific scopes in certain actions:
+You can also require the access token to have specific scopes in certain
+actions:
 
 First configure the scopes in `initializers/doorkeeper.rb`
 
@@ -196,11 +247,15 @@ class Api::V1::ProductsController < Api::V1::ApiController
 end
 ```
 
-For a more detailed explanation about scopes usage, check out the related [page in the wiki](https://github.com/applicake/doorkeeper/wiki/Using-Scopes).
+For a more detailed explanation about scopes usage, check out the related
+[page in the
+wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki/Using-Scopes).
 
 ### Authenticated resource owner
 
-If you want to return data based on the current resource owner, in other words, the access token owner, you may want to define a method in your controller that returns the resource owner instance:
+If you want to return data based on the current resource owner, in other
+words, the access token owner, you may want to define a method in your
+controller that returns the resource owner instance:
 
 ``` ruby
 class Api::V1::CredentialsController < Api::V1::ApiController
@@ -221,11 +276,13 @@ class Api::V1::CredentialsController < Api::V1::ApiController
 end
 ```
 
-In this example, we're returning the credentials (`me.json`) of the access token owner.
+In this example, we're returning the credentials (`me.json`) of the access
+token owner.
 
 ### Applications list
 
-By default, the applications list (`/oauth/applications`) is public available. To protect the endpoint you should uncomment these lines:
+By default, the applications list (`/oauth/applications`) is public available.
+To protect the endpoint you should uncomment these lines:
 
 ```ruby
 # config/initializers/doorkeeper.rb
@@ -236,18 +293,25 @@ Doorkeeper.configure do
 end
 ```
 
-The logic is the same as the `resource_owner_authenticator` block. **Note:** since the application list is just a scaffold, it's recommended to either customize the controller used by the list or skip the controller at all. For more information see the page [in the wiki](https://github.com/applicake/doorkeeper/wiki/Customizing-routes).
+The logic is the same as the `resource_owner_authenticator` block. **Note:**
+since the application list is just a scaffold, it's recommended to either
+customize the controller used by the list or skip the controller at all. For
+more information see the page [in the
+wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki/Customizing-routes).
 
 ## Other customizations
 
-- [Associate users to OAuth applications (ownership)](https://github.com/applicake/doorkeeper/wiki/Associate-users-to-OAuth-applications-%28ownership%29)
-- [CORS - Cross Origin Resource Sharing](https://github.com/applicake/doorkeeper/wiki/%5BCORS%5D-Cross-Origin-Resource-Sharing)
+- [Associate users to OAuth applications (ownership)](https://github.com/doorkeeper-gem/doorkeeper/wiki/Associate-users-to-OAuth-applications-%28ownership%29)
+- [CORS - Cross Origin Resource Sharing](https://github.com/doorkeeper-gem/doorkeeper/wiki/%5BCORS%5D-Cross-Origin-Resource-Sharing)
 
 ## Upgrading
 
-If you want to upgrade doorkeeper to a new version, check out the [upgrading notes](https://github.com/applicake/doorkeeper/wiki/Migration-from-old-versions) and take a look at the [changelog](https://github.com/applicake/doorkeeper/blob/master/CHANGELOG.md).
+If you want to upgrade doorkeeper to a new version, check out the [upgrading
+notes](https://github.com/doorkeeper-gem/doorkeeper/wiki/Migration-from-old-versions)
+and take a look at the
+[changelog](https://github.com/doorkeeper-gem/doorkeeper/blob/master/CHANGELOG.md).
 
-### Development
+## Development
 
 To run the local engine server:
 
@@ -256,7 +320,8 @@ rails=3.2.8 orm=active_record bundle install
 rails=3.2.8 orm=active_record bundle exec rails server
 ````
 
-By default, it uses the latest Rails version with ActiveRecord. To run the tests:
+By default, it uses the latest Rails version with ActiveRecord. To run the
+tests:
 
 ```
 rails=3.2.8 orm=active_record bundle exec rake
@@ -264,43 +329,50 @@ rails=3.2.8 orm=active_record bundle exec rake
 
 Or you might prefer to run `script/run_all` to integrate against all ORMs.
 
-### Contributing
+## Contributing
 
-Want to contribute and don't know where to start? Check out [features we're missing](https://github.com/applicake/doorkeeper/wiki/Supported-Features), create [example apps](https://github.com/applicake/doorkeeper/wiki/Example-Applications), integrate the gem with your app and let us know!
+Want to contribute and don't know where to start? Check out [features we're
+missing](https://github.com/doorkeeper-gem/doorkeeper/wiki/Supported-Features),
+create [example
+apps](https://github.com/doorkeeper-gem/doorkeeper/wiki/Example-Applications),
+integrate the gem with your app and let us know!
 
-Also, check out our [contributing guidelines page](https://github.com/applicake/doorkeeper/wiki/Contributing).
+Also, check out our [contributing guidelines
+page](https://github.com/doorkeeper-gem/doorkeeper/wiki/Contributing).
 
 ## Other resources
 
 ### Wiki
 
-You can find everything about doorkeeper in our [wiki here](https://github.com/applicake/doorkeeper/wiki).
+You can find everything about doorkeeper in our [wiki
+here](https://github.com/doorkeeper-gem/doorkeeper/wiki).
 
 ### Live demo
 
-Check out this [live demo](http://doorkeeper-provider.herokuapp.com) hosted on heroku. For more demos check out [the wiki](https://github.com/applicake/doorkeeper/wiki/Example-Applications).
+Check out this [live demo](http://doorkeeper-provider.herokuapp.com) hosted on
+heroku. For more demos check out [the
+wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki/Example-Applications).
 
 ### Screencast
 
-Check out this screencast from [railscasts.com](http://railscasts.com/): [#353 OAuth with Doorkeeper](http://railscasts.com/episodes/353-oauth-with-doorkeeper)
+Check out this screencast from [railscasts.com](http://railscasts.com/): [#353
+OAuth with
+Doorkeeper](http://railscasts.com/episodes/353-oauth-with-doorkeeper)
 
 ### Client applications
 
-After you set up the provider, you may want to create a client application to test the integration. Check out these [client examples](https://github.com/applicake/doorkeeper/wiki/Example-Applications) in our wiki or follow this [tutorial here](https://github.com/applicake/doorkeeper/wiki/Testing-your-provider-with-OAuth2-gem).
-
-### Supported ruby versions
-
-All supported ruby versions are [listed here](https://github.com/applicake/doorkeeper/wiki/Supported-Ruby-&-Rails-versions).
-
-### Maintainers
-
-- Felipe Elias Philipp - [coderwall.com/felipeelias](http://coderwall.com/felipeelias)
-- Piotr Jakubowski - [coderwall.com/piotrj](http://coderwall.com/piotrj)
+After you set up the provider, you may want to create a client application to
+test the integration. Check out these [client
+examples](https://github.com/doorkeeper-gem/doorkeeper/wiki/Example-Applications)
+in our wiki or follow this [tutorial
+here](https://github.com/doorkeeper-gem/doorkeeper/wiki/Testing-your-provider-with-OAuth2-gem).
 
 ### Contributors
 
-Thanks to all our [awesome contributors](https://github.com/applicake/doorkeeper/contributors)!
+Thanks to all our [awesome
+contributors](https://github.com/doorkeeper-gem/doorkeeper/contributors)!
 
 ### License
 
-MIT License. Copyright 2011 Applicake. [http://applicake.com](http://applicake.com)
+MIT License. Copyright 2011 Applicake.
+[http://applicake.com](http://applicake.com)

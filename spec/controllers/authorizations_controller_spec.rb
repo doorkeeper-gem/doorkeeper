@@ -16,7 +16,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
   let(:user)   { User.create!(:name => "Joe", :password => "sekret") }
 
   before do
-    controller.stub :current_resource_owner => user
+    allow(controller).to receive(:current_resource_owner).and_return(user)
   end
 
   describe "POST #create" do
@@ -100,35 +100,35 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   describe "GET #new with skip_authorization true" do
     before do
-      Doorkeeper.configuration.stub(:skip_authorization => proc do
+      allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
           true
         end)
       get :new, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uri
     end
 
     it "should redirect immediately" do
-      response.should be_redirect
-      response.location.should =~ %r[^#{client.redirect_uri}]
+      expect(response).to be_redirect
+      expect(response.location).to match(%r[^#{client.redirect_uri}])
     end
 
     it "should issue a token" do
-      Doorkeeper::AccessToken.count.should be 1
+      expect(Doorkeeper::AccessToken.count).to be 1
     end
 
     it "includes token type in fragment" do
-      fragments("token_type").should == "bearer"
+      expect(fragments("token_type")).to eq("bearer")
     end
 
     it "includes token expiration in fragment" do
-      fragments("expires_in").to_i.should == 2.hours.to_i
+      expect(fragments("expires_in").to_i).to eq(2.hours.to_i)
     end
 
     it "issues the token for the current client" do
-      Doorkeeper::AccessToken.first.application_id.should == client.id
+      expect(Doorkeeper::AccessToken.first.application_id).to eq(client.id)
     end
 
     it "issues the token for the current resource owner" do
-      Doorkeeper::AccessToken.first.resource_owner_id.should == user.id
+      expect(Doorkeeper::AccessToken.first.resource_owner_id).to eq(user.id)
     end
   end
 

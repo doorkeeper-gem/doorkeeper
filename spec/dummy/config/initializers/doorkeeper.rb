@@ -30,7 +30,8 @@ Doorkeeper.configure do
   use_refresh_token
 
   # Define access token scopes for your provider
-  # For more information go to https://github.com/applicake/doorkeeper/wiki/Using-Scopes
+  # For more information go to
+  # https://github.com/doorkeeper-gem/doorkeeper/wiki/Using-Scopes
   default_scopes  :public
   optional_scopes :write, :update
 
@@ -53,4 +54,7 @@ Doorkeeper.configure do
   # (Similar behaviour: https://developers.google.com/accounts/docs/OAuth2InstalledApp#choosingredirecturi)
   #
   # test_redirect_uri 'urn:ietf:wg:oauth:2.0:oob'
+
+  # WWW-Authenticate Realm (default "Doorkeeper").
+  realm "Doorkeeper"
 end

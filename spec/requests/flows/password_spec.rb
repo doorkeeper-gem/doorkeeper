@@ -39,6 +39,16 @@ feature 'Resource Owner Password Credentials Flow' do
       should_have_json 'access_token',  token.token
     end
 
+    scenario "should issue new token without client credentials" do
+      expect {
+        post password_token_endpoint_url(:resource_owner => @resource_owner)
+      }.to change { Doorkeeper::AccessToken.count }.by(1)
+
+      token = Doorkeeper::AccessToken.first
+
+      should_have_json 'access_token',  token.token
+    end
+
     scenario "should issue a refresh token if enabled" do
       config_is_set(:refresh_token_enabled, true)
 
@@ -47,16 +57,6 @@ feature 'Resource Owner Password Credentials Flow' do
       token = Doorkeeper::AccessToken.first
 
       should_have_json 'refresh_token',  token.refresh_token
-    end
-
-    scenario 'should return the same token if it is still accessible' do
-      client_is_authorized(@client, @resource_owner)
-
-      post password_token_endpoint_url(:client => @client, :resource_owner => @resource_owner)
-
-      Doorkeeper::AccessToken.count.should be(1)
-
-      should_have_json 'access_token', Doorkeeper::AccessToken.first.token
     end
   end
 
@@ -72,6 +72,16 @@ feature 'Resource Owner Password Credentials Flow' do
     scenario "should not issue new token without credentials" do
       expect {
         post password_token_endpoint_url( :client => @client)
+      }.to_not change { Doorkeeper::AccessToken.count }
+    end
+  end
+
+  context "with invalid client credentials" do
+    scenario "should not issue new token with bad client credentials" do
+      expect {
+        post password_token_endpoint_url( :client_id => @client.uid,
+                                          :client_secret => "bad_secret",
+                                          :resource_owner => @resource_owner)
       }.to_not change { Doorkeeper::AccessToken.count }
     end
   end

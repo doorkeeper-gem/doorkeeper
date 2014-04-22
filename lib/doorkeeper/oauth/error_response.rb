@@ -2,6 +2,7 @@ module Doorkeeper
   module OAuth
     class ErrorResponse
       include Doorkeeper::OAuth::Authorization::URIBuilder
+      include Doorkeeper::OAuth::Helpers
 
       def self.from_request(request, attributes = {})
         state = request.state if request.respond_to?(:state)
@@ -25,7 +26,7 @@ module Doorkeeper
       end
 
       def redirectable?
-        (name != :invalid_redirect_uri) && (name != :invalid_client)
+        (name != :invalid_redirect_uri) && (name != :invalid_client) && !URIChecker.test_uri?(@redirect_uri)
       end
 
       def redirect_uri
@@ -36,8 +37,23 @@ module Doorkeeper
         end
       end
 
+      def authenticate_info
+        %{Bearer realm="#{realm}", error="#{name}", error_description="#{description}"}
+      end
+
       def headers
-        { 'Cache-Control' => 'no-store', 'Pragma' => 'no-cache', 'Content-Type' => 'application/json; charset=utf-8' }
+        { 'Cache-Control' => 'no-store',
+          'Pragma' => 'no-cache',
+          'Content-Type' => 'application/json; charset=utf-8',
+          'WWW-Authenticate' => authenticate_info }
+      end
+
+      protected
+
+      delegate :realm, :to => :configuration
+
+      def configuration
+        Doorkeeper.configuration
       end
     end
   end

@@ -8,7 +8,7 @@ shared_context "valid token", :token => :valid do
   end
 
   before :each do
-    Doorkeeper::AccessToken.stub(:authenticate).with(token_string).and_return(token)
+    allow(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string).and_return(token)
   end
 end
 
@@ -18,24 +18,24 @@ shared_context "invalid token", :token => :invalid do
   end
 
   let :token do
-    double(Doorkeeper::AccessToken, :accessible? => false)
+    double(Doorkeeper::AccessToken, :accessible? => false, :revoked? => false, :expired? => false)
   end
 
   before :each do
-    Doorkeeper::AccessToken.stub(:authenticate).with(token_string).and_return(token)
+    allow(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string).and_return(token)
   end
 end
 
 shared_context "authenticated resource owner" do
   before do
     user = double(:resource, :id => 1)
-    Doorkeeper.configuration.stub(:authenticate_resource_owner) { proc do user end }
+    allow(Doorkeeper.configuration).to receive(:authenticate_resource_owner) { proc do user end }
   end
 end
 
 shared_context "not authenticated resource owner" do
   before do
-    Doorkeeper.configuration.stub(:authenticate_resource_owner) { proc do redirect_to '/' end }
+    allow(Doorkeeper.configuration).to receive(:authenticate_resource_owner) { proc do redirect_to '/' end }
   end
 end
 
@@ -45,7 +45,7 @@ shared_context "valid authorization request" do
   end
 
   before do
-    controller.stub(:authorization) { authorization }
+    allow(controller).to receive(:authorization) { authorization }
   end
 end
 
@@ -55,6 +55,6 @@ shared_context "invalid authorization request" do
   end
 
   before do
-    controller.stub(:authorization) { authorization }
+    allow(controller).to receive(:authorization) { authorization }
   end
 end

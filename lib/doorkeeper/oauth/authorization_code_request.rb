@@ -8,7 +8,7 @@ module Doorkeeper
       validate :grant,        :error => :invalid_grant
       validate :redirect_uri, :error => :invalid_grant
 
-      attr_accessor :server, :grant, :client, :redirect_uri
+      attr_accessor :server, :grant, :client, :redirect_uri, :access_token
 
       def initialize(server, grant, client, parameters = {})
         @server = server
@@ -21,7 +21,7 @@ module Doorkeeper
         validate
         @response = if valid?
           grant.revoke
-          find_or_create_access_token
+          issue_token
           TokenResponse.new access_token
         else
           ErrorResponse.from_request self
@@ -32,26 +32,9 @@ module Doorkeeper
         self.error.nil?
       end
 
-      def access_token
-        @access_token ||= Doorkeeper::AccessToken.matching_token_for client, grant.resource_owner_id, grant.scopes
-      end
+    private
 
-      private
-
-      def find_or_create_access_token
-        if access_token
-          access_token.expired? ? revoke_and_create_access_token : access_token
-        else
-          create_access_token
-        end
-      end
-
-      def revoke_and_create_access_token
-        access_token.revoke
-        create_access_token
-      end
-
-      def create_access_token
+      def issue_token
         @access_token = Doorkeeper::AccessToken.create!({
           :application_id    => grant.application_id,
           :resource_owner_id => grant.resource_owner_id,

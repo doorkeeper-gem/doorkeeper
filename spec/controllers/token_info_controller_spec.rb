@@ -7,7 +7,7 @@ describe Doorkeeper::TokenInfoController do
     let(:doorkeeper_token) { FactoryGirl.create(:access_token) }
 
     before(:each) do
-      controller.stub(:doorkeeper_token) { doorkeeper_token }
+      allow(controller).to receive(:doorkeeper_token) { doorkeeper_token }
     end
 
     def do_get
@@ -29,18 +29,20 @@ describe Doorkeeper::TokenInfoController do
 
     describe "invalid token response" do
       before(:each) do
-        controller.stub(:doorkeeper_token => nil)
+        allow(controller).to receive(:doorkeeper_token).and_return(nil)
       end
       it "responds with 401 when doorkeeper_token is not valid" do
         do_get
         expect(response.status).to eq 401
+        expect(response.headers["WWW-Authenticate"]).to match(/^Bearer/)
       end
 
       it "responds with 401 when doorkeeper_token is invalid, expired or revoked" do
-        controller.stub(:doorkeeper_token => doorkeeper_token)
-        doorkeeper_token.stub(:accessible? => false)
+        allow(controller).to receive(:doorkeeper_token).and_return(doorkeeper_token)
+        allow(doorkeeper_token).to receive(:accessible?).and_return(false)
         do_get
         expect(response.status).to eq 401
+        expect(response.headers["WWW-Authenticate"]).to match(/^Bearer/)
       end
 
       it "responds body message for error" do

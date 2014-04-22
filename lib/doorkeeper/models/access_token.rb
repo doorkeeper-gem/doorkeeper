@@ -8,11 +8,14 @@ module Doorkeeper
 
     belongs_to :application, :class_name => "Doorkeeper::Application", :inverse_of => :access_tokens
 
-    validates :application_id, :token, :presence => true
+    validates :token, :presence => true
     validates :token, :uniqueness => true
     validates :refresh_token, :uniqueness => true, :if => :use_refresh_token?
 
     attr_accessor :use_refresh_token
+    if ::Rails.version.to_i < 4 || defined?(ProtectedAttributes)
+      attr_accessible :application_id, :resource_owner_id, :expires_in, :scopes, :use_refresh_token
+    end
 
     before_validation :generate_token, :on => :create
     before_validation :generate_refresh_token, :on => :create, :if => :use_refresh_token?
@@ -26,7 +29,10 @@ module Doorkeeper
     end
 
     def self.revoke_all_for(application_id, resource_owner)
-      delete_all_for(application_id, resource_owner)
+      where(:application_id => application_id,
+            :resource_owner_id => resource_owner.id,
+            :revoked_at => nil)
+      .map(&:revoke)
     end
 
     def self.matching_token_for(application, resource_owner_or_id, scopes)
@@ -50,6 +56,11 @@ module Doorkeeper
         :expires_in_seconds => self.expires_in_seconds,
         :application => { :uid => self.application.uid }
       }
+    end
+
+    # It indicates whether the tokens have the same credential
+    def same_credential?(access_token)
+      application_id == access_token.application_id && resource_owner_id == access_token.resource_owner_id
     end
 
     private

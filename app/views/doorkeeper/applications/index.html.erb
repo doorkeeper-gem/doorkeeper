@@ -1,29 +1,26 @@
-<div class="span16">
-  <header class="page-header">
-    <h2>Your applications</h2>
-  </header>
-
-  <p><%= link_to 'New Application', new_oauth_application_path %></p>
-
-  <table class="zebra-striped">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Callback url</th>
-        <th></th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @applications.each do |application| %>
-        <tr id="application_<%= application.id %>">
-          <td><%= link_to application.name, [:oauth, application] %></td>
-          <td><%= application.redirect_uri %></td>
-          <td><%= link_to 'Edit', edit_oauth_application_path(application) %></td>
-          <td><%= link_to 'Destroy', [:oauth, application], :data => { :confirm => 'Are you sure?' }, :method => :delete %></td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-
+<div class="page-header">
+  <h1>Your applications</h1>
 </div>
+
+<p><%= link_to 'New Application', new_oauth_application_path, class: 'btn btn-success' %></p>
+
+<table class="table table-striped">
+  <thead>
+  <tr>
+    <th>Name</th>
+    <th>Callback URL</th>
+    <th></th>
+    <th></th>
+  </tr>
+  </thead>
+  <tbody>
+  <% @applications.each do |application| %>
+    <tr id="application_<%= application.id %>">
+      <td><%= link_to application.name, [:oauth, application] %></td>
+      <td><%= application.redirect_uri %></td>
+      <td><%= link_to 'Edit', edit_oauth_application_path(application), class: 'btn btn-link' %></td>
+      <td><%= render 'delete_form', application: application %></td>
+    </tr>
+  <% end %>
+  </tbody>
+</table>

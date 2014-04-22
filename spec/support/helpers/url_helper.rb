@@ -55,6 +55,10 @@ module UrlHelper
     "/oauth/token?#{build_query(parameters)}"
   end
 
+  def revocation_token_endpoint_url
+    "/oauth/revoke"
+  end
+
   def build_query(hash)
     Rack::Utils.build_query(hash)
   end

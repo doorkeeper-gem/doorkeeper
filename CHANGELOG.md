@@ -1,5 +1,91 @@
 # Changelog
 
+## 1.2.0 (not yet released)
+
+- enhancements
+  - [#376] Allow users to enable basic header authorization for access tokens.
+  - [#374] Token revocation implementation [RFC 7009]
+- internals
+  - [#381] Locale source fix.
+  - [#380] Renames `errors_for` to `doorkeeper_errors_for`.
+
+## 1.1.0
+
+- enhancements
+  - [#336] mongoid4 support.
+  - [#372] Allow users to set ActiveRecord table_name_prefix/suffix options
+- internals
+  - [#343] separate OAuth's admin and user end-point to different layouts, upgrade theme to Bootstrap 3.1.
+  - [#348] Move render_options in filter after `@error` has been set
+
+## 1.0.0
+
+- bug (spec)
+  - [#228] token response `expires_in` value is now in seconds, relative to
+    request time
+  - [#296] client is optional for password grant type.
+  - [#319] If client credentials are present on password grant type they are validated
+  - [#326] If client credentials are present in refresh token they are validated
+  - [#326] If authenticated client does not match original client that
+    obtained a refresh token it responds `invalid_grant` instead of
+    `invalid_client`. Previous usage was invalid according to Section 5.2 of
+    the spec.
+  - [#329] access tokens' `scopes` string wa being compared against
+    `default_scopes` symbols, always unauthorizing.
+  - [#318] Include "WWW-Authenticate" header with Unauthorized responses
+- enhancements
+  - [#293] Adds ActionController::Instrumentation in TokensController
+  - [#298] Support for multiple redirect_uris added.
+  - [#313] `AccessToken.revoke_all_for` actually revokes all non-revoked
+    tokens for an application/owner instead of deleting them.
+  - [#333] Rails 4.1 support
+- internals
+  - Removes jQuery dependency [fixes #300] [PR #312 is related]
+  - [#294] Client uid and secret will be generated only if not present.
+  - [#316] Test warnings addressed.
+  - [#338] Rspec 3 syntax.
+
+## 0.7.4
+
+- bug
+  - Symbols instead of strings for user input.
+
+## 0.7.3
+
+- enhancements
+  - [#204] Allow to overwrite scope in routes
+- internals
+  - Returns only present keys in Token Response (may imply a backwards
+    incompatible change). https://github.com/doorkeeper-gem/doorkeeper/issues/220
+- bug
+  - [#290] Support for Rails 4 when 'protected_attributes' gem is present.
+
+
+## 0.7.2
+
+- enhancements
+  - [#272] Allow issuing multiple access_tokens for one user/application for multiple devices
+  - [#170] Increase length of allowed redirect URIs
+  - [#239] Do not try to load unavailable Request class for the current phase.
+  - [#273] Relax jquery-rails gem dependency
+
+## 0.7.1
+
+- bug
+  - [#269] Rails 3.2 raised `ActiveModel::MassAssignmentSecurity::Error`.
+
+## 0.7.0
+
+- enhancements
+  - [#229] Rails 4!
+- internals
+  - [#203] Changing table name to be specific in column_names_with_table
+  - [#215] README update
+  - [#227] Use Rails.config.paths["config/routes"] instead of assuming "config/routes.rb" exists
+  - [#262] Add jquery as gem dependency
+  - [#263] Add a configuration for ActiveRecord.establish_connection
+  - Deprecation and Ruby warnings (PRs merged outside of GitHub).
+
 ## 0.6.7
 
 - internals

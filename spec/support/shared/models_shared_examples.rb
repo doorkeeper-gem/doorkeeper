@@ -1,12 +1,12 @@
 shared_examples "an accessible token" do
   describe :accessible? do
     it "is accessible if token is not expired" do
-      subject.stub :expired? => false
+      allow(subject).to receive(:expired?).and_return(false)
       should be_accessible
     end
 
     it "is not accessible if token is expired" do
-      subject.stub :expired? => true
+      allow(subject).to receive(:expired?).and_return(true)
       should_not be_accessible
     end
   end
@@ -17,12 +17,12 @@ shared_examples "a revocable token" do
     before { subject.save! }
 
     it "is accessible if token is not revoked" do
-      subject.should be_accessible
+      expect(subject).to be_accessible
     end
 
     it "is not accessible if token is revoked" do
       subject.revoke
-      subject.should_not be_accessible
+      expect(subject).not_to be_accessible
     end
   end
 end
@@ -33,7 +33,7 @@ shared_examples "an unique token" do
       tokens = []
       3.times do
         token = FactoryGirl.create(factory_name).token
-        tokens.should_not include(token)
+        expect(tokens).not_to include(token)
       end
     end
 
@@ -45,7 +45,7 @@ shared_examples "an unique token" do
       token1 = FactoryGirl.create factory_name
       token2 = FactoryGirl.create factory_name
       token2.token = token1.token
-      token2.should_not be_valid
+      expect(token2).not_to be_valid
     end
 
     it 'expects database to throw an error when tokens are the same' do

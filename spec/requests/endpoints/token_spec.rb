@@ -25,7 +25,7 @@ feature 'Token endpoint' do
     config_is_set(:access_token_expires_in, nil)
     post token_endpoint_url(:code => @authorization.token, :client => @client)
     should_have_json 'access_token', Doorkeeper::AccessToken.first.token
-    should_have_json 'expires_in', nil
+    should_not_have_json 'expires_in'
   end
 
   scenario 'returns unsupported_grant_type for invalid grant_type param' do

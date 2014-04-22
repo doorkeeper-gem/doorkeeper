@@ -56,6 +56,12 @@ en:
 
         # Password Access token errors
         invalid_resource_owner: 'The provided resource owner credentials are not valid, or resource owner cannot be found'
+
+        invalid_token:
+          revoked: "The access token was revoked"
+          expired: "The access token expired"
+          unknown: "The access token is invalid"
+
     flash:
       applications:
         create:

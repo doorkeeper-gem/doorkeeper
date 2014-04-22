@@ -16,11 +16,11 @@ module Doorkeeper
       end
 
       def current_resource_owner
-        instance_eval &Doorkeeper.configuration.authenticate_resource_owner
+        instance_eval(&Doorkeeper.configuration.authenticate_resource_owner)
       end
 
       def resource_owner_from_credentials
-        instance_eval &Doorkeeper.configuration.resource_owner_from_credentials
+        instance_eval(&Doorkeeper.configuration.resource_owner_from_credentials)
       end
 
       def resource_owner_from_assertion
@@ -28,7 +28,7 @@ module Doorkeeper
       end
 
       def authenticate_admin!
-        instance_eval &Doorkeeper.configuration.authenticate_admin
+        instance_eval(&Doorkeeper.configuration.authenticate_admin)
       end
 
       def server

@@ -7,8 +7,8 @@ feature 'Adding applications' do
     end
 
     scenario 'adding a valid app' do
-      fill_in 'Name', :with => 'My Application'
-      fill_in 'Redirect uri', :with => 'http://example.com'
+      fill_in 'application_name', :with => 'My Application'
+      fill_in 'application_redirect_uri', :with => 'http://example.com'
       click_button 'Submit'
       i_should_see 'Application created'
       i_should_see 'My Application'
@@ -69,7 +69,7 @@ feature 'Edit application' do
   end
 end
 
-feature 'Destroy application' do
+feature 'Remove application' do
   background do
     @app = FactoryGirl.create :application
   end
@@ -78,7 +78,7 @@ feature 'Destroy application' do
     visit "/oauth/applications"
     i_should_see @app.name
     within(:css, "tr#application_#{@app.id}") do
-      click_link "Destroy"
+      click_button "Destroy"
     end
     i_should_see "Application deleted"
     i_should_not_see @app.name
@@ -86,7 +86,7 @@ feature 'Destroy application' do
 
   scenario 'deleting an application from show' do
     visit "/oauth/applications/#{@app.id}"
-    click_link 'Remove'
+    click_button 'Destroy'
     i_should_see "Application deleted"
   end
 end

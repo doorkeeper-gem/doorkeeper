@@ -11,9 +11,9 @@ describe 'Client Credentials Request' do
       post '/oauth/token', params, headers
 
       should_have_json 'access_token', Doorkeeper::AccessToken.first.token
-      should_have_json 'expires_in', Doorkeeper.configuration.access_token_expires_in
-      should_have_json 'scope', ''
-      should_have_json 'refresh_token', nil
+      should_have_json_within 'expires_in', Doorkeeper.configuration.access_token_expires_in, 1
+      should_not_have_json 'scope'
+      should_not_have_json 'refresh_token'
 
       should_not_have_json 'error'
       should_not_have_json 'error_description'
@@ -47,7 +47,7 @@ describe 'Client Credentials Request' do
       should_have_json 'error_description', translated_error_message(:invalid_client)
       should_not_have_json 'access_token'
 
-      response.status.should == 401
+      expect(response.status).to eq(401)
     end
   end
 
