@@ -24,7 +24,7 @@ module Doorkeeper
       end
 
       def resource_owner_from_assertion
-        instance_eval &Doorkeeper.configuration.resource_owner_from_assertion
+        instance_eval(&Doorkeeper.configuration.resource_owner_from_assertion)
       end
 
       def authenticate_admin!

@@ -24,7 +24,7 @@ end
 
 class User
   if ::Rails.version.to_i < 4
-    attr_accessible :name, :password
+    attr_accessible :name, :password, :assertion
   end
 
   def self.authenticate!(name, password)

@@ -17,7 +17,7 @@ module Doorkeeper
     end
 
     def token_strategy(strategy)
-      get_strategy strategy, %w[password client_credentials authorization_code refresh_token]
+      get_strategy strategy, %w[password client_credentials authorization_code refresh_token assertion]
     rescue NameError
       raise Errors::InvalidTokenStrategy
     end
