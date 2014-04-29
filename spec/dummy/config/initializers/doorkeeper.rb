@@ -8,7 +8,7 @@ Doorkeeper.configure do
   resource_owner_authenticator do
     # Put your resource owner authentication logic here.
     # e.g. User.find_by_id(session[:user_id]) || redirect_to(new_user_session_url)
-    User.find_by_id(session[:user_id]) || redirect_to(root_url, alert: "Needs sign in.")
+    User.find_by_id(session[:user_id]) || redirect_to(root_url, alert: 'Needs sign in.')
   end
 
   # If you want to restrict the access to the web interface for
@@ -54,6 +54,6 @@ Doorkeeper.configure do
   #
   # test_redirect_uri 'urn:ietf:wg:oauth:2.0:oob'
 
-  # WWW-Authenticate Realm (default "Doorkeeper").
-  realm "Doorkeeper"
+  # WWW-Authenticate Realm (default 'Doorkeeper').
+  realm 'Doorkeeper'
 end

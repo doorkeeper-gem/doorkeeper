@@ -55,15 +55,15 @@ feature 'Edit application' do
   end
 
   scenario 'updating a valid app' do
-    fill_in :name, with: "Serious app"
+    fill_in :name, with: 'Serious app'
     click_button 'Submit'
-    i_should_see "Application updated"
-    i_should_see "Serious app"
-    i_should_not_see "OMG my app"
+    i_should_see 'Application updated'
+    i_should_see 'Serious app'
+    i_should_not_see 'OMG my app'
   end
 
   scenario 'updating an invalid app' do
-    fill_in :name, with: ""
+    fill_in :name, with: ''
     click_button 'Submit'
     i_should_see 'Whoops! Check your form for possible errors'
   end
@@ -75,18 +75,18 @@ feature 'Remove application' do
   end
 
   scenario 'deleting an application from list' do
-    visit "/oauth/applications"
+    visit '/oauth/applications'
     i_should_see @app.name
     within(:css, "tr#application_#{@app.id}") do
-      click_button "Destroy"
+      click_button 'Destroy'
     end
-    i_should_see "Application deleted"
+    i_should_see 'Application deleted'
     i_should_not_see @app.name
   end
 
   scenario 'deleting an application from show' do
     visit "/oauth/applications/#{@app.id}"
     click_button 'Destroy'
-    i_should_see "Application deleted"
+    i_should_see 'Application deleted'
   end
 end

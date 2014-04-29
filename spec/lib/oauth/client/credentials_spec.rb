@@ -5,8 +5,8 @@ require 'doorkeeper/oauth/client'
 class Doorkeeper::OAuth::Client
   describe Credentials do
     it 'is blank when any of the credentials is blank' do
-      expect(Credentials.new(nil, "something")).to be_blank
-      expect(Credentials.new("something", nil)).to be_blank
+      expect(Credentials.new(nil, 'something')).to be_blank
+      expect(Credentials.new('something', nil)).to be_blank
     end
 
     describe :from_request do

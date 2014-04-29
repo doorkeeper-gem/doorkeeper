@@ -44,7 +44,7 @@ module Doorkeeper::OAuth
       expect(subject).to be_valid
     end
 
-    describe "with scopes" do
+    describe 'with scopes' do
       subject do
         PasswordAccessTokenRequest.new(server, client, owner, scope: 'public')
       end
@@ -56,7 +56,7 @@ module Doorkeeper::OAuth
       end
 
       it 'creates the token with scopes' do
-        allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("public"))
+        allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string('public'))
         expect {
           subject.authorize
         }.to change { Doorkeeper::AccessToken.count }.by(1)

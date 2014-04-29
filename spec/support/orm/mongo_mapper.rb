@@ -13,7 +13,7 @@ module Doorkeeper
   class PlaceholderApplicationOwner
     include MongoMapper::Document
 
-    set_collection_name "placeholder_application_owners"
+    set_collection_name 'placeholder_application_owners'
     many :applications, class: Doorkeeper::Application
 
   end

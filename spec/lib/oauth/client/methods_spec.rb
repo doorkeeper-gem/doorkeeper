@@ -4,8 +4,8 @@ require 'doorkeeper/oauth/client'
 
 class Doorkeeper::OAuth::Client
   describe 'Methods' do
-    let(:client_id) { "some-uid" }
-    let(:client_secret) { "some-secret" }
+    let(:client_id) { 'some-uid' }
+    let(:client_secret) { 'some-secret' }
 
     subject do
       Class.new do
@@ -18,8 +18,8 @@ class Doorkeeper::OAuth::Client
         request     = double parameters: { client_id: client_id, client_secret: client_secret }
         uid, secret = subject.from_params(request)
 
-        expect(uid).to    eq("some-uid")
-        expect(secret).to eq("some-secret")
+        expect(uid).to    eq('some-uid')
+        expect(secret).to eq('some-secret')
       end
 
       it 'is blank when there are no credentials' do
@@ -38,8 +38,8 @@ class Doorkeeper::OAuth::Client
         request     = double authorization: "Basic #{credentials}"
         uid, secret = subject.from_basic(request)
 
-        expect(uid).to    eq("some-uid")
-        expect(secret).to eq("some-secret")
+        expect(uid).to    eq('some-uid')
+        expect(secret).to eq('some-secret')
       end
 
       it 'is blank if Authorization is not Basic' do

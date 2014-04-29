@@ -16,7 +16,7 @@ module Doorkeeper::OAuth::Authorization
       end
 
       it 'rejects nil values' do
-        uri = subject.uri_with_query 'http://example.com/', parameter: ""
+        uri = subject.uri_with_query 'http://example.com/', parameter: ''
         expect(uri).to eq('http://example.com/?')
       end
 

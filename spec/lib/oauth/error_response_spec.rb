@@ -55,7 +55,7 @@ module Doorkeeper::OAuth
     describe '.headers' do
       subject { ErrorResponse.new(name: :some_error, state: :some_state).headers }
 
-      it { should include "WWW-Authenticate" }
+      it { should include 'WWW-Authenticate' }
     end
   end
 end

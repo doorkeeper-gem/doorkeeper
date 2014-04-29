@@ -1,10 +1,10 @@
 require 'spec_helper_integration'
 
-describe Doorkeeper, "configuration" do
+describe Doorkeeper, 'configuration' do
   subject { Doorkeeper.configuration }
 
-  describe "resource_owner_authenticator" do
-    it "sets the block that is accessible via authenticate_resource_owner" do
+  describe 'resource_owner_authenticator' do
+    it 'sets the block that is accessible via authenticate_resource_owner' do
       block = proc do end
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
@@ -14,8 +14,8 @@ describe Doorkeeper, "configuration" do
     end
   end
 
-  describe "admin_authenticator" do
-    it "sets the block that is accessible via authenticate_admin" do
+  describe 'admin_authenticator' do
+    it 'sets the block that is accessible via authenticate_admin' do
       block = proc do end
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
@@ -25,12 +25,12 @@ describe Doorkeeper, "configuration" do
     end
   end
 
-  describe "access_token_expires_in" do
-    it "has 2 hours by default" do
+  describe 'access_token_expires_in' do
+    it 'has 2 hours by default' do
       expect(subject.access_token_expires_in).to eq(2.hours)
     end
 
-    it "can change the value" do
+    it 'can change the value' do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
         access_token_expires_in 4.hours
@@ -38,7 +38,7 @@ describe Doorkeeper, "configuration" do
       expect(subject.access_token_expires_in).to eq(4.hours)
     end
 
-    it "can be set to nil" do
+    it 'can be set to nil' do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
         access_token_expires_in nil
@@ -47,8 +47,8 @@ describe Doorkeeper, "configuration" do
     end
   end
 
-  describe "scopes" do
-    it "has default scopes" do
+  describe 'scopes' do
+    it 'has default scopes' do
       Doorkeeper.configure {
         orm DOORKEEPER_ORM
         default_scopes :public
@@ -74,12 +74,12 @@ describe Doorkeeper, "configuration" do
     end
   end
 
-  describe "use_refresh_token" do
-    it "is false by default" do
+  describe 'use_refresh_token' do
+    it 'is false by default' do
       expect(subject.refresh_token_enabled?).to be_false
     end
 
-    it "can change the value" do
+    it 'can change the value' do
       Doorkeeper.configure {
         orm DOORKEEPER_ORM
         use_refresh_token
@@ -93,7 +93,7 @@ describe Doorkeeper, "configuration" do
       expect(subject.client_credentials_methods).to eq([:from_basic, :from_params])
     end
 
-    it "can change the value" do
+    it 'can change the value' do
       Doorkeeper.configure {
         orm DOORKEEPER_ORM
         client_credentials :from_digest, :from_params
@@ -107,7 +107,7 @@ describe Doorkeeper, "configuration" do
       expect(subject.access_token_methods).to eq([:from_bearer_authorization, :from_access_token_param, :from_bearer_param])
     end
 
-    it "can change the value" do
+    it 'can change the value' do
       Doorkeeper.configure {
         orm DOORKEEPER_ORM
         access_token_methods :from_access_token_param, :from_bearer_param
@@ -116,59 +116,59 @@ describe Doorkeeper, "configuration" do
     end
   end
 
-  describe "enable_application_owner" do
-    it "is disabled by default" do
+  describe 'enable_application_owner' do
+    it 'is disabled by default' do
       expect(Doorkeeper.configuration.enable_application_owner?).not_to be_true
     end
 
-    context "when enabled without confirmation" do
+    context 'when enabled without confirmation' do
       before do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
           enable_application_owner
         end
       end
-      it "adds support for application owner" do
+      it 'adds support for application owner' do
         expect(Doorkeeper::Application.new).to respond_to :owner
       end
-      it "Doorkeeper.configuration.confirm_application_owner? returns false" do
+      it 'Doorkeeper.configuration.confirm_application_owner? returns false' do
         expect(Doorkeeper.configuration.confirm_application_owner?).not_to be_true
       end
     end
 
-    context "when enabled with confirmation set to true" do
+    context 'when enabled with confirmation set to true' do
       before do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
           enable_application_owner confirmation: true
         end
       end
-      it "adds support for application owner" do
+      it 'adds support for application owner' do
         expect(Doorkeeper::Application.new).to respond_to :owner
       end
-      it "Doorkeeper.configuration.confirm_application_owner? returns true" do
+      it 'Doorkeeper.configuration.confirm_application_owner? returns true' do
         expect(Doorkeeper.configuration.confirm_application_owner?).to be_true
       end
     end
   end
 
-  describe "wildcard_redirect_uri" do
-    it "is disabled by default" do
+  describe 'wildcard_redirect_uri' do
+    it 'is disabled by default' do
       Doorkeeper.configuration.wildcard_redirect_uri.should be_false
     end
   end
 
-  describe "realm" do
-    it "is \"Doorkeeper\" by default" do
-      expect(Doorkeeper.configuration.realm).to eq("Doorkeeper")
+  describe 'realm' do
+    it 'is \'Doorkeeper\' by default' do
+      expect(Doorkeeper.configuration.realm).to eq('Doorkeeper')
     end
 
-    it "can change the value" do
+    it 'can change the value' do
       Doorkeeper.configure {
         orm DOORKEEPER_ORM
-        realm "Example"
+        realm 'Example'
       }
-      expect(subject.realm).to eq("Example")
+      expect(subject.realm).to eq('Example')
     end
   end
 

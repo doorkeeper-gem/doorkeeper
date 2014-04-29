@@ -16,12 +16,12 @@ module Doorkeeper::OAuth
     describe :from_access_token do
       it 'revoked' do
         response = InvalidTokenResponse.from_access_token double(revoked?: true, expired?: true)
-        expect(response.description).to include("revoked")
+        expect(response.description).to include('revoked')
       end
 
       it 'expired' do
         response = InvalidTokenResponse.from_access_token double(revoked?: false, expired?: true)
-        expect(response.description).to include("expired")
+        expect(response.description).to include('expired')
       end
     end
   end

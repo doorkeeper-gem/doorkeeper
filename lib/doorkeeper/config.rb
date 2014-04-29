@@ -1,7 +1,7 @@
 module Doorkeeper
   class MissingConfiguration < StandardError
     def initialize
-      super("Configuration for doorkeeper missing. Do you have doorkeeper initializer?")
+      super('Configuration for doorkeeper missing. Do you have doorkeeper initializer?')
     end
   end
 
@@ -18,7 +18,7 @@ module Doorkeeper
   def self.orm_model_dir
     case configuration.orm
     when :mongoid3, :mongoid4
-      "mongoid3_4"
+      'mongoid3_4'
     else
       configuration.orm
     end
@@ -51,36 +51,36 @@ module Doorkeeper
       end
 
       def enable_application_owner(opts={})
-        @config.instance_variable_set("@enable_application_owner", true)
+        @config.instance_variable_set('@enable_application_owner', true)
         confirm_application_owner if opts[:confirmation].present? && opts[:confirmation]
       end
 
       def confirm_application_owner
-        @config.instance_variable_set("@confirm_application_owner", true)
+        @config.instance_variable_set('@confirm_application_owner', true)
       end
 
       def default_scopes(*scopes)
-        @config.instance_variable_set("@default_scopes", Doorkeeper::OAuth::Scopes.from_array(scopes))
+        @config.instance_variable_set('@default_scopes', Doorkeeper::OAuth::Scopes.from_array(scopes))
       end
 
       def optional_scopes(*scopes)
-        @config.instance_variable_set("@optional_scopes", Doorkeeper::OAuth::Scopes.from_array(scopes))
+        @config.instance_variable_set('@optional_scopes', Doorkeeper::OAuth::Scopes.from_array(scopes))
       end
 
       def client_credentials(*methods)
-        @config.instance_variable_set("@client_credentials", methods)
+        @config.instance_variable_set('@client_credentials', methods)
       end
 
       def access_token_methods(*methods)
-        @config.instance_variable_set("@access_token_methods", methods)
+        @config.instance_variable_set('@access_token_methods', methods)
       end
 
       def use_refresh_token
-        @config.instance_variable_set("@refresh_token_enabled", true)
+        @config.instance_variable_set('@refresh_token_enabled', true)
       end
 
       def realm(realm)
-        @config.instance_variable_set("@realm", realm)
+        @config.instance_variable_set('@realm', realm)
       end
     end
 
@@ -110,7 +110,7 @@ module Doorkeeper
       #
       #    option :name
       #    option :name, as: :set_name
-      #    option :name, default: "My Name"
+      #    option :name, default: 'My Name'
       #    option :scopes builder_class: ScopesBuilder
       #
       def option(name, options = {})
@@ -168,7 +168,7 @@ module Doorkeeper
     option :orm,                           default: :active_record
     option :test_redirect_uri,             default: 'urn:ietf:wg:oauth:2.0:oob'
     option :active_record_options,         default: {}
-    option :realm,                         default: "Doorkeeper"
+    option :realm,                         default: 'Doorkeeper'
     option :wildcard_redirect_uri,         default: false
 
     def refresh_token_enabled?
@@ -208,7 +208,7 @@ module Doorkeeper
     end
 
     def realm
-      @realm ||= "Doorkeeper"
+      @realm ||= 'Doorkeeper'
     end
   end
 end

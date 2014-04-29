@@ -6,9 +6,9 @@ module Doorkeeper
 
     it { should be_valid }
 
-    it_behaves_like "an accessible token"
-    it_behaves_like "a revocable token"
-    it_behaves_like "an unique token" do
+    it_behaves_like 'an accessible token'
+    it_behaves_like 'a revocable token'
+    it_behaves_like 'an unique token' do
       let(:factory_name) { :access_token }
     end
 
@@ -23,7 +23,7 @@ module Doorkeeper
         expect(token.refresh_token).not_to be_nil
       end
 
-      it "is not valid if token exists" do
+      it 'is not valid if token exists' do
         token1 = FactoryGirl.create :access_token, use_refresh_token: true
         token2 = FactoryGirl.create :access_token, use_refresh_token: true
         token2.send :write_attribute, :refresh_token, token1.refresh_token
@@ -40,8 +40,8 @@ module Doorkeeper
       end
     end
 
-    describe "validations" do
-      it "is valid without resource_owner_id" do
+    describe 'validations' do
+      it 'is valid without resource_owner_id' do
         # For client credentials flow
         subject.resource_owner_id = nil
         should be_valid
@@ -126,7 +126,7 @@ module Doorkeeper
     describe '.matching_token_for' do
       let(:resource_owner_id) { 100 }
       let(:application)       { FactoryGirl.create :application }
-      let(:scopes)            { Doorkeeper::OAuth::Scopes.from_string("public write") }
+      let(:scopes)            { Doorkeeper::OAuth::Scopes.from_string('public write') }
       let(:default_attributes) do
         { application: application, resource_owner_id: resource_owner_id, scopes: scopes.to_s }
       end

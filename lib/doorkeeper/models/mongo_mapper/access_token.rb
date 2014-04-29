@@ -7,7 +7,7 @@ module Doorkeeper
     safe
     timestamps!
 
-    set_collection_name "oauth_access_tokens"
+    set_collection_name 'oauth_access_tokens'
 
     key :resource_owner_id, ObjectId
     key :token,             String

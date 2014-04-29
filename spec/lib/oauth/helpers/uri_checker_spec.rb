@@ -4,73 +4,73 @@ require 'doorkeeper/oauth/helpers/uri_checker'
 
 module Doorkeeper::OAuth::Helpers
   describe URIChecker do
-    describe ".valid?" do
-      it "is valid for valid uris" do
-        uri = "http://app.co"
+    describe '.valid?' do
+      it 'is valid for valid uris' do
+        uri = 'http://app.co'
         expect(URIChecker.valid?(uri)).to be_true
       end
 
-      it "is valid if include path param" do
-        uri = "http://app.co/path"
+      it 'is valid if include path param' do
+        uri = 'http://app.co/path'
         expect(URIChecker.valid?(uri)).to be_true
       end
 
-      it "is valid if include query param" do
-        uri = "http://app.co/?query=1"
+      it 'is valid if include query param' do
+        uri = 'http://app.co/?query=1'
         expect(URIChecker.valid?(uri)).to be_true
       end
 
-      it "is invalid if uri includes fragment" do
-        uri = "http://app.co/test#fragment"
+      it 'is invalid if uri includes fragment' do
+        uri = 'http://app.co/test#fragment'
         expect(URIChecker.valid?(uri)).to be_false
       end
 
-      it "is invalid if scheme is missing" do
-        uri = "app.co"
+      it 'is invalid if scheme is missing' do
+        uri = 'app.co'
         expect(URIChecker.valid?(uri)).to be_false
       end
 
-      it "is invalid if is a relative uri" do
-        uri = "/abc/123"
+      it 'is invalid if is a relative uri' do
+        uri = '/abc/123'
         expect(URIChecker.valid?(uri)).to be_false
       end
 
-      it "is invalid if is not a url" do
-        uri = "http://"
+      it 'is invalid if is not a url' do
+        uri = 'http://'
         expect(URIChecker.valid?(uri)).to be_false
       end
     end
 
-    describe ".matches?" do
-      it "is true if both url matches" do
+    describe '.matches?' do
+      it 'is true if both url matches' do
         uri = client_uri = 'http://app.co/aaa'
         expect(URIChecker.matches?(uri, client_uri)).to be_true
       end
 
-      it "ignores query parameter on comparsion" do
+      it 'ignores query parameter on comparsion' do
         uri = 'http://app.co/?query=hello'
         client_uri = 'http://app.co'
         expect(URIChecker.matches?(uri, client_uri)).to be_true
       end
 
-      context "allows wildcard redirect_uri" do
+      context 'allows wildcard redirect_uri' do
         before do
           Doorkeeper.configuration.stub(wildcard_redirect_uri: true )
         end
 
-        it "ignores query parameter on comparison" do
+        it 'ignores query parameter on comparison' do
           uri = 'http://app.co/?query=hello'
           client_uri = 'http://app.co'
           expect(URIChecker.matches?(uri, client_uri)).to be true
         end
 
-        it "doesn't allow non-matching domains through" do
+        it 'doesn\'t allow non-matching domains through' do
           uri = 'http://app.abc/?query=hello'
           client_uri = 'http://app.co'
           expect(URIChecker.matches?(uri, client_uri)).to be false
         end
 
-        it "doesn't allow non-matching domains that don't start at the beginning" do
+        it 'doesn\'t allow non-matching domains that don\'t start at the beginning' do
           uri = 'http://app.co/?query=hello'
           client_uri = 'http://example.com?app.co=test'
           expect(URIChecker.matches?(uri, client_uri)).to be false
@@ -78,46 +78,46 @@ module Doorkeeper::OAuth::Helpers
       end
     end
 
-    describe ".valid_for_authorization?" do
-      it "is true if valid and matches" do
+    describe '.valid_for_authorization?' do
+      it 'is true if valid and matches' do
         uri = client_uri = 'http://app.co/aaa'
         expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be_true
       end
 
-      it "is false if valid and mismatches" do
+      it 'is false if valid and mismatches' do
         uri = 'http://app.co/aaa'
         client_uri = 'http://app.co/bbb'
         expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be_false
       end
 
-      it "is true if valid and included in array" do
+      it 'is true if valid and included in array' do
         uri = 'http://app.co/aaa'
         client_uri = "http://example.com/bbb\nhttp://app.co/aaa"
         expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be_true
       end
 
-      it "is false if valid and not included in array" do
+      it 'is false if valid and not included in array' do
         uri = 'http://app.co/aaa'
         client_uri = "http://example.com/bbb\nhttp://app.co/cc"
         expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be_false
       end
 
-      it "is true if valid and matches" do
+      it 'is true if valid and matches' do
         uri = client_uri = 'http://app.co/aaa'
         expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be true
       end
 
-      it "is false if invalid" do
+      it 'is false if invalid' do
         uri = client_uri = 'http://app.co/aaa?waffles=abc'
         expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be false
       end
 
-      context "allows wildcard redirect_uri" do
+      context 'allows wildcard redirect_uri' do
         before do
           Doorkeeper.configuration.stub(wildcard_redirect_uri: true )
         end
 
-        it "is true if valid, matches and contains a query parameter" do
+        it 'is true if valid, matches and contains a query parameter' do
           uri = client_uri = 'http://app.co/aaa?waffles=abc'
           expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be true
         end

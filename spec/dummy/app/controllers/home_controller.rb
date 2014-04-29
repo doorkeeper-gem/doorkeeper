@@ -4,7 +4,7 @@ class HomeController < ApplicationController
 
   def sign_in
     session[:user_id] = if Rails.env.development?
-      User.first || User.create!(name: "Joe", password: "sekret")
+      User.first || User.create!(name: 'Joe', password: 'sekret')
     else
       User.first
     end
@@ -12,6 +12,6 @@ class HomeController < ApplicationController
   end
 
   def callback
-    render text: "ok"
+    render text: 'ok'
   end
 end

@@ -57,7 +57,7 @@ module RequestSpecHelper
 
   def sign_in
     visit '/'
-    click_on "Sign in"
+    click_on 'Sign in'
   end
 
   def i_should_see_translated_error_message(key)

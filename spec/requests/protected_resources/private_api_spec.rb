@@ -3,14 +3,14 @@ require 'spec_helper_integration'
 feature 'Private API' do
   background do
     @client   = FactoryGirl.create(:application)
-    @resource = User.create!(name: "Joe", password: "sekret")
+    @resource = User.create!(name: 'Joe', password: 'sekret')
     @token    = client_is_authorized(@client, @resource)
   end
 
   scenario 'client requests protected resource with valid token' do
     with_access_token_header @token.token
     visit '/full_protected_resources'
-    expect(page.body).to have_content("index")
+    expect(page.body).to have_content('index')
   end
 
   scenario 'client requests protected resource with disabled header authentication' do
@@ -21,7 +21,7 @@ feature 'Private API' do
   end
 
   scenario 'client attempts to request protected resource with invalid token' do
-    with_access_token_header "invalid"
+    with_access_token_header 'invalid'
     visit '/full_protected_resources'
     response_status_should_be 401
   end
@@ -37,7 +37,7 @@ feature 'Private API' do
     @token.update_column :expires_in, nil # never expires
     with_access_token_header @token.token
     visit '/full_protected_resources'
-    expect(page.body).to have_content("index")
+    expect(page.body).to have_content('index')
   end
 
   scenario 'access token with no scopes' do
@@ -53,6 +53,6 @@ feature 'Private API' do
     @token.update_column :scopes, 'admin'
     with_access_token_header @token.token
     visit '/full_protected_resources/1.json'
-    expect(page.body).to have_content("show")
+    expect(page.body).to have_content('show')
   end
 end

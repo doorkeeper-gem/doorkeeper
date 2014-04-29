@@ -4,9 +4,9 @@ module Doorkeeper
     safe
     timestamps!
 
-    set_collection_name "oauth_applications"
+    set_collection_name 'oauth_applications'
 
-    many :authorized_tokens, class_name: "Doorkeeper::AccessToken"
+    many :authorized_tokens, class_name: 'Doorkeeper::AccessToken'
 
     key :name,         String
     key :uid,          String

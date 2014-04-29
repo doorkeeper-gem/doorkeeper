@@ -42,7 +42,7 @@ module Doorkeeper::OAuth
     end
 
     context 'with scopes' do
-      let(:default_scopes) { Doorkeeper::OAuth::Scopes.from_string("public email") }
+      let(:default_scopes) { Doorkeeper::OAuth::Scopes.from_string('public email') }
 
       before do
         allow(server).to receive(:default_scopes).and_return(default_scopes)
@@ -54,9 +54,9 @@ module Doorkeeper::OAuth
       end
 
       it 'issues an access token with requested scopes' do
-        subject = ClientCredentialsRequest.new(server, client, scope: "email")
+        subject = ClientCredentialsRequest.new(server, client, scope: 'email')
         subject.issuer = token_creator
-        expect(token_creator).to receive(:create).with(client, Doorkeeper::OAuth::Scopes.from_string("email"))
+        expect(token_creator).to receive(:create).with(client, Doorkeeper::OAuth::Scopes.from_string('email'))
         subject.authorize
       end
     end

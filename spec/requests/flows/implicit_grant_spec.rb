@@ -10,7 +10,7 @@ feature 'Implicit Grant Flow' do
 
   scenario 'resource owner authorizes the client' do
     visit authorization_endpoint_url(client: @client, response_type: 'token')
-    click_on "Authorize"
+    click_on 'Authorize'
 
     access_token_should_exist_for @client, @resource_owner
 

@@ -1,4 +1,4 @@
-require "spec_helper_integration"
+require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
   describe PreAuthorization do
@@ -48,7 +48,7 @@ module Doorkeeper::OAuth
       expect(subject).to be_authorizable
     end
 
-    it "matches the redirect uri against client's one" do
+    it 'matches the redirect uri against client\'s one' do
       subject.redirect_uri = 'http://nothesame.com'
       expect(subject).not_to be_authorizable
     end

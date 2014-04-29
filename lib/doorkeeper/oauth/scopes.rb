@@ -5,7 +5,7 @@ module Doorkeeper
       include Comparable
 
       def self.from_string(string)
-        string ||= ""
+        string ||= ''
         new.tap do |scope|
           scope.add(*string.split)
         end
@@ -37,7 +37,7 @@ module Doorkeeper
       end
 
       def to_s
-        @scopes.join(" ")
+        @scopes.join(' ')
       end
 
       def has_scopes?(scopes)

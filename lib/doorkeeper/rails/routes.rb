@@ -16,8 +16,8 @@ module Doorkeeper
       end
 
       def self.warn_if_using_mount_method!
-        paths = ::Rails.application.config.paths["config/routes"] ||
-          ::Rails.application.config.paths["config/routes.rb"]
+        paths = ::Rails.application.config.paths['config/routes'] ||
+          ::Rails.application.config.paths['config/routes.rb']
 
         paths.each do |path|
           if File.read(::Rails.root.join(path)) =~ %r[mount Doorkeeper::Engine]
