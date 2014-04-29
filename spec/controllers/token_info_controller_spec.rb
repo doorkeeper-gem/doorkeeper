@@ -47,7 +47,7 @@ describe Doorkeeper::TokenInfoController do
 
       it "responds body message for error" do
         do_get
-        expect(response.body).to eq(Doorkeeper::OAuth::ErrorResponse.new(:name => :invalid_request, :status => :unauthorized).body.to_json)
+        expect(response.body).to eq(Doorkeeper::OAuth::ErrorResponse.new(name: :invalid_request, status: :unauthorized).body.to_json)
       end
     end
 

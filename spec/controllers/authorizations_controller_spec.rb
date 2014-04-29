@@ -9,11 +9,11 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
   end
 
   def translated_error_message(key)
-    I18n.translate key, :scope => [:doorkeeper, :errors, :messages]
+    I18n.translate key, scope: [:doorkeeper, :errors, :messages]
   end
 
   let(:client) { FactoryGirl.create :application }
-  let(:user)   { User.create!(:name => "Joe", :password => "sekret") }
+  let(:user)   { User.create!(name: "Joe", password: "sekret") }
 
   before do
     allow(controller).to receive(:current_resource_owner).and_return(user)
@@ -21,7 +21,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   describe "POST #create" do
     before do
-      post :create, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uri
+      post :create, client_id: client.uid, response_type: "token", redirect_uri: client.redirect_uri
     end
 
     it "redirects after authorization" do
@@ -56,7 +56,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
   describe "POST #create with errors" do
     before do
       default_scopes_exist :public
-      post :create, :client_id => client.uid, :response_type => "token", :scope => "invalid", :redirect_uri => client.redirect_uri
+      post :create, client_id: client.uid, response_type: "token", scope: "invalid", redirect_uri: client.redirect_uri
     end
 
     it "redirects after authorization" do
@@ -90,7 +90,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   describe "GET #new" do
     before do
-      get :new, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uri
+      get :new, client_id: client.uid, response_type: "token", redirect_uri: client.redirect_uri
     end
 
     it 'renders new template' do
@@ -103,7 +103,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
       allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
           true
         end)
-      get :new, :client_id => client.uid, :response_type => "token", :redirect_uri => client.redirect_uri
+      get :new, client_id: client.uid, response_type: "token", redirect_uri: client.redirect_uri
     end
 
     it "should redirect immediately" do
@@ -135,7 +135,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
   describe "GET #new with errors" do
     before do
       default_scopes_exist :public
-      get :new, :an_invalid => 'request'
+      get :new, an_invalid: 'request'
     end
 
     it "does not redirect" do

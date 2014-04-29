@@ -14,7 +14,7 @@ feature 'Authorization Code Flow Errors' do
 
   context 'when access was denied' do
     scenario 'redirects with error' do
-      visit authorization_endpoint_url(:client => @client)
+      visit authorization_endpoint_url(client: @client)
       click_on "Deny"
 
       i_should_be_on_client_callback @client
@@ -24,7 +24,7 @@ feature 'Authorization Code Flow Errors' do
     end
 
     scenario 'redirects with state parameter' do
-      visit authorization_endpoint_url(:client => @client, :state => "return-this")
+      visit authorization_endpoint_url(client: @client, state: "return-this")
       click_on "Deny"
 
       i_should_be_on_client_callback @client
@@ -37,16 +37,16 @@ end
 feature 'Authorization Code Flow Errors', 'after authorization' do
   background do
     client_exists
-    authorization_code_exists :application => @client
+    authorization_code_exists application: @client
   end
 
   scenario "returns :invalid_grant error when posting an already revoked grant code" do
     # First successful request
-    post token_endpoint_url(:code => @authorization.token, :client => @client)
+    post token_endpoint_url(code: @authorization.token, client: @client)
 
     # Second attempt with same token
     expect {
-      post token_endpoint_url(:code => @authorization.token, :client => @client)
+      post token_endpoint_url(code: @authorization.token, client: @client)
     }.to_not change { Doorkeeper::AccessToken.count }
 
     should_not_have_json 'access_token'
@@ -55,7 +55,7 @@ feature 'Authorization Code Flow Errors', 'after authorization' do
   end
 
   scenario "returns :invalid_grant error for invalid grant code" do
-    post token_endpoint_url(:code => "invalid", :client => @client)
+    post token_endpoint_url(code: "invalid", client: @client)
 
     access_token_should_not_exist
 

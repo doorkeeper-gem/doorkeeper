@@ -140,7 +140,7 @@ describe Doorkeeper, "configuration" do
       before do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
-          enable_application_owner :confirmation => true
+          enable_application_owner confirmation: true
         end
       end
       it "adds support for application owner" do

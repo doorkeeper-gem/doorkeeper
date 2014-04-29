@@ -6,7 +6,7 @@ describe 'Client Credentials Request' do
   context 'a valid request' do
     it 'authorizes the client and returns the token response' do
       headers = authorization client.uid, client.secret
-      params  = { :grant_type => 'client_credentials' }
+      params  = { grant_type: 'client_credentials' }
 
       post '/oauth/token', params, headers
 
@@ -26,7 +26,7 @@ describe 'Client Credentials Request' do
 
       it 'adds the scope to the token an returns in the response' do
         headers = authorization client.uid, client.secret
-        params  = { :grant_type => 'client_credentials', :scope => 'write' }
+        params  = { grant_type: 'client_credentials', scope: 'write' }
 
         post '/oauth/token', params, headers
 
@@ -39,7 +39,7 @@ describe 'Client Credentials Request' do
   context 'an invalid request' do
     it 'does not authorize the client and returns the error' do
       headers = {}
-      params  = { :grant_type => 'client_credentials' }
+      params  = { grant_type: 'client_credentials' }
 
       post '/oauth/token', params, headers
 

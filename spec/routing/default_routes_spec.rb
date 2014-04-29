@@ -30,7 +30,7 @@ describe 'Default routes' do
   end
 
   it 'GET /oauth/token/info route to authorzed tokeninfo controller' do
-    expect(get('/oauth/token/info')).to route_to('doorkeeper/token_info#show')    
+    expect(get('/oauth/token/info')).to route_to('doorkeeper/token_info#show')
   end
 
 end

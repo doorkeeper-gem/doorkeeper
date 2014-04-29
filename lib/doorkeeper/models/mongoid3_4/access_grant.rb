@@ -13,16 +13,16 @@ module Doorkeeper
     self.store_in collection: :oauth_access_grants
 
     if defined?(Moped::BSON)
-      field :resource_owner_id, :type => Moped::BSON::ObjectId
+      field :resource_owner_id, type: Moped::BSON::ObjectId
     else
-      field :resource_owner_id, :type => BSON::ObjectId
+      field :resource_owner_id, type: BSON::ObjectId
     end
 
-    field :application_id, :type => Hash
-    field :token, :type => String
-    field :expires_in, :type => Integer
-    field :redirect_uri, :type => String
-    field :revoked_at, :type => DateTime
+    field :application_id, type: Hash
+    field :token, type: String
+    field :expires_in, type: Integer
+    field :redirect_uri, type: String
+    field :revoked_at, type: DateTime
 
     index({ token: 1 }, { unique: true })
   end

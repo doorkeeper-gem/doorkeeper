@@ -14,7 +14,7 @@ module Doorkeeper
     include Mongoid::Document
 
     if ::Mongoid::VERSION >= "3"
-      self.store_in :collection => :placeholder_application_owners
+      self.store_in collection: :placeholder_application_owners
     else
       self.store_in :placeholder_application_owners
     end

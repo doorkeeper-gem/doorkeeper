@@ -15,7 +15,7 @@ feature 'Revoke Token Flow' do
     let(:authorization_access_token) { FactoryGirl.create :access_token,
                                               application: client_application,
                                               resource_owner_id: resource_owner.id,
-                                              use_refresh_token: true }                       
+                                              use_refresh_token: true }
 
     let(:headers) { { 'HTTP_AUTHORIZATION' => "Bearer #{authorization_access_token.token}"} }
 
@@ -24,9 +24,9 @@ feature 'Revoke Token Flow' do
       scenario 'client wants to revoke the given access token' do
 
         post revocation_token_endpoint_url, { token: 'I_AM_AN_INVALIDE_TOKEN' }, headers
-        
+
         authorization_access_token.reload
-        # The authorization server responds with HTTP status code 200 if the token 
+        # The authorization server responds with HTTP status code 200 if the token
         # has been revoked successfully or if the client submitted an invalid token.
         expect(response).to be_success
         expect(authorization_access_token).to_not be_revoked
@@ -38,9 +38,9 @@ feature 'Revoke Token Flow' do
       let(:token_to_revoke){ authorization_access_token }
 
       scenario 'client wants to revoke the given access token' do
-        
+
         post revocation_token_endpoint_url, {token: token_to_revoke.token}, headers
-        
+
         token_to_revoke.reload
         authorization_access_token.reload
 
@@ -54,7 +54,7 @@ feature 'Revoke Token Flow' do
 
         url_with_query_string = revocation_token_endpoint_url + '?' + Rack::Utils.build_query({token: token_to_revoke.token})
         post url_with_query_string, {}, headers
-        
+
         token_to_revoke.reload
         authorization_access_token.reload
 
@@ -69,16 +69,15 @@ feature 'Revoke Token Flow' do
 
     context 'The access token to revoke app and owners are the same than the authorization access token' do
 
-
       let(:token_to_revoke) { FactoryGirl.create :access_token,
                                               application: client_application,
                                               resource_owner_id: resource_owner.id,
                                               use_refresh_token: true }
-      
+
       scenario 'client wants to revoke the given access token' do
-        
+
         post revocation_token_endpoint_url, { token: token_to_revoke.token }, headers
-        
+
         token_to_revoke.reload
         authorization_access_token.reload
 
@@ -101,7 +100,7 @@ feature 'Revoke Token Flow' do
       scenario 'client wants to revoke the given access token' do
 
         post revocation_token_endpoint_url, { token: token_to_revoke.token }, headers
-        
+
         token_to_revoke.reload
         authorization_access_token.reload
 
@@ -118,12 +117,12 @@ feature 'Revoke Token Flow' do
       let(:token_to_revoke) { FactoryGirl.create :access_token,
                                               application: client_application,
                                               resource_owner_id: other_resource_owner.id,
-                                              use_refresh_token: true } 
+                                              use_refresh_token: true }
 
       scenario 'client wants to revoke the given access token' do
-        
+
         post revocation_token_endpoint_url, { token: token_to_revoke.token }, headers
-        
+
         token_to_revoke.reload
         authorization_access_token.reload
 
@@ -136,11 +135,11 @@ feature 'Revoke Token Flow' do
     end
 
     context 'With valid refresh token to revoke' do
-      
+
       let(:token_to_revoke) { FactoryGirl.create :access_token,
                                               application: client_application,
-                                              resource_owner_id: resource_owner.id, 
-                                              use_refresh_token: true 
+                                              resource_owner_id: resource_owner.id,
+                                              use_refresh_token: true
                             }
 
       scenario 'client wants to revoke the given refresh token' do
@@ -152,7 +151,7 @@ feature 'Revoke Token Flow' do
         expect(response).to be_success
         expect(Doorkeeper::AccessToken.by_refresh_token(token_to_revoke.refresh_token).revoked?).to be_true
         expect(authorization_access_token).to_not be_revoked
-      
+
       end
     end
   end

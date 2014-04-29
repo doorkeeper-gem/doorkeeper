@@ -3,12 +3,12 @@ module Doorkeeper
     module Ownership
       def validate_owner?
         Doorkeeper.configuration.confirm_application_owner?
-      end    
-  
+      end
+
       def self.included(base)
         base.class_eval do
-          belongs_to :owner, :polymorphic => true
-          validates :owner, :presence => true, :if => :validate_owner?      
+          belongs_to :owner, polymorphic: true
+          validates :owner, presence: true, if: :validate_owner?
         end
       end
     end

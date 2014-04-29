@@ -6,4 +6,4 @@ module ConfigHelper
   end
 end
 
-RSpec.configuration.send :include, ConfigHelper, :type => :request
+RSpec.configuration.send :include, ConfigHelper, type: :request

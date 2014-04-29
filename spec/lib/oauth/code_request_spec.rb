@@ -4,16 +4,16 @@ module Doorkeeper::OAuth
   describe CodeRequest do
     let(:pre_auth) do
       double(:pre_auth, {
-        :client => double(:application, :id => 9990),
-        :redirect_uri => 'http://tst.com/cb',
-        :scopes => nil,
-        :state => nil,
-        :error => nil,
-        :authorizable? => true
+        client: double(:application, id: 9990),
+        redirect_uri: 'http://tst.com/cb',
+        scopes: nil,
+        state: nil,
+        error: nil,
+        authorizable?: true
       })
     end
 
-    let(:owner) { double :owner, :id => 8900 }
+    let(:owner) { double :owner, id: 8900 }
 
     subject do
       CodeRequest.new(pre_auth, owner)

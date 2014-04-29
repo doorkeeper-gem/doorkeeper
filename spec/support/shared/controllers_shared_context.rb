@@ -1,10 +1,10 @@
-shared_context "valid token", :token => :valid do
+shared_context "valid token", token: :valid do
   let :token_string do
     "1A2B3C4D"
   end
 
   let :token do
-    double(Doorkeeper::AccessToken, :accessible? => true)
+    double(Doorkeeper::AccessToken, accessible?: true)
   end
 
   before :each do
@@ -12,13 +12,13 @@ shared_context "valid token", :token => :valid do
   end
 end
 
-shared_context "invalid token", :token => :invalid do
+shared_context "invalid token", token: :invalid do
   let :token_string do
     "1A2B3C4D"
   end
 
   let :token do
-    double(Doorkeeper::AccessToken, :accessible? => false, :revoked? => false, :expired? => false)
+    double(Doorkeeper::AccessToken, accessible?: false, revoked?: false, expired?: false)
   end
 
   before :each do
@@ -28,7 +28,7 @@ end
 
 shared_context "authenticated resource owner" do
   before do
-    user = double(:resource, :id => 1)
+    user = double(:resource, id: 1)
     allow(Doorkeeper.configuration).to receive(:authenticate_resource_owner) { proc do user end }
   end
 end
@@ -41,7 +41,7 @@ end
 
 shared_context "valid authorization request" do
   let :authorization do
-    double(:authorization, :valid? => true, :authorize => true, :success_redirect_uri => "http://something.com/cb?code=token")
+    double(:authorization, valid?: true, authorize:  true, success_redirect_uri: "http://something.com/cb?code=token")
   end
 
   before do
@@ -51,7 +51,7 @@ end
 
 shared_context "invalid authorization request" do
   let :authorization do
-    double(:authorization, :valid? => false, :authorize => false, :redirect_on_error? => false)
+    double(:authorization, valid?: false, authorize:  false, redirect_on_error?: false)
   end
 
   before do

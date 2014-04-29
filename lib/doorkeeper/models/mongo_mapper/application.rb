@@ -6,7 +6,7 @@ module Doorkeeper
 
     set_collection_name "oauth_applications"
 
-    many :authorized_tokens, :class_name => "Doorkeeper::AccessToken"
+    many :authorized_tokens, class_name: "Doorkeeper::AccessToken"
 
     key :name,         String
     key :uid,          String
@@ -19,12 +19,12 @@ module Doorkeeper
     end
 
     def self.authorized_for(resource_owner)
-      ids = AccessToken.where(:resource_owner_id => resource_owner.id, :revoked_at => nil).map(&:application_id)
+      ids = AccessToken.where(resource_owner_id: resource_owner.id, revoked_at: nil).map(&:application_id)
       find(ids)
     end
 
     def self.create_indexes
-      ensure_index :uid, :unique => true
+      ensure_index :uid, unique: true
     end
   end
 end

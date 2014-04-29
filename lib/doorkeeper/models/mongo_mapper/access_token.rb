@@ -24,15 +24,15 @@ module Doorkeeper
     end
 
     def self.delete_all_for(application_id, resource_owner)
-      delete_all(:application_id => application_id,
-                 :resource_owner_id => resource_owner.id)
+      delete_all(application_id: application_id,
+                 resource_owner_id: resource_owner.id)
     end
     private_class_method :delete_all_for
 
     def self.last_authorized_token_for(application, resource_owner_id)
-      where(:application_id => application.id,
-            :resource_owner_id => resource_owner_id,
-            :revoked_at => nil).
+      where(application_id: application.id,
+            resource_owner_id: resource_owner_id,
+            revoked_at: nil).
       sort(:created_at.desc).
       limit(1).
       first
@@ -44,8 +44,8 @@ module Doorkeeper
     end
 
     def self.create_indexes
-      ensure_index :token, :unique => true
-      ensure_index [[:refresh_token, 1]], :unique => true, :sparse => true
+      ensure_index :token, unique: true
+      ensure_index [[:refresh_token, 1]], unique: true, sparse: true
     end
   end
 end

@@ -5,13 +5,13 @@ require 'doorkeeper/oauth/client_credentials/issuer'
 class Doorkeeper::OAuth::ClientCredentialsRequest
   describe Issuer do
     let(:creator) { double :acces_token_creator }
-    let(:server)  { double :server, :access_token_expires_in => 100 }
-    let(:validation) { double :validation, :valid? => true }
+    let(:server)  { double :server, access_token_expires_in: 100 }
+    let(:validation) { double :validation, valid?: true }
 
     subject { Issuer.new(server, validation) }
 
     describe :create do
-      let(:client) { double :client, :id => 'some-id' }
+      let(:client) { double :client, id: 'some-id' }
       let(:scopes) { 'some scope' }
 
       it 'creates and sets the token' do
@@ -23,8 +23,8 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
 
       it 'creates with correct token parameters' do
         expect(creator).to receive(:call).with(client, scopes, {
-          :expires_in        => 100,
-          :use_refresh_token => false
+          expires_in: 100,
+          use_refresh_token: false
         })
 
         subject.create client, scopes, creator

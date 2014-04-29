@@ -2,8 +2,8 @@ require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
   describe RefreshTokenRequest do
-    let(:server)         { double :server, :access_token_expires_in => 2.minutes }
-    let!(:refresh_token) { FactoryGirl.create(:access_token, :use_refresh_token => true) }
+    let(:server)         { double :server, access_token_expires_in: 2.minutes }
+    let!(:refresh_token) { FactoryGirl.create(:access_token, use_refresh_token: true) }
     let(:client)         { refresh_token.application }
     let(:credentials)    { Client::Credentials.new(client.uid, client.secret) }
 
@@ -55,7 +55,7 @@ module Doorkeeper::OAuth
     end
 
     context 'clientless access tokens' do
-      let!(:refresh_token) { FactoryGirl.create(:clientless_access_token, :use_refresh_token => true) }
+      let!(:refresh_token) { FactoryGirl.create(:clientless_access_token, use_refresh_token: true) }
 
       subject {
         RefreshTokenRequest.new server, refresh_token, nil
@@ -69,7 +69,7 @@ module Doorkeeper::OAuth
     end
 
     context 'with scopes' do
-      let!(:refresh_token) { FactoryGirl.create(:access_token, :use_refresh_token => true, :scopes => 'public write') }
+      let!(:refresh_token) { FactoryGirl.create(:access_token, use_refresh_token: true, scopes: 'public write') }
       let(:parameters) { {} }
       subject {
         RefreshTokenRequest.new server, refresh_token, credentials, parameters

@@ -2,64 +2,64 @@ require 'spec_helper_integration'
 
 module ControllerActions
   def index
-    render :text => "index"
+    render text: "index"
   end
 
   def show
-    render :text => "show"
+    render text: "show"
   end
 end
 
 shared_examples "specified for particular actions" do
-  context "with valid token", :token => :valid do
+  context "with valid token", token: :valid do
     it "allows into index action" do
-      get :index, :access_token => token_string
+      get :index, access_token: token_string
       expect(response).to be_success
     end
 
     it "allows into show action" do
-      get :show, :id => "3", :access_token => token_string
+      get :show, id: "3", access_token: token_string
       expect(response).to be_success
     end
   end
 
-  context "with invalid token", :token => :invalid do
+  context "with invalid token", token: :invalid do
     include_context "invalid token"
 
     it "does not allow into index action" do
-      get :index, :access_token => token_string
+      get :index, access_token: token_string
       expect(response.status).to eq 401
       expect(response.headers["WWW-Authenticate"]).to match(/^Bearer/)
     end
 
     it "allows into show action" do
-      get :show, :id => "5", :access_token => token_string
+      get :show, id: "5", access_token: token_string
       expect(response).to be_success
     end
   end
 end
 
 shared_examples "specified with except" do
-  context "with valid token", :token => :valid do
+  context "with valid token", token: :valid do
     it "allows into index action" do
-      get :index, :access_token => token_string
+      get :index, access_token: token_string
       expect(response).to be_success
     end
 
     it "allows into show action" do
-      get :show, :id => "4", :access_token => token_string
+      get :show, id: "4", access_token: token_string
       expect(response).to be_success
     end
   end
 
-  context "with invalid token", :token => :invalid do
+  context "with invalid token", token: :invalid do
     it "allows into index action" do
-      get :index, :access_token => token_string
+      get :index, access_token: token_string
       expect(response).to be_success
     end
 
     it "does not allow into show action" do
-      get :show, :id => "14", :access_token => token_string
+      get :show, id: "14", access_token: token_string
       expect(response.status).to eq 401
       expect(response.headers["WWW-Authenticate"]).to match(/^Bearer/)
     end
@@ -72,7 +72,7 @@ describe "Doorkeeper_for helper" do
       doorkeeper_for :all
 
       def index
-        render :text => "index"
+        render text: "index"
       end
     end
 
@@ -80,12 +80,12 @@ describe "Doorkeeper_for helper" do
 
     it "access_token param" do
       expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string)
-      get :index, :access_token => token_string
+      get :index, access_token: token_string
     end
 
     it "bearer_token param" do
       expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string)
-      get :index, :bearer_token => token_string
+      get :index, bearer_token: token_string
     end
 
     it "Authorization header" do
@@ -116,27 +116,27 @@ describe "Doorkeeper_for helper" do
       include ControllerActions
     end
 
-    context "with valid token", :token => :valid do
+    context "with valid token", token: :valid do
       it "allows into index action" do
-        get :index, :access_token => token_string
+        get :index, access_token: token_string
         expect(response).to be_success
       end
 
       it "allows into show action" do
-        get :show, :id => "4", :access_token => token_string
+        get :show, id: "4", access_token: token_string
         expect(response).to be_success
       end
     end
 
-    context "with invalid token", :token => :invalid do
+    context "with invalid token", token: :invalid do
       it "does not allow into index action" do
-        get :index, :access_token => token_string
+        get :index, access_token: token_string
         expect(response.status).to eq 401
         expect(response.header["WWW-Authenticate"]).to match(/^Bearer/)
       end
 
       it "does not allow into show action" do
-        get :show, :id => "4", :access_token => token_string
+        get :show, id: "4", access_token: token_string
         expect(response.status).to eq 401
         expect(response.header["WWW-Authenticate"]).to match(/^Bearer/)
       end
@@ -154,7 +154,7 @@ describe "Doorkeeper_for helper" do
 
   context "defined for actions except index" do
     controller do
-      doorkeeper_for :all, :except => :index
+      doorkeeper_for :all, except: :index
 
       include ControllerActions
     end
@@ -163,7 +163,7 @@ describe "Doorkeeper_for helper" do
 
   context "defined with scopes" do
     controller do
-      doorkeeper_for :all, :scopes => [:write]
+      doorkeeper_for :all, scopes: [:write]
 
       include ControllerActions
     end
@@ -171,16 +171,16 @@ describe "Doorkeeper_for helper" do
     let(:token_string) { "1A2DUWE" }
 
     it "allows if the token has particular scopes" do
-      token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => ['write', 'public'])
+      token = double(Doorkeeper::AccessToken, accessible?: true, scopes: ['write', 'public'])
       expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string).and_return(token)
-      get :index, :access_token => token_string
+      get :index, access_token: token_string
       expect(response).to be_success
     end
 
     it "does not allow if the token does not include given scope" do
-      token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => ['public'], :revoked? => false, :expired? => false)
+      token = double(Doorkeeper::AccessToken, accessible?: true, scopes: ['public'], revoked?: false, expired?: false)
       expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string).and_return(token)
-      get :index, :access_token => token_string
+      get :index, access_token: token_string
       expect(response.status).to eq 401
       expect(response.header["WWW-Authenticate"]).to match(/^Bearer/)
     end
@@ -193,13 +193,13 @@ describe "Doorkeeper_for helper" do
       include ControllerActions
     end
 
-    context "with a JSON custom render", :token => :invalid do
+    context "with a JSON custom render", token: :invalid do
       before do
-        expect(controller).to receive(:doorkeeper_unauthorized_render_options).and_return({ :json => ActiveSupport::JSON.encode({ :error => "Unauthorized" })  } )
+        expect(controller).to receive(:doorkeeper_unauthorized_render_options).and_return({ json: ActiveSupport::JSON.encode({ error: "Unauthorized" })  } )
       end
 
-      it "it renders a custom JSON response", :token => :invalid do
-        get :index, :access_token => token_string
+      it "it renders a custom JSON response", token: :invalid do
+        get :index, access_token: token_string
         expect(response.status).to eq 401
         expect(response.content_type).to eq('application/json')
         expect(response.header["WWW-Authenticate"]).to match(/^Bearer/)
@@ -210,13 +210,13 @@ describe "Doorkeeper_for helper" do
 
     end
 
-    context "with a text custom render", :token => :invalid do
+    context "with a text custom render", token: :invalid do
       before do
-        expect(controller).to receive(:doorkeeper_unauthorized_render_options).and_return({ :text => "Unauthorized"  } )
+        expect(controller).to receive(:doorkeeper_unauthorized_render_options).and_return({ text: "Unauthorized"  } )
       end
 
-      it "it renders a custom JSON response", :token => :invalid do
-        get :index, :access_token => token_string
+      it "it renders a custom JSON response", token: :invalid do
+        get :index, access_token: token_string
         expect(response.status).to eq 401
         expect(response.content_type).to eq('text/html')
         expect(response.header["WWW-Authenticate"]).to match(/^Bearer/)
@@ -227,8 +227,8 @@ describe "Doorkeeper_for helper" do
 
   context "when defined with conditional if block" do
     controller do
-      doorkeeper_for :index, :if => lambda { the_false }
-      doorkeeper_for :show, :if => lambda { the_true }
+      doorkeeper_for :index, if: lambda { the_false }
+      doorkeeper_for :show,  if: lambda { the_true }
 
       include ControllerActions
 
@@ -242,26 +242,26 @@ describe "Doorkeeper_for helper" do
       end
     end
 
-    context "with valid token", :token => :valid do
+    context "with valid token", token: :valid do
       it "enables access if passed block evaluates to false" do
-        get :index, :access_token => token_string
+        get :index, access_token: token_string
         expect(response).to be_success
       end
 
       it "enables access if passed block evaluates to true" do
-        get :show, :id => 1, :access_token => token_string
+        get :show, id: 1, access_token: token_string
         expect(response).to be_success
       end
     end
 
-    context "with invalid token", :token => :invalid do
+    context "with invalid token", token: :invalid do
       it "enables access if passed block evaluates to false" do
-        get :index, :access_token => token_string
+        get :index, access_token: token_string
         expect(response).to be_success
       end
 
       it "does not enable access if passed block evaluates to true" do
-        get :show, :id => 3, :access_token => token_string
+        get :show, id: 3, access_token: token_string
         expect(response.status).to eq 401
         expect(response.header["WWW-Authenticate"]).to match(/^Bearer/)
       end
@@ -270,8 +270,8 @@ describe "Doorkeeper_for helper" do
 
   context "when defined with conditional unless block" do
     controller do
-      doorkeeper_for :index, :unless => lambda { the_false }
-      doorkeeper_for :show, :unless => lambda { the_true }
+      doorkeeper_for :index, unless: lambda { the_false }
+      doorkeeper_for :show, unless: lambda { the_true }
 
       include ControllerActions
 
@@ -286,25 +286,25 @@ describe "Doorkeeper_for helper" do
       end
     end
 
-    context "with valid token", :token => :valid do
+    context "with valid token", token: :valid do
       it "allows access if passed block evaluates to false" do
-        get :index, :access_token => token_string
+        get :index, access_token: token_string
         expect(response).to be_success
       end
 
       it "allows access if passed block evaluates to true" do
-        get :show, :id => 1, :access_token => token_string
+        get :show, id: 1, access_token: token_string
         expect(response).to be_success
       end
     end
 
-    context "with invalid token", :token => :invalid do
+    context "with invalid token", token: :invalid do
       it "does not allow access if passed block evaluates to false" do
-        get :index, :access_token => token_string
+        get :index, access_token: token_string
       end
 
       it "allows access if passed block evaluates to true" do
-        get :show, :id => 3, :access_token => token_string
+        get :show, id: 3, access_token: token_string
         expect(response).to be_success
       end
     end

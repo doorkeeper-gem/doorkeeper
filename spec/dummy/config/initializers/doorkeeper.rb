@@ -8,7 +8,7 @@ Doorkeeper.configure do
   resource_owner_authenticator do
     # Put your resource owner authentication logic here.
     # e.g. User.find_by_id(session[:user_id]) || redirect_to(new_user_session_url)
-    User.find_by_id(session[:user_id]) || redirect_to(root_url, :alert => "Needs sign in.")
+    User.find_by_id(session[:user_id]) || redirect_to(root_url, alert: "Needs sign in.")
   end
 
   # If you want to restrict the access to the web interface for
@@ -46,7 +46,6 @@ Doorkeeper.configure do
   # fallsback to `:access_token` or `:bearer_token` from `params` object
   # Check out the wiki for mor information on customization
   # access_token_methods :from_bearer_authorization, :from_access_token_param, :from_bearer_param
-
 
   # Change the test redirect uri for client apps
   # When clients register with the following redirect uri, they won't be redirected to any server and the authorization code will be displayed within the provider

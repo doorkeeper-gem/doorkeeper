@@ -11,7 +11,7 @@ describe 'Revocable' do
 
   describe :revoke do
     it "updates :revoked_at attribute with current time" do
-      clock = double :now => double
+      clock = double now: double
       expect(subject).to receive(:update_column).with(:revoked_at, clock.now)
       subject.revoke(clock)
     end

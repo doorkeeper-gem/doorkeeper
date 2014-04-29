@@ -13,28 +13,28 @@ module Doorkeeper::OAuth
 
     describe :from_request do
       it 'has the error from request' do
-        error = ErrorResponse.from_request double(:error => :some_error)
+        error = ErrorResponse.from_request double(error: :some_error)
         expect(error.name).to eq(:some_error)
       end
 
       it 'ignores state if request does not respond to state' do
-        error = ErrorResponse.from_request double(:error => :some_error)
+        error = ErrorResponse.from_request double(error: :some_error)
         expect(error.state).to be_nil
       end
 
       it 'has state if request responds to state' do
-        error = ErrorResponse.from_request double(:error => :some_error, :state => :hello)
+        error = ErrorResponse.from_request double(error: :some_error, state: :hello)
         expect(error.state).to eq(:hello)
       end
     end
 
     it 'ignores empty error values' do
-      subject = ErrorResponse.new(:error => :some_error, :state => nil)
+      subject = ErrorResponse.new(error: :some_error, state: nil)
       expect(subject.body).not_to have_key(:state)
     end
 
     describe '.body' do
-      subject { ErrorResponse.new(:name => :some_error, :state => :some_state).body }
+      subject { ErrorResponse.new(name: :some_error, state: :some_state).body }
 
       describe '#body' do
         it { should have_key(:error) }
@@ -44,7 +44,7 @@ module Doorkeeper::OAuth
     end
 
     describe '.authenticate_info' do
-      let(:error_response) { ErrorResponse.new(:name => :some_error, :state => :some_state) }
+      let(:error_response) { ErrorResponse.new(name: :some_error, state: :some_state) }
       subject { error_response.authenticate_info }
 
       it { should include("realm=\"#{error_response.realm}\"") }
@@ -53,7 +53,7 @@ module Doorkeeper::OAuth
     end
 
     describe '.headers' do
-      subject { ErrorResponse.new(:name => :some_error, :state => :some_state).headers }
+      subject { ErrorResponse.new(name: :some_error, state: :some_state).headers }
 
       it { should include "WWW-Authenticate" }
     end

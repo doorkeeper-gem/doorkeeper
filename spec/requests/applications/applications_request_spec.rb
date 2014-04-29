@@ -7,8 +7,8 @@ feature 'Adding applications' do
     end
 
     scenario 'adding a valid app' do
-      fill_in 'application_name', :with => 'My Application'
-      fill_in 'application_redirect_uri', :with => 'http://example.com'
+      fill_in 'application_name', with: 'My Application'
+      fill_in 'application_redirect_uri', with: 'http://example.com'
       click_button 'Submit'
       i_should_see 'Application created'
       i_should_see 'My Application'
@@ -23,8 +23,8 @@ end
 
 feature 'Listing applications' do
   background do
-    FactoryGirl.create :application, :name => 'Oauth Dude'
-    FactoryGirl.create :application, :name => 'Awesome App'
+    FactoryGirl.create :application, name: 'Oauth Dude'
+    FactoryGirl.create :application, name: 'Awesome App'
   end
 
   scenario 'application list' do
@@ -36,7 +36,7 @@ end
 
 feature 'Show application' do
   let :app do
-    FactoryGirl.create :application, :name => 'Just another oauth app'
+    FactoryGirl.create :application, name: 'Just another oauth app'
   end
 
   scenario 'visiting application page' do
@@ -47,7 +47,7 @@ end
 
 feature 'Edit application' do
   let :app do
-    FactoryGirl.create :application, :name => 'OMG my app'
+    FactoryGirl.create :application, name: 'OMG my app'
   end
 
   background do
@@ -55,7 +55,7 @@ feature 'Edit application' do
   end
 
   scenario 'updating a valid app' do
-    fill_in :name, :with => "Serious app"
+    fill_in :name, with: "Serious app"
     click_button 'Submit'
     i_should_see "Application updated"
     i_should_see "Serious app"
@@ -63,7 +63,7 @@ feature 'Edit application' do
   end
 
   scenario 'updating an invalid app' do
-    fill_in :name, :with => ""
+    fill_in :name, with: ""
     click_button 'Submit'
     i_should_see 'Whoops! Check your form for possible errors'
   end

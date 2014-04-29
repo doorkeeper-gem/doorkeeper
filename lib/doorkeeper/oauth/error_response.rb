@@ -6,10 +6,10 @@ module Doorkeeper
 
       def self.from_request(request, attributes = {})
         state = request.state if request.respond_to?(:state)
-        new(attributes.merge(:name => request.error, :state => state))
+        new(attributes.merge(name: request.error, state: state))
       end
 
-      delegate :name, :description, :state, :to => :@error
+      delegate :name, :description, :state, to: :@error
 
       def initialize(attributes = {})
         @error = Doorkeeper::OAuth::Error.new(*attributes.values_at(:name, :state))
@@ -18,7 +18,7 @@ module Doorkeeper
       end
 
       def body
-        { :error => name, :error_description => description, :state => state }.reject { |k, v| v.blank? }
+        { error: name, error_description: description, state: state }.reject { |k, v| v.blank? }
       end
 
       def status
@@ -50,7 +50,7 @@ module Doorkeeper
 
       protected
 
-      delegate :realm, :to => :configuration
+      delegate :realm, to: :configuration
 
       def configuration
         Doorkeeper.configuration

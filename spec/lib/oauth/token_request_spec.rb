@@ -4,17 +4,17 @@ module Doorkeeper::OAuth
   describe TokenRequest do
     let :pre_auth do
       double(:pre_auth, {
-        :client => double(:application, :id => 9990),
-        :redirect_uri => 'http://tst.com/cb',
-        :state => nil,
-        :scopes => nil,
-        :error => nil,
-        :authorizable? => true
+        client: double(:application, id: 9990),
+        redirect_uri: 'http://tst.com/cb',
+        state: nil,
+        scopes: nil,
+        error: nil,
+        authorizable?: true
       })
     end
 
     let :owner do
-      double :owner, :id => 7866
+      double :owner, id: 7866
     end
 
     subject do

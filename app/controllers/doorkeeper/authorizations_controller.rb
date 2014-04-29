@@ -25,7 +25,7 @@ module Doorkeeper
       if auth.redirectable?
         redirect_to auth.redirect_uri
       else
-        render :json => auth.body, :status => auth.status
+        render json: auth.body, status: auth.status
       end
     end
 
@@ -35,7 +35,7 @@ module Doorkeeper
       if auth.redirectable?
         redirect_to auth.redirect_uri
       else
-        render :json => auth.body, :status => auth.status
+        render json: auth.body, status: auth.status
       end
     end
 

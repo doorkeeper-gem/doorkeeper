@@ -22,7 +22,7 @@ module Doorkeeper
     end
 
     def self.create_indexes
-      ensure_index :token, :unique => true
+      ensure_index :token, unique: true
     end
   end
 end

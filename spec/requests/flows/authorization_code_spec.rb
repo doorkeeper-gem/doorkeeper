@@ -9,7 +9,7 @@ feature 'Authorization Code Flow' do
   end
 
   scenario 'resource owner authorizes the client' do
-    visit authorization_endpoint_url(:client => @client)
+    visit authorization_endpoint_url(client: @client)
     click_on "Authorize"
 
     access_grant_should_exist_for(@client, @resource_owner)
@@ -24,7 +24,7 @@ feature 'Authorization Code Flow' do
   scenario 'resource owner authorizes using test url' do
     @client.redirect_uri = Doorkeeper.configuration.test_redirect_uri
     @client.save!
-    visit authorization_endpoint_url(:client => @client)
+    visit authorization_endpoint_url(client: @client)
     click_on "Authorize"
 
     access_grant_should_exist_for(@client, @resource_owner)
@@ -34,18 +34,18 @@ feature 'Authorization Code Flow' do
   end
 
   scenario 'resource owner authorizes the client with state parameter set' do
-    visit authorization_endpoint_url(:client => @client, :state => "return-me")
+    visit authorization_endpoint_url(client: @client, state: "return-me")
     click_on "Authorize"
     url_should_have_param("code", Doorkeeper::AccessGrant.first.token)
     url_should_have_param("state", "return-me")
   end
 
   scenario 'resource owner requests an access token with authorization code' do
-    visit authorization_endpoint_url(:client => @client)
+    visit authorization_endpoint_url(client: @client)
     click_on "Authorize"
 
     authorization_code = Doorkeeper::AccessGrant.first.token
-    post token_endpoint_url(:code => authorization_code, :client => @client)
+    post token_endpoint_url(code: authorization_code, client: @client)
 
     access_token_should_exist_for(@client, @resource_owner)
 
@@ -63,42 +63,42 @@ feature 'Authorization Code Flow' do
     end
 
     scenario 'resource owner authorizes the client with default scopes' do
-      visit authorization_endpoint_url(:client => @client)
+      visit authorization_endpoint_url(client: @client)
       click_on "Authorize"
       access_grant_should_exist_for(@client, @resource_owner)
       access_grant_should_have_scopes :public
     end
 
     scenario 'resource owner authorizes the client with required scopes' do
-      visit authorization_endpoint_url(:client => @client, :scope => "public write")
+      visit authorization_endpoint_url(client: @client, scope: "public write")
       click_on "Authorize"
       access_grant_should_have_scopes :public, :write
     end
 
     scenario 'resource owner authorizes the client with required scopes (without defaults)' do
-      visit authorization_endpoint_url(:client => @client, :scope => "write")
+      visit authorization_endpoint_url(client: @client, scope: "write")
       click_on "Authorize"
       access_grant_should_have_scopes :write
     end
 
     scenario 'new access token matches required scopes' do
-      visit authorization_endpoint_url(:client => @client, :scope => "public write")
+      visit authorization_endpoint_url(client: @client, scope: "public write")
       click_on "Authorize"
 
       authorization_code = Doorkeeper::AccessGrant.first.token
-      post token_endpoint_url(:code => authorization_code, :client => @client)
+      post token_endpoint_url(code: authorization_code, client: @client)
 
       access_token_should_exist_for(@client, @resource_owner)
       access_token_should_have_scopes :public, :write
     end
 
     scenario 'returns new token if scopes have changed' do
-      client_is_authorized(@client, @resource_owner, :scopes => "public write")
-      visit authorization_endpoint_url(:client => @client, :scope => "public")
+      client_is_authorized(@client, @resource_owner, scopes: "public write")
+      visit authorization_endpoint_url(client: @client, scope: "public")
       click_on "Authorize"
 
       authorization_code = Doorkeeper::AccessGrant.first.token
-      post token_endpoint_url(:code => authorization_code, :client => @client)
+      post token_endpoint_url(code: authorization_code, client: @client)
 
       expect(Doorkeeper::AccessToken.count).to be(2)
 

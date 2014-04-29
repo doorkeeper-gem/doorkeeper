@@ -53,7 +53,7 @@ shared_examples "an unique token" do
       token2 = FactoryGirl.create factory_name
       token2.token = token1.token
       expect {
-        token2.save!(:validate => false)
+        token2.save!(validate: false)
       }.to raise_error
     end
   end

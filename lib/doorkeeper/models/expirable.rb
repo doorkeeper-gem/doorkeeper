@@ -13,7 +13,7 @@ module Doorkeeper
         return nil if expires_in.nil?
         expires = (created_at + expires_in.seconds) - Time.now
         expires_sec = expires.seconds.round(0)
-        expires_sec > 0 ? expires_sec : 0  
+        expires_sec > 0 ? expires_sec : 0
       end
       private :expired_time
     end

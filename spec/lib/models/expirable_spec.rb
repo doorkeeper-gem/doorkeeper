@@ -34,18 +34,18 @@ describe 'Expirable' do
   describe :expires_in_seconds do
     it "should return the amount of time remaining until the token is expired" do
       allow(subject).to receive(:expires_in).and_return(2.minutes)
-      expect(subject.expires_in_seconds).to eq(60) 
+      expect(subject.expires_in_seconds).to eq(60)
     end
 
     it "should return 0 when expired" do
       allow(subject).to receive(:expires_in).and_return(30.seconds)
-      expect(subject.expires_in_seconds).to eq(0) 
+      expect(subject.expires_in_seconds).to eq(0)
     end
 
     it "should return nil when expires_in is nil" do
       allow(subject).to receive(:expires_in).and_return(nil)
       expect(subject.expires_in_seconds).to be_nil
     end
-    
+
   end
 end

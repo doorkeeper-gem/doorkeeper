@@ -14,7 +14,7 @@ module Doorkeeper
     include MongoMapper::Document
 
     set_collection_name "placeholder_application_owners"
-    many :applications, :class => Doorkeeper::Application
+    many :applications, class: Doorkeeper::Application
 
   end
 

@@ -4,8 +4,8 @@ require 'doorkeeper/oauth/client_credentials/validation'
 
 class Doorkeeper::OAuth::ClientCredentialsRequest
   describe Validation do
-    let(:server)  { double :server, :scopes => nil }
-    let(:request) { double :request, :client => double, :original_scopes => nil }
+    let(:server)  { double :server, scopes: nil }
+    let(:request) { double :request, client: double, original_scopes: nil }
 
     subject { Validation.new(server, request) }
 

@@ -40,7 +40,7 @@ module Doorkeeper
           :invalid_request
         end
 
-        OAuth::ErrorResponse.new :name => error_name, :state => params[:state]
+        OAuth::ErrorResponse.new name: error_name, state: params[:state]
       end
 
       def handle_token_exception(exception)

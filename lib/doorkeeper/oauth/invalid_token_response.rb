@@ -11,16 +11,16 @@ module Doorkeeper
             :unknown
           end
 
-        new(attributes.merge(:reason => reason))
+        new(attributes.merge(reason: reason))
       end
 
       def initialize(attributes = {})
-        super(attributes.merge(:name => :invalid_token, :state => :unauthorized))
+        super(attributes.merge(name: :invalid_token, state: :unauthorized))
         @reason = attributes[:reason] || :unknown
       end
 
       def description
-        @description ||= I18n.translate @reason, :scope => [:doorkeeper, :errors, :messages, :invalid_token]
+        @description ||= I18n.translate @reason, scope: [:doorkeeper, :errors, :messages, :invalid_token]
       end
     end
   end

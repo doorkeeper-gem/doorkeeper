@@ -17,7 +17,7 @@ module Doorkeeper
         end
       end
 
-      delegate :each, :to => :@scopes
+      delegate :each, to: :@scopes
 
       def initialize
         @scopes = []

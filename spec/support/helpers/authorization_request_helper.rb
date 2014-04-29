@@ -1,6 +1,6 @@
 module AuthorizationRequestHelper
   def resource_owner_is_authenticated(resource_owner = nil)
-    resource_owner ||= User.create!(:name => "Joe", :password => "sekret")
+    resource_owner ||= User.create!(name: "Joe", password: "sekret")
     Doorkeeper.configuration.instance_variable_set(:@authenticate_resource_owner, proc { resource_owner })
   end
 
@@ -29,4 +29,4 @@ module AuthorizationRequestHelper
   end
 end
 
-RSpec.configuration.send :include, AuthorizationRequestHelper, :type => :request
+RSpec.configuration.send :include, AuthorizationRequestHelper, type: :request

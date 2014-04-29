@@ -3,7 +3,7 @@ require 'spec_helper_integration'
 feature 'Private API' do
   background do
     @client   = FactoryGirl.create(:application)
-    @resource = User.create!(:name => "Joe", :password => "sekret")
+    @resource = User.create!(name: "Joe", password: "sekret")
     @token    = client_is_authorized(@client, @resource)
   end
 

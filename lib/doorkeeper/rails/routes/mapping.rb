@@ -6,17 +6,17 @@ module Doorkeeper
 
         def initialize
           @controllers = {
-            :authorizations => 'doorkeeper/authorizations',
-            :applications => 'doorkeeper/applications',
-            :authorized_applications => 'doorkeeper/authorized_applications',
-            :tokens => 'doorkeeper/tokens',
-            :token_info => 'doorkeeper/token_info'
+            authorizations: 'doorkeeper/authorizations',
+            applications: 'doorkeeper/applications',
+            authorized_applications: 'doorkeeper/authorized_applications',
+            tokens: 'doorkeeper/tokens',
+            token_info: 'doorkeeper/token_info'
           }
 
           @as = {
-            :authorizations => :authorization,
-            :tokens => :token,
-            :token_info => :token_info
+            authorizations: :authorization,
+            tokens: :token,
+            token_info: :token_info
           }
 
           @skips = []
@@ -25,8 +25,8 @@ module Doorkeeper
 
         def [](routes)
           {
-            :controllers => @controllers[routes],
-            :as => @as[routes]
+            controllers: @controllers[routes],
+            as: @as[routes]
           }
         end
 

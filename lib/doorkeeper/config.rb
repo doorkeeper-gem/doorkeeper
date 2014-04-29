@@ -109,9 +109,9 @@ module Doorkeeper
       # ==== Examples
       #
       #    option :name
-      #    option :name, :as => :set_name
-      #    option :name, :default => "My Name"
-      #    option :scopes :builder_class => ScopesBuilder
+      #    option :name, as: :set_name
+      #    option :name, default: "My Name"
+      #    option :scopes builder_class: ScopesBuilder
       #
       def option(name, options = {})
         attribute = options[:as] || name
@@ -149,27 +149,27 @@ module Doorkeeper
     extend Option
 
     option :resource_owner_authenticator,
-           :as => :authenticate_resource_owner,
-           :default => lambda{|routes|
-             logger.warn(I18n.translate('doorkeeper.errors.messages.resource_owner_authenticator_not_configured'))
-             nil
-           }
+           as: :authenticate_resource_owner,
+           default: lambda{ |routes|
+            logger.warn(I18n.translate('doorkeeper.errors.messages.resource_owner_authenticator_not_configured'))
+            nil
+          }
     option :admin_authenticator,
-           :as => :authenticate_admin,
-           :default => lambda{|routes| }
+           as: :authenticate_admin,
+           default: lambda{ |routes| }
     option :resource_owner_from_credentials,
-           :default => lambda{|routes|
-             warn(I18n.translate('doorkeeper.errors.messages.credential_flow_not_configured'))
-             nil
-           }
-    option :skip_authorization, :default => lambda{|routes|}
-    option :access_token_expires_in,      :default => 7200
-    option :authorization_code_expires_in,:default => 600
-    option :orm, :default => :active_record
-    option :test_redirect_uri, :default => 'urn:ietf:wg:oauth:2.0:oob'
-    option :active_record_options, :default => {}
-    option :realm, :default => "Doorkeeper"
-    option :wildcard_redirect_uri, :default => false
+           default: lambda{ |routes|
+            warn(I18n.translate('doorkeeper.errors.messages.credential_flow_not_configured'))
+            nil
+          }
+    option :skip_authorization,            default: lambda{|routes|}
+    option :access_token_expires_in,       default: 7200
+    option :authorization_code_expires_in, default: 600
+    option :orm,                           default: :active_record
+    option :test_redirect_uri,             default: 'urn:ietf:wg:oauth:2.0:oob'
+    option :active_record_options,         default: {}
+    option :realm,                         default: "Doorkeeper"
+    option :wildcard_redirect_uri,         default: false
 
     def refresh_token_enabled?
       !!@refresh_token_enabled

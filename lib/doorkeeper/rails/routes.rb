@@ -34,7 +34,7 @@ module Doorkeeper
 
       def generate_routes!(options)
         @mapping = Mapper.new.map(&@block)
-        routes.scope options[:scope] || 'oauth', :as => 'oauth' do
+        routes.scope options[:scope] || 'oauth', as: 'oauth' do
           map_route(:authorizations, :authorization_routes)
           map_route(:tokens, :token_routes)
           map_route(:tokens, :revoke_routes)
@@ -53,42 +53,42 @@ module Doorkeeper
 
       def authorization_routes(mapping)
           routes.resource(
-            :authorization, :path => 'authorize',
-            :only => [:create, :update, :destroy],
-            :as => mapping[:as],
-            :controller => mapping[:controllers]
+            :authorization, path: 'authorize',
+            only: [:create, :update, :destroy],
+            as: mapping[:as],
+            controller: mapping[:controllers]
           ) do
-            routes.get '/:code', :action => :show, :on => :member
-            routes.get '/', :action => :new, :on => :member
+            routes.get '/:code', action: :show, on: :member
+            routes.get '/', action: :new, on: :member
           end
       end
 
       def token_routes(mapping)
         routes.resource(
-          :token, :path => 'token',
-          :only => [:create], :as => mapping[:as],
-          :controller => mapping[:controllers]
+          :token, path: 'token',
+          only: [:create], as: mapping[:as],
+          controller: mapping[:controllers]
         )
       end
-      
+
       def revoke_routes(mapping)
-        routes.post 'revoke', :controller => mapping[:controllers], :action => :revoke
+        routes.post 'revoke', controller: mapping[:controllers], action: :revoke
       end
 
       def token_info_routes(mapping)
         routes.resource(
-          :token_info, :path => 'token/info',
-          :only => [:show], :as => mapping[:as],
-          :controller => mapping[:controllers]
+          :token_info, path: 'token/info',
+          only: [:show], as: mapping[:as],
+          controller: mapping[:controllers]
         )
       end
 
       def application_routes(mapping)
-        routes.resources :applications, :controller => mapping[:controllers]
+        routes.resources :applications, controller: mapping[:controllers]
       end
 
       def authorized_applications_routes(mapping)
-        routes.resources :authorized_applications, :only => [:index, :destroy], :controller => mapping[:controllers]
+        routes.resources :authorized_applications, only: [:index, :destroy], controller: mapping[:controllers]
       end
     end
   end
