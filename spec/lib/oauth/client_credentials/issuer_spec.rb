@@ -22,7 +22,9 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
       end
 
       it 'creates with correct token parameters' do
-        expect(creator).to receive(:call).with(client, scopes, {
+        expect(creator).to receive(:call).with(
+          client,
+          scopes,
           expires_in: 100,
           use_refresh_token: false
         })

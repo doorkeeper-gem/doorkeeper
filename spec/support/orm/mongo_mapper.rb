@@ -15,7 +15,6 @@ module Doorkeeper
 
     set_collection_name 'placeholder_application_owners'
     many :applications, class: Doorkeeper::Application
-
   end
 
   module OrmHelper

@@ -49,7 +49,7 @@ module Doorkeeper
       self.use_refresh_token
     end
 
-    def as_json(options={})
+    def as_json(options = {})
       {
         resource_owner_id: self.resource_owner_id,
         scopes: self.scopes,
@@ -72,6 +72,5 @@ module Doorkeeper
     def generate_token
       self.token = UniqueToken.generate
     end
-
   end
 end

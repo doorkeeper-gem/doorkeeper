@@ -14,9 +14,10 @@ feature 'Token endpoint' do
   end
 
   scenario 'accepts client credentials with basic auth header' do
-    post token_endpoint_url(code: @authorization.token, redirect_uri: @client.redirect_uri),
-                            {} ,
-                            { 'HTTP_AUTHORIZATION' => basic_auth_header_for_client(@client) }
+    post token_endpoint_url(
+      code: @authorization.token,
+      redirect_uri: @client.redirect_uri
+    ), {}, 'HTTP_AUTHORIZATION' => basic_auth_header_for_client(@client)
 
     should_have_json 'access_token', Doorkeeper::AccessToken.first.token
   end

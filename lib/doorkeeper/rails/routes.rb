@@ -44,7 +44,8 @@ module Doorkeeper
         end
       end
 
-    private
+      private
+
       def map_route(name, method)
         unless @mapping.skipped?(name)
           send method, @mapping[name]
@@ -52,20 +53,22 @@ module Doorkeeper
       end
 
       def authorization_routes(mapping)
-          routes.resource(
-            :authorization, path: 'authorize',
-            only: [:create, :update, :destroy],
-            as: mapping[:as],
-            controller: mapping[:controllers]
-          ) do
-            routes.get '/:code', action: :show, on: :member
-            routes.get '/', action: :new, on: :member
-          end
+        routes.resource(
+          :authorization,
+          path: 'authorize',
+          only: [:create, :update, :destroy],
+          as: mapping[:as],
+          controller: mapping[:controllers]
+        ) do
+          routes.get '/:code', action: :show, on: :member
+          routes.get '/', action: :new, on: :member
+        end
       end
 
       def token_routes(mapping)
         routes.resource(
-          :token, path: 'token',
+          :token,
+          path: 'token',
           only: [:create], as: mapping[:as],
           controller: mapping[:controllers]
         )
@@ -77,7 +80,8 @@ module Doorkeeper
 
       def token_info_routes(mapping)
         routes.resource(
-          :token_info, path: 'token/info',
+          :token_info,
+          path: 'token/info',
           only: [:show], as: mapping[:as],
           controller: mapping[:controllers]
         )

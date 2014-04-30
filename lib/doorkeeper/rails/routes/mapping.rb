@@ -20,7 +20,6 @@ module Doorkeeper
           }
 
           @skips = []
-
         end
 
         def [](routes)

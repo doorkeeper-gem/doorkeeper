@@ -55,7 +55,7 @@ module Doorkeeper::OAuth::Helpers
 
       context 'allows wildcard redirect_uri' do
         before do
-          Doorkeeper.configuration.stub(wildcard_redirect_uri: true )
+          Doorkeeper.configuration.stub(wildcard_redirect_uri: true)
         end
 
         it 'ignores query parameter on comparison' do
@@ -114,7 +114,7 @@ module Doorkeeper::OAuth::Helpers
 
       context 'allows wildcard redirect_uri' do
         before do
-          Doorkeeper.configuration.stub(wildcard_redirect_uri: true )
+          Doorkeeper.configuration.stub(wildcard_redirect_uri: true)
         end
 
         it 'is true if valid, matches and contains a query parameter' do

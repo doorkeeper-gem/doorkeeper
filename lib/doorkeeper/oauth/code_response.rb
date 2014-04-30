@@ -21,7 +21,8 @@ module Doorkeeper
           "/oauth/authorize/#{auth.token.token}"
         else
           if response_on_fragment
-            uri_with_fragment(pre_auth.redirect_uri, {
+            uri_with_fragment(
+              pre_auth.redirect_uri,
               access_token: auth.token.token,
               token_type: auth.token.token_type,
               expires_in: auth.token.expires_in,

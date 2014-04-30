@@ -3,7 +3,8 @@ require 'spec_helper_integration'
 module Doorkeeper::OAuth
   describe TokenRequest do
     let :pre_auth do
-      double(:pre_auth, {
+      double(
+        :pre_auth,
         client: double(:application, id: 9990),
         redirect_uri: 'http://tst.com/cb',
         state: nil,

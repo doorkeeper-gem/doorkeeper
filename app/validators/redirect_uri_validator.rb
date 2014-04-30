@@ -21,7 +21,7 @@ class RedirectUriValidator < ActiveModel::EachValidator
     record.errors.add(attribute, :invalid_uri)
   end
 
-private
+  private
 
   def test_redirect_uri?(uri)
     self.class.test_redirect_uri.present? && uri.to_s == self.class.test_redirect_uri.to_s

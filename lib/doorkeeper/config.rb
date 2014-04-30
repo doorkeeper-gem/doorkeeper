@@ -22,7 +22,6 @@ module Doorkeeper
     else
       configuration.orm
     end
-
   end
 
   def self.enable_orm
@@ -50,7 +49,7 @@ module Doorkeeper
         @config
       end
 
-      def enable_application_owner(opts={})
+      def enable_application_owner(opts = {})
         @config.instance_variable_set('@enable_application_owner', true)
         confirm_application_owner if opts[:confirmation].present? && opts[:confirmation]
       end
@@ -85,7 +84,6 @@ module Doorkeeper
     end
 
     module Option
-
       # Defines configuration option
       #
       # When you call option, it defines two methods. One method will take place
@@ -121,10 +119,10 @@ module Doorkeeper
           define_method name do |*args, &block|
             # TODO: is builder_class option being used?
             value = unless attribute_builder
-              block ? block : args.first
-            else
-              attribute_builder.new(&block).build
-            end
+                      block ? block : args.first
+                    else
+                      attribute_builder.new(&block).build
+                    end
 
             @config.instance_variable_set(:"@#{attribute}", value)
           end
@@ -150,19 +148,19 @@ module Doorkeeper
 
     option :resource_owner_authenticator,
            as: :authenticate_resource_owner,
-           default: lambda{ |routes|
-            logger.warn(I18n.translate('doorkeeper.errors.messages.resource_owner_authenticator_not_configured'))
-            nil
-          }
+           default: lambda { |routes|
+             logger.warn(I18n.translate('doorkeeper.errors.messages.resource_owner_authenticator_not_configured'))
+             nil
+           }
     option :admin_authenticator,
            as: :authenticate_admin,
-           default: lambda{ |routes| }
+           default: lambda { |routes| }
     option :resource_owner_from_credentials,
-           default: lambda{ |routes|
-            warn(I18n.translate('doorkeeper.errors.messages.credential_flow_not_configured'))
-            nil
-          }
-    option :skip_authorization,            default: lambda{|routes|}
+           default: lambda { |routes|
+             warn(I18n.translate('doorkeeper.errors.messages.credential_flow_not_configured'))
+             nil
+           }
+    option :skip_authorization,            default: lambda { |routes| }
     option :access_token_expires_in,       default: 7200
     option :authorization_code_expires_in, default: 600
     option :orm,                           default: :active_record

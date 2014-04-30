@@ -63,15 +63,15 @@ feature 'Resource Owner Password Credentials Flow' do
   context 'with invalid user credentials' do
     scenario 'should not issue new token with bad password' do
       expect {
-        post password_token_endpoint_url( client: @client,
-                                          resource_owner_username: @resource_owner.name,
-                                          resource_owner_password: 'wrongpassword')
+        post password_token_endpoint_url(client: @client,
+                                         resource_owner_username: @resource_owner.name,
+                                         resource_owner_password: 'wrongpassword')
       }.to_not change { Doorkeeper::AccessToken.count }
     end
 
     scenario 'should not issue new token without credentials' do
       expect {
-        post password_token_endpoint_url( client: @client)
+        post password_token_endpoint_url(client: @client)
       }.to_not change { Doorkeeper::AccessToken.count }
     end
   end
@@ -79,9 +79,9 @@ feature 'Resource Owner Password Credentials Flow' do
   context 'with invalid client credentials' do
     scenario 'should not issue new token with bad client credentials' do
       expect {
-        post password_token_endpoint_url( client_id: @client.uid,
-                                          client_secret: 'bad_secret',
-                                          resource_owner: @resource_owner)
+        post password_token_endpoint_url(client_id: @client.uid,
+                                         client_secret: 'bad_secret',
+                                         resource_owner: @resource_owner)
       }.to_not change { Doorkeeper::AccessToken.count }
     end
   end

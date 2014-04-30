@@ -36,7 +36,7 @@ module Doorkeeper
         Doorkeeper::OAuth::ErrorResponse.from_request(self)
       end
 
-    private
+      private
 
       def validate_response_type
         %w[code token].include? response_type
@@ -55,7 +55,7 @@ module Doorkeeper
       def validate_redirect_uri
         return false unless redirect_uri.present?
         Helpers::URIChecker.test_uri?(redirect_uri) ||
-        Helpers::URIChecker.valid_for_authorization?(redirect_uri, client.redirect_uri)
+          Helpers::URIChecker.valid_for_authorization?(redirect_uri, client.redirect_uri)
       end
     end
   end

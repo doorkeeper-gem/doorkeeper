@@ -195,7 +195,7 @@ describe 'Doorkeeper_for helper' do
 
     context 'with a JSON custom render', token: :invalid do
       before do
-        expect(controller).to receive(:doorkeeper_unauthorized_render_options).and_return({ json: ActiveSupport::JSON.encode({ error: 'Unauthorized' })  } )
+        expect(controller).to receive(:doorkeeper_unauthorized_render_options).and_return({ json: ActiveSupport::JSON.encode({ error: 'Unauthorized' }) })
       end
 
       it 'it renders a custom JSON response', token: :invalid do
@@ -212,7 +212,7 @@ describe 'Doorkeeper_for helper' do
 
     context 'with a text custom render', token: :invalid do
       before do
-        expect(controller).to receive(:doorkeeper_unauthorized_render_options).and_return({ text: 'Unauthorized'  } )
+        expect(controller).to receive(:doorkeeper_unauthorized_render_options).and_return({ text: 'Unauthorized'  })
       end
 
       it 'it renders a custom JSON response', token: :invalid do
@@ -233,6 +233,7 @@ describe 'Doorkeeper_for helper' do
       include ControllerActions
 
       private
+
       def the_true
         true
       end

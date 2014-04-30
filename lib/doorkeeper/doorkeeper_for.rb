@@ -22,6 +22,7 @@ module Doorkeeper
     end
 
     private
+
     def scopes(scopes)
       @scopes = scopes.map(&:to_s)
     end
@@ -43,6 +44,7 @@ module Doorkeeper
 
   class AllDoorkeeperFor < DoorkeeperFor
     private
+
     def except(actions)
       @filter_options[:except] = actions
     end
@@ -56,6 +58,7 @@ module Doorkeeper
     end
 
     private
+
     def only(actions)
       @filter_options[:only] = actions
     end

@@ -23,6 +23,7 @@ module Doorkeeper
         end
 
         private
+
         def token_from_basic_header(header, pattern)
           encoded_header = token_from_header(header, pattern)
           token, _ = decode_basic_credentials(encoded_header)
@@ -38,7 +39,7 @@ module Doorkeeper
         end
 
         def match?(header, pattern)
-           header && header.match(pattern)
+          header && header.match(pattern)
         end
       end
 

@@ -20,12 +20,11 @@ module Doorkeeper
     end
 
     has_many :applications
-
   end
 
   module OrmHelper
-  	def mock_application_owner
-  		PlaceholderApplicationOwner.new
-  	end
+    def mock_application_owner
+      PlaceholderApplicationOwner.new
+    end
   end
 end
