@@ -35,9 +35,9 @@ module Doorkeeper
       where(application_id: application.id,
             resource_owner_id: resource_owner_id,
             revoked_at: nil).
-      order_by([:created_at, :desc]).
-      limit(1).
-      first
+        order_by([:created_at, :desc]).
+        limit(1).
+        first
     end
     private_class_method :last_authorized_token_for
 
