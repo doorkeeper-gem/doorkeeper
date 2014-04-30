@@ -52,7 +52,7 @@ ActiveRecord::Schema.define(version: 20130902175349) do
     t.string   'owner_type'
   end
 
-  add_index 'oauth_applications', ['owner_id', 'owner_type'], name: 'index_oauth_applications_on_owner_id_and_owner_type'
+  add_index 'oauth_applications', %w(owner_id owner_type), name: 'index_oauth_applications_on_owner_id_and_owner_type'
   add_index 'oauth_applications', ['uid'], name: 'index_oauth_applications_on_uid', unique: true
 
   create_table 'users', force: true do |t|

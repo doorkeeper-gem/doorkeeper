@@ -171,7 +171,7 @@ describe 'Doorkeeper_for helper' do
     let(:token_string) { '1A2DUWE' }
 
     it 'allows if the token has particular scopes' do
-      token = double(Doorkeeper::AccessToken, accessible?: true, scopes: ['write', 'public'])
+      token = double(Doorkeeper::AccessToken, accessible?: true, scopes: %w(write public))
       expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string).and_return(token)
       get :index, access_token: token_string
       expect(response).to be_success

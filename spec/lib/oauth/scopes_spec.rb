@@ -62,7 +62,7 @@ module Doorkeeper::OAuth
     describe :+ do
       it 'can add to another scope object' do
         scopes = Scopes.from_string('public') + Scopes.from_string('admin')
-        expect(scopes.all).to eq(['public', 'admin'])
+        expect(scopes.all).to eq(%w(public admin))
       end
 
       it 'does not change the existing object' do
