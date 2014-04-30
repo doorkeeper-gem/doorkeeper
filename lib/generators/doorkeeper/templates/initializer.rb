@@ -66,7 +66,7 @@ Doorkeeper.configure do
   #   client.superapp? or resource_owner.admin?
   # end
 
-  # WWW-Authenticate Realm (default "Doorkeeper").
+  # WWW-Authenticate Realm (default "Doorkeeper").
   # realm "Doorkeeper"
 
   # Allow dynamic query parameters (disabled by default)
