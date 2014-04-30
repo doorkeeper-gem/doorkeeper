@@ -4,7 +4,7 @@ require 'doorkeeper/oauth/helpers/unique_token'
 module Doorkeeper::OAuth::Helpers
   describe UniqueToken do
     let :generator do
-      lambda { |size| 'a' * size }
+      ->(size) { 'a' * size }
     end
 
     it 'is able to customize the generator method' do

@@ -72,9 +72,7 @@ module Doorkeeper::OAuth
       end
 
       it 'raises an error if cannot handle addition' do
-        expect {
-          Scopes.from_string('public') + 'admin'
-        }.to raise_error(NoMethodError)
+        expect { Scopes.from_string('public') + 'admin' }.to raise_error(NoMethodError)
       end
     end
 

@@ -7,20 +7,14 @@ module Doorkeeper::OAuth
     let(:client)         { refresh_token.application }
     let(:credentials)    { Client::Credentials.new(client.uid, client.secret) }
 
-    subject {
-      RefreshTokenRequest.new server, refresh_token, credentials
-    }
+    subject { RefreshTokenRequest.new server, refresh_token, credentials }
 
     it 'issues a new token for the client' do
-      expect {
-        subject.authorize
-      }.to change { client.access_tokens.count }.by(1)
+      expect { subject.authorize }.to change { client.access_tokens.count }.by(1)
     end
 
     it 'revokes the previous token' do
-      expect {
-        subject.authorize
-      }.to change { refresh_token.revoked? }.from(false).to(true)
+      expect { subject.authorize } .to change { refresh_token.revoked? }.from(false).to(true)
     end
 
     it 'requires the refresh token' do
@@ -57,23 +51,17 @@ module Doorkeeper::OAuth
     context 'clientless access tokens' do
       let!(:refresh_token) { FactoryGirl.create(:clientless_access_token, use_refresh_token: true) }
 
-      subject {
-        RefreshTokenRequest.new server, refresh_token, nil
-      }
+      subject { RefreshTokenRequest.new server, refresh_token, nil }
 
       it 'issues a new token without a client' do
-        expect {
-          subject.authorize
-        }.to change { Doorkeeper::AccessToken.count }.by(1)
+        expect { subject.authorize }.to change { Doorkeeper::AccessToken.count }.by(1)
       end
     end
 
     context 'with scopes' do
       let!(:refresh_token) { FactoryGirl.create(:access_token, use_refresh_token: true, scopes: 'public write') }
       let(:parameters) { {} }
-      subject {
-        RefreshTokenRequest.new server, refresh_token, credentials, parameters
-      }
+      subject { RefreshTokenRequest.new server, refresh_token, credentials, parameters }
 
       it 'transfers scopes from the old token to the new token' do
         subject.authorize

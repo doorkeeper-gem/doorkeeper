@@ -5,7 +5,7 @@ describe Doorkeeper, 'configuration' do
 
   describe 'resource_owner_authenticator' do
     it 'sets the block that is accessible via authenticate_resource_owner' do
-      block = proc do end
+      block = proc {}
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
         resource_owner_authenticator &block
@@ -16,7 +16,7 @@ describe Doorkeeper, 'configuration' do
 
   describe 'admin_authenticator' do
     it 'sets the block that is accessible via authenticate_admin' do
-      block = proc do end
+      block = proc {}
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
         admin_authenticator &block
@@ -49,18 +49,18 @@ describe Doorkeeper, 'configuration' do
 
   describe 'scopes' do
     it 'has default scopes' do
-      Doorkeeper.configure {
+      Doorkeeper.configure do
         orm DOORKEEPER_ORM
         default_scopes :public
-      }
+      end
       expect(subject.default_scopes).to include('public')
     end
 
     it 'has optional scopes' do
-      Doorkeeper.configure {
+      Doorkeeper.configure do
         orm DOORKEEPER_ORM
         optional_scopes :write, :update
-      }
+      end
       expect(subject.optional_scopes).to include('write', 'update')
     end
 
@@ -80,10 +80,10 @@ describe Doorkeeper, 'configuration' do
     end
 
     it 'can change the value' do
-      Doorkeeper.configure {
+      Doorkeeper.configure do
         orm DOORKEEPER_ORM
         use_refresh_token
-      }
+      end
       expect(subject.refresh_token_enabled?).to be_true
     end
   end
@@ -94,10 +94,10 @@ describe Doorkeeper, 'configuration' do
     end
 
     it 'can change the value' do
-      Doorkeeper.configure {
+      Doorkeeper.configure do
         orm DOORKEEPER_ORM
         client_credentials :from_digest, :from_params
-      }
+      end
       expect(subject.client_credentials_methods).to eq([:from_digest, :from_params])
     end
   end
@@ -108,10 +108,10 @@ describe Doorkeeper, 'configuration' do
     end
 
     it 'can change the value' do
-      Doorkeeper.configure {
+      Doorkeeper.configure do
         orm DOORKEEPER_ORM
         access_token_methods :from_access_token_param, :from_bearer_param
-      }
+      end
       expect(subject.access_token_methods).to eq([:from_access_token_param, :from_bearer_param])
     end
   end
@@ -164,10 +164,10 @@ describe Doorkeeper, 'configuration' do
     end
 
     it 'can change the value' do
-      Doorkeeper.configure {
+      Doorkeeper.configure do
         orm DOORKEEPER_ORM
         realm 'Example'
-      }
+      end
       expect(subject.realm).to eq('Example')
     end
   end

@@ -14,7 +14,7 @@ module Doorkeeper
         let(:request) { double.as_null_object }
 
         let(:method) do
-          lambda { |request| return 'token-value' }
+          ->(request) { return 'token-value' }
         end
 
         it 'accepts anything that responds to #call' do
@@ -30,7 +30,7 @@ module Doorkeeper
         it 'stops at the first credentials found' do
           not_called_method = double
           expect(not_called_method).not_to receive(:call)
-          Token.from_request request, lambda { |r| }, method, not_called_method
+          Token.from_request request, ->(r) {}, method, not_called_method
         end
 
         it 'returns the credential from extractor method' do
@@ -87,7 +87,7 @@ module Doorkeeper
         let(:finder) { double :finder }
 
         it 'calls the finder if token was found' do
-          token = lambda { |r| 'token' }
+          token = ->(r) { 'token' }
           expect(AccessToken).to receive(:authenticate).with('token')
           Token.authenticate double, token
         end

@@ -12,23 +12,23 @@ module Doorkeeper::OAuth
     end
 
     it 'issues a new token for the client' do
-      expect {
+      expect do
         subject.authorize
-      }.to change { client.access_tokens.count }.by(1)
+      end.to change { client.access_tokens.count }.by(1)
     end
 
     it 'issues a new token without a client' do
-      expect {
+      expect do
         subject.credentials = nil
         subject.authorize
-      }.to change { Doorkeeper::AccessToken.count }.by(1)
+      end.to change { Doorkeeper::AccessToken.count }.by(1)
     end
 
     it 'does not issue a new token with an invalid client' do
-      expect {
+      expect do
         subject.client = nil
         subject.authorize
-      }.to_not change { Doorkeeper::AccessToken.count }
+      end.to_not change { Doorkeeper::AccessToken.count }
 
       expect(subject.error).to eq(:invalid_client)
     end
@@ -57,9 +57,9 @@ module Doorkeeper::OAuth
 
       it 'creates the token with scopes' do
         allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string('public'))
-        expect {
+        expect do
           subject.authorize
-        }.to change { Doorkeeper::AccessToken.count }.by(1)
+        end.to change { Doorkeeper::AccessToken.count }.by(1)
         expect(Doorkeeper::AccessToken.last.scopes).to include('public')
       end
     end

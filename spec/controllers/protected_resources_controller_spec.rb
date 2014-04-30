@@ -227,8 +227,8 @@ describe 'Doorkeeper_for helper' do
 
   context 'when defined with conditional if block' do
     controller do
-      doorkeeper_for :index, if: lambda { the_false }
-      doorkeeper_for :show,  if: lambda { the_true }
+      doorkeeper_for :index, if: -> { the_false }
+      doorkeeper_for :show,  if: -> { the_true }
 
       include ControllerActions
 
@@ -271,8 +271,8 @@ describe 'Doorkeeper_for helper' do
 
   context 'when defined with conditional unless block' do
     controller do
-      doorkeeper_for :index, unless: lambda { the_false }
-      doorkeeper_for :show, unless: lambda { the_true }
+      doorkeeper_for :index, unless: -> { the_false }
+      doorkeeper_for :show, unless: -> { the_true }
 
       include ControllerActions
 

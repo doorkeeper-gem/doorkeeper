@@ -14,9 +14,9 @@ feature 'Resource Owner Password Credentials Flow inproperly set up' do
   context 'with valid user credentials' do
     scenario 'should issue new token' do
       pending 'Check a way to supress warnings here (or handle config better)'
-      expect {
+      expect do
         post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
-      }.to_not change { Doorkeeper::AccessToken.count }
+      end.to_not change { Doorkeeper::AccessToken.count }
     end
   end
 end
@@ -30,9 +30,9 @@ feature 'Resource Owner Password Credentials Flow' do
 
   context 'with valid user credentials' do
     scenario 'should issue new token' do
-      expect {
+      expect do
         post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
-      }.to change { Doorkeeper::AccessToken.count }.by(1)
+      end.to change { Doorkeeper::AccessToken.count }.by(1)
 
       token = Doorkeeper::AccessToken.first
 
@@ -40,9 +40,9 @@ feature 'Resource Owner Password Credentials Flow' do
     end
 
     scenario 'should issue new token without client credentials' do
-      expect {
+      expect do
         post password_token_endpoint_url(resource_owner: @resource_owner)
-      }.to change { Doorkeeper::AccessToken.count }.by(1)
+      end.to change { Doorkeeper::AccessToken.count }.by(1)
 
       token = Doorkeeper::AccessToken.first
 
@@ -62,27 +62,27 @@ feature 'Resource Owner Password Credentials Flow' do
 
   context 'with invalid user credentials' do
     scenario 'should not issue new token with bad password' do
-      expect {
+      expect do
         post password_token_endpoint_url(client: @client,
                                          resource_owner_username: @resource_owner.name,
                                          resource_owner_password: 'wrongpassword')
-      }.to_not change { Doorkeeper::AccessToken.count }
+      end.to_not change { Doorkeeper::AccessToken.count }
     end
 
     scenario 'should not issue new token without credentials' do
-      expect {
+      expect do
         post password_token_endpoint_url(client: @client)
-      }.to_not change { Doorkeeper::AccessToken.count }
+      end.to_not change { Doorkeeper::AccessToken.count }
     end
   end
 
   context 'with invalid client credentials' do
     scenario 'should not issue new token with bad client credentials' do
-      expect {
+      expect do
         post password_token_endpoint_url(client_id: @client.uid,
                                          client_secret: 'bad_secret',
                                          resource_owner: @resource_owner)
-      }.to_not change { Doorkeeper::AccessToken.count }
+      end.to_not change { Doorkeeper::AccessToken.count }
     end
   end
 end

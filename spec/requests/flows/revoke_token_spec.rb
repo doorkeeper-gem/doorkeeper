@@ -3,21 +3,19 @@ require 'spec_helper_integration'
 feature 'Revoke Token Flow' do
 
   before do
-    Doorkeeper.configure {
-      orm DOORKEEPER_ORM
-    }
+    Doorkeeper.configure { orm DOORKEEPER_ORM }
   end
 
   context 'with default parameters' do
 
     let(:client_application) { FactoryGirl.create :application }
     let(:resource_owner) { User.create!(name: 'John', password: 'sekret') }
-    let(:authorization_access_token) {
+    let(:authorization_access_token) do
       FactoryGirl.create(:access_token,
                          application: client_application,
                          resource_owner_id: resource_owner.id,
                          use_refresh_token: true)
-    }
+    end
 
     let(:headers) { { 'HTTP_AUTHORIZATION' => "Bearer #{authorization_access_token.token}" } }
 
@@ -71,12 +69,12 @@ feature 'Revoke Token Flow' do
 
     context 'The access token to revoke app and owners are the same than the authorization access token' do
 
-      let(:token_to_revoke) {
+      let(:token_to_revoke) do
         FactoryGirl.create(:access_token,
                            application: client_application,
                            resource_owner_id: resource_owner.id,
                            use_refresh_token: true)
-      }
+      end
 
       scenario 'client wants to revoke the given access token' do
 
@@ -96,12 +94,12 @@ feature 'Revoke Token Flow' do
     context 'The access token to revoke authorization owner is the same than the authorization access token' do
 
       let(:other_client_application) { FactoryGirl.create :application }
-      let(:token_to_revoke) {
+      let(:token_to_revoke) do
         FactoryGirl.create(:access_token,
                            application: other_client_application,
                            resource_owner_id: resource_owner.id,
                            use_refresh_token: true)
-      }
+      end
 
       scenario 'client wants to revoke the given access token' do
 
@@ -120,12 +118,12 @@ feature 'Revoke Token Flow' do
     context 'The access token to revoke app is the same than the authorization access token' do
 
       let(:other_resource_owner) { User.create!(name: 'Matheo', password: 'pareto') }
-      let(:token_to_revoke) {
+      let(:token_to_revoke) do
         FactoryGirl.create(:access_token,
                            application: client_application,
                            resource_owner_id: other_resource_owner.id,
                            use_refresh_token: true)
-      }
+      end
 
       scenario 'client wants to revoke the given access token' do
 
@@ -144,12 +142,12 @@ feature 'Revoke Token Flow' do
 
     context 'With valid refresh token to revoke' do
 
-      let(:token_to_revoke) {
+      let(:token_to_revoke) do
         FactoryGirl.create(:access_token,
                            application: client_application,
                            resource_owner_id: resource_owner.id,
                            use_refresh_token: true)
-      }
+      end
 
       scenario 'client wants to revoke the given refresh token' do
 

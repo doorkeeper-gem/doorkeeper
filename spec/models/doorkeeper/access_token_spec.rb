@@ -33,10 +33,10 @@ module Doorkeeper
       it 'expects database to raise an error if refresh tokens are the same' do
         token1 = FactoryGirl.create :access_token, use_refresh_token: true
         token2 = FactoryGirl.create :access_token, use_refresh_token: true
-        expect {
+        expect do
           token2.write_attribute :refresh_token, token1.refresh_token
           token2.save(validate: false)
-        }.to raise_error
+        end.to raise_error
       end
     end
 
