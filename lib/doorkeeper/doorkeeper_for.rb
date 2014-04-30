@@ -3,7 +3,7 @@ module Doorkeeper
   class DoorkeeperFor
     def initialize(options)
       options ||= {}
-      raise InvalidSyntax unless options.is_a? Hash
+      fail InvalidSyntax unless options.is_a? Hash
       @filter_options = {}
 
       options.each do |k, v|
@@ -70,7 +70,7 @@ module Doorkeeper
       when :all
         AllDoorkeeperFor.new(args[1] || {})
       when Hash, nil
-        raise InvalidSyntax
+        fail InvalidSyntax
       else
         SelectedDoorkeeperFor.new(*args)
       end

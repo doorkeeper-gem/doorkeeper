@@ -22,8 +22,8 @@ module Doorkeeper
     end
 
     def get_strategy(strategy, available)
-      raise Errors::MissingRequestStrategy unless strategy.present?
-      raise NameError unless available.include?(strategy.to_s)
+      fail Errors::MissingRequestStrategy unless strategy.present?
+      fail NameError unless available.include?(strategy.to_s)
       "Doorkeeper::Request::#{strategy.to_s.camelize}".constantize
     end
   end

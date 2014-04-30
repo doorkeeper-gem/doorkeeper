@@ -12,7 +12,7 @@ module Doorkeeper
   end
 
   def self.configuration
-    @config || (raise MissingConfiguration.new)
+    @config || (fail MissingConfiguration.new)
   end
 
   def self.orm_model_dir
