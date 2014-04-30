@@ -7,7 +7,7 @@ require 'doorkeeper/request/token'
 
 module Doorkeeper
   module Request
-    extend self
+    module_function
 
     def authorization_strategy(strategy)
       get_strategy strategy, %w(code token)
