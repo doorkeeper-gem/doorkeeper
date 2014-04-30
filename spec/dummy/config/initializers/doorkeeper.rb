@@ -54,6 +54,6 @@ Doorkeeper.configure do
   #
   # test_redirect_uri 'urn:ietf:wg:oauth:2.0:oob'
 
-  # WWW-Authenticate Realm (default 'Doorkeeper').
+  # WWW-Authenticate Realm (default 'Doorkeeper').
   realm 'Doorkeeper'
 end
