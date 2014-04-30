@@ -3,7 +3,7 @@ DOORKEEPER_ORM = (ENV['orm'] || :active_record).to_sym
 TABLE_NAME_PREFIX = ENV['table_name_prefix'] || nil
 TABLE_NAME_SUFFIX = ENV['table_name_suffix'] || nil
 
-$:.unshift File.dirname(__FILE__)
+$LOAD_PATH.unshift File.dirname(__FILE__)
 
 require 'dummy/config/environment'
 require 'rspec/rails'
