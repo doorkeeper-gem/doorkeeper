@@ -11,7 +11,7 @@ module Doorkeeper::OAuth
         scopes: nil,
         error: nil,
         authorizable?: true
-      })
+      )
     end
 
     let :owner do

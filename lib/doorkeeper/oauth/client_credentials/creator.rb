@@ -3,10 +3,10 @@ module Doorkeeper
     class ClientCredentialsRequest
       class Creator
         def call(client, scopes, attributes = {})
-          Doorkeeper::AccessToken.create(attributes.merge({
+          Doorkeeper::AccessToken.create(attributes.merge(
             application_id: client.id,
             scopes: scopes.to_s
-          }))
+          ))
         end
       end
     end

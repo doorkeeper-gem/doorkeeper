@@ -27,7 +27,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
           scopes,
           expires_in: 100,
           use_refresh_token: false
-        })
+        )
 
         subject.create client, scopes, creator
       end

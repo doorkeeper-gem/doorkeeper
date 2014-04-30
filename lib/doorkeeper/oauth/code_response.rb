@@ -27,7 +27,7 @@ module Doorkeeper
               token_type: auth.token.token_type,
               expires_in: auth.token.expires_in,
               state: pre_auth.state
-            })
+            )
           else
             uri_with_query pre_auth.redirect_uri, code: auth.token.token, state: pre_auth.state
           end

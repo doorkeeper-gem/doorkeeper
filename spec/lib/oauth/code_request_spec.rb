@@ -11,7 +11,7 @@ module Doorkeeper::OAuth
         state: nil,
         error: nil,
         authorizable?: true
-      })
+      )
     end
 
     let(:owner) { double :owner, id: 8900 }
