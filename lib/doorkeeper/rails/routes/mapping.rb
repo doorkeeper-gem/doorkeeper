@@ -30,7 +30,7 @@ module Doorkeeper
         end
 
         def skipped?(controller)
-          return @skips.include?(controller)
+          @skips.include?(controller)
         end
       end
     end
