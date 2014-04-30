@@ -29,7 +29,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
 
     it 'redirects to client redirect uri' do
-      expect(response.location).to match(%r[^#{client.redirect_uri}])
+      expect(response.location).to match(%r{^#{client.redirect_uri}})
     end
 
     it 'includes access token in fragment' do
@@ -64,7 +64,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
 
     it 'redirects to client redirect uri' do
-      expect(response.location).to match(%r[^#{client.redirect_uri}])
+      expect(response.location).to match(%r{^#{client.redirect_uri}})
     end
 
     it 'does not include access token in fragment' do
@@ -108,7 +108,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
 
     it 'should redirect immediately' do
       expect(response).to be_redirect
-      expect(response.location).to match(%r[^#{client.redirect_uri}])
+      expect(response.location).to match(%r{^#{client.redirect_uri}})
     end
 
     it 'should issue a token' do

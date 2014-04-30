@@ -38,7 +38,7 @@ module Doorkeeper
       end
 
       def authenticate_info
-        %{Bearer realm="#{realm}", error="#{name}", error_description="#{description}"}
+        %(Bearer realm="#{realm}", error="#{name}", error_description="#{description}")
       end
 
       def headers
