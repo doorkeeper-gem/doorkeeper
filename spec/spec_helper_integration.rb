@@ -1,4 +1,4 @@
-ENV["RAILS_ENV"] ||= 'test'
+ENV['RAILS_ENV'] ||= 'test'
 DOORKEEPER_ORM = (ENV['orm'] || :active_record).to_sym
 TABLE_NAME_PREFIX = ENV['table_name_prefix'] || nil
 TABLE_NAME_SUFFIX = ENV['table_name_suffix'] || nil

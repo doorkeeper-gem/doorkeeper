@@ -183,12 +183,11 @@ module Doorkeeper
 
       it 'returns as_json hash'   do
         token = FactoryGirl.create :access_token, default_attributes
-        token_hash = {
-                      resource_owner_id: token.resource_owner_id,
-                      scopes: token.scopes,
-                      expires_in_seconds: token.expires_in_seconds,
-                      application: { uid: token.application.uid }
-                     }
+        token_hash = { resource_owner_id: token.resource_owner_id,
+                       scopes: token.scopes,
+                       expires_in_seconds: token.expires_in_seconds,
+                       application: { uid: token.application.uid }
+        }
         expect(token.as_json).to eq token_hash
       end
     end

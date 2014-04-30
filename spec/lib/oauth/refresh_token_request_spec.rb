@@ -10,7 +10,9 @@ module Doorkeeper::OAuth
     subject { RefreshTokenRequest.new server, refresh_token, credentials }
 
     it 'issues a new token for the client' do
-      expect { subject.authorize }.to change { client.access_tokens.count }.by(1)
+      expect do
+        subject.authorize
+      end.to change { client.access_tokens.count }.by(1)
     end
 
     it 'revokes the previous token' do

@@ -12,11 +12,15 @@ describe Doorkeeper::Server do
 
   describe '.authorization_request' do
     it 'raises error when strategy does not exist' do
-      expect { subject.authorization_request(:duh) }.to raise_error(Doorkeeper::Errors::InvalidAuthorizationStrategy)
+      expect do
+        subject.authorization_request(:duh)
+      end.to raise_error(Doorkeeper::Errors::InvalidAuthorizationStrategy)
     end
 
     it 'raises error when strategy does not match phase' do
-      expect { subject.token_request(:code) }.to raise_error(Doorkeeper::Errors::InvalidTokenStrategy)
+      expect do
+        subject.token_request(:code)
+      end.to raise_error(Doorkeeper::Errors::InvalidTokenStrategy)
     end
 
     it 'builds the request with selected strategy' do

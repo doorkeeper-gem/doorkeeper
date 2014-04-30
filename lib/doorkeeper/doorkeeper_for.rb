@@ -14,7 +14,7 @@ module Doorkeeper
     # TODO: move this to Token class
     def validate_token(token)
       return false unless token
-      token.accessible? and validate_token_scopes(token)
+      token.accessible? && validate_token_scopes(token)
     end
 
     def filter_options
