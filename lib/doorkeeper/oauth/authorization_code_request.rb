@@ -3,10 +3,10 @@ module Doorkeeper
     class AuthorizationCodeRequest
       include Doorkeeper::Validations
 
-      validate :attributes,   :error => :invalid_request
-      validate :client,       :error => :invalid_client
-      validate :grant,        :error => :invalid_grant
-      validate :redirect_uri, :error => :invalid_grant
+      validate :attributes,   error: :invalid_request
+      validate :client,       error: :invalid_client
+      validate :grant,        error: :invalid_grant
+      validate :redirect_uri, error: :invalid_grant
 
       attr_accessor :server, :grant, :client, :redirect_uri, :access_token
 
@@ -20,28 +20,27 @@ module Doorkeeper
       def authorize
         validate
         @response = if valid?
-          grant.revoke
-          issue_token
-          TokenResponse.new access_token
-        else
-          ErrorResponse.from_request self
-        end
+                      grant.revoke
+                      issue_token
+                      TokenResponse.new access_token
+                    else
+                      ErrorResponse.from_request self
+                    end
       end
 
       def valid?
-        self.error.nil?
+        error.nil?
       end
 
-    private
+      private
 
       def issue_token
-        @access_token = Doorkeeper::AccessToken.create!({
-          :application_id    => grant.application_id,
-          :resource_owner_id => grant.resource_owner_id,
-          :scopes            => grant.scopes_string,
-          :expires_in        => server.access_token_expires_in,
-          :use_refresh_token => server.refresh_token_enabled?
-        })
+        @access_token = Doorkeeper::AccessToken.create!(
+          application_id:    grant.application_id,
+          resource_owner_id: grant.resource_owner_id,
+          scopes:            grant.scopes_string,
+          expires_in:        server.access_token_expires_in,
+          use_refresh_token: server.refresh_token_enabled?)
       end
 
       def validate_attributes

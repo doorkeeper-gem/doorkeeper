@@ -10,18 +10,19 @@ module Doorkeeper
       end
 
       def authorize
-        @response = if pre_auth.authorizable?
+        if pre_auth.authorizable?
           auth = Authorization::Code.new(pre_auth, resource_owner)
           auth.issue_token
-          CodeResponse.new pre_auth, auth
+          @response = CodeResponse.new pre_auth, auth
         else
-          ErrorResponse.from_request pre_auth
+          @response = ErrorResponse.from_request pre_auth
         end
       end
 
       def deny
         pre_auth.error = :access_denied
-        ErrorResponse.from_request(pre_auth, :redirect_uri => pre_auth.redirect_uri)
+        ErrorResponse.from_request pre_auth,
+                                   redirect_uri: pre_auth.redirect_uri
       end
     end
   end

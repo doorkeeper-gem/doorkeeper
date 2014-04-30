@@ -4,10 +4,10 @@ module Doorkeeper
       include Doorkeeper::Validations
       include Doorkeeper::OAuth::Helpers
 
-      validate :token,        :error => :invalid_request
-      validate :client,       :error => :invalid_client
-      validate :client_match, :error => :invalid_grant
-      validate :scope,        :error => :invalid_scope
+      validate :token,        error: :invalid_request
+      validate :client,       error: :invalid_client
+      validate :client_match, error: :invalid_grant
+      validate :scope,        error: :invalid_scope
 
       attr_accessor :server, :refresh_token, :credentials, :access_token
       attr_accessor :client
@@ -18,32 +18,35 @@ module Doorkeeper
         @credentials      = credentials
         @requested_scopes = parameters[:scopes]
 
-        @client = Doorkeeper::Application.authenticate(credentials.uid, credentials.secret) if credentials
+        if credentials
+          @client = Doorkeeper::Application.authenticate credentials.uid,
+                                                         credentials.secret
+        end
       end
 
       def authorize
         validate
         @response = if valid?
-          revoke_and_create_access_token
-          TokenResponse.new access_token
-        else
-          ErrorResponse.from_request self
-        end
+                      revoke_and_create_access_token
+                      TokenResponse.new access_token
+                    else
+                      ErrorResponse.from_request self
+                    end
       end
 
       def valid?
-        self.error.nil?
+        error.nil?
       end
 
       def scopes
         @scopes ||= if @requested_scopes.present?
-          Scopes.from_string @requested_scopes
-        else
-          refresh_token.scopes
-        end
+                      Scopes.from_string @requested_scopes
+                    else
+                      refresh_token.scopes
+                    end
       end
 
-    private
+      private
 
       def revoke_and_create_access_token
         refresh_token.revoke
@@ -51,13 +54,13 @@ module Doorkeeper
       end
 
       def create_access_token
-        @access_token = Doorkeeper::AccessToken.create!({
-          :application_id    => refresh_token.application_id,
-          :resource_owner_id => refresh_token.resource_owner_id,
-          :scopes            => scopes.to_s,
-          :expires_in        => server.access_token_expires_in,
-          :use_refresh_token => true
-        })
+        @access_token = Doorkeeper::AccessToken.create!(
+          application_id:    refresh_token.application_id,
+          resource_owner_id: refresh_token.resource_owner_id,
+          scopes:            scopes.to_s,
+          expires_in:        server.access_token_expires_in,
+          use_refresh_token: true
+        )
       end
 
       def validate_token
@@ -65,7 +68,7 @@ module Doorkeeper
       end
 
       def validate_client
-        (!credentials || !!client)
+        !credentials || !!client
       end
 
       def validate_client_match
