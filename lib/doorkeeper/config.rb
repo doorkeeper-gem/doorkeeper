@@ -81,6 +81,10 @@ module Doorkeeper
       def realm(realm)
         @config.instance_variable_set('@realm', realm)
       end
+
+      def reuse_access_token
+        @config.instance_variable_set("@reuse_access_token", true)
+      end
     end
 
     module Option
@@ -207,6 +211,10 @@ module Doorkeeper
 
     def realm
       @realm ||= 'Doorkeeper'
+    end
+
+    def reuse_access_token
+      @reuse_access_token
     end
   end
 end
