@@ -8,7 +8,7 @@ module Doorkeeper
 
     it_behaves_like "an accessible token"
     it_behaves_like "a revocable token"
-    it_behaves_like "an unique token" do
+    it_behaves_like "a unique token" do
       let(:factory_name) { :access_token }
     end
 
@@ -69,7 +69,7 @@ module Doorkeeper
         context 'the second token has same owner and different app' do
           let(:other_application) { FactoryGirl.create :application }
           let(:access_token2) { FactoryGirl.create :access_token, application: other_application, resource_owner_id: resource_owner_id }
-                   
+
           it 'fail' do
             expect(access_token1.same_credential?(access_token2)).to be_false
           end
@@ -79,7 +79,7 @@ module Doorkeeper
 
           let(:other_application) { FactoryGirl.create :application }
           let(:access_token2) { FactoryGirl.create :access_token, application: other_application, resource_owner_id: 42 }
-          
+
           it 'fail' do
             expect(access_token1.same_credential?(access_token2)).to be_false
           end
@@ -87,7 +87,7 @@ module Doorkeeper
 
         context 'the second token has different owner and same app' do
           let(:access_token2) { FactoryGirl.create :access_token, application: application, resource_owner_id: 42 }
-          
+
           it 'fail' do
             expect(access_token1.same_credential?(access_token2)).to be_false
           end
