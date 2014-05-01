@@ -11,6 +11,11 @@ describe RedirectUriValidator do
   end
 
   it 'accepts test redirect uri' do
+    subject.redirect_uri = 'urn:ietf:wg:oauth:2.0:oob:test'
+    expect(subject).to be_valid
+  end
+
+  it 'accepts native redirect uri' do
     subject.redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
     expect(subject).to be_valid
   end
@@ -18,6 +23,12 @@ describe RedirectUriValidator do
   it 'rejects if test uri is disabled' do
     allow(RedirectUriValidator).to receive(:test_redirect_uri).and_return(nil)
     subject.redirect_uri = "urn:some:test"
+    expect(subject).not_to be_valid
+  end
+
+  it 'rejects if native uri is disabled' do
+    allow(RedirectUriValidator).to receive(:native_redirect_uri).and_return(nil)
+    subject.redirect_uri = "urn:some:native"
     expect(subject).not_to be_valid
   end
 
