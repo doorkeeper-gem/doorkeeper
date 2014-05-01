@@ -8,7 +8,7 @@ module Doorkeeper
 
     it_behaves_like 'an accessible token'
     it_behaves_like 'a revocable token'
-    it_behaves_like 'an unique token' do
+    it_behaves_like 'a unique token' do
       let(:factory_name) { :access_token }
     end
 
