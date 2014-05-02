@@ -1,10 +1,11 @@
 # Changelog
 
-## 1.2.0 (not yet released)
+## 1.2.0
 
 - enhancements
   - [#376] Allow users to enable basic header authorization for access tokens.
   - [#374] Token revocation implementation [RFC 7009]
+  - [#295] Only enable specific grant flows.
 - internals
   - [#381] Locale source fix.
   - [#380] Renames `errors_for` to `doorkeeper_errors_for`.
