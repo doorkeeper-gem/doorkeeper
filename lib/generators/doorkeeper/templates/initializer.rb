@@ -25,6 +25,10 @@ Doorkeeper.configure do
   # If you want to disable expiration, set this to nil.
   # access_token_expires_in 2.hours
 
+  # Reuse access token for the same resource owner within an application (disabled by default)
+  # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/383
+  # reuse_access_token
+
   # Issue access tokens with refresh token (disabled by default)
   # use_refresh_token
 
@@ -73,8 +77,4 @@ Doorkeeper.configure do
   # Some applications require dynamic query parameters on their request_uri
   # set to true if you want this to be allowed
   # wildcard_redirect_uri false
-
-  # Reuse access token for the same resource owner within an application (disabled by default)
-  # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/383
-  # reuse_access_token
 end
