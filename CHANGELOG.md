@@ -8,6 +8,8 @@
 - internals
   - [#381] Locale source fix.
   - [#380] Renames `errors_for` to `doorkeeper_errors_for`.
+  - [#390] Style adjustments in accordance with Ruby Style Guide form
+    Thoughtbot.
 
 ## 1.1.0
 
