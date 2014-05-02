@@ -59,7 +59,7 @@ module Doorkeeper::OAuth
       end.to_not change { Doorkeeper::AccessToken.count }
     end
 
-    describe "with scopes" do
+    describe 'with scopes' do
       subject do
         PasswordAccessTokenRequest.new(server, client, owner, scope: 'public')
       end
