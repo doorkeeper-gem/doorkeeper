@@ -13,6 +13,10 @@ feature 'Resource Owner Assertion Flow inproperly set up' do
       expect {
         post assertion_endpoint_url(:client => @client, :resource_owner => @resource_owner)
       }.to_not change { Doorkeeper::AccessToken.count }
+
+      should_have_json 'error', 'invalid_resource_owner'
+      should_have_json 'error_description', translated_error_message(:invalid_resource_owner)
+      expect(response.status).to eq(401)
     end
   end
 end
@@ -52,12 +56,20 @@ feature 'Resource Owner Assertion Flow' do
       expect {
         post assertion_endpoint_url( :client => @client, :assertion => 'i_dont_exist' )
       }.to_not change { Doorkeeper::AccessToken.count }
+
+      should_have_json 'error', 'invalid_resource_owner'
+      should_have_json 'error_description', translated_error_message(:invalid_resource_owner)
+      expect(response.status).to eq(401)
     end
 
     scenario "should not issue new token without assertion" do
       expect {
         post assertion_endpoint_url( :client => @client )
       }.to_not change { Doorkeeper::AccessToken.count }
+
+      should_have_json 'error', 'invalid_resource_owner'
+      should_have_json 'error_description', translated_error_message(:invalid_resource_owner)
+      expect(response.status).to eq(401)
     end
 
   end

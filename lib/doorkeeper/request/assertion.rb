@@ -12,8 +12,6 @@ module Doorkeeper
       end
 
       def request
-        # TODO: For now OAuth::PasswordAccessTokenRequest is reused for the Assertion Flow. In need of
-        # OAuth::AssertionAccessTokenRequest in future
         @request ||= OAuth::PasswordAccessTokenRequest.new(Doorkeeper.configuration, credentials, resource_owner, server.parameters)
       end
 
