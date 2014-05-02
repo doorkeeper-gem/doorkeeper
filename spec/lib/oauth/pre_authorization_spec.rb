@@ -1,15 +1,15 @@
-require "spec_helper_integration"
+require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
   describe PreAuthorization do
-    let(:server) { double :server, :default_scopes => Scopes.new, :scopes => Scopes.from_string('public') }
-    let(:client) { double :client, :redirect_uri => 'http://tst.com/auth' }
+    let(:server) { double :server, default_scopes: Scopes.new, scopes: Scopes.from_string('public') }
+    let(:client) { double :client, redirect_uri: 'http://tst.com/auth' }
 
     let :attributes do
       {
-        :response_type => 'code',
-        :redirect_uri => 'http://tst.com/auth',
-        :state => 'save-this'
+        response_type: 'code',
+        redirect_uri: 'http://tst.com/auth',
+        state: 'save-this'
       }
     end
 
@@ -48,7 +48,7 @@ module Doorkeeper::OAuth
       expect(subject).to be_authorizable
     end
 
-    it "matches the redirect uri against client's one" do
+    it 'matches the redirect uri against client\'s one' do
       subject.redirect_uri = 'http://nothesame.com'
       expect(subject).not_to be_authorizable
     end

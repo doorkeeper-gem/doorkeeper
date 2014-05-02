@@ -25,7 +25,7 @@ module Doorkeeper
       if auth.redirectable?
         redirect_to auth.redirect_uri
       else
-        render :json => auth.body, :status => auth.status
+        render json: auth.body, status: auth.status
       end
     end
 
@@ -35,11 +35,11 @@ module Doorkeeper
       if auth.redirectable?
         redirect_to auth.redirect_uri
       else
-        render :json => auth.body, :status => auth.status
+        render json: auth.body, status: auth.status
       end
     end
 
-  private
+    private
 
     def pre_auth
       @pre_auth ||= OAuth::PreAuthorization.new(Doorkeeper.configuration, server.client_via_uid, params)

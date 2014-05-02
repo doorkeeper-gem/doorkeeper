@@ -24,10 +24,12 @@ module Doorkeeper
         private
 
         def create_token(client, scopes, creator)
-          creator.call(client, scopes, {
-            :use_refresh_token => false,
-            :expires_in        => @server.access_token_expires_in
-          })
+          creator.call(
+            client,
+            scopes,
+            use_refresh_token: false,
+            expires_in: @server.access_token_expires_in
+          )
         end
       end
     end

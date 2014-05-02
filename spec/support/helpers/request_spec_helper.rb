@@ -57,7 +57,7 @@ module RequestSpecHelper
 
   def sign_in
     visit '/'
-    click_on "Sign in"
+    click_on 'Sign in'
   end
 
   def i_should_see_translated_error_message(key)
@@ -65,7 +65,7 @@ module RequestSpecHelper
   end
 
   def translated_error_message(key)
-    I18n.translate key, :scope => [:doorkeeper, :errors, :messages]
+    I18n.translate key, scope: [:doorkeeper, :errors, :messages]
   end
 
   def response_status_should_be(status)
@@ -73,4 +73,4 @@ module RequestSpecHelper
   end
 end
 
-RSpec.configuration.send :include, RequestSpecHelper, :type => :request
+RSpec.configuration.send :include, RequestSpecHelper, type: :request

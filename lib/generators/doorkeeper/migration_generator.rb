@@ -3,7 +3,7 @@ require 'rails/generators/active_record'
 class Doorkeeper::MigrationGenerator < ::Rails::Generators::Base
   include Rails::Generators::Migration
   source_root File.expand_path('../templates', __FILE__)
-  desc "Installs Doorkeeper migration file."
+  desc 'Installs Doorkeeper migration file.'
 
   def install
     migration_template 'migration.rb', 'db/migrate/create_doorkeeper_tables.rb'

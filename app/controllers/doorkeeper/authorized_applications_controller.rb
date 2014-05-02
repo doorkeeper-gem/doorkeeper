@@ -7,6 +7,6 @@ class Doorkeeper::AuthorizedApplicationsController < Doorkeeper::ApplicationCont
 
   def destroy
     Doorkeeper::AccessToken.revoke_all_for params[:id], current_resource_owner
-    redirect_to oauth_authorized_applications_url, :notice => I18n.t(:notice, :scope => [:doorkeeper, :flash, :authorized_applications, :destroy])
+    redirect_to oauth_authorized_applications_url, notice: I18n.t(:notice, scope: [:doorkeeper, :flash, :authorized_applications, :destroy])
   end
 end

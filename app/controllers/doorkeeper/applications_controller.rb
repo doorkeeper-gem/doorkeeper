@@ -4,7 +4,7 @@ module Doorkeeper
     respond_to :html
 
     before_filter :authenticate_admin!
-    before_filter :set_application, :only => [:show, :edit, :update, :destroy]
+    before_filter :set_application, only: [:show, :edit, :update, :destroy]
 
     def index
       @applications = Application.all
@@ -17,7 +17,7 @@ module Doorkeeper
     def create
       @application = Application.new(application_params)
       if @application.save
-        flash[:notice] = I18n.t(:notice, :scope => [:doorkeeper, :flash, :applications, :create])
+        flash[:notice] = I18n.t(:notice, scope: [:doorkeeper, :flash, :applications, :create])
         respond_with [:oauth, @application]
       else
         render :new
@@ -32,7 +32,7 @@ module Doorkeeper
 
     def update
       if @application.update_attributes(application_params)
-        flash[:notice] = I18n.t(:notice, :scope => [:doorkeeper, :flash, :applications, :update])
+        flash[:notice] = I18n.t(:notice, scope: [:doorkeeper, :flash, :applications, :update])
         respond_with [:oauth, @application]
       else
         render :edit
@@ -40,7 +40,7 @@ module Doorkeeper
     end
 
     def destroy
-      flash[:notice] = I18n.t(:notice, :scope => [:doorkeeper, :flash, :applications, :destroy]) if @application.destroy
+      flash[:notice] = I18n.t(:notice, scope: [:doorkeeper, :flash, :applications, :destroy]) if @application.destroy
       redirect_to oauth_applications_url
     end
 

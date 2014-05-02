@@ -20,7 +20,7 @@ module Doorkeeper
 
         if credentials
           @client = Doorkeeper::Application.authenticate credentials.uid,
-                                                         credentials.secret
+            credentials.secret
         end
       end
 

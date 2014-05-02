@@ -1,16 +1,16 @@
 require File.expand_path('../boot', __FILE__)
 
-require "action_controller/railtie"
-require "sprockets/railtie"
+require 'action_controller/railtie'
+require 'sprockets/railtie'
 
 Bundler.require :default
 
 orm = if [:mongoid2, :mongoid3, :mongoid4].include?(DOORKEEPER_ORM)
-  Mongoid.load!(File.join(File.dirname(File.expand_path(__FILE__)), "#{DOORKEEPER_ORM}.yml"))
-  :mongoid
-else
-  DOORKEEPER_ORM
-end
+        Mongoid.load!(File.join(File.dirname(File.expand_path(__FILE__)), "#{DOORKEEPER_ORM}.yml"))
+        :mongoid
+      else
+        DOORKEEPER_ORM
+      end
 
 require "#{orm}/railtie"
 
@@ -40,7 +40,7 @@ module Dummy
     # config.i18n.default_locale = :en
 
     # Configure the default encoding used in templates for Ruby 1.9.
-    config.encoding = "utf-8"
+    config.encoding = 'utf-8'
 
     # Configure sensitive parameters which will be filtered from the log file.
     config.filter_parameters += [:password]
@@ -52,4 +52,3 @@ module Dummy
     config.assets.version = '1.0'
   end
 end
-

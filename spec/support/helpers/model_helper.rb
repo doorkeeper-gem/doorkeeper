@@ -4,7 +4,7 @@ module ModelHelper
   end
 
   def create_resource_owner
-    @resource_owner = User.create!(:name => "Joe", :password => "sekret")
+    @resource_owner = User.create!(name: 'Joe', password: 'sekret')
   end
 
   def authorization_code_exists(options = {})
@@ -42,4 +42,4 @@ module ModelHelper
   end
 end
 
-RSpec.configuration.send :include, ModelHelper, :type => :request
+RSpec.configuration.send :include, ModelHelper, type: :request
