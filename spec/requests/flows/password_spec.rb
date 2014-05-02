@@ -64,7 +64,7 @@ feature 'Resource Owner Password Credentials Flow' do
 
       client_is_authorized(@client, @resource_owner)
 
-      post password_token_endpoint_url(:client => @client, :resource_owner => @resource_owner)
+      post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
 
       Doorkeeper::AccessToken.count.should be(1)
 
