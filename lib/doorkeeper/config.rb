@@ -173,6 +173,8 @@ module Doorkeeper
     option :realm,                         default: 'Doorkeeper'
     option :wildcard_redirect_uri,         default: false
 
+    attr_reader :reuse_access_token
+
     def refresh_token_enabled?
       !!@refresh_token_enabled
     end
@@ -211,10 +213,6 @@ module Doorkeeper
 
     def realm
       @realm ||= 'Doorkeeper'
-    end
-
-    def reuse_access_token
-      @reuse_access_token
     end
   end
 end
