@@ -36,7 +36,7 @@ module Doorkeeper
       private
 
       def issue_token
-        @access_token = FindOrCreateAccessToken.for(
+        @access_token = Doorkeeper::AccessToken.find_or_create_for(
           grant.application,
           grant.resource_owner_id,
           grant.scopes,
