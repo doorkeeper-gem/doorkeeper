@@ -1,46 +1,46 @@
-require "doorkeeper/version"
-require "doorkeeper/engine"
-require "doorkeeper/config"
-require "doorkeeper/doorkeeper_for"
+require 'doorkeeper/version'
+require 'doorkeeper/engine'
+require 'doorkeeper/config'
+require 'doorkeeper/doorkeeper_for'
 
 require 'doorkeeper/errors'
 require 'doorkeeper/server'
 require 'doorkeeper/request'
-require "doorkeeper/validations"
+require 'doorkeeper/validations'
 
-require "doorkeeper/oauth/authorization/code"
-require "doorkeeper/oauth/authorization/token"
-require "doorkeeper/oauth/authorization/uri_builder"
-require "doorkeeper/oauth/helpers/scope_checker"
-require "doorkeeper/oauth/helpers/uri_checker"
-require "doorkeeper/oauth/helpers/unique_token"
-require "doorkeeper/oauth/helpers/find_or_create_access_token"
+require 'doorkeeper/oauth/authorization/code'
+require 'doorkeeper/oauth/authorization/token'
+require 'doorkeeper/oauth/authorization/uri_builder'
+require 'doorkeeper/oauth/helpers/scope_checker'
+require 'doorkeeper/oauth/helpers/uri_checker'
+require 'doorkeeper/oauth/helpers/unique_token'
+require 'doorkeeper/oauth/helpers/find_or_create_access_token'
 
-require "doorkeeper/oauth/scopes"
-require "doorkeeper/oauth/error"
-require "doorkeeper/oauth/code_response"
-require "doorkeeper/oauth/token_response"
-require "doorkeeper/oauth/error_response"
-require "doorkeeper/oauth/pre_authorization"
-require "doorkeeper/oauth/authorization_code_request"
-require "doorkeeper/oauth/refresh_token_request"
-require "doorkeeper/oauth/password_access_token_request"
-require "doorkeeper/oauth/client_credentials_request"
-require "doorkeeper/oauth/code_request"
-require "doorkeeper/oauth/token_request"
-require "doorkeeper/oauth/client"
-require "doorkeeper/oauth/token"
-require "doorkeeper/oauth/invalid_token_response"
+require 'doorkeeper/oauth/scopes'
+require 'doorkeeper/oauth/error'
+require 'doorkeeper/oauth/code_response'
+require 'doorkeeper/oauth/token_response'
+require 'doorkeeper/oauth/error_response'
+require 'doorkeeper/oauth/pre_authorization'
+require 'doorkeeper/oauth/authorization_code_request'
+require 'doorkeeper/oauth/refresh_token_request'
+require 'doorkeeper/oauth/password_access_token_request'
+require 'doorkeeper/oauth/client_credentials_request'
+require 'doorkeeper/oauth/code_request'
+require 'doorkeeper/oauth/token_request'
+require 'doorkeeper/oauth/client'
+require 'doorkeeper/oauth/token'
+require 'doorkeeper/oauth/invalid_token_response'
 
 require 'doorkeeper/models/scopes'
 require 'doorkeeper/models/expirable'
 require 'doorkeeper/models/revocable'
 require 'doorkeeper/models/accessible'
 
-require "doorkeeper/helpers/filter"
-require "doorkeeper/helpers/controller"
+require 'doorkeeper/helpers/filter'
+require 'doorkeeper/helpers/controller'
 
-require "doorkeeper/rails/routes"
+require 'doorkeeper/rails/routes'
 
 module Doorkeeper
   def self.configured?
