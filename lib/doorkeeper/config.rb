@@ -168,6 +168,8 @@ module Doorkeeper
     option :active_record_options,         default: {}
     option :realm,                         default: 'Doorkeeper'
     option :wildcard_redirect_uri,         default: false
+    option :grant_flows,
+           default: %w(authorization_code implicit password client_credentials)
 
     def refresh_token_enabled?
       !!@refresh_token_enabled
@@ -207,6 +209,35 @@ module Doorkeeper
 
     def realm
       @realm ||= 'Doorkeeper'
+    end
+
+    def authorization_response_types
+      @authorization_response_types ||= calculate_authorization_response_types
+    end
+
+    def token_grant_types
+      @token_grant_types ||= calculate_token_grant_types
+    end
+
+  private
+
+    # Determines what values are acceptable for 'response_type' param in
+    # authorization request endpoint, and return them as an array of strings.
+    #
+    def calculate_authorization_response_types
+      types = []
+      types << 'code'  if grant_flows.include? 'authorization_code'
+      types << 'token' if grant_flows.include? 'implicit'
+      types
+    end
+
+    # Determines what values are acceptable for 'grant_type' param token
+    # request endpoint, and return them in array.
+    #
+    def calculate_token_grant_types
+      types = grant_flows - ['implicit']
+      types << 'refresh_token' if refresh_token_enabled?
+      types
     end
   end
 end

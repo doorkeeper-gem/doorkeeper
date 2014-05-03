@@ -86,6 +86,23 @@ describe Doorkeeper, 'configuration' do
       end
       expect(subject.refresh_token_enabled?).to be_true
     end
+
+    it "does not includes 'refresh_token' in authorization_response_types" do
+      expect(subject.token_grant_types).not_to include 'refresh_token'
+    end
+
+    context "is enabled" do
+      before do
+        Doorkeeper.configure {
+          orm DOORKEEPER_ORM
+          use_refresh_token
+        }
+      end
+
+      it "includes 'refresh_token' in authorization_response_types" do
+        expect(subject.token_grant_types).to include 'refresh_token'
+      end
+    end
   end
 
   describe 'client_credentials' do
@@ -169,6 +186,81 @@ describe Doorkeeper, 'configuration' do
         realm 'Example'
       end
       expect(subject.realm).to eq('Example')
+    end
+  end
+
+  describe "grant_flows" do
+    it "is set to all grant flows by default" do
+      expect(Doorkeeper.configuration.grant_flows).to eq [
+        'authorization_code',
+        'implicit',
+        'password',
+        'client_credentials'
+      ]
+    end
+
+    it "can change the value" do
+      Doorkeeper.configure {
+        orm DOORKEEPER_ORM
+        grant_flows [ 'authorization_code', 'implicit' ]
+      }
+      expect(subject.grant_flows).to eq ['authorization_code', 'implicit']
+    end
+
+    context "when including 'authorization_code'" do
+      before do
+        Doorkeeper.configure {
+          orm DOORKEEPER_ORM
+          grant_flows ['authorization_code']
+        }
+      end
+
+      it "includes 'code' in authorization_response_types" do
+        expect(subject.authorization_response_types).to include 'code'
+      end
+
+      it "includes 'authorization_code' in token_grant_types" do
+        expect(subject.token_grant_types).to include 'authorization_code'
+      end
+    end
+
+    context "when including 'implicit'" do
+      before do
+        Doorkeeper.configure {
+          orm DOORKEEPER_ORM
+          grant_flows ['implicit']
+        }
+      end
+
+      it "includes 'token' in authorization_response_types" do
+        expect(subject.authorization_response_types).to include 'token'
+      end
+    end
+
+    context "when including 'password'" do
+      before do
+        Doorkeeper.configure {
+          orm DOORKEEPER_ORM
+          grant_flows ['password']
+        }
+      end
+
+      it "includes 'password' in token_grant_types" do
+        expect(subject.token_grant_types).to include 'password'
+      end
+    end
+
+    context "when including 'client_credentials'" do
+      before do
+        Doorkeeper.configure {
+          orm DOORKEEPER_ORM
+          grant_flows ['client_credentials']
+        }
+      end
+
+      it "includes 'client_credentials' in token_grant_types" do
+        expect(subject.token_grant_types).to include 'client_credentials'
+      end
     end
   end
 
