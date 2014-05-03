@@ -195,7 +195,8 @@ describe Doorkeeper, 'configuration' do
         'authorization_code',
         'implicit',
         'password',
-        'client_credentials'
+        'client_credentials',
+        'assertion'
       ]
     end
 

@@ -43,6 +43,7 @@ en:
 
         #configuration error messages
         credential_flow_not_configured: 'Resource Owner Password Credentials flow failed due to Doorkeeper.configure.resource_owner_from_credentials being unconfigured.'
+        assertion_flow_not_configured: 'Resource Owner Assertion flow failed due to Doorkeeper.configure.resource_owner_from_assertion being unconfigured.'
         resource_owner_authenticator_not_configured: 'Resource Owner find failed due to Doorkeeper.configure.resource_owner_authenticator being unconfiged.'
 
         # Access grant errors

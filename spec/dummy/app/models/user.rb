@@ -9,20 +9,22 @@ when :mongoid2, :mongoid3, :mongoid4
 
     field :name, type: String
     field :password, type: String
+    field :assertion, type: String
   end
 when :mongo_mapper
   class User
     include MongoMapper::Document
     timestamps!
 
-    key :name,     String
-    key :password, String
+    key :name,      String
+    key :password,  String
+    key :assertion, String
   end
 end
 
 class User
   if ::Rails.version.to_i < 4
-    attr_accessible :name, :password
+    attr_accessible :name, :password, :assertion
   end
 
   def self.authenticate!(name, password)
