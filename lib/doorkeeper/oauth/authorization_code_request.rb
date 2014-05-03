@@ -35,12 +35,12 @@ module Doorkeeper
       private
 
       def issue_token
-        @access_token = Doorkeeper::AccessToken.create!(
-          application_id:    grant.application_id,
-          resource_owner_id: grant.resource_owner_id,
-          scopes:            grant.scopes_string,
-          expires_in:        server.access_token_expires_in,
-          use_refresh_token: server.refresh_token_enabled?)
+        @access_token = Doorkeeper::AccessToken.find_or_create_for(
+          grant.application,
+          grant.resource_owner_id,
+          grant.scopes,
+          server.access_token_expires_in,
+          server.refresh_token_enabled?)
       end
 
       def validate_attributes

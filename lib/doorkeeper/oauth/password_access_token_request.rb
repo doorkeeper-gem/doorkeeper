@@ -48,13 +48,12 @@ module Doorkeeper
       private
 
       def issue_token
-        @access_token = Doorkeeper::AccessToken.create!(
-          application_id:    client.try(:id),
-          resource_owner_id: resource_owner.id,
-          scopes:            scopes.to_s,
-          expires_in:        server.access_token_expires_in,
-          use_refresh_token: server.refresh_token_enabled?
-        )
+        @access_token = Doorkeeper::AccessToken.find_or_create_for(
+          client,
+          resource_owner.id,
+          scopes,
+          server.access_token_expires_in,
+          server.refresh_token_enabled?)
       end
 
       def validate_scopes

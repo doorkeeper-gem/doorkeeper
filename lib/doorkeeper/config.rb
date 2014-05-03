@@ -81,6 +81,10 @@ module Doorkeeper
       def realm(realm)
         @config.instance_variable_set('@realm', realm)
       end
+
+      def reuse_access_token
+        @config.instance_variable_set("@reuse_access_token", true)
+      end
     end
 
     module Option
@@ -170,6 +174,8 @@ module Doorkeeper
     option :wildcard_redirect_uri,         default: false
     option :grant_flows,
            default: %w(authorization_code implicit password client_credentials)
+
+    attr_reader :reuse_access_token
 
     def refresh_token_enabled?
       !!@refresh_token_enabled
