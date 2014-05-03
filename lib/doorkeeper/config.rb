@@ -1,7 +1,7 @@
 module Doorkeeper
   class MissingConfiguration < StandardError
     def initialize
-      super("Configuration for doorkeeper missing. Do you have doorkeeper initializer?")
+      super('Configuration for doorkeeper missing. Do you have doorkeeper initializer?')
     end
   end
 
@@ -12,17 +12,16 @@ module Doorkeeper
   end
 
   def self.configuration
-    @config || (raise MissingConfiguration.new)
+    @config || (fail MissingConfiguration.new)
   end
 
   def self.orm_model_dir
     case configuration.orm
     when :mongoid3, :mongoid4
-      "mongoid3_4"
+      'mongoid3_4'
     else
       configuration.orm
     end
-
   end
 
   def self.enable_orm
@@ -50,42 +49,41 @@ module Doorkeeper
         @config
       end
 
-      def enable_application_owner(opts={})
-        @config.instance_variable_set("@enable_application_owner", true)
+      def enable_application_owner(opts = {})
+        @config.instance_variable_set('@enable_application_owner', true)
         confirm_application_owner if opts[:confirmation].present? && opts[:confirmation]
       end
 
       def confirm_application_owner
-        @config.instance_variable_set("@confirm_application_owner", true)
+        @config.instance_variable_set('@confirm_application_owner', true)
       end
 
       def default_scopes(*scopes)
-        @config.instance_variable_set("@default_scopes", Doorkeeper::OAuth::Scopes.from_array(scopes))
+        @config.instance_variable_set('@default_scopes', Doorkeeper::OAuth::Scopes.from_array(scopes))
       end
 
       def optional_scopes(*scopes)
-        @config.instance_variable_set("@optional_scopes", Doorkeeper::OAuth::Scopes.from_array(scopes))
+        @config.instance_variable_set('@optional_scopes', Doorkeeper::OAuth::Scopes.from_array(scopes))
       end
 
       def client_credentials(*methods)
-        @config.instance_variable_set("@client_credentials", methods)
+        @config.instance_variable_set('@client_credentials', methods)
       end
 
       def access_token_methods(*methods)
-        @config.instance_variable_set("@access_token_methods", methods)
+        @config.instance_variable_set('@access_token_methods', methods)
       end
 
       def use_refresh_token
-        @config.instance_variable_set("@refresh_token_enabled", true)
+        @config.instance_variable_set('@refresh_token_enabled', true)
       end
 
       def realm(realm)
-        @config.instance_variable_set("@realm", realm)
+        @config.instance_variable_set('@realm', realm)
       end
     end
 
     module Option
-
       # Defines configuration option
       #
       # When you call option, it defines two methods. One method will take place
@@ -109,9 +107,9 @@ module Doorkeeper
       # ==== Examples
       #
       #    option :name
-      #    option :name, :as => :set_name
-      #    option :name, :default => "My Name"
-      #    option :scopes :builder_class => ScopesBuilder
+      #    option :name, as: :set_name
+      #    option :name, default: 'My Name'
+      #    option :scopes builder_class: ScopesBuilder
       #
       def option(name, options = {})
         attribute = options[:as] || name
@@ -121,10 +119,10 @@ module Doorkeeper
           define_method name do |*args, &block|
             # TODO: is builder_class option being used?
             value = unless attribute_builder
-              block ? block : args.first
-            else
-              attribute_builder.new(&block).build
-            end
+                      block ? block : args.first
+                    else
+                      attribute_builder.new(&block).build
+                    end
 
             @config.instance_variable_set(:"@#{attribute}", value)
           end
@@ -149,32 +147,34 @@ module Doorkeeper
     extend Option
 
     option :resource_owner_authenticator,
-           :as => :authenticate_resource_owner,
-           :default => lambda{|routes|
+           as: :authenticate_resource_owner,
+           default: (lambda do |routes|
              logger.warn(I18n.translate('doorkeeper.errors.messages.resource_owner_authenticator_not_configured'))
              nil
-           }
+           end)
     option :admin_authenticator,
-           :as => :authenticate_admin,
-           :default => lambda{|routes| }
+           as: :authenticate_admin,
+           default: ->(routes) {}
     option :resource_owner_from_credentials,
-           :default => lambda{|routes|
+           default: (lambda do |routes|
              warn(I18n.translate('doorkeeper.errors.messages.credential_flow_not_configured'))
              nil
-           }
+           end)
     option :resource_owner_from_assertion,
-           :default => lambda{|routes|
+           default: (lambda do |routes|
              warn(I18n.translate('doorkeeper.errors.messages.assertion_flow_not_configured'))
              nil
-           }
-    option :skip_authorization, :default => lambda{|routes|}
-    option :access_token_expires_in,      :default => 7200
-    option :authorization_code_expires_in,:default => 600
-    option :orm, :default => :active_record
-    option :test_redirect_uri, :default => 'urn:ietf:wg:oauth:2.0:oob'
-    option :active_record_options, :default => {}
-    option :realm, :default => "Doorkeeper"
-    option :wildcard_redirect_uri, :default => false
+           end)
+    option :skip_authorization,            default: ->(routes) {}
+    option :access_token_expires_in,       default: 7200
+    option :authorization_code_expires_in, default: 600
+    option :orm,                           default: :active_record
+    option :test_redirect_uri,             default: 'urn:ietf:wg:oauth:2.0:oob'
+    option :active_record_options,         default: {}
+    option :realm,                         default: 'Doorkeeper'
+    option :wildcard_redirect_uri,         default: false
+    option :grant_flows,
+           default: %w(authorization_code implicit password client_credentials assertion)
 
     def refresh_token_enabled?
       !!@refresh_token_enabled
@@ -213,7 +213,36 @@ module Doorkeeper
     end
 
     def realm
-      @realm ||= "Doorkeeper"
+      @realm ||= 'Doorkeeper'
+    end
+
+    def authorization_response_types
+      @authorization_response_types ||= calculate_authorization_response_types
+    end
+
+    def token_grant_types
+      @token_grant_types ||= calculate_token_grant_types
+    end
+
+  private
+
+    # Determines what values are acceptable for 'response_type' param in
+    # authorization request endpoint, and return them as an array of strings.
+    #
+    def calculate_authorization_response_types
+      types = []
+      types << 'code'  if grant_flows.include? 'authorization_code'
+      types << 'token' if grant_flows.include? 'implicit'
+      types
+    end
+
+    # Determines what values are acceptable for 'grant_type' param token
+    # request endpoint, and return them in array.
+    #
+    def calculate_token_grant_types
+      types = grant_flows - ['implicit']
+      types << 'refresh_token' if refresh_token_enabled?
+      types
     end
   end
 end

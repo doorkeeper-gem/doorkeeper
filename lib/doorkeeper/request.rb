@@ -8,23 +8,23 @@ require 'doorkeeper/request/token'
 
 module Doorkeeper
   module Request
-    extend self
+    module_function
 
     def authorization_strategy(strategy)
-      get_strategy strategy, %w[code token]
+      get_strategy strategy, Doorkeeper.configuration.authorization_response_types
     rescue NameError
       raise Errors::InvalidAuthorizationStrategy
     end
 
     def token_strategy(strategy)
-      get_strategy strategy, %w[password client_credentials authorization_code refresh_token assertion]
+      get_strategy strategy, Doorkeeper.configuration.token_grant_types
     rescue NameError
       raise Errors::InvalidTokenStrategy
     end
 
     def get_strategy(strategy, available)
-      raise Errors::MissingRequestStrategy unless strategy.present?
-      raise NameError unless available.include?(strategy.to_s)
+      fail Errors::MissingRequestStrategy unless strategy.present?
+      fail NameError unless available.include?(strategy.to_s)
       "Doorkeeper::Request::#{strategy.to_s.camelize}".constantize
     end
   end

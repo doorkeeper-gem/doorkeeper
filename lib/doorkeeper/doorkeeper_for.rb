@@ -3,7 +3,7 @@ module Doorkeeper
   class DoorkeeperFor
     def initialize(options)
       options ||= {}
-      raise InvalidSyntax unless options.is_a? Hash
+      fail InvalidSyntax unless options.is_a? Hash
       @filter_options = {}
 
       options.each do |k, v|
@@ -14,7 +14,7 @@ module Doorkeeper
     # TODO: move this to Token class
     def validate_token(token)
       return false unless token
-      token.accessible? and validate_token_scopes(token)
+      token.accessible? && validate_token_scopes(token)
     end
 
     def filter_options
@@ -22,6 +22,7 @@ module Doorkeeper
     end
 
     private
+
     def scopes(scopes)
       @scopes = scopes.map(&:to_s)
     end
@@ -43,6 +44,7 @@ module Doorkeeper
 
   class AllDoorkeeperFor < DoorkeeperFor
     private
+
     def except(actions)
       @filter_options[:except] = actions
     end
@@ -56,6 +58,7 @@ module Doorkeeper
     end
 
     private
+
     def only(actions)
       @filter_options[:only] = actions
     end
@@ -67,7 +70,7 @@ module Doorkeeper
       when :all
         AllDoorkeeperFor.new(args[1] || {})
       when Hash, nil
-        raise InvalidSyntax
+        fail InvalidSyntax
       else
         SelectedDoorkeeperFor.new(*args)
       end

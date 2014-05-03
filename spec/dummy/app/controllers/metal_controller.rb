@@ -6,6 +6,6 @@ class MetalController < ActionController::Metal
   doorkeeper_for :all
 
   def index
-    self.response_body = { :ok => true }.to_json
+    self.response_body = { ok: true }.to_json
   end
 end

@@ -21,7 +21,7 @@
             <code><%= uri %></code>
           </td>
           <td>
-            <%= link_to 'Authorize', oauth_authorization_path(:client_id => @application.uid, :redirect_uri => uri, :response_type => 'code'), class: 'btn btn-success', target: '_blank' %>
+            <%= link_to 'Authorize', oauth_authorization_path(client_id: @application.uid, redirect_uri: uri, response_type: 'code'), class: 'btn btn-success', target: '_blank' %>
           </td>
         </tr>
       <% end %>

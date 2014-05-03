@@ -5,15 +5,15 @@ require 'doorkeeper/oauth/client'
 class Doorkeeper::OAuth::Client
   describe Credentials do
     it 'is blank when any of the credentials is blank' do
-      expect(Credentials.new(nil, "something")).to be_blank
-      expect(Credentials.new("something", nil)).to be_blank
+      expect(Credentials.new(nil, 'something')).to be_blank
+      expect(Credentials.new('something', nil)).to be_blank
     end
 
     describe :from_request do
       let(:request) { double.as_null_object }
 
       let(:method) do
-        lambda { |request| return 'uid', 'secret' }
+        ->(request) { return 'uid', 'secret' }
       end
 
       it 'accepts anything that responds to #call' do
@@ -29,7 +29,7 @@ class Doorkeeper::OAuth::Client
       it 'stops at the first credentials found' do
         not_called_method = double
         expect(not_called_method).not_to receive(:call)
-        credentials = Credentials.from_request request, lambda { |r| }, method, not_called_method
+        credentials = Credentials.from_request request, ->(r) {}, method, not_called_method
       end
 
       it 'returns new Credentials' do

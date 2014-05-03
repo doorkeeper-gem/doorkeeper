@@ -4,8 +4,8 @@ require 'doorkeeper/oauth/client'
 
 class Doorkeeper::OAuth::Client
   describe 'Methods' do
-    let(:client_id) { "some-uid" }
-    let(:client_secret) { "some-secret" }
+    let(:client_id) { 'some-uid' }
+    let(:client_secret) { 'some-secret' }
 
     subject do
       Class.new do
@@ -15,15 +15,15 @@ class Doorkeeper::OAuth::Client
 
     describe :from_params do
       it 'returns credentials from parameters when Authorization header is not available' do
-        request     = double :parameters => { :client_id => client_id, :client_secret => client_secret }
+        request     = double parameters: { client_id: client_id, client_secret: client_secret }
         uid, secret = subject.from_params(request)
 
-        expect(uid).to    eq("some-uid")
-        expect(secret).to eq("some-secret")
+        expect(uid).to    eq('some-uid')
+        expect(secret).to eq('some-secret')
       end
 
       it 'is blank when there are no credentials' do
-        request     = double :parameters => {}
+        request     = double parameters: {}
         uid, secret = subject.from_params(request)
 
         expect(uid).to    be_blank
@@ -35,15 +35,15 @@ class Doorkeeper::OAuth::Client
       let(:credentials) { Base64.encode64("#{client_id}:#{client_secret}") }
 
       it 'decodes the credentials' do
-        request     = double :authorization => "Basic #{credentials}"
+        request     = double authorization: "Basic #{credentials}"
         uid, secret = subject.from_basic(request)
 
-        expect(uid).to    eq("some-uid")
-        expect(secret).to eq("some-secret")
+        expect(uid).to    eq('some-uid')
+        expect(secret).to eq('some-secret')
       end
 
       it 'is blank if Authorization is not Basic' do
-        request     = double :authorization => "#{credentials}"
+        request     = double authorization: "#{credentials}"
         uid, secret = subject.from_basic(request)
 
         expect(uid).to    be_blank

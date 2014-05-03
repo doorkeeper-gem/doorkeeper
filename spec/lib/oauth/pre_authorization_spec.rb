@@ -1,15 +1,21 @@
-require "spec_helper_integration"
+require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
   describe PreAuthorization do
-    let(:server) { double :server, :default_scopes => Scopes.new, :scopes => Scopes.from_string('public') }
-    let(:client) { double :client, :redirect_uri => 'http://tst.com/auth' }
+    let(:server) {
+      server = Doorkeeper.configuration
+      server.stub(:default_scopes) { Scopes.new }
+      server.stub(:scopes) { Scopes.from_string('public') }
+      server
+    }
+
+    let(:client) { double :client, redirect_uri: 'http://tst.com/auth' }
 
     let :attributes do
       {
-        :response_type => 'code',
-        :redirect_uri => 'http://tst.com/auth',
-        :state => 'save-this'
+        response_type: 'code',
+        redirect_uri: 'http://tst.com/auth',
+        state: 'save-this'
       }
     end
 
@@ -31,6 +37,40 @@ module Doorkeeper::OAuth
       expect(subject).to be_authorizable
     end
 
+    context 'when using default grant flows' do
+      it 'accepts "code" as response type' do
+        subject.response_type = 'code'
+        expect(subject).to be_authorizable
+      end
+
+      it 'accepts "token" as response type' do
+        subject.response_type = 'token'
+        expect(subject).to be_authorizable
+      end
+    end
+
+    context 'when authorization code grant flow is disabled' do
+      before do
+        server.stub(:grant_flows) { ['implicit'] }
+      end
+
+      it 'does not accept "code" as response type' do
+        subject.response_type = 'code'
+        expect(subject).not_to be_authorizable
+      end
+    end
+
+    context 'when implicit grant flow is disabled' do
+      before do
+        server.stub(:grant_flows) { ['authorization_code'] }
+      end
+
+      it 'does not accept "token" as response type' do
+        subject.response_type = 'token'
+        expect(subject).not_to be_authorizable
+      end
+    end
+
     it 'accepts valid scopes' do
       subject.scope = 'public'
       expect(subject).to be_authorizable
@@ -48,7 +88,7 @@ module Doorkeeper::OAuth
       expect(subject).to be_authorizable
     end
 
-    it "matches the redirect uri against client's one" do
+    it 'matches the redirect uri against client\'s one' do
       subject.redirect_uri = 'http://nothesame.com'
       expect(subject).not_to be_authorizable
     end

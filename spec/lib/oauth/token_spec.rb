@@ -14,7 +14,7 @@ module Doorkeeper
         let(:request) { double.as_null_object }
 
         let(:method) do
-          lambda { |request| return 'token-value' }
+          ->(request) { return 'token-value' }
         end
 
         it 'accepts anything that responds to #call' do
@@ -30,7 +30,7 @@ module Doorkeeper
         it 'stops at the first credentials found' do
           not_called_method = double
           expect(not_called_method).not_to receive(:call)
-          Token.from_request request, lambda { |r| }, method, not_called_method
+          Token.from_request request, ->(r) {}, method, not_called_method
         end
 
         it 'returns the credential from extractor method' do
@@ -41,29 +41,29 @@ module Doorkeeper
 
       describe :from_access_token_param do
         it 'returns token from access_token parameter' do
-          request = double :parameters => { :access_token => 'some-token' }
+          request = double parameters: { access_token: 'some-token' }
           token   = Token.from_access_token_param(request)
-          expect(token).to eq("some-token")
+          expect(token).to eq('some-token')
         end
       end
 
       describe :from_bearer_param do
         it 'returns token from bearer_token parameter' do
-          request = double :parameters => { :bearer_token => 'some-token' }
+          request = double parameters: { bearer_token: 'some-token' }
           token   = Token.from_bearer_param(request)
-          expect(token).to eq("some-token")
+          expect(token).to eq('some-token')
         end
       end
 
       describe :from_bearer_authorization do
         it 'returns token from authorization bearer' do
-          request = double :authorization => "Bearer SomeToken"
+          request = double authorization: 'Bearer SomeToken'
           token   = Token.from_bearer_authorization(request)
-          expect(token).to eq("SomeToken")
+          expect(token).to eq('SomeToken')
         end
 
         it 'does not return token if authorization is not bearer' do
-          request = double :authorization => "MAC SomeToken"
+          request = double authorization: 'MAC SomeToken'
           token   = Token.from_bearer_authorization(request)
           expect(token).to be_blank
         end
@@ -71,13 +71,13 @@ module Doorkeeper
 
       describe :from_basic_authorization do
         it 'returns token from authorization basic' do
-          request = double :authorization => "Basic #{Base64.encode64 'SomeToken:'}"
+          request = double authorization: "Basic #{Base64.encode64 'SomeToken:'}"
           token   = Token.from_basic_authorization(request)
-          expect(token).to eq("SomeToken")
+          expect(token).to eq('SomeToken')
         end
 
         it 'does not return token if authorization is not basic' do
-          request = double :authorization => "MAC #{Base64.encode64 'SomeToken:'}"
+          request = double authorization: "MAC #{Base64.encode64 'SomeToken:'}"
           token   = Token.from_basic_authorization(request)
           expect(token).to be_blank
         end
@@ -87,7 +87,7 @@ module Doorkeeper
         let(:finder) { double :finder }
 
         it 'calls the finder if token was found' do
-          token = lambda { |r| 'token' }
+          token = ->(r) { 'token' }
           expect(AccessToken).to receive(:authenticate).with('token')
           Token.authenticate double, token
         end

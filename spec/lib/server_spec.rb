@@ -12,11 +12,33 @@ describe Doorkeeper::Server do
 
   describe '.authorization_request' do
     it 'raises error when strategy does not exist' do
-      expect { subject.authorization_request(:duh) }.to raise_error(Doorkeeper::Errors::InvalidAuthorizationStrategy)
+      expect do
+        subject.authorization_request(:duh)
+      end.to raise_error(Doorkeeper::Errors::InvalidAuthorizationStrategy)
     end
 
     it 'raises error when strategy does not match phase' do
-      expect { subject.token_request(:code) }.to raise_error(Doorkeeper::Errors::InvalidTokenStrategy)
+      expect do
+        subject.token_request(:code)
+      end.to raise_error(Doorkeeper::Errors::InvalidTokenStrategy)
+    end
+
+    context 'when only Authorization Code strategy is enabled' do
+      before do
+        Doorkeeper.configuration.stub(:grant_flows) { ['authorization_code'] }
+      end
+
+      it 'raises error when using the disabled Implicit strategy' do
+        expect do
+          subject.authorization_request(:token)
+        end.to raise_error(Doorkeeper::Errors::InvalidAuthorizationStrategy)
+      end
+
+      it 'raises error when using the disabled Client Credentials strategy' do
+        expect do
+          subject.token_request(:client_credentials)
+        end.to raise_error(Doorkeeper::Errors::InvalidTokenStrategy)
+      end
     end
 
     it 'builds the request with selected strategy' do

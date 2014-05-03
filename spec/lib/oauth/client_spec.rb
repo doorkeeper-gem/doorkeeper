@@ -22,16 +22,16 @@ module Doorkeeper::OAuth
 
     describe :authenticate do
       it 'returns the authenticated client via credentials' do
-        credentials = Client::Credentials.new("some-uid", "some-secret")
+        credentials = Client::Credentials.new('some-uid', 'some-secret')
         authenticator = double
-        expect(authenticator).to receive(:call).with("some-uid", "some-secret").and_return(double)
+        expect(authenticator).to receive(:call).with('some-uid', 'some-secret').and_return(double)
         expect(Client.authenticate(credentials, authenticator)).to be_a(Client)
       end
 
       it 'retunrs nil if client was not authenticated' do
-        credentials = Client::Credentials.new("some-uid", "some-secret")
+        credentials = Client::Credentials.new('some-uid', 'some-secret')
         authenticator = double
-        expect(authenticator).to receive(:call).with("some-uid", "some-secret").and_return(nil)
+        expect(authenticator).to receive(:call).with('some-uid', 'some-secret').and_return(nil)
         expect(Client.authenticate(credentials, authenticator)).to be_nil
       end
     end
