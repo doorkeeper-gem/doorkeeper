@@ -29,16 +29,6 @@ end
 
 shared_examples 'a unique token' do
   describe :token do
-    let(:iterations) { 3 }
-
-    it 'is unique' do
-      tokens = []
-      iterations.times do
-        tokens << FactoryGirl.create(factory_name).token
-      end
-      expect(tokens.uniq.size).to eq(iterations)
-    end
-
     it 'is generated before validation' do
       expect { subject.valid? }.to change { subject.token }.from(nil)
     end
