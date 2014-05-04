@@ -2,6 +2,7 @@ module Doorkeeper
   module OAuth
     class RefreshTokenRequest
       include Doorkeeper::Validations
+      include Doorkeeper::OAuth::RequestConcern
       include Doorkeeper::OAuth::Helpers
 
       validate :token,        error: :invalid_request
@@ -16,7 +17,7 @@ module Doorkeeper
         @server           = server
         @refresh_token    = refresh_token
         @credentials      = credentials
-        @requested_scopes = parameters[:scopes]
+        @original_scopes  = parameters[:scopes]
 
         if credentials
           @client = Doorkeeper::Application.authenticate credentials.uid,
@@ -24,33 +25,15 @@ module Doorkeeper
         end
       end
 
-      def authorize
-        validate
-        @response = if valid?
-                      revoke_and_create_access_token
-                      TokenResponse.new access_token
-                    else
-                      ErrorResponse.from_request self
-                    end
-      end
-
-      def valid?
-        error.nil?
-      end
-
-      def scopes
-        @scopes ||= if @requested_scopes.present?
-                      Scopes.from_string @requested_scopes
-                    else
-                      refresh_token.scopes
-                    end
-      end
-
       private
 
-      def revoke_and_create_access_token
+      def on_successful_authorization
         refresh_token.revoke
         create_access_token
+      end
+
+      def default_scopes
+        refresh_token.scopes
       end
 
       def create_access_token
@@ -59,8 +42,7 @@ module Doorkeeper
           resource_owner_id: refresh_token.resource_owner_id,
           scopes:            scopes.to_s,
           expires_in:        server.access_token_expires_in,
-          use_refresh_token: true
-        )
+          use_refresh_token: true)
       end
 
       def validate_token
@@ -76,8 +58,8 @@ module Doorkeeper
       end
 
       def validate_scope
-        if @requested_scopes.present?
-          ScopeChecker.valid?(@requested_scopes, refresh_token.scopes)
+        if @original_scopes.present?
+          ScopeChecker.valid?(@original_scopes, refresh_token.scopes)
         else
           true
         end
