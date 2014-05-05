@@ -29,7 +29,9 @@ module Doorkeeper
               state: pre_auth.state
             )
           else
-            uri_with_query pre_auth.redirect_uri, code: auth.token.token, state: pre_auth.state
+            uri_with_query pre_auth.redirect_uri,
+                           code: auth.token.token,
+                           state: pre_auth.state
           end
         end
       end

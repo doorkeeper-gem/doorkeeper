@@ -22,7 +22,9 @@ module Doorkeeper
       end
 
       def headers
-        { 'Cache-Control' => 'no-store', 'Pragma' => 'no-cache', 'Content-Type' => 'application/json; charset=utf-8' }
+        { 'Cache-Control' => 'no-store',
+          'Pragma' => 'no-cache',
+          'Content-Type' => 'application/json; charset=utf-8' }
       end
     end
   end

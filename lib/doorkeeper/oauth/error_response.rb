@@ -18,7 +18,11 @@ module Doorkeeper
       end
 
       def body
-        { error: name, error_description: description, state: state }.reject { |k, v| v.blank? }
+        {
+          error: name,
+          error_description: description,
+          state: state
+        }.reject { |_, v| v.blank? }
       end
 
       def status
@@ -26,7 +30,8 @@ module Doorkeeper
       end
 
       def redirectable?
-        (name != :invalid_redirect_uri) && (name != :invalid_client) && !URIChecker.test_uri?(@redirect_uri)
+        name != :invalid_redirect_uri && name != :invalid_client &&
+          !URIChecker.test_uri?(@redirect_uri)
       end
 
       def redirect_uri
