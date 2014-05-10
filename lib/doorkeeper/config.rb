@@ -164,6 +164,11 @@ module Doorkeeper
              warn(I18n.translate('doorkeeper.errors.messages.credential_flow_not_configured'))
              nil
            end)
+    option :resource_owner_from_assertion,
+           default: (lambda do |routes|
+             warn(I18n.translate('doorkeeper.errors.messages.assertion_flow_not_configured'))
+             nil
+           end)
     option :skip_authorization,            default: ->(routes) {}
     option :access_token_expires_in,       default: 7200
     option :authorization_code_expires_in, default: 600
@@ -173,7 +178,7 @@ module Doorkeeper
     option :realm,                         default: 'Doorkeeper'
     option :wildcard_redirect_uri,         default: false
     option :grant_flows,
-           default: %w(authorization_code implicit password client_credentials)
+           default: %w(authorization_code implicit password client_credentials assertion)
 
     attr_reader :reuse_access_token
 
