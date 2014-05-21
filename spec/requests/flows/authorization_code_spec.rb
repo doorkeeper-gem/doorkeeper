@@ -56,6 +56,21 @@ feature 'Authorization Code Flow' do
     should_have_json_within 'expires_in', Doorkeeper::AccessToken.first.expires_in, 1
   end
 
+  scenario 'uses default_response_type if response_type is missing' do
+    config_is_set(:default_response_type, 'code')
+
+    visit authorization_endpoint_url(client: @client, response_type: '')
+    click_on 'Authorize'
+
+    access_grant_should_exist_for(@client, @resource_owner)
+
+    i_should_be_on_client_callback(@client)
+
+    url_should_have_param('code', Doorkeeper::AccessGrant.first.token)
+    url_should_not_have_param('state')
+    url_should_not_have_param('error')
+  end
+
   context 'with scopes' do
     background do
       default_scopes_exist  :public

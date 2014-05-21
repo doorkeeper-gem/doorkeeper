@@ -43,7 +43,7 @@ module Doorkeeper
     end
 
     def strategy
-      @strategy ||= server.token_request params[:grant_type]
+      @strategy ||= server.token_request(params[:grant_type] || Doorkeeper.configuration.default_grant_type)
     end
   end
 end

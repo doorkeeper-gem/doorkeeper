@@ -74,6 +74,32 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
+  describe 'default_grant_type' do
+    it 'is nil by default' do
+      expect(subject.default_grant_type).to be_nil
+    end
+
+    it 'can change the value' do
+      Doorkeeper.configure do
+        default_grant_type 'authorization_code'
+      end
+      expect(subject.default_grant_type).to eq('authorization_code')
+    end
+  end
+
+  describe 'default_response_type' do
+    it 'is nil by default' do
+      expect(subject.default_response_type).to be_nil
+    end
+
+    it 'can change the value' do
+      Doorkeeper.configure do
+        default_response_type 'code'
+      end
+      expect(subject.default_response_type).to eq('code')
+    end
+  end
+
   describe 'use_refresh_token' do
     it 'is false by default' do
       expect(subject.refresh_token_enabled?).to be_false

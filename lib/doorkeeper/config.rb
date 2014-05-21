@@ -172,6 +172,8 @@ module Doorkeeper
     option :active_record_options,         default: {}
     option :realm,                         default: 'Doorkeeper'
     option :wildcard_redirect_uri,         default: false
+    option :default_grant_type
+    option :default_response_type
     option :grant_flows,
            default: %w(authorization_code implicit password client_credentials)
 

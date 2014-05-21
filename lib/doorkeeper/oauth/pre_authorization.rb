@@ -14,7 +14,7 @@ module Doorkeeper
       def initialize(server, client, attrs = {})
         @server        = server
         @client        = client
-        @response_type = attrs[:response_type]
+        @response_type = attrs[:response_type] || Doorkeeper.configuration.default_response_type
         @redirect_uri  = attrs[:redirect_uri]
         @scope         = attrs[:scope]
         @state         = attrs[:state]
