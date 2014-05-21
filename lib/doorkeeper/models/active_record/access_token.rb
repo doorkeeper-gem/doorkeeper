@@ -13,7 +13,7 @@ module Doorkeeper
     private_class_method :delete_all_for
 
     def self.last_authorized_token_for(application, resource_owner_id)
-      where(application_id: application.id,
+      where(application_id: application.try(:id),
             resource_owner_id: resource_owner_id,
             revoked_at: nil).
         order('created_at desc').
