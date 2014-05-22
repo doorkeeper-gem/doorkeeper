@@ -6,7 +6,9 @@ module Doorkeeper
     include Doorkeeper::Models::Accessible
     include Doorkeeper::Models::Scopes
 
-    belongs_to :application, class_name: 'Doorkeeper::Application'
+    belongs_to :application,
+               class_name: 'Doorkeeper::Application',
+               inverse_of: :access_tokens
 
     validates :token, presence: true
     validates :token, uniqueness: true
