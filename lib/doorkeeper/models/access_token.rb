@@ -44,7 +44,7 @@ module Doorkeeper
                           else
                             resource_owner_or_id
                           end
-      token = last_authorized_token_for(application, resource_owner_id)
+      token = last_authorized_token_for(application.id, resource_owner_id)
       token if token && ScopeChecker.matches?(token.scopes, scopes)
     end
 
