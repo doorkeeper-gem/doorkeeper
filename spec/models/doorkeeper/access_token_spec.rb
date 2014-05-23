@@ -180,15 +180,43 @@ module Doorkeeper
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to eq(token)
       end
+    end
 
-      it 'returns as_json hash'   do
-        token = FactoryGirl.create :access_token, default_attributes
-        token_hash = { resource_owner_id: token.resource_owner_id,
-                       scopes: token.scopes,
-                       expires_in_seconds: token.expires_in_seconds,
-                       application: { uid: token.application.uid }
+    describe '#as_json' do
+      let(:resource_owner) { double(id: 100) }
+      let(:application)    { FactoryGirl.create :application }
+      let(:token)          { FactoryGirl.create :access_token, default_attributes }
+
+      let(:default_attributes) do
+        { application: application, resource_owner_id: resource_owner.id }
+      end
+
+      it 'returns hash' do
+        token_hash = {
+          resource_owner_id: token.resource_owner_id,
+          scopes: token.scopes,
+          expires_in_seconds: token.expires_in_seconds,
+          application: { uid: token.application.uid }
         }
+
         expect(token.as_json).to eq token_hash
+      end
+
+      describe 'when application is nil' do
+        let(:default_attributes) do
+          { application: nil, resource_owner_id: resource_owner.id }
+        end
+
+        it 'returns hash' do
+          token_hash = {
+            resource_owner_id: token.resource_owner_id,
+            scopes: token.scopes,
+            expires_in_seconds: token.expires_in_seconds,
+            application: {uid: nil}
+          }
+
+          expect(token.as_json).to eq token_hash
+        end
       end
     end
 
