@@ -1,6 +1,6 @@
 # Changelog
 
-## master
+## 1.3.0
 
 - enhancements
   - [#387] Adds reuse_access_token configuration option.
