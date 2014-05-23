@@ -54,4 +54,8 @@ module Doorkeeper
   def self.installed?
     configured? && database_installed?
   end
+
+  def self.authenticate(request, methods = Doorkeeper.configuration.access_token_methods)
+    OAuth::Token.authenticate(request, *methods)
+  end
 end
