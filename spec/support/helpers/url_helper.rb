@@ -6,7 +6,7 @@ module UrlHelper
       client_secret: options[:client_secret] || (options[:client] ? options[:client].secret : nil),
       redirect_uri: options[:redirect_uri]  || (options[:client] ? options[:client].redirect_uri : nil),
       grant_type: options[:grant_type]    || 'authorization_code'
-    }
+    }.reject { |k, v| v.blank? }
     "/oauth/token?#{build_query(parameters)}"
   end
 

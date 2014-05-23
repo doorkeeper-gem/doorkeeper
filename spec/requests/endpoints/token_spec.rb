@@ -61,4 +61,14 @@ feature 'Token endpoint' do
     should_have_json 'error', 'invalid_request'
     should_have_json 'error_description', translated_error_message('invalid_request')
   end
+
+  scenario 'uses default_grant_type if grant_type is missing' do
+    config_is_set(:default_grant_type, 'authorization_code')
+
+    post token_endpoint_url(code: @authorization.token, client: @client, grant_type: '')
+
+    should_have_json 'access_token', Doorkeeper::AccessToken.first.token
+    should_not_have_json 'error'
+    should_not_have_json 'error_description'
+  end
 end
