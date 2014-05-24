@@ -6,11 +6,10 @@ rvm:
   - 2.0
   - 2.1
 env:
-  - rails=3.1.8
-  - rails=3.2.8
-  - rails=3.2.16
-  - rails=4.0.2
-  - rails=4.1.0.beta1
+  - rails=3.1.12
+  - rails=3.2.18
+  - rails=4.0.5
+  - rails=4.1.1
   - orm=mongoid2
   - orm=mongoid3
   - orm=mongoid4
