@@ -112,8 +112,10 @@ end
 
 This will mount following routes:
 
+    GET       /oauth/authorize/:code
     GET       /oauth/authorize
     POST      /oauth/authorize
+    PUT       /oauth/authorize
     DELETE    /oauth/authorize
     POST      /oauth/token
     POST      /oauth/revoke
