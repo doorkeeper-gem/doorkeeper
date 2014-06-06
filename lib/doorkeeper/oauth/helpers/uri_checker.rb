@@ -28,7 +28,7 @@ module Doorkeeper
           URI.parse(url)
         end
 
-        def self.test_uri?(url)
+        def self.native_uri?(url)
           url == Doorkeeper.configuration.native_redirect_uri
         end
       end
