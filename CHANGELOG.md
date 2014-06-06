@@ -1,5 +1,14 @@
 # Changelog
 
+## master
+
+- enhancements
+  - [#405] Adds facade to more easily get the token from a request in a route
+    constraint.
+- internals
+  - [#409] Deprecates `test_redirect_uri` in favor of `native_redirect_uri`.
+    See discussion in: [#351].
+
 ## 1.3.0
 
 - enhancements
