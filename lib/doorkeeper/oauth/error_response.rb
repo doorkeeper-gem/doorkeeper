@@ -31,7 +31,7 @@ module Doorkeeper
 
       def redirectable?
         name != :invalid_redirect_uri && name != :invalid_client &&
-          !URIChecker.test_uri?(@redirect_uri)
+          !URIChecker.native_uri?(@redirect_uri)
       end
 
       def redirect_uri

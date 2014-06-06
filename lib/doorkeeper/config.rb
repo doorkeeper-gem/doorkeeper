@@ -85,6 +85,14 @@ module Doorkeeper
       def reuse_access_token
         @config.instance_variable_set("@reuse_access_token", true)
       end
+
+      def test_redirect_uri(uri)
+        warn <<-TEXT
+          DEPRECATION: test_redirect_uri has renamed to native_redirect_uri. use "native_redirect_uri '#{uri}'".
+        TEXT
+
+        @config.instance_variable_set('@native_redirect_uri', uri)
+      end
     end
 
     module Option
@@ -168,7 +176,7 @@ module Doorkeeper
     option :access_token_expires_in,       default: 7200
     option :authorization_code_expires_in, default: 600
     option :orm,                           default: :active_record
-    option :test_redirect_uri,             default: 'urn:ietf:wg:oauth:2.0:oob'
+    option :native_redirect_uri,           default: 'urn:ietf:wg:oauth:2.0:oob'
     option :active_record_options,         default: {}
     option :realm,                         default: 'Doorkeeper'
     option :wildcard_redirect_uri,         default: false

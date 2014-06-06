@@ -28,8 +28,8 @@ module Doorkeeper
           URI.parse(url)
         end
 
-        def self.test_uri?(url)
-          url == Doorkeeper.configuration.test_redirect_uri
+        def self.native_uri?(url)
+          url == Doorkeeper.configuration.native_redirect_uri
         end
       end
     end

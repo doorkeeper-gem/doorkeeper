@@ -5,7 +5,8 @@ development:
       hosts:
         - localhost:27017
       options:
-        w: 1
+        write:
+          w: 1
 
 test:
   sessions:
