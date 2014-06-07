@@ -5,7 +5,7 @@ require 'doorkeeper/oauth/scopes'
 
 module Doorkeeper::OAuth
   describe Scopes do
-    describe :add do
+    describe '#add' do
       it 'allows you to add scopes with symbols' do
         subject.add :public
         expect(subject.all).to eq(['public'])
@@ -23,22 +23,22 @@ module Doorkeeper::OAuth
       end
     end
 
-    describe :exists do
+    describe '#exists' do
       before do
         subject.add :public
       end
 
       it 'returns true if scope with given name is present' do
-        expect(subject.exists?('public')).to be_true
+        expect(subject.exists?('public')).to be_truthy
       end
 
       it 'returns false if scope with given name does not exist' do
-        expect(subject.exists?('other')).to be_false
+        expect(subject.exists?('other')).to be_falsey
       end
 
       it 'handles symbols' do
-        expect(subject.exists?(:public)).to be_true
-        expect(subject.exists?(:other)).to be_false
+        expect(subject.exists?(:public)).to be_truthy
+        expect(subject.exists?(:other)).to be_falsey
       end
     end
 
@@ -59,7 +59,7 @@ module Doorkeeper::OAuth
       end
     end
 
-    describe :+ do
+    describe '#+' do
       it 'can add to another scope object' do
         scopes = Scopes.from_string('public') + Scopes.from_string('admin')
         expect(scopes.all).to eq(%w(public admin))
@@ -78,7 +78,7 @@ module Doorkeeper::OAuth
       end
     end
 
-    describe :== do
+    describe '#==' do
       it 'is equal to another set of scopes' do
         expect(Scopes.from_string('public')).to eq(Scopes.from_string('public'))
       end
@@ -92,31 +92,31 @@ module Doorkeeper::OAuth
       end
     end
 
-    describe :has_scopes? do
+    describe '#has_scopes?' do
       subject { Scopes.from_string('public admin') }
 
       it 'returns true when at least one scope is included' do
-        expect(subject.has_scopes?(Scopes.from_string('public'))).to be_true
+        expect(subject.has_scopes?(Scopes.from_string('public'))).to be_truthy
       end
 
       it 'returns true when all scopes are included' do
-        expect(subject.has_scopes?(Scopes.from_string('public admin'))).to be_true
+        expect(subject.has_scopes?(Scopes.from_string('public admin'))).to be_truthy
       end
 
       it 'is true if all scopes are included in any order' do
-        expect(subject.has_scopes?(Scopes.from_string('admin public'))).to be_true
+        expect(subject.has_scopes?(Scopes.from_string('admin public'))).to be_truthy
       end
 
       it 'is false if no scopes are included' do
-        expect(subject.has_scopes?(Scopes.from_string('notexistent'))).to be_false
+        expect(subject.has_scopes?(Scopes.from_string('notexistent'))).to be_falsey
       end
 
       it 'returns false when any scope is not included' do
-        expect(subject.has_scopes?(Scopes.from_string('public nope'))).to be_false
+        expect(subject.has_scopes?(Scopes.from_string('public nope'))).to be_falsey
       end
 
       it 'is false if no scopes are included even for existing ones' do
-        expect(subject.has_scopes?(Scopes.from_string('public admin notexistent'))).to be_false
+        expect(subject.has_scopes?(Scopes.from_string('public admin notexistent'))).to be_falsey
       end
     end
   end

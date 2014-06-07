@@ -13,7 +13,7 @@ feature 'Resource Owner Password Credentials Flow inproperly set up' do
 
   context 'with valid user credentials' do
     scenario 'should issue new token' do
-      pending 'Check a way to supress warnings here (or handle config better)'
+      skip 'Check a way to supress warnings here (or handle config better)'
       expect do
         post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
       end.to_not change { Doorkeeper::AccessToken.count }

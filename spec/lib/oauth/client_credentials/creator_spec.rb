@@ -14,7 +14,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
     it 'returns false if creation fails' do
       expect(Doorkeeper::AccessToken).to receive(:create).and_return(false)
       created = subject.call(client, scopes)
-      expect(created).to be_false
+      expect(created).to be_falsey
     end
   end
 end

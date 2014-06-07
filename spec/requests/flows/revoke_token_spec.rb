@@ -45,8 +45,8 @@ feature 'Revoke Token Flow' do
         authorization_access_token.reload
 
         expect(response).to be_success
-        expect(token_to_revoke.revoked?).to be_true
-        expect(Doorkeeper::AccessToken.by_refresh_token(token_to_revoke.refresh_token).revoked?).to be_true
+        expect(token_to_revoke.revoked?).to be_truthy
+        expect(Doorkeeper::AccessToken.by_refresh_token(token_to_revoke.refresh_token).revoked?).to be_truthy
 
       end
 
@@ -59,9 +59,9 @@ feature 'Revoke Token Flow' do
         authorization_access_token.reload
 
         expect(response).to be_success
-        expect(token_to_revoke.revoked?).to be_false
-        expect(Doorkeeper::AccessToken.by_refresh_token(token_to_revoke.refresh_token).revoked?).to be_false
-        expect(authorization_access_token.revoked?).to be_false
+        expect(token_to_revoke.revoked?).to be_falsey
+        expect(Doorkeeper::AccessToken.by_refresh_token(token_to_revoke.refresh_token).revoked?).to be_falsey
+        expect(authorization_access_token.revoked?).to be_falsey
 
       end
 
@@ -84,9 +84,9 @@ feature 'Revoke Token Flow' do
         authorization_access_token.reload
 
         expect(response).to be_success
-        expect(token_to_revoke.revoked?).to be_true
-        expect(Doorkeeper::AccessToken.by_refresh_token(token_to_revoke.refresh_token).revoked?).to be_true
-        expect(authorization_access_token.revoked?).to be_false
+        expect(token_to_revoke.revoked?).to be_truthy
+        expect(Doorkeeper::AccessToken.by_refresh_token(token_to_revoke.refresh_token).revoked?).to be_truthy
+        expect(authorization_access_token.revoked?).to be_falsey
 
       end
     end
@@ -109,9 +109,9 @@ feature 'Revoke Token Flow' do
         authorization_access_token.reload
 
         expect(response).to be_success
-        expect(token_to_revoke.revoked?).to be_false
-        expect(Doorkeeper::AccessToken.by_refresh_token(token_to_revoke.refresh_token).revoked?).to be_false
-        expect(authorization_access_token.revoked?).to be_false
+        expect(token_to_revoke.revoked?).to be_falsey
+        expect(Doorkeeper::AccessToken.by_refresh_token(token_to_revoke.refresh_token).revoked?).to be_falsey
+        expect(authorization_access_token.revoked?).to be_falsey
 
       end
     end
@@ -133,9 +133,9 @@ feature 'Revoke Token Flow' do
         authorization_access_token.reload
 
         expect(response).to be_success
-        expect(token_to_revoke.revoked?).to be_false
-        expect(Doorkeeper::AccessToken.by_refresh_token(token_to_revoke.refresh_token).revoked?).to be_false
-        expect(authorization_access_token.revoked?).to be_false
+        expect(token_to_revoke.revoked?).to be_falsey
+        expect(Doorkeeper::AccessToken.by_refresh_token(token_to_revoke.refresh_token).revoked?).to be_falsey
+        expect(authorization_access_token.revoked?).to be_falsey
 
       end
     end
@@ -156,7 +156,7 @@ feature 'Revoke Token Flow' do
         token_to_revoke.reload
 
         expect(response).to be_success
-        expect(Doorkeeper::AccessToken.by_refresh_token(token_to_revoke.refresh_token).revoked?).to be_true
+        expect(Doorkeeper::AccessToken.by_refresh_token(token_to_revoke.refresh_token).revoked?).to be_truthy
         expect(authorization_access_token).to_not be_revoked
 
       end

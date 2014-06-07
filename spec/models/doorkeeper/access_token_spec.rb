@@ -62,7 +62,7 @@ module Doorkeeper
         context 'the second token has the same owner and same app' do
           let(:access_token2) { FactoryGirl.create :access_token, default_attributes }
           it 'success' do
-            expect(access_token1.same_credential?(access_token2)).to be_true
+            expect(access_token1.same_credential?(access_token2)).to be_truthy
           end
         end
 
@@ -71,7 +71,7 @@ module Doorkeeper
           let(:access_token2) { FactoryGirl.create :access_token, application: other_application, resource_owner_id: resource_owner_id }
 
           it 'fail' do
-            expect(access_token1.same_credential?(access_token2)).to be_false
+            expect(access_token1.same_credential?(access_token2)).to be_falsey
           end
         end
 
@@ -81,7 +81,7 @@ module Doorkeeper
           let(:access_token2) { FactoryGirl.create :access_token, application: other_application, resource_owner_id: 42 }
 
           it 'fail' do
-            expect(access_token1.same_credential?(access_token2)).to be_false
+            expect(access_token1.same_credential?(access_token2)).to be_falsey
           end
         end
 
@@ -89,7 +89,7 @@ module Doorkeeper
           let(:access_token2) { FactoryGirl.create :access_token, application: application, resource_owner_id: 42 }
 
           it 'fail' do
-            expect(access_token1.same_credential?(access_token2)).to be_false
+            expect(access_token1.same_credential?(access_token2)).to be_falsey
           end
         end
       end
