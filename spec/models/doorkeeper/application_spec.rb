@@ -76,8 +76,8 @@ module Doorkeeper
     end
 
     it 'checks uniqueness of uid' do
-      app1 = Factory(:application)
-      app2 = Factory(:application)
+      app1 = FactoryGirl.create(:application)
+      app2 = FactoryGirl.create(:application)
       app2.uid = app1.uid
       expect(app2).not_to be_valid
     end

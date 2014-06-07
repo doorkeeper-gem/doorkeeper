@@ -17,7 +17,7 @@ module AuthorizationRequestHelper
   end
 
   def client_should_be_authorized(client)
-    expect(client).to have(1).access_grants
+    expect(client.access_grants.size).to eq(1)
   end
 
   def client_should_not_be_authorized(client)

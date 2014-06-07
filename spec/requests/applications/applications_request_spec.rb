@@ -55,7 +55,7 @@ feature 'Edit application' do
   end
 
   scenario 'updating a valid app' do
-    fill_in :name, with: 'Serious app'
+    fill_in 'application[name]', with: 'Serious app'
     click_button 'Submit'
     i_should_see 'Application updated'
     i_should_see 'Serious app'
@@ -63,7 +63,7 @@ feature 'Edit application' do
   end
 
   scenario 'updating an invalid app' do
-    fill_in :name, with: ''
+    fill_in 'application[name]', with: ''
     click_button 'Submit'
     i_should_see 'Whoops! Check your form for possible errors'
   end

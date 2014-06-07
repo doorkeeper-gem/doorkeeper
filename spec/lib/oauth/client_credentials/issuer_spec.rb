@@ -52,7 +52,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
         end
 
         it 'returns false' do
-          expect(subject.create(client, scopes, creator)).to be_false
+          expect(subject.create(client, scopes, creator)).to be_falsey
         end
       end
     end
