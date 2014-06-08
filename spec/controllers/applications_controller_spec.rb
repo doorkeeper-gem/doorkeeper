@@ -16,7 +16,7 @@ module Doorkeeper
 
       it 'does not create application' do
         expect do
-          post :create, application: {
+          post :create, doorkeeper_application: {
             name: 'Example',
             redirect_uri: 'http://example.com' }
         end.to_not change { Doorkeeper::Application.count }
@@ -30,7 +30,7 @@ module Doorkeeper
 
       it 'creates application' do
         expect do
-          post :create, application: {
+          post :create, doorkeeper_application: {
             name: 'Example',
             redirect_uri: 'http://example.com' }
         end.to change { Doorkeeper::Application.count }.by(1)
@@ -39,7 +39,7 @@ module Doorkeeper
 
       it 'does not allow mass assignment of uid or secret' do
         application = FactoryGirl.create(:application)
-        put :update, id: application.id, application: {
+        put :update, id: application.id, doorkeeper_application: {
           uid: '1A2B3C4D',
           secret: '1A2B3C4D' }
 
@@ -48,7 +48,7 @@ module Doorkeeper
 
       it 'updates application' do
         application = FactoryGirl.create(:application)
-        put :update, id: application.id, application: {
+        put :update, id: application.id, doorkeeper_application: {
           name: 'Example',
           redirect_uri: 'http://example.com' }
         expect(application.reload.name).to eq 'Example'

@@ -77,7 +77,7 @@ module Doorkeeper
       end
 
       def application_routes(mapping)
-        routes.resources :applications, controller: mapping[:controllers]
+        routes.resources :doorkeeper_applications, controller: mapping[:controllers], as: :applications, path: 'applications'
       end
 
       def authorized_applications_routes(mapping)

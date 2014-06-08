@@ -2,7 +2,7 @@ en:
   activerecord:
     errors:
       models:
-        application:
+        doorkeeper/application:
           attributes:
             redirect_uri:
               fragment_present: 'cannot contain a fragment.'
@@ -11,7 +11,7 @@ en:
   mongoid:
     errors:
       models:
-        application:
+        doorkeeper/application:
           attributes:
             redirect_uri:
               fragment_present: 'cannot contain a fragment.'
@@ -20,7 +20,7 @@ en:
   mongo_mapper:
     errors:
       models:
-        application:
+        doorkeeper/application:
           attributes:
             redirect_uri:
               fragment_present: 'cannot contain a fragment.'
