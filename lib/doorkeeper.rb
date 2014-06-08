@@ -32,10 +32,10 @@ require 'doorkeeper/oauth/token'
 require 'doorkeeper/oauth/invalid_token_response'
 require 'doorkeeper/oauth/forbidden_token_response'
 
-require 'doorkeeper/models/scopes'
-require 'doorkeeper/models/expirable'
-require 'doorkeeper/models/revocable'
-require 'doorkeeper/models/accessible'
+require 'doorkeeper/models/concerns/scopes'
+require 'doorkeeper/models/concerns/expirable'
+require 'doorkeeper/models/concerns/revocable'
+require 'doorkeeper/models/concerns/accessible'
 
 require 'doorkeeper/helpers/controller'
 

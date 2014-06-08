@@ -1,6 +1,12 @@
 module Doorkeeper
   module Models
     module Expirable
+      extend ActiveSupport::Concern
+
+      included do
+        private :expired_time
+      end
+
       def expired?
         expires_in && Time.now > expired_time
       end
@@ -15,7 +21,6 @@ module Doorkeeper
         expires_sec = expires.seconds.round(0)
         expires_sec > 0 ? expires_sec : 0
       end
-      private :expired_time
     end
   end
 end

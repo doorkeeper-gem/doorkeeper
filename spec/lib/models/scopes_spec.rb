@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'active_support/core_ext/module/delegation'
 require 'active_support/core_ext/object/blank'
 require 'doorkeeper/oauth/scopes'
-require 'doorkeeper/models/scopes'
+require 'doorkeeper/models/concerns/scopes'
 
 describe 'Doorkeeper::Models::Scopes' do
   subject do
