@@ -25,7 +25,7 @@ module Doorkeeper
                       on: :create,
                       if: :use_refresh_token?
 
-    def self.authenticate(token)
+    def self.by_token(token)
       where(token: token).first
     end
 

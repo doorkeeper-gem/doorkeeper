@@ -15,7 +15,7 @@ module Doorkeeper
       attr_accessible :name, :redirect_uri
     end
 
-    def self.authenticate(uid, secret)
+    def self.by_uid_and_secret(uid, secret)
       where(uid: uid, secret: secret).first
     end
 

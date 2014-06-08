@@ -19,8 +19,8 @@ module Doorkeeper
         @original_scopes = parameters[:scope]
 
         if credentials
-          @client = Application.authenticate credentials.uid,
-                                             credentials.secret
+          @client = Application.by_uid_and_secret credentials.uid,
+                                                  credentials.secret
         end
       end
 

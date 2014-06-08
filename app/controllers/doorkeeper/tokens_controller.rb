@@ -25,7 +25,7 @@ module Doorkeeper
     private
 
     def revoke_token(token)
-      token = AccessToken.authenticate(token) || AccessToken.by_refresh_token(token)
+      token = AccessToken.by_token(token) || AccessToken.by_refresh_token(token)
       if token && doorkeeper_token.same_credential?(token)
         token.revoke
         true
