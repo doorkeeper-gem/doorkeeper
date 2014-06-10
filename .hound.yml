@@ -1,0 +1,3 @@
+LineLength:
+  Exclude:
+    - app/spec/**/*
