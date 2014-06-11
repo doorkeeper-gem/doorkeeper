@@ -18,7 +18,7 @@ module Doorkeeper
       # TODO: configure the test oauth path?
       def redirect_uri
         if URIChecker.native_uri? pre_auth.redirect_uri
-          "/oauth/authorize/#{auth.token.token}"
+          { action: :show, code: auth.token.token }
         else
           if response_on_fragment
             uri_with_fragment(
