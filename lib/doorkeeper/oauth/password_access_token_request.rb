@@ -26,7 +26,7 @@ module Doorkeeper
 
       private
 
-      def on_successful_authorization
+      def before_successful_response
         find_or_create_access_token(client, resource_owner.id, scopes, server)
       end
 

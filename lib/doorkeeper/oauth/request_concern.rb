@@ -4,8 +4,10 @@ module Doorkeeper
       def authorize
         validate
         if valid?
-          on_successful_authorization
+          before_successful_response
           @response = TokenResponse.new(access_token)
+          after_successful_response
+          @response
         else
           @response = ErrorResponse.from_request(self)
         end
@@ -36,7 +38,10 @@ module Doorkeeper
           server.refresh_token_enabled?)
       end
 
-      def on_successful_authorization
+      def before_successful_response
+      end
+
+      def after_successful_response
       end
     end
   end
