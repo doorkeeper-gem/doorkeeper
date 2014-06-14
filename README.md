@@ -243,7 +243,7 @@ Doorkeeper.configure do
 end
 ```
 
-The in your controllers:
+And in your controllers:
 
 ```ruby
 class Api::V1::ProductsController < Api::V1::ApiController

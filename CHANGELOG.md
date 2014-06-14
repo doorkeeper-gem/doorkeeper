@@ -5,9 +5,16 @@
 - enhancements
   - [#405] Adds facade to more easily get the token from a request in a route
     constraint.
+  - [#415] Extend Doorkeeper TokenResponse with an `after_successful_response`
+    callback that allows handling of `response` object.
 - internals
   - [#409] Deprecates `test_redirect_uri` in favor of `native_redirect_uri`.
     See discussion in: [#351].
+  - [#411] Clean rspec deprecations. General test improvements.
+  - [#412] rspec line width can go longer than 80 (hound CI config).
+- bug
+  - [#413] fixes #340, routing scope is now taken into account in redirect.
+  - [#401] and [#425] application is not required any longer for access_token.
 
 ## 1.3.0
 
