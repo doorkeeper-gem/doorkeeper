@@ -27,7 +27,7 @@ module Doorkeeper
 
       private
 
-      def on_successful_authorization
+      def before_successful_response
         refresh_token.revoke
         create_access_token
       end
