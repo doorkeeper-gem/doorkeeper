@@ -10,6 +10,10 @@ module Doorkeeper
           define_method :scopes_string do
             Doorkeeper::OAuth::Scopes.from_string(self[:scopes]).to_s
           end
+          
+          define_method :includes_scope? do |required_scopes|
+            required_scopes.blank? || required_scopes.any? { |s| scopes.exists?(s) } 
+          end
         end
       end
     end

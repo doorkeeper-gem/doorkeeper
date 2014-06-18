@@ -13,12 +13,6 @@ module Doorkeeper
       end
     end
 
-    # TODO: move this to Token class
-    def validate_token(token)
-      return false unless token
-      token.accessible? && validate_token_scopes(token)
-    end
-
     def filter_options
       @filter_options
     end
@@ -35,12 +29,6 @@ module Doorkeeper
 
     def unless=(unless_block)
       @filter_options[:unless] = unless_block
-    end
-
-    # TODO: move this to Token class
-    def validate_token_scopes(token)
-      return true if scopes.blank?
-      token.scopes.any? { |scope| scopes.include? scope }
     end
   end
 

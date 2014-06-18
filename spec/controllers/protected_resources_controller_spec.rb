@@ -14,9 +14,7 @@ shared_examples 'specified for particular actions' do
   context 'with valid token', token: :valid do
     it 'allows into index action' do
       get :index, access_token: token_string
-      expect(response).to be_success
-    end
-
+      expect(response).to be_success end 
     it 'allows into show action' do
       get :show, id: '3', access_token: token_string
       expect(response).to be_success
@@ -77,19 +75,22 @@ describe 'Doorkeeper_for helper' do
     end
 
     let(:token_string) { '1A2BC3' }
+    let(:token) {
+      double(Doorkeeper::AccessToken, acceptable?: true)
+    }
 
     it 'access_token param' do
-      expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string)
+      expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string).and_return(token)
       get :index, access_token: token_string
     end
 
     it 'bearer_token param' do
-      expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string)
+      expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string).and_return(token)
       get :index, bearer_token: token_string
     end
 
     it 'Authorization header' do
-      expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string)
+      expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string).and_return(token)
       request.env['HTTP_AUTHORIZATION'] = "Bearer #{token_string}"
       get :index
     end
@@ -101,7 +102,7 @@ describe 'Doorkeeper_for helper' do
     end
 
     it 'does not change Authorization header value' do
-      expect(Doorkeeper::AccessToken).to receive(:authenticate).exactly(2).times
+      expect(Doorkeeper::AccessToken).to receive(:authenticate).exactly(2).times.and_return(token)
       request.env['HTTP_AUTHORIZATION'] = "Bearer #{token_string}"
       get :index
       controller.send(:remove_instance_variable, :@token)
@@ -172,6 +173,7 @@ describe 'Doorkeeper_for helper' do
 
     it 'allows if the token has particular scopes' do
       token = double(Doorkeeper::AccessToken, accessible?: true, scopes: %w(write public))
+      expect(token).to receive(:acceptable?).with(["write"]).and_return(true)
       expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string).and_return(token)
       get :index, access_token: token_string
       expect(response).to be_success
@@ -180,6 +182,7 @@ describe 'Doorkeeper_for helper' do
     it 'does not allow if the token does not include given scope' do
       token = double(Doorkeeper::AccessToken, accessible?: true, scopes: ['public'], revoked?: false, expired?: false)
       expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string).and_return(token)
+      expect(token).to receive(:acceptable?).with(["write"]).and_return(false)
       get :index, access_token: token_string
       expect(response.status).to eq 403
       expect(response.header).to_not include('WWW-Authenticate')
