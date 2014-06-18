@@ -31,6 +31,7 @@ require 'doorkeeper/oauth/token_request'
 require 'doorkeeper/oauth/client'
 require 'doorkeeper/oauth/token'
 require 'doorkeeper/oauth/invalid_token_response'
+require 'doorkeeper/oauth/forbidden_token_response'
 
 require 'doorkeeper/models/scopes'
 require 'doorkeeper/models/expirable'
