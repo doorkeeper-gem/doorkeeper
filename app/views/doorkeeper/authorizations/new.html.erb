@@ -21,19 +21,15 @@
 
   <div class="actions">
     <%= form_tag oauth_authorization_path, method: :post do %>
-      <%= hidden_field_tag :client_id, @pre_auth.client.uid %>
-      <%= hidden_field_tag :redirect_uri, @pre_auth.redirect_uri %>
-      <%= hidden_field_tag :state, @pre_auth.state %>
-      <%= hidden_field_tag :response_type, @pre_auth.response_type %>
-      <%= hidden_field_tag :scope, @pre_auth.scope %>
+      <% @pre_auth.hidden_fields.each do |key, val| %>
+        <%= hidden_field_tag key, val %>
+      <% end %>
       <%= submit_tag "Authorize", class: "btn btn-success btn-lg btn-block" %>
     <% end %>
     <%= form_tag oauth_authorization_path, method: :delete do %>
-      <%= hidden_field_tag :client_id, @pre_auth.client.uid %>
-      <%= hidden_field_tag :redirect_uri, @pre_auth.redirect_uri %>
-      <%= hidden_field_tag :state, @pre_auth.state %>
-      <%= hidden_field_tag :response_type, @pre_auth.response_type %>
-      <%= hidden_field_tag :scope, @pre_auth.scope %>
+      <% @pre_auth.hidden_fields.each do |key, val| %>
+        <%= hidden_field_tag key, val %>
+      <% end %>
       <%= submit_tag "Deny", class: "btn btn-danger btn-lg btn-block" %>
     <% end %>
   </div>

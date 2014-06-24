@@ -9,7 +9,8 @@ module Doorkeeper::OAuth
       server
     }
 
-    let(:client) { double :client, redirect_uri: 'http://tst.com/auth' }
+    let(:client) { double :client, redirect_uri: 'http://tst.com/auth',
+                                   uid: 'dummy-uid'}
 
     let :attributes do
       {
@@ -115,6 +116,21 @@ module Doorkeeper::OAuth
     it 'rejects non-valid scopes' do
       subject.scope = 'invalid'
       expect(subject).not_to be_authorizable
+    end
+
+    it 'returns a hash of hidden fields' do
+      subject.scope = 'profile'
+      hidden_hash = subject.hidden_fields
+      expect_pairs = {
+          client_id:     client.uid,
+          redirect_uri:  attributes[:redirect_uri],
+          state:         attributes[:state],
+          response_type: attributes[:response_type],
+          scope:         'profile',
+      }
+      expect_pairs.each do |key, val|
+        expect(hidden_hash[key]).to eq(val)
+      end
     end
   end
 end
