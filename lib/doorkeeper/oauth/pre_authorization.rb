@@ -38,11 +38,11 @@ module Doorkeeper
 
       def hidden_fields
         {
-            client_id:     client.uid,
-            redirect_uri:  redirect_uri,
-            state:         state,
-            response_type: response_type,
-            scope:         scope,
+          client_id:     client.uid,
+          redirect_uri:  redirect_uri,
+          state:         state,
+          response_type: response_type,
+          scope:         scope,
         }
       end
 

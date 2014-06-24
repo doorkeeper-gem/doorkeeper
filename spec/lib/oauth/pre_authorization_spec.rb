@@ -9,8 +9,12 @@ module Doorkeeper::OAuth
       server
     }
 
-    let(:client) { double :client, redirect_uri: 'http://tst.com/auth',
-                                   uid: 'dummy-uid'}
+    let(:client) do
+      double :client,
+             redirect_uri: 'http://tst.com/auth',
+             uid: 'dummy-uid'
+    end
+
 
     let :attributes do
       {
@@ -122,11 +126,11 @@ module Doorkeeper::OAuth
       subject.scope = 'profile'
       hidden_hash = subject.hidden_fields
       expect_pairs = {
-          client_id:     client.uid,
-          redirect_uri:  attributes[:redirect_uri],
-          state:         attributes[:state],
-          response_type: attributes[:response_type],
-          scope:         'profile',
+        client_id:     client.uid,
+        redirect_uri:  attributes[:redirect_uri],
+        state:         attributes[:state],
+        response_type: attributes[:response_type],
+        scope:         'profile',
       }
       expect_pairs.each do |key, val|
         expect(hidden_hash[key]).to eq(val)
