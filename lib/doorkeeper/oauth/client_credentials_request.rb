@@ -8,7 +8,7 @@ module Doorkeeper
       include Doorkeeper::Validations
       include Doorkeeper::OAuth::RequestConcern
 
-      attr_accessor :issuer, :server, :client, :original_scopes, :scopes
+      attr_accessor :issuer, :server, :client, :original_scopes
       attr_reader :response
       alias :error_response :response
 
@@ -26,15 +26,6 @@ module Doorkeeper
 
       def access_token
         issuer.token
-      end
-
-      # TODO: Why can't it use RequestConcern's implementation?
-      def scopes
-        @scopes ||= if @original_scopes.present?
-                      Doorkeeper::OAuth::Scopes.from_string(@original_scopes)
-                    else
-                      server.default_scopes
-                    end
       end
 
       private
