@@ -15,10 +15,26 @@ module Doorkeeper
 
       def scopes
         @scopes ||= if @original_scopes.present?
-                      Doorkeeper::OAuth::Scopes.from_string(@original_scopes)
+                      requested_scopes
                     else
                       default_scopes
                     end
+      end
+
+      def requested_scopes
+        if default_scopes_persistent?
+          default_scopes + optional_scopes
+        else
+          optional_scopes
+        end
+      end
+
+      def optional_scopes
+        Doorkeeper::OAuth::Scopes.from_string(@original_scopes)
+      end
+
+      def default_scopes_persistent?
+        Doorkeeper.configuration.default_scopes_persistent?
       end
 
       def default_scopes
