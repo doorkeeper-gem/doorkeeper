@@ -79,7 +79,7 @@ module Doorkeeper
         resource_owner_id: resource_owner_id,
         scopes: scopes,
         expires_in_seconds: expires_in_seconds,
-        application: { uid: application.uid }
+        application: { uid: application.try(:uid) }
       }
     end
 
