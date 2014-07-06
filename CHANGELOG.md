@@ -1,6 +1,6 @@
 # Changelog
 
-## master
+## 1.3.1
 
 - enhancements
   - [#405] Adds facade to more easily get the token from a request in a route
