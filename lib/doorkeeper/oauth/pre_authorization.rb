@@ -36,6 +36,16 @@ module Doorkeeper
         Doorkeeper::OAuth::ErrorResponse.from_request(self)
       end
 
+      def hidden_fields
+        {
+          client_id:     client.uid,
+          redirect_uri:  redirect_uri,
+          state:         state,
+          response_type: response_type,
+          scope:         scope,
+        }
+      end
+
       private
 
       def validate_response_type
