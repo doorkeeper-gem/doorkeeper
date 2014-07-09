@@ -9,13 +9,15 @@ module Doorkeeper
             unless doorkeeper_for.validate_token(doorkeeper_token)
               if !doorkeeper_token || !doorkeeper_token.accessible?
                 @error = OAuth::InvalidTokenResponse.from_access_token(doorkeeper_token)
-                headers.merge!(@error.headers.reject { |k, v| ['Content-Type'].include? k })
-                render_unauthorized(doorkeeper_unauthorized_render_options)
+                error_status = :unauthorized
+                options = doorkeeper_unauthorized_render_options
               else
                 @error = OAuth::ForbiddenTokenResponse.from_scopes(doorkeeper_for.scopes)
-                headers.merge!(@error.headers.reject { |k, v| ['Content-Type'].include? k })
-                render_forbidden(doorkeeper_forbidden_render_options)
+                error_status = :forbidden
+                options = doorkeeper_forbidden_render_options
               end
+              headers.merge!(@error.headers.reject { |k, v| ['Content-Type'].include? k })
+              render_error(error_status, options)
             end
           end
         end
@@ -42,21 +44,11 @@ module Doorkeeper
 
       private
 
-      def render_unauthorized(options)
+      def render_error(error, options)
         if options.blank?
-          head :unauthorized
+          head error
         else
-          options[:status] = :unauthorized
-          options[:layout] = false if options[:layout].nil?
-          render options
-        end
-      end
-
-      def render_forbidden(options)
-        if options.blank?
-          head :forbidden
-        else
-          options[:status] = :forbidden
+          options[:status] = error
           options[:layout] = false if options[:layout].nil?
           render options
         end
