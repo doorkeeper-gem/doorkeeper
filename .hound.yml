@@ -1,3 +1,6 @@
 LineLength:
   Exclude:
     - app/spec/**/*
+
+StringLiterals:
+  Enabled: false
