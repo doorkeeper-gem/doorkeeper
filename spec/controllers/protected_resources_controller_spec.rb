@@ -302,6 +302,8 @@ describe 'Doorkeeper_for helper' do
     context 'with invalid token', token: :invalid do
       it 'does not allow access if passed block evaluates to false' do
         get :index, access_token: token_string
+        expect(response.status).to eq 401
+        expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
       end
 
       it 'allows access if passed block evaluates to true' do
