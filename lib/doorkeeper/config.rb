@@ -66,6 +66,10 @@ module Doorkeeper
         @config.instance_variable_set('@optional_scopes', Doorkeeper::OAuth::Scopes.from_array(scopes))
       end
 
+      def default_scopes_persistent
+        @config.instance_variable_set('@default_scopes_persistent', true)
+      end
+
       def client_credentials(*methods)
         @config.instance_variable_set('@client_credentials', methods)
       end
@@ -195,6 +199,10 @@ module Doorkeeper
 
     def confirm_application_owner?
       !!@confirm_application_owner
+    end
+
+    def default_scopes_persistent?
+      !!@default_scopes_persistent
     end
 
     def default_scopes
