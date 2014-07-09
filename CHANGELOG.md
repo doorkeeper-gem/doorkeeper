@@ -1,5 +1,13 @@
 # Changelog
 
+## master
+
+- internals
+  - [#427] Adds specs expectations.
+- bug
+  - [#418] fixes #243, requests with insufficient scope now respond 403 instead
+    of 401.
+
 ## 1.3.1
 
 - enhancements
