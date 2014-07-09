@@ -45,7 +45,7 @@ feature 'Private API' do
     @token.update_column :scopes, nil
     with_access_token_header @token.token
     visit '/full_protected_resources/1.json'
-    response_status_should_be 401
+    response_status_should_be 403
   end
 
   scenario 'access token with default scope' do

@@ -181,8 +181,8 @@ describe 'Doorkeeper_for helper' do
       token = double(Doorkeeper::AccessToken, accessible?: true, scopes: ['public'], revoked?: false, expired?: false)
       expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string).and_return(token)
       get :index, access_token: token_string
-      expect(response.status).to eq 401
-      expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
+      expect(response.status).to eq 403
+      expect(response.header).to_not include('WWW-Authenticate')
     end
   end
 

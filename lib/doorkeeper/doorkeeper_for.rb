@@ -1,13 +1,15 @@
 module Doorkeeper
   class InvalidSyntax < StandardError; end
   class DoorkeeperFor
+    attr_reader :scopes
+
     def initialize(options)
       options ||= {}
       fail InvalidSyntax unless options.is_a? Hash
       @filter_options = {}
 
       options.each do |k, v|
-        self.send(k, v)
+        send("#{k}=", v)
       end
     end
 
@@ -23,29 +25,29 @@ module Doorkeeper
 
     private
 
-    def scopes(scopes)
+    def scopes=(scopes)
       @scopes = scopes.map(&:to_s)
     end
 
-    def if(if_block)
+    def if=(if_block)
       @filter_options[:if] = if_block
     end
 
-    def unless(unless_block)
+    def unless=(unless_block)
       @filter_options[:unless] = unless_block
     end
 
     # TODO: move this to Token class
     def validate_token_scopes(token)
-      return true if @scopes.blank?
-      token.scopes.any? { |scope| @scopes.include? scope }
+      return true if scopes.blank?
+      token.scopes.any? { |scope| scopes.include? scope }
     end
   end
 
   class AllDoorkeeperFor < DoorkeeperFor
     private
 
-    def except(actions)
+    def except=(actions)
       @filter_options[:except] = actions
     end
   end

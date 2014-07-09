@@ -7,16 +7,14 @@ module Doorkeeper
 
           before_filter doorkeeper_for.filter_options do
             unless doorkeeper_for.validate_token(doorkeeper_token)
-              @error = OAuth::InvalidTokenResponse.from_access_token(doorkeeper_token)
-              headers.merge!(@error.headers.reject { |k, v| ['Content-Type'].include? k })
-              render_options = doorkeeper_unauthorized_render_options
-
-              if render_options.nil? || render_options.empty?
-                head :unauthorized
+              if !doorkeeper_token || !doorkeeper_token.accessible?
+                @error = OAuth::InvalidTokenResponse.from_access_token(doorkeeper_token)
+                headers.merge!(@error.headers.reject { |k, v| ['Content-Type'].include? k })
+                render_unauthorized(doorkeeper_unauthorized_render_options)
               else
-                render_options[:status] = :unauthorized
-                render_options[:layout] = false if render_options[:layout].nil?
-                render render_options
+                @error = OAuth::ForbiddenTokenResponse.from_scopes(doorkeeper_for.scopes)
+                headers.merge!(@error.headers.reject { |k, v| ['Content-Type'].include? k })
+                render_forbidden(doorkeeper_forbidden_render_options)
               end
             end
           end
@@ -36,6 +34,32 @@ module Doorkeeper
 
       def doorkeeper_unauthorized_render_options
         nil
+      end
+
+      def doorkeeper_forbidden_render_options
+        nil
+      end
+
+      private
+
+      def render_unauthorized(options)
+        if options.blank?
+          head :unauthorized
+        else
+          options[:status] = :unauthorized
+          options[:layout] = false if options[:layout].nil?
+          render options
+        end
+      end
+
+      def render_forbidden(options)
+        if options.blank?
+          head :forbidden
+        else
+          options[:status] = :forbidden
+          options[:layout] = false if options[:layout].nil?
+          render options
+        end
       end
     end
   end
