@@ -11,7 +11,7 @@ module Doorkeeper
                 @error = OAuth::InvalidTokenResponse.from_access_token(doorkeeper_token)
                 error_status = :unauthorized
                 options = doorkeeper_unauthorized_render_options
-             else
+              else
                 @error = OAuth::ForbiddenTokenResponse.from_scopes(doorkeeper_for.scopes)
                 error_status = :forbidden
                 options = doorkeeper_forbidden_render_options

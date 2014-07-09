@@ -113,7 +113,11 @@ module Doorkeeper
       end
 
       context 'a token is acceptable with the correct scopes' do
-        let(:token) { t = FactoryGirl.create(:access_token); t[:scopes] = 'public'; t }
+        let(:token) do
+          token = FactoryGirl.create(:access_token)
+          token[:scopes] = 'public'
+          token
+        end
 
         it 'should return true' do
           expect(token.acceptable?(['public'])).to be true
