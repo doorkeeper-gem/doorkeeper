@@ -95,6 +95,36 @@ module Doorkeeper
       end
     end
 
+    describe '#acceptable?' do
+      context 'a token that is not accessible' do
+        let(:token) { FactoryGirl.create(:access_token, created_at: 6.hours.ago) }
+
+        it 'should return false' do
+          expect(token.acceptable?(nil)).to be false
+        end
+      end
+
+      context 'a token that has the incorrect scopes' do
+        let(:token) { FactoryGirl.create(:access_token) }
+
+        it 'should return false' do
+          expect(token.acceptable?(['public'])).to be false
+        end
+      end
+
+      context 'a token is acceptable with the correct scopes' do
+        let(:token) do
+          token = FactoryGirl.create(:access_token)
+          token[:scopes] = 'public'
+          token
+        end
+
+        it 'should return true' do
+          expect(token.acceptable?(['public'])).to be true
+        end
+      end
+    end
+
     describe '.revoke_all_for' do
       let(:resource_owner) { double(id: 100) }
       let(:application)    { FactoryGirl.create :application }

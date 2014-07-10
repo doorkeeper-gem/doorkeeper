@@ -4,7 +4,7 @@ shared_context 'valid token', token: :valid do
   end
 
   let :token do
-    double(Doorkeeper::AccessToken, accessible?: true)
+    double(Doorkeeper::AccessToken, accessible?: true, includes_scope?: true, acceptable?: true)
   end
 
   before :each do
@@ -18,7 +18,7 @@ shared_context 'invalid token', token: :invalid do
   end
 
   let :token do
-    double(Doorkeeper::AccessToken, accessible?: false, revoked?: false, expired?: false)
+    double(Doorkeeper::AccessToken, accessible?: false, revoked?: false, expired?: false, includes_scope?: false, acceptable?: false)
   end
 
   before :each do

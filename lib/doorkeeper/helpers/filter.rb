@@ -6,7 +6,7 @@ module Doorkeeper
           doorkeeper_for = DoorkeeperForBuilder.create_doorkeeper_for(*args)
 
           before_filter doorkeeper_for.filter_options do
-            unless doorkeeper_for.validate_token(doorkeeper_token)
+            unless valid_token?(doorkeeper_for.scopes)
               if !doorkeeper_token || !doorkeeper_token.accessible?
                 @error = OAuth::InvalidTokenResponse.from_access_token(doorkeeper_token)
                 error_status = :unauthorized
@@ -29,9 +29,11 @@ module Doorkeeper
       end
 
       def doorkeeper_token
-        return @token if instance_variable_defined?(:@token)
-        methods = Doorkeeper.configuration.access_token_methods
-        @token = OAuth::Token.authenticate request, *methods
+        @token ||= OAuth::Token.authenticate request, *config_methods
+      end
+
+      def config_methods
+        @methods ||= Doorkeeper.configuration.access_token_methods
       end
 
       def doorkeeper_unauthorized_render_options
@@ -43,6 +45,10 @@ module Doorkeeper
       end
 
       private
+
+      def valid_token?(scopes)
+        doorkeeper_token && doorkeeper_token.acceptable?(scopes)
+      end
 
       def render_error(error, options)
         if options.blank?
