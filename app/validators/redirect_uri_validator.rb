@@ -14,7 +14,6 @@ class RedirectUriValidator < ActiveModel::EachValidator
         return if native_redirect_uri?(uri)
         record.errors.add(attribute, :fragment_present) unless uri.fragment.nil?
         record.errors.add(attribute, :relative_uri) if uri.scheme.nil? || uri.host.nil?
-        record.errors.add(attribute, :has_query_parameter) unless uri.query.nil?
       end
     end
   rescue URI::InvalidURIError

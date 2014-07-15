@@ -41,7 +41,6 @@ describe RedirectUriValidator do
 
   it 'is invalid when the uri has a query parameter' do
     subject.redirect_uri = 'http://example.com/abcd?xyz=123'
-    expect(subject).not_to be_valid
-    expect(subject.errors[:redirect_uri].first).to eq('cannot contain a query parameter.')
+    expect(subject).to be_valid
   end
 end
