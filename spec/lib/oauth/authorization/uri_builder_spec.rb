@@ -32,6 +32,11 @@ module Doorkeeper::OAuth::Authorization
         uri = subject.uri_with_fragment 'http://example.com/', parameter: 'value'
         expect(uri).to eq('http://example.com/#parameter=value')
       end
+
+      it 'preserves original query parameters' do
+        uri = subject.uri_with_fragment 'http://example.com/?query1=value1', parameter: 'value'
+        expect(uri).to eq('http://example.com/?query1=value1#parameter=value')
+      end
     end
   end
 end

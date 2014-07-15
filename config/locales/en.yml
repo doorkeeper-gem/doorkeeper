@@ -6,7 +6,6 @@ en:
           attributes:
             redirect_uri:
               fragment_present: 'cannot contain a fragment.'
-              has_query_parameter: 'cannot contain a query parameter.'
               invalid_uri: 'must be a valid URI.'
               relative_uri: 'must be an absolute URI.'
   mongoid:
@@ -16,7 +15,6 @@ en:
           attributes:
             redirect_uri:
               fragment_present: 'cannot contain a fragment.'
-              has_query_parameter: 'cannot contain a query parameter.'
               invalid_uri: 'must be a valid URI.'
               relative_uri: 'must be an absolute URI.'
   mongo_mapper:
@@ -26,7 +24,6 @@ en:
           attributes:
             redirect_uri:
               fragment_present: 'cannot contain a fragment.'
-              has_query_parameter: 'cannot contain a query parameter.'
               invalid_uri: 'must be a valid URI.'
               relative_uri: 'must be an absolute URI.'
   doorkeeper:
