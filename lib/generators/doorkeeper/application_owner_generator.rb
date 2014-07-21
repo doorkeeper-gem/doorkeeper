@@ -1,4 +1,5 @@
 require 'rails/generators/active_record'
+require 'doorkeeper'
 
 class Doorkeeper::ApplicationOwnerGenerator < Rails::Generators::Base
   include Rails::Generators::Migration
