@@ -13,11 +13,7 @@ module Doorkeeper
       handle_token_exception e
     end
 
-    #############################################
-    #   RFC 7009 - OAuth 2.0 Token Revocation   #
-    #                                           #
-    #    http://tools.ietf.org/html/rfc7009     #
-    #############################################
+    # OAuth 2.0 Token Revocation - http://tools.ietf.org/html/rfc7009
     def revoke
       # The authorization server first validates the client credentials
       if doorkeeper_token && doorkeeper_token.accessible?

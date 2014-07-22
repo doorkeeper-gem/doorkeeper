@@ -15,7 +15,6 @@ module Doorkeeper
         true
       end
 
-      # TODO: configure the test oauth path?
       def redirect_uri
         if URIChecker.native_uri? pre_auth.redirect_uri
           { action: :show, code: auth.token.token }

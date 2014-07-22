@@ -24,12 +24,6 @@ module Doorkeeper
       end
     end
 
-    def show
-    end
-
-    def edit
-    end
-
     def update
       if @application.update_attributes(application_params)
         flash[:notice] = I18n.t(:notice, scope: [:doorkeeper, :flash, :applications, :update])
