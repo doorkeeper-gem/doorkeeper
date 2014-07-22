@@ -9,6 +9,7 @@
 - bug
   - [#418] fixes #243, requests with insufficient scope now respond 403 instead
     of 401. (API change)
+  - [#438] fixes #398, native redirect for implicit token grant bug.
 - enhancements
   - [#432] Keeps query parameters
 
