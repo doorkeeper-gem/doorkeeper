@@ -98,6 +98,52 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
   end
 
+  describe 'GET #new token request with native url and skip_authorization true' do
+    before do
+      allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
+        true
+      end)
+      client.update_column :redirect_uri, 'urn:ietf:wg:oauth:2.0:oob'
+      get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
+    end
+
+    it 'should redirect immediately' do
+      expect(response).to be_redirect
+      expect(response.location).to match(/oauth\/token\/info\?access_token=/)
+    end
+
+    it 'should not issue a grant' do
+      expect(Doorkeeper::AccessGrant.count).to be 0
+    end
+
+    it 'should issue a token' do
+      expect(Doorkeeper::AccessToken.count).to be 1
+    end
+  end
+
+  describe 'GET #new code request with native url and skip_authorization true' do
+    before do
+      allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
+        true
+      end)
+      client.update_column :redirect_uri, 'urn:ietf:wg:oauth:2.0:oob'
+      get :new, client_id: client.uid, response_type: 'code', redirect_uri: client.redirect_uri
+    end
+
+    it 'should redirect immediately' do
+      expect(response).to be_redirect
+      expect(response.location).to match(/oauth\/authorize\//)
+    end
+
+    it 'should issue a grant' do
+      expect(Doorkeeper::AccessGrant.count).to be 1
+    end
+
+    it 'should not issue a token' do
+      expect(Doorkeeper::AccessToken.count).to be 0
+    end
+  end
+
   describe 'GET #new with skip_authorization true' do
     before do
       allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
