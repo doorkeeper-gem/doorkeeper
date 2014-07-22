@@ -4,9 +4,13 @@
 
 - internals
   - [#427] Adds specs expectations.
+  - [#428] Error response refactor.
+  - [#417] Moves token validation into Access Token class.
 - bug
   - [#418] fixes #243, requests with insufficient scope now respond 403 instead
-    of 401.
+    of 401. (API change)
+- enhancements
+  - [#432] Keeps query parameters
 
 ## 1.3.1
 
