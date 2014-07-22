@@ -79,7 +79,7 @@ module Doorkeeper::OAuth::Helpers
 
           it 'expands *' do
             uri = 'http://app.co'
-            client_uri = 'http://app.co*'
+            client_uri = 'http://app.co/*'
             expect(URIChecker.matches?(uri, client_uri)).to be true
           end
 
