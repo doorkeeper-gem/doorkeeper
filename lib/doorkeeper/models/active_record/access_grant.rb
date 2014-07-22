@@ -4,6 +4,6 @@ module Doorkeeper
       establish_connection Doorkeeper.configuration.active_record_options[:establish_connection]
     end
 
-    self.table_name = "#{self.table_name_prefix}oauth_access_grants#{self.table_name_suffix}".to_sym
+    self.table_name = "#{table_name_prefix}oauth_access_grants#{table_name_suffix}".to_sym
   end
 end

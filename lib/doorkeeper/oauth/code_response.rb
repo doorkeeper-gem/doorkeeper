@@ -1,8 +1,8 @@
 module Doorkeeper
   module OAuth
     class CodeResponse
-      include Doorkeeper::OAuth::Authorization::URIBuilder
-      include Doorkeeper::OAuth::Helpers
+      include OAuth::Authorization::URIBuilder
+      include OAuth::Helpers
 
       attr_accessor :pre_auth, :auth, :response_on_fragment
 

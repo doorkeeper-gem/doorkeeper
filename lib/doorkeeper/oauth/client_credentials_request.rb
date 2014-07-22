@@ -5,8 +5,8 @@ require 'doorkeeper/oauth/client_credentials/validation'
 module Doorkeeper
   module OAuth
     class ClientCredentialsRequest
-      include Doorkeeper::Validations
-      include Doorkeeper::OAuth::RequestConcern
+      include Validations
+      include OAuth::RequestConcern
 
       attr_accessor :issuer, :server, :client, :original_scopes
       attr_reader :response

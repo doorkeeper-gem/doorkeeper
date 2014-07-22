@@ -6,8 +6,8 @@ module Doorkeeper
   module OAuth
     class ClientCredentialsRequest
       class Validation
-        include Doorkeeper::Validations
-        include Doorkeeper::OAuth::Helpers
+        include Validations
+        include OAuth::Helpers
 
         validate :client, error: :invalid_client
         validate :scopes, error: :invalid_scope

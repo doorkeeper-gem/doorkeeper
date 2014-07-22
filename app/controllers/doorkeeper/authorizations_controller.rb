@@ -1,10 +1,10 @@
 module Doorkeeper
-  class AuthorizationsController < ::Doorkeeper::ApplicationController
+  class AuthorizationsController < ApplicationController
     before_filter :authenticate_resource_owner!
 
     def new
       if pre_auth.authorizable?
-        if Doorkeeper::AccessToken.matching_token_for(pre_auth.client, current_resource_owner.id, pre_auth.scopes) || skip_authorization?
+        if AccessToken.matching_token_for(pre_auth.client, current_resource_owner.id, pre_auth.scopes) || skip_authorization?
           auth = authorization.authorize
           redirect_to auth.redirect_uri
         else
@@ -13,9 +13,6 @@ module Doorkeeper
       else
         render :error
       end
-    end
-
-    def show
     end
 
     # TODO: Handle raise invalid authorization

@@ -35,7 +35,7 @@ module Doorkeeper
 
   def self.setup_application_owner
     require File.join(File.dirname(__FILE__), 'models', 'ownership')
-    Doorkeeper::Application.send :include, Doorkeeper::Models::Ownership
+    Application.send :include, Models::Ownership
   end
 
   class Config
@@ -59,11 +59,11 @@ module Doorkeeper
       end
 
       def default_scopes(*scopes)
-        @config.instance_variable_set('@default_scopes', Doorkeeper::OAuth::Scopes.from_array(scopes))
+        @config.instance_variable_set('@default_scopes', OAuth::Scopes.from_array(scopes))
       end
 
       def optional_scopes(*scopes)
-        @config.instance_variable_set('@optional_scopes', Doorkeeper::OAuth::Scopes.from_array(scopes))
+        @config.instance_variable_set('@optional_scopes', OAuth::Scopes.from_array(scopes))
       end
 
       def client_credentials(*methods)
@@ -198,11 +198,11 @@ module Doorkeeper
     end
 
     def default_scopes
-      @default_scopes ||= Doorkeeper::OAuth::Scopes.new
+      @default_scopes ||= OAuth::Scopes.new
     end
 
     def optional_scopes
-      @optional_scopes ||= Doorkeeper::OAuth::Scopes.new
+      @optional_scopes ||= OAuth::Scopes.new
     end
 
     def scopes

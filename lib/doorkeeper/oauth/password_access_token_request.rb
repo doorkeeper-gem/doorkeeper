@@ -1,9 +1,9 @@
 module Doorkeeper
   module OAuth
     class PasswordAccessTokenRequest
-      include Doorkeeper::Validations
-      include Doorkeeper::OAuth::RequestConcern
-      include Doorkeeper::OAuth::Helpers
+      include Validations
+      include OAuth::RequestConcern
+      include OAuth::Helpers
 
       validate :client,         error: :invalid_client
       validate :resource_owner, error: :invalid_resource_owner
@@ -19,8 +19,8 @@ module Doorkeeper
         @original_scopes = parameters[:scope]
 
         if credentials
-          @client = Doorkeeper::Application.authenticate credentials.uid,
-                                                         credentials.secret
+          @client = Application.authenticate credentials.uid,
+                                             credentials.secret
         end
       end
 

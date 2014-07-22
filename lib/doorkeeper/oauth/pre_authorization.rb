@@ -1,7 +1,7 @@
 module Doorkeeper
   module OAuth
     class PreAuthorization
-      include Doorkeeper::Validations
+      include Validations
 
       validate :response_type, error: :unsupported_response_type
       validate :client, error: :invalid_client
@@ -33,7 +33,7 @@ module Doorkeeper
       end
 
       def error_response
-        Doorkeeper::OAuth::ErrorResponse.from_request(self)
+        OAuth::ErrorResponse.from_request(self)
       end
 
       private

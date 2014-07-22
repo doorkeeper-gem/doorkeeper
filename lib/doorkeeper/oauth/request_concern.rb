@@ -15,7 +15,7 @@ module Doorkeeper
 
       def scopes
         @scopes ||= if @original_scopes.present?
-                      Doorkeeper::OAuth::Scopes.from_string(@original_scopes)
+                      OAuth::Scopes.from_string(@original_scopes)
                     else
                       default_scopes
                     end
@@ -30,7 +30,7 @@ module Doorkeeper
       end
 
       def find_or_create_access_token(client, resource_owner_id, scopes, server)
-        @access_token = Doorkeeper::AccessToken.find_or_create_for(
+        @access_token = AccessToken.find_or_create_for(
           client,
           resource_owner_id,
           scopes,

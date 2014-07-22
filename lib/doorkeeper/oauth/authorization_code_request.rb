@@ -1,8 +1,8 @@
 module Doorkeeper
   module OAuth
     class AuthorizationCodeRequest
-      include Doorkeeper::Validations
-      include Doorkeeper::OAuth::RequestConcern
+      include Validations
+      include OAuth::RequestConcern
 
       validate :attributes,   error: :invalid_request
       validate :client,       error: :invalid_client

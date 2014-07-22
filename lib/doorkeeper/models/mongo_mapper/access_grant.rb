@@ -3,7 +3,7 @@ require 'doorkeeper/models/mongo_mapper/revocable'
 module Doorkeeper
   class AccessGrant
     include MongoMapper::Document
-    include Doorkeeper::Models::MongoMapper::Revocable
+    include Models::MongoMapper::Revocable
     safe
     timestamps!
 

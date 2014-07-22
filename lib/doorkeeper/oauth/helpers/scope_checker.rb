@@ -10,7 +10,7 @@ module Doorkeeper
         def self.valid?(scope, server_scopes)
           scope.present? &&
           scope !~ /[\n|\r|\t]/ &&
-          server_scopes.has_scopes?(Doorkeeper::OAuth::Scopes.from_string(scope))
+          server_scopes.has_scopes?(OAuth::Scopes.from_string(scope))
         end
       end
     end

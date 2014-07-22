@@ -1,9 +1,9 @@
 module Doorkeeper
   module OAuth
     class RefreshTokenRequest
-      include Doorkeeper::Validations
-      include Doorkeeper::OAuth::RequestConcern
-      include Doorkeeper::OAuth::Helpers
+      include Validations
+      include OAuth::RequestConcern
+      include OAuth::Helpers
 
       validate :token,        error: :invalid_request
       validate :client,       error: :invalid_client
@@ -20,8 +20,8 @@ module Doorkeeper
         @original_scopes  = parameters[:scopes]
 
         if credentials
-          @client = Doorkeeper::Application.authenticate credentials.uid,
-            credentials.secret
+          @client = Application.authenticate credentials.uid,
+                                             credentials.secret
         end
       end
 
@@ -37,7 +37,7 @@ module Doorkeeper
       end
 
       def create_access_token
-        @access_token = Doorkeeper::AccessToken.create!(
+        @access_token = AccessToken.create!(
           application_id:    refresh_token.application_id,
           resource_owner_id: refresh_token.resource_owner_id,
           scopes:            scopes.to_s,

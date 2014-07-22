@@ -1,5 +1,5 @@
 module Doorkeeper
-  class TokensController < ::Doorkeeper::ApplicationController
+  class TokensController < ApplicationController
     include Helpers::Controller
     include ActionController::RackDelegation
     include ActionController::Instrumentation
@@ -33,7 +33,7 @@ module Doorkeeper
     private
 
     def revoke_token(token)
-      token = Doorkeeper::AccessToken.authenticate(token) || Doorkeeper::AccessToken.by_refresh_token(token)
+      token = AccessToken.authenticate(token) || AccessToken.by_refresh_token(token)
       if token && doorkeeper_token.same_credential?(token)
         token.revoke
         true
