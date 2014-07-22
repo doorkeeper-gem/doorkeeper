@@ -58,12 +58,6 @@ module Doorkeeper::OAuth::Helpers
           Doorkeeper.configuration.stub(wildcard_redirect_uri: true)
         end
 
-        it 'ignores query parameter on comparison' do
-          uri = 'http://app.co/?query=hello'
-          client_uri = 'http://app.co'
-          expect(URIChecker.matches?(uri, client_uri)).to be true
-        end
-
         it 'doesn\'t allow non-matching domains through' do
           uri = 'http://app.abc/?query=hello'
           client_uri = 'http://app.co'
@@ -74,6 +68,26 @@ module Doorkeeper::OAuth::Helpers
           uri = 'http://app.co/?query=hello'
           client_uri = 'http://example.com?app.co=test'
           expect(URIChecker.matches?(uri, client_uri)).to be false
+        end
+
+        context 'expanding *' do
+          it 'allows subdomain' do
+            uri = 'http://subdomain.app.co'
+            client_uri = 'http://*.app.co'
+            expect(URIChecker.matches?(uri, client_uri)).to be true
+          end
+
+          it 'expands *' do
+            uri = 'http://app.co'
+            client_uri = 'http://app.co*'
+            expect(URIChecker.matches?(uri, client_uri)).to be true
+          end
+
+          it 'doesn\'t allow non-matching domains through' do
+            uri = 'http://app.abc/?query=hello'
+            client_uri = 'http://app.co/*'
+            expect(URIChecker.matches?(uri, client_uri)).to be false
+          end
         end
       end
     end

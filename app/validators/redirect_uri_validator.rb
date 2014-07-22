@@ -10,6 +10,7 @@ class RedirectUriValidator < ActiveModel::EachValidator
       record.errors.add(attribute, :blank)
     else
       value.split.each do |val|
+        val = val.gsub('*', 'a') if Doorkeeper.configuration.wildcard_redirect_uri
         uri = ::URI.parse(val)
         return if native_redirect_uri?(uri)
         record.errors.add(attribute, :fragment_present) unless uri.fragment.nil?
