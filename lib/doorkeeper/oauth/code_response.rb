@@ -17,7 +17,7 @@ module Doorkeeper
 
       def redirect_uri
         if URIChecker.native_uri? pre_auth.redirect_uri
-          { action: :show, code: auth.token.token }
+          auth.native_redirect
         else
           if response_on_fragment
             uri_with_fragment(
