@@ -1,4 +1,3 @@
-require 'doorkeeper/models/mongoid/revocable'
 require 'doorkeeper/models/mongoid/scopes'
 require 'doorkeeper/models/mongoid/version'
 
@@ -6,7 +5,6 @@ module Doorkeeper
   class AccessGrant
     include Mongoid::Document
     include Mongoid::Timestamps
-    include Models::Mongoid::Revocable
     include Models::Mongoid::Scopes
     extend Models::Mongoid::Version
 

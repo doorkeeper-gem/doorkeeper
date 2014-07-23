@@ -1,11 +1,9 @@
-require 'doorkeeper/models/mongoid/revocable'
 require 'doorkeeper/models/mongoid/scopes'
 
 module Doorkeeper
   class AccessToken
     include Mongoid::Document
     include Mongoid::Timestamps
-    include Models::Mongoid::Revocable
     include Models::Mongoid::Scopes
 
     self.store_in :oauth_access_tokens
