@@ -27,4 +27,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency "database_cleaner", "~> 1.3.0"
   s.add_development_dependency "rspec-activemodel-mocks", "~> 1.0.0"
   s.add_development_dependency "bcrypt-ruby", "~> 3.0.1"
+  s.add_development_dependency "pry", "~> 0.10.0"
 end

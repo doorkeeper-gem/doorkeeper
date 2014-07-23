@@ -19,6 +19,14 @@ module Doorkeeper
           )
         end
 
+        def native_redirect
+          {
+            controller: 'doorkeeper/token_info',
+            action: :show,
+            access_token: token.token
+          }
+        end
+
         def configuration
           Doorkeeper.configuration
         end
