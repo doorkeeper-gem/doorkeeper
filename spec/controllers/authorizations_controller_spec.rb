@@ -103,7 +103,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
       allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
         true
       end)
-      client.update_column :redirect_uri, 'urn:ietf:wg:oauth:2.0:oob'
+      client.update_attribute :redirect_uri, 'urn:ietf:wg:oauth:2.0:oob'
       get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
     end
 
@@ -126,7 +126,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
       allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
         true
       end)
-      client.update_column :redirect_uri, 'urn:ietf:wg:oauth:2.0:oob'
+      client.update_attribute :redirect_uri, 'urn:ietf:wg:oauth:2.0:oob'
       get :new, client_id: client.uid, response_type: 'code', redirect_uri: client.redirect_uri
     end
 
