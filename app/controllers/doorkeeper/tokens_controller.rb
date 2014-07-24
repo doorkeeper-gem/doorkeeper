@@ -1,6 +1,5 @@
 module Doorkeeper
   class TokensController < ApplicationController
-    include Helpers::Controller
     include ActionController::RackDelegation
     include ActionController::Instrumentation
 
