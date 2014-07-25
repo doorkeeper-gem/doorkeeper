@@ -1,5 +1,5 @@
 module Doorkeeper
-  class ApplicationsController < ApplicationController
+  class ApplicationsController < Doorkeeper::ApplicationController
     layout 'doorkeeper/admin'
     respond_to :html
 
