@@ -1,5 +1,5 @@
 module Doorkeeper
-  class TokenInfoController < ApplicationController
+  class TokenInfoController < Doorkeeper::ApplicationController
     def show
       if doorkeeper_token && doorkeeper_token.accessible?
         render json: doorkeeper_token, status: :ok

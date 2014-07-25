@@ -1,5 +1,5 @@
 module Doorkeeper
-  class AuthorizedApplicationsController < ApplicationController
+  class AuthorizedApplicationsController < Doorkeeper::ApplicationController
     before_filter :authenticate_resource_owner!
 
     def index
