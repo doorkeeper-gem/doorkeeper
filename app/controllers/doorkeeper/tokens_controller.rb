@@ -1,8 +1,5 @@
 module Doorkeeper
-  class TokensController < Doorkeeper::ApplicationController
-    include ActionController::RackDelegation
-    include ActionController::Instrumentation
-
+  class TokensController < Doorkeeper::ApplicationMetalController
     def create
       response = strategy.authorize
       self.headers.merge! response.headers

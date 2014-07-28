@@ -1,14 +1,9 @@
 module Doorkeeper
   module Helpers
     module Controller
-      def self.included(base)
-        base.send :private,
-                  :authenticate_resource_owner!,
-                  :authenticate_admin!,
-                  :current_resource_owner,
-                  :resource_owner_from_credentials,
-                  :skip_authorization?
-      end
+      extend ActiveSupport::Concern
+
+      private
 
       def authenticate_resource_owner!
         current_resource_owner
@@ -28,6 +23,14 @@ module Doorkeeper
 
       def server
         @server ||= Server.new(self)
+      end
+
+      def doorkeeper_token
+        @token ||= OAuth::Token.authenticate request, *config_methods
+      end
+
+      def config_methods
+        @methods ||= Doorkeeper.configuration.access_token_methods
       end
 
       def get_error_response_from_exception(exception)
