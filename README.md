@@ -192,6 +192,30 @@ class Api::V1::ProductsController < Api::V1::ApiController
 end
 ```
 
+You can call `skip_doorkeeper_for` helper, specifying the actions you want to skipping protect.
+
+For example:
+
+```ruby
+  class BaseController
+    doorkeeper_for :all
+  end
+  
+  class Sub1Controller < BaseController
+    skip_doorkeeper_for :index
+    
+    def index; end;
+    def show; end;
+  end
+  
+  class Sub2Controller < BaseController
+    skip_doorkeeper_for :all
+    
+    def index; end;
+    def new; end;
+  end
+```
+
 ### ActionController::Metal integration
 
 The `doorkeeper_for` filter is intended to work with ActionController::Metal

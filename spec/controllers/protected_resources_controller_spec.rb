@@ -10,6 +10,22 @@ module ControllerActions
   end
 end
 
+class BaseGlobalBearerController < ActionController::Base
+  doorkeeper_for :all
+
+  def index
+    render text: 'index'
+  end
+
+  def show
+    render text: 'show'
+  end
+
+  def edit
+    render text: 'edit'
+  end
+end
+
 shared_examples 'specified for particular actions' do
   context 'with valid token', token: :valid do
     it 'allows into index action' do
@@ -313,6 +329,77 @@ describe 'Doorkeeper_for helper' do
 
       it 'allows access if passed block evaluates to true' do
         get :show, id: 3, access_token: token_string
+        expect(response).to be_success
+      end
+    end
+  end
+
+  context "skip doorkeeper bearer for inherited controller's all actions" do
+    controller(BaseGlobalBearerController) do
+      skip_doorkeeper_for :all
+    end
+
+    context 'with invalid token', token: :invalid do
+      it 'allows into index action' do
+        get :index, access_token: token_string
+        expect(response).to be_success
+      end
+    end
+  end
+
+  context "skip doorkeeper bearer for inherited controller's specified actions" do
+    controller(BaseGlobalBearerController) do
+      skip_doorkeeper_for :index, :show
+    end
+
+    context 'with invalid token', token: :invalid do
+      it 'allows into index action' do
+        get :index, access_token: token_string
+        expect(response).to be_success
+      end
+
+      it 'does not allow into edit action' do
+        get :edit, id: '4', access_token: token_string
+        expect(response.status).to eq 401
+        expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
+      end
+    end
+  end
+
+  context "skip doorkeeper bearer for inherited controller's actions except" do
+    controller(BaseGlobalBearerController) do
+      skip_doorkeeper_for :all, except: [:show, :edit]
+    end
+
+    context 'with invalid token', token: :invalid do
+      it 'allows into index action' do
+        get :index, access_token: token_string
+        expect(response).to be_success
+      end
+
+      it 'does not allow into show action' do
+        get :show, id: '14', access_token: token_string
+        expect(response.status).to eq 401
+        expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
+      end
+    end
+  end
+
+  context "skip parent's doorkeeper bearer in inherited controller and define new" do
+    controller(BaseGlobalBearerController) do
+      skip_doorkeeper_for :all
+      doorkeeper_for :index
+    end
+
+    context 'with invalid token', token: :invalid do
+      it 'does not allow into index action' do
+        get :index, access_token: token_string
+        expect(response.status).to eq 401
+        expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
+      end
+
+      it 'allows into show action' do
+        get :show, id: '4', access_token: token_string
         expect(response).to be_success
       end
     end

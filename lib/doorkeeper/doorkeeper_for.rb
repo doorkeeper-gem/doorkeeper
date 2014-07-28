@@ -1,12 +1,15 @@
 module Doorkeeper
-  class InvalidSyntax < StandardError; end
+  class InvalidSyntax < StandardError
+  end
+
   class DoorkeeperFor
-    attr_reader :scopes
+    attr_reader :scopes, :name
 
     def initialize(options)
       options ||= {}
       fail InvalidSyntax unless options.is_a? Hash
       @filter_options = {}
+      @name = ''
 
       options.each do |k, v|
         send("#{k}=", v)
@@ -33,23 +36,35 @@ module Doorkeeper
   end
 
   class AllDoorkeeperFor < DoorkeeperFor
+    def initialize(options)
+      super
+
+      @name = 'all'
+      if @filter_options[:except].try :any?
+        @name << "_except_#{@filter_options[:except].join('_')}"
+      end
+    end
+
     private
 
-    def except=(actions)
+    def except=(*actions)
       @filter_options[:except] = actions
     end
   end
 
   class SelectedDoorkeeperFor < DoorkeeperFor
     def initialize(*args)
-      options = args.pop if args.last.is_a? Hash
+      options = args.extract_options!
+
       super(options)
-      only(args)
+
+      only(*args)
+      @name = @filter_options[:only].join('_')
     end
 
     private
 
-    def only(actions)
+    def only(*actions)
       @filter_options[:only] = actions
     end
   end
