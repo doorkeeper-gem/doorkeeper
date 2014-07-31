@@ -85,14 +85,6 @@ module Doorkeeper
       def reuse_access_token
         @config.instance_variable_set("@reuse_access_token", true)
       end
-
-      def test_redirect_uri(uri)
-        warn <<-TEXT
-          DEPRECATION: test_redirect_uri has renamed to native_redirect_uri. use "native_redirect_uri '#{uri}'".
-        TEXT
-
-        @config.instance_variable_set('@native_redirect_uri', uri)
-      end
     end
 
     module Option
