@@ -6,10 +6,13 @@
   - [#427] Adds specs expectations.
   - [#428] Error response refactor.
   - [#417] Moves token validation into Access Token class.
+  - [#439] Removes redundant module includes.
+  - [#443] TokensController and TokenInfoController inherit from ActionController::Metal
 - bug
   - [#418] fixes #243, requests with insufficient scope now respond 403 instead
     of 401. (API change)
   - [#438] fixes #398, native redirect for implicit token grant bug.
+  - [#440] namespace fixes
 - enhancements
   - [#432] Keeps query parameters
 
