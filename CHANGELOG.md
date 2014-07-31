@@ -2,6 +2,8 @@
 
 ## master
 
+## 1.4.0
+
 - internals
   - [#427] Adds specs expectations.
   - [#428] Error response refactor.
