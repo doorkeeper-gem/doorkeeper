@@ -1,6 +1,6 @@
 module Doorkeeper
-  module Helpers
-    module Filter
+  module Rails
+    module Helpers
       extend ActiveSupport::Concern
 
       DOORKEEPER_BEARER_PREFIX = 'doorkeeper_bearer_for'

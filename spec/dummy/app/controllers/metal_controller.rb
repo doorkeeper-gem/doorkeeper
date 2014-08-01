@@ -1,7 +1,7 @@
 class MetalController < ActionController::Metal
   include AbstractController::Callbacks
   include ActionController::Head
-  include Doorkeeper::Helpers::Filter
+  include Doorkeeper::Rails::Helpers
 
   doorkeeper_for :all
 

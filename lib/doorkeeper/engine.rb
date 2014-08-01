@@ -7,7 +7,7 @@ module Doorkeeper
 
     initializer 'doorkeeper.helpers' do
       ActiveSupport.on_load(:action_controller) do
-        include Doorkeeper::Helpers::Filter
+        include Doorkeeper::Rails::Helpers
       end
     end
   end
