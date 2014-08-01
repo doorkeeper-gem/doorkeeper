@@ -89,8 +89,8 @@ module Doorkeeper
         resource_owner_id == access_token.resource_owner_id
     end
 
-    def acceptable?(scopes)
-      accessible? && includes_scope?(scopes)
+    def acceptable?(scope)
+      accessible? && includes_scope?(scope)
     end
 
     private

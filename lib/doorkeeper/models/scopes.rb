@@ -11,8 +11,8 @@ module Doorkeeper
             OAuth::Scopes.from_string(self[:scopes]).to_s
           end
 
-          define_method :includes_scope? do |required_scopes|
-            required_scopes.blank? || required_scopes.any? { |s| scopes.exists?(s) }
+          define_method :includes_scope? do |required_scope|
+            scopes.exists? required_scope.to_s
           end
         end
       end

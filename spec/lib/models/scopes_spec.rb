@@ -32,12 +32,12 @@ describe 'Doorkeeper::Models::Scopes' do
   end
 
   describe :includes_scope? do
-    it 'should return true if at least one scope is included' do
-      expect(subject.includes_scope?(['public', 'private'])).to be true
+    it 'should return true if scope is included' do
+      expect(subject.includes_scope?('public')).to be true
     end
 
     it 'should return false if no scopes are included' do
-      expect(subject.includes_scope?(['teacher', 'student'])).to be false
+      expect(subject.includes_scope?('teacher')).to be false
     end
   end
 end

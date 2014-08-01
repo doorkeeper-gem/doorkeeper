@@ -3,7 +3,7 @@ class MetalController < ActionController::Metal
   include ActionController::Head
   include Doorkeeper::Rails::Helpers
 
-  doorkeeper_for :all
+  before_filter :doorkeeper_authorize_public!
 
   def index
     self.response_body = { ok: true }.to_json

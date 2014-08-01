@@ -53,7 +53,7 @@ module Doorkeeper::OAuth
 
     it 'skips token creation if there is already one' do
       Doorkeeper.configuration.stub(:reuse_access_token).and_return(true)
-      FactoryGirl.create(:access_token, application_id: client.id, resource_owner_id: owner.id)
+      FactoryGirl.create(:access_token, application_id: client.id, resource_owner_id: owner.id, scopes: '')
       expect do
         subject.authorize
       end.to_not change { Doorkeeper::AccessToken.count }

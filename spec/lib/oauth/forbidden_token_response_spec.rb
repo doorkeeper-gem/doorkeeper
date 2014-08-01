@@ -13,9 +13,9 @@ module Doorkeeper::OAuth
       it { expect(subject.status).to eq(:forbidden) }
     end
 
-    describe :from_scopes do
+    describe :from_scope do
       it 'should have a list of acceptable scopes' do
-        response = ForbiddenTokenResponse.from_scopes(["public"])
+        response = ForbiddenTokenResponse.from_scope('public')
         expect(response.description).to include('public')
       end
     end

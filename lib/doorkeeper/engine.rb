@@ -7,6 +7,10 @@ module Doorkeeper
 
     initializer 'doorkeeper.helpers' do
       ActiveSupport.on_load(:action_controller) do
+        Doorkeeper.configuration.scopes.each do |s|
+          Doorkeeper::Rails::Helpers.define_filter_method(s)
+        end
+
         include Doorkeeper::Rails::Helpers
       end
     end
