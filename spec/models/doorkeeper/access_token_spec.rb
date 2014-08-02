@@ -120,7 +120,7 @@ module Doorkeeper
         end
 
         it 'should return true' do
-          expect(token.acceptable?(['public'])).to be true
+          expect(token.acceptable?('public')).to be true
         end
       end
     end

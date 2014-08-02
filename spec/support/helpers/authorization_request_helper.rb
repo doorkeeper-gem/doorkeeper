@@ -10,10 +10,12 @@ module AuthorizationRequestHelper
 
   def default_scopes_exist(*scopes)
     Doorkeeper.configuration.instance_variable_set(:@default_scopes, Doorkeeper::OAuth::Scopes.from_array(scopes))
+    scopes.each { |s| Doorkeeper::Rails::Helpers.define_filter_method(s) }
   end
 
   def optional_scopes_exist(*scopes)
     Doorkeeper.configuration.instance_variable_set(:@optional_scopes, Doorkeeper::OAuth::Scopes.from_array(scopes))
+    scopes.each { |s| Doorkeeper::Rails::Helpers.define_filter_method(s) }
   end
 
   def client_should_be_authorized(client)

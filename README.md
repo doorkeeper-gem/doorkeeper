@@ -164,48 +164,20 @@ authentication
 
 ## Protecting resources with OAuth (a.k.a your API endpoint)
 
-To protect your API with OAuth, doorkeeper only requires you to call
-`doorkeeper_for` helper, specifying the actions you want to protect.
-
-For example, if you have a products controller under api/v1, you can require
-the OAuth authentication with:
+To protect your API with OAuth, you just need to setup `before_action`s
+specifying the actions you want to protect. For example:
 
 ``` ruby
 class Api::V1::ProductsController < Api::V1::ApiController
-  doorkeeper_for :all                 # Require access token for all actions
-  doorkeeper_for :all, except: :index # All actions except index
-  doorkeeper_for :index, :show        # Only for index and show action
+  before_action :doorkeeper_authorize # Require access token for all actions
 
   # your actions
 end
 ```
 
-You don't need to setup any before filter, `doorkeeper_for` will handle that
-for you.
+You can pass any option `before_action` accepts, such as `if`, `only`,
+`except`, and others.
 
-You can pass `if` or `unless` blocks that would specify when doorkeeper has to
-guard the access.
-
-``` ruby
-class Api::V1::ProductsController < Api::V1::ApiController
-  doorkeeper_for :all, :if => lambda { request.xhr? }
-end
-```
-
-### ActionController::Metal integration
-
-The `doorkeeper_for` filter is intended to work with ActionController::Metal
-too. You only need to include the required `ActionController` modules:
-
-```ruby
-class MetalController < ActionController::Metal
-  include AbstractController::Callbacks
-  include ActionController::Head
-  include Doorkeeper::Helpers::Filter
-
-  doorkeeper_for :all
-end
-```
 
 ### Route Constraints and other integrations
 
@@ -248,8 +220,10 @@ And in your controllers:
 
 ```ruby
 class Api::V1::ProductsController < Api::V1::ApiController
-  doorkeeper_for :index, :show,    :scopes => [:public]
-  doorkeeper_for :update, :create, :scopes => [:admin, :write]
+  before_action only: :index, ->{ doorkeeper_authorize scopes: :public }
+  before_action only: [:create, :update, :destroy] do
+    doorkeeper_authorize scopes: [:admin, :write]
+  end
 end
 ```
 
@@ -265,8 +239,8 @@ controller that returns the resource owner instance:
 
 ``` ruby
 class Api::V1::CredentialsController < Api::V1::ApiController
-  doorkeeper_for :all
-  respond_to     :json
+  before_action :doorkeeper_authorize
+  respond_to    :json
 
   # GET /me.json
   def me

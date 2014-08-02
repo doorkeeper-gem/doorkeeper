@@ -1,13 +1,13 @@
 module Doorkeeper
   module OAuth
     class ForbiddenTokenResponse < ErrorResponse
-      def self.from_scopes(scopes, attributes = {})
-        new(attributes.merge(scopes: scopes))
+      def self.from_scope(scope, attributes = {})
+        new(attributes.merge(scope: scope))
       end
 
       def initialize(attributes = {})
         super(attributes.merge(name: :invalid_scope, state: :forbidden))
-        @scopes = attributes[:scopes]
+        @scope = attributes[:scope]
       end
 
       def status
@@ -21,8 +21,7 @@ module Doorkeeper
       end
 
       def description
-        scope = { scope: [:doorkeeper, :scopes] }
-        @description ||= @scopes.map { |r| I18n.translate r, scope }.join('\n')
+        @description ||= I18n.translate @scope, scope: [:doorkeeper, :scopes]
       end
     end
   end

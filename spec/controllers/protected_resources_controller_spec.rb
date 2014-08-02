@@ -10,6 +10,22 @@ module ControllerActions
   end
 end
 
+class BaseGlobalBearerController < ActionController::Base
+  before_filter :doorkeeper_authorize_public!
+
+  def index
+    render text: 'index'
+  end
+
+  def show
+    render text: 'show'
+  end
+
+  def edit
+    render text: 'edit'
+  end
+end
+
 shared_examples 'specified for particular actions' do
   context 'with valid token', token: :valid do
     it 'allows into index action' do
@@ -66,10 +82,10 @@ shared_examples 'specified with except' do
   end
 end
 
-describe 'Doorkeeper_for helper' do
+describe 'doorkeeper_authorize filter' do
   context 'accepts token code specified as' do
     controller do
-      doorkeeper_for :all
+      before_filter :doorkeeper_authorize_public!
 
       def index
         render text: 'index'
@@ -107,14 +123,14 @@ describe 'Doorkeeper_for helper' do
       expect(Doorkeeper::AccessToken).to receive(:authenticate).exactly(2).times.and_return(token)
       request.env['HTTP_AUTHORIZATION'] = "Bearer #{token_string}"
       get :index
-      controller.send(:remove_instance_variable, :@token)
+      controller.send(:remove_instance_variable, :@_doorkeeper_token)
       get :index
     end
   end
 
   context 'defined for all actions' do
     controller do
-      doorkeeper_for :all
+      before_filter :doorkeeper_authorize_public!
 
       include ControllerActions
     end
@@ -148,7 +164,7 @@ describe 'Doorkeeper_for helper' do
 
   context 'defined only for index action' do
     controller do
-      doorkeeper_for :index
+      before_filter :doorkeeper_authorize_public!, only: :index
 
       include ControllerActions
     end
@@ -157,7 +173,7 @@ describe 'Doorkeeper_for helper' do
 
   context 'defined for actions except index' do
     controller do
-      doorkeeper_for :all, except: :index
+      before_filter :doorkeeper_authorize_public!, except: :index
 
       include ControllerActions
     end
@@ -166,7 +182,7 @@ describe 'Doorkeeper_for helper' do
 
   context 'defined with scopes' do
     controller do
-      doorkeeper_for :all, scopes: [:write]
+      before_filter :doorkeeper_authorize_write!
 
       include ControllerActions
     end
@@ -175,7 +191,7 @@ describe 'Doorkeeper_for helper' do
 
     it 'allows if the token has particular scopes' do
       token = double(Doorkeeper::AccessToken, accessible?: true, scopes: %w(write public))
-      expect(token).to receive(:acceptable?).with(['write']).and_return(true)
+      expect(token).to receive(:acceptable?).with('write').and_return(true)
       expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string).and_return(token)
       get :index, access_token: token_string
       expect(response).to be_success
@@ -184,7 +200,7 @@ describe 'Doorkeeper_for helper' do
     it 'does not allow if the token does not include given scope' do
       token = double(Doorkeeper::AccessToken, accessible?: true, scopes: ['public'], revoked?: false, expired?: false)
       expect(Doorkeeper::AccessToken).to receive(:authenticate).with(token_string).and_return(token)
-      expect(token).to receive(:acceptable?).with(['write']).and_return(false)
+      expect(token).to receive(:acceptable?).with('write').and_return(false)
       get :index, access_token: token_string
       expect(response.status).to eq 403
       expect(response.header).to_not include('WWW-Authenticate')
@@ -193,7 +209,7 @@ describe 'Doorkeeper_for helper' do
 
   context 'when custom unauthorized render options are configured' do
     controller do
-      doorkeeper_for :all
+      before_filter :doorkeeper_authorize_public!
 
       include ControllerActions
     end
@@ -232,8 +248,8 @@ describe 'Doorkeeper_for helper' do
 
   context 'when defined with conditional if block' do
     controller do
-      doorkeeper_for :index, if: -> { the_false }
-      doorkeeper_for :show,  if: -> { the_true }
+      before_filter :doorkeeper_authorize_public!, only: :index, if: -> { the_false }
+      before_filter :doorkeeper_authorize_public!, only: :show, if: -> { the_true }
 
       include ControllerActions
 
@@ -276,30 +292,14 @@ describe 'Doorkeeper_for helper' do
 
   context 'when defined with conditional unless block' do
     controller do
-      doorkeeper_for :index, unless: -> { the_false }
-      doorkeeper_for :show, unless: -> { the_true }
+      before_filter :doorkeeper_authorize_public!, only: :index, unless: ->{ false }
 
       include ControllerActions
-
-      def the_true
-        true
-      end
-
-      private
-
-      def the_false
-        false
-      end
     end
 
     context 'with valid token', token: :valid do
       it 'allows access if passed block evaluates to false' do
         get :index, access_token: token_string
-        expect(response).to be_success
-      end
-
-      it 'allows access if passed block evaluates to true' do
-        get :show, id: 1, access_token: token_string
         expect(response).to be_success
       end
     end
@@ -310,9 +310,17 @@ describe 'Doorkeeper_for helper' do
         expect(response.status).to eq 401
         expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
       end
+    end
+  end
 
-      it 'allows access if passed block evaluates to true' do
-        get :show, id: 3, access_token: token_string
+  context "skip doorkeeper authorize filter for inherited controller's all actions" do
+    controller(BaseGlobalBearerController) do
+      skip_before_filter :doorkeeper_authorize_public!
+    end
+
+    context 'with invalid token', token: :invalid do
+      it 'allows into index action' do
+        get :index, access_token: token_string
         expect(response).to be_success
       end
     end

@@ -62,7 +62,7 @@ feature 'Resource Owner Password Credentials Flow' do
     scenario 'should return the same token if it is still accessible' do
       Doorkeeper.configuration.stub(:reuse_access_token).and_return(true)
 
-      client_is_authorized(@client, @resource_owner)
+      client_is_authorized(@client, @resource_owner, scopes: '')
 
       post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
 
