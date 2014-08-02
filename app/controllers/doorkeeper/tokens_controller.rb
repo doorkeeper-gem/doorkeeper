@@ -18,7 +18,7 @@ module Doorkeeper
         revoke_token(request.POST['token']) if request.POST['token']
       end
       # The authorization server responds with HTTP status code 200 if the
-      # token has been revoked sucessfully or if the client submitted an invalid token
+      # token has been revoked successfully or if the client submitted an invalid token
       render json: {}, status: 200
     end
 
