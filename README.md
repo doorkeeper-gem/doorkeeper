@@ -164,61 +164,23 @@ authentication
 
 ## Protecting resources with OAuth (a.k.a your API endpoint)
 
-To protect your API with OAuth, doorkeeper only requires you to call
-`doorkeeper_for` helper, specifying the actions you want to protect.
+To protect your API with OAuth, doorkeeper only requires you setup
+`doorkeeper_authorize_#{scope}` filter, specifying the actions you want to protect.
 
 For example, if you have a products controller under api/v1, you can require
 the OAuth authentication with:
 
 ``` ruby
 class Api::V1::ProductsController < Api::V1::ApiController
-  doorkeeper_for :all                 # Require access token for all actions
-  doorkeeper_for :all, except: :index # All actions except index
-  doorkeeper_for :index, :show        # Only for index and show action
+  before_filter :doorkeeper_authorize_public # Require access token with public scope for all actions
 
   # your actions
 end
 ```
 
-You don't need to setup any before filter, `doorkeeper_for` will handle that
-for you.
-
-You can pass `if` or `unless` blocks that would specify when doorkeeper has to
-guard the access.
-
-``` ruby
-class Api::V1::ProductsController < Api::V1::ApiController
-  doorkeeper_for :all, :if => lambda { request.xhr? }
-end
-```
-
-You can call `skip_doorkeeper_for` helper, specifying the actions you want to skipping protect.
-
-For example:
-
-```ruby
-  class BaseController
-    doorkeeper_for :all
-  end
-  
-  class Sub1Controller < BaseController
-    skip_doorkeeper_for :index
-    
-    def index; end;
-    def show; end;
-  end
-  
-  class Sub2Controller < BaseController
-    skip_doorkeeper_for :all
-    
-    def index; end;
-    def new; end;
-  end
-```
-
 ### ActionController::Metal integration
 
-The `doorkeeper_for` filter is intended to work with ActionController::Metal
+The doorkeeper's filters are intended to work with ActionController::Metal
 too. You only need to include the required `ActionController` modules:
 
 ```ruby
@@ -227,7 +189,7 @@ class MetalController < ActionController::Metal
   include ActionController::Head
   include Doorkeeper::Helpers::Filter
 
-  doorkeeper_for :all
+  before_filter :doorkeeper_authorize_public
 end
 ```
 
@@ -264,7 +226,7 @@ First configure the scopes in `initializers/doorkeeper.rb`
 ```ruby
 Doorkeeper.configure do
   default_scopes :public # if no scope was requested, this will be the default
-  optional_scopes :admin, :write
+  optional_scopes :admin_write
 end
 ```
 
@@ -272,8 +234,8 @@ And in your controllers:
 
 ```ruby
 class Api::V1::ProductsController < Api::V1::ApiController
-  doorkeeper_for :index, :show,    :scopes => [:public]
-  doorkeeper_for :update, :create, :scopes => [:admin, :write]
+  before_filter :doorkeeper_authorize_public, only: [:index, :show]
+  before_filter :doorkeeper_authorize_admin_write, only: [:update, :create]
 end
 ```
 
@@ -289,7 +251,7 @@ controller that returns the resource owner instance:
 
 ``` ruby
 class Api::V1::CredentialsController < Api::V1::ApiController
-  doorkeeper_for :all
+  before_filter :doorkeeper_authorize_public
   respond_to     :json
 
   # GET /me.json
