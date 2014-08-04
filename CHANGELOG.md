@@ -1,6 +1,15 @@
 # Changelog
 
-## master
+## master (preparation for 2.0.0)
+
+- internals
+  - Removes deprecated option `test_redirect_uri`. Now called
+    `native_redirect_uri`.
+  - [#446] Removes deprecated `mount Doorkeeper::Engine`. Now we use
+    `use_doorkeeper`.
+  - [#448] Removes `doorkeeper_for` helper. Now we use
+    `before_action :doorkeeper_authorize!`. This change didn't go through the
+    deprecation cycle.
 
 ## 1.4.0
 
