@@ -3,12 +3,16 @@ module Doorkeeper
     extend ActiveSupport::Concern
 
     attr_accessor :error
+    attr_accessor :error_description_key
 
     def validate
       @error = nil
-      self.class.validations.each do |validation|
+      self.class.validations.each do |validation_attr, validation_opts|
         break if @error
-        @error = validation.last unless send("validate_#{validation.first}")
+        unless send("validate_#{validation_attr}")
+          @error                 = validation_opts[:error]
+          @error_description_key = validation_opts[:error_description_key]
+        end
       end
     end
 
@@ -19,7 +23,7 @@ module Doorkeeper
 
     module ClassMethods
       def validate(attribute, options = {})
-        validations << [attribute, options[:error]]
+        validations << [attribute, options]
       end
 
       def validations

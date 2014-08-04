@@ -6,7 +6,7 @@ module Doorkeeper
       include OAuth::Helpers
 
       validate :client,         error: :invalid_client
-      validate :resource_owner, error: :invalid_grant
+      validate :resource_owner, error: :invalid_grant, error_description_key: :invalid_resource_owner
       validate :scopes,         error: :invalid_scope
 
       attr_accessor :server, :resource_owner, :credentials, :access_token
