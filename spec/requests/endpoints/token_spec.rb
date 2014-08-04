@@ -65,11 +65,13 @@ feature 'Token endpoint' do
   context "password grant" do
 
     scenario 'returns invalid_grant if credentials are invalid' do
-      Doorkeeper.configure { resource_owner_from_credentials { |routes| false } }
-      post token_endpoint_url(client: @client, grant_type: 'password', username: 'joe', password: 'secret')
+      Doorkeeper.configure { resource_owner_from_credentials { false } }
+      post token_endpoint_url(client: @client, grant_type: 'password',
+                              username: 'joe', password: 'secret')
       should_not_have_json 'access_token'
       should_have_json 'error', 'invalid_grant'
-      should_have_json 'error_description', translated_error_message('invalid_resource_owner')
+      should_have_json 'error_description',
+        translated_error_message('invalid_resource_owner')
     end
 
   end

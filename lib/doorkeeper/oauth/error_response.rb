@@ -6,13 +6,21 @@ module Doorkeeper
 
       def self.from_request(request, attributes = {})
         state = request.state if request.respond_to?(:state)
-        new(attributes.merge(name: request.error, state: state, description_key: request.error_description_key))
+        new(
+          attributes.merge(
+            name: request.error,
+            state: state,
+            description_key: request.error_description_key
+          )
+        )
       end
 
       delegate :name, :description, :state, to: :@error
 
       def initialize(attributes = {})
-        @error = OAuth::Error.new(*attributes.values_at(:name, :state, :description_key))
+        @error = OAuth::Error.new(
+          *attributes.values_at(:name, :state, :description_key)
+        )
         @redirect_uri = attributes[:redirect_uri]
         @response_on_fragment = attributes[:response_on_fragment]
       end
