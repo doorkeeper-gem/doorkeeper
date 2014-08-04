@@ -50,6 +50,13 @@ Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider functionali
 
 ## Installation
 
+### Documentation valid for master branch
+
+Please check the documentation for the version you are using:
+https://github.com/doorkeeper-gem/doorkeeper/releases
+
+___
+
 Put this in your Gemfile:
 
 ``` ruby
