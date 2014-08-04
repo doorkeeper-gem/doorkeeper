@@ -13,17 +13,23 @@ module Doorkeeper::OAuth
 
     describe :from_request do
       it 'has the error from request' do
-        error = ErrorResponse.from_request double(error: :some_error)
+        error = ErrorResponse.from_request(
+          double(error: :some_error, error_description_key: nil)
+        )
         expect(error.name).to eq(:some_error)
       end
 
       it 'ignores state if request does not respond to state' do
-        error = ErrorResponse.from_request double(error: :some_error)
+        error = ErrorResponse.from_request(
+          double(error: :some_error, error_description_key: nil)
+        )
         expect(error.state).to be_nil
       end
 
       it 'has state if request responds to state' do
-        error = ErrorResponse.from_request double(error: :some_error, state: :hello)
+        error = ErrorResponse.from_request(
+          double(error: :some_error, state: :hello, error_description_key: nil)
+        )
         expect(error.state).to eq(:hello)
       end
     end

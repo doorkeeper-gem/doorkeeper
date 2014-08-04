@@ -61,4 +61,18 @@ feature 'Token endpoint' do
     should_have_json 'error', 'invalid_request'
     should_have_json 'error_description', translated_error_message('invalid_request')
   end
+
+  context "password grant" do
+
+    scenario 'returns invalid_grant if credentials are invalid' do
+      config_is_set(:resource_owner_from_credentials) { false }
+      post token_endpoint_url(client: @client, grant_type: 'password',
+                              username: 'joe', password: 'secret')
+      should_not_have_json 'access_token'
+      should_have_json 'error', 'invalid_grant'
+      should_have_json 'error_description',
+        translated_error_message('invalid_resource_owner')
+    end
+
+  end
 end
