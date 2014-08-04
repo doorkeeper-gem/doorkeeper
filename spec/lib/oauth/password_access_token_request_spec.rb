@@ -36,7 +36,7 @@ module Doorkeeper::OAuth
     it 'requires the owner' do
       subject.resource_owner = nil
       subject.validate
-      expect(subject.error).to eq(:invalid_resource_owner)
+      expect(subject.error).to eq(:invalid_grant)
     end
 
     it 'optionally accepts the client' do
