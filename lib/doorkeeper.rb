@@ -1,7 +1,6 @@
 require 'doorkeeper/version'
 require 'doorkeeper/engine'
 require 'doorkeeper/config'
-require 'doorkeeper/doorkeeper_for'
 
 require 'doorkeeper/errors'
 require 'doorkeeper/server'
