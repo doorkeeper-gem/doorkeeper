@@ -16,11 +16,11 @@ module Doorkeeper
     end
 
     def self.authenticate(uid, secret)
-      self.where(uid: uid, secret: secret).first
+      where(uid: uid, secret: secret).first
     end
 
     def self.by_uid(uid)
-      self.where(uid: uid).first
+      where(uid: uid).first
     end
 
     private
