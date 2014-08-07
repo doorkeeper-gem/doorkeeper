@@ -6,7 +6,7 @@ module Doorkeeper
       end
 
       def revoked?
-        revoked_at.present?
+        !!(revoked_at && revoked_at <= DateTime.now)
       end
     end
   end
