@@ -4,8 +4,10 @@ module Doorkeeper
       module Scopes
         extend ActiveSupport::Concern
 
-        def scopes=(value)
-          write_attribute :scopes, value if value.present?
+        included do
+          def scopes=(value)
+            write_attribute :scopes, value if value.present?
+          end
         end
       end
     end

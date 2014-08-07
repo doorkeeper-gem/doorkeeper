@@ -3,16 +3,18 @@ module Doorkeeper
     module Scopes
       extend ActiveSupport::Concern
 
-      def scopes
-        OAuth::Scopes.from_string(self[:scopes])
-      end
+      included do
+        def scopes
+          OAuth::Scopes.from_string(self[:scopes])
+        end
 
-      def scopes_string
-        self[:scopes]
-      end
+        def scopes_string
+          self[:scopes]
+        end
 
-      def includes_scope?(*required_scopes)
-        required_scopes.blank? || required_scopes.any? { |s| scopes.exists?(s.to_s) }
+        def includes_scope?(*required_scopes)
+          required_scopes.blank? || required_scopes.any? { |s| scopes.exists?(s.to_s) }
+        end
       end
     end
   end
