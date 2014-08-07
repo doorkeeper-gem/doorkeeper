@@ -7,6 +7,11 @@
 
 Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider functionality to your application.
 
+## Documentation valid for `master` branch
+
+Please check the documentation for the version of doorkeeper you are using in:
+https://github.com/doorkeeper-gem/doorkeeper/releases.
+
 ## Table of Contents
 
 - [Useful links](#useful-links)
@@ -49,13 +54,6 @@ Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider functionali
 - ORM ActiveRecord, Mongoid, MongoMapper
 
 ## Installation
-
-### Documentation valid for master branch
-
-Please check the documentation for the version you are using:
-https://github.com/doorkeeper-gem/doorkeeper/releases
-
-___
 
 Put this in your Gemfile:
 
