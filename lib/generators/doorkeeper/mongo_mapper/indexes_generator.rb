@@ -1,3 +1,5 @@
+require 'doorkeeper'
+
 module Doorkeeper
   module MongoMapper
     class IndexesGenerator < ::Rails::Generators::Base

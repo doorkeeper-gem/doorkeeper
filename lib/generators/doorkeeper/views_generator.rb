@@ -1,3 +1,5 @@
+require 'doorkeeper'
+
 module Doorkeeper
   module Generators
     class ViewsGenerator < ::Rails::Generators::Base
