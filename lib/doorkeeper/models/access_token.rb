@@ -90,7 +90,7 @@ module Doorkeeper
     end
 
     def acceptable?(scopes)
-      accessible? && includes_scope?(scopes)
+      accessible? && includes_scope?(*scopes)
     end
 
     private
