@@ -1,6 +1,6 @@
 module Doorkeeper
   module Models
-    module Mongoid
+    module Mongoid3
       module Scopes
         extend ActiveSupport::Concern
 

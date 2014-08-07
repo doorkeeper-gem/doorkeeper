@@ -15,22 +15,12 @@ module Doorkeeper
     @config || (fail MissingConfiguration.new)
   end
 
-  def self.orm_model_dir
-    case configuration.orm
-    when :mongoid3, :mongoid4
-      'mongoid3_4'
-    else
-      configuration.orm
-    end
-  end
-
   def self.enable_orm
-    require "doorkeeper/models/#{orm_model_dir}/access_grant"
-    require "doorkeeper/models/#{orm_model_dir}/access_token"
-    require "doorkeeper/models/#{orm_model_dir}/application"
-    require 'doorkeeper/models/access_grant'
-    require 'doorkeeper/models/access_token'
-    require 'doorkeeper/models/application'
+    "doorkeeper/#{configuration.orm}_adapter".classify.constantize.hook!
+
+    Application.send :include, Doorkeeper::ApplicationEssential
+    AccessToken.send :include, Doorkeeper::AccessTokenEssential
+    AccessGrant.send :include, Doorkeeper::AccessGrantEssential
   end
 
   def self.setup_application_owner

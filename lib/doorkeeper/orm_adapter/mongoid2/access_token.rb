@@ -1,10 +1,10 @@
-require 'doorkeeper/models/mongoid/scopes'
+require 'doorkeeper/orm_adapter/mongoid2/concerns/scopes'
 
 module Doorkeeper
   class AccessToken
     include Mongoid::Document
     include Mongoid::Timestamps
-    include Models::Mongoid::Scopes
+    include Models::Mongoid2::Scopes
 
     self.store_in :oauth_access_tokens
 
