@@ -39,7 +39,7 @@ module Doorkeeper
       def create_access_token
         @access_token = AccessToken.create!(
           application_id:    refresh_token.application_id,
-          resource_owner_uid: refresh_token.resource_owner_uid,
+          resource_owner_id: refresh_token.resource_owner_id,
           scopes:            scopes.to_s,
           expires_in:        server.access_token_expires_in,
           use_refresh_token: true)

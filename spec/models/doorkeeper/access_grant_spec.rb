@@ -12,8 +12,8 @@ describe Doorkeeper::AccessGrant do
   end
 
   describe 'validations' do
-    it 'is invalid without resource_owner_uid' do
-      subject.resource_owner_uid = nil
+    it 'is invalid without resource_owner_id' do
+      subject.resource_owner_id = nil
       should_not be_valid
     end
 

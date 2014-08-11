@@ -13,7 +13,7 @@ feature 'Revoke Token Flow' do
     let(:authorization_access_token) do
       FactoryGirl.create(:access_token,
                          application: client_application,
-                         resource_owner_uid: resource_owner.send(RESOURCE_OWNER_PROPERTY),
+                         resource_owner_id: resource_owner.send(RESOURCE_OWNER_PROPERTY),
                          use_refresh_token: true)
     end
 
@@ -72,7 +72,7 @@ feature 'Revoke Token Flow' do
       let(:token_to_revoke) do
         FactoryGirl.create(:access_token,
                            application: client_application,
-                           resource_owner_uid: resource_owner.send(RESOURCE_OWNER_PROPERTY),
+                           resource_owner_id: resource_owner.send(RESOURCE_OWNER_PROPERTY),
                            use_refresh_token: true)
       end
 
@@ -97,7 +97,7 @@ feature 'Revoke Token Flow' do
       let(:token_to_revoke) do
         FactoryGirl.create(:access_token,
                            application: other_client_application,
-                           resource_owner_uid: resource_owner.send(RESOURCE_OWNER_PROPERTY),
+                           resource_owner_id: resource_owner.send(RESOURCE_OWNER_PROPERTY),
                            use_refresh_token: true)
       end
 
@@ -121,7 +121,7 @@ feature 'Revoke Token Flow' do
       let(:token_to_revoke) do
         FactoryGirl.create(:access_token,
                            application: client_application,
-                           resource_owner_uid: other_resource_owner.send(RESOURCE_OWNER_PROPERTY),
+                           resource_owner_id: other_resource_owner.send(RESOURCE_OWNER_PROPERTY),
                            use_refresh_token: true)
       end
 
@@ -145,7 +145,7 @@ feature 'Revoke Token Flow' do
       let(:token_to_revoke) do
         FactoryGirl.create(:access_token,
                            application: client_application,
-                           resource_owner_uid: resource_owner.send(RESOURCE_OWNER_PROPERTY),
+                           resource_owner_id: resource_owner.send(RESOURCE_OWNER_PROPERTY),
                            use_refresh_token: true)
       end
 

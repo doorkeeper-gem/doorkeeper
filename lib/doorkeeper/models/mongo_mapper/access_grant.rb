@@ -6,7 +6,7 @@ module Doorkeeper
 
     set_collection_name 'oauth_access_grants'
 
-    key :resource_owner_uid, String
+    key :resource_owner_id, String
     key :application_id,    ObjectId
     key :token,             String
     key :expires_in,        Integer

@@ -14,7 +14,7 @@
 ActiveRecord::Schema.define(version: 20130902175349) do
 
   create_table 'oauth_access_grants', force: true do |t|
-    t.string   'resource_owner_uid',                null: false
+    t.string   'resource_owner_id',                null: false
     t.integer  'application_id',                    null: false
     t.string   'token',                             null: false
     t.integer  'expires_in',                        null: false
@@ -27,7 +27,7 @@ ActiveRecord::Schema.define(version: 20130902175349) do
   add_index 'oauth_access_grants', ['token'], name: 'index_oauth_access_grants_on_token', unique: true
 
   create_table 'oauth_access_tokens', force: true do |t|
-    t.string   'resource_owner_uid'
+    t.string   'resource_owner_id'
     t.integer  'application_id'
     t.string   'token',             null: false
     t.string   'refresh_token'
@@ -38,7 +38,7 @@ ActiveRecord::Schema.define(version: 20130902175349) do
   end
 
   add_index 'oauth_access_tokens', ['refresh_token'], name: 'index_oauth_access_tokens_on_refresh_token', unique: true
-  add_index 'oauth_access_tokens', ['resource_owner_uid'], name: 'index_oauth_access_tokens_on_resource_owner_id'
+  add_index 'oauth_access_tokens', ['resource_owner_id'], name: 'index_oauth_access_tokens_on_resource_owner_id'
   add_index 'oauth_access_tokens', ['token'], name: 'index_oauth_access_tokens_on_token', unique: true
 
   create_table 'oauth_applications', force: true do |t|

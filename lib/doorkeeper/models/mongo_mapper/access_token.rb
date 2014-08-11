@@ -6,7 +6,7 @@ module Doorkeeper
 
     set_collection_name 'oauth_access_tokens'
 
-    key :resource_owner_uid, String
+    key :resource_owner_id, String
     key :token,             String
     key :expires_in,        Integer
     key :revoked_at,        DateTime
@@ -20,17 +20,17 @@ module Doorkeeper
       self.sort(:created_at).last
     end
 
-    def self.delete_all_for(application_id, resource_owner_or_uid)
-      resource_owner_uid = extract_resource_owner_uid(resource_owner_or_uid)
+    def self.delete_all_for(application_id, resource_owner_or_id)
+      resource_owner_id = extract_resource_owner_id(resource_owner_or_id)
       delete_all(application_id: application_id,
-                 resource_owner_uid: resource_owner_uid)
+                 resource_owner_id: resource_owner_id)
     end
     private_class_method :delete_all_for
 
-    def self.last_authorized_token_for(application_id, resource_owner_or_uid)
-      resource_owner_uid = extract_resource_owner_uid(resource_owner_or_uid)
+    def self.last_authorized_token_for(application_id, resource_owner_or_id)
+      resource_owner_id = extract_resource_owner_id(resource_owner_or_id)
       where(application_id: application_id,
-            resource_owner_uid: resource_owner_uid,
+            resource_owner_id: resource_owner_id,
             revoked_at: nil).
         sort(:created_at.desc).
         limit(1).

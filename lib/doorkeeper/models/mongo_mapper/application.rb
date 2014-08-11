@@ -24,7 +24,7 @@ module Doorkeeper
     private_class_method :resource_owner_property
 
     def self.authorized_for(resource_owner)
-      ids = AccessToken.where(resource_owner_uid: resource_owner.send(resource_owner_property), revoked_at: nil).map(&:application_id)
+      ids = AccessToken.where(resource_owner_id: resource_owner.send(resource_owner_property), revoked_at: nil).map(&:application_id)
       find(ids)
     end
 
