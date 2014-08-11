@@ -4,7 +4,7 @@ module ModelHelper
   end
 
   def create_resource_owner
-    @resource_owner = User.create!(name: 'Joe', password: 'sekret')
+    @resource_owner = User.create!(name: 'Joe', password: 'sekret', uid: '12316515613')
   end
 
   def authorization_code_exists(options = {})
@@ -14,13 +14,13 @@ module ModelHelper
   def access_grant_should_exist_for(client, resource_owner)
     grant = Doorkeeper::AccessGrant.first
     expect(grant.application).to eq(client)
-    grant.resource_owner_id  == resource_owner.id
+    grant.resource_owner_uid  == resource_owner.send(RESOURCE_OWNER_PROPERTY)
   end
 
   def access_token_should_exist_for(client, resource_owner)
     grant = Doorkeeper::AccessToken.first
     expect(grant.application).to eq(client)
-    grant.resource_owner_id  == resource_owner.id
+    grant.resource_owner_uid  == resource_owner.send(RESOURCE_OWNER_PROPERTY)
   end
 
   def access_grant_should_not_exist

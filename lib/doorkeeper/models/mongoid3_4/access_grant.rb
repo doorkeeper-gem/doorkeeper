@@ -10,12 +10,7 @@ module Doorkeeper
 
     self.store_in collection: :oauth_access_grants
 
-    if defined?(Moped::BSON)
-      field :resource_owner_id, type: Moped::BSON::ObjectId
-    else
-      field :resource_owner_id, type: BSON::ObjectId
-    end
-
+    field :resource_owner_uid, type: String
     field :application_id, type: Hash
     field :token, type: String
     field :expires_in, type: Integer

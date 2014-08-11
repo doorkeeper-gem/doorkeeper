@@ -8,6 +8,7 @@ source 'https://rubygems.org'
 gem 'rails', ENV['rails']
 
 gem 'database_cleaner', '~> 1.0.0.RC1' if ENV['rails'][0] == '4'
+gem 'awesome_print'
 
 case ENV['orm']
 when 'active_record'

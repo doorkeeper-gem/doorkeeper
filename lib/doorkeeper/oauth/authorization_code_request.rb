@@ -23,7 +23,7 @@ module Doorkeeper
       def before_successful_response
         grant.revoke
         find_or_create_access_token(grant.application,
-                                    grant.resource_owner_id,
+                                    grant.resource_owner_uid,
                                     grant.scopes,
                                     server)
       end

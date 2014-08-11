@@ -13,7 +13,7 @@ feature 'Revoke Token Flow' do
     let(:authorization_access_token) do
       FactoryGirl.create(:access_token,
                          application: client_application,
-                         resource_owner_id: resource_owner.id,
+                         resource_owner_uid: resource_owner.send(RESOURCE_OWNER_PROPERTY),
                          use_refresh_token: true)
     end
 
@@ -72,7 +72,7 @@ feature 'Revoke Token Flow' do
       let(:token_to_revoke) do
         FactoryGirl.create(:access_token,
                            application: client_application,
-                           resource_owner_id: resource_owner.id,
+                           resource_owner_uid: resource_owner.send(RESOURCE_OWNER_PROPERTY),
                            use_refresh_token: true)
       end
 
@@ -97,7 +97,7 @@ feature 'Revoke Token Flow' do
       let(:token_to_revoke) do
         FactoryGirl.create(:access_token,
                            application: other_client_application,
-                           resource_owner_id: resource_owner.id,
+                           resource_owner_uid: resource_owner.send(RESOURCE_OWNER_PROPERTY),
                            use_refresh_token: true)
       end
 
@@ -117,11 +117,11 @@ feature 'Revoke Token Flow' do
     end
     context 'The access token to revoke app is the same than the authorization access token' do
 
-      let(:other_resource_owner) { User.create!(name: 'Matheo', password: 'pareto') }
+      let(:other_resource_owner) { User.create!(name: 'Matheo', password: 'pareto', uid: '13156132023') }
       let(:token_to_revoke) do
         FactoryGirl.create(:access_token,
                            application: client_application,
-                           resource_owner_id: other_resource_owner.id,
+                           resource_owner_uid: other_resource_owner.send(RESOURCE_OWNER_PROPERTY),
                            use_refresh_token: true)
       end
 
@@ -145,7 +145,7 @@ feature 'Revoke Token Flow' do
       let(:token_to_revoke) do
         FactoryGirl.create(:access_token,
                            application: client_application,
-                           resource_owner_id: resource_owner.id,
+                           resource_owner_uid: resource_owner.send(RESOURCE_OWNER_PROPERTY),
                            use_refresh_token: true)
       end
 

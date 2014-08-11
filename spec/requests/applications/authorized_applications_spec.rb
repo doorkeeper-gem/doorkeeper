@@ -2,7 +2,7 @@ require 'spec_helper_integration'
 
 feature 'Authorized applications' do
   background do
-    @user   = User.create!(name: 'Joe', password: 'sekret')
+    @user   = User.create!(name: 'Joe', password: 'sekret', uid: '12315679132')
     @client = client_exists(name: 'Amazing Client App')
     resource_owner_is_authenticated @user
     client_is_authorized @client, @user
@@ -15,7 +15,7 @@ feature 'Authorized applications' do
 
   scenario 'do not display other user\'s authorized applications' do
     client = client_exists(name: 'Another Client App')
-    client_is_authorized client, User.create!(name: 'Joe', password: 'sekret')
+    client_is_authorized client, User.create!(name: 'Joe', password: 'sekret', uid: '15412')
     visit '/oauth/authorized_applications'
     i_should_not_see 'Another Client App'
   end

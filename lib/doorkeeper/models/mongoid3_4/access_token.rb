@@ -10,12 +10,7 @@ module Doorkeeper
 
     self.store_in collection: :oauth_access_tokens
 
-    if defined?(Moped::BSON)
-      field :resource_owner_id, type: Moped::BSON::ObjectId
-    else
-      field :resource_owner_id, type: BSON::ObjectId
-    end
-
+    field :resource_owner_uid, type: String
     field :token, type: String
     field :expires_in, type: Integer
     field :revoked_at, type: DateTime
@@ -23,15 +18,15 @@ module Doorkeeper
     index({ token: 1 }, { unique: true })
     index({ refresh_token: 1 }, { unique: true, sparse: true })
 
-    def self.delete_all_for(application_id, resource_owner)
+    def self.delete_all_for(application_id, resource_owner_uid)
       where(application_id: application_id,
-            resource_owner_id: resource_owner.id).delete_all
+            resource_owner_uid: resource_owner_uid).delete_all
     end
     private_class_method :delete_all_for
 
-    def self.last_authorized_token_for(application_id, resource_owner_id)
+    def self.last_authorized_token_for(application_id, resource_owner_uid)
       where(application_id: application_id,
-            resource_owner_id: resource_owner_id,
+            resource_owner_uid: resource_owner_uid,
             revoked_at: nil).
         order_by([:created_at, :desc]).
         limit(1).

@@ -11,6 +11,11 @@ Doorkeeper.configure do
     User.where(id: session[:user_id]).first || redirect_to(root_url, alert: 'Needs sign in.')
   end
 
+  # The field that will be used for the resource_owner identification
+  # Default we use the id field but its also possible to use another field (uid for example)
+  # This allows to use multiple user models with doorkeeper
+  resource_owner_property :uid
+
   # If you want to restrict the access to the web interface for
   # adding oauth authorized applications you need to declare the
   # block below
