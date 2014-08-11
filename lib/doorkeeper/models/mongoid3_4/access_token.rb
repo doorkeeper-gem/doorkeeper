@@ -18,13 +18,15 @@ module Doorkeeper
     index({ token: 1 }, { unique: true })
     index({ refresh_token: 1 }, { unique: true, sparse: true })
 
-    def self.delete_all_for(application_id, resource_owner_uid)
+    def self.delete_all_for(application_id, resource_owner_or_uid)
+      resource_owner_uid = extract_resource_owner_uid(resource_owner_or_uid)
       where(application_id: application_id,
             resource_owner_uid: resource_owner_uid).delete_all
     end
     private_class_method :delete_all_for
 
-    def self.last_authorized_token_for(application_id, resource_owner_uid)
+    def self.last_authorized_token_for(application_id, resource_owner_or_uid)
+      resource_owner_uid = extract_resource_owner_uid(resource_owner_or_uid)
       where(application_id: application_id,
             resource_owner_uid: resource_owner_uid,
             revoked_at: nil).
