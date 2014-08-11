@@ -31,6 +31,7 @@ module Doorkeeper
     private_class_method :resource_owner_property
 
     def self.extract_resource_owner_uid(resource_owner_or_uid)
+      return nil if resource_owner_or_uid.nil?
       if resource_owner_or_uid.respond_to?(resource_owner_property)
         resource_owner_or_uid.send(resource_owner_property)
       else
