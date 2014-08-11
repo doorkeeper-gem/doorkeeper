@@ -46,16 +46,6 @@ rails=4.1.4 orm=active_record bundle update --quiet
 rails=4.1.4 orm=active_record resource_owner_property=id bundle exec rake
 rails=4.1.4 orm=active_record resource_owner_property=uid bundle exec rake
 
-echo "rails=4.1.4 orm=mongoid2"
-rails=4.1.4 orm=mongoid2 bundle update --quiet
-rails=4.1.4 orm=mongoid2 resource_owner_property=id bundle exec rake
-rails=4.1.4 orm=mongoid2 resource_owner_property=uid bundle exec rake
-
-echo "rails=4.1.4 orm=mongoid3"
-rails=4.1.4 orm=mongoid3 bundle update --quiet
-rails=4.1.4 orm=mongoid3 resource_owner_property=id bundle exec rake
-rails=4.1.4 orm=mongoid3 resource_owner_property=uid bundle exec rake
-
 echo "rails=4.1.4 orm=mongoid4"
 rails=4.1.4 orm=mongoid4 bundle update --quiet
 rails=4.1.4 orm=mongoid4 resource_owner_property=id bundle exec rake

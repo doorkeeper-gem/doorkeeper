@@ -20,13 +20,15 @@ module Doorkeeper
       self.sort(:created_at).last
     end
 
-    def self.delete_all_for(application_id, resource_owner_uid)
+    def self.delete_all_for(application_id, resource_owner_or_uid)
+      resource_owner_uid = extract_resource_owner_uid(resource_owner_or_uid)
       delete_all(application_id: application_id,
                  resource_owner_uid: resource_owner_uid)
     end
     private_class_method :delete_all_for
 
-    def self.last_authorized_token_for(application_id, resource_owner_uid)
+    def self.last_authorized_token_for(application_id, resource_owner_or_uid)
+      resource_owner_uid = extract_resource_owner_uid(resource_owner_or_uid)
       where(application_id: application_id,
             resource_owner_uid: resource_owner_uid,
             revoked_at: nil).
