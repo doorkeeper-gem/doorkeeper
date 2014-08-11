@@ -1,14 +1,77 @@
 #!/usr/bin/env bash
 set -e
 
-rails=3.2.8 orm=active_record bundle install --quiet
-rails=3.2.8 orm=active_record bundle exec rake
+puts "rails=3.2.8 orm=active_record"
+rails=3.2.8 orm=active_record bundle update --quiet
+rails=3.2.8 orm=active_record resource_owner_property=id bundle exec rake
+rails=3.2.8 orm=active_record resource_owner_property=uid bundle exec rake
 
-rails=3.2.8 orm=mongoid2 bundle install --quiet
-rails=3.2.8 orm=mongoid2 bundle exec rake
+puts "rails=3.2.8 orm=mongoid2"
+rails=3.2.8 orm=mongoid2 bundle update --quiet
+rails=3.2.8 orm=mongoid2 resource_owner_property=id bundle exec rake
+rails=3.2.8 orm=mongoid2 resource_owner_property=uid bundle exec rake
 
-rails=3.2.8 orm=mongoid3 bundle install --quiet
-rails=3.2.8 orm=mongoid3 bundle exec rake
+puts "rails=3.2.8 orm=mongoid3"
+rails=3.2.8 orm=mongoid3 bundle update --quiet
+rails=3.2.8 orm=mongoid3 resource_owner_property=id bundle exec rake
+rails=3.2.8 orm=mongoid3 resource_owner_property=uid bundle exec rake
 
-rails=3.2.8 orm=mongo_mapper bundle install --quiet
-rails=3.2.8 orm=mongo_mapper bundle exec rake
+puts "rails=3.2.8 orm=mongoid4"
+rails=3.2.8 orm=mongoid4 bundle update --quiet
+rails=3.2.8 orm=mongoid4 resource_owner_property=id bundle exec rake
+rails=3.2.8 orm=mongoid4 resource_owner_property=uid bundle exec rake
+
+puts "rails=3.2.8 orm=mongo_mapper"
+rails=3.2.8 orm=mongo_mapper bundle update --quiet
+rails=3.2.8 orm=mongo_mapper resource_owner_property=id bundle exec rake
+rails=3.2.8 orm=mongo_mapper resource_owner_property=uid bundle exec rake
+
+puts "rails=3.2.19 orm=active_record"
+rails=3.2.19 orm=active_record bundle update --quiet
+rails=3.2.19 orm=active_record resource_owner_property=id bundle exec rake
+rails=3.2.19 orm=active_record resource_owner_property=uid bundle exec rake
+
+puts "rails=3.2.19 orm=mongoid2"
+rails=3.2.19 orm=mongoid2 bundle update --quiet
+rails=3.2.19 orm=mongoid2 resource_owner_property=id bundle exec rake
+rails=3.2.19 orm=mongoid2 resource_owner_property=uid bundle exec rake
+
+puts "rails=3.2.19 orm=mongoid3"
+rails=3.2.19 orm=mongoid3 bundle update --quiet
+rails=3.2.19 orm=mongoid3 resource_owner_property=id bundle exec rake
+rails=3.2.19 orm=mongoid3 resource_owner_property=uid bundle exec rake
+
+puts "rails=3.2.19 orm=mongoid4"
+rails=3.2.19 orm=mongoid4 bundle update --quiet
+rails=3.2.19 orm=mongoid4 resource_owner_property=id bundle exec rake
+rails=3.2.19 orm=mongoid4 resource_owner_property=uid bundle exec rake
+
+puts "rails=3.2.19 orm=mongo_mapper"
+rails=3.2.19 orm=mongo_mapper bundle update --quiet
+rails=3.2.19 orm=mongo_mapper resource_owner_property=id bundle exec rake
+rails=3.2.19 orm=mongo_mapper resource_owner_property=uid bundle exec rake
+
+puts "rails=4.1.4 orm=active_record"
+rails=4.1.4 orm=active_record bundle update --quiet
+rails=4.1.4 orm=active_record resource_owner_property=id bundle exec rake
+rails=4.1.4 orm=active_record resource_owner_property=uid bundle exec rake
+
+puts "rails=4.1.4 orm=mongoid2"
+rails=4.1.4 orm=mongoid2 bundle update --quiet
+rails=4.1.4 orm=mongoid2 resource_owner_property=id bundle exec rake
+rails=4.1.4 orm=mongoid2 resource_owner_property=uid bundle exec rake
+
+puts "rails=4.1.4 orm=mongoid3"
+rails=4.1.4 orm=mongoid3 bundle update --quiet
+rails=4.1.4 orm=mongoid3 resource_owner_property=id bundle exec rake
+rails=4.1.4 orm=mongoid3 resource_owner_property=uid bundle exec rake
+
+puts "rails=4.1.4 orm=mongoid4"
+rails=4.1.4 orm=mongoid4 bundle update --quiet
+rails=4.1.4 orm=mongoid4 resource_owner_property=id bundle exec rake
+rails=4.1.4 orm=mongoid4 resource_owner_property=uid bundle exec rake
+
+puts "rails=4.1.4 orm=mongo_mapper"
+rails=4.1.4 orm=mongo_mapper bundle update --quiet
+rails=4.1.4 orm=mongo_mapper resource_owner_property=id bundle exec rake
+rails=4.1.4 orm=mongo_mapper resource_owner_property=uid bundle exec rake
