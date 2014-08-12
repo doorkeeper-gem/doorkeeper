@@ -6,13 +6,15 @@ module Doorkeeper
 
     self.table_name = "#{table_name_prefix}oauth_access_tokens#{table_name_suffix}".to_sym
 
-    def self.delete_all_for(application_id, resource_owner)
+    def self.delete_all_for(application_id, resource_owner_or_id)
+      resource_owner_id = extract_resource_owner_id(resource_owner_or_id)
       where(application_id: application_id,
-            resource_owner_id: resource_owner.id).delete_all
+            resource_owner_id: resource_owner_id).delete_all
     end
     private_class_method :delete_all_for
 
-    def self.last_authorized_token_for(application_id, resource_owner_id)
+    def self.last_authorized_token_for(application_id, resource_owner_or_id)
+      resource_owner_id = extract_resource_owner_id(resource_owner_or_id)
       where(application_id: application_id,
             resource_owner_id: resource_owner_id,
             revoked_at: nil).

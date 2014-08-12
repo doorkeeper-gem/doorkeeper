@@ -13,7 +13,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
   end
 
   let(:client) { FactoryGirl.create :application }
-  let(:user)   { User.create!(name: 'Joe', password: 'sekret') }
+  let(:user)   { User.create!(name: 'Joe', password: 'sekret', uid: '456154941321') }
 
   before do
     allow(controller).to receive(:current_resource_owner).and_return(user)
@@ -49,7 +49,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
 
     it 'issues the token for the current resource owner' do
-      expect(Doorkeeper::AccessToken.first.resource_owner_id).to eq(user.id)
+      expect(Doorkeeper::AccessToken.first.resource_owner_id.to_s).to eq(user.send(RESOURCE_OWNER_PROPERTY).to_s)
     end
   end
 
@@ -174,7 +174,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
 
     it 'issues the token for the current resource owner' do
-      expect(Doorkeeper::AccessToken.first.resource_owner_id).to eq(user.id)
+      expect(Doorkeeper::AccessToken.first.resource_owner_id.to_s).to eq(user.send(RESOURCE_OWNER_PROPERTY).to_s)
     end
   end
 

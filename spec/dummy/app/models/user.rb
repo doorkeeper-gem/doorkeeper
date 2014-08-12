@@ -9,6 +9,7 @@ when :mongoid2, :mongoid3, :mongoid4
 
     field :name, type: String
     field :password, type: String
+    field :uid, type: String
   end
 when :mongo_mapper
   class User
@@ -17,12 +18,13 @@ when :mongo_mapper
 
     key :name,     String
     key :password, String
+    key :uid,      String
   end
 end
 
 class User
   if ::Rails.version.to_i < 4
-    attr_accessible :name, :password
+    attr_accessible :name, :password, :uid
   end
 
   def self.authenticate!(name, password)

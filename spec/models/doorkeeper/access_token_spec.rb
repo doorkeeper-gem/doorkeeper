@@ -52,7 +52,11 @@ module Doorkeeper
 
       context 'with default parameters' do
 
-        let(:resource_owner_id) { 100 }
+        if RESOURCE_OWNER_PROPERTY == 'id'
+          let(:resource_owner_id) { 100 }
+        else
+          let(:resource_owner_id) { "124651321" }
+        end
         let(:application)    { FactoryGirl.create :application }
         let(:default_attributes) do
           { application: application, resource_owner_id: resource_owner_id }
@@ -126,10 +130,10 @@ module Doorkeeper
     end
 
     describe '.revoke_all_for' do
-      let(:resource_owner) { double(id: 100) }
+      let(:resource_owner) { double(id: 100, uid: "126498132") }
       let(:application)    { FactoryGirl.create :application }
       let(:default_attributes) do
-        { application: application, resource_owner_id: resource_owner.id }
+        { application: application, resource_owner_id: resource_owner.send(RESOURCE_OWNER_PROPERTY) }
       end
 
       it 'revokes all tokens for given application and resource owner' do
@@ -154,7 +158,11 @@ module Doorkeeper
     end
 
     describe '.matching_token_for' do
-      let(:resource_owner_id) { 100 }
+      if RESOURCE_OWNER_PROPERTY == 'id'
+        let(:resource_owner_id) { 100 }
+      else
+        let(:resource_owner_id) { "124651321" }
+      end
       let(:application)       { FactoryGirl.create :application }
       let(:scopes)            { Doorkeeper::OAuth::Scopes.from_string('public write') }
       let(:default_attributes) do
@@ -168,7 +176,7 @@ module Doorkeeper
       end
 
       it 'accepts resource owner as object' do
-        resource_owner = double(to_key: true, id: 100)
+        resource_owner = double(to_key: true, id: 100, uid: "124651321")
         token = FactoryGirl.create :access_token, default_attributes
         last_token = AccessToken.matching_token_for(application, resource_owner, scopes)
         expect(last_token).to eq(token)

@@ -2,6 +2,7 @@ ENV['RAILS_ENV'] ||= 'test'
 DOORKEEPER_ORM = (ENV['orm'] || :active_record).to_sym
 TABLE_NAME_PREFIX = ENV['table_name_prefix'] || nil
 TABLE_NAME_SUFFIX = ENV['table_name_suffix'] || nil
+RESOURCE_OWNER_PROPERTY = ENV['resource_owner_property'] || 'id'
 
 $LOAD_PATH.unshift File.dirname(__FILE__)
 
@@ -37,6 +38,7 @@ RSpec.configure do |config|
   config.before do
     DatabaseCleaner.start
     Doorkeeper.configure { orm DOORKEEPER_ORM }
+    Doorkeeper.configuration.stub(:resource_owner_property).and_return(RESOURCE_OWNER_PROPERTY)
   end
 
   config.after do

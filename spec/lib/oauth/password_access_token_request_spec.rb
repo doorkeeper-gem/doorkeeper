@@ -5,7 +5,11 @@ module Doorkeeper::OAuth
     let(:server) { double :server, default_scopes: Doorkeeper::OAuth::Scopes.new, access_token_expires_in: 2.hours, refresh_token_enabled?: false }
     let(:credentials) { Client::Credentials.new(client.uid, client.secret) }
     let(:client) { FactoryGirl.create(:application) }
-    let(:owner)  { double :owner, id: 99 }
+    let(:owner)  { double :owner, id: 99, uid: '1564631897' }
+
+    before(:each) do
+      Doorkeeper.configuration.stub(:resource_owner_property).and_return(:uid)
+    end
 
     subject do
       PasswordAccessTokenRequest.new(server, credentials, owner)
@@ -45,7 +49,7 @@ module Doorkeeper::OAuth
     end
 
     it 'creates token even when there is already one (default)' do
-      FactoryGirl.create(:access_token, application_id: client.id, resource_owner_id: owner.id)
+      FactoryGirl.create(:access_token, application_id: client.id, resource_owner_id: owner.uid)
       expect do
         subject.authorize
       end.to change { Doorkeeper::AccessToken.count }.by(1)
@@ -53,7 +57,8 @@ module Doorkeeper::OAuth
 
     it 'skips token creation if there is already one' do
       Doorkeeper.configuration.stub(:reuse_access_token).and_return(true)
-      FactoryGirl.create(:access_token, application_id: client.id, resource_owner_id: owner.id)
+      Doorkeeper.configuration.stub(:resource_owner_property).and_return(:uid)
+      FactoryGirl.create(:access_token, application_id: client.id, resource_owner_id: owner.uid)
       expect do
         subject.authorize
       end.to_not change { Doorkeeper::AccessToken.count }

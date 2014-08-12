@@ -25,6 +25,21 @@ module Doorkeeper
                       on: :create,
                       if: :use_refresh_token?
 
+    def self.resource_owner_property
+      Doorkeeper.configuration.resource_owner_property
+    end
+    private_class_method :resource_owner_property
+
+    def self.extract_resource_owner_id(resource_owner_or_id)
+      return nil if resource_owner_or_id.nil?
+      if resource_owner_or_id.respond_to?(resource_owner_property)
+        resource_owner_or_id.send(resource_owner_property)
+      else
+        resource_owner_or_id
+      end
+    end
+    private_class_method :extract_resource_owner_id
+
     def self.by_token(token)
       where(token: token).first
     end
@@ -33,24 +48,21 @@ module Doorkeeper
       where(refresh_token: refresh_token).first
     end
 
-    def self.revoke_all_for(application_id, resource_owner)
+    def self.revoke_all_for(application_id, resource_owner_or_id)
       where(application_id: application_id,
-            resource_owner_id: resource_owner.id,
+            resource_owner_id: extract_resource_owner_id(resource_owner_or_id),
             revoked_at: nil)
       .map(&:revoke)
     end
 
     def self.matching_token_for(application, resource_owner_or_id, scopes)
-      resource_owner_id = if resource_owner_or_id.respond_to?(:to_key)
-                            resource_owner_or_id.id
-                          else
-                            resource_owner_or_id
-                          end
+      resource_owner_id = extract_resource_owner_id(resource_owner_or_id)
       token = last_authorized_token_for(application.try(:id), resource_owner_id)
       token if token && ScopeChecker.matches?(token.scopes, scopes)
     end
 
-    def self.find_or_create_for(application, resource_owner_id, scopes, expires_in, use_refresh_token)
+    def self.find_or_create_for(application, resource_owner_or_id, scopes, expires_in, use_refresh_token)
+      resource_owner_id = extract_resource_owner_id(resource_owner_or_id)
       if Doorkeeper.configuration.reuse_access_token
         access_token = matching_token_for(application, resource_owner_id, scopes)
         if access_token && !access_token.expired?

@@ -28,7 +28,7 @@ module Doorkeeper
 
     def matching_token?
       AccessToken.matching_token_for pre_auth.client,
-                                     current_resource_owner.id,
+                                     current_resource_owner,
                                      pre_auth.scopes
     end
 
@@ -41,7 +41,7 @@ module Doorkeeper
     end
 
     def pre_auth
-      @pre_auth ||= OAuth::PreAuthorization.new(Doorkeeper.configuration, server.client_via_uid, params)
+      @pre_auth ||= OAuth::PreAuthorization.new(Doorkeeper.configuration, server, params)
     end
 
     def authorization

@@ -164,10 +164,13 @@ module Doorkeeper
              warn(I18n.translate('doorkeeper.errors.messages.credential_flow_not_configured'))
              nil
            end)
+    option :resource_owner_allowed_for,
+           default: ->(app_id, resource_owner) { true }
     option :skip_authorization,            default: ->(routes) {}
     option :access_token_expires_in,       default: 7200
     option :authorization_code_expires_in, default: 600
     option :orm,                           default: :active_record
+    option :resource_owner_property,       default: :id
     option :native_redirect_uri,           default: 'urn:ietf:wg:oauth:2.0:oob'
     option :active_record_options,         default: {}
     option :realm,                         default: 'Doorkeeper'
