@@ -49,7 +49,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
 
     it 'issues the token for the current resource owner' do
-      expect(Doorkeeper::AccessToken.first.resource_owner_id).to eq(user.send(RESOURCE_OWNER_PROPERTY).to_s)
+      expect(Doorkeeper::AccessToken.first.resource_owner_id.to_s).to eq(user.send(RESOURCE_OWNER_PROPERTY).to_s)
     end
   end
 
@@ -174,7 +174,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
 
     it 'issues the token for the current resource owner' do
-      expect(Doorkeeper::AccessToken.first.resource_owner_id).to eq(user.send(RESOURCE_OWNER_PROPERTY).to_s)
+      expect(Doorkeeper::AccessToken.first.resource_owner_id.to_s).to eq(user.send(RESOURCE_OWNER_PROPERTY).to_s)
     end
   end
 

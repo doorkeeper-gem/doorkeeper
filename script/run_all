@@ -50,8 +50,3 @@ echo "rails=4.1.4 orm=mongoid4"
 rails=4.1.4 orm=mongoid4 bundle update --quiet
 rails=4.1.4 orm=mongoid4 resource_owner_property=id bundle exec rake
 rails=4.1.4 orm=mongoid4 resource_owner_property=uid bundle exec rake
-
-echo "rails=4.1.4 orm=mongo_mapper"
-rails=4.1.4 orm=mongo_mapper bundle update --quiet
-rails=4.1.4 orm=mongo_mapper resource_owner_property=id bundle exec rake
-rails=4.1.4 orm=mongo_mapper resource_owner_property=uid bundle exec rake

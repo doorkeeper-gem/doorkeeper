@@ -6,7 +6,7 @@ module Doorkeeper
 
     set_collection_name 'oauth_access_tokens'
 
-    key :resource_owner_id, String
+    key :resource_owner_id, ObjectId
     key :token,             String
     key :expires_in,        Integer
     key :revoked_at,        DateTime
