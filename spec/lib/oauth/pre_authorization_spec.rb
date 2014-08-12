@@ -9,7 +9,13 @@ module Doorkeeper::OAuth
       server
     }
 
-    let(:client) { double :client, redirect_uri: 'http://tst.com/auth' }
+    let(:resource_owner) { User.create!(name: 'Joe', password: 'sekret', uid: '4561549412') }
+
+    let(:client) {
+      double :client,
+        client_via_uid: (double :client, redirect_uri: 'http://tst.com/auth', id: 2),
+        current_resource_owner: resource_owner
+    }
 
     let :attributes do
       {
@@ -36,6 +42,19 @@ module Doorkeeper::OAuth
       subject.response_type = 'token'
       expect(subject).to be_authorizable
     end
+
+    context 'when resource_owner is not allowed for client id' do
+      before do
+        allow(server).to receive(:resource_owner_allowed_for).and_return(proc do
+          false
+        end)
+      end
+
+      it 'rejects request' do
+        expect(subject).not_to be_authorizable
+      end
+    end
+
 
     context 'when using default grant flows' do
       it 'accepts "code" as response type' do
