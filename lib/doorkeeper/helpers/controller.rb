@@ -22,11 +22,6 @@ module Doorkeeper
         instance_eval(&configuration.authenticate_admin)
       end
 
-      def resource_owner_allowed_for?(application)
-        instance_exec(application.try(:id), current_resource_owner,
-          &configuration.resource_owner_allowed_for)
-      end
-
       def server
         @server ||= Server.new(self)
       end
