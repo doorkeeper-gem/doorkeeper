@@ -3,7 +3,7 @@ module Doorkeeper
     before_filter :authenticate_resource_owner!
 
     def new
-      if pre_auth.authorizable? && resouce_owner_allowed_for?(pre_auth.client)
+      if pre_auth.authorizable? && resource_owner_allowed_for?(pre_auth.client)
         if matching_token? || skip_authorization?
           auth = authorization.authorize
           redirect_to auth.redirect_uri
