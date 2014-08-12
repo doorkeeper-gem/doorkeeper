@@ -37,6 +37,7 @@ en:
         invalid_scope: 'The requested scope is invalid, unknown, or malformed.'
         server_error: 'The authorization server encountered an unexpected condition which prevented it from fulfilling the request.'
         temporarily_unavailable: 'The authorization server is currently unable to handle the request due to a temporary overloading or maintenance of the server.'
+        not_allowed_application: 'You are not allowed to access this application.'
 
         #configuration error messages
         credential_flow_not_configured: 'Resource Owner Password Credentials flow failed due to Doorkeeper.configure.resource_owner_from_credentials being unconfigured.'
