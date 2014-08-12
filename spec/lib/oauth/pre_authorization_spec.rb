@@ -9,7 +9,7 @@ module Doorkeeper::OAuth
       server
     }
 
-    let(:resource_owner) { User.create!(name: 'Joe', password: 'sekret', uid: '4561549412') }
+    let(:resource_owner) { User.create!(name: 'Joe', password: 'sekret') }
 
     let(:client) {
       double :client,
