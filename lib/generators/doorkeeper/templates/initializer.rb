@@ -11,6 +11,13 @@ Doorkeeper.configure do
     #   User.find_by_id(session[:user_id]) || redirect_to(new_user_session_url)
   end
 
+  # This block gets called to see if the resource owner is allowed to register themself
+  # with the request application. The block returns true or false for the given app_id.
+  # By default true is returned (meaning every app is allowed).
+  # resource_owner_allowed_for do |app_id|
+  #   false
+  # end
+
   # The field that will be used for the resource_owner identification
   # Default we use the id field but its also possible to use another field (uid for example)
   # This allows to use multiple user models with doorkeeper

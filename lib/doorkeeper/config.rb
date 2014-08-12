@@ -164,6 +164,8 @@ module Doorkeeper
              warn(I18n.translate('doorkeeper.errors.messages.credential_flow_not_configured'))
              nil
            end)
+    option :resource_owner_allowed_for,
+           default: ->(app_id, current_resource_owner) { true }
     option :skip_authorization,            default: ->(routes) {}
     option :access_token_expires_in,       default: 7200
     option :authorization_code_expires_in, default: 600
