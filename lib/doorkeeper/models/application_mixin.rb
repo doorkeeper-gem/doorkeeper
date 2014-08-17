@@ -3,6 +3,7 @@ module Doorkeeper
     extend ActiveSupport::Concern
 
     include OAuth::Helpers
+    include Models::Scopes
 
     included do
       has_many :access_grants, dependent: :destroy, class_name: 'Doorkeeper::AccessGrant'

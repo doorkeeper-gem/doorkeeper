@@ -21,6 +21,8 @@
 - [#496] Tests with Rails 4.2.
 - [#489] Adds `force_ssl_in_redirect_uri` to force the usage of the HTTPS
   protocol in non-native redirect uris.
+- [#469] Allow client applications to restrict the set of allowable scopes.
+  Fixes #317.
 
 
 ## 1.4.0
