@@ -13,18 +13,13 @@ module Doorkeeper
     end
     has_many :authorized_applications, through: :authorized_tokens, source: :application
 
-    def self.resource_owner_property
-      Doorkeeper.configuration.resource_owner_property
-    end
-    private_class_method :resource_owner_property
-
     def self.column_names_with_table
       self.column_names.map { |c| "#{table_name}.#{c}" }
     end
 
     def self.authorized_for(resource_owner)
       joins(:authorized_applications).
-        where(AccessToken.table_name => { resource_owner_id: resource_owner.send(resource_owner_property), revoked_at: nil }).
+        where(AccessToken.table_name => { resource_owner_id: resource_owner.to_param, revoked_at: nil }).
         group(column_names_with_table.join(','))
     end
   end

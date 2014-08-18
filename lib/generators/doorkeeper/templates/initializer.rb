@@ -11,11 +11,6 @@ Doorkeeper.configure do
     #   User.find_by_id(session[:user_id]) || redirect_to(new_user_session_url)
   end
 
-  # The field that will be used for the resource_owner identification
-  # Default we use the id field but its also possible to use another field (uid for example)
-  # This allows to use multiple user models with doorkeeper
-  # resource_owner_property :id
-
   # If you want to restrict access to the web interface for adding oauth authorized applications, you need to declare the block below.
   # admin_authenticator do
   #   # Put your admin authentication logic here.

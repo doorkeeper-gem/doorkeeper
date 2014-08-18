@@ -3,10 +3,6 @@ require 'spec_helper_integration'
 describe Doorkeeper, 'configuration' do
   subject { Doorkeeper.configuration }
 
-  before(:each) do
-    Doorkeeper.configuration.stub(:resource_owner_property).and_call_original
-  end
-
   describe 'resource_owner_authenticator' do
     it 'sets the block that is accessible via authenticate_resource_owner' do
       block = proc {}
@@ -176,20 +172,6 @@ describe Doorkeeper, 'configuration' do
   describe 'wildcard_redirect_uri' do
     it 'is disabled by default' do
       Doorkeeper.configuration.wildcard_redirect_uri.should be_falsey
-    end
-  end
-
-  describe 'resource_owner_property' do
-    it 'is \':id\' by default' do
-      expect(Doorkeeper.configuration.resource_owner_property).to eq(:id)
-    end
-
-    it 'can change the value' do
-      Doorkeeper.configure do
-        orm DOORKEEPER_ORM
-        resource_owner_property :uid
-      end
-      expect(subject.resource_owner_property).to eq(:uid)
     end
   end
 

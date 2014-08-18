@@ -14,7 +14,7 @@ module Doorkeeper::OAuth
       )
     end
 
-    let(:owner) { double :owner, id: 8900, uid: "45951213" }
+    let(:owner) { double :owner, id: 8900 }
 
     subject do
       CodeRequest.new(pre_auth, owner)

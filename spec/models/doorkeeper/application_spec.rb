@@ -127,33 +127,33 @@ module Doorkeeper
     end
 
     describe :authorized_for do
-      let(:resource_owner) { double(:resource_owner, id: 10, uid: "1234561321695") }
+      let(:resource_owner) { double(:resource_owner, id: 10) }
 
       it 'is empty if the application is not authorized for anyone' do
         expect(Application.authorized_for(resource_owner)).to be_empty
       end
 
       it 'returns only application for a specific resource owner' do
-        FactoryGirl.create(:access_token, resource_owner_id: resource_owner.send(RESOURCE_OWNER_PROPERTY).to_s + "1")
-        token = FactoryGirl.create(:access_token, resource_owner_id: resource_owner.send(RESOURCE_OWNER_PROPERTY))
+        FactoryGirl.create(:access_token, resource_owner_id: resource_owner.to_param.to_s + "1")
+        token = FactoryGirl.create(:access_token, resource_owner_id: resource_owner.to_param)
         expect(Application.authorized_for(resource_owner)).to eq([token.application])
       end
 
       it 'excludes revoked tokens' do
-        FactoryGirl.create(:access_token, resource_owner_id: resource_owner.send(RESOURCE_OWNER_PROPERTY), revoked_at: 2.days.ago)
+        FactoryGirl.create(:access_token, resource_owner_id: resource_owner.to_param, revoked_at: 2.days.ago)
         expect(Application.authorized_for(resource_owner)).to be_empty
       end
 
       it 'returns all applications that have been authorized' do
-        token1 = FactoryGirl.create(:access_token, resource_owner_id: resource_owner.send(RESOURCE_OWNER_PROPERTY))
-        token2 = FactoryGirl.create(:access_token, resource_owner_id: resource_owner.send(RESOURCE_OWNER_PROPERTY))
+        token1 = FactoryGirl.create(:access_token, resource_owner_id: resource_owner.to_param)
+        token2 = FactoryGirl.create(:access_token, resource_owner_id: resource_owner.to_param)
         expect(Application.authorized_for(resource_owner)).to eq([token1.application, token2.application])
       end
 
       it 'returns only one application even if it has been authorized twice' do
         application = FactoryGirl.create(:application)
-        FactoryGirl.create(:access_token, resource_owner_id: resource_owner.send(RESOURCE_OWNER_PROPERTY), application: application)
-        FactoryGirl.create(:access_token, resource_owner_id: resource_owner.send(RESOURCE_OWNER_PROPERTY), application: application)
+        FactoryGirl.create(:access_token, resource_owner_id: resource_owner.to_param, application: application)
+        FactoryGirl.create(:access_token, resource_owner_id: resource_owner.to_param, application: application)
         expect(Application.authorized_for(resource_owner)).to eq([application])
       end
 

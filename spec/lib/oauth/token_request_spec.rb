@@ -15,7 +15,7 @@ module Doorkeeper::OAuth
     end
 
     let :owner do
-      double :owner, id: 7866, uid: "12495415613"
+      double :owner, id: 7866
     end
 
     subject do

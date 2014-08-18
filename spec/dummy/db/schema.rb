@@ -60,7 +60,6 @@ ActiveRecord::Schema.define(version: 20130902175349) do
     t.datetime 'created_at', null: false
     t.datetime 'updated_at', null: false
     t.string   'password'
-    t.string   'uid'
   end
 
 end

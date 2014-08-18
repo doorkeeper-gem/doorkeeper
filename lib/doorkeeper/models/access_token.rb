@@ -25,15 +25,10 @@ module Doorkeeper
                       on: :create,
                       if: :use_refresh_token?
 
-    def self.resource_owner_property
-      Doorkeeper.configuration.resource_owner_property
-    end
-    private_class_method :resource_owner_property
-
     def self.extract_resource_owner_id(resource_owner_or_id)
       return nil if resource_owner_or_id.nil?
-      if resource_owner_or_id.respond_to?(resource_owner_property)
-        resource_owner_or_id.send(resource_owner_property)
+      if resource_owner_or_id.respond_to?(:to_param)
+        resource_owner_or_id.to_param
       else
         resource_owner_or_id
       end

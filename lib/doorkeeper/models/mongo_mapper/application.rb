@@ -18,13 +18,8 @@ module Doorkeeper
       write_attribute :scopes, value if value.present?
     end
 
-    def self.resource_owner_property
-      Doorkeeper.configuration.resource_owner_property
-    end
-    private_class_method :resource_owner_property
-
     def self.authorized_for(resource_owner)
-      ids = AccessToken.where(resource_owner_id: resource_owner.send(resource_owner_property), revoked_at: nil).map(&:application_id)
+      ids = AccessToken.where(resource_owner_id: resource_owner.to_param, revoked_at: nil).map(&:application_id)
       find(ids)
     end
 
