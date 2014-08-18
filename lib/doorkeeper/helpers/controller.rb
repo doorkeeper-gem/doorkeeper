@@ -10,15 +10,16 @@ module Doorkeeper
       end
 
       def current_resource_owner
-        instance_eval(&Doorkeeper.configuration.authenticate_resource_owner)
+        @current_resource_owner ||=
+          instance_eval(&configuration.authenticate_resource_owner)
       end
 
       def resource_owner_from_credentials
-        instance_eval(&Doorkeeper.configuration.resource_owner_from_credentials)
+        instance_eval(&configuration.resource_owner_from_credentials)
       end
 
       def authenticate_admin!
-        instance_eval(&Doorkeeper.configuration.authenticate_admin)
+        instance_eval(&configuration.authenticate_admin)
       end
 
       def server
@@ -30,7 +31,7 @@ module Doorkeeper
       end
 
       def config_methods
-        @methods ||= Doorkeeper.configuration.access_token_methods
+        @methods ||= configuration.access_token_methods
       end
 
       def get_error_response_from_exception(exception)
@@ -54,7 +55,11 @@ module Doorkeeper
       end
 
       def skip_authorization?
-        !!instance_exec([@server.current_resource_owner, @pre_auth.client], &Doorkeeper.configuration.skip_authorization)
+        !!instance_exec([@server.current_resource_owner, @pre_auth.client], &configuration.skip_authorization)
+      end
+
+      def configuration
+        Doorkeeper.configuration
       end
     end
   end

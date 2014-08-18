@@ -7,17 +7,19 @@ module Doorkeeper
       validate :client, error: :invalid_client
       validate :scopes, error: :invalid_scope
       validate :redirect_uri, error: :invalid_redirect_uri
+      validate :resource_owner_allowed_client, error: :not_allowed_application
 
-      attr_accessor :server, :client, :response_type, :redirect_uri, :state
+      attr_accessor :server, :client, :resource_owner, :response_type, :redirect_uri, :state
       attr_writer   :scope
 
       def initialize(server, client, attrs = {})
-        @server        = server
-        @client        = client
+        @server = server
+        @client = client.client_via_uid
+        @resource_owner = client.current_resource_owner
         @response_type = attrs[:response_type]
-        @redirect_uri  = attrs[:redirect_uri]
-        @scope         = attrs[:scope]
-        @state         = attrs[:state]
+        @redirect_uri = attrs[:redirect_uri]
+        @scope = attrs[:scope]
+        @state = attrs[:state]
       end
 
       def authorizable?
@@ -49,6 +51,10 @@ module Doorkeeper
       def validate_scopes
         return true unless scope.present?
         Helpers::ScopeChecker.valid? scope, server.scopes
+      end
+
+      def validate_resource_owner_allowed_client
+        instance_exec(client.try(:id), resource_owner, &server.resource_owner_allowed_for)
       end
 
       # TODO: test uri should be matched against the client's one
