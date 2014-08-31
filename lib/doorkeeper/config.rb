@@ -16,7 +16,11 @@ module Doorkeeper
   end
 
   def self.enable_orm
-    "doorkeeper/#{configuration.orm}_adapter".classify.constantize.hook!
+    begin
+      "doorkeeper/#{configuration.orm}_adapter".classify.constantize.hook!
+    rescue
+      fail 'Doorkeeper: Not found ORM adapter.'
+    end
 
     Application.send :include, Doorkeeper::ApplicationEssential
     AccessToken.send :include, Doorkeeper::AccessTokenEssential
@@ -189,10 +193,6 @@ module Doorkeeper
 
     def scopes
       @scopes ||= default_scopes + optional_scopes
-    end
-
-    def orm_name
-      [:mongoid2, :mongoid3, :mongoid4].include?(orm) ? :mongoid : orm
     end
 
     def client_credentials_methods

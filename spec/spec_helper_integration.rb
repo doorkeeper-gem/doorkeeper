@@ -22,7 +22,8 @@ end
 Rails.logger.info "====> Rails version: #{Rails.version}"
 Rails.logger.info "====> Ruby version: #{RUBY_VERSION}"
 
-require "support/orm/#{Doorkeeper.configuration.orm_name}"
+orm_name = [:mongoid2, :mongoid3, :mongoid4].include?(Doorkeeper.configuration.orm) ? :mongoid : Doorkeeper.configuration.orm
+require "support/orm/#{orm_name}"
 
 ENGINE_RAILS_ROOT = File.join(File.dirname(__FILE__), '../')
 
