@@ -28,7 +28,11 @@ module Doorkeeper
       private
 
       def before_successful_response
-        refresh_token.revoke
+        if server.refresh_token_revoked_in
+          refresh_token.revoke_in(server.refresh_token_revoked_in)
+        else
+          refresh_token.revoke
+        end
         create_access_token
       end
 

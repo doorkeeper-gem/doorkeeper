@@ -2,7 +2,7 @@ require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
   describe RefreshTokenRequest do
-    let(:server)         { double :server, access_token_expires_in: 2.minutes }
+    let(:server)         { double :server, access_token_expires_in: 2.minutes, refresh_token_revoked_in: 0.seconds }
     let!(:refresh_token) { FactoryGirl.create(:access_token, use_refresh_token: true) }
     let(:client)         { refresh_token.application }
     let(:credentials)    { Client::Credentials.new(client.uid, client.secret) }
@@ -48,6 +48,14 @@ module Doorkeeper::OAuth
       refresh_token.save
       subject.validate
       expect(subject).to be_valid
+    end
+
+    context 'longer lived refresh tokens' do
+      let(:server) { double :server, access_token_expires_in: 2.minutes, refresh_token_revoked_in: 1.day }
+
+      it 'revokes the previous token' do
+        expect { subject.authorize } .to change { refresh_token.revoked_at }.from(nil).to(be_within(1).of(DateTime.now + 1.day))
+      end
     end
 
     context 'clientless access tokens' do

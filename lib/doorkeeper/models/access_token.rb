@@ -15,6 +15,7 @@ module Doorkeeper
     validates :refresh_token, uniqueness: true, if: :use_refresh_token?
 
     attr_accessor :use_refresh_token
+
     if ::Rails.version.to_i < 4 || defined?(ProtectedAttributes)
       attr_accessible :application_id, :resource_owner_id, :expires_in,
                       :scopes, :use_refresh_token
