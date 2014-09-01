@@ -56,6 +56,15 @@ module Doorkeeper::OAuth
       it 'revokes the previous token' do
         expect { subject.authorize } .to change { refresh_token.revoked_at }.from(nil).to(be_within(1).of(DateTime.now + 1.day))
       end
+
+      context 'revoked token' do
+        time = DateTime.now + 3.hours
+        let!(:refresh_token) { FactoryGirl.create(:access_token, use_refresh_token: true, revoked_at: time) }
+        it 'does not change the revoke time of a future revoked token' do
+          subject.authorize
+          refresh_token.revoked_at.should eq(time)
+        end
+      end
     end
 
     context 'clientless access tokens' do
