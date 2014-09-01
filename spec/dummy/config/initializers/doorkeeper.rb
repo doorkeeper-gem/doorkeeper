@@ -29,6 +29,9 @@ Doorkeeper.configure do
   # Issue access tokens with refresh token (disabled by default)
   use_refresh_token
 
+  # Revoke the refresh token in a set time. Defaults to now
+  # refresh_token_revoked_in 0.seconds
+
   # Define access token scopes for your provider
   # For more information go to
   # https://github.com/doorkeeper-gem/doorkeeper/wiki/Using-Scopes
