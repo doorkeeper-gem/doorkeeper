@@ -5,6 +5,7 @@ module Doorkeeper
       include Comparable
 
       def self.from_string(string)
+        return from_array(string) if string.is_a?(Array)
         string ||= ''
         new.tap do |scope|
           scope.add(*string.split)
