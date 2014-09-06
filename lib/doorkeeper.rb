@@ -32,15 +32,25 @@ require 'doorkeeper/oauth/token'
 require 'doorkeeper/oauth/invalid_token_response'
 require 'doorkeeper/oauth/forbidden_token_response'
 
-require 'doorkeeper/models/scopes'
-require 'doorkeeper/models/expirable'
-require 'doorkeeper/models/revocable'
-require 'doorkeeper/models/accessible'
+require 'doorkeeper/models/concerns/scopes'
+require 'doorkeeper/models/concerns/expirable'
+require 'doorkeeper/models/concerns/revocable'
+require 'doorkeeper/models/concerns/accessible'
+
+require 'doorkeeper/models/access_grant_essential'
+require 'doorkeeper/models/access_token_essential'
+require 'doorkeeper/models/application_essential'
 
 require 'doorkeeper/helpers/controller'
 
 require 'doorkeeper/rails/routes'
 require 'doorkeeper/rails/helpers'
+
+require 'doorkeeper/orm_adapter/active_record_adapter'
+require 'doorkeeper/orm_adapter/mongo_mapper_adapter'
+require 'doorkeeper/orm_adapter/mongoid2_adapter'
+require 'doorkeeper/orm_adapter/mongoid3_adapter'
+require 'doorkeeper/orm_adapter/mongoid4_adapter'
 
 module Doorkeeper
   def self.configured?

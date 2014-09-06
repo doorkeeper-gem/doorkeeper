@@ -15,27 +15,21 @@ module Doorkeeper
     @config || (fail MissingConfiguration.new)
   end
 
-  def self.orm_model_dir
-    case configuration.orm
-    when :mongoid3, :mongoid4
-      'mongoid3_4'
-    else
-      configuration.orm
-    end
-  end
-
   def self.enable_orm
-    require "doorkeeper/models/#{orm_model_dir}/access_grant"
-    require "doorkeeper/models/#{orm_model_dir}/access_token"
-    require "doorkeeper/models/#{orm_model_dir}/application"
-    require 'doorkeeper/models/access_grant'
-    require 'doorkeeper/models/access_token'
-    require 'doorkeeper/models/application'
+    begin
+      "doorkeeper/#{configuration.orm}_adapter".classify.constantize.hook!
+    rescue
+      fail 'Doorkeeper: Not found ORM adapter.'
+    end
+
+    Application.send :include, Doorkeeper::ApplicationEssential
+    AccessToken.send :include, Doorkeeper::AccessTokenEssential
+    AccessGrant.send :include, Doorkeeper::AccessGrantEssential
   end
 
   def self.setup_application_owner
-    require File.join(File.dirname(__FILE__), 'models', 'ownership')
-    Application.send :include, Models::Ownership
+    require File.join(File.dirname(__FILE__), 'models', 'concerns', 'ownership')
+    Application.send :include, Doorkeeper::Models::Ownership
   end
 
   class Config
@@ -199,10 +193,6 @@ module Doorkeeper
 
     def scopes
       @scopes ||= default_scopes + optional_scopes
-    end
-
-    def orm_name
-      [:mongoid2, :mongoid3, :mongoid4].include?(orm) ? :mongoid : orm
     end
 
     def client_credentials_methods
