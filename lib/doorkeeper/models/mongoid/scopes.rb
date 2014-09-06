@@ -2,11 +2,13 @@ module Doorkeeper
   module Models
     module Mongoid
       module Scopes
-        def self.included(base)
-          base.class_eval do
-            def scopes=(value)
-              write_attribute :scopes, value if value.present?
-            end
+        extend ActiveSupport::Concern
+
+        # It's strange that if not define these after included will raise error in Mongoid 2 and 3, but 4 works well
+        # see: https://travis-ci.org/jasl/doorkeeper/builds/31586902
+        included do
+          def scopes=(value)
+            write_attribute :scopes, value if value.present?
           end
         end
       end

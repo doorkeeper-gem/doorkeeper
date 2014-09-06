@@ -34,8 +34,8 @@ module Doorkeeper
   end
 
   def self.setup_application_owner
-    require File.join(File.dirname(__FILE__), 'models', 'ownership')
-    Application.send :include, Models::Ownership
+    require File.join(File.dirname(__FILE__), 'models', 'concerns', 'ownership')
+    Application.send :include, Doorkeeper::Models::Ownership
   end
 
   class Config
