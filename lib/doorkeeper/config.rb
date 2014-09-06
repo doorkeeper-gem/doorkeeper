@@ -15,22 +15,15 @@ module Doorkeeper
     @config || (fail MissingConfiguration.new)
   end
 
-  def self.orm_model_dir
-    case configuration.orm
-    when :mongoid3, :mongoid4
-      'mongoid3_4'
-    else
-      configuration.orm
-    end
-  end
-
   def self.enable_orm
-    require "doorkeeper/models/#{orm_model_dir}/access_grant"
-    require "doorkeeper/models/#{orm_model_dir}/access_token"
-    require "doorkeeper/models/#{orm_model_dir}/application"
-    require 'doorkeeper/models/access_grant'
-    require 'doorkeeper/models/access_token'
-    require 'doorkeeper/models/application'
+    # using Orm namespace to prevent some class finding problem
+    "doorkeeper/orm/#{configuration.orm}".classify.constantize.initialize_models!
+
+    Application.send :include, Doorkeeper::ApplicationMixin
+    AccessToken.send :include, Doorkeeper::AccessTokenMixin
+    AccessGrant.send :include, Doorkeeper::AccessGrantMixin
+  rescue
+    fail 'Doorkeeper: Not found ORM adapter.'
   end
 
   def self.setup_application_owner
@@ -201,10 +194,6 @@ module Doorkeeper
       @scopes ||= default_scopes + optional_scopes
     end
 
-    def orm_name
-      [:mongoid2, :mongoid3, :mongoid4].include?(orm) ? :mongoid : orm
-    end
-
     def client_credentials_methods
       @client_credentials ||= [:from_basic, :from_params]
     end
@@ -225,7 +214,7 @@ module Doorkeeper
       @token_grant_types ||= calculate_token_grant_types
     end
 
-  private
+    private
 
     # Determines what values are acceptable for 'response_type' param in
     # authorization request endpoint, and return them as an array of strings.

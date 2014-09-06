@@ -1,19 +1,14 @@
-require 'doorkeeper/models/mongoid/scopes'
+require 'doorkeeper/orm/mongoid3/concerns/scopes'
 
 module Doorkeeper
   class AccessGrant
     include Mongoid::Document
     include Mongoid::Timestamps
-    include Models::Mongoid::Scopes
+    include Models::Mongoid3::Scopes
 
     self.store_in collection: :oauth_access_grants
 
-    if defined?(Moped::BSON)
-      field :resource_owner_id, type: Moped::BSON::ObjectId
-    else
-      field :resource_owner_id, type: BSON::ObjectId
-    end
-
+    field :resource_owner_id, type: Moped::BSON::ObjectId
     field :application_id, type: Hash
     field :token, type: String
     field :expires_in, type: Integer

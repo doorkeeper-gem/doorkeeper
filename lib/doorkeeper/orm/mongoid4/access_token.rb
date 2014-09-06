@@ -1,19 +1,14 @@
-require 'doorkeeper/models/mongoid/scopes'
+require 'doorkeeper/orm/mongoid4/concerns/scopes'
 
 module Doorkeeper
   class AccessToken
     include Mongoid::Document
     include Mongoid::Timestamps
-    include Models::Mongoid::Scopes
+    include Models::Mongoid4::Scopes
 
     self.store_in collection: :oauth_access_tokens
 
-    if defined?(Moped::BSON)
-      field :resource_owner_id, type: Moped::BSON::ObjectId
-    else
-      field :resource_owner_id, type: BSON::ObjectId
-    end
-
+    field :resource_owner_id, type: BSON::ObjectId
     field :token, type: String
     field :expires_in, type: Integer
     field :revoked_at, type: DateTime
