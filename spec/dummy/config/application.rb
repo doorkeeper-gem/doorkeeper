@@ -1,18 +1,10 @@
 require File.expand_path('../boot', __FILE__)
 
+require 'active_record/railtie'
 require 'action_controller/railtie'
 require 'sprockets/railtie'
 
 Bundler.require :default
-
-orm = if [:mongoid2, :mongoid3, :mongoid4].include?(DOORKEEPER_ORM)
-        Mongoid.load!(File.join(File.dirname(File.expand_path(__FILE__)), "#{DOORKEEPER_ORM}.yml"))
-        :mongoid
-      else
-        DOORKEEPER_ORM
-      end
-
-require "#{orm}/railtie"
 
 module Dummy
   class Application < Rails::Application

@@ -1,5 +1,5 @@
 ENV['RAILS_ENV'] ||= 'test'
-DOORKEEPER_ORM = (ENV['orm'] || :active_record).to_sym
+
 TABLE_NAME_PREFIX = ENV['table_name_prefix'] || nil
 TABLE_NAME_SUFFIX = ENV['table_name_suffix'] || nil
 
@@ -14,16 +14,15 @@ require 'generator_spec/test_case'
 require 'timecop'
 require 'database_cleaner'
 
+DOORKEEPER_ORM = Doorkeeper.configuration.orm unless defined?(DOORKEEPER_ORM)
+
 Rails.logger.info "====> Doorkeeper.orm = #{Doorkeeper.configuration.orm.inspect}"
-if Doorkeeper.configuration.orm == :active_record
-  Rails.logger.info "======> active_record.table_name_prefix = #{Rails.configuration.active_record.table_name_prefix.inspect}"
-  Rails.logger.info "======> active_record.table_name_suffix = #{Rails.configuration.active_record.table_name_suffix.inspect}"
-end
+Rails.logger.info "======> active_record.table_name_prefix = #{Rails.configuration.active_record.table_name_prefix.inspect}"
+Rails.logger.info "======> active_record.table_name_suffix = #{Rails.configuration.active_record.table_name_suffix.inspect}"
 Rails.logger.info "====> Rails version: #{Rails.version}"
 Rails.logger.info "====> Ruby version: #{RUBY_VERSION}"
 
-orm_name = Doorkeeper.configuration.orm.to_s.include?('mongoid') ? :mongoid : Doorkeeper.configuration.orm
-require "support/orm/#{orm_name}"
+require "support/orm/#{DOORKEEPER_ORM}"
 
 ENGINE_RAILS_ROOT = File.join(File.dirname(__FILE__), '../')
 

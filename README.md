@@ -19,9 +19,6 @@ https://github.com/doorkeeper-gem/doorkeeper/releases.
 - [Installation](#installation)
 - [Configuration](#configuration)
     - [Active Record](#active-record)
-    - [Mongoid / MongoMapper](#mongoid--mongomapper)
-        - [Mongoid indexes](#mongoid-indexes)
-        - [MongoMapper indexes](#mongomapper-indexes)
     - [Routes](#routes)
     - [Authenticating](#authenticating)
 - [Protecting resources with OAuth (a.k.a your API endpoint)](#protecting-resources-with-oauth-aka-your-api-endpoint)
@@ -79,30 +76,6 @@ to generate the migration tables:
 Don't forget to run the migration with:
 
     rake db:migrate
-
-### Mongoid / MongoMapper
-
-Doorkeeper currently supports MongoMapper, Mongoid 2 and 3. To start using it,
-you have to set the `orm` configuration:
-
-``` ruby
-Doorkeeper.configure do
-  orm :mongoid2 # or :mongoid3, :mongoid4, :mongo_mapper
-end
-```
-
-#### Mongoid indexes
-
-Make sure you create indexes for doorkeeper models. You can do this either by
-running `rake db:mongoid:create_indexes` or (if you're using Mongoid 2) by
-adding `autocreate_indexes: true` to your `config/mongoid.yml`
-
-#### MongoMapper indexes
-
-Generate the `db/indexes.rb` file and create indexes for the doorkeeper models:
-
-    rails generate doorkeeper:mongo_mapper:indexes
-    rake db:index
 
 ### Routes
 
