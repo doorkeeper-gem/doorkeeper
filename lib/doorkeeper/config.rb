@@ -20,11 +20,11 @@ module Doorkeeper
     require "doorkeeper/orm/#{configuration.orm}"
     "doorkeeper/orm/#{configuration.orm}".classify.constantize.initialize_models!
 
-    Application.send :include, Doorkeeper::ApplicationMixin
-    AccessToken.send :include, Doorkeeper::AccessTokenMixin
-    AccessGrant.send :include, Doorkeeper::AccessGrantMixin
+    Application.send :include, ApplicationMixin
+    AccessToken.send :include, AccessTokenMixin
+    AccessGrant.send :include, AccessGrantMixin
   rescue => e
-    fail e, 'Doorkeeper: Not found ORM adapter.'
+    fail e, "Doorkeeper: ORM adapter not found (#{configuration.orm}). You probably need to add the related gem."
   end
 
   def self.setup_application_owner
@@ -219,7 +219,7 @@ module Doorkeeper
       @token_grant_types ||= calculate_token_grant_types
     end
 
-  private
+    private
 
     # Determines what values are acceptable for 'response_type' param in
     # authorization request endpoint, and return them as an array of strings.

@@ -2,7 +2,7 @@ module Doorkeeper
   class Application < ActiveRecord::Base
     self.table_name = "#{table_name_prefix}oauth_applications#{table_name_suffix}".to_sym
 
-    if ::ActiveRecord::VERSION::MAJOR >= 4
+    if ActiveRecord::VERSION::MAJOR >= 4
       has_many :authorized_tokens, -> { where(revoked_at: nil) }, class_name: 'AccessToken'
     else
       has_many :authorized_tokens, class_name: 'AccessToken', conditions: { revoked_at: nil }
