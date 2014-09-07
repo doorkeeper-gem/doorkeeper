@@ -74,7 +74,7 @@ feature 'Refresh Token Flow' do
       # enable password auth to simulate other devices
       config_is_set(:resource_owner_from_credentials) { User.authenticate! params[:username], params[:password] }
       create_resource_owner
-      @token = FactoryGirl.create(:access_token, application: @client, resource_owner_id: @resource_owner.id, use_refresh_token: true)
+      @token = FactoryGirl.create(:access_token, application: @client, resource_owner_id: @resource_owner.to_param, use_refresh_token: true)
     end
 
     scenario 'client request a token after creating another token with the same user' do

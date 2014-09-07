@@ -12,7 +12,7 @@ module Doorkeeper
         def issue_token
           @token ||= AccessGrant.create!(
             application_id: pre_auth.client.id,
-            resource_owner_id: resource_owner.id,
+            resource_owner_id: resource_owner.to_param,
             expires_in: configuration.authorization_code_expires_in,
             redirect_uri: pre_auth.redirect_uri,
             scopes: pre_auth.scopes.to_s
