@@ -17,18 +17,19 @@ module Doorkeeper
 
   def self.enable_orm
     # using Orm namespace to prevent some class finding problem
+    require "doorkeeper/orm/#{configuration.orm}"
     "doorkeeper/orm/#{configuration.orm}".classify.constantize.initialize_models!
 
     Application.send :include, Doorkeeper::ApplicationMixin
     AccessToken.send :include, Doorkeeper::AccessTokenMixin
     AccessGrant.send :include, Doorkeeper::AccessGrantMixin
-  rescue
-    fail 'Doorkeeper: Not found ORM adapter.'
+  rescue => e
+    fail e, 'Doorkeeper: Not found ORM adapter.'
   end
 
   def self.setup_application_owner
     require File.join(File.dirname(__FILE__), 'models', 'concerns', 'ownership')
-    Application.send :include, Doorkeeper::Models::Ownership
+    Application.send :include, Models::Ownership
   end
 
   class Config
@@ -194,6 +195,10 @@ module Doorkeeper
       @scopes ||= default_scopes + optional_scopes
     end
 
+    def orm_name
+      [:mongoid2, :mongoid3, :mongoid4].include?(orm) ? :mongoid : orm
+    end
+
     def client_credentials_methods
       @client_credentials ||= [:from_basic, :from_params]
     end
@@ -214,7 +219,7 @@ module Doorkeeper
       @token_grant_types ||= calculate_token_grant_types
     end
 
-    private
+  private
 
     # Determines what values are acceptable for 'response_type' param in
     # authorization request endpoint, and return them as an array of strings.
