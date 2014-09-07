@@ -70,6 +70,15 @@ module Doorkeeper
           use_refresh_token: use_refresh_token
         )
       end
+
+      def last_authorized_token_for(application_id, resource_owner_id)
+        where(application_id: application_id,
+              resource_owner_id: resource_owner_id,
+              revoked_at: nil).
+          send(order_method, created_at_desc).
+          limit(1).
+          first
+      end
     end
 
     def token_type
