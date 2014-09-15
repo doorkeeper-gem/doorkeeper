@@ -12,6 +12,7 @@
 - [#450] When password is invalid in Password Credentials Grant, Doorkeeper
   returned 'invalid_resource_owner' instead of 'invalid_grant', as the spec
   declares. Fixes [#444].
+- [#480] For Implicit grant flow, access tokens are now being able to be reused. Fixes [#421].
 
 ## 1.4.0
 
