@@ -1,5 +1,7 @@
 module Doorkeeper
   class Application < ActiveRecord::Base
+    include ApplicationMixin
+
     self.table_name = "#{table_name_prefix}oauth_applications#{table_name_suffix}".to_sym
 
     if ActiveRecord::VERSION::MAJOR >= 4

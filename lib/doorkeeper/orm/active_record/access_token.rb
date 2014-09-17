@@ -1,5 +1,7 @@
 module Doorkeeper
   class AccessToken < ActiveRecord::Base
+    include AccessTokenMixin
+
     self.table_name = "#{table_name_prefix}oauth_access_tokens#{table_name_suffix}".to_sym
 
     def self.delete_all_for(application_id, resource_owner)

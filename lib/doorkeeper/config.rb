@@ -19,10 +19,6 @@ module Doorkeeper
     # using Orm namespace to prevent some class finding problem
     require "doorkeeper/orm/#{configuration.orm}"
     "doorkeeper/orm/#{configuration.orm}".classify.constantize.initialize_models!
-
-    Application.send :include, ApplicationMixin
-    AccessToken.send :include, AccessTokenMixin
-    AccessGrant.send :include, AccessGrantMixin
   rescue => e
     fail e, "Doorkeeper: ORM adapter not found (#{configuration.orm}). You probably need to add the related gem."
   end
