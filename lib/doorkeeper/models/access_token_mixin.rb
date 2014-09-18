@@ -31,7 +31,7 @@ module Doorkeeper
 
     module ClassMethods
       def by_token(token)
-        where(token: token).first
+        where(token: token).limit(1).to_a.first
       end
 
       def by_refresh_token(refresh_token)
