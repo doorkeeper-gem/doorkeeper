@@ -9,6 +9,7 @@ en:
               has_query_parameter: 'cannot contain a query parameter.'
               invalid_uri: 'must be a valid URI.'
               relative_uri: 'must be an absolute URI.'
+              protocol_error: 'must use either http or https.'
   mongoid:
     errors:
       models:
