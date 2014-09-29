@@ -64,6 +64,12 @@ Doorkeeper.configure do
   #
   # native_redirect_uri 'urn:ietf:wg:oauth:2.0:oob'
 
+  # Forces the usage of the HTTPS protocol in non-native redirect uris.
+  # OAuth2 delegates security in communication to the HTTPS protocol so its wise to set this.
+  # Optional parameters are if: and unless: which require a Proc, and are used as conditional statements to determine if the validation should run.
+  # When both parameters are set, both conditions are used. When no parameters are given, it will always evaluate.
+  # force_ssl_in_redirect_uri if: -> () { true }, unless: -> { Rails.env.development? }
+
   # Specify what grant flows are enabled in array of Strings. The valid
   # strings and the flows they enable are:
   #
