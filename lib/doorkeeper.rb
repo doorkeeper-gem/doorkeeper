@@ -46,6 +46,8 @@ require 'doorkeeper/helpers/controller'
 require 'doorkeeper/rails/routes'
 require 'doorkeeper/rails/helpers'
 
+require 'doorkeeper/orm/active_record'
+
 module Doorkeeper
   def self.configured?
     @config.present?

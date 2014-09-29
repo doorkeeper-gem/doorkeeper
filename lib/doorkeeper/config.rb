@@ -17,10 +17,17 @@ module Doorkeeper
 
   def self.enable_orm
     # using Orm namespace to prevent some class finding problem
-    require "doorkeeper/orm/#{configuration.orm}"
-    "doorkeeper/orm/#{configuration.orm}".classify.constantize.initialize_models!
-  rescue LoadError => e
-    fail e, "Doorkeeper: ORM adapter not found (#{configuration.orm}). You probably need to add the related gem."
+    class_name = "doorkeeper/orm/#{configuration.orm}".classify
+    class_name.constantize.initialize_models!
+  rescue NameError => e
+    # `constantize` should raise NameError,
+    # message is like `NameError: uninitialized constant Doorkeeper::Orm::Mongoid4`
+    # make sure only rescue this error(NoMethodError is a subclass of NameError, we won't catch that).
+    if e.message.include? class_name
+      fail e, "Doorkeeper: ORM adapter not found (#{configuration.orm}). You probably need to add the related gem."
+    else
+      raise e
+    end
   end
 
   def self.setup_application_owner
