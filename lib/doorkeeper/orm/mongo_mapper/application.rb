@@ -1,6 +1,9 @@
 module Doorkeeper
   class Application
     include MongoMapper::Document
+
+    include ApplicationMixin
+
     safe
     timestamps!
 

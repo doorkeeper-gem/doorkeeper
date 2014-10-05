@@ -3,6 +3,8 @@ module Doorkeeper
     include Mongoid::Document
     include Mongoid::Timestamps
 
+    include ApplicationMixin
+
     self.store_in :oauth_applications
 
     field :name, type: String
