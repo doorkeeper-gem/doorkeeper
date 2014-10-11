@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'active_support/core_ext/module/delegation'
 require 'active_support/core_ext/object/blank'
 require 'doorkeeper/oauth/scopes'
-require 'doorkeeper/models/scopes'
+require 'doorkeeper/models/concerns/scopes'
 
 describe 'Doorkeeper::Models::Scopes' do
   subject do
@@ -33,11 +33,11 @@ describe 'Doorkeeper::Models::Scopes' do
 
   describe :includes_scope? do
     it 'should return true if at least one scope is included' do
-      expect(subject.includes_scope?(['public', 'private'])).to be true
+      expect(subject.includes_scope?('public', 'private')).to be true
     end
 
     it 'should return false if no scopes are included' do
-      expect(subject.includes_scope?(['teacher', 'student'])).to be false
+      expect(subject.includes_scope?('teacher', 'student')).to be false
     end
   end
 end

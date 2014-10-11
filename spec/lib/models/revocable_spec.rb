@@ -1,6 +1,6 @@
 require 'spec_helper'
 require 'active_support/core_ext/object/blank'
-require 'doorkeeper/models/revocable'
+require 'doorkeeper/models/concerns/revocable'
 
 describe 'Revocable' do
   subject do

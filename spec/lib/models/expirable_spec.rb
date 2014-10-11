@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'timecop'
 require 'active_support/time'
-require 'doorkeeper/models/expirable'
+require 'doorkeeper/models/concerns/expirable'
 
 describe 'Expirable' do
   subject do

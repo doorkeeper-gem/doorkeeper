@@ -15,26 +15,24 @@ module Doorkeeper
     @config || (fail MissingConfiguration.new)
   end
 
-  def self.orm_model_dir
-    case configuration.orm
-    when :mongoid3, :mongoid4
-      'mongoid3_4'
+  def self.enable_orm
+    # using Orm namespace to prevent some class finding problem
+    class_name = "doorkeeper/orm/#{configuration.orm}".classify
+    class_name.constantize.initialize_models!
+  rescue NameError => e
+    # `constantize` could raise NameError, with a message like `NameError:
+    # uninitialized constant Doorkeeper::Orm::Mongoid4`. We want to rescue this
+    # error, and not `NoMethodError`, which is a subclass of NameError.
+    # TODO: write specs for this.
+    if e.instance_of?(NameError)
+      fail e, "Doorkeeper: ORM adapter not found (#{configuration.orm}). You probably need to add the related gem."
     else
-      configuration.orm
+      raise e
     end
   end
 
-  def self.enable_orm
-    require "doorkeeper/models/#{orm_model_dir}/access_grant"
-    require "doorkeeper/models/#{orm_model_dir}/access_token"
-    require "doorkeeper/models/#{orm_model_dir}/application"
-    require 'doorkeeper/models/access_grant'
-    require 'doorkeeper/models/access_token'
-    require 'doorkeeper/models/application'
-  end
-
   def self.setup_application_owner
-    require File.join(File.dirname(__FILE__), 'models', 'ownership')
+    require File.join(File.dirname(__FILE__), 'models', 'concerns', 'ownership')
     Application.send :include, Models::Ownership
   end
 
@@ -225,7 +223,7 @@ module Doorkeeper
       @token_grant_types ||= calculate_token_grant_types
     end
 
-  private
+    private
 
     # Determines what values are acceptable for 'response_type' param in
     # authorization request endpoint, and return them as an array of strings.
