@@ -4,7 +4,6 @@ rvm:
   - 2.0
   - 2.1
 env:
-  - rails=3.1.12
   - rails=3.2.18
   - rails=4.0.5
   - rails=4.1.1

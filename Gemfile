@@ -1,6 +1,6 @@
 # Defaults. For supported versions check .travis.yml
-ENV['rails'] ||= ENV['orm'] == "mongoid4" ? '4.1.0' : '3.2.0'
-ENV['orm']   ||= 'active_record'
+ENV['orm'] ||= 'active_record'
+ENV['rails'] ||= %w(active_record mongoid4).include?(ENV['orm']) ? '4.1' : '3.2'
 
 source 'https://rubygems.org'
 
@@ -27,6 +27,9 @@ when 'mongoid4'
 when 'mongo_mapper'
   gem 'mongo_mapper', '~> 0.12'
   gem 'bson_ext', '~> 1.7'
+
+else
+  fail "Invalid ENV['orm']: #{ENV['orm']}."
 
 end
 
