@@ -20,7 +20,16 @@ module Doorkeeper
     class_name.constantize.initialize_models!
   rescue NameError => e
     if e.instance_of?(NameError)
-      fail e, "Doorkeeper: ORM adapter not found (#{configuration.orm}). You probably need to add the related gem."
+      fail e, <<-error_msg
+[doorkeeper] ORM adapter not found (#{configuration.orm}), or there was an error
+trying to load it.
+
+You probably need to add the related gem for this adapter to work with
+doorkeeper.
+
+If you are working on the adapter itself, double check that the constant exists,
+and that your `initialize_models!` method doesn't raise any errors.\n
+      error_msg
     else
       raise e
     end
