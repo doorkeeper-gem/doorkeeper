@@ -2,12 +2,14 @@ require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
   describe PreAuthorization do
-    let(:server) {
-      server = Doorkeeper.configuration
-      server.stub(:default_scopes) { Scopes.new }
-      server.stub(:scopes) { Scopes.from_string('public') }
-      server
+    let(:config) {
+      config = Doorkeeper.configuration
+      config.stub(:default_scopes) { Scopes.new }
+      config.stub(:scopes) { Scopes.from_string('public') }
+      config
     }
+
+    let(:server) { double :server }
 
     let(:client) { double :client, redirect_uri: 'http://tst.com/auth' }
 
@@ -20,7 +22,7 @@ module Doorkeeper::OAuth
     end
 
     subject do
-      PreAuthorization.new(server, client, attributes)
+      PreAuthorization.new(config, server, client, attributes)
     end
 
     it 'is authorizable when request is valid' do
@@ -51,7 +53,7 @@ module Doorkeeper::OAuth
 
     context 'when authorization code grant flow is disabled' do
       before do
-        server.stub(:grant_flows) { ['implicit'] }
+        config.stub(:grant_flows) { ['implicit'] }
       end
 
       it 'does not accept "code" as response type' do
@@ -62,7 +64,7 @@ module Doorkeeper::OAuth
 
     context 'when implicit grant flow is disabled' do
       before do
-        server.stub(:grant_flows) { ['authorization_code'] }
+        config.stub(:grant_flows) { ['authorization_code'] }
       end
 
       it 'does not accept "token" as response type' do
@@ -77,7 +79,7 @@ module Doorkeeper::OAuth
     end
 
     it 'uses default scopes when none is required' do
-      allow(server).to receive(:default_scopes).and_return(Scopes.from_string('default'))
+      allow(config).to receive(:default_scopes).and_return(Scopes.from_string('default'))
       subject.scope = nil
       expect(subject.scope).to  eq('default')
       expect(subject.scopes).to eq(Scopes.from_string('default'))
