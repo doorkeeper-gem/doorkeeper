@@ -16,14 +16,9 @@ module Doorkeeper
   end
 
   def self.enable_orm
-    # using Orm namespace to prevent some class finding problem
     class_name = "doorkeeper/orm/#{configuration.orm}".classify
     class_name.constantize.initialize_models!
   rescue NameError => e
-    # `constantize` could raise NameError, with a message like `NameError:
-    # uninitialized constant Doorkeeper::Orm::Mongoid4`. We want to rescue this
-    # error, and not `NoMethodError`, which is a subclass of NameError.
-    # TODO: write specs for this.
     if e.instance_of?(NameError)
       fail e, "Doorkeeper: ORM adapter not found (#{configuration.orm}). You probably need to add the related gem."
     else

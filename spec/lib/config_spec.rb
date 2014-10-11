@@ -14,6 +14,22 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
+  describe 'enable_orm' do
+    it 'adds specific error message to NameError exception' do
+      expect do
+        Doorkeeper.configure { orm 'hibernate' }
+      end.to raise_error(NameError, /Doorkeeper: ORM adapter not found/)
+    end
+
+    it 'does not change other exceptions' do
+      String.any_instance.stub(:classify) { raise NoMethodError }
+
+      expect do
+        Doorkeeper.configure { orm 'hibernate' }
+      end.to raise_error(NoMethodError, 'NoMethodError')
+    end
+  end
+
   describe 'admin_authenticator' do
     it 'sets the block that is accessible via authenticate_admin' do
       block = proc {}
