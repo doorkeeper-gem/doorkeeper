@@ -11,8 +11,13 @@
   deprecation cycle.
 - [#450] When password is invalid in Password Credentials Grant, Doorkeeper
   returned 'invalid_resource_owner' instead of 'invalid_grant', as the spec
-  declares. Fixes [#444].
-- [#480] For Implicit grant flow, access tokens are now being able to be reused. Fixes [#421].
+  declares. Fixes #444.
+- [#452] Allows `revoked_at` to be set in the future, for future expiry.
+  Rationale: https://github.com/doorkeeper-gem/doorkeeper/pull/452#issuecomment-51431459
+- [#480] For Implicit grant flow, access tokens can now be reused. Fixes #421.
+- [#491] Reworks of @jasl's #454 and #478. ORM refactor that allows doorkeeper
+  to be extended more easily with unsupported ORMs. It also marks the boundaries
+  between shared model code and ORM specifics inside of the gem.
 
 ## 1.4.0
 
