@@ -8,10 +8,11 @@ module Doorkeeper
       validate :scopes, error: :invalid_scope
       validate :redirect_uri, error: :invalid_redirect_uri
 
-      attr_accessor :server, :client, :response_type, :redirect_uri, :state
+      attr_accessor :config, :server, :client, :response_type, :redirect_uri, :state
       attr_writer   :scope
 
-      def initialize(server, client, attrs = {})
+      def initialize(config, server, client, attrs = {})
+        @config        = config
         @server        = server
         @client        = client
         @response_type = attrs[:response_type]
@@ -29,17 +30,24 @@ module Doorkeeper
       end
 
       def scope
-        @scope.presence || server.default_scopes.to_s
+        @scope.presence || config.default_scopes.to_s
       end
 
       def error_response
         OAuth::ErrorResponse.from_request(self)
       end
 
+      def validate
+        super
+        if extra_validation === false
+          @error ||= :invalid_scope
+        end
+      end
+
       private
 
       def validate_response_type
-        server.authorization_response_types.include? response_type
+        config.authorization_response_types.include? response_type
       end
 
       def validate_client
@@ -48,7 +56,7 @@ module Doorkeeper
 
       def validate_scopes
         return true unless scope.present?
-        Helpers::ScopeChecker.valid? scope, server.scopes
+        Helpers::ScopeChecker.valid? scope, config.scopes
       end
 
       # TODO: test uri should be matched against the client's one
@@ -56,6 +64,10 @@ module Doorkeeper
         return false unless redirect_uri.present?
         Helpers::URIChecker.native_uri?(redirect_uri) ||
           Helpers::URIChecker.valid_for_authorization?(redirect_uri, client.redirect_uri)
+      end
+
+      def extra_validation
+        Doorkeeper.configuration.validate_on_authorize.call self, @server.current_resource_owner, @client, scopes.all
       end
     end
   end
