@@ -16,10 +16,9 @@ describe Doorkeeper, 'configuration' do
 
   describe 'enable_orm' do
     it 'adds specific error message to NameError exception' do
-      error_msg = '\[doorkeeper\] ORM adapter not found \(hibernate\)'
       expect do
         Doorkeeper.configure { orm 'hibernate' }
-      end.to raise_error(NameError, /#{error_msg}/)
+      end.to raise_error(NameError, /ORM adapter not found \(hibernate\)/)
     end
 
     it 'does not change other exceptions' do

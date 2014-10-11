@@ -20,7 +20,7 @@ module Doorkeeper
     class_name.constantize.initialize_models!
   rescue NameError => e
     if e.instance_of?(NameError)
-      fail e, <<-error_msg
+      fail e, "ORM adapter not found (#{configuration.orm})", <<-error_msg
 [doorkeeper] ORM adapter not found (#{configuration.orm}), or there was an error
 trying to load it.
 
