@@ -165,6 +165,7 @@ module Doorkeeper
              nil
            end)
     option :skip_authorization,            default: ->(routes) {}
+    option :validate_on_authorize,         default: Proc.new {true}
     option :access_token_expires_in,       default: 7200
     option :authorization_code_expires_in, default: 600
     option :orm,                           default: :active_record

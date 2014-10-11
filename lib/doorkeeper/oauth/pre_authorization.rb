@@ -37,6 +37,13 @@ module Doorkeeper
         OAuth::ErrorResponse.from_request(self)
       end
 
+      def validate
+        super
+        if extra_validation === false
+          @error ||= :invalid_scope
+        end
+      end
+
       private
 
       def validate_response_type
@@ -57,6 +64,10 @@ module Doorkeeper
         return false unless redirect_uri.present?
         Helpers::URIChecker.native_uri?(redirect_uri) ||
           Helpers::URIChecker.valid_for_authorization?(redirect_uri, client.redirect_uri)
+      end
+
+      def extra_validation
+        Doorkeeper.configuration.validate_on_authorize.call self, @server.current_resource_owner, @client, scopes.all
       end
     end
   end

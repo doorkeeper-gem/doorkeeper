@@ -197,4 +197,71 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
       expect(Doorkeeper::AccessToken.count).to eq 0
     end
   end
+
+  describe 'GET #new with extra validation failing' do
+    before do
+      allow(Doorkeeper.configuration).to receive(:validate_on_authorize).and_return(proc do
+        false
+      end)
+      post :create, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
+    end
+
+    it 'redirects after authorization' do
+      expect(response).to be_redirect
+    end
+
+    it 'redirects to client redirect uri' do
+      expect(response.location).to match(%r{^#{client.redirect_uri}})
+    end
+
+    it 'does not include access token in fragment' do
+      expect(fragments('access_token')).to be_nil
+    end
+
+    it 'includes error in fragment' do
+      expect(fragments('error')).to eq('invalid_scope')
+    end
+
+    it 'includes error description in fragment' do
+      expect(fragments('error_description')).to eq(translated_error_message(:invalid_scope))
+    end
+
+    it 'does not issue any access token' do
+      expect(Doorkeeper::AccessToken.all).to be_empty
+    end
+  end
+
+  describe 'GET #new with extra validation failing with custom message' do
+    before do
+      allow(Doorkeeper.configuration).to receive(:validate_on_authorize).and_return(proc do |validator|
+        validator.error = :foo_bar
+        false
+      end)
+      post :create, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
+    end
+
+    it 'redirects after authorization' do
+      expect(response).to be_redirect
+    end
+
+    it 'redirects to client redirect uri' do
+      expect(response.location).to match(%r{^#{client.redirect_uri}})
+    end
+
+    it 'does not include access token in fragment' do
+      expect(fragments('access_token')).to be_nil
+    end
+
+    it 'includes error in fragment' do
+      expect(fragments('error')).to eq('foo_bar')
+    end
+
+    it 'includes error description in fragment' do
+      expect(fragments('error_description')).to eq(translated_error_message(:foo_bar))
+    end
+
+    it 'does not issue any access token' do
+      expect(Doorkeeper::AccessToken.all).to be_empty
+    end
+  end
 end
