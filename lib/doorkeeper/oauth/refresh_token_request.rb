@@ -14,10 +14,10 @@ module Doorkeeper
       attr_accessor :client
 
       def initialize(server, refresh_token, credentials, parameters = {})
-        @server           = server
-        @refresh_token    = refresh_token
-        @credentials      = credentials
-        @original_scopes  = parameters[:scopes]
+        @server          = server
+        @refresh_token   = refresh_token
+        @credentials     = credentials
+        @original_scopes = parameters[:scopes]
 
         if credentials
           @client = Application.by_uid_and_secret credentials.uid,
