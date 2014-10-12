@@ -204,7 +204,7 @@ and that your `initialize_models!` method doesn't raise any errors.\n
     end
 
     def orm_name
-      [:mongoid2, :mongoid3, :mongoid4].include?(orm) ? :mongoid : orm
+      [:mongoid2, :mongoid3, :mongoid4].include?(orm.to_sym) ? :mongoid : orm
     end
 
     def client_credentials_methods

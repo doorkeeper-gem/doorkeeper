@@ -1,8 +1,8 @@
-case DOORKEEPER_ORM
-when :active_record
+case DOORKEEPER_ORM.to_s
+when "active_record"
   class User < ActiveRecord::Base
   end
-when :mongoid2, :mongoid3, :mongoid4
+when /mongoid/
   class User
     include Mongoid::Document
     include Mongoid::Timestamps
@@ -10,7 +10,7 @@ when :mongoid2, :mongoid3, :mongoid4
     field :name, type: String
     field :password, type: String
   end
-when :mongo_mapper
+when "mongo_mapper"
   class User
     include MongoMapper::Document
     timestamps!
@@ -21,7 +21,7 @@ when :mongo_mapper
 end
 
 class User
-  if ::Rails.version.to_i < 4
+  if ::Rails.version.to_i < 4 || defined?(::ProtectedAttributes)
     attr_accessible :name, :password
   end
 
