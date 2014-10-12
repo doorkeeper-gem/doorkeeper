@@ -4,13 +4,31 @@
   <% end %>
 
   <%= content_tag :div, class: "form-group#{' has-error' if application.errors[:name].present?}" do %>
-    <%= f.label :name, class: 'col-sm-2 control-label', for: 'application_name' %>
+    <%= f.label :name, class: 'col-sm-2 control-label', for: 'doorkeeper_application_name' %>
     <div class="col-sm-10">
       <%= f.text_field :name, class: 'form-control' %>
       <%= doorkeeper_errors_for application, :name %>
     </div>
   <% end %>
-
+  <br />
+ <% if application.respond_to?(:valid_scopes) && doorkeeper_scope_list.size > 0 %>
+  <%= content_tag :div, class: "row form-group#{' has-error' if application.errors[:valid_scopes].present?}" do %>
+    <%= f.label :valid_scopes, 'Available scopes', class: 'span2 control-label', for: 'doorkeeper_application_valid_scopes' %>
+    <div class="col-sm-10">
+      <%= f.select(:valid_scopes, options_for_select(doorkeeper_scope_list, Doorkeeper::OAuth::Scopes.from_string(application.valid_scopes).to_a), {}, :multiple => true) %>
+      <%= doorkeeper_errors_for application, :valid_scopes %>
+    </div>
+  <% end %>
+  <br />
+  <%= content_tag :div, class: "row form-group#{' has-error' if application.errors[:scope_required].present?}" do %>
+    <%= f.label :scope_required, 'Scope Required', class: 'span2 control-label', for: 'doorkeeper_application_name' %>
+    <div class="col-sm-10">
+      <%= f.check_box(:scope_required) %>
+      <%= doorkeeper_errors_for application, :scope_required %>
+    </div>
+  <% end %>
+  <br />
+ <% end %>
   <%= content_tag :div, class: "form-group#{' has-error' if application.errors[:redirect_uri].present?}" do %>
     <%= f.label :redirect_uri, class: 'col-sm-2 control-label', for: 'application_redirect_uri' %>
     <div class="col-sm-10">

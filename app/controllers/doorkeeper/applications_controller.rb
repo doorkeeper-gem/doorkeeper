@@ -44,10 +44,13 @@ module Doorkeeper
     end
 
     def application_params
+      if params[:doorkeeper_application]
+        params[:doorkeeper_application][:valid_scopes] = Doorkeeper::OAuth::Scopes.from_array(params[:doorkeeper_application][:valid_scopes]).to_s
+      end
       if params.respond_to?(:permit)
-        params.require(:doorkeeper_application).permit(:name, :redirect_uri)
+        params.require(:doorkeeper_application).permit(:name, :redirect_uri, :valid_scopes, :scope_required)
       else
-        params[:doorkeeper_application].slice(:name, :redirect_uri) rescue nil
+        params[:doorkeeper_application].slice(:name, :redirect_uri, :valid_scopes, :scope_required) rescue nil
       end
     end
   end
