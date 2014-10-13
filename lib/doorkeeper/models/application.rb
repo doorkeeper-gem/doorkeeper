@@ -27,7 +27,7 @@ module Doorkeeper
     end
 
     def scopes
-      OAuth::Scopes.from_string(self.valid_scopes)
+      OAuth::Scopes.from_string(valid_scopes)
     end
 
     private
