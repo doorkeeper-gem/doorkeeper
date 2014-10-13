@@ -44,7 +44,7 @@ module Doorkeeper
     end
 
     def application_params
-      if params[:doorkeeper_application]
+      if params[:doorkeeper_application] && Application.column_names.include?(:valid_scopes)
         params[:doorkeeper_application][:valid_scopes] = Doorkeeper::OAuth::Scopes.from_array(params[:doorkeeper_application][:valid_scopes]).to_s
       end
       if params.respond_to?(:permit)
