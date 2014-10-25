@@ -4,7 +4,7 @@ module Doorkeeper
 
     def new
       if pre_auth.authorizable?
-        if matching_token? || skip_authorization?
+        if skip_authorization? || matching_token?
           auth = authorization.authorize
           redirect_to auth.redirect_uri
         else
