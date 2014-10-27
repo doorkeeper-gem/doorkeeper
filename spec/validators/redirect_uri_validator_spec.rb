@@ -83,22 +83,31 @@ describe RedirectUriValidator do
       it 'accepts an invalid uri when the uri should not be validated' do
         allow(Doorkeeper.configuration).to receive(
                                                :force_ssl_in_redirect_uri_options
-                                           ).and_return(if: ->() { false }, unless: ->() { true })
+                                           ).and_return(if: proc { false }, unless: proc { true })
         expect(subject).to be_valid
       end
 
       it 'invalidates the uri when uri is invalid and options if returns true' do
         allow(Doorkeeper.configuration).to receive(
                                                :force_ssl_in_redirect_uri_options
-                                           ).and_return(if: ->() { true })
+                                           ).and_return(if: proc { true })
         expect(subject).to be_invalid
       end
 
       it 'invalidates the uri when uri is invalid and options unless returns false' do
         allow(Doorkeeper.configuration).to receive(
                                                :force_ssl_in_redirect_uri_options
-                                           ).and_return(if: ->() { true }, unless: ->() { false })
+                                           ).and_return(if: proc { true }, unless: proc { false })
         expect(subject).to be_invalid
+      end
+
+      it 'evaluates an lambda with model context' do
+        application_id = subject.id
+        subject.redirect_uri = 'https://example.com/callback'
+        allow(Doorkeeper.configuration).to receive(
+                                               :force_ssl_in_redirect_uri_options
+                                           ).and_return(if: lambda { |klass| klass.id == application_id } )
+        expect(subject).to be_valid
       end
     end
   end
