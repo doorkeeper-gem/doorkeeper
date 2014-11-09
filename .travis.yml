@@ -5,9 +5,10 @@ rvm:
   - 2.1
 env:
   # - rails=3.1 # Don't need it in the CI matrix
-  - rails=3.2
-  - rails=4.0
-  - rails=4.1
+  - rails=3.2.0
+  - rails=4.0.0
+  - rails=4.1.0
+  - rails=4.2.0.beta4
 gemfile:
   - Gemfile
   - gemfiles/Gemfile.mongoid2.rb
@@ -19,16 +20,20 @@ services:
 matrix:
   exclude:
     - gemfile: gemfiles/Gemfile.mongoid2.rb
-      env: rails=4.0
+      env: rails=4.0.0
     - gemfile: gemfiles/Gemfile.mongoid2.rb
-      env: rails=4.1
+      env: rails=4.1.0
+    - gemfile: gemfiles/Gemfile.mongoid2.rb
+      env: rails=4.2.0.beta4
 
     - gemfile: gemfiles/Gemfile.mongoid3.rb
-      env: rails=4.0
+      env: rails=4.0.0
     - gemfile: gemfiles/Gemfile.mongoid3.rb
-      env: rails=4.1
+      env: rails=4.1.0
+    - gemfile: gemfiles/Gemfile.mongoid3.rb
+      env: rails=4.2.0.beta4
 
     - gemfile: gemfiles/Gemfile.mongoid4.rb
-      env: rails=3.1
+      env: rails=3.1.0
     - gemfile: gemfiles/Gemfile.mongoid4.rb
-      env: rails=3.2
+      env: rails=3.2.0
