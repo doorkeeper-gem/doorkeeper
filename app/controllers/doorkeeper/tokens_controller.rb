@@ -1,5 +1,6 @@
 module Doorkeeper
   class TokensController < Doorkeeper::ApplicationMetalController
+
     def create
       response = strategy.authorize
       self.headers.merge! response.headers
@@ -11,6 +12,9 @@ module Doorkeeper
 
     # OAuth 2.0 Token Revocation - http://tools.ietf.org/html/rfc7009
     def revoke
+      # No authorization header found
+      render json: {}, status: 401 and return unless doorkeeper_token
+
       # The authorization server first validates the client credentials
       if doorkeeper_token && doorkeeper_token.accessible?
         # Doorkeeper does not use the token_type_hint logic described in the RFC 7009
