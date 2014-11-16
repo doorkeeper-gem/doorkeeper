@@ -34,4 +34,19 @@ describe Doorkeeper::TokensController do
       expect(response.headers['WWW-Authenticate']).to match(/Bearer/)
     end
   end
+
+  describe 'when revoke authorization has failed' do
+    let :token do
+      double(:token, authorize: false)
+    end
+
+    before do
+      allow(controller).to receive(:token) { token }
+    end
+
+    it 'returns the error response' do
+      post :revoke
+      expect(response.status).to eq 401
+    end
+  end
 end

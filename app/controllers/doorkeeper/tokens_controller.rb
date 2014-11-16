@@ -19,7 +19,8 @@ module Doorkeeper
       end
       # The authorization server responds with HTTP status code 200 if the
       # token has been revoked successfully or if the client submitted an invalid token
-      render json: {}, status: 200
+      # and returns a 401 if no authorization header is passed in
+      render json: {}, status: (doorkeeper_token ? 200 : 401)
     end
 
     private
