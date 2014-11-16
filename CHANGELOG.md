@@ -18,6 +18,7 @@
 - [#491] Reworks of @jasl's #454 and #478. ORM refactor that allows doorkeeper
   to be extended more easily with unsupported ORMs. It also marks the boundaries
   between shared model code and ORM specifics inside of the gem.
+- [#496] Tests with Rails 4.2.
 
 ## 1.4.0
 
