@@ -1,6 +1,5 @@
 module Doorkeeper
   class TokensController < Doorkeeper::ApplicationMetalController
-
     def create
       response = strategy.authorize
       self.headers.merge! response.headers
