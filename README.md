@@ -151,20 +151,7 @@ models, session or routes helpers. However, since this code is not run in the
 context of your application's `ApplicationController` it doesn't have access to
 the methods defined over there.
 
-If you use [devise](https://github.com/plataformatec/devise), you may want to
-use warden to authenticate the block:
-
-``` ruby
-resource_owner_authenticator do
-  current_user || warden.authenticate!(:scope => :user)
-end
-```
-
-Side note: when using devise you have access to `current_user` as devise extends
-entire `ActionController::Base` with the `current_#{mapping}`.
-
-If you are not using devise, you may want to check other ways of
-authentication
+You may want to check other ways of authentication
 [here](https://github.com/doorkeeper-gem/doorkeeper/wiki/Authenticating-using-Clearance-or-DIY).
 
 ## Protecting resources with OAuth (a.k.a your API endpoint)
