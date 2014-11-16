@@ -12,9 +12,6 @@ module Doorkeeper
 
     # OAuth 2.0 Token Revocation - http://tools.ietf.org/html/rfc7009
     def revoke
-      # No authorization header found
-      render json: {}, status: 401 and return unless doorkeeper_token
-
       # The authorization server first validates the client credentials
       if doorkeeper_token && doorkeeper_token.accessible?
         # Doorkeeper does not use the token_type_hint logic described in the RFC 7009
@@ -23,7 +20,8 @@ module Doorkeeper
       end
       # The authorization server responds with HTTP status code 200 if the
       # token has been revoked successfully or if the client submitted an invalid token
-      render json: {}, status: 200
+      # and returns a 401 if no authorization header is passed in
+      render json: {}, status: (doorkeeper_token ? 200 : 401)
     end
 
     private
