@@ -136,39 +136,16 @@ describe Doorkeeper, 'configuration' do
   end
 
   describe 'force_ssl_in_redirect_uri' do
-    context 'uses_force_ssl_in_redirect_uri?' do
-      it 'is false by default' do
-        expect(subject.uses_force_ssl_in_redirect_uri?).to be_falsey
-      end
-
-      it 'can change the value' do
-        Doorkeeper.configure do
-          orm DOORKEEPER_ORM
-          force_ssl_in_redirect_uri
-        end
-        expect(subject.uses_force_ssl_in_redirect_uri?).to be_truthy
-      end
+    it 'is true by default' do
+      expect(subject.force_ssl_in_redirect_uri).to be_truthy
     end
 
-    context 'force_ssl_in_redirect_uri_configuration' do
-      it 'returns a hash' do
-        Doorkeeper.configure do
-          orm DOORKEEPER_ORM
-          force_ssl_in_redirect_uri
-        end
-        expect(subject.force_ssl_in_redirect_uri_options).to be_a(Hash)
-        expect(subject.force_ssl_in_redirect_uri_options).to be_empty
+    it 'can change the value' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        force_ssl_in_redirect_uri(false)
       end
-
-      it 'returns the configured hash' do
-        result = { if: true, unless: false }
-        Doorkeeper.configure do
-          orm DOORKEEPER_ORM
-          force_ssl_in_redirect_uri result
-        end
-        expect(subject.force_ssl_in_redirect_uri_options).to be_a(Hash)
-        expect(subject.force_ssl_in_redirect_uri_options).to eq result
-      end
+      expect(subject.force_ssl_in_redirect_uri).to be_falsey
     end
   end
 

@@ -6,7 +6,7 @@ describe RedirectUriValidator do
   end
 
   it 'is valid when the uri is a uri' do
-    subject.redirect_uri = 'http://example.com/callback'
+    subject.redirect_uri = 'https://example.com/callback'
     expect(subject).to be_valid
   end
 
@@ -34,81 +34,40 @@ describe RedirectUriValidator do
   end
 
   it 'is invalid when the uri has a fragment' do
-    subject.redirect_uri = 'http://example.com/abcd#xyz'
+    subject.redirect_uri = 'https://example.com/abcd#xyz'
     expect(subject).not_to be_valid
     expect(subject.errors[:redirect_uri].first).to eq('cannot contain a fragment.')
   end
 
   it 'is invalid when the uri has a query parameter' do
-    subject.redirect_uri = 'http://example.com/abcd?xyz=123'
+    subject.redirect_uri = 'https://example.com/abcd?xyz=123'
     expect(subject).to be_valid
   end
 
   context 'force secured uri' do
     it 'accepts an valid uri' do
       subject.redirect_uri = 'https://example.com/callback'
-      allow(RedirectUriValidator).to receive(:force_secured_redirect_uri?).
-                                     and_return(true)
-      allow(Doorkeeper.configuration).to receive(
-                                             :force_ssl_in_redirect_uri_configuration
-                                         ).and_return({ })
       expect(subject).to be_valid
     end
 
     it 'accepts native redirect uri' do
       subject.redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
-      allow(RedirectUriValidator).to receive(:force_secured_redirect_uri?).
-                                     and_return(true)
+      expect(subject).to be_valid
+    end
+
+    it 'accepts a non secured protocol when disabled' do
+      subject.redirect_uri = 'http://example.com/callback'
+      allow(Doorkeeper.configuration).to receive(
+                                             :force_ssl_in_redirect_uri
+                                         ).and_return(false)
       expect(subject).to be_valid
     end
 
     it 'invalidates the uri when the uri does not use a secure protocol' do
       subject.redirect_uri = 'http://example.com/callback'
-      allow(RedirectUriValidator).to receive(:force_secured_redirect_uri?).
-                                     and_return(true)
-      allow(Doorkeeper.configuration).to receive(
-                                             :force_ssl_in_redirect_uri_options
-                                         ).and_return({ })
       expect(subject).not_to be_valid
-      expect(subject.errors[:redirect_uri].first).to eq('must be an HTTPS/SSL URI.')
-    end
-
-    context 'with options' do
-      before do
-        allow(RedirectUriValidator).to receive(:force_secured_redirect_uri?).
-                                              and_return(true)
-        subject.redirect_uri = 'http://example.com/callback'
-      end
-
-      it 'accepts an invalid uri when the uri should not be validated' do
-        allow(Doorkeeper.configuration).to receive(
-                                               :force_ssl_in_redirect_uri_options
-                                           ).and_return(if: proc { false }, unless: proc { true })
-        expect(subject).to be_valid
-      end
-
-      it 'invalidates the uri when uri is invalid and options if returns true' do
-        allow(Doorkeeper.configuration).to receive(
-                                               :force_ssl_in_redirect_uri_options
-                                           ).and_return(if: proc { true })
-        expect(subject).to be_invalid
-      end
-
-      it 'invalidates the uri when uri is invalid and options unless returns false' do
-        allow(Doorkeeper.configuration).to receive(
-                                               :force_ssl_in_redirect_uri_options
-                                           ).and_return(if: proc { true }, unless: proc { false })
-        expect(subject).to be_invalid
-      end
-
-      it 'evaluates an lambda with model context' do
-        application_id = subject.id
-        subject.redirect_uri = 'https://example.com/callback'
-        allow(Doorkeeper.configuration).to receive(
-                                               :force_ssl_in_redirect_uri_options
-                                           ).and_return(if: lambda { |klass| klass.id == application_id } )
-        expect(subject).to be_valid
-      end
+      error = subject.errors[:redirect_uri].first
+      expect(error).to eq('must be an HTTPS/SSL URI.')
     end
   end
 end
