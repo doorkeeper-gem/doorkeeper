@@ -1,22 +1,29 @@
 language: ruby
+
 rvm:
   - 1.9.3
   - 2.0
   - 2.1
+
+sudo: false
+
 env:
   # - rails=3.1 # Don't need it in the CI matrix
   - rails=3.2.0
   - rails=4.0.0
   - rails=4.1.0
   - rails=4.2.0.beta4
+
 gemfile:
   - Gemfile
   - gemfiles/Gemfile.mongoid2.rb
   - gemfiles/Gemfile.mongoid3.rb
   - gemfiles/Gemfile.mongoid4.rb
   - gemfiles/Gemfile.mongo_mapper.rb
+
 services:
   - mongodb
+
 matrix:
   exclude:
     - gemfile: gemfiles/Gemfile.mongoid2.rb
