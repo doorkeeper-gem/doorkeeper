@@ -1,18 +1,18 @@
 language: ruby
+sudo: false
+cache: bundler
 
 rvm:
   - 1.9.3
   - 2.0
   - 2.1
 
-sudo: false
-
 env:
   # - rails=3.1 # Don't need it in the CI matrix
   - rails=3.2.0
   - rails=4.0.0
   - rails=4.1.0
-  - rails=4.2.0.beta4
+  # - rails=4.2.0.beta4 # Not playing well with current arel 6
 
 gemfile:
   - Gemfile

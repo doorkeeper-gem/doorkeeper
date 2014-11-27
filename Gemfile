@@ -1,4 +1,4 @@
-ENV['rails'] ||= '4.2.0.beta4'
+ENV['rails'] ||= '4.1.0'
 
 source 'https://rubygems.org'
 
