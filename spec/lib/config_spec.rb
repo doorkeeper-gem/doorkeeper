@@ -135,6 +135,20 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
+  describe 'force_ssl_in_redirect_uri' do
+    it 'is true by default' do
+      expect(subject.force_ssl_in_redirect_uri).to be_truthy
+    end
+
+    it 'can change the value' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        force_ssl_in_redirect_uri(false)
+      end
+      expect(subject.force_ssl_in_redirect_uri).to be_falsey
+    end
+  end
+
   describe 'access_token_credentials' do
     it 'has defaults order' do
       expect(subject.access_token_methods).to eq([:from_bearer_authorization, :from_access_token_param, :from_bearer_param])

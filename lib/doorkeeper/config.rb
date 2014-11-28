@@ -87,6 +87,10 @@ and that your `initialize_models!` method doesn't raise any errors.\n
       def reuse_access_token
         @config.instance_variable_set("@reuse_access_token", true)
       end
+
+      def force_ssl_in_redirect_uri(boolean)
+        @config.instance_variable_set("@force_ssl_in_redirect_uri", boolean)
+      end
     end
 
     module Option
@@ -174,6 +178,7 @@ and that your `initialize_models!` method doesn't raise any errors.\n
     option :active_record_options,         default: {}
     option :realm,                         default: 'Doorkeeper'
     option :wildcard_redirect_uri,         default: false
+    option :force_ssl_in_redirect_uri,     default: !Rails.env.development?
     option :grant_flows,
            default: %w(authorization_code implicit password client_credentials)
 
