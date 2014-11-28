@@ -19,7 +19,8 @@
   to be extended more easily with unsupported ORMs. It also marks the boundaries
   between shared model code and ORM specifics inside of the gem.
 - [#496] Tests with Rails 4.2.
-- [#489] Adds `force_ssl_in_redirect_uri` to force the usage of the HTTPS protocol in non-native redirect uris.
+- [#489] Adds `force_ssl_in_redirect_uri` to force the usage of the HTTPS
+  protocol in non-native redirect uris.
 
 
 ## 1.4.0

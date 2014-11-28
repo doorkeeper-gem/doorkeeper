@@ -136,7 +136,7 @@ describe Doorkeeper, 'configuration' do
   end
 
   describe 'force_ssl_in_redirect_uri' do
-    it 'is true by default' do
+    it 'is true by default in non-development environments' do
       expect(subject.force_ssl_in_redirect_uri).to be_truthy
     end
 
