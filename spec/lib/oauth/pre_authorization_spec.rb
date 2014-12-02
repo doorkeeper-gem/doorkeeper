@@ -5,11 +5,19 @@ module Doorkeeper::OAuth
     let(:server) {
       server = Doorkeeper.configuration
       server.stub(:default_scopes) { Scopes.new }
-      server.stub(:scopes) { Scopes.from_string('public') }
+      server.stub(:scopes) { Scopes.from_string('public profile') }
       server
     }
 
-    let(:client) { double :client, redirect_uri: 'http://tst.com/auth' }
+    let(:application) do
+      application = double :application
+      application.stub(:scopes) { Scopes.from_string('') }
+      application
+    end
+
+    let(:client) do
+      double :client, redirect_uri: 'http://tst.com/auth', application: application
+    end
 
     let :attributes do
       {
@@ -71,9 +79,39 @@ module Doorkeeper::OAuth
       end
     end
 
-    it 'accepts valid scopes' do
-      subject.scope = 'public'
-      expect(subject).to be_authorizable
+    context 'client application does not restrict valid scopes' do
+      it 'accepts valid scopes' do
+        subject.scope = 'public'
+        expect(subject).to be_authorizable
+      end
+
+      it 'rejects (globally) non-valid scopes' do
+        subject.scope = 'invalid'
+        expect(subject).not_to be_authorizable
+      end
+    end
+
+    context 'client application restricts valid scopes' do
+      let(:application) do
+        application = double :application
+        application.stub(:scopes) { Scopes.from_string('public nonsense') }
+        application
+      end
+
+      it 'accepts valid scopes' do
+        subject.scope = 'public'
+        expect(subject).to be_authorizable
+      end
+
+      it 'rejects (globally) non-valid scopes' do
+        subject.scope = 'invalid'
+        expect(subject).not_to be_authorizable
+      end
+
+      it 'rejects (application level) non-valid scopes' do
+        subject.scope = 'profile'
+        expect(subject).to_not be_authorizable
+      end
     end
 
     it 'uses default scopes when none is required' do
@@ -112,9 +150,5 @@ module Doorkeeper::OAuth
       expect(subject).not_to be_authorizable
     end
 
-    it 'rejects non-valid scopes' do
-      subject.scope = 'invalid'
-      expect(subject).not_to be_authorizable
-    end
   end
 end

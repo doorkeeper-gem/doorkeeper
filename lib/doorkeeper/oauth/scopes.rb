@@ -17,7 +17,7 @@ module Doorkeeper
         end
       end
 
-      delegate :each, to: :@scopes
+      delegate :each, :empty?, to: :@scopes
 
       def initialize
         @scopes = []
@@ -54,6 +54,11 @@ module Doorkeeper
 
       def <=>(other)
         self.map(&:to_s).sort <=> other.map(&:to_s).sort
+      end
+
+      def &(other)
+        other_array = other.present? ? other.all : []
+        self.class.from_array(all & other_array)
       end
     end
   end

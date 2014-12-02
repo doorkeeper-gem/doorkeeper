@@ -41,7 +41,9 @@ module Doorkeeper
     end
 
     def pre_auth
-      @pre_auth ||= OAuth::PreAuthorization.new(Doorkeeper.configuration, server.client_via_uid, params)
+      @pre_auth ||= OAuth::PreAuthorization.new(Doorkeeper.configuration,
+                                                server.client_via_uid,
+                                                params)
     end
 
     def authorization
