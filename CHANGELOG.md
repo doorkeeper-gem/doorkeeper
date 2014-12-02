@@ -1,14 +1,26 @@
 # Changelog
 
-## master (preparation for 2.0.0)
+## 2.0.0
 
-- Removes deprecated option `test_redirect_uri`. Now called
-  `native_redirect_uri`.
-- [#446] Removes deprecated `mount Doorkeeper::Engine`. Now we use
-  `use_doorkeeper`.
+### Backward incompatible changes
+
 - [#448] Removes `doorkeeper_for` helper. Now we use
-  `before_action :doorkeeper_authorize!`. This change didn't go through the
-  deprecation cycle.
+  `before_action :doorkeeper_authorize!`.
+- [#469] Allow client applications to restrict the set of allowable scopes.
+  Fixes #317. `oauth_applications` relation needs a new `scopes` string column,
+  non nullable, which defaults to an empty string:
+
+  ```ruby
+  add_column :oauth_applications, :scopes, :string, null: false, default: ‘’
+  ```
+
+### Removed deprecations
+
+- Removes `test_redirect_uri` option. It is now called `native_redirect_uri`.
+- [#446] Removes `mount Doorkeeper::Engine`. Now we use `use_doorkeeper`.
+
+### Other changes/enhancements
+
 - [#450] When password is invalid in Password Credentials Grant, Doorkeeper
   returned 'invalid_resource_owner' instead of 'invalid_grant', as the spec
   declares. Fixes #444.
@@ -21,8 +33,6 @@
 - [#496] Tests with Rails 4.2.
 - [#489] Adds `force_ssl_in_redirect_uri` to force the usage of the HTTPS
   protocol in non-native redirect uris.
-- [#469] Allow client applications to restrict the set of allowable scopes.
-  Fixes #317.
 
 
 ## 1.4.0
