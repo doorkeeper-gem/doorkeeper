@@ -6,7 +6,10 @@ class Doorkeeper::ApplicationOwnerGenerator < Rails::Generators::Base
   desc 'Provide support for client application ownership.'
 
   def application_owner
-    migration_template 'add_owner_to_application_migration.rb', 'db/migrate/add_owner_to_application.rb'
+    migration_template(
+      'add_owner_to_application_migration.rb',
+      'db/migrate/add_owner_to_application.rb'
+    )
   end
 
   def self.next_migration_number(dirname)
