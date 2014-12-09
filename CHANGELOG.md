@@ -27,6 +27,7 @@
 
 ### Other changes/enhancements
 
+- [#484] Performance improvement - avoid performing order_by when not required.
 - [#450] When password is invalid in Password Credentials Grant, Doorkeeper
   returned 'invalid_resource_owner' instead of 'invalid_grant', as the spec
   declares. Fixes #444.
