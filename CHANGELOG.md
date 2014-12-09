@@ -8,9 +8,13 @@
   `before_action :doorkeeper_authorize!`.
 - [#469] Allow client applications to restrict the set of allowable scopes.
   Fixes #317. `oauth_applications` relation needs a new `scopes` string column,
-  non nullable, which defaults to an empty string. Run `rails generate
-  doorkeeper:application_scopes` to add the column. If you’d rather do it by
-  hand, your ActiveRecord migration should contain:
+  non nullable, which defaults to an empty string. To add the column run:
+
+  ```
+  rails generate doorkeeper:application_scopes
+  ```
+
+  If you’d rather do it by hand, your ActiveRecord migration should contain:
 
   ```ruby
   add_column :oauth_applications, :scopes, :string, null: false, default: ‘’
