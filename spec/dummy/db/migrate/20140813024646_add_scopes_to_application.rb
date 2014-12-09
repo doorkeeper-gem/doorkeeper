@@ -1,4 +1,4 @@
-class AddScopesToOauthApplications < ActiveRecord::Migration
+class AddScopesToApplication < ActiveRecord::Migration
   def change
     add_column :oauth_applications, :scopes, :string, null: false, default: ''
   end
