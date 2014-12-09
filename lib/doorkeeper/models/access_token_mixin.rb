@@ -77,6 +77,7 @@ module Doorkeeper
               revoked_at: nil).
           send(order_method, created_at_desc).
           limit(1).
+          to_a.
           first
       end
     end

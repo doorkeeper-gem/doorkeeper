@@ -27,19 +27,17 @@ module Doorkeeper
     end
     private_class_method :delete_all_for
 
-    def self.last_authorized_token_for(application_id, resource_owner_id)
-      where(application_id: application_id,
-            resource_owner_id: resource_owner_id,
-            revoked_at: nil).
-        sort(:created_at.desc).
-        limit(1).
-        first
-    end
-    private_class_method :last_authorized_token_for
-
     def self.create_indexes
       ensure_index :token, unique: true
       ensure_index [[:refresh_token, 1]], unique: true, sparse: true
+    end
+
+    def self.order_method
+      :sort
+    end
+
+    def self.created_at_desc
+      :created_at.desc
     end
   end
 end

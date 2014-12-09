@@ -29,6 +29,7 @@ module Doorkeeper
     def self.order_method
       :order_by
     end
+
     def self.created_at_desc
       [:created_at, :desc]
     end
