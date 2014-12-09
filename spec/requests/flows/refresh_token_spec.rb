@@ -74,15 +74,24 @@ feature 'Refresh Token Flow' do
       # enable password auth to simulate other devices
       config_is_set(:resource_owner_from_credentials) { User.authenticate! params[:username], params[:password] }
       create_resource_owner
+      _another_token = post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
+      last_token.update_attribute :created_at, 5.seconds.ago
+
       @token = FactoryGirl.create(:access_token, application: @client, resource_owner_id: @resource_owner.id, use_refresh_token: true)
+      @token.update_attribute :expires_in, -100
     end
 
     scenario 'client request a token after creating another token with the same user' do
-      @token.update_attribute :expires_in, -100
-      post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
       post refresh_token_endpoint_url(client: @client, refresh_token: @token.refresh_token)
-      should_have_json 'refresh_token', Doorkeeper::AccessToken.last.refresh_token
+
+      should_have_json 'refresh_token', last_token.refresh_token
       expect(@token.reload).to be_revoked
+    end
+
+    def last_token
+      Doorkeeper::AccessToken.last_authorized_token_for(
+        @client.id, @resource_owner.id
+      )
     end
   end
 end
