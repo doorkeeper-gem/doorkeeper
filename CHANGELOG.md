@@ -40,6 +40,7 @@
 - [#496] Tests with Rails 4.2.
 - [#489] Adds `force_ssl_in_redirect_uri` to force the usage of the HTTPS
   protocol in non-native redirect uris.
+- [#516] Adds `protect_from_forgery` to `Doorkeeper::ApplicationController`
 - [#518] Fix random failures in mongodb.
 
 
