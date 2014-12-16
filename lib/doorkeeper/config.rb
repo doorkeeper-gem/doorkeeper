@@ -8,11 +8,26 @@ module Doorkeeper
   def self.configure(&block)
     @config = Config::Builder.new(&block).build
     enable_orm
+    check_for_missing_columns
     setup_application_owner if @config.enable_application_owner?
   end
 
   def self.configuration
     @config || (fail MissingConfiguration.new)
+  end
+
+  def self.check_for_missing_columns
+    if Doorkeeper.configuration.orm == :active_record &&
+        !Application.new.attributes.include?("scopes")
+
+      puts <<-MSG.squish
+[doorkeeper] Missing column: `applications.scopes`.
+If you are using ActiveRecord run `rails generate doorkeeper:application_scopes
+&& rake db:migrate` to add it.
+      MSG
+    end
+  rescue ActiveRecord::StatementInvalid
+    # trap error when DB is not yet setup
   end
 
   def self.enable_orm
