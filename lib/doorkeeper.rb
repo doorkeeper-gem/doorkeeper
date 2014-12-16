@@ -36,6 +36,7 @@ require 'doorkeeper/models/concerns/scopes'
 require 'doorkeeper/models/concerns/expirable'
 require 'doorkeeper/models/concerns/revocable'
 require 'doorkeeper/models/concerns/accessible'
+require 'doorkeeper/models/concerns/ownership'
 
 require 'doorkeeper/models/access_grant_mixin'
 require 'doorkeeper/models/access_token_mixin'
