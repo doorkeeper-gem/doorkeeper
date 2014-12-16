@@ -3,7 +3,7 @@ TABLE_NAME_PREFIX = ENV['table_name_prefix'] || nil
 TABLE_NAME_SUFFIX = ENV['table_name_suffix'] || nil
 
 orm = ENV['BUNDLE_GEMFILE'].match(/Gemfile\.(.+)\.rb/)
-DOORKEEPER_ORM = (orm && orm[1]) || :active_record
+DOORKEEPER_ORM = (orm && orm[1] || :active_record).to_sym
 
 $LOAD_PATH.unshift File.dirname(__FILE__)
 
@@ -24,7 +24,8 @@ end
 Rails.logger.info "====> Rails version: #{Rails.version}"
 Rails.logger.info "====> Ruby version: #{RUBY_VERSION}"
 
-require "support/orm/#{Doorkeeper.configuration.orm_name}"
+orm_name = [:mongoid2, :mongoid3, :mongoid4].include?(DOORKEEPER_ORM) ? :mongoid : DOORKEEPER_ORM
+require "support/orm/#{orm_name}"
 
 ENGINE_RAILS_ROOT = File.join(File.dirname(__FILE__), '../')
 
