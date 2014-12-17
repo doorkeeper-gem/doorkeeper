@@ -44,6 +44,11 @@
 - [#518] Fix random failures in mongodb.
 
 
+## 1.4.1
+
+- [#516] Adds `protect_from_forgery` to `Doorkeeper::ApplicationController`
+
+
 ## 1.4.0
 
 - internals
