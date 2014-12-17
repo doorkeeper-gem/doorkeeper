@@ -25,7 +25,7 @@
 - Removes `test_redirect_uri` option. It is now called `native_redirect_uri`.
 - [#446] Removes `mount Doorkeeper::Engine`. Now we use `use_doorkeeper`.
 
-### Other changes/enhancements
+### Others
 
 - [#484] Performance improvement - avoid performing order_by when not required.
 - [#450] When password is invalid in Password Credentials Grant, Doorkeeper
@@ -40,13 +40,13 @@
 - [#496] Tests with Rails 4.2.
 - [#489] Adds `force_ssl_in_redirect_uri` to force the usage of the HTTPS
   protocol in non-native redirect uris.
-- [#516] Adds `protect_from_forgery` to `Doorkeeper::ApplicationController`
+- [#516] SECURITY: Adds `protect_from_forgery` to `Doorkeeper::ApplicationController`
 - [#518] Fix random failures in mongodb.
 
 
 ## 1.4.1
 
-- [#516] Adds `protect_from_forgery` to `Doorkeeper::ApplicationController`
+- [#516] SECURITY: Adds `protect_from_forgery` to `Doorkeeper::ApplicationController`
 
 
 ## 1.4.0
