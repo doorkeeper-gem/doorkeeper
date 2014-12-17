@@ -27,6 +27,15 @@ module AuthorizationRequestHelper
   def i_should_be_on_client_callback(client)
     expect(client.redirect_uri).to eq("#{current_uri.scheme}://#{current_uri.host}#{current_uri.path}")
   end
+
+  def allowing_forgery_protection(&block)
+    _original_value = ActionController::Base.allow_forgery_protection
+    ActionController::Base.allow_forgery_protection = true
+
+    block.call
+  ensure
+    ActionController::Base.allow_forgery_protection = _original_value
+  end
 end
 
 RSpec.configuration.send :include, AuthorizationRequestHelper, type: :request
