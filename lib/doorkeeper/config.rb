@@ -26,7 +26,7 @@ If you are using ActiveRecord run `rails generate doorkeeper:application_scopes
 && rake db:migrate` to add it.
       MSG
     end
-  rescue ActiveRecord::StatementInvalid
+  rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseException
     # trap error when DB is not yet setup
   end
 
