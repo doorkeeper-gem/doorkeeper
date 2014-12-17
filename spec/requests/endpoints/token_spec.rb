@@ -61,4 +61,20 @@ feature 'Token endpoint' do
     should_have_json 'error', 'invalid_request'
     should_have_json 'error_description', translated_error_message('invalid_request')
   end
+
+  context 'forgery protection enabled' do
+    before do
+      Doorkeeper::ApplicationMetalController.allow_forgery_protection = true
+    end
+
+    after do
+      Doorkeeper::ApplicationMetalController.allow_forgery_protection = false
+    end
+
+    scenario 'raises exception on forged requests' do
+      expect do
+        post token_endpoint_url(code: @authorization.token, client: @client)
+      end.to raise_error(ActionController::InvalidAuthenticityToken)
+    end
+  end
 end
