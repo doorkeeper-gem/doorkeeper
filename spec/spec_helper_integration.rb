@@ -50,4 +50,12 @@ RSpec.configure do |config|
   end
 
   config.order = 'random'
+
+  config.before do
+    Doorkeeper::ApplicationMetalController.allow_forgery_protection = false
+  end
+
+  config.after do
+    Doorkeeper::ApplicationMetalController.allow_forgery_protection = true
+  end
 end
