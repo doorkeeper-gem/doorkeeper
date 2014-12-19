@@ -50,7 +50,7 @@ module Doorkeeper
         doorkeeper_token && doorkeeper_token.acceptable?(scopes)
       end
 
-      def render_error(error, options)
+      def render_error(error, options = {})
         if options.blank?
           head error
         else
