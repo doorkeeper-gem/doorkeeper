@@ -1,18 +1,18 @@
 <div class="page-header">
-  <h1>Application: <%= @application.name %></h1>
+  <h1><%= t('.title', name: @application.name) %></h1>
 </div>
 
 <div class="row">
   <div class="col-md-8">
-    <h4>Application Id:</h4>
+    <h4><%= t('.application_id') %>:</h4>
 
     <p><code id="application_id"><%= @application.uid %></code></p>
 
-    <h4>Secret:</h4>
+    <h4><%= t('.secret') %>:</h4>
 
     <p><code id="secret"><%= @application.secret %></code></p>
 
-    <h4>Callback urls:</h4>
+    <h4><%= t('.callback_urls') %>:</h4>
 
     <table>
       <% @application.redirect_uri.split.each do |uri| %>
@@ -21,7 +21,7 @@
             <code><%= uri %></code>
           </td>
           <td>
-            <%= link_to 'Authorize', oauth_authorization_path(client_id: @application.uid, redirect_uri: uri, response_type: 'code'), class: 'btn btn-success', target: '_blank' %>
+            <%= link_to t('doorkeeper.applications.buttons.authorize'), oauth_authorization_path(client_id: @application.uid, redirect_uri: uri, response_type: 'code'), class: 'btn btn-success', target: '_blank' %>
           </td>
         </tr>
       <% end %>
@@ -29,9 +29,9 @@
   </div>
 
   <div class="col-md-4">
-    <h3>Actions</h3>
+    <h3><%= t('.actions') %></h3>
 
-    <p><%= link_to 'Edit', edit_oauth_application_path(@application), class: 'btn btn-primary' %></p>
+    <p><%= link_to t('doorkeeper.applications.buttons.edit'), edit_oauth_application_path(@application), class: 'btn btn-primary' %></p>
 
     <p><%= render 'delete_form', application: @application, submit_btn_css: 'btn btn-danger' %></p>
   </div>
