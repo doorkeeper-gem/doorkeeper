@@ -3,6 +3,7 @@
 ## 2.0.2
 
 - [#540] Include `created_at` in response.
+- [#538] Check application-level scopes in client_credentials and password flow.
 
 ## 2.0.1
 
