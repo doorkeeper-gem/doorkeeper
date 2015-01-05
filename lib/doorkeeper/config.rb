@@ -166,6 +166,7 @@ module Doorkeeper
            end)
     option :skip_authorization,            default: ->(routes) {}
     option :access_token_expires_in,       default: 7200
+    option :refresh_token_revoked_in,      default: 0
     option :authorization_code_expires_in, default: 600
     option :orm,                           default: :active_record
     option :native_redirect_uri,           default: 'urn:ietf:wg:oauth:2.0:oob'
