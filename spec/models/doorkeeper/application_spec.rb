@@ -169,7 +169,7 @@ module Doorkeeper
     describe :authenticate do
       it 'finds the application via uid/secret' do
         app = FactoryGirl.create :application
-        authenticated = Application.authenticate(app.uid, app.secret)
+        authenticated = Application.by_uid_and_secret(app.uid, app.secret)
         expect(authenticated).to eq(app)
       end
     end

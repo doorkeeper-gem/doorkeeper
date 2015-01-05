@@ -18,14 +18,14 @@ module Doorkeeper
         revoke_token(request.POST['token']) if request.POST['token']
       end
       # The authorization server responds with HTTP status code 200 if the
-      # token has been revoked sucessfully or if the client submitted an invalid token
+      # token has been revoked successfully or if the client submitted an invalid token
       render json: {}, status: 200
     end
 
     private
 
     def revoke_token(token)
-      token = AccessToken.authenticate(token) || AccessToken.by_refresh_token(token)
+      token = AccessToken.by_token(token) || AccessToken.by_refresh_token(token)
       if token && doorkeeper_token.same_credential?(token)
         token.revoke
         true

@@ -38,7 +38,7 @@ module Doorkeeper
     end
 
     def grant
-      AccessGrant.authenticate(parameters[:code])
+      AccessGrant.by_token(parameters[:code])
     end
 
     # TODO: Use configuration and evaluate proper context on block

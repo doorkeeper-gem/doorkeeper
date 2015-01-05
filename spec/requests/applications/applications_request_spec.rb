@@ -7,8 +7,8 @@ feature 'Adding applications' do
     end
 
     scenario 'adding a valid app' do
-      fill_in 'application_name', with: 'My Application'
-      fill_in 'application_redirect_uri', with: 'http://example.com'
+      fill_in 'doorkeeper_application[name]', with: 'My Application'
+      fill_in 'doorkeeper_application[redirect_uri]', with: 'http://example.com'
       click_button 'Submit'
       i_should_see 'Application created'
       i_should_see 'My Application'
@@ -55,7 +55,7 @@ feature 'Edit application' do
   end
 
   scenario 'updating a valid app' do
-    fill_in 'application[name]', with: 'Serious app'
+    fill_in 'doorkeeper_application[name]', with: 'Serious app'
     click_button 'Submit'
     i_should_see 'Application updated'
     i_should_see 'Serious app'
@@ -63,7 +63,7 @@ feature 'Edit application' do
   end
 
   scenario 'updating an invalid app' do
-    fill_in 'application[name]', with: ''
+    fill_in 'doorkeeper_application[name]', with: ''
     click_button 'Submit'
     i_should_see 'Whoops! Check your form for possible errors'
   end

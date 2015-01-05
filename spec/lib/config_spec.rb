@@ -264,16 +264,6 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
-  describe 'test_redirect_uri' do
-    it 'can change the native_redirect_uri value' do
-      Doorkeeper.configure do
-        orm DOORKEEPER_ORM
-        test_redirect_uri 'foo'
-      end
-      expect(subject.native_redirect_uri).to eq('foo')
-    end
-  end
-
   it 'raises an exception when configuration is not set' do
     old_config = Doorkeeper.configuration
     Doorkeeper.module_eval do

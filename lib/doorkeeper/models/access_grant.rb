@@ -17,7 +17,7 @@ module Doorkeeper
 
     before_validation :generate_token, on: :create
 
-    def self.authenticate(token)
+    def self.by_token(token)
       where(token: token).first
     end
 

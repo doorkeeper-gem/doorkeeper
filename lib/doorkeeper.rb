@@ -1,7 +1,6 @@
 require 'doorkeeper/version'
 require 'doorkeeper/engine'
 require 'doorkeeper/config'
-require 'doorkeeper/doorkeeper_for'
 
 require 'doorkeeper/errors'
 require 'doorkeeper/server'
@@ -38,10 +37,10 @@ require 'doorkeeper/models/expirable'
 require 'doorkeeper/models/revocable'
 require 'doorkeeper/models/accessible'
 
-require 'doorkeeper/helpers/filter'
 require 'doorkeeper/helpers/controller'
 
 require 'doorkeeper/rails/routes'
+require 'doorkeeper/rails/helpers'
 
 module Doorkeeper
   def self.configured?

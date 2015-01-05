@@ -1,11 +1,11 @@
 class SemiProtectedResourcesController < ApplicationController
-  doorkeeper_for :index
+  before_filter :doorkeeper_authorize!, only: :index
 
   def index
     render text: 'protected index'
   end
 
   def show
-    render text: 'protected show'
+    render text: 'non protected show'
   end
 end

@@ -15,17 +15,6 @@ module Doorkeeper
         ActionDispatch::Routing::Mapper.send :include, Doorkeeper::Rails::Routes::Helper
       end
 
-      def self.warn_if_using_mount_method!
-        paths = ::Rails.application.config.paths['config/routes'] ||
-          ::Rails.application.config.paths['config/routes.rb']
-
-        paths.each do |path|
-          if File.read(::Rails.root.join(path)) =~ %r{mount Doorkeeper::Engine}
-            warn "\n[DOORKEEPER] `mount Doorkeeper::Engine` is not being used anymore. Please replace it with `use_doorkeeper` in your #{path} file\n"
-          end
-        end
-      end
-
       attr_accessor :routes
 
       def initialize(routes, &block)
@@ -88,7 +77,7 @@ module Doorkeeper
       end
 
       def application_routes(mapping)
-        routes.resources :applications, controller: mapping[:controllers]
+        routes.resources :doorkeeper_applications, controller: mapping[:controllers], as: :applications, path: 'applications'
       end
 
       def authorized_applications_routes(mapping)

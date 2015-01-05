@@ -10,11 +10,11 @@ module Doorkeeper
                class_name: 'Doorkeeper::Application',
                inverse_of: :access_tokens
 
-    validates :token, presence: true
-    validates :token, uniqueness: true
+    validates :token, presence: true, uniqueness: true
     validates :refresh_token, uniqueness: true, if: :use_refresh_token?
 
-    attr_accessor :use_refresh_token
+    attr_writer :use_refresh_token
+
     if ::Rails.version.to_i < 4 || defined?(ProtectedAttributes)
       attr_accessible :application_id, :resource_owner_id, :expires_in,
                       :scopes, :use_refresh_token
@@ -25,7 +25,7 @@ module Doorkeeper
                       on: :create,
                       if: :use_refresh_token?
 
-    def self.authenticate(token)
+    def self.by_token(token)
       where(token: token).first
     end
 
@@ -71,7 +71,7 @@ module Doorkeeper
     end
 
     def use_refresh_token?
-      use_refresh_token
+      !!@use_refresh_token
     end
 
     def as_json(options = {})

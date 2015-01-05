@@ -1,4 +1,4 @@
-<%= form_for [:oauth, application], html: {class: 'form-horizontal', role: 'form'} do |f| %>
+<%= form_for application, url: doorkeeper_submit_path(application), html: {class: 'form-horizontal', role: 'form'} do |f| %>
   <% if application.errors.any? %>
     <div class="alert alert-danger" data-alert><p>Whoops! Check your form for possible errors</p></div>
   <% end %>

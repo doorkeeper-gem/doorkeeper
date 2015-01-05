@@ -1,7 +1,6 @@
 module Doorkeeper
   class ApplicationsController < Doorkeeper::ApplicationController
     layout 'doorkeeper/admin'
-    respond_to :html
 
     before_filter :authenticate_admin!
     before_filter :set_application, only: [:show, :edit, :update, :destroy]
@@ -18,7 +17,7 @@ module Doorkeeper
       @application = Application.new(application_params)
       if @application.save
         flash[:notice] = I18n.t(:notice, scope: [:doorkeeper, :flash, :applications, :create])
-        respond_with [:oauth, @application]
+        redirect_to oauth_application_url(@application)
       else
         render :new
       end
@@ -27,7 +26,7 @@ module Doorkeeper
     def update
       if @application.update_attributes(application_params)
         flash[:notice] = I18n.t(:notice, scope: [:doorkeeper, :flash, :applications, :update])
-        respond_with [:oauth, @application]
+        redirect_to oauth_application_url(@application)
       else
         render :edit
       end
@@ -46,9 +45,9 @@ module Doorkeeper
 
     def application_params
       if params.respond_to?(:permit)
-        params.require(:application).permit(:name, :redirect_uri)
+        params.require(:doorkeeper_application).permit(:name, :redirect_uri)
       else
-        params[:application].slice(:name, :redirect_uri) rescue nil
+        params[:doorkeeper_application].slice(:name, :redirect_uri) rescue nil
       end
     end
   end

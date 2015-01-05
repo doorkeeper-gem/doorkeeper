@@ -15,16 +15,12 @@ module Doorkeeper
       attr_accessible :name, :redirect_uri
     end
 
-    def self.model_name
-      ActiveModel::Name.new(self, Doorkeeper, 'Application')
-    end
-
-    def self.authenticate(uid, secret)
-      self.where(uid: uid, secret: secret).first
+    def self.by_uid_and_secret(uid, secret)
+      where(uid: uid, secret: secret).first
     end
 
     def self.by_uid(uid)
-      self.where(uid: uid).first
+      where(uid: uid).first
     end
 
     private

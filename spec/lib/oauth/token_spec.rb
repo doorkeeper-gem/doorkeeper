@@ -88,7 +88,7 @@ module Doorkeeper
 
         it 'calls the finder if token was found' do
           token = ->(r) { 'token' }
-          expect(AccessToken).to receive(:authenticate).with('token')
+          expect(AccessToken).to receive(:by_token).with('token')
           Token.authenticate double, token
         end
       end

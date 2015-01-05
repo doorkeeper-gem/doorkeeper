@@ -6,7 +6,7 @@ module Doorkeeper
       include OAuth::Helpers
 
       validate :client,         error: :invalid_client
-      validate :resource_owner, error: :invalid_resource_owner
+      validate :resource_owner, error: :invalid_grant
       validate :scopes,         error: :invalid_scope
 
       attr_accessor :server, :resource_owner, :credentials, :access_token
@@ -19,8 +19,8 @@ module Doorkeeper
         @original_scopes = parameters[:scope]
 
         if credentials
-          @client = Application.authenticate credentials.uid,
-                                             credentials.secret
+          @client = Application.by_uid_and_secret credentials.uid,
+                                                  credentials.secret
         end
       end
 
