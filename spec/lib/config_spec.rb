@@ -14,6 +14,22 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
+  describe 'enable_orm' do
+    it 'adds specific error message to NameError exception' do
+      expect do
+        Doorkeeper.configure { orm 'hibernate' }
+      end.to raise_error(NameError, /ORM adapter not found \(hibernate\)/)
+    end
+
+    it 'does not change other exceptions' do
+      String.any_instance.stub(:classify) { raise NoMethodError }
+
+      expect do
+        Doorkeeper.configure { orm 'hibernate' }
+      end.to raise_error(NoMethodError, 'NoMethodError')
+    end
+  end
+
   describe 'admin_authenticator' do
     it 'sets the block that is accessible via authenticate_admin' do
       block = proc {}
@@ -116,6 +132,20 @@ describe Doorkeeper, 'configuration' do
         client_credentials :from_digest, :from_params
       end
       expect(subject.client_credentials_methods).to eq([:from_digest, :from_params])
+    end
+  end
+
+  describe 'force_ssl_in_redirect_uri' do
+    it 'is true by default in non-development environments' do
+      expect(subject.force_ssl_in_redirect_uri).to be_truthy
+    end
+
+    it 'can change the value' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        force_ssl_in_redirect_uri(false)
+      end
+      expect(subject.force_ssl_in_redirect_uri).to be_falsey
     end
   end
 

@@ -18,7 +18,7 @@ module Doorkeeper
         expect do
           post :create, doorkeeper_application: {
             name: 'Example',
-            redirect_uri: 'http://example.com' }
+            redirect_uri: 'https://example.com' }
         end.to_not change { Doorkeeper::Application.count }
       end
     end
@@ -32,7 +32,7 @@ module Doorkeeper
         expect do
           post :create, doorkeeper_application: {
             name: 'Example',
-            redirect_uri: 'http://example.com' }
+            redirect_uri: 'https://example.com' }
         end.to change { Doorkeeper::Application.count }.by(1)
         expect(response).to be_redirect
       end
@@ -50,7 +50,7 @@ module Doorkeeper
         application = FactoryGirl.create(:application)
         put :update, id: application.id, doorkeeper_application: {
           name: 'Example',
-          redirect_uri: 'http://example.com' }
+          redirect_uri: 'https://example.com' }
         expect(application.reload.name).to eq 'Example'
       end
     end

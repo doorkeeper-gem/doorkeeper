@@ -28,7 +28,7 @@ module Doorkeeper::OAuth
         expect(Client.authenticate(credentials, authenticator)).to be_a(Client)
       end
 
-      it 'retunrs nil if client was not authenticated' do
+      it 'returns nil if client was not authenticated' do
         credentials = Client::Credentials.new('some-uid', 'some-secret')
         authenticator = double
         expect(authenticator).to receive(:call).with('some-uid', 'some-secret').and_return(nil)

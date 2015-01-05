@@ -4,8 +4,10 @@ require 'doorkeeper/oauth/client_credentials/validation'
 
 class Doorkeeper::OAuth::ClientCredentialsRequest
   describe Validation do
-    let(:server)  { double :server, scopes: nil }
-    let(:request) { double :request, client: double, original_scopes: nil }
+    let(:server)      { double :server, scopes: nil }
+    let(:application) { double scopes: nil }
+    let(:client)      { double application: application }
+    let(:request)     { double :request, client: client, original_scopes: nil }
 
     subject { Validation.new(server, request) }
 
@@ -20,9 +22,30 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
 
     context 'with scopes' do
       it 'is invalid when scopes are not included in the server' do
-        allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string('email'))
+        server_scopes = Doorkeeper::OAuth::Scopes.from_string 'email'
+        allow(server).to receive(:scopes).and_return(server_scopes)
         allow(request).to receive(:original_scopes).and_return('invalid')
         expect(subject).not_to be_valid
+      end
+
+      context 'with application scopes' do
+        it 'is valid when scopes are included in the application' do
+          application_scopes = Doorkeeper::OAuth::Scopes.from_string 'app'
+          server_scopes = Doorkeeper::OAuth::Scopes.from_string 'email app'
+          allow(application).to receive(:scopes).and_return(application_scopes)
+          allow(server).to receive(:scopes).and_return(server_scopes)
+          allow(request).to receive(:original_scopes).and_return('app')
+          expect(subject).to be_valid
+        end
+
+        it 'is invalid when scopes are not included in the application' do
+          application_scopes = Doorkeeper::OAuth::Scopes.from_string 'app'
+          server_scopes = Doorkeeper::OAuth::Scopes.from_string 'email app'
+          allow(application).to receive(:scopes).and_return(application_scopes)
+          allow(server).to receive(:scopes).and_return(server_scopes)
+          allow(request).to receive(:original_scopes).and_return('email')
+          expect(subject).not_to be_valid
+        end
       end
     end
   end

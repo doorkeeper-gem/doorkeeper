@@ -1,7 +1,6 @@
 module Doorkeeper
   module Request
     class Token
-      # TODO: this is so wrong!
       def self.build(server)
         new(server.context.send(:pre_auth), server)
       end

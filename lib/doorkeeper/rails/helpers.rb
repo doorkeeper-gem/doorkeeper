@@ -3,6 +3,20 @@ module Doorkeeper
     module Helpers
       extend ActiveSupport::Concern
 
+      module ClassMethods
+        def doorkeeper_for(*args, &block)
+          fail Errors::DoorkeeperError, "`doorkeeper_for` no longer available", <<-eos
+\nStarting in version 2.0.0 of doorkeeper gem, `doorkeeper_for` is no longer
+available. Please change `doorkeeper_for` calls in your application with:
+
+  before_action :doorkeeper_authorize!
+
+For more information check the README:
+https://github.com/doorkeeper-gem/doorkeeper#protecting-resources-with-oauth-aka-your-api-endpoint\n
+          eos
+        end
+      end
+
       def doorkeeper_token
         @_doorkeeper_token ||= OAuth::Token.authenticate request, *Doorkeeper.configuration.access_token_methods
       end

@@ -51,4 +51,21 @@ feature 'Authorization endpoint' do
       i_should_see_translated_error_message :unsupported_response_type
     end
   end
+
+  context 'forgery protection enabled' do
+    background do
+      create_resource_owner
+      sign_in
+    end
+
+    scenario 'raises exception on forged requests' do
+      ActionController::Base.any_instance.should_receive(:handle_unverified_request)
+      allowing_forgery_protection do
+        post "/oauth/authorize",
+          client_id:      @client.uid,
+          redirect_uri:   @client.redirect_uri,
+          response_type:  'code'
+      end
+    end
+  end
 end

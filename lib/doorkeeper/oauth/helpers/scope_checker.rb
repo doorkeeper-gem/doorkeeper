@@ -7,10 +7,16 @@ module Doorkeeper
           current_scopes == scopes
         end
 
-        def self.valid?(scope, server_scopes)
+        def self.valid?(scope, server_scopes, application_scopes = '')
+          valid_scopes = if application_scopes.present?
+                           server_scopes & application_scopes
+                         else
+                           server_scopes
+                         end
+
           scope.present? &&
           scope !~ /[\n|\r|\t]/ &&
-          server_scopes.has_scopes?(OAuth::Scopes.from_string(scope))
+          valid_scopes.has_scopes?(OAuth::Scopes.from_string(scope))
         end
       end
     end

@@ -4,3 +4,6 @@ LineLength:
 
 StringLiterals:
   Enabled: false
+
+TrailingBlankLines:
+  Enabled: true

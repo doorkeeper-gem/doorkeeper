@@ -16,4 +16,36 @@ feature 'Implicit Grant Flow' do
 
     i_should_be_on_client_callback @client
   end
+
+  context 'token reuse' do
+    scenario 'should return a new token each request' do
+      Doorkeeper.configuration.stub(:reuse_access_token).and_return(false)
+
+      token = client_is_authorized(@client, @resource_owner)
+
+      post "/oauth/authorize",
+           client_id: @client.uid,
+           state: '',
+           redirect_uri: @client.redirect_uri,
+           response_type: 'token',
+           commit: 'Authorize'
+
+      expect(response.location).not_to include(token.token)
+    end
+
+    scenario 'should return the same token if it is still accessible' do
+      Doorkeeper.configuration.stub(:reuse_access_token).and_return(true)
+
+      token = client_is_authorized(@client, @resource_owner)
+
+      post "/oauth/authorize",
+           client_id: @client.uid,
+           state: '',
+           redirect_uri: @client.redirect_uri,
+           response_type: 'token',
+           commit: 'Authorize'
+
+      expect(response.location).to include(token.token)
+    end
+  end
 end

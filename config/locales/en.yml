@@ -1,5 +1,9 @@
 en:
   activerecord:
+    attributes:
+      doorkeeper/application:
+        name: 'Name'
+        redirect_uri: 'Redirect URI'
     errors:
       models:
         doorkeeper/application:
@@ -8,7 +12,13 @@ en:
               fragment_present: 'cannot contain a fragment.'
               invalid_uri: 'must be a valid URI.'
               relative_uri: 'must be an absolute URI.'
+              secured_uri: 'must be an HTTPS/SSL URI.'
+
   mongoid:
+    attributes:
+      doorkeeper/application:
+        name: 'Name'
+        redirect_uri: 'Redirect URI'
     errors:
       models:
         doorkeeper/application:
@@ -17,7 +27,13 @@ en:
               fragment_present: 'cannot contain a fragment.'
               invalid_uri: 'must be a valid URI.'
               relative_uri: 'must be an absolute URI.'
+              secured_uri: 'must be an HTTPS/SSL URI.'
+
   mongo_mapper:
+    attributes:
+      doorkeeper/application:
+        name: 'Name'
+        redirect_uri: 'Redirect URI'
     errors:
       models:
         doorkeeper/application:
@@ -26,7 +42,63 @@ en:
               fragment_present: 'cannot contain a fragment.'
               invalid_uri: 'must be a valid URI.'
               relative_uri: 'must be an absolute URI.'
+              secured_uri: 'must be an HTTPS/SSL URI.'
+
   doorkeeper:
+    applications:
+      confirmations:
+        destroy: 'Are you sure?'
+      buttons:
+        edit: 'Edit'
+        destroy: 'Destroy'
+        submit: 'Submit'
+        cancel: 'Cancel'
+        authorize: 'Authorize'
+      form:
+        error: 'Whoops! Check your form for possible errors'
+      help:
+        redirect_uri: 'Use one line per URI'
+        native_redirect_uri: 'Use %{native_redirect_uri} for local tests'
+      edit:
+        title: 'Edit application'
+      index:
+        title: 'Your applications'
+        new: 'New Application'
+        name: 'Name'
+        callback_url: 'Callback URL'
+      new:
+        title: 'New Application'
+      show:
+        title: 'Application: %{name}'
+        application_id: 'Application Id'
+        secret: 'Secret'
+        callback_urls: 'Callback urls'
+        actions: 'Actions'
+
+    authorizations:
+      buttons:
+        authorize: 'Authorize'
+        deny: 'Deny'
+      error:
+        title: 'An error has occurred'
+      new:
+        title: 'Authorize required'
+        prompt: 'Authorize %{client_name} to use your account?'
+        able_to: 'This application will be able to'
+      show:
+        title: 'Authorization code'
+
+    authorized_applications:
+      confirmations:
+        revoke: 'Are you sure?'
+      buttons:
+        revoke: 'Revoke'
+      index:
+        title: 'Your authorized applications'
+        application: 'Application'
+        created_at: 'Created At'
+        date_format: '%Y-%m-%d %H:%M:%S'
+
     errors:
       messages:
         # Common error messages
@@ -69,3 +141,11 @@ en:
       authorized_applications:
         destroy:
           notice: 'Application revoked.'
+
+    layouts:
+      admin:
+        nav:
+          oauth2_provider: 'OAuth2 Provider'
+          applications: 'Applications'
+      application:
+        title: 'OAuth authorize required'

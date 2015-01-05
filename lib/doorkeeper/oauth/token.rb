@@ -54,7 +54,7 @@ module Doorkeeper
       end
 
       def self.authenticate(request, *methods)
-        if (token = from_request(request, *methods))
+        if token = from_request(request, *methods)
           AccessToken.by_token(token)
         end
       end

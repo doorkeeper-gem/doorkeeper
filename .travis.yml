@@ -1,18 +1,46 @@
 language: ruby
+sudo: false
+cache: bundler
+
 rvm:
   - 1.9.3
   - 2.0
   - 2.1
+
 env:
-  - rails=3.1.12
-  - rails=3.2.18
-  - rails=4.0.5
-  - rails=4.1.1
-  - orm=mongoid2
-  - orm=mongoid3
-  - orm=mongoid4
-  - orm=mongo_mapper
-  - table_name_prefix=h_
-  - table_name_suffix=_h
+  # - rails=3.1 # Don't need it in the CI matrix
+  - rails=3.2.0
+  - rails=4.0.0
+  - rails=4.1.0
+  - rails=4.2.0.rc2
+
+gemfile:
+  - Gemfile
+  - gemfiles/Gemfile.mongoid2.rb
+  - gemfiles/Gemfile.mongoid3.rb
+  - gemfiles/Gemfile.mongoid4.rb
+  - gemfiles/Gemfile.mongo_mapper.rb
+
 services:
   - mongodb
+
+matrix:
+  exclude:
+    - gemfile: gemfiles/Gemfile.mongoid2.rb
+      env: rails=4.0.0
+    - gemfile: gemfiles/Gemfile.mongoid2.rb
+      env: rails=4.1.0
+    - gemfile: gemfiles/Gemfile.mongoid2.rb
+      env: rails=4.2.0.rc2
+
+    - gemfile: gemfiles/Gemfile.mongoid3.rb
+      env: rails=4.0.0
+    - gemfile: gemfiles/Gemfile.mongoid3.rb
+      env: rails=4.1.0
+    - gemfile: gemfiles/Gemfile.mongoid3.rb
+      env: rails=4.2.0.rc2
+
+    - gemfile: gemfiles/Gemfile.mongoid4.rb
+      env: rails=3.1.0
+    - gemfile: gemfiles/Gemfile.mongoid4.rb
+      env: rails=3.2.0

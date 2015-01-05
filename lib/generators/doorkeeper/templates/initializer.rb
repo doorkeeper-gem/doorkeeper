@@ -1,6 +1,7 @@
 Doorkeeper.configure do
   # Change the ORM that doorkeeper will use.
-  # Currently supported options are :active_record, :mongoid2, :mongoid3, :mongo_mapper
+  # Currently supported options are :active_record, :mongoid2, :mongoid3,
+  # :mongoid4, :mongo_mapper
   orm :active_record
 
   # This block will be called to check whether the resource owner is authenticated or not.
@@ -62,6 +63,12 @@ Doorkeeper.configure do
   # (Similar behaviour: https://developers.google.com/accounts/docs/OAuth2InstalledApp#choosingredirecturi)
   #
   # native_redirect_uri 'urn:ietf:wg:oauth:2.0:oob'
+
+  # Forces the usage of the HTTPS protocol in non-native redirect uris (enabled
+  # by default in non-development environments). OAuth2 delegates security in
+  # communication to the HTTPS protocol so it is wise to keep this enabled.
+  #
+  # force_ssl_in_redirect_uri !Rails.env.development?
 
   # Specify what grant flows are enabled in array of Strings. The valid
   # strings and the flows they enable are:

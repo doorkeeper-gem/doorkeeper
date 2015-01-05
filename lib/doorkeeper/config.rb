@@ -8,6 +8,7 @@ module Doorkeeper
   def self.configure(&block)
     @config = Config::Builder.new(&block).build
     enable_orm
+    check_for_missing_columns
     setup_application_owner if @config.enable_application_owner?
   end
 
@@ -15,26 +16,42 @@ module Doorkeeper
     @config || (fail MissingConfiguration.new)
   end
 
-  def self.orm_model_dir
-    case configuration.orm
-    when :mongoid3, :mongoid4
-      'mongoid3_4'
-    else
-      configuration.orm
+  def self.check_for_missing_columns
+    if Doorkeeper.configuration.orm == :active_record &&
+        !Application.new.attributes.include?("scopes")
+
+      puts <<-MSG.squish
+[doorkeeper] Missing column: `applications.scopes`.
+If you are using ActiveRecord run `rails generate doorkeeper:application_scopes
+&& rake db:migrate` to add it.
+      MSG
     end
+  rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError
+    # trap error when DB is not yet setup
   end
 
   def self.enable_orm
-    require "doorkeeper/models/#{orm_model_dir}/access_grant"
-    require "doorkeeper/models/#{orm_model_dir}/access_token"
-    require "doorkeeper/models/#{orm_model_dir}/application"
-    require 'doorkeeper/models/access_grant'
-    require 'doorkeeper/models/access_token'
-    require 'doorkeeper/models/application'
+    class_name = "doorkeeper/orm/#{configuration.orm}".classify
+    class_name.constantize.initialize_models!
+  rescue NameError => e
+    if e.instance_of?(NameError)
+      fail e, "ORM adapter not found (#{configuration.orm})", <<-error_msg
+[doorkeeper] ORM adapter not found (#{configuration.orm}), or there was an error
+trying to load it.
+
+You probably need to add the related gem for this adapter to work with
+doorkeeper.
+
+If you are working on the adapter itself, double check that the constant exists,
+and that your `initialize_models!` method doesn't raise any errors.\n
+      error_msg
+    else
+      raise e
+    end
   end
 
   def self.setup_application_owner
-    require File.join(File.dirname(__FILE__), 'models', 'ownership')
+    require File.join(File.dirname(__FILE__), 'models', 'concerns', 'ownership')
     Application.send :include, Models::Ownership
   end
 
@@ -84,6 +101,10 @@ module Doorkeeper
 
       def reuse_access_token
         @config.instance_variable_set("@reuse_access_token", true)
+      end
+
+      def force_ssl_in_redirect_uri(boolean)
+        @config.instance_variable_set("@force_ssl_in_redirect_uri", boolean)
       end
     end
 
@@ -173,6 +194,7 @@ module Doorkeeper
     option :active_record_options,         default: {}
     option :realm,                         default: 'Doorkeeper'
     option :wildcard_redirect_uri,         default: false
+    option :force_ssl_in_redirect_uri,     default: !Rails.env.development?
     option :grant_flows,
            default: %w(authorization_code implicit password client_credentials)
 
@@ -202,10 +224,6 @@ module Doorkeeper
       @scopes ||= default_scopes + optional_scopes
     end
 
-    def orm_name
-      [:mongoid2, :mongoid3, :mongoid4].include?(orm) ? :mongoid : orm
-    end
-
     def client_credentials_methods
       @client_credentials ||= [:from_basic, :from_params]
     end
@@ -226,7 +244,7 @@ module Doorkeeper
       @token_grant_types ||= calculate_token_grant_types
     end
 
-  private
+    private
 
     # Determines what values are acceptable for 'response_type' param in
     # authorization request endpoint, and return them as an array of strings.
