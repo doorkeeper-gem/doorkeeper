@@ -18,6 +18,7 @@ module Doorkeeper
 
   def self.check_for_missing_columns
     if Doorkeeper.configuration.orm == :active_record &&
+        ActiveRecord::Base.connected? &&
         !Application.new.attributes.include?("scopes")
 
       puts <<-MSG.squish
@@ -26,8 +27,6 @@ If you are using ActiveRecord run `rails generate doorkeeper:application_scopes
 && rake db:migrate` to add it.
       MSG
     end
-  rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError
-    # trap error when DB is not yet setup
   end
 
   def self.enable_orm
