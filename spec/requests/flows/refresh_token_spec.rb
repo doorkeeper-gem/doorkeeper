@@ -53,19 +53,17 @@ feature 'Refresh Token Flow' do
       expect(@token.reload).to be_revoked
     end
 
-    # TODO: verify proper error code for this (previously was invalid_grant)
     scenario 'client gets an error for invalid refresh token' do
       post refresh_token_endpoint_url(client: @client, refresh_token: 'invalid')
       should_not_have_json 'refresh_token'
-      should_have_json 'error', 'invalid_request'
+      should_have_json 'error', 'invalid_grant'
     end
 
-    # TODO: verify proper error code for this (previously was invalid_grant)
     scenario 'client gets an error for revoked acccess token' do
       @token.revoke
       post refresh_token_endpoint_url(client: @client, refresh_token: @token.refresh_token)
       should_not_have_json 'refresh_token'
-      should_have_json 'error', 'invalid_request'
+      should_have_json 'error', 'invalid_grant'
     end
   end
 
