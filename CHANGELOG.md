@@ -2,14 +2,12 @@
 
 ## master
 
-- Enable by default `authorization_code` and `client_credentials` grant flows.
-  Disables implicit and password grant flows by default.
-
-## 2.0.2
-
 - [#540] Include `created_at` in response.
 - [#538] Check application-level scopes in client_credentials and password flow.
 - [#534] Internationalizes doorkeeper views.
+- Enable by default `authorization_code` and `client_credentials` grant flows.
+  Disables implicit and password grant flows by default.
+- [#510, #544, 722113f] Revoked refresh token response bugfix.
 
 ## 2.0.1
 
