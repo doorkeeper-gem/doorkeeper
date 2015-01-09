@@ -72,6 +72,7 @@ feature 'Refresh Token Flow' do
   context 'refreshing the token with multiple sessions (devices)' do
     before do
       # enable password auth to simulate other devices
+      config_is_set(:grant_flows, ["password"])
       config_is_set(:resource_owner_from_credentials) { User.authenticate! params[:username], params[:password] }
       create_resource_owner
       _another_token = post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)

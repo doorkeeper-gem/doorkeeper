@@ -41,6 +41,7 @@ module Doorkeeper::OAuth
     end
 
     it 'accepts token as response type' do
+      server.stub(:grant_flows) { ['implicit'] }
       subject.response_type = 'token'
       expect(subject).to be_authorizable
     end
@@ -52,6 +53,7 @@ module Doorkeeper::OAuth
       end
 
       it 'accepts "token" as response type' do
+        server.stub(:grant_flows) { ['implicit'] }
         subject.response_type = 'token'
         expect(subject).to be_authorizable
       end

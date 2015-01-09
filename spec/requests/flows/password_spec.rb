@@ -23,6 +23,7 @@ end
 
 feature 'Resource Owner Password Credentials Flow' do
   background do
+    config_is_set(:grant_flows, ["password"])
     config_is_set(:resource_owner_from_credentials) { User.authenticate! params[:username], params[:password] }
     client_exists
     create_resource_owner

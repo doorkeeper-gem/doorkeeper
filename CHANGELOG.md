@@ -1,5 +1,10 @@
 # Changelog
 
+## master
+
+- Enable by default `authorization_code` and `client_credentials` grant flows.
+  Disables implicit and password grant flows by default.
+
 ## 2.0.2
 
 - [#540] Include `created_at` in response.
