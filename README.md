@@ -344,6 +344,12 @@ here](https://github.com/doorkeeper-gem/doorkeeper/wiki/Testing-your-provider-wi
 Thanks to all our [awesome
 contributors](https://github.com/doorkeeper-gem/doorkeeper/contributors)!
 
+
+### IETF Standards
+
+* [The OAuth 2.0 Authorization Framework](http://tools.ietf.org/html/rfc6749)
+* [OAuth 2.0 Threat Model and Security Considerations](http://tools.ietf.org/html/rfc6819)
+
 ### License
 
 MIT License. Copyright 2011 Applicake.
