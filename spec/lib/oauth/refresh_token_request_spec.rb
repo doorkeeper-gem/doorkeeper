@@ -40,7 +40,7 @@ module Doorkeeper::OAuth
     it 'rejects revoked tokens' do
       refresh_token.revoke
       subject.validate
-      expect(subject.error).to eq(:invalid_request)
+      expect(subject.error).to eq(:invalid_grant)
     end
 
     it 'accepts expired tokens' do
