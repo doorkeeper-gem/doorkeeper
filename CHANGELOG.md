@@ -4,6 +4,7 @@
 
 - Enable by default `authorization_code` and `client_credentials` grant flows.
   Disables implicit and password grant flows by default.
+- [#510, #544, 722113f] Revoked refresh token response bugfix.
 
 ## 2.0.2
 
