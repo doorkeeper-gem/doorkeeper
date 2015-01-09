@@ -68,7 +68,6 @@ feature 'Resource Owner Password Credentials Flow' do
       post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
 
       Doorkeeper::AccessToken.count.should be(1)
-
       should_have_json 'access_token', Doorkeeper::AccessToken.first.token
     end
   end

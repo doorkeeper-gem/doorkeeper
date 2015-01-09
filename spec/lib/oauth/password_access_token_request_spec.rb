@@ -2,7 +2,14 @@ require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
   describe PasswordAccessTokenRequest do
-    let(:server) { double :server, default_scopes: Doorkeeper::OAuth::Scopes.new, access_token_expires_in: 2.hours, refresh_token_enabled?: false }
+    let(:server) do
+      double(
+        :server,
+        default_scopes: Doorkeeper::OAuth::Scopes.new,
+        access_token_expires_in: 2.hours,
+        refresh_token_enabled?: false
+      )
+    end
     let(:credentials) { Client::Credentials.new(client.uid, client.secret) }
     let(:client) { FactoryGirl.create(:application) }
     let(:owner)  { double :owner, id: 99 }

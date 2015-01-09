@@ -2,10 +2,14 @@ require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
   describe TokenRequest do
+    let :application do
+      scopes = double(all: ['public'])
+      double(:application, id: 9990, scopes: scopes)
+    end
     let :pre_auth do
       double(
         :pre_auth,
-        client: double(:application, id: 9990),
+        client: application,
         redirect_uri: 'http://tst.com/cb',
         state: nil,
         scopes: Scopes.from_string('public'),
