@@ -25,11 +25,7 @@ module Doorkeeper
       end
 
       def scopes
-        if scope.is_a?(Array)
-          Scopes.from_array scope
-        else
-          Scopes.from_string scope
-        end
+        Scopes.from_string scope
       end
 
       def scope
