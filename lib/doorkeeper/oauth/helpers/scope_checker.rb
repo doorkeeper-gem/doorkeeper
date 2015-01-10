@@ -16,7 +16,7 @@ module Doorkeeper
 
           scope.present? &&
           scope !~ /[\n|\r|\t]/ &&
-          valid_scopes.has_scopes?(scope)
+          valid_scopes.has_scopes?(OAuth::Scopes.from_string(scope))
         end
       end
     end
