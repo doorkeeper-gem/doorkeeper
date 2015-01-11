@@ -12,7 +12,7 @@ env:
   - rails=3.2.0
   - rails=4.0.0
   - rails=4.1.0
-  - rails=4.2.0.rc2
+  - rails=4.2.0
 
 gemfile:
   - Gemfile
@@ -31,14 +31,14 @@ matrix:
     - gemfile: gemfiles/Gemfile.mongoid2.rb
       env: rails=4.1.0
     - gemfile: gemfiles/Gemfile.mongoid2.rb
-      env: rails=4.2.0.rc2
+      env: rails=4.2.0
 
     - gemfile: gemfiles/Gemfile.mongoid3.rb
       env: rails=4.0.0
     - gemfile: gemfiles/Gemfile.mongoid3.rb
       env: rails=4.1.0
     - gemfile: gemfiles/Gemfile.mongoid3.rb
-      env: rails=4.2.0.rc2
+      env: rails=4.2.0
 
     - gemfile: gemfiles/Gemfile.mongoid4.rb
       env: rails=3.1.0
