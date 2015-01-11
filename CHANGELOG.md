@@ -9,6 +9,7 @@
   Disables implicit and password grant flows by default.
 - [#510, #544, 722113f] Revoked refresh token response bugfix.
 - [#546] Doorkeeper::Application, fixes possible Application model conflict.
+- [#549] Upgrade Bootstrap CSS to 3.3.1 from 3.1
 
 ## 2.0.1
 
