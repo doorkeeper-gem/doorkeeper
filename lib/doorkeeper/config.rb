@@ -22,7 +22,7 @@ module Doorkeeper
         !Doorkeeper::Application.new.attributes.include?("scopes")
 
       puts <<-MSG.squish
-[doorkeeper] Missing column: `applications.scopes`.
+[doorkeeper] Missing column: `oauth_applications.scopes`.
 If you are using ActiveRecord run `rails generate doorkeeper:application_scopes
 && rake db:migrate` to add it.
       MSG
