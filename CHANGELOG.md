@@ -2,8 +2,13 @@
 
 ## master
 
+
+## 2.0.2
+
 - [#540] Include `created_at` in response.
 - [#538] Check application-level scopes in client_credentials and password flow.
+- [5596227] Check application scopes in AccessToken when present. Fixes a bug in
+  doorkeeper 2.0.0 and 2.0.1 referring to application specific scopes.
 - [#534] Internationalizes doorkeeper views.
 - Enable by default `authorization_code` and `client_credentials` grant flows.
   Disables implicit and password grant flows by default.
@@ -13,8 +18,6 @@
 - [#546] Use `Doorkeeper::` prefix when referencing `Application` to avoid
   possible application model name conflict.
 - [#538] Test with Rails ~> 4.2.
-- [5596227] Check application scopes in AccessToken when present. Fixes a bug in
-  doorkeeper 2.0.0 and 2.0.1 referring to application specific scopes.
 
 ## 2.0.1
 
