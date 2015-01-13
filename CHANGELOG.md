@@ -3,7 +3,7 @@
 ## master
 
 
-## 2.0.2
+## 2.1.0
 
 - [#540] Include `created_at` in response.
 - [#538] Check application-level scopes in client_credentials and password flow.
