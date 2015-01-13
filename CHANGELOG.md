@@ -10,14 +10,17 @@
 - [5596227] Check application scopes in AccessToken when present. Fixes a bug in
   doorkeeper 2.0.0 and 2.0.1 referring to application specific scopes.
 - [#534] Internationalizes doorkeeper views.
-- Enable by default `authorization_code` and `client_credentials` grant flows.
-  Disables implicit and password grant flows by default.
-- [#510, #544, 722113f] Revoked refresh token response bugfix.
 - [#545] Ensure there is a connection to the database before checking for
   missing columns
 - [#546] Use `Doorkeeper::` prefix when referencing `Application` to avoid
   possible application model name conflict.
 - [#538] Test with Rails ~> 4.2.
+
+### Potentially backward incompatible changes
+
+- Enable by default `authorization_code` and `client_credentials` grant flows.
+  Disables implicit and password grant flows by default.
+- [#510, #544, 722113f] Revoked refresh token response bugfix.
 
 ## 2.0.1
 
