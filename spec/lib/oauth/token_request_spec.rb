@@ -48,6 +48,26 @@ module Doorkeeper::OAuth
       expect(subject.authorize).to be_a(ErrorResponse)
     end
 
+    context 'with custom expirations' do
+      let(:custom_ttl) { 1233 }
+
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          custom_access_token_expires_in do |_oauth_client|
+            # The RSpec scope isn't available in here
+            1233
+          end
+        end
+      end
+
+      it 'should use the custom ttl' do
+        subject.authorize
+        token = Doorkeeper::AccessToken.first
+        expect(token.expires_in).to eq(custom_ttl)
+      end
+    end
+
     context 'token reuse' do
       it 'creates a new token if there are no matching tokens' do
         Doorkeeper.configuration.stub(:reuse_access_token).and_return(true)
