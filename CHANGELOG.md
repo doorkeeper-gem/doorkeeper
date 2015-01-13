@@ -1,6 +1,8 @@
 # Changelog
 
-## master
+## 2.2.0 (unreleased)
+
+- Remove `wildcard_redirect_url` option
 
 
 ## 2.1.0
@@ -22,9 +24,11 @@
   Disables implicit and password grant flows by default.
 - [#510, #544, 722113f] Revoked refresh token response bugfix.
 
+
 ## 2.0.1
 
 - [#525, #526, #527] Fix `ActiveRecord::NoDatabaseError` on gem load.
+
 
 ## 2.0.0
 

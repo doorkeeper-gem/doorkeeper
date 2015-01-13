@@ -199,12 +199,6 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
-  describe 'wildcard_redirect_uri' do
-    it 'is disabled by default' do
-      Doorkeeper.configuration.wildcard_redirect_uri.should be_falsey
-    end
-  end
-
   describe 'realm' do
     it 'is \'Doorkeeper\' by default' do
       expect(Doorkeeper.configuration.realm).to eq('Doorkeeper')

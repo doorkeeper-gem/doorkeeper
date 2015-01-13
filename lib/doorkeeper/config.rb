@@ -191,7 +191,6 @@ and that your `initialize_models!` method doesn't raise any errors.\n
     option :native_redirect_uri,           default: 'urn:ietf:wg:oauth:2.0:oob'
     option :active_record_options,         default: {}
     option :realm,                         default: 'Doorkeeper'
-    option :wildcard_redirect_uri,         default: false
     option :force_ssl_in_redirect_uri,     default: !Rails.env.development?
     option :grant_flows,                   default: %w(authorization_code client_credentials)
 
