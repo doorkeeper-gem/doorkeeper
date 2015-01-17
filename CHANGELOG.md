@@ -3,7 +3,7 @@
 ## 2.2.0 (unreleased)
 
 - Remove `wildcard_redirect_url` option
-
+- [#541] Fixed `undefined method attr_accessible` problem on Rails4
 
 ## 2.1.0
 
