@@ -12,6 +12,14 @@ module Doorkeeper
       def revoked?
         !!(revoked_at && revoked_at <= DateTime.now)
       end
+
+      def revoke_previous_refresh_token!
+        unless previous_refresh_token.nil?
+          old_refresh_token = AccessToken.from_refresh_token(previous_refresh_token)
+          old_refresh_token.revoke unless old_refresh_token.nil? or old_refresh_token.revoked_at
+          update_attribute :previous_refresh_token, nil
+        end
+      end
     end
   end
 end
