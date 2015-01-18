@@ -3,6 +3,7 @@
 ## 2.2.0 (unreleased)
 
 - Remove `wildcard_redirect_url` option
+- [#481] Customize token flow OAuth expirations with a config lambda
 
 
 ## 2.1.0
