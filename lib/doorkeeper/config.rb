@@ -94,6 +94,10 @@ and that your `initialize_models!` method doesn't raise any errors.\n
         @config.instance_variable_set('@refresh_token_enabled', true)
       end
 
+      def use_unique_refresh_token_index
+        @config.instance_variable_set('@use_unique_refresh_token_index', true)
+      end
+
       def realm(realm)
         @config.instance_variable_set('@realm', realm)
       end
