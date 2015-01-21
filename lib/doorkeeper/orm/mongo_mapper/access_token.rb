@@ -16,6 +16,7 @@ module Doorkeeper
     key :expires_in,        Integer
     key :revoked_at,        DateTime
     key :scopes,            String
+    key :previous_refresh_token, String
 
     def self.last
       self.sort(:created_at).last

@@ -16,6 +16,7 @@ module Doorkeeper
     field :refresh_token, type: String
     field :expires_in, type: Integer
     field :revoked_at, type: DateTime
+    field :previous_refresh_token, String
 
     index({ token: 1 }, { unique: true })
     index({ refresh_token: 1 }, { unique: true, sparse: true })

@@ -28,7 +28,7 @@ module Doorkeeper
       private
 
       def before_successful_response
-        refresh_token.revoke_in(server.refresh_token_revoked_in) unless refresh_token.revoked_at
+        refresh_token.revoke_in(server.refresh_token_revoked_in) unless refresh_token.revoked_at || server.refresh_token_revoked_on_use
         create_access_token
       end
 
@@ -37,12 +37,15 @@ module Doorkeeper
       end
 
       def create_access_token
-        @access_token = AccessToken.create!(
+        create_params = {
           application_id:    refresh_token.application_id,
           resource_owner_id: refresh_token.resource_owner_id,
           scopes:            scopes.to_s,
           expires_in:        server.access_token_expires_in,
-          use_refresh_token: true)
+          use_refresh_token: true
+        }
+        create_params[:previous_refresh_token] = refresh_token.refresh_token if server.refresh_token_revoked_on_use
+        @access_token = AccessToken.create! create_params
       end
 
       def validate_token
