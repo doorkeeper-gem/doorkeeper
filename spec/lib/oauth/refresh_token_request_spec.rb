@@ -51,7 +51,7 @@ module Doorkeeper::OAuth
     end
 
     context 'refresh tokens expire on access token use' do
-      let(:server) { double :server, access_token_expires_in: 2.minutes, refresh_token_revoked_in: 0.seconds, refresh_token_revoked_on_use: true }
+      let(:server) { double :server, access_token_expires_in: 2.minutes, refresh_token_revoked_in: 0.seconds, refresh_token_revoked_on_use: true, refresh_token_enabled?: true }
 
       it 'issues a new token for the client' do
         expect do
