@@ -56,7 +56,7 @@ module Doorkeeper
       def self.authenticate(request, *methods)
         if token = from_request(request, *methods)
           access_token = AccessToken.by_token(token)
-          access_token.revoke_previous_refresh_token! if Doorkeeper.configuration.refresh_token_revoked_on_use
+          access_token.revoke_previous_refresh_token! if access_token && Doorkeeper.configuration.refresh_token_revoked_on_use
           access_token
         end
       end
