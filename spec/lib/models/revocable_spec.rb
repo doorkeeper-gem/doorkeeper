@@ -39,7 +39,7 @@ describe 'Revocable' do
     previous_token = FactoryGirl.build(:access_token)
 
     it 'revokes the previous token if present and sets the attribute :previous_refresh_token to nil' do
-      expect(Doorkeeper::AccessToken).to receive(:from_refresh_token).with(subject.previous_refresh_token).and_return(previous_token)
+      expect(Doorkeeper::AccessToken).to receive(:by_refresh_token).with(subject.previous_refresh_token).and_return(previous_token)
       expect(previous_token).to receive(:revoke)
       expect(subject).to receive(:update_attribute).with(:previous_refresh_token, nil)
       subject.revoke_previous_refresh_token!
@@ -52,7 +52,7 @@ describe 'Revocable' do
     end
 
     it 'sets the attribute :previous_refresh_token to nil if the previous refresh token does not exist' do
-      expect(Doorkeeper::AccessToken).to receive(:from_refresh_token).with(subject.previous_refresh_token).and_return(nil)
+      expect(Doorkeeper::AccessToken).to receive(:by_refresh_token).with(subject.previous_refresh_token).and_return(nil)
       expect(subject).to receive(:update_attribute).with(:previous_refresh_token, nil)
       subject.revoke_previous_refresh_token!
     end
