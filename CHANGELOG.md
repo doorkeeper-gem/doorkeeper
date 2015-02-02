@@ -4,6 +4,7 @@
 
 - Remove `wildcard_redirect_url` option
 - [#481] Customize token flow OAuth expirations with a config lambda
+- [#568] TokensController: Memoize strategy.authorize_response result.
 
 
 ## 2.1.0

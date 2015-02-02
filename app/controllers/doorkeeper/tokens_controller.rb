@@ -1,7 +1,7 @@
 module Doorkeeper
   class TokensController < Doorkeeper::ApplicationMetalController
     def create
-      response = strategy.authorize
+      response = authorize_response
       self.headers.merge! response.headers
       self.response_body = response.body.to_json
       self.status        = response.status
@@ -36,6 +36,10 @@ module Doorkeeper
 
     def strategy
       @strategy ||= server.token_request params[:grant_type]
+    end
+
+    def authorize_response
+      @authorize_response ||= strategy.authorize
     end
   end
 end
