@@ -19,7 +19,9 @@ module Doorkeeper
   def self.check_for_missing_columns
     if Doorkeeper.configuration.orm == :active_record &&
         ActiveRecord::Base.connected? &&
-        ActiveRecord::Base.connection.table_exists?(Doorkeeper::Application.table_name) &&
+        ActiveRecord::Base.connection.table_exists?(
+          Doorkeeper::Application.table_name
+        ) &&
         !Doorkeeper::Application.new.attributes.include?("scopes")
 
       puts <<-MSG.squish
