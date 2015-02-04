@@ -16,7 +16,7 @@ module Doorkeeper::OAuth
     end
 
     it 'revokes the previous token' do
-      expect { subject.authorize } .to change { refresh_token.revoked? }.from(false).to(true)
+      expect { subject.authorize }.to change { refresh_token.revoked? }.from(false).to(true)
     end
 
     it 'requires the refresh token' do
