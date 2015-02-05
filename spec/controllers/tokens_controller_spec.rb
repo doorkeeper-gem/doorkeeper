@@ -40,4 +40,18 @@ describe Doorkeeper::TokensController do
       expect(response.status).to eq 200
     end
   end
+
+  describe 'authorize response memoization' do
+    it "memoizes the result of the authorization" do
+      strategy = double(:strategy, authorize: true)
+      expect(strategy).to receive(:authorize).once
+      allow(controller).to receive(:strategy) { strategy }
+
+      controller.stub(:create) do
+        controller.send :authorize_response
+        controller.send :authorize_response
+      end
+      post :create
+    end
+  end
 end
