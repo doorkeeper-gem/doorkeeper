@@ -4,7 +4,9 @@
 
 - Remove `wildcard_redirect_url` option
 - [#481] Customize token flow OAuth expirations with a config lambda
-- [#568] TokensController: Memoize strategy.authorize_response result.
+- [#568] TokensController: Memoize strategy.authorize_response result to enable
+    subclasses to use the response object.
+- [#571] Fix database initialization issues in some configurations.
 
 
 ## 2.1.0
