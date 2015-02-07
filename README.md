@@ -287,15 +287,15 @@ and take a look at the
 To run the local engine server:
 
 ```
-rails=3.2.8 orm=active_record bundle install
-rails=3.2.8 orm=active_record bundle exec rails server
+bundle install
+bundle exec rails server
 ````
 
 By default, it uses the latest Rails version with ActiveRecord. To run the
-tests:
+tests with a specific ORM and Rails version:
 
 ```
-rails=3.2.8 orm=active_record bundle exec rake
+rails=4.2.0 orm=active_record bundle exec rake
 ```
 
 Or you might prefer to run `script/run_all` to integrate against all ORMs.
