@@ -45,7 +45,7 @@ module Doorkeeper
         routes.resource(
           :authorization,
           path: 'authorize',
-          only: [:create, :update, :destroy],
+          only: [:create, :destroy],
           as: mapping[:as],
           controller: mapping[:controllers]
         ) do
