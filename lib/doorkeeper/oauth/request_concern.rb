@@ -34,7 +34,7 @@ module Doorkeeper
           client,
           resource_owner_id,
           scopes,
-          server.access_token_expires_in,
+          Authorization::Token.access_token_expires_in(server, client),
           server.refresh_token_enabled?)
       end
 

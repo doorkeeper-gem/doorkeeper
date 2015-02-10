@@ -25,7 +25,6 @@ https://github.com/doorkeeper-gem/doorkeeper/releases.
     - [Routes](#routes)
     - [Authenticating](#authenticating)
 - [Protecting resources with OAuth (a.k.a your API endpoint)](#protecting-resources-with-oauth-aka-your-api-endpoint)
-    - [ActionController::Metal integration](#actioncontrollermetal-integration)
     - [Route Constraints and other integrations](#route-constraints-and-other-integrations)
     - [Access Token Scopes](#access-token-scopes)
     - [Authenticated resource owner](#authenticated-resource-owner)
@@ -49,8 +48,8 @@ https://github.com/doorkeeper-gem/doorkeeper/releases.
 
 ## Requirements
 
-- Ruby >1.9.3
-- Rails >3.1
+- Ruby >= 1.9.3
+- Rails >= 3.2
 - ORM ActiveRecord, Mongoid, MongoMapper
 
 ## Installation
@@ -288,15 +287,15 @@ and take a look at the
 To run the local engine server:
 
 ```
-rails=3.2.8 orm=active_record bundle install
-rails=3.2.8 orm=active_record bundle exec rails server
+bundle install
+bundle exec rails server
 ````
 
 By default, it uses the latest Rails version with ActiveRecord. To run the
-tests:
+tests with a specific ORM and Rails version:
 
 ```
-rails=3.2.8 orm=active_record bundle exec rake
+rails=4.2.0 orm=active_record bundle exec rake
 ```
 
 Or you might prefer to run `script/run_all` to integrate against all ORMs.
@@ -343,6 +342,12 @@ here](https://github.com/doorkeeper-gem/doorkeeper/wiki/Testing-your-provider-wi
 
 Thanks to all our [awesome
 contributors](https://github.com/doorkeeper-gem/doorkeeper/contributors)!
+
+
+### IETF Standards
+
+* [The OAuth 2.0 Authorization Framework](http://tools.ietf.org/html/rfc6749)
+* [OAuth 2.0 Threat Model and Security Considerations](http://tools.ietf.org/html/rfc6819)
 
 ### License
 

@@ -2,7 +2,7 @@ ENV['RAILS_ENV'] ||= 'test'
 TABLE_NAME_PREFIX = ENV['table_name_prefix'] || nil
 TABLE_NAME_SUFFIX = ENV['table_name_suffix'] || nil
 
-orm = ENV['BUNDLE_GEMFILE'].match(/Gemfile\.(.+)\.rb/)
+orm = (ENV['BUNDLE_GEMFILE'] || '').match(/Gemfile\.(.+)\.rb/)
 DOORKEEPER_ORM = (orm && orm[1] || :active_record).to_sym
 
 $LOAD_PATH.unshift File.dirname(__FILE__)

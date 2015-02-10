@@ -23,6 +23,7 @@ end
 
 feature 'Resource Owner Password Credentials Flow' do
   background do
+    config_is_set(:grant_flows, ["password"])
     config_is_set(:resource_owner_from_credentials) { User.authenticate! params[:username], params[:password] }
     client_exists
     create_resource_owner
@@ -67,7 +68,6 @@ feature 'Resource Owner Password Credentials Flow' do
       post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
 
       Doorkeeper::AccessToken.count.should be(1)
-
       should_have_json 'access_token', Doorkeeper::AccessToken.first.token
     end
   end

@@ -18,16 +18,18 @@ module Doorkeeper
 
   def self.check_for_missing_columns
     if Doorkeeper.configuration.orm == :active_record &&
-        !Application.new.attributes.include?("scopes")
+        ActiveRecord::Base.connected? &&
+        ActiveRecord::Base.connection.table_exists?(
+          Doorkeeper::Application.table_name
+        ) &&
+        !Doorkeeper::Application.new.attributes.include?("scopes")
 
       puts <<-MSG.squish
-[doorkeeper] Missing column: `applications.scopes`.
+[doorkeeper] Missing column: `oauth_applications.scopes`.
 If you are using ActiveRecord run `rails generate doorkeeper:application_scopes
 && rake db:migrate` to add it.
       MSG
     end
-  rescue ActiveRecord::StatementInvalid, ActiveRecord::NoDatabaseError
-    # trap error when DB is not yet setup
   end
 
   def self.enable_orm
@@ -173,31 +175,30 @@ and that your `initialize_models!` method doesn't raise any errors.\n
 
     option :resource_owner_authenticator,
            as: :authenticate_resource_owner,
-           default: (lambda do |routes|
+           default: (lambda do |_routes|
              logger.warn(I18n.translate('doorkeeper.errors.messages.resource_owner_authenticator_not_configured'))
              nil
            end)
     option :admin_authenticator,
            as: :authenticate_admin,
-           default: ->(routes) {}
+           default: ->(_routes) {}
     option :resource_owner_from_credentials,
-           default: (lambda do |routes|
+           default: (lambda do |_routes|
              warn(I18n.translate('doorkeeper.errors.messages.credential_flow_not_configured'))
              nil
            end)
-    option :skip_authorization,            default: ->(routes) {}
-    option :access_token_expires_in,       default: 7200
-    option :refresh_token_revoked_in,      default: 0
-    option :refresh_token_revoked_on_use,  default: false
-    option :authorization_code_expires_in, default: 600
-    option :orm,                           default: :active_record
-    option :native_redirect_uri,           default: 'urn:ietf:wg:oauth:2.0:oob'
-    option :active_record_options,         default: {}
-    option :realm,                         default: 'Doorkeeper'
-    option :wildcard_redirect_uri,         default: false
-    option :force_ssl_in_redirect_uri,     default: !Rails.env.development?
-    option :grant_flows,
-           default: %w(authorization_code implicit password client_credentials)
+    option :skip_authorization,             default: ->(_routes) {}
+    option :access_token_expires_in,        default: 7200
+    option :refresh_token_revoked_in,       default: 0
+    option :refresh_token_revoked_on_use,   default: false
+    option :custom_access_token_expires_in, default: lambda { |_app| nil }
+    option :authorization_code_expires_in,  default: 600
+    option :orm,                            default: :active_record
+    option :native_redirect_uri,            default: 'urn:ietf:wg:oauth:2.0:oob'
+    option :active_record_options,          default: {}
+    option :realm,                          default: 'Doorkeeper'
+    option :force_ssl_in_redirect_uri,      default: !Rails.env.development?
+    option :grant_flows,                    default: %w(authorization_code client_credentials)
 
     attr_reader :reuse_access_token
 

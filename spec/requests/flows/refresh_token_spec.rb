@@ -53,25 +53,24 @@ feature 'Refresh Token Flow' do
       expect(@token.reload).to be_revoked
     end
 
-    # TODO: verify proper error code for this (previously was invalid_grant)
     scenario 'client gets an error for invalid refresh token' do
       post refresh_token_endpoint_url(client: @client, refresh_token: 'invalid')
       should_not_have_json 'refresh_token'
-      should_have_json 'error', 'invalid_request'
+      should_have_json 'error', 'invalid_grant'
     end
 
-    # TODO: verify proper error code for this (previously was invalid_grant)
     scenario 'client gets an error for revoked acccess token' do
       @token.revoke
       post refresh_token_endpoint_url(client: @client, refresh_token: @token.refresh_token)
       should_not_have_json 'refresh_token'
-      should_have_json 'error', 'invalid_request'
+      should_have_json 'error', 'invalid_grant'
     end
   end
 
   context 'refreshing the token with multiple sessions (devices)' do
     before do
       # enable password auth to simulate other devices
+      config_is_set(:grant_flows, ["password"])
       config_is_set(:resource_owner_from_credentials) { User.authenticate! params[:username], params[:password] }
       create_resource_owner
       _another_token = post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
