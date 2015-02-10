@@ -1,14 +1,38 @@
 # Changelog
 
-## 2.0.2
+## 2.2.0 (unreleased)
+
+- Remove `wildcard_redirect_url` option
+- [#481] Customize token flow OAuth expirations with a config lambda
+- [#568] TokensController: Memoize strategy.authorize_response result to enable
+    subclasses to use the response object.
+- [#571] Fix database initialization issues in some configurations.
+
+
+## 2.1.0
 
 - [#540] Include `created_at` in response.
 - [#538] Check application-level scopes in client_credentials and password flow.
+- [5596227] Check application scopes in AccessToken when present. Fixes a bug in
+  doorkeeper 2.0.0 and 2.0.1 referring to application specific scopes.
 - [#534] Internationalizes doorkeeper views.
+- [#545] Ensure there is a connection to the database before checking for
+  missing columns
+- [#546] Use `Doorkeeper::` prefix when referencing `Application` to avoid
+  possible application model name conflict.
+- [#538] Test with Rails ~> 4.2.
+
+### Potentially backward incompatible changes
+
+- Enable by default `authorization_code` and `client_credentials` grant flows.
+  Disables implicit and password grant flows by default.
+- [#510, #544, 722113f] Revoked refresh token response bugfix.
+
 
 ## 2.0.1
 
 - [#525, #526, #527] Fix `ActiveRecord::NoDatabaseError` on gem load.
+
 
 ## 2.0.0
 

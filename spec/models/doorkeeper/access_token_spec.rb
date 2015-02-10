@@ -161,9 +161,13 @@ module Doorkeeper
     describe '.matching_token_for' do
       let(:resource_owner_id) { 100 }
       let(:application)       { FactoryGirl.create :application }
-      let(:scopes)            { Doorkeeper::OAuth::Scopes.from_string('public write') }
+      let(:scopes) { Doorkeeper::OAuth::Scopes.from_string('public write') }
       let(:default_attributes) do
-        { application: application, resource_owner_id: resource_owner_id, scopes: scopes.to_s }
+        {
+          application: application,
+          resource_owner_id: resource_owner_id,
+          scopes: scopes.to_s
+        }
       end
 
       it 'returns only one token' do
@@ -192,7 +196,7 @@ module Doorkeeper
       end
 
       it 'matches the application' do
-        token = FactoryGirl.create :access_token, default_attributes.merge(application: FactoryGirl.create(:application))
+        FactoryGirl.create :access_token, default_attributes.merge(application: FactoryGirl.create(:application))
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
       end
@@ -205,6 +209,15 @@ module Doorkeeper
 
       it 'matches the scopes' do
         FactoryGirl.create :access_token, default_attributes.merge(scopes: 'public email')
+        last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
+        expect(last_token).to be_nil
+      end
+
+      it 'matches application scopes' do
+        application = FactoryGirl.create :application, scopes: "private read"
+        FactoryGirl.create :access_token, default_attributes.merge(
+          application: application
+        )
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
       end

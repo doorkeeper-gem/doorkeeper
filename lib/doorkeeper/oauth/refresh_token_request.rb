@@ -5,7 +5,8 @@ module Doorkeeper
       include OAuth::RequestConcern
       include OAuth::Helpers
 
-      validate :token,        error: :invalid_request
+      validate :token_presence, error: :invalid_request
+      validate :token,        error: :invalid_grant
       validate :client,       error: :invalid_client
       validate :client_match, error: :invalid_grant
       validate :scope,        error: :invalid_scope
@@ -18,6 +19,7 @@ module Doorkeeper
         @refresh_token   = refresh_token
         @credentials     = credentials
         @original_scopes = parameters[:scopes]
+        @refresh_token_parameter = parameters[:refresh_token]
 
         if credentials
           @client = Application.by_uid_and_secret credentials.uid,
@@ -26,6 +28,8 @@ module Doorkeeper
       end
 
       private
+
+      attr_reader :refresh_token_parameter
 
       def before_successful_response
         refresh_token.revoke_in(server.refresh_token_revoked_in) unless refresh_token.revoked_at || server.refresh_token_revoked_on_use
@@ -46,6 +50,10 @@ module Doorkeeper
         }
         create_params[:previous_refresh_token] = refresh_token.refresh_token if server.refresh_token_revoked_on_use
         @access_token = AccessToken.create! create_params
+      end
+
+      def validate_token_presence
+        refresh_token.present? || refresh_token_parameter.present?
       end
 
       def validate_token

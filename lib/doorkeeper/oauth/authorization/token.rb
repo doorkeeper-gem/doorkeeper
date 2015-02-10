@@ -9,13 +9,24 @@ module Doorkeeper
           @resource_owner = resource_owner
         end
 
+        def self.access_token_expires_in(server, pre_auth)
+          custom_expiration = server.
+            custom_access_token_expires_in.call(pre_auth)
+
+          if custom_expiration
+            custom_expiration
+          else
+            server.access_token_expires_in
+          end
+        end
+
         def issue_token
           @token ||= AccessToken.find_or_create_for(
-              pre_auth.client,
-              resource_owner.id,
-              pre_auth.scopes,
-              configuration.access_token_expires_in,
-              false
+            pre_auth.client,
+            resource_owner.id,
+            pre_auth.scopes,
+            self.class.access_token_expires_in(configuration, pre_auth),
+            false
           )
         end
 

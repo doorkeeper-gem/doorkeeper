@@ -16,6 +16,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
   let(:user)   { User.create!(name: 'Joe', password: 'sekret') }
 
   before do
+    allow(Doorkeeper.configuration).to receive(:grant_flows).and_return(["implicit"])
     allow(controller).to receive(:current_resource_owner).and_return(user)
   end
 
@@ -123,6 +124,8 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
 
   describe 'GET #new code request with native url and skip_authorization true' do
     before do
+      allow(Doorkeeper.configuration).to receive(:grant_flows).
+        and_return(%w(authorization_code))
       allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
         true
       end)
