@@ -27,7 +27,7 @@ module Doorkeeper
             if application_scopes.present?
               server_scopes & application_scopes
             else
-              server_scopes
+              OAuth::Scopes.new # Empty set
             end
           end
         end
