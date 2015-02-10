@@ -25,7 +25,7 @@ module Doorkeeper
         end
 
         def validate_scopes
-          return true unless @request.scopes.present?
+          return true unless @request.original_scopes.present?
 
           ScopeChecker.valid?(
             @request.original_scopes,

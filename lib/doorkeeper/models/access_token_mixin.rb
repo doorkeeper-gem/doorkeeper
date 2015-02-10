@@ -60,16 +60,13 @@ module Doorkeeper
 
       def scopes_match?(token, param_scopes, application)
         return false unless token.present?
+        return true if token.scopes.blank? && param_scopes.blank?
 
-        if token.scopes.blank? && param_scopes.blank?
-          true
-        else
-          Doorkeeper::OAuth::Helpers::ScopeChecker.valid?(
-            param_scopes.to_s,
-            token,
-            application
-          )
-        end
+        Doorkeeper::OAuth::Helpers::ScopeChecker.valid?(
+          param_scopes.to_s,
+          token,
+          application
+        )
       end
 
       def find_or_create_for(application, resource_owner_id, scopes, expires_in, use_refresh_token)
