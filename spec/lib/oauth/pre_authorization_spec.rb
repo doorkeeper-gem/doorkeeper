@@ -11,7 +11,7 @@ module Doorkeeper::OAuth
 
     let(:application) do
       application = double :application
-      application.stub(:scopes) { Scopes.from_string('') }
+      application.stub(:scopes) { Scopes.from_string('public') }
       application
     end
 

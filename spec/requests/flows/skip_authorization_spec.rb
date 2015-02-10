@@ -25,16 +25,16 @@ feature 'Skip authorization form' do
     end
 
     scenario 'does not skip authorization when scopes differ' do
-      client_is_authorized(@client, @resource_owner, scopes: 'public write')
-      visit authorization_endpoint_url(client: @client, scope: 'public')
+      client_is_authorized(@client, @resource_owner, scopes: 'public')
+      visit authorization_endpoint_url(client: @client, scope: 'public write')
       i_should_see 'Authorize'
     end
 
     scenario 'creates grant with new scope when scopes differ' do
-      client_is_authorized(@client, @resource_owner, scopes: 'public write')
-      visit authorization_endpoint_url(client: @client, scope: 'public')
+      client_is_authorized(@client, @resource_owner, scopes: 'public')
+      visit authorization_endpoint_url(client: @client, scope: 'public write')
       click_on 'Authorize'
-      access_grant_should_have_scopes :public
+      access_grant_should_have_scopes :public, :write
     end
   end
 end

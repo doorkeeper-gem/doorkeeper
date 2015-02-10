@@ -50,8 +50,8 @@ module Doorkeeper
         return true unless scope.present?
         Helpers::ScopeChecker.valid?(
           scope,
-          server.scopes,
-          client.application.scopes
+          server,
+          client.application
         )
       end
 
