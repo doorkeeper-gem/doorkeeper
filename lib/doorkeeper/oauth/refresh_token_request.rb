@@ -67,7 +67,7 @@ module Doorkeeper
 
       def validate_scope
         if @original_scopes.present?
-          ScopeChecker.valid?(@original_scopes, refresh_token.scopes)
+          ScopeChecker.valid?(@original_scopes, refresh_token.scopes, @client.try(:scopes))
         else
           true
         end
