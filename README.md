@@ -48,7 +48,7 @@ https://github.com/doorkeeper-gem/doorkeeper/releases.
 
 ## Requirements
 
-- Ruby >= 1.9.3
+- Ruby >= 2.0.0
 - Rails >= 3.2
 - ORM ActiveRecord, Mongoid, MongoMapper
 
