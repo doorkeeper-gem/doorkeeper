@@ -16,7 +16,7 @@ module Doorkeeper::OAuth::Helpers
       it 'is invalid if scope is not present' do
         expect(ScopeChecker.valid?(nil, server_scopes)).to be_falsey
       end
-    end 
+    end
 
     context 'with application_scopes' do
       let(:server_scopes) do
