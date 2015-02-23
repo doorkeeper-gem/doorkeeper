@@ -7,6 +7,7 @@
 - [#568] TokensController: Memoize strategy.authorize_response result to enable
     subclasses to use the response object.
 - [#571] Fix database initialization issues in some configurations.
+- [#582] The Authorization header fields are now case insensitive.
 
 
 ## 2.1.0
