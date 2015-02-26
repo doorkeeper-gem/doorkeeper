@@ -1,13 +1,22 @@
 # Changelog
 
-## 2.2.0 (unreleased)
+## 2.1.2
+
+- [#574] Remove unused update authorization route.
+- [#576] Filter out sensitive parameters from logs.
+- [#582] The Authorization HTTP header fields are now case insensitive.
+- [#583] Database connection bugfix in certain scenarios.
+- Testing improvements
+
+
+## 2.1.1
 
 - Remove `wildcard_redirect_url` option
 - [#481] Customize token flow OAuth expirations with a config lambda
 - [#568] TokensController: Memoize strategy.authorize_response result to enable
     subclasses to use the response object.
 - [#571] Fix database initialization issues in some configurations.
-- [#582] The Authorization header fields are now case insensitive.
+- Documentation improvements
 
 
 ## 2.1.0
