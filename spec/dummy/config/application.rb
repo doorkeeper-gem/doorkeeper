@@ -27,7 +27,7 @@ module Dummy
     # Activate observers that should always be running.
     # config.active_record.observers = :cacher, :garbage_collector, :forum_observer
 
-    if defined?(ActiveRecord) && Rails.version.to_i < 4
+    if defined?(ActiveRecord) && Rails.version.to_i < 4 && !defined?(::StrongParameters)
       config.active_record.whitelist_attributes = true
     end
 

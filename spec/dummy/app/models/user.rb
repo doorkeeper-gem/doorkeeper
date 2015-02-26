@@ -21,7 +21,7 @@ when "mongo_mapper"
 end
 
 class User
-  if ::Rails.version.to_i < 4 || defined?(::ProtectedAttributes)
+  if (::Rails.version.to_i < 4 && !defined?(::StrongParameters)) || defined?(::ProtectedAttributes)
     attr_accessible :name, :password
   end
 
