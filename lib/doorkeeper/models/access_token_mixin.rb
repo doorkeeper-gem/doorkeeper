@@ -18,7 +18,7 @@ module Doorkeeper
 
       attr_writer :use_refresh_token
 
-      if ::Rails.version.to_i < 4 || defined?(::ProtectedAttributes)
+      if (::Rails.version.to_i < 4 && !defined?(::StrongParameters)) || defined?(::ProtectedAttributes)
         attr_accessible :application_id, :resource_owner_id, :expires_in,
                         :scopes, :use_refresh_token
       end
