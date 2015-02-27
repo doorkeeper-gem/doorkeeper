@@ -59,7 +59,7 @@ module Doorkeeper
 
       def scopes_match?(token_scopes, param_scopes, app_scopes)
         (!token_scopes.present? && !param_scopes.present?) ||
-          Doorkeeper::OAuth::Helpers::ScopeChecker.valid?(
+          Doorkeeper::OAuth::Helpers::ScopeChecker.match?(
             token_scopes.to_s,
             param_scopes,
             app_scopes
