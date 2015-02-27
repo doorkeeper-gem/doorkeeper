@@ -220,7 +220,6 @@ module Doorkeeper
         expect(last_token).to be_nil
       end
 
-
       it 'matches application scopes' do
         application = FactoryGirl.create :application, scopes: "private read"
         FactoryGirl.create :access_token, default_attributes.merge(

@@ -36,7 +36,6 @@ feature 'Skip authorization form' do
       i_should_see 'Authorize'
     end
 
-
     scenario 'creates grant with new scope when scopes differ' do
       client_is_authorized(@client, @resource_owner, scopes: 'public write')
       visit authorization_endpoint_url(client: @client, scope: 'public')
