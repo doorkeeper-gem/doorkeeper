@@ -24,9 +24,15 @@ feature 'Skip authorization form' do
       url_should_have_param 'code', Doorkeeper::AccessGrant.first.token
     end
 
-    scenario 'does not skip authorization when scopes differ' do
+    scenario 'does not skip authorization when scopes differ (new request has fewer scopes)' do
       client_is_authorized(@client, @resource_owner, scopes: 'public write')
       visit authorization_endpoint_url(client: @client, scope: 'public')
+      i_should_see 'Authorize'
+    end
+
+    scenario 'does not skip authorization when scopes differ (new request has more scopes)' do
+      client_is_authorized(@client, @resource_owner, scopes: 'public write')
+      visit authorization_endpoint_url(client: @client, scopes: 'public write email')
       i_should_see 'Authorize'
     end
 

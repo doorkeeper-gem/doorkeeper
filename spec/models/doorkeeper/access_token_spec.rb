@@ -202,8 +202,20 @@ module Doorkeeper
         expect(last_token).to be_nil
       end
 
-      it 'matches the scopes' do
+      it 'matches token with fewer scopes' do
+        FactoryGirl.create :access_token, default_attributes.merge(scopes: 'public')
+        last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
+        expect(last_token).to be_nil
+      end
+
+      it 'matches token with different scopes' do
         FactoryGirl.create :access_token, default_attributes.merge(scopes: 'public email')
+        last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
+        expect(last_token).to be_nil
+      end
+
+      it 'matches token with more scopes' do
+        FactoryGirl.create :access_token, default_attributes.merge(scopes: 'public write email')
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
       end
