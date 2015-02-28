@@ -6,7 +6,7 @@ module Doorkeeper
       def doorkeeper_authorize!(*scopes)
         @_doorkeeper_scopes = scopes || Doorkeeper.configuration.default_scopes
 
-        if doorkeeper_token_is_invalid?
+        if !valid_doorkeeper_token?
           doorkeeper_render_error
         end
       end
@@ -19,11 +19,11 @@ module Doorkeeper
         nil
       end
 
-      private
-
-      def doorkeeper_token_is_invalid?
-        !doorkeeper_token || !doorkeeper_token.acceptable?(@_doorkeeper_scopes)
+      def valid_doorkeeper_token?
+        doorkeeper_token && doorkeeper_token.acceptable?(@_doorkeeper_scopes)
       end
+
+      private
 
       def doorkeeper_render_error
         error = doorkeeper_error
