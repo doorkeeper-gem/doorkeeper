@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.3
+
+- [#588] Fixes scopes_match? bug that skipped authorization form in some cases
+
+
 ## 2.1.2
 
 - [#574] Remove unused update authorization route.
