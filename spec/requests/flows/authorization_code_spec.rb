@@ -104,5 +104,19 @@ feature 'Authorization Code Flow' do
 
       should_have_json 'access_token', Doorkeeper::AccessToken.last.token
     end
+
+    scenario 'resource owner authorizes the client with extra scopes' do
+      client_is_authorized(@client, @resource_owner, scopes: 'public')
+      visit authorization_endpoint_url(client: @client, scope: 'public write')
+      click_on 'Authorize'
+
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      post token_endpoint_url(code: authorization_code, client: @client)
+
+      expect(Doorkeeper::AccessToken.count).to be(2)
+
+      should_have_json 'access_token', Doorkeeper::AccessToken.last.token
+      access_token_should_have_scopes :public, :write
+    end
   end
 end

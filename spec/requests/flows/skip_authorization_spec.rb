@@ -42,5 +42,18 @@ feature 'Skip authorization form' do
       click_on 'Authorize'
       access_grant_should_have_scopes :public
     end
+
+    scenario 'doesn not skip authorization when scopes are greater' do
+      client_is_authorized(@client, @resource_owner, scopes: 'public')
+      visit authorization_endpoint_url(client: @client, scope: 'public write')
+      i_should_see 'Authorize'
+    end
+
+    scenario 'creates grant with new scope when scopes are greater' do
+      client_is_authorized(@client, @resource_owner, scopes: 'public')
+      visit authorization_endpoint_url(client: @client, scope: 'public write')
+      click_on 'Authorize'
+      access_grant_should_have_scopes :public, :write
+    end
   end
 end

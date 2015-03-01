@@ -37,7 +37,7 @@ module ModelHelper
   end
 
   def access_token_should_have_scopes(*args)
-    grant = Doorkeeper::AccessToken.first
+    grant = Doorkeeper::AccessToken.last
     expect(grant.scopes).to eq(Doorkeeper::OAuth::Scopes.from_array(args))
   end
 end
