@@ -3,20 +3,22 @@ module Doorkeeper
     module Helpers
       module ScopeChecker
         class Validator
+          attr_reader :parsed_scopes, :scope_str
+
           def initialize(scope_str, server_scopes, application_scopes)
+            @parsed_scopes = OAuth::Scopes.from_string(scope_str)
             @scope_str = scope_str
             @valid_scopes = valid_scopes(server_scopes, application_scopes)
-            @parsed_scopes = OAuth::Scopes.from_string(scope_str)
           end
 
           def valid?
-            @scope_str.present? &&
-              @scope_str !~ /[\n|\r|\t]/ &&
-              @valid_scopes.has_scopes?(@parsed_scopes)
+            scope_str.present? &&
+              scope_str !~ /[\n|\r|\t]/ &&
+              @valid_scopes.has_scopes?(parsed_scopes)
           end
 
           def match?
-            valid? && @parsed_scopes.has_scopes?(@valid_scopes)
+            valid? && parsed_scopes.has_scopes?(@valid_scopes)
           end
 
           private
