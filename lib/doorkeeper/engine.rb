@@ -1,5 +1,9 @@
 module Doorkeeper
   class Engine < Rails::Engine
+    initializer "doorkeeper.params.filter" do |app|
+      app.config.filter_parameters += [:client_secret, :code, :token]
+    end
+
     initializer 'doorkeeper.routes' do
       Doorkeeper::Rails::Routes.warn_if_using_mount_method!
       Doorkeeper::Rails::Routes.install!

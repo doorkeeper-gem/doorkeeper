@@ -2,6 +2,11 @@
 
 ## master
 
+## 1.4.2
+
+- [#576] Backported to 1.4.X branch
+
+
 ## 1.4.0
 
 - internals
