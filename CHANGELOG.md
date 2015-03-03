@@ -4,7 +4,12 @@
 
 ## 1.4.2
 
-- [#576] Backported to 1.4.X branch
+- [#576] Backported to 1.4.X branch. Filters out sensitive parameters from logs.
+
+
+## 1.4.1
+
+- Fixes CSRF vulnerability
 
 
 ## 1.4.0
