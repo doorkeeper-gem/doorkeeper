@@ -1,0 +1,151 @@
+zh-TW:
+  activerecord:
+    attributes:
+      doorkeeper/application:
+        name: '名稱'
+        redirect_uri: '轉向網址'
+    errors:
+      models:
+        doorkeeper/application:
+          attributes:
+            redirect_uri:
+              fragment_present: '不能包含片段(#)'
+              invalid_uri: '必須是有效的網址'
+              relative_uri: '必須是絕對的網址'
+              secured_uri: '必須是有 HTTPS/SSL 的網址'
+
+  mongoid:
+    attributes:
+      doorkeeper/application:
+        name: '名稱'
+        redirect_uri: '轉向網址'
+    errors:
+      models:
+        doorkeeper/application:
+          attributes:
+            redirect_uri:
+              fragment_present: '不能包含片段(#)'
+              invalid_uri: '必須是有效的網址'
+              relative_uri: '必須是絕對的網址'
+              secured_uri: '必須是有 HTTPS/SSL 的網址'
+
+  mongo_mapper:
+    attributes:
+      doorkeeper/application:
+        name: '名稱'
+        redirect_uri: '轉向網址'
+    errors:
+      models:
+        doorkeeper/application:
+          attributes:
+            redirect_uri:
+              fragment_present: '不能包含片段(#)'
+              invalid_uri: '必須是有效的網址'
+              relative_uri: '必須是絕對的網址'
+              secured_uri: '必須是有 HTTPS/SSL 的網址'
+
+  doorkeeper:
+    applications:
+      confirmations:
+        destroy: '確定嗎？'
+      buttons:
+        edit: '編輯'
+        destroy: '刪除'
+        submit: '送出'
+        cancel: '取消'
+        authorize: '授權'
+      form:
+        error: 'Whoops! 確認表單內可能的錯誤'
+      help:
+        redirect_uri: '每個網址必須只有一行'
+        native_redirect_uri: '使用 %{native_redirect_uri} 作本地端測試'
+      edit:
+        title: '編輯應用'
+      index:
+        title: '你的應用'
+        new: '新應用'
+        name: '名稱'
+        callback_url: '回應網址'
+      new:
+        title: '新應用'
+      show:
+        title: '應用: %{name}'
+        application_id: '應用 ID'
+        secret: '私鑰'
+        callback_urls: '回應網址'
+        actions: '動作'
+
+    authorizations:
+      buttons:
+        authorize: '授權'
+        deny: '拒絕'
+      error:
+        title: '發生錯誤'
+      new:
+        title: '授權需求'
+        prompt: '授權 %{client_name} 使用您的帳戶?'
+        able_to: '這個應用將會'
+      show:
+        title: '授權碼'
+
+    authorized_applications:
+      confirmations:
+        revoke: '確認嗎?'
+      buttons:
+        revoke: '撤銷'
+      index:
+        title: '你授權的應用'
+        application: '應用'
+        created_at: '建立時間'
+        date_format: '%Y-%m-%d %H:%M:%S'
+
+    errors:
+      messages:
+        # Common error messages
+        invalid_request: '這個請求少了一個必要的參數，可能是不支援的參數值或是其他格式錯誤'
+        invalid_redirect_uri: '這個轉向網址無效'
+        unauthorized_client: '這個應用並無被授權可以執行這個請求的方法'
+        access_denied: '擁有者或認證伺服器拒絕此需求'
+        invalid_scope: '請求範圍無效、未知或格式錯誤'
+        server_error: '授權伺服器因不明原因無法完成此請求'
+        temporarily_unavailable: '授權伺服器超載或維護中，無法處理此項請求'
+
+        #configuration error messages
+        credential_flow_not_configured: '資源擁有者密碼認證流程失敗，因為 Doorkeeper.configure.resource_owner_from_credentials 並未設定'
+        resource_owner_authenticator_not_configured: '資源擁有者查詢失敗，因為 Doorkeeper.configure.resource_owner_authenticator 並未設定'
+
+        # Access grant errors
+        unsupported_response_type: '授權伺服器並不支援此回應'
+
+        # Access token errors
+        invalid_client: '由於未知、不支援或是沒有客戶端認證而失敗'
+        invalid_grant: '轉向網址的授權許可無效、過期或已被撤銷'
+        unsupported_grant_type: '授權伺服器不支援此授權許可型態'
+
+        # Password Access token errors
+        invalid_resource_owner: '資源擁有者認證無效或無此擁有者'
+
+        invalid_token:
+          revoked: "Access Token 已被撤銷"
+          expired: "Access Token 已過期"
+          unknown: "Access Token 是無效的"
+
+    flash:
+      applications:
+        create:
+          notice: '應用已建立'
+        destroy:
+          notice: '應用已刪除'
+        update:
+          notice: '應用已更新'
+      authorized_applications:
+        destroy:
+          notice: '應用已撤銷'
+
+    layouts:
+      admin:
+        nav:
+          oauth2_provider: 'OAuth2 Provider'
+          applications: '應用'
+      application:
+        title: 'OAuth 認證需求'
