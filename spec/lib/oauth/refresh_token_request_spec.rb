@@ -71,13 +71,13 @@ module Doorkeeper::OAuth
       end
 
       it 'reduces scopes to the provided scopes' do
-        parameters[:scopes] = 'public'
+        parameters[:scope] = 'public'
         subject.authorize
         expect(Doorkeeper::AccessToken.last.scopes).to eq([:public])
       end
 
       it 'validates that scopes are included in the original access token' do
-        parameters[:scopes] = 'public update'
+        parameters[:scope] = 'public update'
 
         subject.validate
         expect(subject.error).to eq(:invalid_scope)
