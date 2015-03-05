@@ -82,6 +82,21 @@ module Doorkeeper::OAuth
         subject.validate
         expect(subject.error).to eq(:invalid_scope)
       end
+
+      it 'uses params[:scope] in favor of scopes if present (valid)' do
+        parameters[:scopes] = 'public update'
+        parameters[:scope] = 'public'
+        subject.authorize
+        expect(Doorkeeper::AccessToken.last.scopes).to eq([:public])
+      end
+
+      it 'uses params[:scope] in favor of scopes if present (invalid)' do
+        parameters[:scopes] = 'public'
+        parameters[:scope] = 'public update'
+
+        subject.validate
+        expect(subject.error).to eq(:invalid_scope)
+      end
     end
 
   end
