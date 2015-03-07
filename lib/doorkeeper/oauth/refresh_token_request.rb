@@ -18,7 +18,12 @@ module Doorkeeper
         @server          = server
         @refresh_token   = refresh_token
         @credentials     = credentials
-        @original_scopes = parameters[:scope]
+        # Prefer :scope, can fall back to :scopes for backwards compatible.
+        if parameters[:scope].present?
+          @original_scopes = parameters[:scope]
+        else
+          @original_scopes = parameters[:scopes]
+        end
         @refresh_token_parameter = parameters[:refresh_token]
 
         if credentials
