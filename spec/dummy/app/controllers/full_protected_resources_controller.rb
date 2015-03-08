@@ -1,5 +1,5 @@
 class FullProtectedResourcesController < ApplicationController
-  before_filter -> { doorkeeper_authorize! :admin }, only: :show
+  before_filter -> { doorkeeper_authorize! :write, :admin }, only: :show
   before_filter :doorkeeper_authorize!, only: :index
 
   def index

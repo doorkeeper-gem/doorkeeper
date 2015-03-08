@@ -40,17 +40,29 @@ feature 'Private API' do
     expect(page.body).to have_content('index')
   end
 
-  scenario 'access token with no scopes' do
-    optional_scopes_exist :admin
+  scenario 'access token with no allowed scopes' do
     @token.update_attribute :scopes, nil
     with_access_token_header @token.token
     visit '/full_protected_resources/1.json'
     response_status_should_be 403
   end
 
-  scenario 'access token with default scope' do
-    default_scopes_exist :admin
+  scenario 'access token with one of allowed scopes' do
     @token.update_attribute :scopes, 'admin'
+    with_access_token_header @token.token
+    visit '/full_protected_resources/1.json'
+    expect(page.body).to have_content('show')
+  end
+
+  scenario 'access token with another of allowed scopes' do
+    @token.update_attribute :scopes, 'write'
+    with_access_token_header @token.token
+    visit '/full_protected_resources/1.json'
+    expect(page.body).to have_content('show')
+  end
+
+  scenario 'access token with both allowed scopes' do
+    @token.update_attribute :scopes, 'write admin'
     with_access_token_header @token.token
     visit '/full_protected_resources/1.json'
     expect(page.body).to have_content('show')
