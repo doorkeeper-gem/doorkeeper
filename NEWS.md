@@ -4,6 +4,11 @@ User-visible changes worth mentioning.
 
 ---
 
+## (unreleased)
+
+- [#541] Fixed `undefined method attr_accessible` problem on Rails 4
+    (happens only when ProtectedAttributes gem is used)
+
 ## 2.2.1
 
 - [#636] `custom_access_token_expires_in` bugfixes

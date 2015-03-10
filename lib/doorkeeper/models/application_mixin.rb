@@ -4,6 +4,7 @@ module Doorkeeper
 
     include OAuth::Helpers
     include Models::Scopes
+    include ActiveModel::MassAssignmentSecurity if defined?(::ProtectedAttributes)
 
     included do
       has_many :access_grants, dependent: :destroy, class_name: 'Doorkeeper::AccessGrant'

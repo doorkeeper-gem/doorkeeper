@@ -7,6 +7,7 @@ module Doorkeeper
     include Models::Revocable
     include Models::Accessible
     include Models::Scopes
+    include ActiveModel::MassAssignmentSecurity if defined?(::ProtectedAttributes)
 
     included do
       belongs_to :application, class_name: 'Doorkeeper::Application', inverse_of: :access_grants
