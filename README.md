@@ -5,7 +5,12 @@
 [![Code Climate](https://codeclimate.com/github/applicake/doorkeeper.svg)](https://codeclimate.com/github/applicake/doorkeeper)
 [![Gem Version](https://badge.fury.io/rb/doorkeeper.svg)](https://rubygems.org/gems/doorkeeper)
 
-Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider functionality to your application.
+Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider
+functionality to your Rails application. As of [PR 567] it plays nicely with
+Grape framework.
+
+[PR 567]: https://github.com/doorkeeper-gem/doorkeeper/pull/567
+
 
 ## Documentation valid for `master` branch
 
