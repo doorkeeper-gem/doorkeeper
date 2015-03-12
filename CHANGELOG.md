@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.1.4 (unreleased)
+
+- [#595] HTTP spec: Add `scope` for refresh token scope param
+- [#596] Limit scopes in app scopes for client credentials
+- [#567] Add Grape helpers for easier integration with Grape framework
+
+
 ## 2.1.3
 
 - [#588] Fixes scopes_match? bug that skipped authorization form in some cases
