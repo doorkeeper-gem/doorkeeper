@@ -31,6 +31,9 @@ Doorkeeper.configure do
   # Issue access tokens with refresh token (disabled by default)
   use_refresh_token
 
+  # Access token's configured complexity (defaults to 32 bit hex token)
+  # access_token_complexity size: 64, generator: SecureRandom.urlsafe_base64
+
   # Provide support for an owner to be assigned to each registered application (disabled by default)
   # Optional parameter :confirmation => true (default false) if you want to enforce ownership of
   # a registered application

@@ -128,7 +128,7 @@ module Doorkeeper
     end
 
     def generate_token
-      self.token = UniqueToken.generate
+      self.token = UniqueToken.generate(Doorkeeper.configuration.access_token_complexity)
     end
   end
 end
