@@ -284,6 +284,20 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
+  describe 'access_token_complexity' do
+    it 'it uses hex and a size of 32 by default' do
+      expect(Doorkeeper.configuration.access_token_complexity).to eq({})
+    end
+
+    it 'can change the value' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        access_token_complexity size: 54
+      end
+      expect(subject.access_token_complexity).to eq(size: 54)
+    end
+  end
+
   it 'raises an exception when configuration is not set' do
     old_config = Doorkeeper.configuration
     Doorkeeper.module_eval do
