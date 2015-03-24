@@ -30,6 +30,7 @@ https://github.com/doorkeeper-gem/doorkeeper/releases.
     - [Routes](#routes)
     - [Authenticating](#authenticating)
 - [Protecting resources with OAuth (a.k.a your API endpoint)](#protecting-resources-with-oauth-aka-your-api-endpoint)
+    - [Protect your API with OAuth when using Grape](#protect-your-api-with-oauth-when-using-grape) 
     - [Route Constraints and other integrations](#route-constraints-and-other-integrations)
     - [Access Token Scopes](#access-token-scopes)
     - [Authenticated resource owner](#authenticated-resource-owner)
@@ -174,6 +175,30 @@ end
 You can pass any option `before_action` accepts, such as `if`, `only`,
 `except`, and others.
 
+### Protect your API with OAuth when using Grape
+
+As of [PR 567] doorkeeper comes with helpers for Grape. One of them is doorkeeper_authorize! and can be used in a similar way as an example above. Note that you have to use `require 'doorkeeper/grape/helpers'` and `helpers Doorkeeper::Grape::Helpers`. For more information about integration with Grape see the [Wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki/Grape-Integration)
+
+``` ruby
+require 'doorkeeper/grape/helpers'
+
+module API
+    module V1
+        class Users < Grape::API
+            helpers Doorkeeper::Grape::Helpers
+
+            before do
+                 doorkeeper_authorize!
+            end
+
+             ...
+        end
+    end
+end
+
+```
+
+[PR 567]: https://github.com/doorkeeper-gem/doorkeeper/pull/567
 
 ### Route Constraints and other integrations
 
