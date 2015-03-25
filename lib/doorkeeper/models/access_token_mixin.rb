@@ -79,7 +79,7 @@ module Doorkeeper
           scopes:            scopes.to_s,
           expires_in:        expires_in,
           use_refresh_token: use_refresh_token,
-          use_jwt_token: use_jwt_token
+          use_jwt_token:     use_jwt_token
         )
       end
 
@@ -133,7 +133,7 @@ module Doorkeeper
     end
 
     def generate_token
-      if use_jwt_token? && jwt_token_payload.present?
+      if use_jwt_token?
         self.token = JWT.encode(jwt_token_payload, jwt_secret_key, jwt_encryption_method)
       else
         self.token = UniqueToken.generate
@@ -149,7 +149,6 @@ module Doorkeeper
     end
 
     def jwt_secret_key
-      return nil if Doorkeeper.configuration.jwt_secret_key.blank?
       Doorkeeper.configuration.jwt_secret_key
     end
 

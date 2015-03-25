@@ -19,7 +19,10 @@ module Doorkeeper
         end
 
         token = FactoryGirl.create :access_token, use_jwt_token: true
-        expect(JWT.decode(token.token, nil, nil)[0]).to be_a(Hash)
+        decoded_token = JWT.decode(token.token, nil, nil)
+        expect(decoded_token[0]).to be_a(Hash)
+        expect(decoded_token[1]["typ"]).to eq "JWT"
+        expect(decoded_token[1]["alg"]).to eq "none"
       end
 
       it "encodes the payload in to the token" do
@@ -32,7 +35,8 @@ module Doorkeeper
         end
 
         token = FactoryGirl.create :access_token, use_jwt_token: true
-        expect(JWT.decode(token.token, nil, nil)[0]).to eq({ "foo" => "bar" })
+        decoded_token = JWT.decode(token.token, nil, nil)
+        expect(decoded_token[0]).to eq({ "foo" => "bar" })
       end
 
       it "encodes the signed payload in to the token" do
@@ -47,7 +51,8 @@ module Doorkeeper
         end
 
         token = FactoryGirl.create :access_token, use_jwt_token: true
-        expect(JWT.decode(token.token, "secret", nil)[0]).to eq({ "foo" => "bar" })
+        decoded_token = JWT.decode(token.token, "secret", nil)
+        expect(decoded_token[0]).to eq({ "foo" => "bar" })
       end
 
       it "encodes the encrypted payload in to the token" do
@@ -63,7 +68,10 @@ module Doorkeeper
         end
 
         token = FactoryGirl.create :access_token, use_jwt_token: true
-        expect(JWT.decode(token.token, "secret", "HS512")[0]).to eq({ "foo" => "bar" })
+        decoded_token = JWT.decode(token.token, "secret", "HS512")
+        expect(decoded_token[0]).to eq({ "foo" => "bar" })
+        expect(decoded_token[1]["typ"]).to eq "JWT"
+        expect(decoded_token[1]["alg"]).to eq "HS512"
       end
 
       it "does not use JWT without use_jwt_token set" do
@@ -74,7 +82,8 @@ module Doorkeeper
         end
 
         token = FactoryGirl.create :access_token
-        expect{ JWT.decode(token.token, nil, nil) }.to raise_error(JWT::DecodeError)
+        expect{ JWT.decode(token.token, nil, nil) }
+          .to raise_error(JWT::DecodeError)
       end
     end
 
