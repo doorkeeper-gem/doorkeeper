@@ -66,7 +66,10 @@ module Doorkeeper
           )
       end
 
-      def find_or_create_for(application, resource_owner_id, scopes, expires_in, use_refresh_token, use_jwt_token)
+      def find_or_create_for(
+        application, resource_owner_id, scopes, expires_in,
+        use_refresh_token, use_jwt_token
+      )
         if Doorkeeper.configuration.reuse_access_token
           access_token = matching_token_for(application, resource_owner_id, scopes)
           if access_token && !access_token.expired?
@@ -79,7 +82,7 @@ module Doorkeeper
           scopes:            scopes.to_s,
           expires_in:        expires_in,
           use_refresh_token: use_refresh_token,
-          use_jwt_token:     use_jwt_token
+          use_jwt_token: use_jwt_token
         )
       end
 
@@ -134,7 +137,8 @@ module Doorkeeper
 
     def generate_token
       if use_jwt_token?
-        self.token = JWT.encode(jwt_token_payload, jwt_secret_key, jwt_encryption_method)
+        self.token = JWT.encode(
+          jwt_token_payload, jwt_secret_key, jwt_encryption_method)
       else
         self.token = UniqueToken.generate
       end

@@ -118,7 +118,8 @@ and that your `initialize_models!` method doesn't raise any errors.\n
       end
 
       def jwt_encryption_method(jwt_encryption_method)
-        @config.instance_variable_set('@jwt_encryption_method', jwt_encryption_method)
+        @config.instance_variable_set(
+          '@jwt_encryption_method', jwt_encryption_method)
       end
     end
 
