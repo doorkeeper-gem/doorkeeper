@@ -163,6 +163,52 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
+  describe 'use_jwt_token' do
+    it 'is false by default' do
+      expect(subject.jwt_token_enabled?).to be_falsey
+    end
+
+    it 'can change the value' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_jwt_token
+      end
+      expect(subject.jwt_token_enabled?).to be_truthy
+    end
+  end
+
+  describe 'jwt_token_payload' do
+    it 'is nil by default' do
+      expect(subject.jwt_token_payload).to be_nil
+    end
+
+    it 'sets the block that is accessible via authenticate_admin' do
+      block = proc {}
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        jwt_token_payload &block
+      end
+      expect(subject.jwt_token_payload).to eq(block)
+    end
+  end
+
+  describe 'jwt_encryption_method' do
+    it 'defaults to nil' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+      expect(subject.jwt_encryption_method).to be_nil
+    end
+
+    it 'can change the value' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        jwt_encryption_method :rs512
+      end
+      expect(subject.jwt_encryption_method).to eq :rs512
+    end
+  end
+
   describe 'enable_application_owner' do
     it 'is disabled by default' do
       expect(Doorkeeper.configuration.enable_application_owner?).not_to be_truthy

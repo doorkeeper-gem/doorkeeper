@@ -12,6 +12,72 @@ module Doorkeeper
       let(:factory_name) { :access_token }
     end
 
+    describe :token do
+      it "creates a JWT token" do
+        Doorkeeper.configure do
+          use_jwt_token
+        end
+
+        token = FactoryGirl.create :access_token, use_jwt_token: true
+        expect(JWT.decode(token.token, nil, nil)[0]).to be_a(Hash)
+      end
+
+      it "encodes the payload in to the token" do
+        Doorkeeper.configure do
+          use_jwt_token
+
+          jwt_token_payload do
+            { foo: "bar" }
+          end
+        end
+
+        token = FactoryGirl.create :access_token, use_jwt_token: true
+        expect(JWT.decode(token.token, nil, nil)[0]).to eq({ "foo" => "bar" })
+      end
+
+      it "encodes the signed payload in to the token" do
+        Doorkeeper.configure do
+          use_jwt_token
+
+          jwt_token_payload do
+            { foo: "bar" }
+          end
+
+          jwt_secret_key "secret"
+        end
+
+        token = FactoryGirl.create :access_token, use_jwt_token: true
+        expect(JWT.decode(token.token, "secret", nil)[0]).to eq({ "foo" => "bar" })
+      end
+
+      it "encodes the encrypted payload in to the token" do
+        Doorkeeper.configure do
+          use_jwt_token
+
+          jwt_token_payload do
+            { foo: "bar" }
+          end
+
+          jwt_secret_key "secret"
+          jwt_encryption_method :hs512
+        end
+
+        token = FactoryGirl.create :access_token, use_jwt_token: true
+        expect(JWT.decode(token.token, "secret", "HS512")[0]).to eq({ "foo" => "bar" })
+      end
+
+      it "does not use JWT without use_jwt_token set" do
+        Doorkeeper.configure do
+          jwt_token_payload do
+            { foo: "bar" }
+          end
+        end
+
+        token = FactoryGirl.create :access_token
+        expect{ JWT.decode(token.token, nil, nil) }.to raise_error(JWT::DecodeError)
+      end
+    end
+
     describe :refresh_token do
       it 'has empty refresh token if it was not required' do
         token = FactoryGirl.create :access_token

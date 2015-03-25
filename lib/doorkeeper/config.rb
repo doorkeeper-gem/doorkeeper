@@ -108,6 +108,18 @@ and that your `initialize_models!` method doesn't raise any errors.\n
       def force_ssl_in_redirect_uri(boolean)
         @config.instance_variable_set("@force_ssl_in_redirect_uri", boolean)
       end
+
+      def use_jwt_token
+        @config.instance_variable_set('@jwt_token_enabled', true)
+      end
+
+      def jwt_secret_key(jwt_secret_key)
+        @config.instance_variable_set('@jwt_secret_key', jwt_secret_key)
+      end
+
+      def jwt_encryption_method(jwt_encryption_method)
+        @config.instance_variable_set('@jwt_encryption_method', jwt_encryption_method)
+      end
     end
 
     module Option
@@ -199,6 +211,10 @@ and that your `initialize_models!` method doesn't raise any errors.\n
     option :force_ssl_in_redirect_uri,      default: !Rails.env.development?
     option :grant_flows,                    default: %w(authorization_code client_credentials)
 
+    option :jwt_token_payload, default: nil
+    option :jwt_secret_key, default: nil.to_s
+    option :jwt_encryption_method, default: nil
+
     attr_reader :reuse_access_token
 
     def refresh_token_enabled?
@@ -243,6 +259,18 @@ and that your `initialize_models!` method doesn't raise any errors.\n
 
     def token_grant_types
       @token_grant_types ||= calculate_token_grant_types
+    end
+
+    def jwt_token_enabled?
+      !!@jwt_token_enabled
+    end
+
+    def jwt_secret_key
+      @jwt_secret_key ||= nil
+    end
+
+    def jwt_encryption_method
+      @jwt_encryption_method ||= nil
     end
 
     private
