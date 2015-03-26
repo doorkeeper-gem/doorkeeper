@@ -15,6 +15,7 @@ module Doorkeeper
     describe :token do
       it "creates a JWT token" do
         Doorkeeper.configure do
+          orm DOORKEEPER_ORM
           use_jwt_token
         end
 
@@ -27,6 +28,7 @@ module Doorkeeper
 
       it "encodes the payload in to the token" do
         Doorkeeper.configure do
+          orm DOORKEEPER_ORM
           use_jwt_token
 
           jwt_token_payload do
@@ -41,6 +43,7 @@ module Doorkeeper
 
       it "encodes the signed payload in to the token" do
         Doorkeeper.configure do
+          orm DOORKEEPER_ORM
           use_jwt_token
 
           jwt_token_payload do
@@ -57,6 +60,7 @@ module Doorkeeper
 
       it "encodes the encrypted payload in to the token" do
         Doorkeeper.configure do
+          orm DOORKEEPER_ORM
           use_jwt_token
 
           jwt_token_payload do
@@ -76,6 +80,7 @@ module Doorkeeper
 
       it "does not use JWT without use_jwt_token set" do
         Doorkeeper.configure do
+          orm DOORKEEPER_ORM
           jwt_token_payload do
             { foo: "bar" }
           end
