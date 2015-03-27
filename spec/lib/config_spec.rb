@@ -300,9 +300,9 @@ describe Doorkeeper, 'configuration' do
   end
 
   describe 'access_token_generator' do
-    it 'is \'UniqueToken\' by default' do
+    it 'is \'Doorkeeper::OAuth::Helpers::UniqueToken\' by default' do
       expect(Doorkeeper.configuration.access_token_generator).to(
-        eq('UniqueToken')
+        eq('Doorkeeper::OAuth::Helpers::UniqueToken')
       )
     end
 
