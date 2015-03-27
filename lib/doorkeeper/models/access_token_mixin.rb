@@ -16,7 +16,7 @@ module Doorkeeper
       validates :token, presence: true, uniqueness: true
       validates :refresh_token, uniqueness: true, if: :use_refresh_token?
 
-      attr_writer :use_refresh_token
+      attr_writer :use_refresh_token, :use_unique_refresh_token_index?
 
       if ::Rails.version.to_i < 4 || defined?(::ProtectedAttributes)
         attr_accessible :application_id, :resource_owner_id, :expires_in,
@@ -99,6 +99,10 @@ module Doorkeeper
 
     def use_refresh_token?
       !!@use_refresh_token
+    end
+
+    def use_unique_refresh_token_index?
+      !!@use_unique_refresh_token_index
     end
 
     def as_json(_options = {})
