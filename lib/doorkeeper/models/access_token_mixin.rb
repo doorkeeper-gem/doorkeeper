@@ -132,7 +132,7 @@ module Doorkeeper
       self.token = generator.generate
     rescue NoMethodError
       raise Errors::UnableToGenerateToken,
-        "#{generator} does not respond to `.generate`."
+      "#{generator} does not respond to `.generate`."
     end
   end
 end

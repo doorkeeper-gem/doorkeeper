@@ -110,7 +110,9 @@ and that your `initialize_models!` method doesn't raise any errors.\n
       end
 
       def access_token_generator(access_token_generator)
-        @config.instance_variable_set('@access_token_generator', access_token_generator)
+        @config.instance_variable_set(
+          '@access_token_generator', access_token_generator
+        )
       end
     end
 
