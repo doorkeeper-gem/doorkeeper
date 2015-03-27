@@ -5,6 +5,7 @@
 - [#595] HTTP spec: Add `scope` for refresh token scope param
 - [#596] Limit scopes in app scopes for client credentials
 - [#567] Add Grape helpers for easier integration with Grape framework
+- [#606] Add custom access token expiration support for Client Credentials flow
 
 
 ## 2.1.3

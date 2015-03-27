@@ -5,7 +5,12 @@ require 'doorkeeper/oauth/client_credentials_request'
 
 module Doorkeeper::OAuth
   describe ClientCredentialsRequest do
-    let(:server) { double default_scopes: nil }
+    let(:server) do
+      double(
+        default_scopes: nil,
+        custom_access_token_expires_in: ->(_app) { nil }
+      )
+    end
     let(:application)   { double :application, scopes: Scopes.from_string('') }
     let(:client)        { double :client, application: application }
     let(:token_creator) { double :issuer, create: true, token: double }
