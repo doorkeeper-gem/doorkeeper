@@ -32,7 +32,7 @@ module Doorkeeper
 
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
-          access_token_generator "CustomGenerator"
+          access_token_generator "Doorkeeper::CustomGenerator"
         end
 
         allow(OAuth::Helpers::UniqueToken).to(
@@ -52,13 +52,13 @@ module Doorkeeper
 
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
-          access_token_generator "NoGenerate"
+          access_token_generator "Doorkeeper::NoGenerate"
         end
 
         allow(OAuth::Helpers::UniqueToken).to(
           receive(:generate).and_call_original)
 
-        expect{ FactoryGirl.create :access_token }.to(
+        expect { FactoryGirl.create :access_token }.to(
           raise_error(Doorkeeper::Errors::UnableToGenerateToken))
       end
     end

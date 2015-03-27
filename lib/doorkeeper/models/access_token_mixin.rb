@@ -128,7 +128,7 @@ module Doorkeeper
     end
 
     def generate_token
-      generator = eval(Doorkeeper.configuration.access_token_generator)
+      generator = Doorkeeper.configuration.access_token_generator.constantize
       self.token = generator.generate
     rescue NoMethodError
       raise Errors::UnableToGenerateToken,
