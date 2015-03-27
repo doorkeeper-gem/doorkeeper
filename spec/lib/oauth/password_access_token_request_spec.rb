@@ -8,7 +8,8 @@ module Doorkeeper::OAuth
         default_scopes: Doorkeeper::OAuth::Scopes.new,
         access_token_expires_in: 2.hours,
         refresh_token_enabled?: false,
-        custom_access_token_expires_in: ->(_app) { nil }
+        custom_access_token_expires_in: ->(_app) { nil },
+        jwt_token_enabled?: false
       )
     end
     let(:credentials) { Client::Credentials.new(client.uid, client.secret) }

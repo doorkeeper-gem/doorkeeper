@@ -102,4 +102,26 @@ Doorkeeper.configure do
 
   # WWW-Authenticate Realm (default "Doorkeeper").
   # realm "Doorkeeper"
+
+  # JWT Settings
+  # Use a JWT token
+  # use_jwt_token
+  #
+  # Set the payload for the JWT token. This should contain unique information
+  # about the user.
+  # jwt_token_payload do
+  #   user = User.find_by_id(session[:user_id])
+  #   {
+  #     id: user.id,
+  #     name: user.name
+  #   }
+  # end
+  #
+  # Set the encryption secret. This would be shared with any other applications
+  # that should be able to read the payload of the token
+  # jwt_secret_key "secret"
+  #
+  # Specify encryption type. Supports any algorithim in
+  # https://github.com/progrium/ruby-jwt
+  # jwt_encryption_method :rs512
 end

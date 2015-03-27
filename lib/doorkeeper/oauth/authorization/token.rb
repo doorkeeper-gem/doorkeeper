@@ -26,6 +26,7 @@ module Doorkeeper
             resource_owner.id,
             pre_auth.scopes,
             self.class.access_token_expires_in(configuration, pre_auth),
+            false,
             false
           )
         end
