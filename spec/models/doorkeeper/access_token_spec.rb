@@ -12,6 +12,51 @@ module Doorkeeper
       let(:factory_name) { :access_token }
     end
 
+    describe :generate_token do
+      it 'generates a token using the default method' do
+        allow(OAuth::Helpers::UniqueToken).to receive(:generate).and_call_original
+        token = FactoryGirl.create :access_token
+        expect(OAuth::Helpers::UniqueToken).to have_received(:generate).at_least(3).times
+      end
+
+      it 'generates a token using a custom method' do
+        module CustomGenerator
+          def self.generate
+            "asdf1234"
+          end
+        end
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_token_generator "CustomGenerator"
+        end
+
+        allow(OAuth::Helpers::UniqueToken).to receive(:generate).and_call_original
+        allow(CustomGenerator).to receive(:generate).and_call_original
+
+        token = FactoryGirl.create :access_token
+
+        expect(OAuth::Helpers::UniqueToken).to have_received(:generate).at_least(2).times
+        expect(CustomGenerator).to have_received(:generate)
+      end
+
+      it 'raises an error if the custom method does not support generate' do
+        module NoGenerate
+        end
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_token_generator "NoGenerate"
+        end
+
+        allow(OAuth::Helpers::UniqueToken).to receive(:generate).and_call_original
+
+        expect{ FactoryGirl.create :access_token }.to(
+          raise_error(Doorkeeper::Errors::UnableToGenerateToken)
+        )
+      end
+    end
+
     describe :refresh_token do
       it 'has empty refresh token if it was not required' do
         token = FactoryGirl.create :access_token
