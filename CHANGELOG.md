@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.1.4 (unreleased)
+## 2.1.4
 
 - [#595] HTTP spec: Add `scope` for refresh token scope param
 - [#596] Limit scopes in app scopes for client credentials
