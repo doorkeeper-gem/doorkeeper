@@ -108,6 +108,12 @@ and that your `initialize_models!` method doesn't raise any errors.\n
       def force_ssl_in_redirect_uri(boolean)
         @config.instance_variable_set("@force_ssl_in_redirect_uri", boolean)
       end
+
+      def access_token_generator(access_token_generator)
+        @config.instance_variable_set(
+          '@access_token_generator', access_token_generator
+        )
+      end
     end
 
     module Option
@@ -198,6 +204,7 @@ and that your `initialize_models!` method doesn't raise any errors.\n
     option :realm,                          default: 'Doorkeeper'
     option :force_ssl_in_redirect_uri,      default: !Rails.env.development?
     option :grant_flows,                    default: %w(authorization_code client_credentials)
+    option :access_token_generator, default: "UniqueToken"
 
     attr_reader :reuse_access_token
 

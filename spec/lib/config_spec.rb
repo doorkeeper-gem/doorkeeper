@@ -298,4 +298,20 @@ describe Doorkeeper, 'configuration' do
       @config = old_config
     end
   end
+
+  describe 'access_token_generator' do
+    it 'is \'UniqueToken\' by default' do
+      expect(Doorkeeper.configuration.access_token_generator).to(
+        eq('UniqueToken')
+      )
+    end
+
+    it 'can change the value' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        access_token_generator 'Example'
+      end
+      expect(subject.access_token_generator).to eq('Example')
+    end
+  end
 end

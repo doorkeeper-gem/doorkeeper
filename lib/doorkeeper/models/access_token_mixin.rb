@@ -128,7 +128,11 @@ module Doorkeeper
     end
 
     def generate_token
-      self.token = UniqueToken.generate
+      generator = eval(Doorkeeper.configuration.access_token_generator)
+      self.token = generator.generate
+    rescue NoMethodError
+      raise Errors::UnableToGenerateToken,
+      "#{generator} does not respond to `.generate`."
     end
   end
 end
