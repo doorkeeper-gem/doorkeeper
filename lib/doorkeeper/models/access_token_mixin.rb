@@ -63,9 +63,9 @@ module Doorkeeper
             true
           else
             Doorkeeper::OAuth::Helpers::ScopeChecker.valid?(
-                param_scopes.to_s,
-                token,
-                application
+              param_scopes.to_s,
+              token,
+              application
             )
           end
         else
