@@ -92,9 +92,9 @@ feature 'Authorization Code Flow' do
       access_token_should_have_scopes :public, :write
     end
 
-    scenario 'returns new token if scopes have changed' do
-      client_is_authorized(@client, @resource_owner, scopes: 'public write')
-      visit authorization_endpoint_url(client: @client, scope: 'public')
+    it 'returns new token if scopes have changed' do
+      client_is_authorized(@client, @resource_owner, scopes: 'public')
+      visit authorization_endpoint_url(client: @client, scope: 'public write')
       click_on 'Authorize'
 
       authorization_code = Doorkeeper::AccessGrant.first.token
