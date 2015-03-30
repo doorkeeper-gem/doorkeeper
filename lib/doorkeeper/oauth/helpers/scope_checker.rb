@@ -5,10 +5,10 @@ module Doorkeeper
         class Validator
           attr_reader :parsed_scopes, :scope_str
 
-          def initialize(scope_str, server_scopes, application_scopes)
+          def initialize(scope_str, scopes_source, application)
             @parsed_scopes = OAuth::Scopes.from_string(scope_str)
             @scope_str = scope_str
-            @valid_scopes = valid_scopes(server_scopes, application_scopes)
+            @valid_scopes = valid_scopes(scopes_source, application)
           end
 
           def valid?
@@ -23,21 +23,29 @@ module Doorkeeper
 
           private
 
-          def valid_scopes(server_scopes, application_scopes)
-            if application_scopes.present?
-              server_scopes & application_scopes
+          def valid_scopes(scopes_source, application)
+            if application
+              if application.scopes.present?
+                scopes_source.scopes & application.scopes
+              else
+                scopes_source.scopes
+              end
             else
-              OAuth::Scopes.new # Empty set
+              if scopes_source.respond_to? :default_scopes
+                scopes_source.default_scopes
+              else
+                scopes_source.scopes
+              end
             end
           end
         end
 
-        def self.valid?(scope_str, server_scopes, application_scopes = nil)
-          Validator.new(scope_str, server_scopes, application_scopes).valid?
+        def self.valid?(scope_str, scopes_source, application = nil)
+          Validator.new(scope_str, scopes_source, application).valid?
         end
 
-        def self.match?(scope_str, server_scopes, application_scopes = nil)
-          Validator.new(scope_str, server_scopes, application_scopes).match?
+        def self.match?(scope_str, scopes_source, application = nil)
+          Validator.new(scope_str, scopes_source, application).match?
         end
       end
     end

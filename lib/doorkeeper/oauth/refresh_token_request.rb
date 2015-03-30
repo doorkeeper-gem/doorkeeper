@@ -74,8 +74,8 @@ module Doorkeeper
         if @original_scopes.present?
           ScopeChecker.valid?(
               @original_scopes,
-              refresh_token.scopes,
-              @client.try(:scopes)
+              refresh_token,
+              client
           )
         else
           true
