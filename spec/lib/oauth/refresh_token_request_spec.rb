@@ -72,11 +72,11 @@ module Doorkeeper::OAuth
 
       it 'reduces scopes to the provided scopes' do
         parameters[:scopes] = 'public'
-        expect {
+        expect do
           subject.authorize
-        }.to change {
+        end.to change do
           Doorkeeper::AccessToken.count
-        }.by(1)
+        end.by(1)
         expect(Doorkeeper::AccessToken.last.scopes).to eq([:public])
       end
 
