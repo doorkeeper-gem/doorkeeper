@@ -194,6 +194,7 @@ and that your `initialize_models!` method doesn't raise any errors.\n
     option :authorization_code_expires_in,  default: 600
     option :orm,                            default: :active_record
     option :native_redirect_uri,            default: 'urn:ietf:wg:oauth:2.0:oob'
+    option :development_uris,               default: :disabled
     option :active_record_options,          default: {}
     option :realm,                          default: 'Doorkeeper'
     option :force_ssl_in_redirect_uri,      default: !Rails.env.development?
