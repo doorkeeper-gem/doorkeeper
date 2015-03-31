@@ -14,19 +14,16 @@ module Doorkeeper
 
     describe :generate_token do
       it 'generates a token using the default method' do
-        allow(OAuth::Helpers::UniqueToken).to(
-          receive(:generate).and_call_original)
-
         FactoryGirl.create :access_token
 
-        expect(OAuth::Helpers::UniqueToken).to(
-          have_received(:generate).at_least(3).times)
+        token = FactoryGirl.create :access_token
+        expect(token.token).to be_a(String)
       end
 
       it 'generates a token using a custom method' do
         module CustomGenerator
           def self.generate
-            "asdf1234"
+            "custom_generator_token"
           end
         end
 
@@ -35,15 +32,24 @@ module Doorkeeper
           access_token_generator "Doorkeeper::CustomGenerator"
         end
 
-        allow(OAuth::Helpers::UniqueToken).to(
-          receive(:generate).and_call_original)
-        allow(CustomGenerator).to receive(:generate).and_call_original
+        token = FactoryGirl.create :access_token
+        expect(token.token).to eq("custom_generator_token")
+      end
 
-        FactoryGirl.create :access_token
+      it 'generates a token using a custom method that accepts an argument' do
+        module CustomGeneratorArgs
+          def self.generate(resource_owner_id)
+            "custom_generator_token_#{resource_owner_id}"
+          end
+        end
 
-        expect(OAuth::Helpers::UniqueToken).to(
-          have_received(:generate).at_least(2).times)
-        expect(CustomGenerator).to have_received(:generate)
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_token_generator "Doorkeeper::CustomGeneratorArgs"
+        end
+
+        token = FactoryGirl.create :access_token
+        expect(token.token).to match(%r{custom_generator_token_\d})
       end
 
       it 'raises an error if the custom method does not support generate' do
@@ -54,9 +60,6 @@ module Doorkeeper
           orm DOORKEEPER_ORM
           access_token_generator "Doorkeeper::NoGenerate"
         end
-
-        allow(OAuth::Helpers::UniqueToken).to(
-          receive(:generate).and_call_original)
 
         expect { FactoryGirl.create :access_token }.to(
           raise_error(Doorkeeper::Errors::UnableToGenerateToken))
