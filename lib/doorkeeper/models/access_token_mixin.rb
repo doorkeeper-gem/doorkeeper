@@ -129,15 +129,12 @@ module Doorkeeper
 
     def generate_token
       generator = Doorkeeper.configuration.access_token_generator.constantize
-
-      if generator.method(:generate).arity == 1
-        self.token = generator.generate(resource_owner_id)
-      else
-        self.token = generator.generate
-      end
-    rescue ArgumentError, TypeError, NoMethodError, NameError
+      self.token = generator.generate(resource_owner_id: resource_owner_id)
+    rescue NoMethodError
       raise Errors::UnableToGenerateToken,
       "#{generator} does not respond to `.generate`."
+    rescue NameError
+      raise Errors::TokenGeneratorNotFound, "#{generator} not found"
     end
   end
 end

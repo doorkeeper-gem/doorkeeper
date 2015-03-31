@@ -14,5 +14,8 @@ module Doorkeeper
 
     class UnableToGenerateToken < DoorkeeperError
     end
+
+    class TokenGeneratorNotFound < DoorkeeperError
+    end
   end
 end
