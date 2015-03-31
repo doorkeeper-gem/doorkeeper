@@ -20,9 +20,9 @@ module Doorkeeper
         expect(token.token).to be_a(String)
       end
 
-      it 'generates a token using a custom method' do
+      it 'generates a token using a custome class' do
         module CustomGenerator
-          def self.generate
+          def self.generate(opts={})
             "custom_generator_token"
           end
         end
@@ -36,10 +36,10 @@ module Doorkeeper
         expect(token.token).to eq("custom_generator_token")
       end
 
-      it 'generates a token using a custom method that accepts an argument' do
+      it 'generates a token using a custome class that accepts an argument' do
         module CustomGeneratorArgs
-          def self.generate(resource_owner_id)
-            "custom_generator_token_#{resource_owner_id}"
+          def self.generate(opts={})
+            "custom_generator_token_#{opts[:resource_owner_id]}"
           end
         end
 
@@ -52,7 +52,7 @@ module Doorkeeper
         expect(token.token).to match(%r{custom_generator_token_\d})
       end
 
-      it 'raises an error if the custom method does not support generate' do
+      it 'raises an error if the custome class does not support generate' do
         module NoGenerate
         end
 
@@ -63,6 +63,16 @@ module Doorkeeper
 
         expect { FactoryGirl.create :access_token }.to(
           raise_error(Doorkeeper::Errors::UnableToGenerateToken))
+      end
+
+      it 'raises an error if the custome class does not exist' do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_token_generator "Doorkeeper::NotReal"
+        end
+
+        expect { FactoryGirl.create :access_token }.to(
+          raise_error(Doorkeeper::Errors::TokenGeneratorNotFound))
       end
     end
 

@@ -31,11 +31,8 @@ Doorkeeper.configure do
   #   oauth_client.application.additional_settings.implicit_oauth_expiration
   # end
 
-  # Use a custom method for generating the access token. Provide a class that
-  # responds to `.generate` and returns a token string. If the method requires
-  # identifying information about the token owner it can accept one parameter,
-  # and `resource_owner_id` will be passed.
-  # Rationale: https://github.com/doorkeeper-gem/doorkeeper/pull/610
+  # Use a custom class for generating the access token.
+  # https://github.com/doorkeeper-gem/doorkeeper#custom-access-token-generator
   # access_token_generator "::Doorkeeper::JWT"
 
   # Reuse access token for the same resource owner within an application (disabled by default)
