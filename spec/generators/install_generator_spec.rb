@@ -20,8 +20,12 @@ describe 'Doorkeeper::InstallGenerator' do
       assert_file 'config/initializers/doorkeeper.rb'
     end
 
-    it 'copies the locale file' do
+    it 'copies the en locale file' do
       assert_file 'config/locales/doorkeeper.en.yml'
+    end
+
+    it 'copies the pt-BR locale file' do
+      assert_file 'config/locales/doorkeeper.pt-BR.yml'
     end
 
     it 'adds sample route' do
