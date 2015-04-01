@@ -253,9 +253,17 @@ class Api::V1::ProductsController < Api::V1::ApiController
 end
 ```
 
-For a more detailed explanation about scopes usage, check out the related
-[page in the
-wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki/Using-Scopes).
+### Custom Access Token Generator
+
+By default a 32 bit access token will be generated. If you require a custom token, such as [JWT](http://jwt.io), specify an object that responds to `.generate(resource_owner_id: resource_owner_id)` and returns a string to be used as the token.
+
+```ruby
+Doorkeeper.configure do
+  access_token_generator "Doorkeeper::JWT"
+end
+```
+
+JWT token support is available with [Doorkeeper-JWT](https://github.com/chriswarren/doorkeeper-jwt).
 
 ### Authenticated resource owner
 

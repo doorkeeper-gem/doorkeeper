@@ -31,6 +31,10 @@ Doorkeeper.configure do
   #   oauth_client.application.additional_settings.implicit_oauth_expiration
   # end
 
+  # Use a custom class for generating the access token.
+  # https://github.com/doorkeeper-gem/doorkeeper#custom-access-token-generator
+  # access_token_generator "::Doorkeeper::JWT"
+
   # Reuse access token for the same resource owner within an application (disabled by default)
   # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/383
   # reuse_access_token

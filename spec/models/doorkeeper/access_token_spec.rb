@@ -12,6 +12,54 @@ module Doorkeeper
       let(:factory_name) { :access_token }
     end
 
+    describe :generate_token do
+      it 'generates a token using the default method' do
+        FactoryGirl.create :access_token
+
+        token = FactoryGirl.create :access_token
+        expect(token.token).to be_a(String)
+      end
+
+      it 'generates a token using a custom object' do
+        module CustomGeneratorArgs
+          def self.generate(opts = {})
+            "custom_generator_token_#{opts[:resource_owner_id]}"
+          end
+        end
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_token_generator "Doorkeeper::CustomGeneratorArgs"
+        end
+
+        token = FactoryGirl.create :access_token
+        expect(token.token).to match(%r{custom_generator_token_\d})
+      end
+
+      it 'raises an error if the custom object does not support generate' do
+        module NoGenerate
+        end
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_token_generator "Doorkeeper::NoGenerate"
+        end
+
+        expect { FactoryGirl.create :access_token }.to(
+          raise_error(Doorkeeper::Errors::UnableToGenerateToken))
+      end
+
+      it 'raises an error if the custom object does not exist' do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_token_generator "Doorkeeper::NotReal"
+        end
+
+        expect { FactoryGirl.create :access_token }.to(
+          raise_error(Doorkeeper::Errors::TokenGeneratorNotFound))
+      end
+    end
+
     describe :refresh_token do
       it 'has empty refresh token if it was not required' do
         token = FactoryGirl.create :access_token
