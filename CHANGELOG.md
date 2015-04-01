@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.5 (unreleased)
+
+- [#611] Allow custom access token generators to be used
+
+
 ## 2.1.4
 
 - [#595] HTTP spec: Add `scope` for refresh token scope param

@@ -255,7 +255,9 @@ end
 
 ### Custom Access Token Generator
 
-By default a 32 bit access token will be generated. If you require a custom token, such as [JWT](http://jwt.io), specify an object that responds to `.generate(resource_owner_id: resource_owner_id)` and returns a string to be used as the token.
+By default a 32 bit access token will be generated. If you require a custom
+token, such as [JWT](http://jwt.io), specify an object that responds to
+`.generate(options = {})` and returns a string to be used as the token.
 
 ```ruby
 Doorkeeper.configure do
@@ -263,7 +265,9 @@ Doorkeeper.configure do
 end
 ```
 
-JWT token support is available with [Doorkeeper-JWT](https://github.com/chriswarren/doorkeeper-jwt).
+JWT token support is available with
+[Doorkeeper-JWT](https://github.com/chriswarren/doorkeeper-jwt).
+
 
 ### Authenticated resource owner
 
