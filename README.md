@@ -253,6 +253,27 @@ class Api::V1::ProductsController < Api::V1::ApiController
 end
 ```
 
+Please note that there is a logical OR between multiple required scopes. In
+above example, `doorkeeper_authorize! :admin, :write` means that the access
+token is required to have either `:admin` scope or `:write` scope, but not need
+have both of them.
+
+If want to require the access token to have multiple scopes at the same time,
+use multiple `doorkeeper_authorize!`, for example:
+
+```ruby
+class Api::V1::ProductsController < Api::V1::ApiController
+  before_action -> { doorkeeper_authorize! :public }, only: :index
+  before_action only: [:create, :update, :destroy] do
+    doorkeeper_authorize! :admin
+    doorkeeper_authorize! :write
+  end
+end
+```
+
+In above example, a client can call `:create` action only if its access token
+have both `:admin` and `:write` scopes.
+
 ### Custom Access Token Generator
 
 By default a 32 bit access token will be generated. If you require a custom
