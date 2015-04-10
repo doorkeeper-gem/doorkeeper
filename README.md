@@ -28,10 +28,12 @@ https://github.com/doorkeeper-gem/doorkeeper/releases.
         - [MongoMapper indexes](#mongomapper-indexes)
     - [Routes](#routes)
     - [Authenticating](#authenticating)
+    - [Internationalization (I18n)](#internationalization-i18n)
 - [Protecting resources with OAuth (a.k.a your API endpoint)](#protecting-resources-with-oauth-aka-your-api-endpoint)
     - [Protect your API with OAuth when using Grape](#protect-your-api-with-oauth-when-using-grape)
     - [Route Constraints and other integrations](#route-constraints-and-other-integrations)
     - [Access Token Scopes](#access-token-scopes)
+    - [Custom Access Token Generator](#custom-access-token-generator)
     - [Authenticated resource owner](#authenticated-resource-owner)
     - [Applications list](#applications-list)
 - [Other customizations](#other-customizations)
@@ -44,7 +46,9 @@ https://github.com/doorkeeper-gem/doorkeeper/releases.
     - [Screencast](#screencast)
     - [Client applications](#client-applications)
     - [Contributors](#contributors)
+    - [IETF Standards](#ietf-standards)
     - [License](#license)
+
 
 ## Useful links
 
@@ -157,6 +161,12 @@ the methods defined over there.
 
 You may want to check other ways of authentication
 [here](https://github.com/doorkeeper-gem/doorkeeper/wiki/Authenticating-using-Clearance-or-DIY).
+
+
+### Internationalization (I18n)
+
+See language files in [the I18n repository](https://github.com/doorkeeper-gem/doorkeeper-i18n).
+
 
 ## Protecting resources with OAuth (a.k.a your API endpoint)
 
