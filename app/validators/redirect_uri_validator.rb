@@ -24,7 +24,7 @@ class RedirectUriValidator < ActiveModel::EachValidator
   private
 
   def native_redirect_uri?(uri)
-    self.class.native_redirect_uri.present? && uri.to_s == self.class.native_redirect_uri.to_s
+    self.class.native_redirect_uri.present? && uri.to_s.match(self.class.native_redirect_uri)
   end
 
   def invalid_ssl_uri?(uri)
