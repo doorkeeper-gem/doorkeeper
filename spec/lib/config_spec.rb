@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 describe Doorkeeper, 'configuration' do
   subject { Doorkeeper.configuration }
@@ -22,7 +22,7 @@ describe Doorkeeper, 'configuration' do
     end
 
     it 'does not change other exceptions' do
-      String.any_instance.stub(:classify) { raise NoMethodError }
+      allow_any_instance_of(String).to receive(:classify) { raise NoMethodError }
 
       expect do
         Doorkeeper.configure { orm 'hibernate' }

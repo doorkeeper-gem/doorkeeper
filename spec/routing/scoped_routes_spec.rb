@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 describe 'Scoped routes' do
   it 'GET /scope/authorize routes to authorizations controller' do
@@ -28,5 +28,4 @@ describe 'Scoped routes' do
   it 'GET /scope/token/info route to authorzed tokeninfo controller' do
     expect(get('/scope/token/info')).to route_to('doorkeeper/token_info#show')
   end
-
 end

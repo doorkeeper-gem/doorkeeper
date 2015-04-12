@@ -38,4 +38,4 @@ module AuthorizationRequestHelper
   end
 end
 
-RSpec.configuration.send :include, AuthorizationRequestHelper, type: :request
+RSpec.configuration.send :include, AuthorizationRequestHelper, type: :feature

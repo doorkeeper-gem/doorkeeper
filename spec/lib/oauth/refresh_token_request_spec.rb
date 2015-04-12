@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 module Doorkeeper::OAuth
   describe RefreshTokenRequest do
@@ -98,6 +98,5 @@ module Doorkeeper::OAuth
         expect(subject.error).to eq(:invalid_scope)
       end
     end
-
   end
 end

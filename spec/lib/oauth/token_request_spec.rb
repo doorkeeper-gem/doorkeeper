@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 module Doorkeeper::OAuth
   describe TokenRequest do
@@ -67,14 +67,14 @@ module Doorkeeper::OAuth
 
     context 'token reuse' do
       it 'creates a new token if there are no matching tokens' do
-        Doorkeeper.configuration.stub(:reuse_access_token).and_return(true)
+        allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
         expect do
           subject.authorize
         end.to change { Doorkeeper::AccessToken.count }.by(1)
       end
 
       it 'creates a new token if scopes do not match' do
-        Doorkeeper.configuration.stub(:reuse_access_token).and_return(true)
+        allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
         FactoryGirl.create(:access_token, application_id: pre_auth.client.id,
                            resource_owner_id: owner.id, scopes: '')
         expect do
@@ -83,7 +83,7 @@ module Doorkeeper::OAuth
       end
 
       it 'skips token creation if there is a matching one' do
-        Doorkeeper.configuration.stub(:reuse_access_token).and_return(true)
+        allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
         FactoryGirl.create(:access_token, application_id: pre_auth.client.id,
                            resource_owner_id: owner.id, scopes: 'public')
         expect do

@@ -3,7 +3,7 @@
 # TODO: this flow should be configurable (letting Doorkeeper users decide if
 # they want to make it available)
 
-require 'spec_helper_integration'
+require 'spec_helper'
 
 feature 'Resource Owner Password Credentials Flow inproperly set up' do
   background do
@@ -61,13 +61,13 @@ feature 'Resource Owner Password Credentials Flow' do
     end
 
     scenario 'should return the same token if it is still accessible' do
-      Doorkeeper.configuration.stub(:reuse_access_token).and_return(true)
+      allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
 
       client_is_authorized(@client, @resource_owner)
 
       post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
 
-      Doorkeeper::AccessToken.count.should be(1)
+      expect(Doorkeeper::AccessToken.count).to be(1)
       should_have_json 'access_token', Doorkeeper::AccessToken.first.token
     end
   end

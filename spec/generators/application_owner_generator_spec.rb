@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 require 'generators/doorkeeper/application_owner_generator'
 
 describe 'Doorkeeper::ApplicationOwnerGenerator' do

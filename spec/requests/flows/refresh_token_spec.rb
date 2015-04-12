@@ -1,7 +1,7 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 feature 'Refresh Token Flow' do
-  before do
+  background do
     Doorkeeper.configure do
       orm DOORKEEPER_ORM
       use_refresh_token
@@ -10,7 +10,7 @@ feature 'Refresh Token Flow' do
   end
 
   context 'issuing a refresh token' do
-    before do
+    background do
       authorization_code_exists application: @client
     end
 
@@ -36,7 +36,7 @@ feature 'Refresh Token Flow' do
   end
 
   context 'refreshing the token' do
-    before do
+    background do
       @token = FactoryGirl.create(:access_token, application: @client, resource_owner_id: 1, use_refresh_token: true)
     end
 
@@ -68,7 +68,7 @@ feature 'Refresh Token Flow' do
   end
 
   context 'refreshing the token with multiple sessions (devices)' do
-    before do
+    background do
       # enable password auth to simulate other devices
       config_is_set(:grant_flows, ["password"])
       config_is_set(:resource_owner_from_credentials) { User.authenticate! params[:username], params[:password] }

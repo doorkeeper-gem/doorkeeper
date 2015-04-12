@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 module Doorkeeper
   describe ApplicationsController do
@@ -54,6 +54,5 @@ module Doorkeeper
         expect(application.reload.name).to eq 'Example'
       end
     end
-
   end
 end

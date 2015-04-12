@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 module Doorkeeper::OAuth
   describe PasswordAccessTokenRequest do
@@ -60,7 +60,7 @@ module Doorkeeper::OAuth
     end
 
     it 'skips token creation if there is already one' do
-      Doorkeeper.configuration.stub(:reuse_access_token).and_return(true)
+      allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
       FactoryGirl.create(:access_token, application_id: client.id, resource_owner_id: owner.id)
       expect do
         subject.authorize
