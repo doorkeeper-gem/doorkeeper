@@ -4,6 +4,10 @@ module Doorkeeper
       app.config.filter_parameters += %i(client_secret code token)
     end
 
+    initializer "doorkeeper.locales" do |app|
+      app.config.i18n.fallbacks = [:en]
+    end
+
     initializer "doorkeeper.routes" do
       Doorkeeper::Rails::Routes.install!
     end
