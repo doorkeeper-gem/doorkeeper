@@ -1,10 +1,10 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
-describe 'Client Credentials Request' do
-  let(:client) { FactoryGirl.create :application }
+feature 'Client Credentials Request' do
+  given(:client) { FactoryGirl.create :application }
 
   context 'a valid request' do
-    it 'authorizes the client and returns the token response' do
+    scenario 'authorizes the client and returns the token response' do
       headers = authorization client.uid, client.secret
       params  = { grant_type: 'client_credentials' }
 
@@ -20,11 +20,11 @@ describe 'Client Credentials Request' do
     end
 
     context 'with scopes' do
-      before do
+      background do
         optional_scopes_exist :write
       end
 
-      it 'adds the scope to the token an returns in the response' do
+      scenario 'adds the scope to the token an returns in the response' do
         headers = authorization client.uid, client.secret
         params  = { grant_type: 'client_credentials', scope: 'write' }
 
@@ -37,7 +37,7 @@ describe 'Client Credentials Request' do
   end
 
   context 'an invalid request' do
-    it 'does not authorize the client and returns the error' do
+    scenario 'does not authorize the client and returns the error' do
       headers = {}
       params  = { grant_type: 'client_credentials' }
 

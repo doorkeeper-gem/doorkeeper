@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 feature 'Authorization endpoint' do
   background do
@@ -59,7 +59,7 @@ feature 'Authorization endpoint' do
     end
 
     scenario 'raises exception on forged requests' do
-      ActionController::Base.any_instance.should_receive(:handle_unverified_request)
+      allow_any_instance_of(ActionController::Base).to receive(:handle_unverified_request)
       allowing_forgery_protection do
         post "/oauth/authorize",
           client_id:      @client.uid,

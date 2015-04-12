@@ -25,7 +25,7 @@ describe Doorkeeper::Server do
 
     context 'when only Authorization Code strategy is enabled' do
       before do
-        Doorkeeper.configuration.stub(:grant_flows) { ['authorization_code'] }
+        allow(Doorkeeper.configuration).to receive(:grant_flows).and_return(['authorization_code'])
       end
 
       it 'raises error when using the disabled Implicit strategy' do

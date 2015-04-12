@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 feature 'Implicit Grant Flow' do
   background do
@@ -20,7 +20,7 @@ feature 'Implicit Grant Flow' do
 
   context 'token reuse' do
     scenario 'should return a new token each request' do
-      Doorkeeper.configuration.stub(:reuse_access_token).and_return(false)
+      allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(false)
 
       token = client_is_authorized(@client, @resource_owner)
 
@@ -35,7 +35,7 @@ feature 'Implicit Grant Flow' do
     end
 
     scenario 'should return the same token if it is still accessible' do
-      Doorkeeper.configuration.stub(:reuse_access_token).and_return(true)
+      allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
 
       token = client_is_authorized(@client, @resource_owner)
 

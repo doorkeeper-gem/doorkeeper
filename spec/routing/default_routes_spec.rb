@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 describe 'Default routes' do
   it 'GET /oauth/authorize routes to authorizations controller' do
@@ -18,7 +18,7 @@ describe 'Default routes' do
   end
 
   it 'POST /oauth/revoke routes to tokens controller' do
-    post('/oauth/revoke').should route_to('doorkeeper/tokens#revoke')
+    expect(post('/oauth/revoke')).to route_to('doorkeeper/tokens#revoke')
   end
 
   it 'GET /oauth/applications routes to applications controller' do
@@ -32,5 +32,4 @@ describe 'Default routes' do
   it 'GET /oauth/token/info route to authorzed tokeninfo controller' do
     expect(get('/oauth/token/info')).to route_to('doorkeeper/token_info#show')
   end
-
 end

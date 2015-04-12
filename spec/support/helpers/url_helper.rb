@@ -52,4 +52,4 @@ module UrlHelper
   end
 end
 
-RSpec.configuration.send :include, UrlHelper, type: :request
+RSpec.configuration.send :include, UrlHelper, type: :feature

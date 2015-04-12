@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 feature 'Authorization Code Flow' do
   background do
@@ -52,13 +52,13 @@ feature 'Authorization Code Flow' do
     should_not_have_json 'error'
 
     should_have_json 'access_token', Doorkeeper::AccessToken.first.token
-    should_have_json 'token_type',   'bearer'
+    should_have_json 'token_type', 'bearer'
     should_have_json_within 'expires_in', Doorkeeper::AccessToken.first.expires_in, 1
   end
 
   context 'with scopes' do
     background do
-      default_scopes_exist  :public
+      default_scopes_exist :public
       optional_scopes_exist :write
     end
 
