@@ -40,6 +40,17 @@ feature 'Private API' do
     expect(page.body).to have_content('index')
   end
 
+  scenario 'access token with no default scopes' do
+    Doorkeeper.configuration.instance_eval {
+      @default_scopes = Doorkeeper::OAuth::Scopes.from_array([:public])
+      @scopes = default_scopes + optional_scopes
+    }
+    @token.update_attribute :scopes, 'dummy'
+    with_access_token_header @token.token
+    visit '/full_protected_resources'
+    response_status_should_be 403
+  end
+
   scenario 'access token with no allowed scopes' do
     @token.update_attribute :scopes, nil
     with_access_token_header @token.token
