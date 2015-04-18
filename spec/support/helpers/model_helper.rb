@@ -42,4 +42,4 @@ module ModelHelper
   end
 end
 
-RSpec.configuration.send :include, ModelHelper, type: :request
+RSpec.configuration.send :include, ModelHelper

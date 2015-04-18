@@ -34,13 +34,13 @@ feature 'Authorization Code Flow Errors' do
   end
 end
 
-feature 'Authorization Code Flow Errors', 'after authorization' do
-  background do
+describe 'Authorization Code Flow Errors', 'after authorization' do
+  before do
     client_exists
     authorization_code_exists application: @client
   end
 
-  scenario 'returns :invalid_grant error when posting an already revoked grant code' do
+  it 'returns :invalid_grant error when posting an already revoked grant code' do
     # First successful request
     post token_endpoint_url(code: @authorization.token, client: @client)
 
@@ -54,7 +54,7 @@ feature 'Authorization Code Flow Errors', 'after authorization' do
     should_have_json 'error_description', translated_error_message('invalid_grant')
   end
 
-  scenario 'returns :invalid_grant error for invalid grant code' do
+  it 'returns :invalid_grant error for invalid grant code' do
     post token_endpoint_url(code: 'invalid', client: @client)
 
     access_token_should_not_exist

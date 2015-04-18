@@ -42,7 +42,7 @@ describe 'Custom controller for routes' do
   end
 
   it 'POST /space/oauth/revoke routes to tokens controller' do
-    post('/space/oauth/revoke').should route_to('custom_authorizations#revoke')
+    expect(post('/space/oauth/revoke')).to route_to('custom_authorizations#revoke')
   end
 
   it 'GET /space/oauth/applications routes to applications controller' do
@@ -68,5 +68,4 @@ describe 'Custom controller for routes' do
   it 'GET /outer_space/oauth/token_info is not routable' do
     expect(get('/outer_space/oauth/token/info')).not_to be_routable
   end
-
 end

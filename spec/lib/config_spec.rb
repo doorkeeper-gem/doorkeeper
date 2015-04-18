@@ -22,7 +22,7 @@ describe Doorkeeper, 'configuration' do
     end
 
     it 'does not change other exceptions' do
-      String.any_instance.stub(:classify) { raise NoMethodError }
+      allow_any_instance_of(String).to receive(:classify) { raise NoMethodError }
 
       expect do
         Doorkeeper.configure { orm 'hibernate' }
@@ -35,7 +35,7 @@ describe Doorkeeper, 'configuration' do
       block = proc {}
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
-        admin_authenticator &block
+        admin_authenticator(&block)
       end
       expect(subject.authenticate_admin).to eq(block)
     end

@@ -98,6 +98,5 @@ module Doorkeeper::OAuth
         expect(subject.error).to eq(:invalid_scope)
       end
     end
-
   end
 end

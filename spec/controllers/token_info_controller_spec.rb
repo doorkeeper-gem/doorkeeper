@@ -1,9 +1,7 @@
 require 'spec_helper_integration'
 
 describe Doorkeeper::TokenInfoController do
-
   describe 'when requesting tokeninfo with valid token' do
-
     let(:doorkeeper_token) { FactoryGirl.create(:access_token) }
 
     before(:each) do
@@ -50,7 +48,5 @@ describe Doorkeeper::TokenInfoController do
         expect(response.body).to eq(Doorkeeper::OAuth::ErrorResponse.new(name: :invalid_request, status: :unauthorized).body.to_json)
       end
     end
-
   end
-
 end
