@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'spec_helper_integration'
 require 'generators/doorkeeper/views_generator'
 
 describe Doorkeeper::Generators::ViewsGenerator do

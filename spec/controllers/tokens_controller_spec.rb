@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'spec_helper_integration'
 
 describe Doorkeeper::TokensController do
   describe 'when authorization has succeeded' do
@@ -11,7 +11,7 @@ describe Doorkeeper::TokensController do
     end
 
     it 'returns the authorization' do
-      skip 'Verify need of these specs'
+      skip 'verify need of these specs'
 
       expect(token).to receive(:authorization)
 
@@ -43,14 +43,14 @@ describe Doorkeeper::TokensController do
     end
   end
 
-  describe 'authorize response memorization' do
-    it 'memorizes the result of the authorization' do
-      skip 'No assertion.'
-
+  describe 'authorize response memoization' do
+    it "memoizes the result of the authorization" do
       strategy = double(:strategy, authorize: true)
-      allow(strategy).to receive(:authorize).once
+      expect(strategy).to receive(:authorize).once
       allow(controller).to receive(:strategy) { strategy }
-      allow(controller).to receive(:create) { controller.send :authorize_response }
+      allow(controller).to receive(:create) do
+        controller.send :authorize_response
+      end
 
       post :create
     end

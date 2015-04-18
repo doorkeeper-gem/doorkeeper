@@ -73,4 +73,4 @@ module RequestSpecHelper
   end
 end
 
-RSpec.configuration.send :include, RequestSpecHelper, type: :feature
+RSpec.configuration.send :include, RequestSpecHelper

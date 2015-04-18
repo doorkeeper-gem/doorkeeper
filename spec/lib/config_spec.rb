@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'spec_helper_integration'
 
 describe Doorkeeper, 'configuration' do
   subject { Doorkeeper.configuration }
@@ -35,7 +35,7 @@ describe Doorkeeper, 'configuration' do
       block = proc {}
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
-        admin_authenticator &block
+        admin_authenticator(&block)
       end
       expect(subject.authenticate_admin).to eq(block)
     end

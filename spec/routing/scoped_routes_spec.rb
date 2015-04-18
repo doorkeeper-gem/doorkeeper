@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'spec_helper_integration'
 
 describe 'Scoped routes' do
   it 'GET /scope/authorize routes to authorizations controller' do

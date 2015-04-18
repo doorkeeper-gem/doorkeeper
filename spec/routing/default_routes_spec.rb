@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'spec_helper_integration'
 
 describe 'Default routes' do
   it 'GET /oauth/authorize routes to authorizations controller' do

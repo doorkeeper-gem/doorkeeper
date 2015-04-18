@@ -8,4 +8,4 @@ module AccessTokenRequestHelper
   end
 end
 
-RSpec.configuration.send :include, AccessTokenRequestHelper, type: :feature
+RSpec.configuration.send :include, AccessTokenRequestHelper

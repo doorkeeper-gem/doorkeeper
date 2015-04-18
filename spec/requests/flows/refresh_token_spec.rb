@@ -1,7 +1,7 @@
-require 'spec_helper'
+require 'spec_helper_integration'
 
-feature 'Refresh Token Flow' do
-  background do
+describe 'Refresh Token Flow' do
+  before do
     Doorkeeper.configure do
       orm DOORKEEPER_ORM
       use_refresh_token
@@ -10,11 +10,11 @@ feature 'Refresh Token Flow' do
   end
 
   context 'issuing a refresh token' do
-    background do
+    before do
       authorization_code_exists application: @client
     end
 
-    scenario 'client gets the refresh token and refreshses it' do
+    it 'client gets the refresh token and refreshses it' do
       post token_endpoint_url(code: @authorization.token, client: @client)
 
       token = Doorkeeper::AccessToken.first
@@ -36,30 +36,30 @@ feature 'Refresh Token Flow' do
   end
 
   context 'refreshing the token' do
-    background do
+    before do
       @token = FactoryGirl.create(:access_token, application: @client, resource_owner_id: 1, use_refresh_token: true)
     end
 
-    scenario 'client request a token with refresh token' do
+    it 'client request a token with refresh token' do
       post refresh_token_endpoint_url(client: @client, refresh_token: @token.refresh_token)
       should_have_json 'refresh_token', Doorkeeper::AccessToken.last.refresh_token
       expect(@token.reload).to be_revoked
     end
 
-    scenario 'client request a token with expired access token' do
+    it 'client request a token with expired access token' do
       @token.update_attribute :expires_in, -100
       post refresh_token_endpoint_url(client: @client, refresh_token: @token.refresh_token)
       should_have_json 'refresh_token', Doorkeeper::AccessToken.last.refresh_token
       expect(@token.reload).to be_revoked
     end
 
-    scenario 'client gets an error for invalid refresh token' do
+    it 'client gets an error for invalid refresh token' do
       post refresh_token_endpoint_url(client: @client, refresh_token: 'invalid')
       should_not_have_json 'refresh_token'
       should_have_json 'error', 'invalid_grant'
     end
 
-    scenario 'client gets an error for revoked acccess token' do
+    it 'client gets an error for revoked acccess token' do
       @token.revoke
       post refresh_token_endpoint_url(client: @client, refresh_token: @token.refresh_token)
       should_not_have_json 'refresh_token'
@@ -68,7 +68,7 @@ feature 'Refresh Token Flow' do
   end
 
   context 'refreshing the token with multiple sessions (devices)' do
-    background do
+    before do
       # enable password auth to simulate other devices
       config_is_set(:grant_flows, ["password"])
       config_is_set(:resource_owner_from_credentials) { User.authenticate! params[:username], params[:password] }
@@ -80,7 +80,7 @@ feature 'Refresh Token Flow' do
       @token.update_attribute :expires_in, -100
     end
 
-    scenario 'client request a token after creating another token with the same user' do
+    it 'client request a token after creating another token with the same user' do
       post refresh_token_endpoint_url(client: @client, refresh_token: @token.refresh_token)
 
       should_have_json 'refresh_token', last_token.refresh_token

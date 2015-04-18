@@ -6,4 +6,4 @@ module ConfigHelper
   end
 end
 
-RSpec.configuration.send :include, ConfigHelper, type: :feature
+RSpec.configuration.send :include, ConfigHelper

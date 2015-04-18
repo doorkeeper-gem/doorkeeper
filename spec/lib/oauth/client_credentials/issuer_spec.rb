@@ -28,8 +28,6 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
       end
 
       it 'creates with correct token parameters' do
-        skip 'No assertion.'
-
         expect(creator).to receive(:call).with(
           client,
           scopes,
@@ -74,8 +72,6 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
         end
 
         it 'creates with correct token parameters' do
-          skip 'No assertion.'
-
           expect(creator).to receive(:call).with(
             client,
             scopes,

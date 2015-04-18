@@ -13,29 +13,23 @@ class Doorkeeper::OAuth::Client
       let(:request) { double.as_null_object }
 
       let(:method) do
-        ->(request) { return 'uid', 'secret' }
+        ->(_request) { return 'uid', 'secret' }
       end
 
       it 'accepts anything that responds to #call' do
-        skip 'No assertion.'
-
         expect(method).to receive(:call).with(request)
         Credentials.from_request request, method
       end
 
       it 'delegates methods received as symbols to Credentials class' do
-        skip 'No assertion.'
-
         expect(Credentials).to receive(:from_params).with(request)
         Credentials.from_request request, :from_params
       end
 
       it 'stops at the first credentials found' do
-        skip 'No assertion.'
-
         not_called_method = double
         expect(not_called_method).not_to receive(:call)
-        credentials = Credentials.from_request request, ->(r) {}, method, not_called_method
+        Credentials.from_request request, ->(_) {}, method, not_called_method
       end
 
       it 'returns new Credentials' do

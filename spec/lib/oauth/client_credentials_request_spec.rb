@@ -22,8 +22,6 @@ module Doorkeeper::OAuth
     end
 
     it 'issues an access token for the current client' do
-      skip 'No assertion.'
-
       expect(token_creator).to receive(:create).with(client, nil)
       subject.authorize
     end
@@ -57,8 +55,6 @@ module Doorkeeper::OAuth
       end
 
       it 'issues an access token with default scopes if none was requested' do
-        skip 'No assertion.'
-
         expect(token_creator).to receive(:create).with(client, default_scopes)
         subject.authorize
       end

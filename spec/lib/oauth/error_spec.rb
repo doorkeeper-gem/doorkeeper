@@ -11,8 +11,6 @@ module Doorkeeper::OAuth
 
     describe :description do
       it 'is translated from translation messages' do
-        skip 'No assertion.'
-
         expect(I18n).to receive(:translate).with(:some_error, scope: [:doorkeeper, :errors, :messages])
         subject.description
       end
