@@ -11,8 +11,8 @@ module Doorkeeper
       validate :client_match, error: :invalid_grant
       validate :scope,        error: :invalid_scope
 
-      attr_accessor :server, :refresh_token, :credentials, :access_token
-      attr_accessor :client
+      attr_accessor :access_token, :client, :credentials, :refresh_token,
+                    :server
 
       def initialize(server, refresh_token, credentials, parameters = {})
         @server          = server
@@ -41,11 +41,16 @@ module Doorkeeper
       end
 
       def create_access_token
+        expires_in = Authorization::Token.access_token_expires_in(
+          server,
+          client
+        )
+
         @access_token = AccessToken.create!(
-          application_id:    refresh_token.application_id,
+          application_id: refresh_token.application_id,
           resource_owner_id: refresh_token.resource_owner_id,
-          scopes:            scopes.to_s,
-          expires_in:        server.access_token_expires_in,
+          scopes: scopes.to_s,
+          expires_in: expires_in,
           use_refresh_token: true)
       end
 

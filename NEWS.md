@@ -4,6 +4,11 @@ User-visible changes worth mentioning.
 
 ---
 
+## 2.2.1 - unreleased
+
+- [#636] `custom_access_token_expires_in` bugfixes
+
+
 ## 2.2.0 - 2015-04-19
 
 - [#611] Allow custom access token generators to be used
