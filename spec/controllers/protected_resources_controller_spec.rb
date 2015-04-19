@@ -158,7 +158,7 @@ describe 'doorkeeper authorize filter' do
   context 'defined for all actions' do
     controller {}
 
-    it 'it renders a custom JSON response', token: :invalid do
+    it 'it renders a custom JSON response' do
       expect do
         controller.class.doorkeeper_for
       end.to raise_error(
