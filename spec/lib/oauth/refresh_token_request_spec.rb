@@ -2,10 +2,16 @@ require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
   describe RefreshTokenRequest do
-    let(:server)         { double :server, access_token_expires_in: 2.minutes }
-    let!(:refresh_token) { FactoryGirl.create(:access_token, use_refresh_token: true) }
-    let(:client)         { refresh_token.application }
-    let(:credentials)    { Client::Credentials.new(client.uid, client.secret) }
+    let(:server) do
+      double :server,
+             access_token_expires_in: 2.minutes,
+             custom_access_token_expires_in: -> (_oauth_client) { nil }
+    end
+    let(:refresh_token) do
+      FactoryGirl.create(:access_token, use_refresh_token: true)
+    end
+    let(:client) { refresh_token.application }
+    let(:credentials) { Client::Credentials.new(client.uid, client.secret) }
 
     subject { RefreshTokenRequest.new server, refresh_token, credentials }
 
@@ -13,6 +19,17 @@ module Doorkeeper::OAuth
       expect do
         subject.authorize
       end.to change { client.access_tokens.count }.by(1)
+      expect(client.reload.access_tokens.last.expires_in).to eq(120)
+    end
+
+    it 'issues a new token for the client with custom expires_in' do
+      server = double :server,
+                      access_token_expires_in: 2.minutes,
+                      custom_access_token_expires_in: ->(_oauth_client) { 1234 }
+
+      RefreshTokenRequest.new(server, refresh_token, credentials).authorize
+
+      expect(client.reload.access_tokens.last.expires_in).to eq(1234)
     end
 
     it 'revokes the previous token' do
@@ -61,7 +78,11 @@ module Doorkeeper::OAuth
     end
 
     context 'with scopes' do
-      let!(:refresh_token) { FactoryGirl.create(:access_token, use_refresh_token: true, scopes: 'public write') }
+      let(:refresh_token) do
+        FactoryGirl.create :access_token,
+                           use_refresh_token: true,
+                           scopes: 'public write'
+      end
       let(:parameters) { {} }
       subject { RefreshTokenRequest.new server, refresh_token, credentials, parameters }
 
