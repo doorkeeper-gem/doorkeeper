@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
   s.add_dependency "railties", ">= 3.2"
 
   s.add_development_dependency "sqlite3", "~> 1.3.5"
-  s.add_development_dependency "rspec-rails", "~> 3.1.0"
+  s.add_development_dependency "rspec-rails", "~> 3.2.0"
   s.add_development_dependency "capybara", "~> 2.3.0"
   s.add_development_dependency "generator_spec", "~> 0.9.0"
   s.add_development_dependency "factory_girl", "~> 4.5.0"
