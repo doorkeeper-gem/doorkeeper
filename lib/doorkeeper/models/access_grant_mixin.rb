@@ -23,7 +23,7 @@ module Doorkeeper
 
     module ClassMethods
       def by_token(token)
-        where(token: token).limit(1).to_a.first
+        where(token: token.to_s).limit(1).to_a.first
       end
     end
 

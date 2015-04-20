@@ -22,11 +22,11 @@ module Doorkeeper
 
     module ClassMethods
       def by_uid_and_secret(uid, secret)
-        where(uid: uid, secret: secret).limit(1).to_a.first
+        where(uid: uid.to_s, secret: secret.to_s).limit(1).to_a.first
       end
 
       def by_uid(uid)
-        where(uid: uid).limit(1).to_a.first
+        where(uid: uid.to_s).limit(1).to_a.first
       end
     end
 

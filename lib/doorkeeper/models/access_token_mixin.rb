@@ -31,11 +31,11 @@ module Doorkeeper
 
     module ClassMethods
       def by_token(token)
-        where(token: token).limit(1).to_a.first
+        where(token: token.to_s).limit(1).to_a.first
       end
 
       def by_refresh_token(refresh_token)
-        where(refresh_token: refresh_token).first
+        where(refresh_token: refresh_token.to_s).first
       end
 
       def revoke_all_for(application_id, resource_owner)
