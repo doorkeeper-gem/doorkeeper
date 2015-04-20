@@ -14,6 +14,13 @@ require 'generator_spec/test_case'
 require 'timecop'
 require 'database_cleaner'
 
+# Load JRuby SQLite3 if in that platform
+begin
+  require 'jdbc/sqlite3'
+  Jdbc::SQLite3.load_driver
+rescue LoadError
+end
+
 Rails.logger.info "====> Doorkeeper.orm = #{Doorkeeper.configuration.orm.inspect}"
 if Doorkeeper.configuration.orm == :active_record
   Rails.logger.info "======> active_record.table_name_prefix = #{Rails.configuration.active_record.table_name_prefix.inspect}"
