@@ -33,7 +33,56 @@ module Doorkeeper
         end
 
         token = FactoryGirl.create :access_token
-        expect(token.token).to match(%r{custom_generator_token_\d})
+        expect(token.token).to match(%r{custom_generator_token_\d+})
+      end
+
+      it 'allows the custom generator to access the application details' do
+        module CustomGeneratorArgs
+          def self.generate(opts = {})
+            "custom_generator_token_#{opts[:application].name}"
+          end
+        end
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_token_generator "Doorkeeper::CustomGeneratorArgs"
+        end
+
+        token = FactoryGirl.create :access_token
+        expect(token.token).to match(%r{custom_generator_token_Application \d+})
+      end
+
+      it 'allows the custom generator to access the scopes' do
+        module CustomGeneratorArgs
+          def self.generate(opts = {})
+            "custom_generator_token_#{opts[:scopes].count}_#{opts[:scopes]}"
+          end
+        end
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_token_generator "Doorkeeper::CustomGeneratorArgs"
+        end
+
+        token = FactoryGirl.create :access_token, scopes: 'public write'
+
+        expect(token.token).to eq 'custom_generator_token_2_public write'
+      end
+
+      it 'allows the custom generator to access the expiry length' do
+        module CustomGeneratorArgs
+          def self.generate(opts = {})
+            "custom_generator_token_#{opts[:expires_in]}"
+          end
+        end
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_token_generator "Doorkeeper::CustomGeneratorArgs"
+        end
+
+        token = FactoryGirl.create :access_token
+        expect(token.token).to eq 'custom_generator_token_7200'
       end
 
       it 'raises an error if the custom object does not support generate' do
