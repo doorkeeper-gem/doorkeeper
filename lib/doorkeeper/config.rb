@@ -7,7 +7,8 @@ module Doorkeeper
 
   def self.configure(&block)
     @config = Config::Builder.new(&block).build
-    enable_orm
+    setup_orm_adapter
+    setup_orm_models
     check_for_missing_columns
     setup_application_owner if @config.enable_application_owner?
   end
@@ -32,24 +33,20 @@ If you are using ActiveRecord run `rails generate doorkeeper:application_scopes
     end
   end
 
-  def self.enable_orm
-    class_name = "doorkeeper/orm/#{configuration.orm}".classify
-    class_name.constantize.initialize_models!
+  def self.setup_orm_adapter
+    @orm_adapter = "doorkeeper/orm/#{configuration.orm}".classify.constantize
   rescue NameError => e
-    if e.instance_of?(NameError)
-      fail e, "ORM adapter not found (#{configuration.orm})", <<-error_msg
+    fail e, "ORM adapter not found (#{configuration.orm})", <<-ERROR_MSG.squish
 [doorkeeper] ORM adapter not found (#{configuration.orm}), or there was an error
 trying to load it.
 
 You probably need to add the related gem for this adapter to work with
 doorkeeper.
+      ERROR_MSG
+  end
 
-If you are working on the adapter itself, double check that the constant exists,
-and that your `initialize_models!` method doesn't raise any errors.\n
-      error_msg
-    else
-      raise e
-    end
+  def self.setup_orm_models
+    @orm_adapter.initialize_models!
   end
 
   def self.setup_application_owner
