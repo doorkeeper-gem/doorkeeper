@@ -12,6 +12,8 @@ module Doorkeeper
 
         Doorkeeper::Application.send :include, Doorkeeper::Models::Ownership
       end
+
+      def self.check_requirements!(_config); end
     end
   end
 end

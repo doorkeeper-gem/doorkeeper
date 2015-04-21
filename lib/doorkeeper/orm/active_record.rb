@@ -18,6 +18,21 @@ module Doorkeeper
 
         Doorkeeper::Application.send :include, Doorkeeper::Models::Ownership
       end
+
+      def self.check_requirements!(_config)
+        if ::ActiveRecord::Base.connected? &&
+           ::ActiveRecord::Base.connection.table_exists?(
+             Doorkeeper::Application.table_name
+           )
+          unless Doorkeeper::Application.new.attributes.include?("scopes")
+            fail <<-MSG.squish
+[doorkeeper] Missing column: `oauth_applications.scopes`.
+Run `rails generate doorkeeper:application_scopes
+&& rake db:migrate` to add it.
+            MSG
+          end
+        end
+      end
     end
   end
 end
