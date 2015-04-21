@@ -8,12 +8,12 @@ Gem::Specification.new do |s|
   s.authors     = ["Felipe Elias Philipp", "Tute Costa"]
   s.email       = %w(tutecosta@gmail.com)
   s.homepage    = "https://github.com/doorkeeper-gem/doorkeeper"
-  s.summary     = "Doorkeeper is an OAuth 2 provider for Rails."
-  s.description = "Doorkeeper is an OAuth 2 provider for Rails."
+  s.summary     = "OAuth 2 provider for Rails and Grape"
+  s.description = "Doorkeeper is an OAuth 2 provider for Rails and Grape."
   s.license     = 'MIT'
 
   s.files         = `git ls-files`.split("\n")
-  s.test_files    = `git ls-files -- test/*`.split("\n")
+  s.test_files    = `git ls-files -- spec/*`.split("\n")
   s.require_paths = ["lib"]
 
   s.add_dependency "railties", ">= 3.2"
