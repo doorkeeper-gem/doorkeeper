@@ -1,11 +1,11 @@
 language: ruby
-sudo: false
 cache: bundler
 
 rvm:
   - 2.0
   - 2.1
   - 2.2
+  - jruby-head
 
 env:
   - rails=3.2.0
