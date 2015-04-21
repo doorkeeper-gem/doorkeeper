@@ -7,9 +7,11 @@
 4. Tag the release: `git tag vVERSION`
 5. Push changes: `git push --tags`
 6. Build and publish the gem:
+
    ```bash
    gem build doorkeeper.gemspec
    gem push doorkeeper-*.gem
    ```
+
 7. Announce the new release, making sure to say “thank you” to the contributors
    who helped shape this version!
