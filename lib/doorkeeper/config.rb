@@ -50,8 +50,7 @@ doorkeeper.
   end
 
   def self.setup_application_owner
-    require File.join(File.dirname(__FILE__), 'models', 'concerns', 'ownership')
-    Application.send :include, Models::Ownership
+    @orm_adapter.initialize_application_owner!
   end
 
   class Config
