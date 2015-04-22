@@ -1,7 +1,7 @@
 module Doorkeeper
   class Engine < Rails::Engine
     initializer "doorkeeper.params.filter" do |app|
-      app.config.filter_parameters += %i(client_secret code token)
+      app.config.filter_parameters += [:client_secret, :code, :token]
     end
 
     initializer "doorkeeper.locales" do |app|
