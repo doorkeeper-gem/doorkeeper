@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 ## 2.2.1 - unreleased
 
 - [#636] `custom_access_token_expires_in` bugfixes
-
+- [#641] syntax error fix (Issue #612)
 
 ## 2.2.0 - 2015-04-19
 
