@@ -19,13 +19,10 @@ https://github.com/doorkeeper-gem/doorkeeper/releases.
 ## Table of Contents
 
 - [Useful links](#useful-links)
-- [Requirements](#requirements)
 - [Installation](#installation)
 - [Configuration](#configuration)
     - [Active Record](#active-record)
-    - [Mongoid / MongoMapper](#mongoid--mongomapper)
-        - [Mongoid indexes](#mongoid-indexes)
-        - [MongoMapper indexes](#mongomapper-indexes)
+    - [Other ORMs](#other-orms)
     - [Routes](#routes)
     - [Authenticating](#authenticating)
     - [Internationalization (I18n)](#internationalization-i18n)
@@ -55,12 +52,6 @@ https://github.com/doorkeeper-gem/doorkeeper/releases.
 - For documentation, please check out our [wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki)
 - For general questions, please post it in [stack overflow](http://stackoverflow.com/questions/tagged/doorkeeper)
 
-## Requirements
-
-- Ruby >= 2.0.0
-- Rails >= 3.2
-- ORM ActiveRecord, Mongoid, MongoMapper
-
 ## Installation
 
 Put this in your Gemfile:
@@ -88,29 +79,12 @@ Don't forget to run the migration with:
 
     rake db:migrate
 
-### Mongoid / MongoMapper
+### Other ORMs
 
-Doorkeeper currently supports MongoMapper, Mongoid 2 and 3. To start using it,
-you have to set the `orm` configuration:
+See [doorkeeper-orms project] for mongoid and mongomapper support. Follow along
+the implementation in that repository to extend doorkeeper with other ORMs.
 
-``` ruby
-Doorkeeper.configure do
-  orm :mongoid2 # or :mongoid3, :mongoid4, :mongo_mapper
-end
-```
-
-#### Mongoid indexes
-
-Make sure you create indexes for doorkeeper models. You can do this either by
-running `rake db:mongoid:create_indexes` or (if you're using Mongoid 2) by
-adding `autocreate_indexes: true` to your `config/mongoid.yml`
-
-#### MongoMapper indexes
-
-Generate the `db/indexes.rb` file and create indexes for the doorkeeper models:
-
-    rails generate doorkeeper:mongo_mapper:indexes
-    rake db:index
+[doorkeeper-orms project]: https://github.com/doorkeeper-gem/doorkeeper-orms
 
 ### Routes
 

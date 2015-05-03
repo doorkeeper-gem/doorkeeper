@@ -14,36 +14,6 @@ en:
               relative_uri: 'must be an absolute URI.'
               secured_uri: 'must be an HTTPS/SSL URI.'
 
-  mongoid:
-    attributes:
-      doorkeeper/application:
-        name: 'Name'
-        redirect_uri: 'Redirect URI'
-    errors:
-      models:
-        doorkeeper/application:
-          attributes:
-            redirect_uri:
-              fragment_present: 'cannot contain a fragment.'
-              invalid_uri: 'must be a valid URI.'
-              relative_uri: 'must be an absolute URI.'
-              secured_uri: 'must be an HTTPS/SSL URI.'
-
-  mongo_mapper:
-    attributes:
-      doorkeeper/application:
-        name: 'Name'
-        redirect_uri: 'Redirect URI'
-    errors:
-      models:
-        doorkeeper/application:
-          attributes:
-            redirect_uri:
-              fragment_present: 'cannot contain a fragment.'
-              invalid_uri: 'must be a valid URI.'
-              relative_uri: 'must be an absolute URI.'
-              secured_uri: 'must be an HTTPS/SSL URI.'
-
   doorkeeper:
     applications:
       confirmations:
