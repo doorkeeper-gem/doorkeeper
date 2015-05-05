@@ -4,10 +4,13 @@ User-visible changes worth mentioning.
 
 ---
 
-## 2.2.1 - unreleased
+## 2.2.1
 
 - [#636] `custom_access_token_expires_in` bugfixes
 - [#641] syntax error fix (Issue #612)
+- [#633] Send extra details to Custom Token Generator
+- [#628] Refactor: improve orm adapters to ease extension
+- [#637] Upgrade to rspec to 3.2
 
 ## 2.2.0 - 2015-04-19
 
