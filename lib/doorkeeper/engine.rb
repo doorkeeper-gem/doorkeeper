@@ -5,7 +5,9 @@ module Doorkeeper
     end
 
     initializer "doorkeeper.locales" do |app|
-      app.config.i18n.fallbacks = [:en]
+      if app.config.i18n.fallbacks.blank?
+        app.config.i18n.fallbacks = [:en]
+      end
     end
 
     initializer "doorkeeper.routes" do
