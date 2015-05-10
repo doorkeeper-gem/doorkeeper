@@ -4,6 +4,7 @@ module Doorkeeper
 
     include OAuth::Helpers
     include Models::Scopes
+    include ActiveModel::MassAssignmentSecurity if defined?(::ProtectedAttributes)
 
     included do
       has_many :access_grants, dependent: :destroy, class_name: 'Doorkeeper::AccessGrant'
@@ -15,7 +16,7 @@ module Doorkeeper
 
       before_validation :generate_uid, :generate_secret, on: :create
 
-      if ::Rails.version.to_i < 4 || defined?(::ProtectedAttributes)
+      if respond_to?(:attr_accessible)
         attr_accessible :name, :redirect_uri
       end
     end
