@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 ## (unreleased)
 
 - [#541] Fixed `undefined method attr_accessible` problem on Rails 4
-    (happens only when ProtectedAttributes gem is used)
+    (happens only when ProtectedAttributes gem is used) in #599
 
 ## 2.2.1
 

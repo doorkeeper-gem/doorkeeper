@@ -23,7 +23,7 @@ end
 class User
   include ActiveModel::MassAssignmentSecurity if defined?(::ProtectedAttributes)
 
-  if ::Rails.version.to_i < 4 || defined?(::ProtectedAttributes)
+  if respond_to?(:attr_accessible)
     attr_accessible :name, :password
   end
 
