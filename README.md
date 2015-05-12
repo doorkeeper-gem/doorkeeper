@@ -81,10 +81,10 @@ Don't forget to run the migration with:
 
 ### Other ORMs
 
-See [doorkeeper-orms project] for mongoid and mongomapper support. Follow along
+See [doorkeeper-mongodb project] for mongoid and mongomapper support. Follow along
 the implementation in that repository to extend doorkeeper with other ORMs.
 
-[doorkeeper-orms project]: https://github.com/doorkeeper-gem/doorkeeper-orms
+[doorkeeper-mongodb project]: https://github.com/doorkeeper-gem/doorkeeper-mongodb
 
 ### Routes
 
