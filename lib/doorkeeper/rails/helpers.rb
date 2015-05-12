@@ -68,24 +68,6 @@ module Doorkeeper
           *Doorkeeper.configuration.access_token_methods
         )
       end
-
-      module ClassMethods
-        def doorkeeper_for(*_args)
-          fail(
-            Errors::DoorkeeperError,
-            "`doorkeeper_for` no longer available",
-            <<-eos
-\nStarting in version 2.0.0 of doorkeeper gem, `doorkeeper_for` is no longer
-available. Please change `doorkeeper_for` calls in your application with:
-
-  before_action :doorkeeper_authorize!
-
-For more information check the README:
-https://github.com/doorkeeper-gem/doorkeeper#protecting-resources-with-oauth-aka-your-api-endpoint\n
-eos
-          )
-        end
-      end
     end
   end
 end

@@ -154,17 +154,4 @@ describe 'doorkeeper authorize filter' do
       end
     end
   end
-
-  context 'defined for all actions' do
-    controller {}
-
-    it 'it renders a custom JSON response' do
-      expect do
-        controller.class.doorkeeper_for
-      end.to raise_error(
-        Doorkeeper::Errors::DoorkeeperError,
-        /`doorkeeper_for` no longer available/
-      )
-    end
-  end
 end
