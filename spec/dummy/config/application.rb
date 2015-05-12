@@ -13,7 +13,6 @@ orm = if DOORKEEPER_ORM =~ /mongoid/
       else
         DOORKEEPER_ORM
       end
-
 require "#{orm}/railtie"
 
 module Dummy
