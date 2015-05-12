@@ -171,20 +171,5 @@ module Doorkeeper
         expect(authenticated).to eq(app)
       end
     end
-
-    if Doorkeeper.configuration.orm == :active_record
-      describe :scopes do
-        it 'fails on missing column with an upgrade notice' do
-          app = FactoryGirl.build :application
-          no_scopes_app = double(attributes: [])
-          allow(Application).to receive(:new).and_return(no_scopes_app)
-
-          expect { app.scopes }.to raise_error(
-            NameError,
-            /Missing column: `applications.scopes`/
-          )
-        end
-      end
-    end
   end
 end

@@ -31,18 +31,6 @@ module Doorkeeper
       end
     end
 
-    alias_method :original_scopes, :scopes
-    def scopes
-      if has_scopes?
-        original_scopes
-      else
-        fail NameError, "Missing column: `applications.scopes`.", <<-MSG.squish
-If you are using ActiveRecord run `rails generate doorkeeper:application_scopes
-&& rake db:migrate` to add it.
-        MSG
-      end
-    end
-
     private
 
     def has_scopes?
