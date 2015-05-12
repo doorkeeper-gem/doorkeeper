@@ -25,11 +25,12 @@ module Doorkeeper
              Doorkeeper::Application.table_name
            )
           unless Doorkeeper::Application.new.attributes.include?("scopes")
-            fail <<-MSG.squish
+            migration_path = '../../../generators/doorkeeper/templates/add_scopes_to_oauth_applications.rb'
+            puts <<-MSG.squish
 [doorkeeper] Missing column: `oauth_applications.scopes`.
-Run `rails generate doorkeeper:application_scopes
-&& rake db:migrate` to add it.
+Create the following migration and run `rake db:migrate`.
             MSG
+            puts File.read(File.expand_path(migration_path, __FILE__))
           end
         end
       end
