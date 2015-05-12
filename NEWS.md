@@ -4,7 +4,22 @@ User-visible changes worth mentioning.
 
 ---
 
-## (unreleased)
+## 3.0.0 (rc1)
+
+### Backward incompatible changes
+
+- [#648] Extracts mongodb ORMs to
+  https://github.com/doorkeeper-gem/doorkeeper-mongodb. If you use ActiveRecord
+  you don’t need to do any change, otherwise you will need to install the new
+  plugin.
+
+### Removed deprecations
+
+- Removes `doorkeeper_for` deprecation notice.
+- Remove `applications.scopes` upgrade notice.
+
+
+## 2.2.2 (unreleased)
 
 - [#541] Fixed `undefined method attr_accessible` problem on Rails 4
     (happens only when ProtectedAttributes gem is used) in #599
