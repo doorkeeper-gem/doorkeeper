@@ -5,7 +5,7 @@ module Doorkeeper::DashboardHelper
         content_tag(:span, class: 'help-block') do
           msg.capitalize
         end
-      end.reduce(&:join).html_safe
+      end.join.html_safe
     end
   end
 
