@@ -7,12 +7,8 @@ module Doorkeeper::OAuth::Helpers
   describe ScopeChecker, '.valid?' do
     let(:server) do
       server = Object.new
-      server.stub(:default_scopes) do
-        ::Doorkeeper::OAuth::Scopes.from_string 'common basic'
-      end
-      server.stub(:scopes) do
-        ::Doorkeeper::OAuth::Scopes.from_string 'common basic extra user'
-      end
+      allow(server).to receive(:default_scopes).and_return(::Doorkeeper::OAuth::Scopes.from_string('common basic'))
+      allow(server).to receive(:scopes).and_return(::Doorkeeper::OAuth::Scopes.from_string('common basic extra user'))
       server
     end
 
@@ -62,7 +58,7 @@ module Doorkeeper::OAuth::Helpers
       context 'without scopes' do
         let(:application) do
           application = Object.new
-          application.stub(:scopes) { nil }
+          allow(application).to receive(:scopes).and_return(nil)
           application
         end
 
@@ -121,9 +117,7 @@ module Doorkeeper::OAuth::Helpers
       context 'with scopes' do
         let(:application) do
           application = Object.new
-          application.stub(:scopes) do
-            Doorkeeper::OAuth::Scopes.from_string 'common user extra'
-          end
+          allow(application).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string('common user extra'))
           application
         end
 

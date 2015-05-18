@@ -18,12 +18,13 @@ module Doorkeeper
           end
 
           def match?
-            valid? && parsed_scopes.has_scopes?(@valid_scopes)
+            valid? && parsed_scopes.equal?(@valid_scopes)
           end
 
           private
 
           def valid_scopes(scopes_source, application)
+            # TODO: Refactor this
             if application
               if application.scopes.present?
                 scopes_source.scopes & application.scopes

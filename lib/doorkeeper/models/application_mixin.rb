@@ -33,11 +33,6 @@ module Doorkeeper
 
     private
 
-    def has_scopes?
-      Doorkeeper.configuration.orm != :active_record ||
-        Application.new.attributes.include?("scopes")
-    end
-
     def generate_uid
       self.uid ||= UniqueToken.generate
     end

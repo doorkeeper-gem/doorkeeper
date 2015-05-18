@@ -28,7 +28,7 @@ module Doorkeeper
           return true unless @request.original_scopes.present?
 
           ScopeChecker.valid?(
-            @request.original_scopes,
+            @request.original_scopes.to_s,
             @server,
             @client.application
           )

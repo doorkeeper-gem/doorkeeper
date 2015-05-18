@@ -7,7 +7,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
     let(:server)      { double :server, scopes: nil }
     let(:application) { double scopes: nil }
     let(:client)      { double application: application }
-    let(:request)     { double :request, client: client, scopes: nil }
+    let(:request)     { double :request, client: client, original_scopes: nil }
 
     subject { Validation.new(server, request) }
 
@@ -24,7 +24,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
       it 'is invalid when scopes are not included in the server' do
         server_scopes = Doorkeeper::OAuth::Scopes.from_string 'email'
         allow(server).to receive(:scopes).and_return(server_scopes)
-        allow(request).to receive(:scopes).and_return(
+        allow(request).to receive(:original_scopes).and_return(
           Doorkeeper::OAuth::Scopes.from_string 'invalid')
         expect(subject).not_to be_valid
       end
@@ -35,7 +35,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
           server_scopes = Doorkeeper::OAuth::Scopes.from_string 'email app'
           allow(application).to receive(:scopes).and_return(application_scopes)
           allow(server).to receive(:scopes).and_return(server_scopes)
-          allow(request).to receive(:scopes).and_return(application_scopes)
+          allow(request).to receive(:original_scopes).and_return(application_scopes)
           expect(subject).to be_valid
         end
 
@@ -44,7 +44,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
           server_scopes = Doorkeeper::OAuth::Scopes.from_string 'email app'
           allow(application).to receive(:scopes).and_return(application_scopes)
           allow(server).to receive(:scopes).and_return(server_scopes)
-          allow(request).to receive(:scopes).and_return(
+          allow(request).to receive(:original_scopes).and_return(
             Doorkeeper::OAuth::Scopes.from_string 'email')
           expect(subject).not_to be_valid
         end

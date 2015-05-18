@@ -62,7 +62,7 @@ module Doorkeeper
         return false unless token.present?
         return true if token.scopes.blank? && param_scopes.blank?
 
-        Doorkeeper::OAuth::Helpers::ScopeChecker.valid?(
+        Doorkeeper::OAuth::Helpers::ScopeChecker.match?(
           param_scopes.to_s,
           token,
           application

@@ -34,7 +34,7 @@ RSpec.configure do |config|
 
   config.infer_base_class_for_anonymous_controllers = false
 
-  config.include RSpec::Rails::RequestExampleGroup, type: :request
+  config.include RSpec::Rails::RequestExampleGroup, type: :feature
 
   config.before do
     DatabaseCleaner.start
