@@ -6,6 +6,12 @@ User-visible changes worth mentioning.
 
 ## (unreleased)
 
+- [#654] Fixed `check_requirements` not to abort when ActiveRecord
+    `oauth_applications` table does not have the `scopes` column.
+    (Issue #653)
+- [#599] Included MassAssignmentSecurity in mixins if
+    ::ProtectedAttributes is defined.
+- [#650] Only fallback i18n when it is not set.
 - [#541] Fixed `undefined method attr_accessible` problem on Rails 4
     (happens only when ProtectedAttributes gem is used) in #599
 
