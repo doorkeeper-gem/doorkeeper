@@ -126,7 +126,17 @@ describe 'doorkeeper authorize filter' do
 
     context 'with a JSON custom render', token: :invalid do
       before do
-        expect(controller).to receive(:doorkeeper_unauthorized_render_options).and_return(json: ActiveSupport::JSON.encode(error: 'Unauthorized'))
+        module ControllerActions
+          def doorkeeper_unauthorized_render_options(error: nil)
+            { json: ActiveSupport::JSON.encode(error_message: error.description) }
+          end
+        end
+      end
+      after do
+        module ControllerActions
+          def doorkeeper_unauthorized_render_options(error: nil)
+          end
+        end
       end
 
       it 'it renders a custom JSON response', token: :invalid do
@@ -136,13 +146,23 @@ describe 'doorkeeper authorize filter' do
         expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
         parsed_body = JSON.parse(response.body)
         expect(parsed_body).not_to be_nil
-        expect(parsed_body['error']).to eq('Unauthorized')
+        expect(parsed_body['error_message']).to match('token is invalid')
       end
     end
 
     context 'with a text custom render', token: :invalid do
       before do
-        expect(controller).to receive(:doorkeeper_unauthorized_render_options).and_return(text: 'Unauthorized')
+        module ControllerActions
+          def doorkeeper_unauthorized_render_options(error: nil)
+            { text: 'Unauthorized' }
+          end
+        end
+      end
+      after do
+        module ControllerActions
+          def doorkeeper_unauthorized_render_options(error: nil)
+          end
+        end
       end
 
       it 'it renders a custom JSON response', token: :invalid do

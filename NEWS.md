@@ -12,6 +12,9 @@ User-visible changes worth mentioning.
   https://github.com/doorkeeper-gem/doorkeeper-mongodb. If you use ActiveRecord
   you don’t need to do any change, otherwise you will need to install the new
   plugin.
+- [#665] `doorkeeper_unauthorized_render_options(error:)` and
+  `doorkeeper_forbidden_render_options(error:)` now accept `error` keyword
+  argument.
 
 ### Removed deprecations
 
