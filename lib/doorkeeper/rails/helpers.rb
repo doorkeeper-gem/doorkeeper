@@ -11,11 +11,11 @@ module Doorkeeper
         end
       end
 
-      def doorkeeper_unauthorized_render_options(error)
+      def doorkeeper_unauthorized_render_options(_error:)
         nil
       end
 
-      def doorkeeper_forbidden_render_options(error)
+      def doorkeeper_forbidden_render_options(_error:)
         nil
       end
 
