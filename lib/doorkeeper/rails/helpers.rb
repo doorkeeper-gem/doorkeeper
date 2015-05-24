@@ -11,11 +11,11 @@ module Doorkeeper
         end
       end
 
-      def doorkeeper_unauthorized_render_options
+      def doorkeeper_unauthorized_render_options(error: error)
         nil
       end
 
-      def doorkeeper_forbidden_render_options
+      def doorkeeper_forbidden_render_options(error: error)
         nil
       end
 
@@ -31,8 +31,8 @@ module Doorkeeper
         doorkeeper_render_error_with(error)
       end
 
-      def doorkeeper_render_error_with(error)
-        options = doorkeeper_render_options || {}
+      def doorkeeper_render_error_with(error: error)
+        options = doorkeeper_render_options(error) || {}
         if options.blank?
           head error.status
         else
@@ -50,11 +50,11 @@ module Doorkeeper
         end
       end
 
-      def doorkeeper_render_options
+      def doorkeeper_render_options(error: error)
         if doorkeeper_invalid_token_response?
-          doorkeeper_unauthorized_render_options
+          doorkeeper_unauthorized_render_options(error)
         else
-          doorkeeper_forbidden_render_options
+          doorkeeper_forbidden_render_options(error)
         end
       end
 
