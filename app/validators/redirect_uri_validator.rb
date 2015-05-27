@@ -29,6 +29,6 @@ class RedirectUriValidator < ActiveModel::EachValidator
 
   def invalid_ssl_uri?(uri)
     forces_ssl = Doorkeeper.configuration.force_ssl_in_redirect_uri
-    forces_ssl && uri.try(:scheme) != 'https'
+    forces_ssl && uri.try(:scheme) == 'http'
   end
 end

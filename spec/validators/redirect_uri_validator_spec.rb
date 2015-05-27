@@ -55,6 +55,11 @@ describe RedirectUriValidator do
       expect(subject).to be_valid
     end
 
+    it 'accepts app redirect uri' do
+      subject.redirect_uri = 'some-awesome-app://oauth/callback'
+      expect(subject).to be_valid
+    end
+
     it 'accepts a non secured protocol when disabled' do
       subject.redirect_uri = 'http://example.com/callback'
       allow(Doorkeeper.configuration).to receive(
