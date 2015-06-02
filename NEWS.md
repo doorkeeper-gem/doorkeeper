@@ -4,6 +4,12 @@ User-visible changes worth mentioning.
 
 ---
 
+## 3.0.0 (rc2)
+
+- [#671] Fixes NoMethodError - undefined method 'getlocal' when calling
+  the /oauth/token path. Switch from using a DateTime object to update
+  AR to using a Time object. (Issue #668)
+
 ## 3.0.0 (rc1)
 
 ### Backward incompatible changes
