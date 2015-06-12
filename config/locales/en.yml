@@ -29,6 +29,7 @@ en:
       help:
         redirect_uri: 'Use one line per URI'
         native_redirect_uri: 'Use %{native_redirect_uri} for local tests'
+        scopes: 'Separate scopes with spaces. Leave blank to use the default scopes.'
       edit:
         title: 'Edit application'
       index:
@@ -42,6 +43,7 @@ en:
         title: 'Application: %{name}'
         application_id: 'Application Id'
         secret: 'Secret'
+        scopes: 'Scopes'
         callback_urls: 'Callback urls'
         actions: 'Actions'
 

@@ -5,12 +5,13 @@
 <div class="row">
   <div class="col-md-8">
     <h4><%= t('.application_id') %>:</h4>
-
     <p><code id="application_id"><%= @application.uid %></code></p>
 
     <h4><%= t('.secret') %>:</h4>
-
     <p><code id="secret"><%= @application.secret %></code></p>
+
+    <h4><%= t('.scopes') %>:</h4>
+    <p><code id="scopes"><%= @application.scopes %></code></p>
 
     <h4><%= t('.callback_urls') %>:</h4>
 

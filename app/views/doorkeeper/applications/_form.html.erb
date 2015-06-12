@@ -17,13 +17,24 @@
       <%= f.text_area :redirect_uri, class: 'form-control' %>
       <%= doorkeeper_errors_for application, :redirect_uri %>
       <span class="help-block">
-         <%= t('doorkeeper.applications.help.redirect_uri') %>
-        </span>
+        <%= t('doorkeeper.applications.help.redirect_uri') %>
+      </span>
       <% if Doorkeeper.configuration.native_redirect_uri %>
           <span class="help-block">
             <%= raw t('doorkeeper.applications.help.native_redirect_uri', native_redirect_uri: "<code>#{ Doorkeeper.configuration.native_redirect_uri }</code>") %>
           </span>
       <% end %>
+    </div>
+  <% end %>
+
+  <%= content_tag :div, class: "form-group#{' has-error' if application.errors[:scopes].present?}" do %>
+    <%= f.label :scopes, class: 'col-sm-2 control-label' %>
+    <div class="col-sm-10">
+      <%= f.text_field :scopes, class: 'form-control' %>
+      <%= doorkeeper_errors_for application, :scopes %>
+      <span class="help-block">
+        <%= t('doorkeeper.applications.help.scopes') %>
+      </span>
     </div>
   <% end %>
 
