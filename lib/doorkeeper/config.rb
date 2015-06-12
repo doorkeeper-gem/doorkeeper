@@ -98,6 +98,12 @@ doorkeeper.
           '@access_token_generator', access_token_generator
         )
       end
+
+      def preauth_class(klass)
+        @config.instance_variable_set(
+          '@preauth_class', klass
+        )
+      end
     end
 
     module Option
@@ -190,6 +196,7 @@ doorkeeper.
     option :grant_flows,                    default: %w(authorization_code client_credentials)
     option :access_token_generator,         default: "Doorkeeper::OAuth::Helpers::UniqueToken"
     option :only_application_scopes,        default: false
+    option :preauth_class,                  default: "DoorKeeper::OAuth::PreAuthorization"
 
     attr_reader :reuse_access_token
 
