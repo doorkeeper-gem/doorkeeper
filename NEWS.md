@@ -9,6 +9,7 @@ User-visible changes worth mentioning.
 - [#671] Fixes NoMethodError - undefined method 'getlocal' when calling
   the /oauth/token path. Switch from using a DateTime object to update
   AR to using a Time object. (Issue #668)
+- [#677] Support editing application-specific scopes via the standard forms.
 
 ## 3.0.0 (rc1)
 
