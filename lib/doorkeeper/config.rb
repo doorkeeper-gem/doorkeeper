@@ -98,6 +98,12 @@ doorkeeper.
           '@access_token_generator', access_token_generator
         )
       end
+
+      def preauth_class(klass)
+        @config.instance_variable_set(
+          '@preauth_class', klass
+        )
+      end
     end
 
     module Option
@@ -189,6 +195,8 @@ doorkeeper.
     option :force_ssl_in_redirect_uri,      default: !Rails.env.development?
     option :grant_flows,                    default: %w(authorization_code client_credentials)
     option :access_token_generator,         default: "Doorkeeper::OAuth::Helpers::UniqueToken"
+    option :only_application_scopes,        default: false
+    option :preauth_class,                  default: "DoorKeeper::OAuth::PreAuthorization"
 
     attr_reader :reuse_access_token
 
@@ -202,6 +210,10 @@ doorkeeper.
 
     def confirm_application_owner?
       !!@confirm_application_owner
+    end
+
+    def only_application_scopes?
+      !!@only_application_scopes
     end
 
     def default_scopes

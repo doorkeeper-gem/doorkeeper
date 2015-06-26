@@ -5,6 +5,11 @@ require 'doorkeeper/oauth/scopes'
 
 module Doorkeeper::OAuth::Helpers
   describe ScopeChecker, '.valid?' do
+    before(:each) do
+      allow(Doorkeeper).to receive(:configuration).
+        and_return( double(:only_application_scopes? => false) )
+    end
+
     let(:server_scopes) { Doorkeeper::OAuth::Scopes.new }
 
     it 'is valid if scope is present' do
@@ -58,6 +63,33 @@ module Doorkeeper::OAuth::Helpers
           server_scopes,
           application_scopes
         )).to be_falsey
+      end
+
+      context "using only application scopes" do
+        let(:application_scopes) do
+          Doorkeeper::OAuth::Scopes.from_string 'app1'
+        end
+
+        before(:each) do
+          allow(Doorkeeper).to receive(:configuration).
+            and_return( double(:only_application_scopes? => true) )
+        end
+
+        it 'is valid if scope is included in the application' do
+          expect(ScopeChecker.valid?(
+            'app1',
+            server_scopes,
+            application_scopes
+          )).to be_truthy
+        end
+
+        it 'is invalid if any scope is not included in the application' do
+          expect(ScopeChecker.valid?(
+            'app1 common',
+            server_scopes,
+            application_scopes
+          )).to be_falsey
+        end
       end
     end
   end
