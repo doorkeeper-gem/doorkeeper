@@ -399,6 +399,7 @@ contributors](https://github.com/doorkeeper-gem/doorkeeper/contributors)!
 
 * [The OAuth 2.0 Authorization Framework](http://tools.ietf.org/html/rfc6749)
 * [OAuth 2.0 Threat Model and Security Considerations](http://tools.ietf.org/html/rfc6819)
+* [OAuth 2.0 Token Revocation](http://tools.ietf.org/html/rfc7009)
 
 ### License
 
