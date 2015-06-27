@@ -10,6 +10,7 @@ User-visible changes worth mentioning.
   the /oauth/token path. Switch from using a DateTime object to update
   AR to using a Time object. (Issue #668)
 - [#677] Support editing application-specific scopes via the standard forms.
+- [#682] Pass error hash to Grape `error!`
 
 ## 3.0.0 (rc1)
 
