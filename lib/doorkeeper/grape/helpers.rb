@@ -26,7 +26,7 @@ module Doorkeeper
                         403
                       end
 
-        error!({ error: error.description }, status_code)
+        error!({ error: error.description }, status_code, error.headers)
       end
 
       private
