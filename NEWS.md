@@ -4,6 +4,8 @@ User-visible changes worth mentioning.
 
 ---
 
+- [#712] Wrap exchange of grant token for access token and access token refresh in transactions.
+
 ## 3.0.0
 
 ### Other changes
