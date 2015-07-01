@@ -11,6 +11,7 @@ User-visible changes worth mentioning.
   AR to using a Time object. (Issue #668)
 - [#677] Support editing application-specific scopes via the standard forms.
 - [#682] Pass error hash to Grape `error!`
+- [#683] Generate application secret/UID if fields are blank strings
 
 ## 3.0.0 (rc1)
 
