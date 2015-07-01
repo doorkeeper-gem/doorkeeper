@@ -55,6 +55,12 @@ module Doorkeeper
       expect(new_application.uid).not_to be_nil
     end
 
+    it 'generates uid on create if an empty string' do
+      new_application.uid = ''
+      new_application.save
+      expect(new_application.uid).not_to be_blank
+    end
+
     it 'generates uid on create unless one is set' do
       new_application.uid = uid
       new_application.save
@@ -91,6 +97,12 @@ module Doorkeeper
       expect(new_application.secret).to be_nil
       new_application.save
       expect(new_application.secret).not_to be_nil
+    end
+
+    it 'generate secret on create if is blank string' do
+      new_application.secret = ''
+      new_application.save
+      expect(new_application.secret).not_to be_blank
     end
 
     it 'generate secret on create unless one is set' do
