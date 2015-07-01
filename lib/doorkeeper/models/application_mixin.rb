@@ -39,13 +39,13 @@ module Doorkeeper
     end
 
     def generate_uid
-      if self.uid.blank?
+      if uid.blank?
         self.uid = UniqueToken.generate
       end
     end
 
     def generate_secret
-      if self.secret.blank?
+      if secret.blank?
         self.secret = UniqueToken.generate
       end
     end
