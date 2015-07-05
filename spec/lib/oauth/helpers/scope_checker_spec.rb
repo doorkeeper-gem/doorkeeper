@@ -5,59 +5,157 @@ require 'doorkeeper/oauth/scopes'
 
 module Doorkeeper::OAuth::Helpers
   describe ScopeChecker, '.valid?' do
-    let(:server_scopes) { Doorkeeper::OAuth::Scopes.new }
-
-    it 'is valid if scope is present' do
-      server_scopes.add :scope
-      expect(ScopeChecker.valid?('scope', server_scopes)).to be_truthy
+    let(:server) do
+      server = Object.new
+      allow(server).to receive(:default_scopes).and_return(::Doorkeeper::OAuth::Scopes.from_string('common basic'))
+      allow(server).to receive(:scopes).and_return(::Doorkeeper::OAuth::Scopes.from_string('common basic extra user'))
+      server
     end
 
-    it 'is invalid if includes tabs space' do
-      expect(ScopeChecker.valid?("\tsomething", server_scopes)).to be_falsey
-    end
-
-    it 'is invalid if scope is not present' do
-      expect(ScopeChecker.valid?(nil, server_scopes)).to be_falsey
-    end
-
-    it 'is invalid if scope is blank' do
-      expect(ScopeChecker.valid?(' ', server_scopes)).to be_falsey
-    end
-
-    it 'is invalid if includes return space' do
-      expect(ScopeChecker.valid?("scope\r", server_scopes)).to be_falsey
-    end
-
-    it 'is invalid if includes new lines' do
-      expect(ScopeChecker.valid?("scope\nanother", server_scopes)).to be_falsey
-    end
-
-    it 'is invalid if any scope is not included in server scopes' do
-      expect(ScopeChecker.valid?('scope another', server_scopes)).to be_falsey
-    end
-
-    context 'with application_scopes' do
-      let(:server_scopes) do
-        Doorkeeper::OAuth::Scopes.from_string 'common svr'
-      end
-      let(:application_scopes) do
-        Doorkeeper::OAuth::Scopes.from_string 'common'
+    context 'without application' do
+      it 'is invalid if scope is not present' do
+        expect(ScopeChecker.valid?(nil, server)).to be_falsey
       end
 
-      it 'is valid if scope is included in the server and the application' do
-        expect(ScopeChecker.valid?(
-          'common',
-          server_scopes,
-          application_scopes
-        )).to be_truthy
+      it 'is invalid if unknown scope is present' do
+        expect(ScopeChecker.valid?('scope', server)).to be_falsey
       end
 
-      it 'is invalid if any scope is not included in the application' do
-        expect(ScopeChecker.valid?(
-          'svr',
-          server_scopes,
-          application_scopes
-        )).to be_falsey
+      it 'is invalid if scope is blank' do
+        expect(ScopeChecker.valid?(' ', server)).to be_falsey
+      end
+
+      it 'is invalid if includes tabs space' do
+        expect(ScopeChecker.valid?("common\tbasic", server)).to be_falsey
+      end
+
+      it 'is invalid if includes return space' do
+        expect(ScopeChecker.valid?("common\rbasic", server)).to be_falsey
+      end
+
+      it 'is invalid if includes new lines' do
+        expect(ScopeChecker.valid?("common\nbasic", server)).to be_falsey
+      end
+
+      it 'is valid if the scope is in the default set' do
+        expect(ScopeChecker.valid?('basic', server)).to be_truthy
+      end
+
+      it 'is valid with multiple scopes in the default set' do
+        expect(ScopeChecker.valid?('basic common', server)).to be_truthy
+      end
+
+      it 'is invalid if the scope is not in the default set' do
+        expect(ScopeChecker.valid?('extra', server)).to be_falsey
+      end
+
+      it 'is invalid with multiple scopes if any is not in the default set' do
+        expect(ScopeChecker.valid?('basic extra common', server)).to be_falsey
+      end
+    end
+
+    context 'with application' do
+      context 'without scopes' do
+        let(:application) do
+          application = Object.new
+          allow(application).to receive(:scopes).and_return(nil)
+          application
+        end
+
+        it 'is invalid if scope is not present' do
+          expect(
+            ScopeChecker.valid?(nil, server, application)
+          ).to be_falsey
+        end
+
+        it 'is invalid if unknown scope is present' do
+          expect(
+            ScopeChecker.valid?('scope', server, application)
+          ).to be_falsey
+        end
+
+        it 'is invalid if scope is blank' do
+          expect(
+            ScopeChecker.valid?(' ', server, application)
+          ).to be_falsey
+        end
+
+        it 'is invalid if includes tabs space' do
+          expect(
+            ScopeChecker.valid?("common\tuser", server, application)
+          ).to be_falsey
+        end
+
+        it 'is invalid if includes return space' do
+          expect(
+            ScopeChecker.valid?("common\ruser", server, application)
+          ).to be_falsey
+        end
+
+        it 'is invalid if includes new lines' do
+          expect(
+            ScopeChecker.valid?("common\nuser", server, application)
+          ).to be_falsey
+        end
+
+        it 'is valid if the scope is in the full set of server scopes' do
+          expect(
+            ScopeChecker.valid?('common extra user', server, application)
+          ).to be_truthy
+        end
+
+        it 'is invalid if any scope is not in the full set of server scopes' do
+          expect(
+            ScopeChecker.valid?(
+              'common extra user invalid',
+              server,
+              application)
+          ).to be_falsey
+        end
+      end
+
+      context 'with scopes' do
+        let(:application) do
+          application = Object.new
+          allow(application).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string('common user extra'))
+          application
+        end
+
+        it 'is valid if the scope is in the server/app intersection' do
+          expect(
+            ScopeChecker.valid?('common', server, application)
+          ).to be_truthy
+        end
+
+        it 'is valid with multiple scopes in the server/app intersection' do
+          expect(
+            ScopeChecker.valid?('common extra user', server, application)
+          ).to be_truthy
+        end
+
+        it 'is invalid if the scope is not in the application set' do
+          expect(
+            ScopeChecker.valid?('basic', server, application)
+          ).to be_falsey
+        end
+
+        it 'is invalid if any scope not in the application set' do
+          expect(
+            ScopeChecker.valid?('extra common user basic', server, application)
+          ).to be_falsey
+        end
+
+        it 'is invalid if the scope is not in the server set' do
+          expect(
+            ScopeChecker.valid?('invalid', server, application)
+          ).to be_falsey
+        end
+
+        it 'is invalid if any scope is not included in server scopes' do
+          expect(
+            ScopeChecker.valid?('extra common invalid', server, application)
+          ).to be_falsey
+        end
       end
     end
   end

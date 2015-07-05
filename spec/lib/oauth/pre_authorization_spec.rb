@@ -11,7 +11,7 @@ module Doorkeeper::OAuth
 
     let(:application) do
       application = double :application
-      allow(application).to receive(:scopes).and_return(Scopes.from_string(''))
+      allow(application).to receive(:scopes).and_return(Scopes.from_string('public'))
       application
     end
 

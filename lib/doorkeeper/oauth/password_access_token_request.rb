@@ -32,7 +32,7 @@ module Doorkeeper
 
       def validate_scopes
         return true unless @original_scopes.present?
-        ScopeChecker.valid? @original_scopes, server.scopes, client.try(:scopes)
+        ScopeChecker.valid? @original_scopes, server, client
       end
 
       def validate_resource_owner

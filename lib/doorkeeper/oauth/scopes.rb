@@ -60,6 +60,12 @@ module Doorkeeper
         other_array = other.present? ? other.all : []
         self.class.from_array(all & other_array)
       end
+
+      def equal?(other)
+        self_scopes = self.map(&:to_s).sort
+        other_scopes = other.map(&:to_s).sort
+        (self_scopes.size == other_scopes.size) && ((self_scopes & other_scopes) == self_scopes)
+      end
     end
   end
 end

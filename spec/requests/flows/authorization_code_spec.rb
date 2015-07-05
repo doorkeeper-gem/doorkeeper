@@ -97,10 +97,8 @@ feature 'Authorization Code Flow' do
     end
 
     scenario 'returns new token if scopes have changed' do
-      skip 'TODO: need to add request helpers to this feature spec'
-
-      client_is_authorized(@client, @resource_owner, scopes: 'public write')
-      visit authorization_endpoint_url(client: @client, scope: 'public')
+      client_is_authorized(@client, @resource_owner, scopes: 'public')
+      visit authorization_endpoint_url(client: @client, scope: 'public write')
       click_on 'Authorize'
 
       authorization_code = Doorkeeper::AccessGrant.first.token
