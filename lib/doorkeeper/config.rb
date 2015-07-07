@@ -89,6 +89,10 @@ doorkeeper.
         @config.instance_variable_set("@reuse_access_token", true)
       end
 
+      def ensure_application_scopes
+        @config.instance_variable_set("@ensure_application_scopes", true)
+      end
+
       def force_ssl_in_redirect_uri(boolean)
         @config.instance_variable_set("@force_ssl_in_redirect_uri", boolean)
       end
@@ -190,7 +194,7 @@ doorkeeper.
     option :grant_flows,                    default: %w(authorization_code client_credentials)
     option :access_token_generator,         default: "Doorkeeper::OAuth::Helpers::UniqueToken"
 
-    attr_reader :reuse_access_token
+    attr_reader :reuse_access_token, :ensure_application_scopes
 
     def refresh_token_enabled?
       !!@refresh_token_enabled
