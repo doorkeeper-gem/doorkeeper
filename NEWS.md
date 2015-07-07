@@ -17,6 +17,9 @@ User-visible changes worth mentioning.
 
 ### Backward incompatible changes
 
+- [#678] Change application-specific scopes to take precedence over server-wide
+  scopes. This removes the previous behavior where the intersection between
+  application and server scopes was used.
 - [#648] Extracts mongodb ORMs to
   https://github.com/doorkeeper-gem/doorkeeper-mongodb. If you use ActiveRecord
   you don’t need to do any change, otherwise you will need to install the new
