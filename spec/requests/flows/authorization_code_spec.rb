@@ -126,5 +126,28 @@ feature 'Authorization Code Flow' do
       should_have_json 'access_token', Doorkeeper::AccessToken.last.token
       access_token_should_have_scopes :public, :write
     end
+
+    scenario 'when ensure_application_scopes is true client is not authorized when asking for scope out of application scope', type: :request  do
+      config_is_set(:ensure_application_scopes) { true }
+      visit authorization_endpoint_url(client: @client, scope: 'write')
+      i_should_see('The requested scope is invalid, unknown, or malformed')
+    end
+
+    scenario 'when ensure_application_scopes is true client is authorized when asking for scope that match application scope', type: :request do
+      config_is_set(:ensure_application_scopes) { true }
+      @client = FactoryGirl.create(:application, scopes: 'write')
+      visit authorization_endpoint_url(client: @client, scope: 'write')
+      click_on 'Authorize'
+
+      access_grant_should_have_scopes :write
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      post token_endpoint_url(code: authorization_code, client: @client)
+
+      expect(Doorkeeper::AccessToken.count).to be(1)
+
+      should_have_json 'access_token', Doorkeeper::AccessToken.last.token
+      access_token_should_have_scopes :write
+    end
+
   end
 end
