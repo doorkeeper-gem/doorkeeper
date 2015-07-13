@@ -5,7 +5,8 @@ module Doorkeeper::OAuth
     let(:server) do
       double :server,
              access_token_expires_in: 2.minutes,
-             custom_access_token_expires_in: -> (_oauth_client) { nil }
+             custom_access_token_expires_in: -> (_oauth_client) { nil },
+             refresh_token_revoked_in: 0
     end
     let(:refresh_token) do
       FactoryGirl.create(:access_token, use_refresh_token: true)
@@ -25,7 +26,8 @@ module Doorkeeper::OAuth
     it 'issues a new token for the client with custom expires_in' do
       server = double :server,
                       access_token_expires_in: 2.minutes,
-                      custom_access_token_expires_in: ->(_oauth_client) { 1234 }
+                      custom_access_token_expires_in: ->(_oauth_client) { 1234 },
+                      refresh_token_revoked_in: 0
 
       RefreshTokenRequest.new(server, refresh_token, credentials).authorize
 
@@ -65,6 +67,53 @@ module Doorkeeper::OAuth
       refresh_token.save
       subject.validate
       expect(subject).to be_valid
+    end
+
+    context 'refresh tokens expire on access token use' do
+      let(:server) do
+        double :server,
+               access_token_expires_in: 2.minutes,
+               custom_access_token_expires_in: ->(_oauth_client) { 1234 },
+               refresh_token_revoked_in: 1.day
+      end
+
+      it 'issues a new token for the client' do
+        expect do
+          subject.authorize
+        end.to change { client.access_tokens.count }.by(1)
+      end
+
+      it 'does not revoke the previous token' do
+        subject.authorize
+        refresh_token.revoked?.should eq(false)
+      end
+
+      it 'sets the previous refresh token in the new access token' do
+        subject.authorize
+        expect(client.access_tokens.last.previous_refresh_token).to eq(refresh_token.refresh_token)
+      end
+    end
+
+    context 'longer lived refresh tokens' do
+      let(:server) do
+        double :server,
+               access_token_expires_in: 2.minutes,
+               custom_access_token_expires_in: ->(_oauth_client) { 1234 },
+               refresh_token_revoked_in: 1.day
+      end
+
+      it 'revokes the previous token' do
+        expect { subject.authorize } .to change { refresh_token.revoked_at }.from(nil).to(be_within(1).of(DateTime.now + 1.day))
+      end
+
+      context 'revoked token' do
+        time = DateTime.now + 1.day
+        let!(:refresh_token) { FactoryGirl.create(:access_token, use_refresh_token: true, revoked_at: time) }
+        it 'does not change the revoke time of a future revoked token' do
+          subject.authorize
+          expect(refresh_token.revoked_at).to be_within(1).of(time)
+        end
+      end
     end
 
     context 'clientless access tokens' do

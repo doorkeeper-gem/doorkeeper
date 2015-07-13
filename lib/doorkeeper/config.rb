@@ -189,6 +189,7 @@ doorkeeper.
     option :force_ssl_in_redirect_uri,      default: !Rails.env.development?
     option :grant_flows,                    default: %w(authorization_code client_credentials)
     option :access_token_generator,         default: "Doorkeeper::OAuth::Helpers::UniqueToken"
+    option :refresh_token_revoked_in,       default: 0
 
     attr_reader :reuse_access_token
 
