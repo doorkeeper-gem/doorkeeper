@@ -54,7 +54,7 @@ en:
       error:
         title: 'An error has occurred'
       new:
-        title: 'Authorize required'
+        title: 'Authorization required'
         prompt: 'Authorize %{client_name} to use your account?'
         able_to: 'This application will be able to'
       show:
@@ -120,4 +120,4 @@ en:
           oauth2_provider: 'OAuth2 Provider'
           applications: 'Applications'
       application:
-        title: 'OAuth authorize required'
+        title: 'OAuth authorization required'
