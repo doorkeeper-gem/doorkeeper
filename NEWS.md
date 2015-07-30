@@ -4,6 +4,12 @@ User-visible changes worth mentioning.
 
 ---
 
+## 3.0.0
+
+### Other changes
+
+- [#693] Updates `en.yml`.
+
 ## 3.0.0 (rc2)
 
 ### Backward incompatible changes
