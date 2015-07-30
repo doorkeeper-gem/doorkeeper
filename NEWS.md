@@ -4,7 +4,7 @@ User-visible changes worth mentioning.
 
 ---
 
-## (unreleased)
+## 2.2.2
 
 - [#654] Fixed `check_requirements` not to abort when ActiveRecord
     `oauth_applications` table does not have the `scopes` column.
@@ -14,6 +14,7 @@ User-visible changes worth mentioning.
 - [#650] Only fallback i18n when it is not set.
 - [#541] Fixed `undefined method attr_accessible` problem on Rails 4
     (happens only when ProtectedAttributes gem is used) in #599
+- [#689] Allow scopes to me resetted to empty in Mongoid
 
 ## 2.2.1
 
