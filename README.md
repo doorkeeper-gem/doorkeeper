@@ -331,7 +331,7 @@ wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki/Customizing-routes).
 If you want to upgrade doorkeeper to a new version, check out the [upgrading
 notes](https://github.com/doorkeeper-gem/doorkeeper/wiki/Migration-from-old-versions)
 and take a look at the
-[changelog](https://github.com/doorkeeper-gem/doorkeeper/blob/master/CHANGELOG.md).
+[changelog](https://github.com/doorkeeper-gem/doorkeeper/blob/master/NEWS.md).
 
 ## Development
 
