@@ -21,7 +21,9 @@ when "mongo_mapper"
 end
 
 class User
-  if ::Rails.version.to_i < 4 || defined?(::ProtectedAttributes)
+  include ActiveModel::MassAssignmentSecurity if defined?(::ProtectedAttributes)
+
+  if respond_to?(:attr_accessible)
     attr_accessible :name, :password
   end
 

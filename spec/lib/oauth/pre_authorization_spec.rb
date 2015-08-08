@@ -4,14 +4,14 @@ module Doorkeeper::OAuth
   describe PreAuthorization do
     let(:server) {
       server = Doorkeeper.configuration
-      server.stub(:default_scopes) { Scopes.new }
-      server.stub(:scopes) { Scopes.from_string('public profile') }
+      allow(server).to receive(:default_scopes).and_return(Scopes.new)
+      allow(server).to receive(:scopes).and_return(Scopes.from_string('public profile'))
       server
     }
 
     let(:application) do
       application = double :application
-      application.stub(:scopes) { Scopes.from_string('') }
+      allow(application).to receive(:scopes).and_return(Scopes.from_string(''))
       application
     end
 
@@ -41,7 +41,7 @@ module Doorkeeper::OAuth
     end
 
     it 'accepts token as response type' do
-      server.stub(:grant_flows) { ['implicit'] }
+      allow(server).to receive(:grant_flows).and_return(['implicit'])
       subject.response_type = 'token'
       expect(subject).to be_authorizable
     end
@@ -53,7 +53,7 @@ module Doorkeeper::OAuth
       end
 
       it 'accepts "token" as response type' do
-        server.stub(:grant_flows) { ['implicit'] }
+        allow(server).to receive(:grant_flows).and_return(['implicit'])
         subject.response_type = 'token'
         expect(subject).to be_authorizable
       end
@@ -61,7 +61,7 @@ module Doorkeeper::OAuth
 
     context 'when authorization code grant flow is disabled' do
       before do
-        server.stub(:grant_flows) { ['implicit'] }
+        allow(server).to receive(:grant_flows).and_return(['implicit'])
       end
 
       it 'does not accept "code" as response type' do
@@ -72,7 +72,7 @@ module Doorkeeper::OAuth
 
     context 'when implicit grant flow is disabled' do
       before do
-        server.stub(:grant_flows) { ['authorization_code'] }
+        allow(server).to receive(:grant_flows).and_return(['authorization_code'])
       end
 
       it 'does not accept "token" as response type' do
@@ -96,7 +96,7 @@ module Doorkeeper::OAuth
     context 'client application restricts valid scopes' do
       let(:application) do
         application = double :application
-        application.stub(:scopes) { Scopes.from_string('public nonsense') }
+        allow(application).to receive(:scopes).and_return(Scopes.from_string('public nonsense'))
         application
       end
 
@@ -119,7 +119,7 @@ module Doorkeeper::OAuth
     it 'uses default scopes when none is required' do
       allow(server).to receive(:default_scopes).and_return(Scopes.from_string('default'))
       subject.scope = nil
-      expect(subject.scope).to  eq('default')
+      expect(subject.scope).to eq('default')
       expect(subject.scopes).to eq(Scopes.from_string('default'))
     end
 
@@ -151,6 +151,5 @@ module Doorkeeper::OAuth
       subject.redirect_uri = nil
       expect(subject).not_to be_authorizable
     end
-
   end
 end

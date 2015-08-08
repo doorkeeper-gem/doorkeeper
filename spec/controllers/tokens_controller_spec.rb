@@ -12,7 +12,9 @@ describe Doorkeeper::TokensController do
 
     it 'returns the authorization' do
       skip 'verify need of these specs'
+
       expect(token).to receive(:authorization)
+
       post :create
     end
   end
@@ -46,11 +48,10 @@ describe Doorkeeper::TokensController do
       strategy = double(:strategy, authorize: true)
       expect(strategy).to receive(:authorize).once
       allow(controller).to receive(:strategy) { strategy }
-
-      controller.stub(:create) do
-        controller.send :authorize_response
+      allow(controller).to receive(:create) do
         controller.send :authorize_response
       end
+
       post :create
     end
   end

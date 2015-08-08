@@ -21,4 +21,6 @@ FactoryGirl.define do
     sequence(:name) { |n| "Application #{n}" }
     redirect_uri 'https://app.com/callback'
   end
+
+  factory :user
 end

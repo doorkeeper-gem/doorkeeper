@@ -7,54 +7,38 @@ module Doorkeeper
 
   def self.configure(&block)
     @config = Config::Builder.new(&block).build
-    enable_orm
-    check_for_missing_columns
+    setup_orm_adapter
+    setup_orm_models
     setup_application_owner if @config.enable_application_owner?
+    check_requirements
   end
 
   def self.configuration
     @config || (fail MissingConfiguration.new)
   end
 
-  def self.check_for_missing_columns
-    if Doorkeeper.configuration.orm == :active_record &&
-        ActiveRecord::Base.connected? &&
-        ActiveRecord::Base.connection.table_exists?(
-          Doorkeeper::Application.table_name
-        ) &&
-        !Doorkeeper::Application.new.attributes.include?("scopes")
-
-      puts <<-MSG.squish
-[doorkeeper] Missing column: `oauth_applications.scopes`.
-If you are using ActiveRecord run `rails generate doorkeeper:application_scopes
-&& rake db:migrate` to add it.
-      MSG
-    end
+  def self.check_requirements
+    @orm_adapter.check_requirements!(configuration)
   end
 
-  def self.enable_orm
-    class_name = "doorkeeper/orm/#{configuration.orm}".classify
-    class_name.constantize.initialize_models!
+  def self.setup_orm_adapter
+    @orm_adapter = "doorkeeper/orm/#{configuration.orm}".classify.constantize
   rescue NameError => e
-    if e.instance_of?(NameError)
-      fail e, "ORM adapter not found (#{configuration.orm})", <<-error_msg
+    fail e, "ORM adapter not found (#{configuration.orm})", <<-ERROR_MSG.squish
 [doorkeeper] ORM adapter not found (#{configuration.orm}), or there was an error
 trying to load it.
 
 You probably need to add the related gem for this adapter to work with
 doorkeeper.
+      ERROR_MSG
+  end
 
-If you are working on the adapter itself, double check that the constant exists,
-and that your `initialize_models!` method doesn't raise any errors.\n
-      error_msg
-    else
-      raise e
-    end
+  def self.setup_orm_models
+    @orm_adapter.initialize_models!
   end
 
   def self.setup_application_owner
-    require File.join(File.dirname(__FILE__), 'models', 'concerns', 'ownership')
-    Application.send :include, Models::Ownership
+    @orm_adapter.initialize_application_owner!
   end
 
   class Config
@@ -107,6 +91,12 @@ and that your `initialize_models!` method doesn't raise any errors.\n
 
       def force_ssl_in_redirect_uri(boolean)
         @config.instance_variable_set("@force_ssl_in_redirect_uri", boolean)
+      end
+
+      def access_token_generator(access_token_generator)
+        @config.instance_variable_set(
+          '@access_token_generator', access_token_generator
+        )
       end
     end
 
@@ -199,6 +189,7 @@ and that your `initialize_models!` method doesn't raise any errors.\n
     option :realm,                          default: 'Doorkeeper'
     option :force_ssl_in_redirect_uri,      default: !Rails.env.development?
     option :grant_flows,                    default: %w(authorization_code client_credentials)
+    option :access_token_generator,         default: "Doorkeeper::OAuth::Helpers::UniqueToken"
 
     attr_reader :reuse_access_token
 

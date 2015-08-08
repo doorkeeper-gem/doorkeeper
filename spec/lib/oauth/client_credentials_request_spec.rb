@@ -5,8 +5,14 @@ require 'doorkeeper/oauth/client_credentials_request'
 
 module Doorkeeper::OAuth
   describe ClientCredentialsRequest do
-    let(:server) { double default_scopes: nil }
-    let(:client) { double }
+    let(:server) do
+      double(
+        default_scopes: nil,
+        custom_access_token_expires_in: ->(_app) { nil }
+      )
+    end
+    let(:application)   { double :application, scopes: Scopes.from_string('') }
+    let(:client)        { double :client, application: application }
     let(:token_creator) { double :issuer, create: true, token: double }
 
     subject { ClientCredentialsRequest.new(server, client) }
@@ -58,6 +64,40 @@ module Doorkeeper::OAuth
         subject.issuer = token_creator
         expect(token_creator).to receive(:create).with(client, Doorkeeper::OAuth::Scopes.from_string('email'))
         subject.authorize
+      end
+    end
+
+    context 'with restricted client' do
+      let(:default_scopes) do
+        Doorkeeper::OAuth::Scopes.from_string('public email')
+      end
+      let(:server_scopes) do
+        Doorkeeper::OAuth::Scopes.from_string('public email phone')
+      end
+      let(:client_scopes) do
+        Doorkeeper::OAuth::Scopes.from_string('public phone')
+      end
+
+      before do
+        allow(server).to receive(:default_scopes).and_return(default_scopes)
+        allow(server).to receive(:scopes).and_return(server_scopes)
+        allow(server).to receive(:access_token_expires_in).and_return(100)
+        allow(application).to receive(:scopes).and_return(client_scopes)
+        allow(client).to receive(:id).and_return(nil)
+      end
+
+      it 'delegates the error to issuer if no scope was requested' do
+        subject = ClientCredentialsRequest.new(server, client)
+        subject.authorize
+        expect(subject.response).to be_a(Doorkeeper::OAuth::ErrorResponse)
+        expect(subject.error).to eq(:invalid_scope)
+      end
+
+      it 'issues an access token with requested scopes' do
+        subject = ClientCredentialsRequest.new(server, client, scope: 'phone')
+        subject.authorize
+        expect(subject.response).to be_a(Doorkeeper::OAuth::TokenResponse)
+        expect(subject.response.token.scopes_string).to eq('phone')
       end
     end
   end

@@ -1,19 +1,19 @@
 require 'spec_helper_integration'
 
-feature 'Token endpoint' do
-  background do
+describe 'Token endpoint' do
+  before do
     client_exists
     authorization_code_exists application: @client, scopes: 'public'
   end
 
-  scenario 'respond with correct headers' do
+  it 'respond with correct headers' do
     post token_endpoint_url(code: @authorization.token, client: @client)
     should_have_header 'Pragma', 'no-cache'
     should_have_header 'Cache-Control', 'no-store'
     should_have_header 'Content-Type', 'application/json; charset=utf-8'
   end
 
-  scenario 'accepts client credentials with basic auth header' do
+  it 'accepts client credentials with basic auth header' do
     post token_endpoint_url(
       code: @authorization.token,
       redirect_uri: @client.redirect_uri
@@ -22,14 +22,14 @@ feature 'Token endpoint' do
     should_have_json 'access_token', Doorkeeper::AccessToken.first.token
   end
 
-  scenario 'returns null for expires_in when a permanent token is set' do
+  it 'returns null for expires_in when a permanent token is set' do
     config_is_set(:access_token_expires_in, nil)
     post token_endpoint_url(code: @authorization.token, client: @client)
     should_have_json 'access_token', Doorkeeper::AccessToken.first.token
     should_not_have_json 'expires_in'
   end
 
-  scenario 'returns unsupported_grant_type for invalid grant_type param' do
+  it 'returns unsupported_grant_type for invalid grant_type param' do
     post token_endpoint_url(code: @authorization.token, client: @client, grant_type: 'nothing')
 
     should_not_have_json 'access_token'
@@ -37,7 +37,7 @@ feature 'Token endpoint' do
     should_have_json 'error_description', translated_error_message('unsupported_grant_type')
   end
 
-  scenario 'returns unsupported_grant_type for disabled grant flows' do
+  it 'returns unsupported_grant_type for disabled grant flows' do
     config_is_set(:grant_flows, ['implicit'])
     post token_endpoint_url(code: @authorization.token, client: @client, grant_type: 'authorization_code')
 
@@ -46,7 +46,7 @@ feature 'Token endpoint' do
     should_have_json 'error_description', translated_error_message('unsupported_grant_type')
   end
 
-  scenario 'returns unsupported_grant_type when refresh_token is not in use' do
+  it 'returns unsupported_grant_type when refresh_token is not in use' do
     post token_endpoint_url(code: @authorization.token, client: @client, grant_type: 'refresh_token')
 
     should_not_have_json 'access_token'
@@ -54,7 +54,7 @@ feature 'Token endpoint' do
     should_have_json 'error_description', translated_error_message('unsupported_grant_type')
   end
 
-  scenario 'returns invalid_request if grant_type is missing' do
+  it 'returns invalid_request if grant_type is missing' do
     post token_endpoint_url(code: @authorization.token, client: @client, grant_type: '')
 
     should_not_have_json 'access_token'

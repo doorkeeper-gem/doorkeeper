@@ -7,11 +7,12 @@ module Doorkeeper
     include Models::Revocable
     include Models::Accessible
     include Models::Scopes
+    include ActiveModel::MassAssignmentSecurity if defined?(::ProtectedAttributes)
 
     included do
       belongs_to :application, class_name: 'Doorkeeper::Application', inverse_of: :access_grants
 
-      if ::Rails.version.to_i < 4 || defined?(::ProtectedAttributes)
+      if respond_to?(:attr_accessible)
         attr_accessible :resource_owner_id, :application_id, :expires_in, :redirect_uri, :scopes
       end
 
@@ -23,7 +24,7 @@ module Doorkeeper
 
     module ClassMethods
       def by_token(token)
-        where(token: token).limit(1).to_a.first
+        where(token: token.to_s).limit(1).to_a.first
       end
     end
 

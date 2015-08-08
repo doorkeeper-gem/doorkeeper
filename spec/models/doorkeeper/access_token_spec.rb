@@ -12,6 +12,103 @@ module Doorkeeper
       let(:factory_name) { :access_token }
     end
 
+    describe :generate_token do
+      it 'generates a token using the default method' do
+        FactoryGirl.create :access_token
+
+        token = FactoryGirl.create :access_token
+        expect(token.token).to be_a(String)
+      end
+
+      it 'generates a token using a custom object' do
+        module CustomGeneratorArgs
+          def self.generate(opts = {})
+            "custom_generator_token_#{opts[:resource_owner_id]}"
+          end
+        end
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_token_generator "Doorkeeper::CustomGeneratorArgs"
+        end
+
+        token = FactoryGirl.create :access_token
+        expect(token.token).to match(%r{custom_generator_token_\d+})
+      end
+
+      it 'allows the custom generator to access the application details' do
+        module CustomGeneratorArgs
+          def self.generate(opts = {})
+            "custom_generator_token_#{opts[:application].name}"
+          end
+        end
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_token_generator "Doorkeeper::CustomGeneratorArgs"
+        end
+
+        token = FactoryGirl.create :access_token
+        expect(token.token).to match(%r{custom_generator_token_Application \d+})
+      end
+
+      it 'allows the custom generator to access the scopes' do
+        module CustomGeneratorArgs
+          def self.generate(opts = {})
+            "custom_generator_token_#{opts[:scopes].count}_#{opts[:scopes]}"
+          end
+        end
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_token_generator "Doorkeeper::CustomGeneratorArgs"
+        end
+
+        token = FactoryGirl.create :access_token, scopes: 'public write'
+
+        expect(token.token).to eq 'custom_generator_token_2_public write'
+      end
+
+      it 'allows the custom generator to access the expiry length' do
+        module CustomGeneratorArgs
+          def self.generate(opts = {})
+            "custom_generator_token_#{opts[:expires_in]}"
+          end
+        end
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_token_generator "Doorkeeper::CustomGeneratorArgs"
+        end
+
+        token = FactoryGirl.create :access_token
+        expect(token.token).to eq 'custom_generator_token_7200'
+      end
+
+      it 'raises an error if the custom object does not support generate' do
+        module NoGenerate
+        end
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_token_generator "Doorkeeper::NoGenerate"
+        end
+
+        expect { FactoryGirl.create :access_token }.to(
+          raise_error(Doorkeeper::Errors::UnableToGenerateToken))
+      end
+
+      it 'raises an error if the custom object does not exist' do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_token_generator "Doorkeeper::NotReal"
+        end
+
+        expect { FactoryGirl.create :access_token }.to(
+          raise_error(Doorkeeper::Errors::TokenGeneratorNotFound))
+      end
+    end
+
     describe :refresh_token do
       it 'has empty refresh token if it was not required' do
         token = FactoryGirl.create :access_token
@@ -207,8 +304,20 @@ module Doorkeeper
         expect(last_token).to be_nil
       end
 
-      it 'matches the scopes' do
+      it 'matches token with fewer scopes' do
+        FactoryGirl.create :access_token, default_attributes.merge(scopes: 'public')
+        last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
+        expect(last_token).to be_nil
+      end
+
+      it 'matches token with different scopes' do
         FactoryGirl.create :access_token, default_attributes.merge(scopes: 'public email')
+        last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
+        expect(last_token).to be_nil
+      end
+
+      it 'matches token with more scopes' do
+        FactoryGirl.create :access_token, default_attributes.merge(scopes: 'public write email')
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
       end

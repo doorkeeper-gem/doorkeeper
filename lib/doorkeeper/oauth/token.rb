@@ -11,13 +11,13 @@ module Doorkeeper
         end
 
         def from_bearer_authorization(request)
-          pattern = /^Bearer /
+          pattern = /^Bearer /i
           header  = request.authorization
           token_from_header(header, pattern) if match?(header, pattern)
         end
 
         def from_basic_authorization(request)
-          pattern = /^Basic /
+          pattern = /^Basic /i
           header  = request.authorization
           token_from_basic_header(header, pattern) if match?(header, pattern)
         end
