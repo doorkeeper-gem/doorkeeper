@@ -179,7 +179,6 @@ doorkeeper.
            end)
     option :skip_authorization,             default: ->(_routes) {}
     option :access_token_expires_in,        default: 7200
-    option :refresh_token_revoked_in,       default: 0
     option :refresh_token_revoked_on_use,   default: false
     option :custom_access_token_expires_in, default: lambda { |_app| nil }
     option :authorization_code_expires_in,  default: 600

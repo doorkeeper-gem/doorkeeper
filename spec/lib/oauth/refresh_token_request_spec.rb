@@ -5,7 +5,6 @@ module Doorkeeper::OAuth
     let(:server) do
       double :server,
              access_token_expires_in: 2.minutes,
-             refresh_token_revoked_in: 0.seconds,
              refresh_token_revoked_on_use: false,
              custom_access_token_expires_in: -> (_oauth_client) { nil }
     end
@@ -27,6 +26,7 @@ module Doorkeeper::OAuth
     it 'issues a new token for the client with custom expires_in' do
       server = double :server,
                       access_token_expires_in: 2.minutes,
+                      refresh_token_revoked_on_use: false,
                       custom_access_token_expires_in: ->(_oauth_client) { 1234 }
 
       RefreshTokenRequest.new(server, refresh_token, credentials).authorize
@@ -70,7 +70,12 @@ module Doorkeeper::OAuth
     end
 
     context 'refresh tokens expire on access token use' do
-      let(:server) { double :server, access_token_expires_in: 2.minutes, refresh_token_revoked_in: 0.seconds, refresh_token_revoked_on_use: true, refresh_token_enabled?: true }
+      let(:server) { double :server,
+                            access_token_expires_in: 2.minutes,
+                            refresh_token_revoked_on_use: true,
+                            refresh_token_enabled?: true,
+                            custom_access_token_expires_in: -> (_oauth_client) { nil }
+      }
 
       it 'issues a new token for the client' do
         expect do
@@ -90,10 +95,10 @@ module Doorkeeper::OAuth
     end
 
     context 'longer lived refresh tokens' do
-      let(:server) { double :server, access_token_expires_in: 2.minutes, refresh_token_revoked_in: 1.day, refresh_token_revoked_on_use: false }
+      let(:server) { double :server, access_token_expires_in: 2.minutes, refresh_token_revoked_on_use: false, custom_access_token_expires_in: -> (_oauth_client) { nil } }
 
       it 'revokes the previous token' do
-        expect { subject.authorize } .to change { refresh_token.revoked_at }.from(nil).to(be_within(1).of(DateTime.now + 1.day))
+        expect { subject.authorize } .to change { refresh_token.revoked_at }.from(nil).to(be_within(1).of(Time.now))
       end
 
       context 'revoked token' do

@@ -32,7 +32,7 @@ module Doorkeeper
       attr_reader :refresh_token_parameter
 
       def before_successful_response
-        refresh_token.revoke_in(server.refresh_token_revoked_in) unless refresh_token.revoked_at || server.refresh_token_revoked_on_use
+        refresh_token.revoke unless refresh_token.revoked_at || server.refresh_token_revoked_on_use
         create_access_token
       end
 
