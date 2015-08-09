@@ -5,7 +5,11 @@
 [![Code Climate](https://codeclimate.com/github/applicake/doorkeeper.svg)](https://codeclimate.com/github/applicake/doorkeeper)
 [![Gem Version](https://badge.fury.io/rb/doorkeeper.svg)](https://rubygems.org/gems/doorkeeper)
 
-Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider functionality to your application.
+Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider
+functionality to your Rails or Grape application.
+
+[PR 567]: https://github.com/doorkeeper-gem/doorkeeper/pull/567
+
 
 ## Documentation valid for `master` branch
 
@@ -24,9 +28,12 @@ https://github.com/doorkeeper-gem/doorkeeper/releases.
         - [MongoMapper indexes](#mongomapper-indexes)
     - [Routes](#routes)
     - [Authenticating](#authenticating)
+    - [Internationalization (I18n)](#internationalization-i18n)
 - [Protecting resources with OAuth (a.k.a your API endpoint)](#protecting-resources-with-oauth-aka-your-api-endpoint)
+    - [Protect your API with OAuth when using Grape](#protect-your-api-with-oauth-when-using-grape)
     - [Route Constraints and other integrations](#route-constraints-and-other-integrations)
     - [Access Token Scopes](#access-token-scopes)
+    - [Custom Access Token Generator](#custom-access-token-generator)
     - [Authenticated resource owner](#authenticated-resource-owner)
     - [Applications list](#applications-list)
 - [Other customizations](#other-customizations)
@@ -39,7 +46,9 @@ https://github.com/doorkeeper-gem/doorkeeper/releases.
     - [Screencast](#screencast)
     - [Client applications](#client-applications)
     - [Contributors](#contributors)
+    - [IETF Standards](#ietf-standards)
     - [License](#license)
+
 
 ## Useful links
 
@@ -120,7 +129,6 @@ This will mount following routes:
     GET       /oauth/authorize/:code
     GET       /oauth/authorize
     POST      /oauth/authorize
-    PUT       /oauth/authorize
     DELETE    /oauth/authorize
     POST      /oauth/token
     POST      /oauth/revoke
@@ -153,6 +161,12 @@ the methods defined over there.
 You may want to check other ways of authentication
 [here](https://github.com/doorkeeper-gem/doorkeeper/wiki/Authenticating-using-Clearance-or-DIY).
 
+
+### Internationalization (I18n)
+
+See language files in [the I18n repository](https://github.com/doorkeeper-gem/doorkeeper-i18n).
+
+
 ## Protecting resources with OAuth (a.k.a your API endpoint)
 
 To protect your API with OAuth, you just need to setup `before_action`s
@@ -168,6 +182,36 @@ end
 
 You can pass any option `before_action` accepts, such as `if`, `only`,
 `except`, and others.
+
+### Protect your API with OAuth when using Grape
+
+As of [PR 567] doorkeeper has helpers for Grape. One of them is
+`doorkeeper_authorize!` and can be used in a similar way as an example above.
+Note that you have to use `require 'doorkeeper/grape/helpers'` and
+`helpers Doorkeeper::Grape::Helpers`.
+
+For more information about integration with Grape see the [Wiki].
+
+[PR 567]: https://github.com/doorkeeper-gem/doorkeeper/pull/567
+[Wiki]: https://github.com/doorkeeper-gem/doorkeeper/wiki/Grape-Integration
+
+``` ruby
+require 'doorkeeper/grape/helpers'
+
+module API
+  module V1
+    class Users < Grape::API
+      helpers Doorkeeper::Grape::Helpers
+
+      before do
+        doorkeeper_authorize!
+      end
+
+      # ...
+    end
+  end
+end
+```
 
 
 ### Route Constraints and other integrations
@@ -218,9 +262,42 @@ class Api::V1::ProductsController < Api::V1::ApiController
 end
 ```
 
-For a more detailed explanation about scopes usage, check out the related
-[page in the
-wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki/Using-Scopes).
+Please note that there is a logical OR between multiple required scopes. In
+above example, `doorkeeper_authorize! :admin, :write` means that the access
+token is required to have either `:admin` scope or `:write` scope, but not need
+have both of them.
+
+If want to require the access token to have multiple scopes at the same time,
+use multiple `doorkeeper_authorize!`, for example:
+
+```ruby
+class Api::V1::ProductsController < Api::V1::ApiController
+  before_action -> { doorkeeper_authorize! :public }, only: :index
+  before_action only: [:create, :update, :destroy] do
+    doorkeeper_authorize! :admin
+    doorkeeper_authorize! :write
+  end
+end
+```
+
+In above example, a client can call `:create` action only if its access token
+have both `:admin` and `:write` scopes.
+
+### Custom Access Token Generator
+
+By default a 32 bit access token will be generated. If you require a custom
+token, such as [JWT](http://jwt.io), specify an object that responds to
+`.generate(options = {})` and returns a string to be used as the token.
+
+```ruby
+Doorkeeper.configure do
+  access_token_generator "Doorkeeper::JWT"
+end
+```
+
+JWT token support is available with
+[Doorkeeper-JWT](https://github.com/chriswarren/doorkeeper-jwt).
+
 
 ### Authenticated resource owner
 

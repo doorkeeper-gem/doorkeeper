@@ -28,5 +28,4 @@ describe 'Scoped routes' do
   it 'GET /scope/token/info route to authorzed tokeninfo controller' do
     expect(get('/scope/token/info')).to route_to('doorkeeper/token_info#show')
   end
-
 end

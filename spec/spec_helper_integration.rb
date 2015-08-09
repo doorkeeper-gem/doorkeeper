@@ -11,10 +11,10 @@ require 'capybara/rspec'
 require 'rspec/active_model/mocks'
 require 'dummy/config/environment'
 require 'rspec/rails'
-require 'rspec/autorun'
 require 'generator_spec/test_case'
 require 'timecop'
 require 'database_cleaner'
+require 'pry'
 
 Rails.logger.info "====> Doorkeeper.orm = #{Doorkeeper.configuration.orm.inspect}"
 if Doorkeeper.configuration.orm == :active_record
@@ -39,6 +39,8 @@ RSpec.configure do |config|
   config.mock_with :rspec
 
   config.infer_base_class_for_anonymous_controllers = false
+
+  config.include RSpec::Rails::RequestExampleGroup, type: :request
 
   config.before do
     DatabaseCleaner.start

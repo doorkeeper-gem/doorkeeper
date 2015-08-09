@@ -14,7 +14,7 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
-  describe 'enable_orm' do
+  describe 'setup_orm_adapter' do
     it 'adds specific error message to NameError exception' do
       expect do
         Doorkeeper.configure { orm 'hibernate' }
@@ -22,11 +22,11 @@ describe Doorkeeper, 'configuration' do
     end
 
     it 'does not change other exceptions' do
-      String.any_instance.stub(:classify) { raise NoMethodError }
+      allow_any_instance_of(String).to receive(:classify) { raise NoMethodError }
 
       expect do
         Doorkeeper.configure { orm 'hibernate' }
-      end.to raise_error(NoMethodError, 'NoMethodError')
+      end.to raise_error(NoMethodError, /ORM adapter not found \(hibernate\)/)
     end
   end
 
@@ -35,7 +35,7 @@ describe Doorkeeper, 'configuration' do
       block = proc {}
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
-        admin_authenticator &block
+        admin_authenticator(&block)
       end
       expect(subject.authenticate_admin).to eq(block)
     end
@@ -296,6 +296,22 @@ describe Doorkeeper, 'configuration' do
 
     Doorkeeper.module_eval do
       @config = old_config
+    end
+  end
+
+  describe 'access_token_generator' do
+    it 'is \'Doorkeeper::OAuth::Helpers::UniqueToken\' by default' do
+      expect(Doorkeeper.configuration.access_token_generator).to(
+        eq('Doorkeeper::OAuth::Helpers::UniqueToken')
+      )
+    end
+
+    it 'can change the value' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        access_token_generator 'Example'
+      end
+      expect(subject.access_token_generator).to eq('Example')
     end
   end
 end

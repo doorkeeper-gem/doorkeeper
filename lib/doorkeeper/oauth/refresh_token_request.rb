@@ -11,14 +11,14 @@ module Doorkeeper
       validate :client_match, error: :invalid_grant
       validate :scope,        error: :invalid_scope
 
-      attr_accessor :server, :refresh_token, :credentials, :access_token
-      attr_accessor :client
+      attr_accessor :access_token, :client, :credentials, :refresh_token,
+                    :server
 
       def initialize(server, refresh_token, credentials, parameters = {})
         @server          = server
         @refresh_token   = refresh_token
         @credentials     = credentials
-        @original_scopes = parameters[:scopes]
+        @original_scopes = parameters[:scope] || parameters[:scopes]
         @refresh_token_parameter = parameters[:refresh_token]
 
         if credentials
@@ -32,7 +32,7 @@ module Doorkeeper
       attr_reader :refresh_token_parameter
 
       def before_successful_response
-        refresh_token.revoke_in(server.refresh_token_revoked_in) unless refresh_token.revoked_at || server.refresh_token_revoked_on_use
+        refresh_token.revoke unless refresh_token.revoked_at || server.refresh_token_revoked_on_use
         create_access_token
       end
 
@@ -41,11 +41,12 @@ module Doorkeeper
       end
 
       def create_access_token
+        expires_in = Authorization::Token.access_token_expires_in(server, client)
         create_params = {
-          application_id:    refresh_token.application_id,
+          application_id: refresh_token.application_id,
           resource_owner_id: refresh_token.resource_owner_id,
-          scopes:            scopes.to_s,
-          expires_in:        server.access_token_expires_in,
+          scopes: scopes.to_s,
+          expires_in: expires_in,
           use_refresh_token: true
         }
         create_params[:previous_refresh_token] = refresh_token.refresh_token if server.refresh_token_revoked_on_use

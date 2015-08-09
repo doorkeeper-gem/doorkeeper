@@ -7,6 +7,7 @@ module Doorkeeper
     include Models::Revocable
     include Models::Accessible
     include Models::Scopes
+    include ActiveModel::MassAssignmentSecurity if defined?(::ProtectedAttributes)
 
     included do
       belongs_to :application,
@@ -18,7 +19,7 @@ module Doorkeeper
 
       attr_writer :use_refresh_token
 
-      if ::Rails.version.to_i < 4 || defined?(::ProtectedAttributes)
+      if respond_to?(:attr_accessible)
         attr_accessible :application_id, :resource_owner_id, :expires_in,
                         :scopes, :use_refresh_token, :previous_refresh_token
       end
@@ -31,11 +32,11 @@ module Doorkeeper
 
     module ClassMethods
       def by_token(token)
-        where(token: token).limit(1).to_a.first
+        where(token: token.to_s).limit(1).to_a.first
       end
 
       def by_refresh_token(refresh_token)
-        where(refresh_token: refresh_token).first
+        where(refresh_token: refresh_token.to_s).first
       end
 
       def revoke_all_for(application_id, resource_owner)
@@ -59,7 +60,7 @@ module Doorkeeper
 
       def scopes_match?(token_scopes, param_scopes, app_scopes)
         (!token_scopes.present? && !param_scopes.present?) ||
-          Doorkeeper::OAuth::Helpers::ScopeChecker.valid?(
+          Doorkeeper::OAuth::Helpers::ScopeChecker.match?(
             token_scopes.to_s,
             param_scopes,
             app_scopes
@@ -128,7 +129,14 @@ module Doorkeeper
     end
 
     def generate_token
-      self.token = UniqueToken.generate
+      generator = Doorkeeper.configuration.access_token_generator.constantize
+      self.token = generator.generate(resource_owner_id: resource_owner_id,
+                                      scopes: scopes, application: application,
+                                      expires_in: expires_in)
+    rescue NoMethodError
+      raise Errors::UnableToGenerateToken, "#{generator} does not respond to `.generate`."
+    rescue NameError
+      raise Errors::TokenGeneratorNotFound, "#{generator} not found"
     end
   end
 end

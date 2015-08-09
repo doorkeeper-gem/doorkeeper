@@ -54,6 +54,5 @@ module Doorkeeper
         expect(application.reload.name).to eq 'Example'
       end
     end
-
   end
 end

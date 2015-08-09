@@ -37,7 +37,7 @@ feature 'Listing applications' do
 end
 
 feature 'Show application' do
-  let :app do
+  given :app do
     FactoryGirl.create :application, name: 'Just another oauth app'
   end
 

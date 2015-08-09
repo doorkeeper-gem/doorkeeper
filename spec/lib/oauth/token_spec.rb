@@ -56,8 +56,14 @@ module Doorkeeper
       end
 
       describe :from_bearer_authorization do
-        it 'returns token from authorization bearer' do
+        it 'returns token from capitalized authorization bearer' do
           request = double authorization: 'Bearer SomeToken'
+          token   = Token.from_bearer_authorization(request)
+          expect(token).to eq('SomeToken')
+        end
+
+        it 'returns token from lowercased authorization bearer' do
+          request = double authorization: 'bearer SomeToken'
           token   = Token.from_bearer_authorization(request)
           expect(token).to eq('SomeToken')
         end
@@ -70,8 +76,14 @@ module Doorkeeper
       end
 
       describe :from_basic_authorization do
-        it 'returns token from authorization basic' do
+        it 'returns token from capitalized authorization basic' do
           request = double authorization: "Basic #{Base64.encode64 'SomeToken:'}"
+          token   = Token.from_basic_authorization(request)
+          expect(token).to eq('SomeToken')
+        end
+
+        it 'returns token from lowercased authorization basic' do
+          request = double authorization: "basic #{Base64.encode64 'SomeToken:'}"
           token   = Token.from_basic_authorization(request)
           expect(token).to eq('SomeToken')
         end
