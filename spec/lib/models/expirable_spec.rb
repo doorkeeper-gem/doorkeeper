@@ -47,5 +47,10 @@ describe 'Expirable' do
       expect(subject.expires_in_seconds).to be_nil
     end
 
+    it 'should return nil when created_at is nil' do
+      allow(subject).to receive(:expires_in).and_return(30.seconds)
+      allow(subject).to receive(:created_at).and_return(nil)
+      expect(subject.expires_in_seconds).to be_nil
+    end
   end
 end
