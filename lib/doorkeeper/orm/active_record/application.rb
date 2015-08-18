@@ -1,8 +1,8 @@
 module Doorkeeper
   class Application < ActiveRecord::Base
-    include ApplicationMixin
-
     self.table_name = "#{table_name_prefix}oauth_applications#{table_name_suffix}".to_sym
+
+    include ApplicationMixin
 
     if ActiveRecord::VERSION::MAJOR >= 4
       has_many :authorized_tokens, -> { where(revoked_at: nil) }, class_name: 'AccessToken'
