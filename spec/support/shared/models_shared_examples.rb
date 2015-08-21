@@ -46,7 +46,7 @@ shared_examples 'a unique token' do
       token2.token = token1.token
       expect do
         token2.save!(validate: false)
-      end.to raise_error
+      end.to raise_error(ActiveRecord::RecordNotUnique)
     end
   end
 end

@@ -90,7 +90,7 @@ module Doorkeeper
       app1 = FactoryGirl.create(:application)
       app2 = FactoryGirl.create(:application)
       app2.uid = app1.uid
-      expect { app2.save!(validate: false) }.to raise_error
+      expect { app2.save!(validate: false) }.to raise_error(ActiveRecord::RecordNotUnique)
     end
 
     it 'generate secret on create' do

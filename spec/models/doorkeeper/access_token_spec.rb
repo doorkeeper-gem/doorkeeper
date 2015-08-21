@@ -131,9 +131,9 @@ module Doorkeeper
         token1 = FactoryGirl.create :access_token, use_refresh_token: true
         token2 = FactoryGirl.create :access_token, use_refresh_token: true
         expect do
-          token2.write_attribute :refresh_token, token1.refresh_token
+          token2.send(:write_attribute, :refresh_token, token1.refresh_token)
           token2.save(validate: false)
-        end.to raise_error
+        end.to raise_error(ActiveRecord::RecordNotUnique)
       end
     end
 
