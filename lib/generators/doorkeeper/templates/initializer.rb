@@ -52,6 +52,10 @@ Doorkeeper.configure do
   # default_scopes  :public
   # optional_scopes :write, :update
 
+  # Authorize only application scopes. Uncomment to prevent that a scope is authorized without being
+  # requested by the application.
+  # ensure_application_scopes
+
   # Change the way client credentials are retrieved from the request object.
   # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then
   # falls back to the `:client_id` and `:client_secret` params from the `params` object.
