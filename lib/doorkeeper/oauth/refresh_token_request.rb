@@ -32,8 +32,13 @@ module Doorkeeper
       attr_reader :refresh_token_parameter
 
       def before_successful_response
-        refresh_token.revoke
-        create_access_token
+        refresh_token.transaction do
+          refresh_token.lock!
+          raise Errors::InvalidTokenReuse if refresh_token.revoked?
+
+          refresh_token.revoke
+          create_access_token
+        end
       end
 
       def default_scopes

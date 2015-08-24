@@ -65,6 +65,14 @@ describe 'Refresh Token Flow' do
       should_not_have_json 'refresh_token'
       should_have_json 'error', 'invalid_grant'
     end
+
+    it 'second of simultaneous client requests get an error for revoked acccess token' do
+      allow_any_instance_of(Doorkeeper::AccessToken).to receive(:revoked?).and_return(false, true)
+      post refresh_token_endpoint_url(client: @client, refresh_token: @token.refresh_token)
+
+      should_not_have_json 'refresh_token'
+      should_have_json 'error', 'invalid_request'
+    end
   end
 
   context 'refreshing the token with multiple sessions (devices)' do
