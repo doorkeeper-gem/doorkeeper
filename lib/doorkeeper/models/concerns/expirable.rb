@@ -6,8 +6,8 @@ module Doorkeeper
       end
 
       def expires_in_seconds
-        return nil if expires_in.nil?
-        expires = (created_at + expires_in.seconds) - Time.now
+        return nil if created_at.nil? || expires_in.nil?
+        expires = expired_time - Time.now
         expires_sec = expires.seconds.round(0)
         expires_sec > 0 ? expires_sec : 0
       end
