@@ -165,12 +165,106 @@ describe 'doorkeeper authorize filter' do
         end
       end
 
-      it 'it renders a custom JSON response', token: :invalid do
+      it 'it renders a custom text response', token: :invalid do
         get :index, access_token: token_string
         expect(response.status).to eq 401
         expect(response.content_type).to eq('text/html')
         expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
         expect(response.body).to eq('Unauthorized')
+      end
+    end
+  end
+
+  context 'when custom forbidden render options are configured' do
+    before do
+      expect(Doorkeeper::AccessToken).to receive(:by_token).with(token_string).and_return(token)
+      expect(token).to receive(:acceptable?).with([:write]).and_return(false)
+    end
+
+    after do
+      module ControllerActions
+        def doorkeeper_forbidden_render_options(*)
+        end
+      end
+    end
+
+    controller do
+      before_filter -> { doorkeeper_authorize! :write }
+
+      include ControllerActions
+    end
+
+    let(:token) do
+      double(Doorkeeper::AccessToken,
+             accessible?: true, scopes: ['public'], revoked?: false, expired?: false)
+    end
+    let(:token_string) { '1A2DUWE' }
+
+    context 'with a JSON custom render' do
+      before do
+        module ControllerActions
+          def doorkeeper_forbidden_render_options(*)
+            { json: { error_message: 'Forbidden' } }
+          end
+        end
+      end
+
+      it 'renders a custom JSON response' do
+        get :index, access_token: token_string
+        expect(response.header).to_not include('WWW-Authenticate')
+        expect(response.content_type).to eq('application/json')
+        expect(response.status).to eq 403
+        parsed_body = JSON.parse(response.body)
+        expect(parsed_body).not_to be_nil
+        expect(parsed_body['error_message']).to match('Forbidden')
+      end
+    end
+
+    context 'with a status and JSON custom render' do
+      before do
+        module ControllerActions
+          def doorkeeper_forbidden_render_options(*)
+            { json: { error_message: 'Not Found' },
+              respond_not_found_when_forbidden: true }
+          end
+        end
+      end
+
+      it 'overrides the default status code' do
+        get :index, access_token: token_string
+        expect(response.status).to eq 404
+      end
+    end
+
+    context 'with a text custom render' do
+      before do
+        module ControllerActions
+          def doorkeeper_forbidden_render_options(*)
+            { text: 'Forbidden' }
+          end
+        end
+      end
+
+      it 'renders a custom status code and text response' do
+        get :index, access_token: token_string
+        expect(response.header).to_not include('WWW-Authenticate')
+        expect(response.status).to eq 403
+        expect(response.body).to eq('Forbidden')
+      end
+    end
+
+    context 'with a status and text custom render' do
+      before do
+        module ControllerActions
+          def doorkeeper_forbidden_render_options(*)
+            { respond_not_found_when_forbidden: true, text: 'Not Found' }
+          end
+        end
+      end
+
+      it 'overrides the default status code' do
+        get :index, access_token: token_string
+        expect(response.status).to eq 404
       end
     end
   end
