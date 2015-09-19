@@ -31,10 +31,12 @@ module Doorkeeper
 
       def doorkeeper_render_error_with(error)
         options = doorkeeper_render_options(error) || {}
+        status = doorkeeper_status_for_error(
+          error, options.delete(:respond_not_found_when_forbidden))
         if options.blank?
-          head error.status
+          head status
         else
-          options[:status] = error.status
+          options[:status] = status
           options[:layout] = false if options[:layout].nil?
           render options
         end
@@ -53,6 +55,14 @@ module Doorkeeper
           doorkeeper_unauthorized_render_options(error: error)
         else
           doorkeeper_forbidden_render_options(error: error)
+        end
+      end
+
+      def doorkeeper_status_for_error(error, respond_not_found_when_forbidden)
+        if respond_not_found_when_forbidden && error.status == :forbidden
+          :not_found
+        else
+          error.status
         end
       end
 
