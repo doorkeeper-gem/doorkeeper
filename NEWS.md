@@ -4,7 +4,15 @@ User-visible changes worth mentioning.
 
 ---
 
-- [#712] Wrap exchange of grant token for access token and access token refresh in transactions.
+## 3.0.1
+
+- [#712] Wrap exchange of grant token for access token and access token refresh
+  in transactions
+- [#704] Allow applications scopes to be mass assigned
+- [#707] Fixed order of Mixin inclusion and table_name configuration in models
+- [#712] Wrap access token and refresh grants in transactions
+- Adds JRuby support
+- Specs, views and documentation adjustments
 
 ## 3.0.0
 
