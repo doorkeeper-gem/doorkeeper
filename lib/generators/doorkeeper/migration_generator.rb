@@ -12,4 +12,11 @@ class Doorkeeper::MigrationGenerator < ::Rails::Generators::Base
   def self.next_migration_number(dirname)
     ActiveRecord::Generators::Base.next_migration_number(dirname)
   end
+
+  private
+
+  def resource_owner_name
+    Doorkeeper.configuration.resource_owner_from_credentials.class.
+      name.demodulize.underscore
+  end
 end
