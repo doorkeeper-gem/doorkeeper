@@ -13,7 +13,7 @@
 
 ActiveRecord::Schema.define(version: 20141209001746) do
 
-  create_table "oauth_access_grants", force: true do |t|
+  create_table "oauth_access_grants", force: :cascade do |t|
     t.integer  "resource_owner_id",              null: false
     t.integer  "application_id",                 null: false
     t.string   "token",                          null: false
@@ -26,7 +26,7 @@ ActiveRecord::Schema.define(version: 20141209001746) do
 
   add_index "oauth_access_grants", ["token"], name: "index_oauth_access_grants_on_token", unique: true
 
-  create_table "oauth_access_tokens", force: true do |t|
+  create_table "oauth_access_tokens", force: :cascade do |t|
     t.integer  "resource_owner_id"
     t.integer  "application_id"
     t.string   "token",             null: false
@@ -41,13 +41,13 @@ ActiveRecord::Schema.define(version: 20141209001746) do
   add_index "oauth_access_tokens", ["resource_owner_id"], name: "index_oauth_access_tokens_on_resource_owner_id"
   add_index "oauth_access_tokens", ["token"], name: "index_oauth_access_tokens_on_token", unique: true
 
-  create_table "oauth_applications", force: true do |t|
+  create_table "oauth_applications", force: :cascade do |t|
     t.string   "name",                                   null: false
     t.string   "uid",                                    null: false
     t.string   "secret",                                 null: false
     t.string   "redirect_uri", limit: 2048,              null: false
-    t.datetime "created_at",                             null: false
-    t.datetime "updated_at",                             null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
     t.integer  "owner_id"
     t.string   "owner_type"
     t.string   "scopes",                    default: "", null: false
@@ -56,10 +56,10 @@ ActiveRecord::Schema.define(version: 20141209001746) do
   add_index "oauth_applications", ["owner_id", "owner_type"], name: "index_oauth_applications_on_owner_id_and_owner_type"
   add_index "oauth_applications", ["uid"], name: "index_oauth_applications_on_uid", unique: true
 
-  create_table "users", force: true do |t|
+  create_table "users", force: :cascade do |t|
     t.string   "name"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
     t.string   "password"
   end
 
