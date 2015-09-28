@@ -333,6 +333,8 @@ notes](https://github.com/doorkeeper-gem/doorkeeper/wiki/Migration-from-old-vers
 and take a look at the
 [changelog](https://github.com/doorkeeper-gem/doorkeeper/blob/master/NEWS.md).
 
+Doorkeeper follows [semantic versioning](http://semver.org/).
+
 ## Development
 
 To run the local engine server:
