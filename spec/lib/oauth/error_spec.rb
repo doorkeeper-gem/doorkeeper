@@ -6,8 +6,8 @@ module Doorkeeper::OAuth
   describe Error do
     subject { Error.new(:some_error, :some_state) }
 
-    it { should respond_to(:name) }
-    it { should respond_to(:state) }
+    it { expect(subject).to respond_to(:name) }
+    it { expect(subject).to respond_to(:state) }
 
     describe :description do
       it 'is translated from translation messages' do

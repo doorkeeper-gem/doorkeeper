@@ -4,7 +4,7 @@ module Doorkeeper
   describe AccessToken do
     subject { FactoryGirl.build(:access_token) }
 
-    it { should be_valid }
+    it { expect(subject).to be_valid }
 
     it_behaves_like 'an accessible token'
     it_behaves_like 'a revocable token'
@@ -141,7 +141,7 @@ module Doorkeeper
       it 'is valid without resource_owner_id' do
         # For client credentials flow
         subject.resource_owner_id = nil
-        should be_valid
+        expect(subject).to be_valid
       end
     end
 
