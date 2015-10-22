@@ -47,7 +47,7 @@ module Doorkeeper::OAuth
 
       subject { Scopes.from_string(string) }
 
-      it { should be_a(Scopes) }
+      it { expect(subject).to be_a(Scopes) }
 
       describe '#all' do
         it 'should be an array of the expected scopes' do
