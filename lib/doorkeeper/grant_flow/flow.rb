@@ -2,8 +2,8 @@ module Doorkeeper
   module GrantFlow
     class Flow
       attr_accessor :name,
-        :grant_type_matches, :grant_type_strategy,
-        :response_type_matches, :response_type_strategy
+                    :grant_type_matches, :grant_type_strategy,
+                    :response_type_matches, :response_type_strategy
 
       def initialize(name, options = {})
         self.name = name

@@ -229,7 +229,7 @@ doorkeeper.
     end
 
     def enabled_grant_flows
-      @enabled_grant_flows ||= grant_flows.map{|name| GrantFlow.get(name) }
+      @enabled_grant_flows ||= grant_flows.map{ |name| GrantFlow.get(name) }
     end
 
     def authorization_response_flows

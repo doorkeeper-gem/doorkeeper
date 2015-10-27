@@ -20,7 +20,7 @@ module Doorkeeper
   end
 end
 
-Doorkeeper::GrantFlow.register :implicit, 
+Doorkeeper::GrantFlow.register :implicit,
   response_type_matches: 'token',
   response_type_strategy: Doorkeeper::Request::Token
 
@@ -41,4 +41,3 @@ Doorkeeper::GrantFlow.register :password,
 Doorkeeper::GrantFlow.register :refresh_token,
   grant_type_matches: 'refresh_token',
   grant_type_strategy: Doorkeeper::Request::RefreshToken
-
