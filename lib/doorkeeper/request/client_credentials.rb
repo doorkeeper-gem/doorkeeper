@@ -6,7 +6,11 @@ module Doorkeeper
       delegate :client, :parameters, to: :server
 
       def request
-        @request ||= OAuth::ClientCredentialsRequest.new(Doorkeeper.configuration, client, parameters)
+        @request ||= OAuth::ClientCredentialsRequest.new(
+          Doorkeeper.configuration,
+          client,
+          parameters
+        )
       end
     end
   end

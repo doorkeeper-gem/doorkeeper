@@ -21,7 +21,8 @@ module Doorkeeper
 
       describe "a sample Strategy subclass" do
         let(:fake_request) { double }
-        let(:strategy_class) {
+
+        let(:strategy_class) do
           subclass = Class.new(Strategy) do
             class << self
               attr_accessor :fake_request
@@ -34,7 +35,8 @@ module Doorkeeper
 
           subclass.fake_request = fake_request
           subclass
-        }
+        end
+
         subject(:strategy) { strategy_class.new(server) }
 
         it "provides a request implementation" do

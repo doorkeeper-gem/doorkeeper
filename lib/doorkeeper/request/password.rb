@@ -6,7 +6,12 @@ module Doorkeeper
       delegate :credentials, :resource_owner, :parameters, to: :server
 
       def request
-        @request ||= OAuth::PasswordAccessTokenRequest.new(Doorkeeper.configuration, credentials, resource_owner, parameters)
+        @request ||= OAuth::PasswordAccessTokenRequest.new(
+          Doorkeeper.configuration,
+          credentials,
+          resource_owner,
+          parameters
+        )
       end
     end
   end
