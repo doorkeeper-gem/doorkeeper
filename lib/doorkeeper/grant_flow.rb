@@ -2,7 +2,8 @@ require 'doorkeeper/grant_flow/flow'
 
 module Doorkeeper
   module GrantFlow
-    mattr_accessor(:registered_flows) { Hash.new }
+    mattr_accessor :registered_flows
+    self.registered_flows = {}
 
     module_function
 
