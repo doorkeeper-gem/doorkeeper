@@ -10,10 +10,11 @@ module Doorkeeper
         let(:grant_type_strategy) { double }
 
         before do
-          GrantFlow.register(name,
-                              grant_type_matches: grant_type_matches,
-                              grant_type_strategy: grant_type_strategy
-                            )
+          GrantFlow.register(
+            name,
+            grant_type_matches: grant_type_matches,
+            grant_type_strategy: grant_type_strategy
+          )
         end
 
         subject(:the_registered_flow) { GrantFlow.get(name) }

@@ -21,24 +21,34 @@ module Doorkeeper
   end
 end
 
-Doorkeeper::GrantFlow.register :implicit,
+Doorkeeper::GrantFlow.register(
+  :implicit,
   response_type_matches: 'token',
   response_type_strategy: Doorkeeper::Request::Token
+)
 
-Doorkeeper::GrantFlow.register :authorization_code,
+Doorkeeper::GrantFlow.register(
+  :authorization_code,
   response_type_matches: 'code',
   response_type_strategy: Doorkeeper::Request::Code,
   grant_type_matches: 'authorization_code',
   grant_type_strategy: Doorkeeper::Request::AuthorizationCode
+)
 
-Doorkeeper::GrantFlow.register :client_credentials,
+Doorkeeper::GrantFlow.register(
+  :client_credentials,
   grant_type_matches: 'client_credentials',
   grant_type_strategy: Doorkeeper::Request::ClientCredentials
+)
 
-Doorkeeper::GrantFlow.register :password,
+Doorkeeper::GrantFlow.register(
+  :password,
   grant_type_matches: 'password',
   grant_type_strategy: Doorkeeper::Request::Password
+)
 
-Doorkeeper::GrantFlow.register :refresh_token,
+Doorkeeper::GrantFlow.register(
+  :refresh_token,
   grant_type_matches: 'refresh_token',
   grant_type_strategy: Doorkeeper::Request::RefreshToken
+)
