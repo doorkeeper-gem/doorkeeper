@@ -1,14 +1,11 @@
 module Doorkeeper
   module Request
     class Token
-      def self.build(server)
-        new(server.context.send(:pre_auth), server)
-      end
-
       attr_accessor :pre_auth, :server
 
-      def initialize(pre_auth, server)
-        @pre_auth, @server = pre_auth, server
+      def initialize(server)
+        @pre_auth = server.context.send(:pre_auth)
+        @server = server
       end
 
       def request

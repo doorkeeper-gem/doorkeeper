@@ -1,14 +1,12 @@
 module Doorkeeper
   module Request
     class RefreshToken
-      def self.build(server)
-        new(server.current_refresh_token, server.credentials, server)
-      end
-
       attr_accessor :refresh_token, :credentials, :server
 
-      def initialize(refresh_token, credentials, server)
-        @refresh_token, @credentials, @server = refresh_token, credentials, server
+      def initialize(server)
+        @refresh_token = server.current_refresh_token
+        @credentials = server.credentials
+        @server = server
       end
 
       def request
