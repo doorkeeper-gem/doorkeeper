@@ -12,7 +12,7 @@ module Doorkeeper
     def authorization_strategy(response_type)
       fail Errors::MissingRequestStrategy unless response_type.present?
 
-      flow = authorization_flows.find{|f| f.matches_response_type?(response_type) }
+      flow = authorization_flows.detect { |flow| flow.matches_response_type?(response_type) }
 
       if flow
         flow.response_type_strategy
@@ -24,7 +24,7 @@ module Doorkeeper
     def token_strategy(grant_type)
       fail Errors::MissingRequestStrategy unless grant_type.present?
 
-      flow = token_flows.find{|f| f.matches_grant_type?(grant_type) }
+      flow = token_flows.detect { |flow| flow.matches_grant_type?(grant_type) }
 
       if flow
         flow.grant_type_strategy

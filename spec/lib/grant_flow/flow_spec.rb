@@ -24,7 +24,7 @@ module Doorkeeper
 
       context "when given a grant_type to match" do
         let(:grant_type_matches) { "secret_handshake" }
-        let(:options) { { grant_type_matches: grant_type_matches }  }
+        let(:options) { { grant_type_matches: grant_type_matches } }
 
         it "should handle grant_type" do
           expect(flow.handles_grant_type?).to be true
@@ -32,7 +32,7 @@ module Doorkeeper
 
         context "when grant_type_matches is a string" do
           it "should match grant_type values" do
-            expect( flow.matches_grant_type?(grant_type_matches) ).to be true
+            expect(flow.matches_grant_type?(grant_type_matches)).to be true
           end
         end
 
@@ -40,14 +40,14 @@ module Doorkeeper
           let(:grant_type_matches) { /^secret_(.*)$/ }
 
           it "should match grant_type values" do
-            expect( flow.matches_grant_type?("secret_boogie") ).to be true
+            expect(flow.matches_grant_type?("secret_boogie")).to be true
           end
         end
       end
 
       context "when given a response_type to match" do
         let(:response_type_matches) { "secret_handshake" }
-        let(:options) { { response_type_matches: response_type_matches }  }
+        let(:options) { { response_type_matches: response_type_matches } }
 
         it "should handle response_type" do
           expect(flow.handles_response_type?).to be true
@@ -55,7 +55,7 @@ module Doorkeeper
 
         context "when response_type_matches is a string" do
           it "should match response_type values" do
-            expect( flow.matches_response_type?(response_type_matches) ).to be true
+            expect(flow.matches_response_type?(response_type_matches)).to be true
           end
         end
 
@@ -63,11 +63,10 @@ module Doorkeeper
           let(:response_type_matches) { /^secret_(.*)$/ }
 
           it "should match response_type values" do
-            expect( flow.matches_response_type?("secret_boogie") ).to be true
+            expect(flow.matches_response_type?("secret_boogie")).to be true
           end
         end
       end
-
     end
   end
 end
