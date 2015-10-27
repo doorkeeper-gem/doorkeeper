@@ -9,22 +9,22 @@ module Doorkeeper
   module Request
     module_function
 
-    def authorization_strategy(strategy)
-      get_strategy strategy, Doorkeeper.configuration.authorization_response_types
+    def authorization_strategy(response_type)
+      get_strategy response_type, Doorkeeper.configuration.authorization_response_types
     rescue NameError
       raise Errors::InvalidAuthorizationStrategy
     end
 
-    def token_strategy(strategy)
-      get_strategy strategy, Doorkeeper.configuration.token_grant_types
+    def token_strategy(grant_type)
+      get_strategy grant_type, Doorkeeper.configuration.token_grant_types
     rescue NameError
       raise Errors::InvalidTokenStrategy
     end
 
-    def get_strategy(strategy, available)
-      fail Errors::MissingRequestStrategy unless strategy.present?
-      fail NameError unless available.include?(strategy.to_s)
-      "Doorkeeper::Request::#{strategy.to_s.camelize}".constantize
+    def get_strategy(grant_or_request_type, available)
+      fail Errors::MissingRequestStrategy unless grant_or_request_type.present?
+      fail NameError unless available.include?(grant_or_request_type.to_s)
+      "Doorkeeper::Request::#{grant_or_request_type.to_s.camelize}".constantize
     end
   end
 end
