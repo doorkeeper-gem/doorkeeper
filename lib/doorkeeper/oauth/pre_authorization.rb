@@ -39,7 +39,7 @@ module Doorkeeper
       private
 
       def validate_response_type
-        server.authorization_response_types.include? response_type
+        server.authorization_response_flows.any? {|f| f.matches_response_type?(response_type) }
       end
 
       def validate_client

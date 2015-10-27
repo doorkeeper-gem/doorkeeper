@@ -103,8 +103,8 @@ describe Doorkeeper, 'configuration' do
       expect(subject.refresh_token_enabled?).to be_truthy
     end
 
-    it "does not includes 'refresh_token' in authorization_response_types" do
-      expect(subject.token_grant_types).not_to include 'refresh_token'
+    it "does not includes 'refresh_token' in token_grant_flows" do
+      expect(subject.token_grant_flows).not_to include Doorkeeper::GrantFlow.get('refresh_token')
     end
 
     context "is enabled" do
@@ -115,8 +115,8 @@ describe Doorkeeper, 'configuration' do
         }
       end
 
-      it "includes 'refresh_token' in authorization_response_types" do
-        expect(subject.token_grant_types).to include 'refresh_token'
+      it "includes 'refresh_token' in token_grant_flows" do
+        expect(subject.token_grant_flows).to include Doorkeeper::GrantFlow.get('refresh_token')
       end
     end
   end
@@ -235,12 +235,12 @@ describe Doorkeeper, 'configuration' do
         }
       end
 
-      it "includes 'code' in authorization_response_types" do
-        expect(subject.authorization_response_types).to include 'code'
+      it "includes 'authorization_code' in authorization_response_flows" do
+        expect(subject.authorization_response_flows).to include Doorkeeper::GrantFlow.get('authorization_code')
       end
 
-      it "includes 'authorization_code' in token_grant_types" do
-        expect(subject.token_grant_types).to include 'authorization_code'
+      it "includes 'authorization_code' in token_grant_flows" do
+        expect(subject.token_grant_flows).to include Doorkeeper::GrantFlow.get('authorization_code')
       end
     end
 
@@ -252,8 +252,8 @@ describe Doorkeeper, 'configuration' do
         }
       end
 
-      it "includes 'token' in authorization_response_types" do
-        expect(subject.authorization_response_types).to include 'token'
+      it "includes 'implicit' in authorization_response_flows" do
+        expect(subject.authorization_response_flows).to include Doorkeeper::GrantFlow.get('implicit')
       end
     end
 
@@ -265,8 +265,8 @@ describe Doorkeeper, 'configuration' do
         }
       end
 
-      it "includes 'password' in token_grant_types" do
-        expect(subject.token_grant_types).to include 'password'
+      it "includes 'password' in token_grant_flows" do
+        expect(subject.token_grant_flows).to include Doorkeeper::GrantFlow.get('password')
       end
     end
 
@@ -278,8 +278,8 @@ describe Doorkeeper, 'configuration' do
         }
       end
 
-      it "includes 'client_credentials' in token_grant_types" do
-        expect(subject.token_grant_types).to include 'client_credentials'
+      it "includes 'client_credentials' in token_grant_flows" do
+        expect(subject.token_grant_flows).to include Doorkeeper::GrantFlow.get('client_credentials')
       end
     end
   end
