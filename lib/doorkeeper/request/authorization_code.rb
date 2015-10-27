@@ -3,15 +3,10 @@ require 'doorkeeper/request/strategy'
 module Doorkeeper
   module Request
     class AuthorizationCode < Strategy
-      attr_accessor :grant, :client
-
-      def initialize(server)
-        super
-        @grant, @client = server.grant, server.client
-      end
+      delegate :grant, :client, :parameters, to: :server
 
       def request
-        @request ||= OAuth::AuthorizationCodeRequest.new(Doorkeeper.configuration, grant, client, server.parameters)
+        @request ||= OAuth::AuthorizationCodeRequest.new(Doorkeeper.configuration, grant, client, parameters)
       end
     end
   end
