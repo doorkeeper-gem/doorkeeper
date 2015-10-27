@@ -1,19 +1,17 @@
+require 'doorkeeper/request/strategy'
+
 module Doorkeeper
   module Request
-    class Code
-      attr_accessor :pre_auth, :server
+    class Code < Strategy
+      attr_accessor :pre_auth
 
       def initialize(server)
+        super
         @pre_auth = server.context.send(:pre_auth)
-        @server = server
       end
 
       def request
         @request ||= OAuth::CodeRequest.new(pre_auth, server.current_resource_owner)
-      end
-
-      def authorize
-        request.authorize
       end
     end
   end

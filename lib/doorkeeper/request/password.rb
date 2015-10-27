@@ -1,20 +1,18 @@
+require 'doorkeeper/request/strategy'
+
 module Doorkeeper
   module Request
-    class Password
-      attr_accessor :credentials, :resource_owner, :server
+    class Password < Strategy
+      attr_accessor :credentials, :resource_owner
 
       def initialize(server)
+        super
         @credentials = server.credentials
         @resource_owner = server.resource_owner
-        @server = server
       end
 
       def request
         @request ||= OAuth::PasswordAccessTokenRequest.new(Doorkeeper.configuration, credentials, resource_owner, server.parameters)
-      end
-
-      def authorize
-        request.authorize
       end
     end
   end

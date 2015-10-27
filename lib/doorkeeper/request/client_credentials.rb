@@ -1,18 +1,17 @@
+require 'doorkeeper/request/strategy'
+
 module Doorkeeper
   module Request
-    class ClientCredentials
-      attr_accessor :client, :server
+    class ClientCredentials < Strategy
+      attr_accessor :client
 
       def initialize(server)
-        @client, @server = server.client, server
+        super
+        @client = server.client
       end
 
       def request
         @request ||= OAuth::ClientCredentialsRequest.new(Doorkeeper.configuration, client, server.parameters)
-      end
-
-      def authorize
-        request.authorize
       end
     end
   end
