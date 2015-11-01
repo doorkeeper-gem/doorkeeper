@@ -18,6 +18,8 @@ https://github.com/doorkeeper-gem/doorkeeper/releases.
 
 ## Table of Contents
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 - [Useful links](#useful-links)
 - [Installation](#installation)
 - [Configuration](#configuration)
@@ -39,12 +41,12 @@ https://github.com/doorkeeper-gem/doorkeeper/releases.
 - [Contributing](#contributing)
 - [Other resources](#other-resources)
     - [Wiki](#wiki)
-    - [Live demo](#live-demo)
     - [Screencast](#screencast)
     - [Client applications](#client-applications)
     - [Contributors](#contributors)
     - [IETF Standards](#ietf-standards)
     - [License](#license)
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
 ## Useful links
@@ -370,12 +372,6 @@ page](https://github.com/doorkeeper-gem/doorkeeper/wiki/Contributing).
 
 You can find everything about doorkeeper in our [wiki
 here](https://github.com/doorkeeper-gem/doorkeeper/wiki).
-
-### Live demo
-
-Check out this [live demo](http://doorkeeper-provider.herokuapp.com) hosted on
-heroku. For more demos check out [the
-wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki/Example-Applications).
 
 ### Screencast
 
