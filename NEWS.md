@@ -3,7 +3,7 @@
 User-visible changes worth mentioning.
 
 ---
-
+- [#736] Existing valid tokens are now resused in client_credentials flow
 - [#722] `doorkeeper_forbidden_render_options` now supports returning a 404 by
   specifying `respond_not_found_when_forbidden: true` in the
   `doorkeeper_forbidden_render_options` method.
