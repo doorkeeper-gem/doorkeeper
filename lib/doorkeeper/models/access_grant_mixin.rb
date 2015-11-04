@@ -12,7 +12,9 @@ module Doorkeeper
     included do
       belongs_to :application, class_name: 'Doorkeeper::Application', inverse_of: :access_grants
 
-      if defined?(::ProtectedAttributes)
+      if defined?(ActiveModel::MassAssignmentSecurity) &&
+        included_modules.include?(ActiveModel::MassAssignmentSecurity)
+        
         attr_accessible :resource_owner_id, :application_id, :expires_in, :redirect_uri, :scopes
       end
 

@@ -16,7 +16,9 @@ module Doorkeeper
 
       before_validation :generate_uid, :generate_secret, on: :create
 
-      if defined?(::ProtectedAttributes)
+      if defined?(ActiveModel::MassAssignmentSecurity) &&
+        included_modules.include?(ActiveModel::MassAssignmentSecurity)
+        
         attr_accessible :name, :redirect_uri, :scopes
       end
     end
