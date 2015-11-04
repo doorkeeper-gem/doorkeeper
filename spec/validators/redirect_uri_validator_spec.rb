@@ -63,13 +63,45 @@ describe RedirectUriValidator do
     it 'accepts a non secured protocol when disabled' do
       subject.redirect_uri = 'http://example.com/callback'
       allow(Doorkeeper.configuration).to receive(
-                                             :force_ssl_in_redirect_uri
-                                         ).and_return(false)
+        :force_ssl_in_redirect_uri
+      ).and_return(false)
       expect(subject).to be_valid
     end
 
     it 'invalidates the uri when the uri does not use a secure protocol' do
       subject.redirect_uri = 'http://example.com/callback'
+      expect(subject).not_to be_valid
+      error = subject.errors[:redirect_uri].first
+      expect(error).to eq('must be an HTTPS/SSL URI.')
+    end
+  end
+
+  context 'allow localhost' do
+    it 'accepts an valid uri' do
+      subject.redirect_uri = 'https://example.com/callback'
+      expect(subject).to be_valid
+    end
+
+    it 'accepts native redirect uri' do
+      subject.redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
+      expect(subject).to be_valid
+    end
+
+    it 'accepts app redirect uri' do
+      subject.redirect_uri = 'some-awesome-app://oauth/callback'
+      expect(subject).to be_valid
+    end
+
+    it 'accepts a localhost uri when allowed' do
+      subject.redirect_uri = 'http://localhost:3000/callback'
+      allow(Doorkeeper.configuration).to receive(
+        :allow_localhost_in_redirect_uri
+      ).and_return(true)
+      expect(subject).to be_valid
+    end
+
+    it 'invalidates the localhost uri when the uri does not use a secure protocol and localhost is not allowed' do
+      subject.redirect_uri = 'http://localhost:3000/callback'
       expect(subject).not_to be_valid
       error = subject.errors[:redirect_uri].first
       expect(error).to eq('must be an HTTPS/SSL URI.')

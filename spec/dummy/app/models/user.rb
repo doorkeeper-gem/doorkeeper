@@ -1,5 +1,6 @@
 class User < ActiveRecord::Base
-  if respond_to?(:attr_accessible)
+  if defined?(ActiveModel::MassAssignmentSecurity) &&
+     included_modules.include?(ActiveModel::MassAssignmentSecurity)
     attr_accessible :name, :password
   end
 
