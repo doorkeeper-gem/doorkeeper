@@ -19,7 +19,7 @@ module Doorkeeper
 
       attr_writer :use_refresh_token
 
-      if respond_to?(:attr_accessible)
+      if defined?(::ProtectedAttributes)
         attr_accessible :application_id, :resource_owner_id, :expires_in,
                         :scopes, :use_refresh_token
       end
