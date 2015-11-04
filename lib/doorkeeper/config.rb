@@ -93,6 +93,10 @@ doorkeeper.
         @config.instance_variable_set("@force_ssl_in_redirect_uri", boolean)
       end
 
+      def allow_localhost_in_redirect_uri(boolean)
+        @config.instance_variable_set("@allow_localhost_in_redirect_uri", boolean)
+      end
+
       def access_token_generator(access_token_generator)
         @config.instance_variable_set(
           '@access_token_generator', access_token_generator
@@ -178,17 +182,18 @@ doorkeeper.
              nil
            end)
 
-    option :skip_authorization,             default: ->(_routes) {}
-    option :access_token_expires_in,        default: 7200
-    option :custom_access_token_expires_in, default: lambda { |_app| nil }
-    option :authorization_code_expires_in,  default: 600
-    option :orm,                            default: :active_record
-    option :native_redirect_uri,            default: 'urn:ietf:wg:oauth:2.0:oob'
-    option :active_record_options,          default: {}
-    option :realm,                          default: 'Doorkeeper'
-    option :force_ssl_in_redirect_uri,      default: !Rails.env.development?
-    option :grant_flows,                    default: %w(authorization_code client_credentials)
-    option :access_token_generator,         default: "Doorkeeper::OAuth::Helpers::UniqueToken"
+    option :skip_authorization,               default: ->(_routes) {}
+    option :access_token_expires_in,          default: 7200
+    option :custom_access_token_expires_in,   default: lambda { |_app| nil }
+    option :authorization_code_expires_in,    default: 600
+    option :orm,                              default: :active_record
+    option :native_redirect_uri,              default: 'urn:ietf:wg:oauth:2.0:oob'
+    option :active_record_options,            default: {}
+    option :realm,                            default: 'Doorkeeper'
+    option :force_ssl_in_redirect_uri,        default: !Rails.env.development?
+    option :allow_localhost_in_redirect_uri,  default: Rails.env.development?
+    option :grant_flows,                      default: %w(authorization_code client_credentials)
+    option :access_token_generator,           default: "Doorkeeper::OAuth::Helpers::UniqueToken"
 
     attr_reader :reuse_access_token
 

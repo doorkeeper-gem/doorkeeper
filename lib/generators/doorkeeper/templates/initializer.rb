@@ -77,6 +77,11 @@ Doorkeeper.configure do
   #
   # force_ssl_in_redirect_uri !Rails.env.development?
 
+  # Allows the usage of localhost (http://localhost:port/) in non-native redirect uris (enabled
+  # by default only in development environments).
+  #
+  # force_ssl_in_redirect_uri !Rails.env.development?
+
   # Specify what grant flows are enabled in array of Strings. The valid
   # strings and the flows they enable are:
   #

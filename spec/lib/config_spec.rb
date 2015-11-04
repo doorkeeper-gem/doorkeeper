@@ -149,6 +149,20 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
+  describe 'allow_localhost_in_redirect_uri' do
+    it 'is false by default in non-development environments' do
+      expect(subject.allow_localhost_in_redirect_uri).to be_falsey
+    end
+
+    it 'can change the value' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        allow_localhost_in_redirect_uri(true)
+      end
+      expect(subject.allow_localhost_in_redirect_uri).to be_truthy
+    end
+  end
+
   describe 'access_token_credentials' do
     it 'has defaults order' do
       expect(subject.access_token_methods).to eq([:from_bearer_authorization, :from_access_token_param, :from_bearer_param])
