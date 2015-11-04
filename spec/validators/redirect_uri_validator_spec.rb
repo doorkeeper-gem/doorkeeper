@@ -63,8 +63,8 @@ describe RedirectUriValidator do
     it 'accepts a non secured protocol when disabled' do
       subject.redirect_uri = 'http://example.com/callback'
       allow(Doorkeeper.configuration).to receive(
-                                             :force_ssl_in_redirect_uri
-                                         ).and_return(false)
+        :force_ssl_in_redirect_uri
+      ).and_return(false)
       expect(subject).to be_valid
     end
 
@@ -95,8 +95,8 @@ describe RedirectUriValidator do
     it 'accepts a localhost uri when allowed' do
       subject.redirect_uri = 'http://localhost:3000/callback'
       allow(Doorkeeper.configuration).to receive(
-                                             :allow_localhost_in_redirect_uri
-                                         ).and_return(true)
+        :allow_localhost_in_redirect_uri
+      ).and_return(true)
       expect(subject).to be_valid
     end
 

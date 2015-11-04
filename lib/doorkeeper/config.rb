@@ -94,7 +94,10 @@ doorkeeper.
       end
 
       def allow_localhost_in_redirect_uri(boolean)
-        @config.instance_variable_set("@allow_localhost_in_redirect_uri", boolean)
+        @config.instance_variable_set(
+          "@allow_localhost_in_redirect_uri",
+          boolean
+        )
       end
 
       def access_token_generator(access_token_generator)
