@@ -123,6 +123,13 @@ module Doorkeeper::OAuth
       expect(subject.scopes).to eq(Scopes.from_string('default'))
     end
 
+    it 'uses application scopes as default if no global default scope' do
+      allow(application).to receive(:scopes).and_return(Scopes.from_string('billing test'))
+      subject.scope = nil
+      expect(subject.scope).to eq('billing test')
+      expect(subject.scopes).to eq(Scopes.from_string('billing test'))
+    end
+
     it 'accepts test uri' do
       subject.redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
       expect(subject).to be_authorizable

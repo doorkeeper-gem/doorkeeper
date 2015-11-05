@@ -29,7 +29,7 @@ module Doorkeeper
       end
 
       def scope
-        @scope.presence || server.default_scopes.to_s
+        @scope.presence || default_scope
       end
 
       def error_response
@@ -37,6 +37,14 @@ module Doorkeeper
       end
 
       private
+
+      def default_scope
+        if server.default_scopes.empty? && client.application.scopes.present?
+          client.application.scopes.to_s
+        else
+          server.default_scopes.to_s
+        end
+      end
 
       def validate_response_type
         server.authorization_response_types.include? response_type
