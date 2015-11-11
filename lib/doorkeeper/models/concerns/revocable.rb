@@ -17,7 +17,9 @@ module Doorkeeper
         if old_refresh_token && !old_refresh_token.revoked?
           old_refresh_token.revoke_in(refresh_token_revoked_in)
         end
-        update_attribute :previous_refresh_token, "" if previous_refresh_token != ""
+        if previous_refresh_token.present?
+          update_attribute :previous_refresh_token, ""
+        end
       end
 
       def old_refresh_token
@@ -26,10 +28,6 @@ module Doorkeeper
 
       def refresh_token_revoked_in
         Doorkeeper.configuration.refresh_token_revoked_in
-      end
-
-      def configuration
-        Doorkeeper.configuration
       end
     end
   end
