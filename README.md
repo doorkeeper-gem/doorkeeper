@@ -14,7 +14,7 @@ functionality to your Rails or Grape application.
 ## Documentation valid for `master` branch
 
 Please check the documentation for the version of doorkeeper you are using in:
-https://github.com/doorkeeper-gem/doorkeeper/releases.
+https://github.com/doorkeeper-gem/doorkeeper/releases
 
 ## Table of Contents
 
@@ -390,7 +390,7 @@ here](https://github.com/doorkeeper-gem/doorkeeper/wiki/Testing-your-provider-wi
 ### Contributors
 
 Thanks to all our [awesome
-contributors](https://github.com/doorkeeper-gem/doorkeeper/contributors)!
+contributors](https://github.com/doorkeeper-gem/doorkeeper/graphs/contributors)!
 
 
 ### IETF Standards
@@ -402,4 +402,3 @@ contributors](https://github.com/doorkeeper-gem/doorkeeper/contributors)!
 ### License
 
 MIT License. Copyright 2011 Applicake.
-[http://applicake.com](http://applicake.com)
