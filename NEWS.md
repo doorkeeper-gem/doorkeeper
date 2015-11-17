@@ -4,6 +4,7 @@ User-visible changes worth mentioning.
 
 - [#823] Make configuration and specs ORM independent
 - [#777] Add support for public client in password grant flow
+- [#745] Add created_at timestamp to token generation options
 
 ---
 
