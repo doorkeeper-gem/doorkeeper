@@ -4,8 +4,6 @@ require 'doorkeeper/errors'
 require 'doorkeeper/server'
 
 describe Doorkeeper::Server do
-  let(:fake_class) { double :fake_class }
-
   subject do
     described_class.new
   end
@@ -44,9 +42,8 @@ describe Doorkeeper::Server do
     end
 
     it 'builds the request with selected strategy' do
-      stub_const 'Doorkeeper::Request::Code', fake_class
-      expect(fake_class).to receive(:build).with(subject)
-      subject.authorization_request :code
+      expect(Doorkeeper::Request::Code).to receive(:build).with(subject)
+      subject.authorization_request 'code'
     end
   end
 end

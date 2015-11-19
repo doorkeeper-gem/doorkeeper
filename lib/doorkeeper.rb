@@ -5,6 +5,7 @@ require 'doorkeeper/config'
 require 'doorkeeper/errors'
 require 'doorkeeper/server'
 require 'doorkeeper/request'
+require 'doorkeeper/grant_flow'
 require 'doorkeeper/validations'
 
 require 'doorkeeper/oauth/authorization/code'
