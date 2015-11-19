@@ -45,6 +45,8 @@ module Doorkeeper
                        :invalid_request
                      when Errors::InvalidGrantReuse
                        :invalid_grant
+                     when Errors::DoorkeeperError
+                       exception.message
                      end
 
         OAuth::ErrorResponse.new name: error_name, state: params[:state]
