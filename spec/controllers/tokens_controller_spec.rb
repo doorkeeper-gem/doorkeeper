@@ -31,6 +31,34 @@ describe Doorkeeper::TokensController do
     end
   end
 
+  describe 'when there is a failure due to a custom error' do
+    it 'returns the error response with a custom message' do
+      # NOTE: I18n will look for this key `en.doorkeeper.errors.messages.my_message` in a locale file
+      allow(I18n).to receive(:translate).
+        with("my_message", hash_including(scope: [:doorkeeper, :errors, :messages])).
+        and_return('This is my authorization custom message')
+
+      doorkeeper_error = Doorkeeper::Errors::DoorkeeperError.new('my_message')
+
+      strategy = double(:strategy)
+      allow(strategy).to receive(:authorize).and_raise(doorkeeper_error)
+
+      allow(controller).to receive(:server) { double(token_request: strategy) }
+
+      post :create
+
+      expect(response.status).to eq 401
+      expect(response.headers['WWW-Authenticate']).to match(/Bearer/)
+
+      expected_response_body = {
+        "error"             => "my_message",
+        "error_description" => "This is my authorization custom message"
+      }
+
+      expect(JSON.load(response.body)).to eq expected_response_body
+    end
+  end
+
   describe 'when revoke authorization has failed' do
     # http://tools.ietf.org/html/rfc7009#section-2.2
     it 'returns no error response' do
