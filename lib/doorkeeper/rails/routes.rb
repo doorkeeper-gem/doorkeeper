@@ -30,6 +30,7 @@ module Doorkeeper
           map_route(:applications, :application_routes)
           map_route(:authorized_applications, :authorized_applications_routes)
           map_route(:token_info, :token_info_routes)
+          map_route(:devices, :device_routes)
         end
       end
 
@@ -82,6 +83,16 @@ module Doorkeeper
 
       def authorized_applications_routes(mapping)
         routes.resources :authorized_applications, only: [:index, :destroy], controller: mapping[:controllers]
+      end
+
+      def device_routes(mapping)
+        routes.resource(
+          :device,
+          path: 'device',
+          only: [:create],
+          as: mapping[:as],
+          controller: mapping[:controllers]
+        )
       end
     end
   end
