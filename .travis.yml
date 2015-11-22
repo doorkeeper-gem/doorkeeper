@@ -5,15 +5,18 @@ sudo: false
 rvm:
   - 2.0
   - 2.1
-  - 2.2
+  - 2.2.2
   - jruby-head
 
 env:
-  - rails=3.2.0
-  - rails=4.1.0
   - rails=4.2.0
+  - rails=5.0.0.beta1
 
 matrix:
   exclude:
-    - env: rails=3.2.0
-      rvm: 2.2
+    - env: rails=5.0.0.beta1
+      rvm: 2.0
+    - env: rails=5.0.0.beta1
+      rvm: 2.1
+    - env: rails=5.0.0.beta1
+      rvm: jruby-head
