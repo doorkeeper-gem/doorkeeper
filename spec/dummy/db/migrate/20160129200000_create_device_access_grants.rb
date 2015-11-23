@@ -8,6 +8,8 @@ class CreateDeviceAccessGrants < ActiveRecord::Migration
       t.datetime :created_at,        null: false
       t.datetime :revoked_at
       t.string   :scopes
+      t.integer  :resource_owner_id
+      t.datetime :last_polled_at
     end
 
     add_index :oauth_device_access_grants, :token, unique: true
