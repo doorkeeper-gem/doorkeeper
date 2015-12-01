@@ -1,5 +1,5 @@
 module Doorkeeper
-  class DevicesController < Doorkeeper::ApplicationController
+  class DevicesController < Doorkeeper::ApplicationMetalController
     def create
       response = authorize_response
       self.headers.merge! response.headers
