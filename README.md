@@ -261,7 +261,7 @@ have both `:admin` and `:write` scopes.
 
 ### Custom Access Token Generator
 
-By default a 32 bit access token will be generated. If you require a custom
+By default a 128 bit access token will be generated. If you require a custom
 token, such as [JWT](http://jwt.io), specify an object that responds to
 `.generate(options = {})` and returns a string to be used as the token.
 
