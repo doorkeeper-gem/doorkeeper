@@ -52,6 +52,7 @@ User-visible changes worth mentioning.
 - [#665] `doorkeeper_unauthorized_render_options(error:)` and
   `doorkeeper_forbidden_render_options(error:)` now accept `error` keyword
   argument.
+- [#691] Revoke Refresh Token on access token use
 
 ### Removed deprecations
 
