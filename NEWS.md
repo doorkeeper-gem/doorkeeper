@@ -3,10 +3,18 @@
 User-visible changes worth mentioning.
 
 ---
-- [#736] Existing valid tokens are now resused in client_credentials flow
+
+## 3.1.0
+
+- [#736] Existing valid tokens are now reused in client_credentials flow
+- [#749] Allow user to raise authorization error with custom messages.
+  Under `resource_owner_authenticator` block a user can
+  `raise Doorkeeper::Errors::DoorkeeperError.new('custom_message')`
+- [#762] Check doesn’t abort the actual migration, so it runs
 - [#722] `doorkeeper_forbidden_render_options` now supports returning a 404 by
   specifying `respond_not_found_when_forbidden: true` in the
   `doorkeeper_forbidden_render_options` method.
+- [#734] Simplify and remove duplication in request strategy classes
 
 ## 3.0.1
 

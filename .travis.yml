@@ -16,4 +16,7 @@ env:
 matrix:
   exclude:
     - env: rails=3.2.0
+      rvm: jruby-head
+  exclude:
+    - env: rails=3.2.0
       rvm: 2.2
