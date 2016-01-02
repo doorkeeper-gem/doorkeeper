@@ -13,7 +13,7 @@ end
 describe 'doorkeeper authorize filter' do
   context 'accepts token code specified as' do
     controller do
-      before_filter :doorkeeper_authorize!
+      before_action :doorkeeper_authorize!
 
       def index
         render text: 'index'
@@ -58,7 +58,7 @@ describe 'doorkeeper authorize filter' do
 
   context 'defined for all actions' do
     controller do
-      before_filter :doorkeeper_authorize!
+      before_action :doorkeeper_authorize!
 
       include ControllerActions
     end
