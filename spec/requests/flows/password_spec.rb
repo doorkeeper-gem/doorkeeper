@@ -32,7 +32,7 @@ describe 'Resource Owner Password Credentials Flow' do
       token = Doorkeeper::AccessToken.first
 
       expect(token.application_id).to eq @client.id
-      should_have_json 'access_token',  token.token
+      should_have_json 'access_token', token.token
     end
 
     it 'should issue new token with public client (only client_id present)' do
@@ -43,7 +43,7 @@ describe 'Resource Owner Password Credentials Flow' do
       token = Doorkeeper::AccessToken.first
 
       expect(token.application_id).to eq @client.id
-      should_have_json 'access_token',  token.token
+      should_have_json 'access_token', token.token
     end
 
     it 'should issue new token without client credentials' do
@@ -54,7 +54,7 @@ describe 'Resource Owner Password Credentials Flow' do
       token = Doorkeeper::AccessToken.first
 
       expect(token.application_id).to be_nil
-      should_have_json 'access_token',  token.token
+      should_have_json 'access_token', token.token
     end
 
     it 'should issue a refresh token if enabled' do
@@ -64,7 +64,7 @@ describe 'Resource Owner Password Credentials Flow' do
 
       token = Doorkeeper::AccessToken.first
 
-      should_have_json 'refresh_token',  token.refresh_token
+      should_have_json 'refresh_token', token.refresh_token
     end
 
     it 'should return the same token if it is still accessible' do

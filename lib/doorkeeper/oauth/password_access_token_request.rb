@@ -9,7 +9,8 @@ module Doorkeeper
       validate :resource_owner, error: :invalid_resource_owner
       validate :scopes,         error: :invalid_scope
 
-      attr_accessor :server, :client, :resource_owner, :parameters, :access_token
+      attr_accessor :server, :client, :resource_owner, :parameters,
+                    :access_token
 
       def initialize(server, client, resource_owner, parameters = {})
         @server          = server
