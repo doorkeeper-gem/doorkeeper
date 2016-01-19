@@ -4,6 +4,9 @@ User-visible changes worth mentioning.
 
 ---
 
+- [#778] Use the remaining time that a token is still valid when building the
+  redirect URI for the implicit grant flow
+
 ## 3.1.0
 
 - [#736] Existing valid tokens are now reused in client_credentials flow
