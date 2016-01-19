@@ -1,8 +1,8 @@
 # Doorkeeper - awesome oauth provider for your Rails app.
 
 [![Build Status](https://travis-ci.org/doorkeeper-gem/doorkeeper.svg?branch=master)](https://travis-ci.org/doorkeeper-gem/doorkeeper)
-[![Dependency Status](https://gemnasium.com/applicake/doorkeeper.svg?travis)](https://gemnasium.com/applicake/doorkeeper)
-[![Code Climate](https://codeclimate.com/github/applicake/doorkeeper.svg)](https://codeclimate.com/github/applicake/doorkeeper)
+[![Dependency Status](https://gemnasium.com/doorkeeper-gem/doorkeeper.svg?travis)](https://gemnasium.com/doorkeeper-gem/doorkeeper)
+[![Code Climate](https://codeclimate.com/github/doorkeeper-gem/doorkeeper.svg)](https://codeclimate.com/github/doorkeeper-gem/doorkeeper)
 [![Gem Version](https://badge.fury.io/rb/doorkeeper.svg)](https://rubygems.org/gems/doorkeeper)
 
 Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider
