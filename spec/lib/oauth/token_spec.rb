@@ -30,7 +30,7 @@ module Doorkeeper
         it 'stops at the first credentials found' do
           not_called_method = double
           expect(not_called_method).not_to receive(:call)
-          Token.from_request request, ->(r) {}, method, not_called_method
+          Token.from_request request, ->(_r) {}, method, not_called_method
         end
 
         it 'returns the credential from extractor method' do
@@ -96,11 +96,18 @@ module Doorkeeper
       end
 
       describe :authenticate do
-        let(:finder) { double :finder }
-
-        it 'calls the finder if token was found' do
-          token = ->(r) { 'token' }
+        it 'calls the finder if token was returned' do
+          token = ->(_r) { 'token' }
           expect(AccessToken).to receive(:by_token).with('token')
+          Token.authenticate double, token
+        end
+
+        it 'revokes previous refresh_token if token was found' do
+          token = ->(_r) { 'token' }
+          expect(
+            AccessToken
+          ).to receive(:by_token).with('token').and_return(token)
+          expect(token).to receive(:revoke_previous_refresh_token!)
           Token.authenticate double, token
         end
       end

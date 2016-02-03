@@ -36,9 +36,13 @@ module Doorkeeper
           refresh_token.lock!
           raise Errors::InvalidTokenReuse if refresh_token.revoked?
 
-          refresh_token.revoke
+          refresh_token.revoke unless refresh_token_revoked_on_use?
           create_access_token
         end
+      end
+
+      def refresh_token_revoked_on_use?
+        server.refresh_token_revoked_on_use?
       end
 
       def default_scopes
@@ -46,17 +50,25 @@ module Doorkeeper
       end
 
       def create_access_token
-        expires_in = Authorization::Token.access_token_expires_in(
-          server,
-          client
-        )
+        @access_token = AccessToken.create!(access_token_attributes)
+      end
 
-        @access_token = AccessToken.create!(
+      def access_token_attributes
+        {
           application_id: refresh_token.application_id,
           resource_owner_id: refresh_token.resource_owner_id,
           scopes: scopes.to_s,
-          expires_in: expires_in,
-          use_refresh_token: true)
+          expires_in: access_token_expires_in,
+          use_refresh_token: true
+        }.tap do |attributes|
+          if refresh_token_revoked_on_use?
+            attributes[:previous_refresh_token] = refresh_token.refresh_token
+          end
+        end
+      end
+
+      def access_token_expires_in
+        Authorization::Token.access_token_expires_in(server, client)
       end
 
       def validate_token_presence

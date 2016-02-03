@@ -37,20 +37,62 @@ describe 'Refresh Token Flow' do
 
   context 'refreshing the token' do
     before do
-      @token = FactoryGirl.create(:access_token, application: @client, resource_owner_id: 1, use_refresh_token: true)
+      @token = FactoryGirl.create(
+        :access_token,
+        application: @client,
+        resource_owner_id: 1,
+        use_refresh_token: true
+      )
     end
 
-    it 'client request a token with refresh token' do
-      post refresh_token_endpoint_url(client: @client, refresh_token: @token.refresh_token)
-      should_have_json 'refresh_token', Doorkeeper::AccessToken.last.refresh_token
-      expect(@token.reload).to be_revoked
+    context "refresh_token revoked on use" do
+      it 'client request a token with refresh token' do
+        post refresh_token_endpoint_url(
+          client: @client, refresh_token: @token.refresh_token
+        )
+        should_have_json(
+          'refresh_token', Doorkeeper::AccessToken.last.refresh_token
+        )
+        expect(@token.reload).not_to be_revoked
+      end
+
+      it 'client request a token with expired access token' do
+        @token.update_attribute :expires_in, -100
+        post refresh_token_endpoint_url(
+          client: @client, refresh_token: @token.refresh_token
+        )
+        should_have_json(
+          'refresh_token', Doorkeeper::AccessToken.last.refresh_token
+        )
+        expect(@token.reload).not_to be_revoked
+      end
     end
 
-    it 'client request a token with expired access token' do
-      @token.update_attribute :expires_in, -100
-      post refresh_token_endpoint_url(client: @client, refresh_token: @token.refresh_token)
-      should_have_json 'refresh_token', Doorkeeper::AccessToken.last.refresh_token
-      expect(@token.reload).to be_revoked
+    context "refresh_token revoked on refresh_token request" do
+      before do
+        config_is_set(:refresh_token_revoked_on_use, false)
+      end
+
+      it 'client request a token with refresh token' do
+        post refresh_token_endpoint_url(
+          client: @client, refresh_token: @token.refresh_token
+        )
+        should_have_json(
+          'refresh_token', Doorkeeper::AccessToken.last.refresh_token
+        )
+        expect(@token.reload).to be_revoked
+      end
+
+      it 'client request a token with expired access token' do
+        @token.update_attribute :expires_in, -100
+        post refresh_token_endpoint_url(
+          client: @client, refresh_token: @token.refresh_token
+        )
+        should_have_json(
+          'refresh_token', Doorkeeper::AccessToken.last.refresh_token
+        )
+        expect(@token.reload).to be_revoked
+      end
     end
 
     it 'client gets an error for invalid refresh token' do
@@ -79,20 +121,48 @@ describe 'Refresh Token Flow' do
     before do
       # enable password auth to simulate other devices
       config_is_set(:grant_flows, ["password"])
-      config_is_set(:resource_owner_from_credentials) { User.authenticate! params[:username], params[:password] }
+      config_is_set(:resource_owner_from_credentials) do
+        User.authenticate! params[:username], params[:password]
+      end
       create_resource_owner
-      _another_token = post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
+      _another_token = post password_token_endpoint_url(
+        client: @client, resource_owner: @resource_owner
+      )
       last_token.update_attribute :created_at, 5.seconds.ago
 
-      @token = FactoryGirl.create(:access_token, application: @client, resource_owner_id: @resource_owner.id, use_refresh_token: true)
+      @token = FactoryGirl.create(
+        :access_token,
+        application: @client,
+        resource_owner_id: @resource_owner.id,
+        use_refresh_token: true
+      )
       @token.update_attribute :expires_in, -100
     end
 
-    it 'client request a token after creating another token with the same user' do
-      post refresh_token_endpoint_url(client: @client, refresh_token: @token.refresh_token)
+    context "refresh_token revoked on use" do
+      it 'client request a token after creating another token with the same user' do
+        post refresh_token_endpoint_url(
+          client: @client, refresh_token: @token.refresh_token
+        )
 
-      should_have_json 'refresh_token', last_token.refresh_token
-      expect(@token.reload).to be_revoked
+        should_have_json 'refresh_token', last_token.refresh_token
+        expect(@token.reload).not_to be_revoked
+      end
+    end
+
+    context "refresh_token revoked on refresh_token request" do
+      before do
+        config_is_set(:refresh_token_revoked_on_use, false)
+      end
+
+      it 'client request a token after creating another token with the same user' do
+        post refresh_token_endpoint_url(
+          client: @client, refresh_token: @token.refresh_token
+        )
+
+        should_have_json 'refresh_token', last_token.refresh_token
+        expect(@token.reload).to be_revoked
+      end
     end
 
     def last_token

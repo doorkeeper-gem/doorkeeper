@@ -4,11 +4,15 @@ shared_context 'valid token', token: :valid do
   end
 
   let :token do
-    double(Doorkeeper::AccessToken, accessible?: true, includes_scope?: true, acceptable?: true)
+    double(Doorkeeper::AccessToken,
+           accessible?: true, includes_scope?: true, acceptable?: true,
+           previous_refresh_token: "", revoke_previous_refresh_token!: true)
   end
 
   before :each do
-    allow(Doorkeeper::AccessToken).to receive(:by_token).with(token_string).and_return(token)
+    allow(
+      Doorkeeper::AccessToken
+    ).to receive(:by_token).with(token_string).and_return(token)
   end
 end
 
@@ -18,11 +22,16 @@ shared_context 'invalid token', token: :invalid do
   end
 
   let :token do
-    double(Doorkeeper::AccessToken, accessible?: false, revoked?: false, expired?: false, includes_scope?: false, acceptable?: false)
+    double(Doorkeeper::AccessToken,
+           accessible?: false, revoked?: false, expired?: false,
+           includes_scope?: false, acceptable?: false,
+           previous_refresh_token: "", revoke_previous_refresh_token!: true)
   end
 
   before :each do
-    allow(Doorkeeper::AccessToken).to receive(:by_token).with(token_string).and_return(token)
+    allow(
+      Doorkeeper::AccessToken
+    ).to receive(:by_token).with(token_string).and_return(token)
   end
 end
 
