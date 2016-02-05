@@ -135,7 +135,7 @@ wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki/Customizing-routes).
 ### Authenticating
 
 You need to configure Doorkeeper in order to provide `resource_owner` model
-and authentication block `initializers/doorkeeper.rb`
+and authentication block in `config/initializers/doorkeeper.rb`:
 
 ``` ruby
 Doorkeeper.configure do
