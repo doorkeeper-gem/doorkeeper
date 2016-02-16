@@ -37,9 +37,9 @@ module Doorkeeper::OAuth
       subject { ErrorResponse.new(name: :some_error, state: :some_state).body }
 
       describe '#body' do
-        it { should have_key(:error) }
-        it { should have_key(:error_description) }
-        it { should have_key(:state) }
+        it { expect(subject).to have_key(:error) }
+        it { expect(subject).to have_key(:error_description) }
+        it { expect(subject).to have_key(:state) }
       end
     end
 
@@ -47,15 +47,15 @@ module Doorkeeper::OAuth
       let(:error_response) { ErrorResponse.new(name: :some_error, state: :some_state) }
       subject { error_response.authenticate_info }
 
-      it { should include("realm=\"#{error_response.realm}\"") }
-      it { should include("error=\"#{error_response.name}\"") }
-      it { should include("error_description=\"#{error_response.description}\"") }
+      it { expect(subject).to include("realm=\"#{error_response.realm}\"") }
+      it { expect(subject).to include("error=\"#{error_response.name}\"") }
+      it { expect(subject).to include("error_description=\"#{error_response.description}\"") }
     end
 
     describe '.headers' do
       subject { ErrorResponse.new(name: :some_error, state: :some_state).headers }
 
-      it { should include 'WWW-Authenticate' }
+      it { expect(subject).to include 'WWW-Authenticate' }
     end
   end
 end

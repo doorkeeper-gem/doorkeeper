@@ -2,8 +2,8 @@ module Doorkeeper
   class ApplicationsController < Doorkeeper::ApplicationController
     layout 'doorkeeper/admin'
 
-    before_filter :authenticate_admin!
-    before_filter :set_application, only: [:show, :edit, :update, :destroy]
+    before_action :authenticate_admin!
+    before_action :set_application, only: [:show, :edit, :update, :destroy]
 
     def index
       @applications = Application.all
@@ -45,9 +45,9 @@ module Doorkeeper
 
     def application_params
       if params.respond_to?(:permit)
-        params.require(:doorkeeper_application).permit(:name, :redirect_uri)
+        params.require(:doorkeeper_application).permit(:name, :redirect_uri, :scopes)
       else
-        params[:doorkeeper_application].slice(:name, :redirect_uri) rescue nil
+        params[:doorkeeper_application].slice(:name, :redirect_uri, :scopes) rescue nil
       end
     end
   end

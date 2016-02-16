@@ -1,22 +1,16 @@
+require 'doorkeeper/request/strategy'
+
 module Doorkeeper
   module Request
-    class Token
-      def self.build(server)
-        new(server.context.send(:pre_auth), server)
-      end
+    class Token < Strategy
+      delegate :current_resource_owner, to: :server
 
-      attr_accessor :pre_auth, :server
-
-      def initialize(pre_auth, server)
-        @pre_auth, @server = pre_auth, server
+      def pre_auth
+        server.context.send(:pre_auth)
       end
 
       def request
-        @request ||= OAuth::TokenRequest.new(pre_auth, server.current_resource_owner)
-      end
-
-      def authorize
-        request.authorize
+        @request ||= OAuth::TokenRequest.new(pre_auth, current_resource_owner)
       end
     end
   end

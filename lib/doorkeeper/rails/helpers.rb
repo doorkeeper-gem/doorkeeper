@@ -11,12 +11,10 @@ module Doorkeeper
         end
       end
 
-      def doorkeeper_unauthorized_render_options
-        nil
+      def doorkeeper_unauthorized_render_options(error: nil)
       end
 
-      def doorkeeper_forbidden_render_options
-        nil
+      def doorkeeper_forbidden_render_options(error: nil)
       end
 
       def valid_doorkeeper_token?
@@ -32,11 +30,13 @@ module Doorkeeper
       end
 
       def doorkeeper_render_error_with(error)
-        options = doorkeeper_render_options || {}
+        options = doorkeeper_render_options(error) || {}
+        status = doorkeeper_status_for_error(
+          error, options.delete(:respond_not_found_when_forbidden))
         if options.blank?
-          head error.status
+          head status
         else
-          options[:status] = error.status
+          options[:status] = status
           options[:layout] = false if options[:layout].nil?
           render options
         end
@@ -50,11 +50,19 @@ module Doorkeeper
         end
       end
 
-      def doorkeeper_render_options
+      def doorkeeper_render_options(error)
         if doorkeeper_invalid_token_response?
-          doorkeeper_unauthorized_render_options
+          doorkeeper_unauthorized_render_options(error: error)
         else
-          doorkeeper_forbidden_render_options
+          doorkeeper_forbidden_render_options(error: error)
+        end
+      end
+
+      def doorkeeper_status_for_error(error, respond_not_found_when_forbidden)
+        if respond_not_found_when_forbidden && error.status == :forbidden
+          :not_found
+        else
+          error.status
         end
       end
 
@@ -67,24 +75,6 @@ module Doorkeeper
           request,
           *Doorkeeper.configuration.access_token_methods
         )
-      end
-
-      module ClassMethods
-        def doorkeeper_for(*_args)
-          fail(
-            Errors::DoorkeeperError,
-            "`doorkeeper_for` no longer available",
-            <<-eos
-\nStarting in version 2.0.0 of doorkeeper gem, `doorkeeper_for` is no longer
-available. Please change `doorkeeper_for` calls in your application with:
-
-  before_action :doorkeeper_authorize!
-
-For more information check the README:
-https://github.com/doorkeeper-gem/doorkeeper#protecting-resources-with-oauth-aka-your-api-endpoint\n
-eos
-          )
-        end
       end
     end
   end

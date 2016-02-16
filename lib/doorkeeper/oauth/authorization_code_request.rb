@@ -7,7 +7,7 @@ module Doorkeeper
       validate :attributes,   error: :invalid_request
       validate :client,       error: :invalid_client
       validate :grant,        error: :invalid_grant
-      validate :redirect_uri, error: :invalid_grant
+      validate :redirect_uri, error: :invalid_redirect_uri
 
       attr_accessor :server, :grant, :client, :redirect_uri, :access_token
 
@@ -21,11 +21,16 @@ module Doorkeeper
       private
 
       def before_successful_response
-        grant.revoke
-        find_or_create_access_token(grant.application,
-                                    grant.resource_owner_id,
-                                    grant.scopes,
-                                    server)
+        grant.transaction do
+          grant.lock!
+          raise Errors::InvalidGrantReuse if grant.revoked?
+
+          grant.revoke
+          find_or_create_access_token(grant.application,
+                                      grant.resource_owner_id,
+                                      grant.scopes,
+                                      server)
+        end
       end
 
       def validate_attributes

@@ -1,7 +1,5 @@
 Doorkeeper.configure do
-  # Change the ORM that doorkeeper will use.
-  # Currently supported options are :active_record, :mongoid2, :mongoid3,
-  # :mongoid4, :mongo_mapper
+  # Change the ORM that doorkeeper will use (needs plugins)
   orm :active_record
 
   # This block will be called to check whether the resource owner is authenticated or not.

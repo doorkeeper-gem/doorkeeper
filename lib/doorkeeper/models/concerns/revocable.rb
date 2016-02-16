@@ -1,13 +1,13 @@
 module Doorkeeper
   module Models
     module Revocable
-      def revoke(clock = DateTime)
+      def revoke(clock = Time)
         update_attribute :revoked_at, clock.now
         Doorkeeper.configuration.refresh_token_revoked_on_use
       end
 
       def revoked?
-        !!(revoked_at && revoked_at <= DateTime.now)
+        !!(revoked_at && revoked_at <= Time.now)
       end
 
       def revoke_previous_refresh_token!

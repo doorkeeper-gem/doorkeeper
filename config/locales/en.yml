@@ -14,36 +14,6 @@ en:
               relative_uri: 'must be an absolute URI.'
               secured_uri: 'must be an HTTPS/SSL URI.'
 
-  mongoid:
-    attributes:
-      doorkeeper/application:
-        name: 'Name'
-        redirect_uri: 'Redirect URI'
-    errors:
-      models:
-        doorkeeper/application:
-          attributes:
-            redirect_uri:
-              fragment_present: 'cannot contain a fragment.'
-              invalid_uri: 'must be a valid URI.'
-              relative_uri: 'must be an absolute URI.'
-              secured_uri: 'must be an HTTPS/SSL URI.'
-
-  mongo_mapper:
-    attributes:
-      doorkeeper/application:
-        name: 'Name'
-        redirect_uri: 'Redirect URI'
-    errors:
-      models:
-        doorkeeper/application:
-          attributes:
-            redirect_uri:
-              fragment_present: 'cannot contain a fragment.'
-              invalid_uri: 'must be a valid URI.'
-              relative_uri: 'must be an absolute URI.'
-              secured_uri: 'must be an HTTPS/SSL URI.'
-
   doorkeeper:
     applications:
       confirmations:
@@ -59,6 +29,7 @@ en:
       help:
         redirect_uri: 'Use one line per URI'
         native_redirect_uri: 'Use %{native_redirect_uri} for local tests'
+        scopes: 'Separate scopes with spaces. Leave blank to use the default scopes.'
       edit:
         title: 'Edit application'
       index:
@@ -72,6 +43,7 @@ en:
         title: 'Application: %{name}'
         application_id: 'Application Id'
         secret: 'Secret'
+        scopes: 'Scopes'
         callback_urls: 'Callback urls'
         actions: 'Actions'
 
@@ -82,7 +54,7 @@ en:
       error:
         title: 'An error has occurred'
       new:
-        title: 'Authorize required'
+        title: 'Authorization required'
         prompt: 'Authorize %{client_name} to use your account?'
         able_to: 'This application will be able to'
       show:
@@ -148,4 +120,4 @@ en:
           oauth2_provider: 'OAuth2 Provider'
           applications: 'Applications'
       application:
-        title: 'OAuth authorize required'
+        title: 'OAuth authorization required'

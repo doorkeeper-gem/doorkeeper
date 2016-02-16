@@ -55,6 +55,12 @@ module Doorkeeper
       expect(new_application.uid).not_to be_nil
     end
 
+    it 'generates uid on create if an empty string' do
+      new_application.uid = ''
+      new_application.save
+      expect(new_application.uid).not_to be_blank
+    end
+
     it 'generates uid on create unless one is set' do
       new_application.uid = uid
       new_application.save
@@ -84,13 +90,19 @@ module Doorkeeper
       app1 = FactoryGirl.create(:application)
       app2 = FactoryGirl.create(:application)
       app2.uid = app1.uid
-      expect { app2.save!(validate: false) }.to raise_error
+      expect { app2.save!(validate: false) }.to raise_error(ActiveRecord::RecordNotUnique)
     end
 
     it 'generate secret on create' do
       expect(new_application.secret).to be_nil
       new_application.save
       expect(new_application.secret).not_to be_nil
+    end
+
+    it 'generate secret on create if is blank string' do
+      new_application.secret = ''
+      new_application.save
+      expect(new_application.secret).not_to be_blank
     end
 
     it 'generate secret on create unless one is set' do
@@ -169,21 +181,6 @@ module Doorkeeper
         app = FactoryGirl.create :application
         authenticated = Application.by_uid_and_secret(app.uid, app.secret)
         expect(authenticated).to eq(app)
-      end
-    end
-
-    if Doorkeeper.configuration.orm == :active_record
-      describe :scopes do
-        it 'fails on missing column with an upgrade notice' do
-          app = FactoryGirl.build :application
-          no_scopes_app = double(attributes: [])
-          allow(Application).to receive(:new).and_return(no_scopes_app)
-
-          expect { app.scopes }.to raise_error(
-            NameError,
-            /Missing column: `applications.scopes`/
-          )
-        end
       end
     end
   end

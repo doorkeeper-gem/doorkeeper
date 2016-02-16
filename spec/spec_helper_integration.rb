@@ -8,13 +8,18 @@ DOORKEEPER_ORM = (orm && orm[1] || :active_record).to_sym
 $LOAD_PATH.unshift File.dirname(__FILE__)
 
 require 'capybara/rspec'
-require 'rspec/active_model/mocks'
 require 'dummy/config/environment'
 require 'rspec/rails'
 require 'generator_spec/test_case'
 require 'timecop'
 require 'database_cleaner'
-require 'pry'
+
+# Load JRuby SQLite3 if in that platform
+begin
+  require 'jdbc/sqlite3'
+  Jdbc::SQLite3.load_driver
+rescue LoadError
+end
 
 Rails.logger.info "====> Doorkeeper.orm = #{Doorkeeper.configuration.orm.inspect}"
 if Doorkeeper.configuration.orm == :active_record
@@ -24,11 +29,7 @@ end
 Rails.logger.info "====> Rails version: #{Rails.version}"
 Rails.logger.info "====> Ruby version: #{RUBY_VERSION}"
 
-if [:mongoid2, :mongoid3, :mongoid4].include?(DOORKEEPER_ORM)
-  require "support/orm/mongoid"
-else
-  require "support/orm/#{DOORKEEPER_ORM}"
-end
+require "support/orm/#{DOORKEEPER_ORM}"
 
 ENGINE_RAILS_ROOT = File.join(File.dirname(__FILE__), '../')
 

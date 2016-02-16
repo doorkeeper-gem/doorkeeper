@@ -5,10 +5,6 @@
  *= require_tree .
 */
 
-body {
-  padding-top: 60px;
-}
-
 td {
-    vertical-align: middle !important;
+  vertical-align: middle !important;
 }

@@ -17,7 +17,7 @@ module Doorkeeper
       before_validation :generate_uid, :generate_secret, on: :create
 
       if respond_to?(:attr_accessible)
-        attr_accessible :name, :redirect_uri
+        attr_accessible :name, :redirect_uri, :scopes
       end
     end
 
@@ -31,18 +31,6 @@ module Doorkeeper
       end
     end
 
-    alias_method :original_scopes, :scopes
-    def scopes
-      if has_scopes?
-        original_scopes
-      else
-        fail NameError, "Missing column: `applications.scopes`.", <<-MSG.squish
-If you are using ActiveRecord run `rails generate doorkeeper:application_scopes
-&& rake db:migrate` to add it.
-        MSG
-      end
-    end
-
     private
 
     def has_scopes?
@@ -51,11 +39,15 @@ If you are using ActiveRecord run `rails generate doorkeeper:application_scopes
     end
 
     def generate_uid
-      self.uid ||= UniqueToken.generate
+      if uid.blank?
+        self.uid = UniqueToken.generate
+      end
     end
 
     def generate_secret
-      self.secret ||= UniqueToken.generate
+      if secret.blank?
+        self.secret = UniqueToken.generate
+      end
     end
   end
 end

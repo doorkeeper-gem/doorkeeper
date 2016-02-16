@@ -128,3 +128,29 @@ feature 'Authorization Code Flow' do
     end
   end
 end
+
+describe 'Authorization Code Flow' do
+  before do
+    Doorkeeper.configure do
+      orm DOORKEEPER_ORM
+      use_refresh_token
+    end
+    client_exists
+  end
+
+  context 'issuing a refresh token' do
+    before do
+      authorization_code_exists application: @client
+    end
+
+    it 'second of simultaneous client requests get an error for revoked acccess token' do
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      allow_any_instance_of(Doorkeeper::AccessGrant).to receive(:revoked?).and_return(false, true)
+
+      post token_endpoint_url(code: authorization_code, client: @client)
+
+      should_not_have_json 'access_token'
+      should_have_json 'error', 'invalid_grant'
+    end
+  end
+end

@@ -19,12 +19,12 @@ describe 'Revocable' do
 
   describe :revoked? do
     it 'is revoked if :revoked_at has passed' do
-      allow(subject).to receive(:revoked_at).and_return(DateTime.now - 1000)
+      allow(subject).to receive(:revoked_at).and_return(Time.now - 1000)
       expect(subject).to be_revoked
     end
 
     it 'is not revoked if :revoked_at has not passed' do
-      allow(subject).to receive(:revoked_at).and_return(DateTime.now + 1000)
+      allow(subject).to receive(:revoked_at).and_return(Time.now + 1000)
       expect(subject).not_to be_revoked
     end
 

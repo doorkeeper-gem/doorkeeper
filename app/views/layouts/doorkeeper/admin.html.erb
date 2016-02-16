@@ -9,14 +9,17 @@
   <%= csrf_meta_tags %>
 </head>
 <body>
-<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-  <div class="container">
+<div class="navbar navbar-inverse navbar-static-top" role="navigation">
+  <div class="container-fluid">
     <div class="navbar-header">
       <%= link_to t('doorkeeper.layouts.admin.nav.oauth2_provider'), oauth_applications_path, class: 'navbar-brand' %>
     </div>
     <ul class="nav navbar-nav">
       <%= content_tag :li, class: "#{'active' if request.path == oauth_applications_path}" do %>
         <%= link_to t('doorkeeper.layouts.admin.nav.applications'), oauth_applications_path %>
+      <% end %>
+      <%= content_tag :li do %>
+        <%= link_to 'Home', root_path %>
       <% end %>
     </ul>
   </div>

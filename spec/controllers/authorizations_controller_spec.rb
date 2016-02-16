@@ -89,16 +89,6 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     it 'returns the existing access token in a fragment'
   end
 
-  describe 'GET #new' do
-    before do
-      get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
-    end
-
-    it 'renders new template' do
-      expect(response).to render_template(:new)
-    end
-  end
-
   describe 'GET #new token request with native url and skip_authorization true' do
     before do
       allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
@@ -189,10 +179,6 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
 
     it 'does not redirect' do
       expect(response).to_not be_redirect
-    end
-
-    it 'renders error template' do
-      expect(response).to render_template(:error)
     end
 
     it 'does not issue any token' do

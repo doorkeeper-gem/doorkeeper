@@ -1,3 +1,7 @@
+AllCops:
+  Exclude:
+    - "spec/dummy/db/*"
+
 LineLength:
   Exclude:
     - spec/**/*

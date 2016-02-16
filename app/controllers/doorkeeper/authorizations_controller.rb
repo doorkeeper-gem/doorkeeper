@@ -1,6 +1,6 @@
 module Doorkeeper
   class AuthorizationsController < Doorkeeper::ApplicationController
-    before_filter :authenticate_resource_owner!
+    before_action :authenticate_resource_owner!
 
     def new
       if pre_auth.authorizable?

@@ -7,7 +7,7 @@
     <%= raw t('.prompt', client_name: "<strong class=\"text-info\">#{ @pre_auth.client.name }</strong>") %>
   </p>
 
-  <% if @pre_auth.scopes %>
+  <% if @pre_auth.scopes.count > 0 %>
     <div id="oauth-permissions">
       <p><%= t('.able_to') %>:</p>
 

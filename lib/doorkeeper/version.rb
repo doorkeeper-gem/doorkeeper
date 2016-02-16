@@ -1,3 +1,3 @@
 module Doorkeeper
-  VERSION = '2.2.2'
+  VERSION = "3.1.0"
 end
