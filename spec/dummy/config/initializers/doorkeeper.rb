@@ -29,6 +29,9 @@ Doorkeeper.configure do
   # Issue access tokens with refresh token (disabled by default)
   use_refresh_token
 
+  # Do not revoke the refresh token until the new access token is used once. Defaults to false
+  # refresh_token_revoked_on_use false
+
   # Provide support for an owner to be assigned to each registered application (disabled by default)
   # Optional parameter :confirmation => true (default false) if you want to enforce ownership of
   # a registered application

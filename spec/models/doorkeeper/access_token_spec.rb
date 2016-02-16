@@ -120,6 +120,11 @@ module Doorkeeper
         expect(token.refresh_token).not_to be_nil
       end
 
+      it 'stores a previous refresh token if it was provided' do
+        token = FactoryGirl.create :access_token, use_refresh_token: true, previous_refresh_token: 'some_token'
+        expect(token.previous_refresh_token).not_to be_nil
+      end
+
       it 'is not valid if token exists' do
         token1 = FactoryGirl.create :access_token, use_refresh_token: true
         token2 = FactoryGirl.create :access_token, use_refresh_token: true

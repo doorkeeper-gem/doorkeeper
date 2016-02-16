@@ -21,7 +21,7 @@ module Doorkeeper
 
       if respond_to?(:attr_accessible)
         attr_accessible :application_id, :resource_owner_id, :expires_in,
-                        :scopes, :use_refresh_token
+                        :scopes, :use_refresh_token, :previous_refresh_token
       end
 
       before_validation :generate_token, on: :create
