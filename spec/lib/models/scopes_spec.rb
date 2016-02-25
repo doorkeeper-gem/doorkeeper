@@ -36,7 +36,6 @@ describe 'Doorkeeper::Models::Scopes' do
       subject.scopes = [:foo, :bar]
       expect(subject.scopes).to include('foo')
     end
-
   end
 
   describe :scopes_string do
