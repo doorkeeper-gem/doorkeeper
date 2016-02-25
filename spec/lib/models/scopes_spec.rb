@@ -23,6 +23,20 @@ describe 'Doorkeeper::Models::Scopes' do
     it 'includes scopes' do
       expect(subject.scopes).to include('public')
     end
+
+    it 'writes scopes as string' do
+      subject.scopes = 'read write'
+      expect(subject.scopes).to include('read')
+    end
+
+    it 'writes scopes as array' do
+      subject.scopes = %w(read write)
+      expect(subject.scopes).to include('read')
+
+      subject.scopes = [:foo, :bar]
+      expect(subject.scopes).to include('foo')
+    end
+
   end
 
   describe :scopes_string do
