@@ -22,6 +22,7 @@ module Doorkeeper
 
       validates :token, presence: true, uniqueness: true
       validates :refresh_token, uniqueness: true, if: :use_refresh_token?
+      validates :application_id, presence: true, allow_nil: true
 
       attr_writer :use_refresh_token
 
