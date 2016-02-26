@@ -12,7 +12,8 @@ module Doorkeeper
     included do
       belongs_to :application,
                  class_name: 'Doorkeeper::Application',
-                 inverse_of: :access_tokens
+                 inverse_of: :access_tokens,
+                 optional: true
 
       validates :token, presence: true, uniqueness: true
       validates :refresh_token, uniqueness: true, if: :use_refresh_token?
