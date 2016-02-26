@@ -4,8 +4,21 @@ User-visible changes worth mentioning.
 
 ---
 
-- [#778] Use the remaining time that a token is still valid when building the
-  redirect URI for the implicit grant flow
+## 4.0.0.rc1
+
+### Backward incompatible changes
+
+- Drops support for Rails 4.1 and earlier
+- Drops support for Ruby 2.0
+- [#778] Bug fix: use the remaining time that a token is still valid when
+  building the redirect URI for the implicit grant flow
+
+### Other changes
+
+- [#771] Validation error messages fixes
+- Adds foreign key constraints in generated migrations between tokens and
+  grants, and applications
+- Support Rails 5
 
 ## 3.1.0
 
