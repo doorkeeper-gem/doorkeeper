@@ -3,7 +3,6 @@ language: ruby
 sudo: false
 
 rvm:
-  - 2.0
   - 2.1
   - 2.2.2
   - jruby-head
@@ -14,8 +13,6 @@ env:
 
 matrix:
   exclude:
-    - env: rails=5.0.0.beta1
-      rvm: 2.0
     - env: rails=5.0.0.beta1
       rvm: 2.1
     - env: rails=5.0.0.beta1
