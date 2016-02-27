@@ -10,7 +10,15 @@ module Doorkeeper
     include ActiveModel::MassAssignmentSecurity if defined?(::ProtectedAttributes)
 
     included do
-      belongs_to :application, class_name: 'Doorkeeper::Application', inverse_of: :access_grants
+      belongs_to_options = {
+        class_name: 'Doorkeeper::Application',
+        inverse_of: :access_grants
+      }
+      if defined?(ActiveRecord::Base) && ActiveRecord::VERSION::MAJOR >= 5
+        belongs_to_options.merge!(optional: true)
+      end
+
+      belongs_to :application, belongs_to_options
 
       if respond_to?(:attr_accessible)
         attr_accessible :resource_owner_id, :application_id, :expires_in, :redirect_uri, :scopes
