@@ -143,6 +143,12 @@ module Doorkeeper
         subject.resource_owner_id = nil
         expect(subject).to be_valid
       end
+
+      it 'is valid without resource_owner_id' do
+        # For resource owner credentials flow
+        subject.application_id = nil
+        expect(subject).to be_valid
+      end
     end
 
     describe '#same_credential?' do
