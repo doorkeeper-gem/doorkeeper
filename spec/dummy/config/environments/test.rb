@@ -10,18 +10,10 @@ Dummy::Application.configure do
   # Configure static asset server for tests with Cache-Control for performance
   config.static_cache_control = 'public, max-age=3600'
 
-  if Rails.version.to_i < 4
-    # Log error messages when you accidentally call methods on nil
-    config.whiny_nils = true
-  end
-
-  if Rails.version.to_i >= 4
-    # Do not eager load code on boot. This avoids loading your whole application
-    # just for the purpose of running a single test. If you are using a tool that
-    # preloads Rails for running tests, you may have to set it to true.
-    config.eager_load = false
-    config.i18n.enforce_available_locales = true
-  end
+  # Do not eager load code on boot. This avoids loading your whole application
+  # just for the purpose of running a single test. If you are using a tool that
+  # preloads Rails for running tests, you may have to set it to true.
+  config.eager_load = false
 
   # Show full error reports and disable caching
   config.consider_all_requests_local       = true
