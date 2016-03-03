@@ -4,6 +4,10 @@ User-visible changes worth mentioning.
 
 ---
 
+## 4.0.0.rc2
+
+- Fix optional belongs_to for Rails 5
+
 ## 4.0.0.rc1
 
 ### Backward incompatible changes
