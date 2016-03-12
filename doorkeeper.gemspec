@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "database_cleaner", "~> 1.3.0"
   s.add_development_dependency "factory_girl", "~> 4.5.0"
   s.add_development_dependency "generator_spec", "~> 0.9.0"
-  s.add_development_dependency "rake", "~> 10.5.0"
+  s.add_development_dependency "rake", "> 10.5.0"
   s.add_development_dependency "rspec-rails"
   s.add_development_dependency "timecop", "~> 0.7.0"
 end

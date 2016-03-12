@@ -8,6 +8,9 @@ rvm:
   - 2.3.0
   - jruby-head
 
+before_install:
+  - gem install bundler -v '~> 1.10'
+
 env:
   - rails=4.2.0
   - rails=5.0.0.beta3
