@@ -194,14 +194,17 @@ doorkeeper.
     attr_reader :reuse_access_token
 
     def refresh_token_enabled?
+      @refresh_token_enabled ||= false
       !!@refresh_token_enabled
     end
 
     def enable_application_owner?
+      @enable_application_owner ||= false
       !!@enable_application_owner
     end
 
     def confirm_application_owner?
+      @confirm_application_owner ||= false
       !!@confirm_application_owner
     end
 
