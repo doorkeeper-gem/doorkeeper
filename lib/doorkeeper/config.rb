@@ -225,10 +225,6 @@ doorkeeper.
       @access_token_methods ||= [:from_bearer_authorization, :from_access_token_param, :from_bearer_param]
     end
 
-    def realm
-      @realm ||= 'Doorkeeper'
-    end
-
     def authorization_response_types
       @authorization_response_types ||= calculate_authorization_response_types
     end
