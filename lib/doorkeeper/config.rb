@@ -133,6 +133,7 @@ doorkeeper.
         attribute_builder = options[:builder_class]
 
         Builder.instance_eval do
+          remove_method name if method_defined?(name)
           define_method name do |*args, &block|
             # TODO: is builder_class option being used?
             value = unless attribute_builder
