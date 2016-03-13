@@ -8,7 +8,7 @@ describe Doorkeeper, 'configuration' do
       block = proc {}
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
-        resource_owner_authenticator &block
+        resource_owner_authenticator(&block)
       end
       expect(subject.authenticate_resource_owner).to eq(block)
     end
