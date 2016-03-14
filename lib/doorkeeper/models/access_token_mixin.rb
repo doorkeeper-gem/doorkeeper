@@ -105,6 +105,7 @@ module Doorkeeper
     end
 
     def use_refresh_token?
+      @use_refresh_token ||= false
       !!@use_refresh_token
     end
 
