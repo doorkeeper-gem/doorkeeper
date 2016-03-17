@@ -6,7 +6,6 @@ rvm:
   - 2.1
   - 2.2.4
   - 2.3.0
-  - jruby-head
 
 before_install:
   - gem install bundler -v '~> 1.10'
@@ -19,5 +18,3 @@ matrix:
   exclude:
     - env: rails=5.0.0.beta3
       rvm: 2.1
-    - env: rails=5.0.0.beta3
-      rvm: jruby-head
