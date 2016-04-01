@@ -4,6 +4,8 @@ User-visible changes worth mentioning.
 
 ---
 
+- Toughen parameters filter with exact match
+
 ## 4.0.0.rc2
 
 - Fix optional belongs_to for Rails 5
