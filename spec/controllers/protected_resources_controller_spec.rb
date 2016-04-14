@@ -8,6 +8,12 @@ module ControllerActions
   def show
     render text: 'show'
   end
+
+  def doorkeeper_unauthorized_render_options(*)
+  end
+
+  def doorkeeper_forbidden_render_options(*)
+  end
 end
 
 describe 'doorkeeper authorize filter' do
@@ -127,6 +133,7 @@ describe 'doorkeeper authorize filter' do
     context 'with a JSON custom render', token: :invalid do
       before do
         module ControllerActions
+          remove_method :doorkeeper_unauthorized_render_options
           def doorkeeper_unauthorized_render_options(error: nil)
             { json: ActiveSupport::JSON.encode(error_message: error.description) }
           end
@@ -134,6 +141,7 @@ describe 'doorkeeper authorize filter' do
       end
       after do
         module ControllerActions
+          remove_method :doorkeeper_unauthorized_render_options
           def doorkeeper_unauthorized_render_options(error: nil)
           end
         end
@@ -153,6 +161,7 @@ describe 'doorkeeper authorize filter' do
     context 'with a text custom render', token: :invalid do
       before do
         module ControllerActions
+          remove_method :doorkeeper_unauthorized_render_options
           def doorkeeper_unauthorized_render_options(error: nil)
             { text: 'Unauthorized' }
           end
@@ -160,6 +169,7 @@ describe 'doorkeeper authorize filter' do
       end
       after do
         module ControllerActions
+          remove_method :doorkeeper_unauthorized_render_options
           def doorkeeper_unauthorized_render_options(error: nil)
           end
         end
@@ -183,6 +193,7 @@ describe 'doorkeeper authorize filter' do
 
     after do
       module ControllerActions
+        remove_method :doorkeeper_forbidden_render_options
         def doorkeeper_forbidden_render_options(*)
         end
       end
@@ -203,6 +214,7 @@ describe 'doorkeeper authorize filter' do
     context 'with a JSON custom render' do
       before do
         module ControllerActions
+          remove_method :doorkeeper_forbidden_render_options
           def doorkeeper_forbidden_render_options(*)
             { json: { error_message: 'Forbidden' } }
           end
@@ -223,6 +235,7 @@ describe 'doorkeeper authorize filter' do
     context 'with a status and JSON custom render' do
       before do
         module ControllerActions
+          remove_method :doorkeeper_forbidden_render_options
           def doorkeeper_forbidden_render_options(*)
             { json: { error_message: 'Not Found' },
               respond_not_found_when_forbidden: true }
@@ -239,6 +252,7 @@ describe 'doorkeeper authorize filter' do
     context 'with a text custom render' do
       before do
         module ControllerActions
+          remove_method :doorkeeper_forbidden_render_options
           def doorkeeper_forbidden_render_options(*)
             { text: 'Forbidden' }
           end
@@ -256,6 +270,7 @@ describe 'doorkeeper authorize filter' do
     context 'with a status and text custom render' do
       before do
         module ControllerActions
+          remove_method :doorkeeper_forbidden_render_options
           def doorkeeper_forbidden_render_options(*)
             { respond_not_found_when_forbidden: true, text: 'Not Found' }
           end
