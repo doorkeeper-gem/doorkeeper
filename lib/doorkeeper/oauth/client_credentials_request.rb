@@ -8,7 +8,8 @@ module Doorkeeper
       include Validations
       include OAuth::RequestConcern
 
-      attr_accessor :issuer, :server, :client, :original_scopes
+      attr_writer :issuer
+      attr_accessor :server, :client, :original_scopes
       attr_reader :response
       alias :error_response :response
 

@@ -67,7 +67,6 @@ module Doorkeeper::OAuth
 
       it 'does not change the existing object' do
         origin = Scopes.from_string('public')
-        new_scope = origin + Scopes.from_string('admin')
         expect(origin.to_s).to eq('public')
       end
 
