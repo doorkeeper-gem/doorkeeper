@@ -12,6 +12,11 @@ module Doorkeeper
       let(:factory_name) { :access_token }
     end
 
+    module CustomGeneratorArgs
+      def self.generate
+      end
+    end
+
     describe :generate_token do
       it 'generates a token using the default method' do
         FactoryGirl.create :access_token
@@ -21,6 +26,10 @@ module Doorkeeper
       end
 
       it 'generates a token using a custom object' do
+        eigenclass = class << CustomGeneratorArgs; self; end
+        eigenclass.class_eval do
+          remove_method :generate
+        end
         module CustomGeneratorArgs
           def self.generate(opts = {})
             "custom_generator_token_#{opts[:resource_owner_id]}"
@@ -37,6 +46,10 @@ module Doorkeeper
       end
 
       it 'allows the custom generator to access the application details' do
+        eigenclass = class << CustomGeneratorArgs; self; end
+        eigenclass.class_eval do
+          remove_method :generate
+        end
         module CustomGeneratorArgs
           def self.generate(opts = {})
             "custom_generator_token_#{opts[:application].name}"
@@ -53,6 +66,10 @@ module Doorkeeper
       end
 
       it 'allows the custom generator to access the scopes' do
+        eigenclass = class << CustomGeneratorArgs; self; end
+        eigenclass.class_eval do
+          remove_method :generate
+        end
         module CustomGeneratorArgs
           def self.generate(opts = {})
             "custom_generator_token_#{opts[:scopes].count}_#{opts[:scopes]}"
@@ -70,6 +87,10 @@ module Doorkeeper
       end
 
       it 'allows the custom generator to access the expiry length' do
+        eigenclass = class << CustomGeneratorArgs; self; end
+        eigenclass.class_eval do
+          remove_method :generate
+        end
         module CustomGeneratorArgs
           def self.generate(opts = {})
             "custom_generator_token_#{opts[:expires_in]}"

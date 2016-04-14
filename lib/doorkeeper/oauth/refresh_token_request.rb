@@ -12,7 +12,9 @@ module Doorkeeper
       validate :scope,        error: :invalid_scope
 
       attr_accessor :access_token, :client, :credentials, :refresh_token,
-                    :server
+                    :server, :refresh_token_parameter
+
+      private :refresh_token_parameter, :refresh_token_parameter=
 
       def initialize(server, refresh_token, credentials, parameters = {})
         @server          = server
@@ -28,8 +30,6 @@ module Doorkeeper
       end
 
       private
-
-      attr_reader :refresh_token_parameter
 
       def before_successful_response
         refresh_token.transaction do
