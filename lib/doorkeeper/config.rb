@@ -191,6 +191,10 @@ doorkeeper.
     option :grant_flows,                    default: %w(authorization_code client_credentials)
     option :access_token_generator,         default: "Doorkeeper::OAuth::Helpers::UniqueToken"
 
+    %w(applications access_grants access_tokens).each do |model_name|
+      option :"#{model_name}_table_name",   default: "oauth_#{model_name}"
+    end
+
     attr_reader :reuse_access_token
 
     def refresh_token_enabled?
