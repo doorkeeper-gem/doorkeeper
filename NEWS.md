@@ -3,8 +3,11 @@
 User-visible changes worth mentioning.
 
 ---
-
+## 4.0.0.rc3
 - Toughen parameters filter with exact match
+
+### Backward incompatible changes
+- Force all timezones to use UTC to prevent comparison issues.
 
 ## 4.0.0.rc2
 
