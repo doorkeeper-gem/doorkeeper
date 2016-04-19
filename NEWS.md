@@ -90,7 +90,7 @@ User-visible changes worth mentioning.
 - Remove `applications.scopes` upgrade notice.
 
 
-## 2.2.2 (unreleased)
+## 2.2.2
 
 - [#541] Fixed `undefined method attr_accessible` problem on Rails 4
     (happens only when ProtectedAttributes gem is used) in #599
