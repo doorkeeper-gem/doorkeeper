@@ -3,6 +3,7 @@ module Doorkeeper
     module ActiveRecord
       def self.initialize_models!
         require 'doorkeeper/orm/active_record/access_grant'
+        require 'doorkeeper/orm/active_record/device_access_grant'
         require 'doorkeeper/orm/active_record/access_token'
         require 'doorkeeper/orm/active_record/application'
 

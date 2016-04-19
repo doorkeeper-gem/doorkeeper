@@ -8,6 +8,7 @@ module Doorkeeper
 
     included do
       has_many :access_grants, dependent: :destroy, class_name: 'Doorkeeper::AccessGrant'
+      has_many :device_access_grants, dependent: :destroy, class_name: 'Doorkeeper::DeviceAccessGrant'
       has_many :access_tokens, dependent: :destroy, class_name: 'Doorkeeper::AccessToken'
 
       validates :name, :secret, :uid, presence: true
