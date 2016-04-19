@@ -15,10 +15,6 @@ module Doorkeeper
       validates :redirect_uri, redirect_uri: true
 
       before_validation :generate_uid, :generate_secret, on: :create
-
-      if respond_to?(:attr_accessible)
-        attr_accessible :name, :redirect_uri, :scopes
-      end
     end
 
     module ClassMethods

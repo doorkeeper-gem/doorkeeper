@@ -20,10 +20,6 @@ module Doorkeeper
 
       belongs_to :application, belongs_to_options
 
-      if respond_to?(:attr_accessible)
-        attr_accessible :resource_owner_id, :application_id, :expires_in, :redirect_uri, :scopes
-      end
-
       validates :resource_owner_id, :application_id, :token, :expires_in, :redirect_uri, presence: true
       validates :token, uniqueness: true
 
