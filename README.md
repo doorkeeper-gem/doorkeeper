@@ -16,43 +16,41 @@ functionality to your Rails or Grape application.
 Please check the documentation for the version of doorkeeper you are using in:
 https://github.com/doorkeeper-gem/doorkeeper/releases
 
+- See the [wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki)
+- For general questions, please post in [Stack Overflow](http://stackoverflow.com/questions/tagged/doorkeeper)
+
 ## Table of Contents
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-- [Useful links](#useful-links)
+
 - [Installation](#installation)
 - [Configuration](#configuration)
-    - [Active Record](#active-record)
-    - [Other ORMs](#other-orms)
-    - [Routes](#routes)
-    - [Authenticating](#authenticating)
-    - [Internationalization (I18n)](#internationalization-i18n)
+  - [Active Record](#active-record)
+  - [Other ORMs](#other-orms)
+  - [Routes](#routes)
+  - [Authenticating](#authenticating)
+  - [Internationalization (I18n)](#internationalization-i18n)
 - [Protecting resources with OAuth (a.k.a your API endpoint)](#protecting-resources-with-oauth-aka-your-api-endpoint)
-    - [Protect your API with OAuth when using Grape](#protect-your-api-with-oauth-when-using-grape)
-    - [Route Constraints and other integrations](#route-constraints-and-other-integrations)
-    - [Access Token Scopes](#access-token-scopes)
-    - [Custom Access Token Generator](#custom-access-token-generator)
-    - [Authenticated resource owner](#authenticated-resource-owner)
-    - [Applications list](#applications-list)
+  - [Protect your API with OAuth when using Grape](#protect-your-api-with-oauth-when-using-grape)
+  - [Route Constraints and other integrations](#route-constraints-and-other-integrations)
+  - [Access Token Scopes](#access-token-scopes)
+  - [Custom Access Token Generator](#custom-access-token-generator)
+  - [Authenticated resource owner](#authenticated-resource-owner)
+  - [Applications list](#applications-list)
 - [Other customizations](#other-customizations)
 - [Upgrading](#upgrading)
 - [Development](#development)
 - [Contributing](#contributing)
 - [Other resources](#other-resources)
-    - [Wiki](#wiki)
-    - [Screencast](#screencast)
-    - [Client applications](#client-applications)
-    - [Contributors](#contributors)
-    - [IETF Standards](#ietf-standards)
-    - [License](#license)
+  - [Wiki](#wiki)
+  - [Screencast](#screencast)
+  - [Client applications](#client-applications)
+  - [Contributors](#contributors)
+  - [IETF Standards](#ietf-standards)
+  - [License](#license)
+
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-
-## Useful links
-
-- For documentation, please check out our [wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki)
-- For general questions, please post it in [stack overflow](http://stackoverflow.com/questions/tagged/doorkeeper)
 
 ## Installation
 
