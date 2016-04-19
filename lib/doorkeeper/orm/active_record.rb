@@ -19,6 +19,12 @@ module Doorkeeper
         Doorkeeper::Application.send :include, Doorkeeper::Models::Ownership
       end
 
+      def self.initialize_table_names!
+        Doorkeeper::AccessGrant.table_name = Doorkeeper.configuration.access_grants_table_name
+        Doorkeeper::AccessToken.table_name = Doorkeeper.configuration.access_tokens_table_name
+        Doorkeeper::Application.table_name = Doorkeeper.configuration.applications_table_name
+      end
+
       def self.check_requirements!(_config)
         if ::ActiveRecord::Base.connected? &&
            ::ActiveRecord::Base.connection.table_exists?(

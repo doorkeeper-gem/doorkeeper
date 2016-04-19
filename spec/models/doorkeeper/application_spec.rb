@@ -9,6 +9,8 @@ module Doorkeeper
     let(:uid) { SecureRandom.hex(8) }
     let(:secret) { SecureRandom.hex(8) }
 
+    it_behaves_like 'a model with custom table', :apps
+
     context 'application_owner is enabled' do
       before do
         Doorkeeper.configure do

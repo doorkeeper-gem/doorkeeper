@@ -10,6 +10,7 @@ module Doorkeeper
     setup_orm_adapter
     setup_orm_models
     setup_application_owner if @config.enable_application_owner?
+    setup_table_names
     check_requirements
   end
 
@@ -39,6 +40,10 @@ doorkeeper.
 
   def self.setup_application_owner
     @orm_adapter.initialize_application_owner!
+  end
+
+  def self.setup_table_names
+    @orm_adapter.initialize_table_names!
   end
 
   class Config
