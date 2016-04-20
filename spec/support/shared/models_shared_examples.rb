@@ -64,8 +64,8 @@ shared_examples 'a model with custom table' do |config_option, custom_table_name
     end
 
     it 'has a custom table name for the specific config' do
-      expect { custom_configuration }.to change { described_class.table_name.to_s }
-                                             .from(default_name).to(custom_table_name.to_s)
+      expect { custom_configuration }.to change { described_class.table_name.to_s }.
+                                             from(default_name).to(custom_table_name.to_s)
     end
   end
 end

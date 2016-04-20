@@ -13,12 +13,12 @@ module Doorkeeper
     end
 
     it_behaves_like 'a model with custom table', :access_tokens_table_name, :tokens do
-      let(:custom_configuration) {
+      let(:custom_configuration) do
         Doorkeeper.configure do
-           orm DOORKEEPER_ORM
-           access_tokens_table_name :tokens
+          orm DOORKEEPER_ORM
+          access_tokens_table_name :tokens
         end
-      }
+      end
     end
 
     module CustomGeneratorArgs

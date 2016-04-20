@@ -10,12 +10,12 @@ module Doorkeeper
     let(:secret) { SecureRandom.hex(8) }
 
     it_behaves_like 'a model with custom table', :applications_table_name, :apps do
-      let(:custom_configuration) {
+      let(:custom_configuration) do
         Doorkeeper.configure do
-           orm DOORKEEPER_ORM
-           applications_table_name :apps
+          orm DOORKEEPER_ORM
+          applications_table_name :apps
         end
-      }
+      end
     end
 
     context 'application_owner is enabled' do

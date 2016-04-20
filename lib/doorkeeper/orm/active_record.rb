@@ -24,7 +24,7 @@ module Doorkeeper
           entity = model.model_name.element # application, access_grant, access_token
 
           table_name = Doorkeeper.configuration.send("#{entity.pluralize}_table_name")
-          fail "#{model.to_s} can't be initialized with blank table name!" if table_name.blank?
+          fail "#{model} can't be initialized with blank table name!" if table_name.blank?
 
           model.table_name = table_name.to_sym
         end
