@@ -314,4 +314,49 @@ describe Doorkeeper, 'configuration' do
       expect(subject.access_token_generator).to eq('Example')
     end
   end
+
+  describe 'applications_table_name' do
+    it 'is :oauth_applications by default' do
+      expect(Doorkeeper.configuration.applications_table_name).to eq(:oauth_applications)
+    end
+
+    it 'can change the value' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        applications_table_name 'example'
+      end
+
+      expect(subject.applications_table_name).to eq('example')
+    end
+  end
+
+  describe 'access_grants_table_name' do
+    it 'is :oauth_access_grants by default' do
+      expect(Doorkeeper.configuration.access_grants_table_name).to eq(:oauth_access_grants)
+    end
+
+    it 'can change the value' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        access_grants_table_name 'example'
+      end
+
+      expect(subject.access_grants_table_name).to eq('example')
+    end
+  end
+
+  describe 'access_tokens_table_name' do
+    it 'is :oauth_access_tokens by default' do
+      expect(Doorkeeper.configuration.access_tokens_table_name).to eq(:oauth_access_tokens)
+    end
+
+    it 'can change the value' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        access_tokens_table_name 'example'
+      end
+
+      expect(subject.access_tokens_table_name).to eq('example')
+    end
+  end
 end
