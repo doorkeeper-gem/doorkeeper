@@ -5,11 +5,19 @@ describe Doorkeeper::AccessGrant do
 
   it { expect(subject).to be_valid }
 
-  it_behaves_like 'a model with custom table', :grants
   it_behaves_like 'an accessible token'
   it_behaves_like 'a revocable token'
   it_behaves_like 'a unique token' do
     let(:factory_name) { :access_grant }
+  end
+
+  it_behaves_like 'a model with custom table', :access_grants_table_name, :grants do
+    let(:custom_configuration) {
+      Doorkeeper.configure do
+         orm DOORKEEPER_ORM
+         access_grants_table_name :grants
+      end
+    }
   end
 
   describe 'validations' do

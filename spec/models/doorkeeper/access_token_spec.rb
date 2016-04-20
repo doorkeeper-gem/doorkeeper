@@ -6,11 +6,19 @@ module Doorkeeper
 
     it { expect(subject).to be_valid }
 
-    it_behaves_like 'a model with custom table', :tokens
     it_behaves_like 'an accessible token'
     it_behaves_like 'a revocable token'
     it_behaves_like 'a unique token' do
       let(:factory_name) { :access_token }
+    end
+
+    it_behaves_like 'a model with custom table', :access_tokens_table_name, :tokens do
+      let(:custom_configuration) {
+        Doorkeeper.configure do
+           orm DOORKEEPER_ORM
+           access_tokens_table_name :tokens
+        end
+      }
     end
 
     module CustomGeneratorArgs
