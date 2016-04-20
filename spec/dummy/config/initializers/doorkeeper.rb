@@ -15,6 +15,18 @@ Doorkeeper.configure do
   #   Admin.find_by_id(session[:admin_id]) || redirect_to(new_admin_session_url)
   # end
 
+  # Name of the `applications` table (default is :oauth_applications)
+  # Doorkeeper::Application model will be associated with this table
+  # applications_table_name :apps
+
+  # Name of the `access grants` table (default is :oauth_access_grants)
+  # Doorkeeper::AccessGrant model will be associated with this table
+  # applications_table_name :grants
+
+  # Name of the `access tokens` table (default is :oauth_access_tokens)
+  # Doorkeeper::AccessToken model will be associated with this table
+  # applications_table_name :tokens
+
   # Authorization Code expiration time (default 10 minutes).
   # authorization_code_expires_in 10.minutes
 

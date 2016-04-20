@@ -20,9 +20,14 @@ module Doorkeeper
       end
 
       def self.initialize_table_names!
-        Doorkeeper::AccessGrant.table_name = Doorkeeper.configuration.access_grants_table_name
-        Doorkeeper::AccessToken.table_name = Doorkeeper.configuration.access_tokens_table_name
-        Doorkeeper::Application.table_name = Doorkeeper.configuration.applications_table_name
+        [Doorkeeper::AccessGrant, Doorkeeper::AccessToken, Doorkeeper::Application].each do |model|
+          entity = model.model_name.element # application, access_grant, access_token
+
+          table_name = Doorkeeper.configuration.send("#{entity.pluralize}_table_name")
+          fail "#{model.to_s} can't be initialized with blank table name!" if table_name.blank?
+
+          model.table_name = table_name
+        end
       end
 
       def self.check_requirements!(_config)
@@ -33,7 +38,7 @@ module Doorkeeper
           unless Doorkeeper::Application.new.attributes.include?("scopes")
             migration_path = '../../../generators/doorkeeper/templates/add_scopes_to_oauth_applications.rb'
             puts <<-MSG.squish
-[doorkeeper] Missing column: `oauth_applications.scopes`.
+[doorkeeper] Missing column: `#{Doorkeeper::Application.table_name}.scopes`.
 Create the following migration and run `rake db:migrate`.
             MSG
             puts File.read(File.expand_path(migration_path, __FILE__))
