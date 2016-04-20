@@ -3,19 +3,24 @@
 User-visible changes worth mentioning.
 
 ---
+
 ## 4.0.0.rc3
 
-- Toughen parameters filter with exact match
-- Drop `attr_accessible` from models
 - [#769] Revoke refresh token on access token use. To make use of the new config
   add `previous_refresh_token` column to `oauth_access_tokens`:
 
   ```
   rails generate doorkeeper:previous_refresh_token
   ```
+- [#811] Toughen parameters filter with exact match
+- [#813] Applications admin bugfix
+- [#799] Fix Ruby Warnings
+- Drop `attr_accessible` from models
 
 ### Backward incompatible changes
-- Force all timezones to use UTC to prevent comparison issues.
+
+- [#730] Force all timezones to use UTC to prevent comparison issues.
+- [#802] Remove `config.i18n.fallbacks` from engine
 
 ## 4.0.0.rc2
 
