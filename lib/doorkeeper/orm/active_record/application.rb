@@ -1,6 +1,6 @@
 module Doorkeeper
   class Application < ActiveRecord::Base
-    self.table_name = Doorkeeper.configuration.applications_table_name
+    self.table_name = Doorkeeper.configuration.applications_table_name.to_sym
 
     include ApplicationMixin
 
