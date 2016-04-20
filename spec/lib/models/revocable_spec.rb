@@ -34,4 +34,26 @@ describe 'Revocable' do
       expect(subject).not_to be_revoked
     end
   end
+
+  describe :revoke_previous_refresh_token! do
+    it "revokes the previous token if existing, and resets the
+      `previous_refresh_token` attribute" do
+      previous_token = FactoryGirl.create(
+        :access_token,
+        refresh_token: "refresh_token"
+      )
+      current_token = FactoryGirl.create(
+        :access_token,
+        previous_refresh_token: previous_token.refresh_token
+      )
+
+      expect_any_instance_of(
+        Doorkeeper::AccessToken
+      ).to receive(:revoke).and_call_original
+      current_token.revoke_previous_refresh_token!
+
+      expect(current_token.previous_refresh_token).to be_empty
+      expect(previous_token.reload).to be_revoked
+    end
+  end
 end

@@ -5,7 +5,8 @@ module Doorkeeper::OAuth
     let(:server) do
       double :server,
              access_token_expires_in: 2.minutes,
-             custom_access_token_expires_in: -> (_oauth_client) { nil }
+             custom_access_token_expires_in: -> (_oauth_client) { nil },
+             refresh_token_revoked_on_use?: false
     end
     let(:refresh_token) do
       FactoryGirl.create(:access_token, use_refresh_token: true)
@@ -16,16 +17,15 @@ module Doorkeeper::OAuth
     subject { RefreshTokenRequest.new server, refresh_token, credentials }
 
     it 'issues a new token for the client' do
-      expect do
-        subject.authorize
-      end.to change { client.access_tokens.count }.by(1)
+      expect { subject.authorize }.to change { client.access_tokens.count }.by(1)
       expect(client.reload.access_tokens.last.expires_in).to eq(120)
     end
 
     it 'issues a new token for the client with custom expires_in' do
       server = double :server,
                       access_token_expires_in: 2.minutes,
-                      custom_access_token_expires_in: ->(_oauth_client) { 1234 }
+                      custom_access_token_expires_in: ->(_oauth_client) { 1234 },
+                      refresh_token_revoked_on_use?: false
 
       RefreshTokenRequest.new(server, refresh_token, credentials).authorize
 
@@ -65,6 +65,31 @@ module Doorkeeper::OAuth
       refresh_token.save
       subject.validate
       expect(subject).to be_valid
+    end
+
+    context 'refresh tokens expire on access token use' do
+      let(:server) do
+        double :server,
+               access_token_expires_in: 2.minutes,
+               custom_access_token_expires_in: ->(_oauth_client) { 1234 },
+               refresh_token_revoked_on_use?: true
+      end
+
+      it 'issues a new token for the client' do
+        expect { subject.authorize }.to change { client.access_tokens.count }.by(1)
+      end
+
+      it 'does not revoke the previous token' do
+        subject.authorize
+        expect(refresh_token).not_to be_revoked
+      end
+
+      it 'sets the previous refresh token in the new access token' do
+        subject.authorize
+        expect(
+          client.access_tokens.last.previous_refresh_token
+        ).to eq(refresh_token.refresh_token)
+      end
     end
 
     context 'clientless access tokens' do

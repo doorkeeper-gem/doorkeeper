@@ -236,6 +236,18 @@ doorkeeper.
       @token_grant_types ||= calculate_token_grant_types
     end
 
+    def refresh_token_revoked_on_use?
+      unless @refresh_token_revoked_on_use.nil?
+        return @refresh_token_revoked_on_use
+      end
+
+      @refresh_token_revoked_on_use =
+        ActiveRecord::Base.connection.column_exists?(
+          :oauth_access_tokens,
+          :previous_refresh_token
+        )
+    end
+
     private
 
     # Determines what values are acceptable for 'response_type' param in

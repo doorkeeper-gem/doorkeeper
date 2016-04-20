@@ -28,7 +28,9 @@ describe 'doorkeeper authorize filter' do
 
     let(:token_string) { '1A2BC3' }
     let(:token) do
-      double(Doorkeeper::AccessToken, acceptable?: true)
+      double(Doorkeeper::AccessToken,
+             acceptable?: true, previous_refresh_token: "",
+             revoke_previous_refresh_token!: true)
     end
 
     it 'access_token param' do
@@ -106,16 +108,26 @@ describe 'doorkeeper authorize filter' do
     let(:token_string) { '1A2DUWE' }
 
     it 'allows if the token has particular scopes' do
-      token = double(Doorkeeper::AccessToken, accessible?: true, scopes: %w(write public))
+      token = double(Doorkeeper::AccessToken,
+                     accessible?: true, scopes: %w(write public),
+                     previous_refresh_token: "",
+                     revoke_previous_refresh_token!: true)
       expect(token).to receive(:acceptable?).with([:write]).and_return(true)
-      expect(Doorkeeper::AccessToken).to receive(:by_token).with(token_string).and_return(token)
+      expect(
+        Doorkeeper::AccessToken
+      ).to receive(:by_token).with(token_string).and_return(token)
       get :index, access_token: token_string
       expect(response).to be_success
     end
 
     it 'does not allow if the token does not include given scope' do
-      token = double(Doorkeeper::AccessToken, accessible?: true, scopes: ['public'], revoked?: false, expired?: false)
-      expect(Doorkeeper::AccessToken).to receive(:by_token).with(token_string).and_return(token)
+      token = double(Doorkeeper::AccessToken,
+                     accessible?: true, scopes: ['public'], revoked?: false,
+                     expired?: false, previous_refresh_token: "",
+                     revoke_previous_refresh_token!: true)
+      expect(
+        Doorkeeper::AccessToken
+      ).to receive(:by_token).with(token_string).and_return(token)
       expect(token).to receive(:acceptable?).with([:write]).and_return(false)
       get :index, access_token: token_string
       expect(response.status).to eq 403
@@ -207,7 +219,9 @@ describe 'doorkeeper authorize filter' do
 
     let(:token) do
       double(Doorkeeper::AccessToken,
-             accessible?: true, scopes: ['public'], revoked?: false, expired?: false)
+             accessible?: true, scopes: ['public'], revoked?: false,
+             expired?: false, previous_refresh_token: "",
+             revoke_previous_refresh_token!: true)
     end
     let(:token_string) { '1A2DUWE' }
 

@@ -7,6 +7,12 @@ User-visible changes worth mentioning.
 
 - Toughen parameters filter with exact match
 - Drop `attr_accessible` from models
+- [#769] Revoke refresh token on access token use. To make use of the new config
+  add `previous_refresh_token` column to `oauth_access_tokens`:
+
+  ```
+  rails generate doorkeeper:previous_refresh_token
+  ```
 
 ### Backward incompatible changes
 - Force all timezones to use UTC to prevent comparison issues.
