@@ -50,3 +50,22 @@ shared_examples 'a unique token' do
     end
   end
 end
+
+shared_examples 'a model with custom table' do |config_option, custom_table_name|
+  let!(:default_name) { Doorkeeper.configuration.send(config_option).try(:to_s) }
+
+  describe 'table name' do
+    it 'has a default table name for the default config' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+
+      expect(described_class.table_name).to eq(default_name)
+    end
+
+    it 'has a custom table name for the specific config' do
+      expect { custom_configuration }.to change { described_class.table_name.to_s }.
+                                             from(default_name).to(custom_table_name.to_s)
+    end
+  end
+end

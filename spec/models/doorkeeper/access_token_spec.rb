@@ -12,6 +12,15 @@ module Doorkeeper
       let(:factory_name) { :access_token }
     end
 
+    it_behaves_like 'a model with custom table', :access_tokens_table_name, :tokens do
+      let(:custom_configuration) do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_tokens_table_name :tokens
+        end
+      end
+    end
+
     module CustomGeneratorArgs
       def self.generate
       end

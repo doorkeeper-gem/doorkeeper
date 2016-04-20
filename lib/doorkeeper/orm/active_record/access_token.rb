@@ -1,6 +1,6 @@
 module Doorkeeper
   class AccessToken < ActiveRecord::Base
-    self.table_name = "#{table_name_prefix}oauth_access_tokens#{table_name_suffix}".to_sym
+    self.table_name = Doorkeeper.configuration.access_tokens_table_name.to_sym
 
     include AccessTokenMixin
 

@@ -10,6 +10,7 @@ module Doorkeeper
     setup_orm_adapter
     setup_orm_models
     setup_application_owner if @config.enable_application_owner?
+    setup_table_names
     check_requirements
   end
 
@@ -39,6 +40,10 @@ doorkeeper.
 
   def self.setup_application_owner
     @orm_adapter.initialize_application_owner!
+  end
+
+  def self.setup_table_names
+    @orm_adapter.initialize_table_names!
   end
 
   class Config
@@ -190,6 +195,10 @@ doorkeeper.
     option :force_ssl_in_redirect_uri,      default: !Rails.env.development?
     option :grant_flows,                    default: %w(authorization_code client_credentials)
     option :access_token_generator,         default: "Doorkeeper::OAuth::Helpers::UniqueToken"
+
+    %w(applications access_grants access_tokens).each do |model_name|
+      option :"#{model_name}_table_name",   default: :"oauth_#{model_name}"
+    end
 
     attr_reader :reuse_access_token
 

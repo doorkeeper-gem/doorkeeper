@@ -11,6 +11,15 @@ describe Doorkeeper::AccessGrant do
     let(:factory_name) { :access_grant }
   end
 
+  it_behaves_like 'a model with custom table', :access_grants_table_name, :grants do
+    let(:custom_configuration) do
+      Doorkeeper.configure do
+         orm DOORKEEPER_ORM
+         access_grants_table_name :grants
+      end
+    end
+  end
+
   describe 'validations' do
     it 'is invalid without resource_owner_id' do
       subject.resource_owner_id = nil
