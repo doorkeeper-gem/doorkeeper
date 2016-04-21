@@ -8,10 +8,20 @@ module Doorkeeper
       def request
         @request ||= OAuth::PasswordAccessTokenRequest.new(
           Doorkeeper.configuration,
-          credentials,
+          client,
           resource_owner,
           parameters
         )
+      end
+
+      private
+
+      def client
+        if credentials
+          server.client
+        elsif parameters[:client_id]
+          server.client_via_uid
+        end
       end
     end
   end
