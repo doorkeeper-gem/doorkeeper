@@ -2,6 +2,8 @@
 
 User-visible changes worth mentioning.
 
+- [#777] Add support for public client in password grant flow
+
 ---
 
 ## 4.0.0.rc3
