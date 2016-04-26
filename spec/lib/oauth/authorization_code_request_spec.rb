@@ -18,7 +18,7 @@ module Doorkeeper::OAuth
     it 'issues a new token for the client' do
       expect do
         subject.authorize
-      end.to change { client.access_tokens.count }.by(1)
+      end.to change { client.reload.access_tokens.count }.by(1)
     end
 
     it "issues the token with same grant's scopes" do

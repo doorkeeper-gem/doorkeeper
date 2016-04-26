@@ -42,7 +42,7 @@ module Doorkeeper
       end
 
       def refresh_token_revoked_on_use?
-        server.refresh_token_revoked_on_use?
+        Doorkeeper::AccessToken.refresh_token_revoked_on_use?
       end
 
       def default_scopes

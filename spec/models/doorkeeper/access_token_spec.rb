@@ -154,7 +154,7 @@ module Doorkeeper
         expect do
           token2.refresh_token = token1.refresh_token
           token2.save(validate: false)
-        end.to raise_error(ActiveRecord::RecordNotUnique)
+        end.to raise_error(uniqueness_error)
       end
     end
 
