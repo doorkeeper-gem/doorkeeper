@@ -166,14 +166,6 @@ module Doorkeeper
         FactoryGirl.create(:access_token, resource_owner_id: resource_owner.id, application: application)
         expect(Application.authorized_for(resource_owner)).to eq([application])
       end
-
-      it 'should fail to mass assign a new application', if: ::Rails::VERSION::MAJOR < 4 do
-        mass_assign = { name: 'Something',
-                        redirect_uri: 'http://somewhere.com/something',
-                        uid: 123,
-                        secret: 'something' }
-        expect(Application.create(mass_assign).uid).not_to eq(123)
-      end
     end
 
     describe :authenticate do
