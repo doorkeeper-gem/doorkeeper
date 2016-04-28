@@ -7,7 +7,8 @@ module Doorkeeper
         attr_accessor :token, :validation, :error
 
         def initialize(server, validation)
-          @server, @validation = server, validation
+          @server = server
+          @validation = validation
         end
 
         def create(client, scopes, creator = Creator.new)

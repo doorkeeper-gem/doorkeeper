@@ -15,7 +15,7 @@ module Doorkeeper
         inverse_of: :access_tokens
       }
       if defined?(ActiveRecord::Base) && ActiveRecord::VERSION::MAJOR >= 5
-        belongs_to_options.merge!(optional: true)
+        belongs_to_options[:optional] = true
       end
 
       belongs_to :application, belongs_to_options
@@ -33,18 +33,18 @@ module Doorkeeper
 
     module ClassMethods
       def by_token(token)
-        where(token: token.to_s).limit(1).to_a.first
+        find_by(token: token.to_s)
       end
 
       def by_refresh_token(refresh_token)
-        where(refresh_token: refresh_token.to_s).first
+        find_by(refresh_token: refresh_token.to_s)
       end
 
       def revoke_all_for(application_id, resource_owner)
         where(application_id: application_id,
               resource_owner_id: resource_owner.id,
               revoked_at: nil).
-          map(&:revoke)
+          each(&:revoke)
       end
 
       def matching_token_for(application, resource_owner_or_id, scopes)
@@ -75,6 +75,7 @@ module Doorkeeper
             return access_token
           end
         end
+
         create!(
           application_id:    application.try(:id),
           resource_owner_id: resource_owner_id,
@@ -85,13 +86,10 @@ module Doorkeeper
       end
 
       def last_authorized_token_for(application_id, resource_owner_id)
-        where(application_id: application_id,
-              resource_owner_id: resource_owner_id,
-              revoked_at: nil).
-          send(order_method, created_at_desc).
-          limit(1).
-          to_a.
-          first
+        send(order_method, created_at_desc).
+          find_by(application_id: application_id,
+                  resource_owner_id: resource_owner_id,
+                  revoked_at: nil)
       end
     end
 
@@ -110,7 +108,7 @@ module Doorkeeper
         scopes:             scopes,
         expires_in_seconds: expires_in_seconds,
         application:        { uid: application.try(:uid) },
-        created_at:         created_at.to_i,
+        created_at:         created_at.to_i
       }
     end
 

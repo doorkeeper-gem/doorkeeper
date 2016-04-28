@@ -24,7 +24,7 @@ module Doorkeeper
            ::ActiveRecord::Base.connection.table_exists?(
              Doorkeeper::Application.table_name
            )
-          unless Doorkeeper::Application.new.attributes.include?("scopes")
+          unless Doorkeeper::Application.column_names.include?("scopes")
             migration_path = '../../../generators/doorkeeper/templates/add_scopes_to_oauth_applications.rb'
             puts <<-MSG.squish
 [doorkeeper] Missing column: `oauth_applications.scopes`.

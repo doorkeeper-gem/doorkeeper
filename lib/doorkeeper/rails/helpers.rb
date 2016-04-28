@@ -6,7 +6,7 @@ module Doorkeeper
       def doorkeeper_authorize!(*scopes)
         @_doorkeeper_scopes = scopes.presence || Doorkeeper.configuration.default_scopes
 
-        if !valid_doorkeeper_token?
+        unless valid_doorkeeper_token?
           doorkeeper_render_error
         end
       end

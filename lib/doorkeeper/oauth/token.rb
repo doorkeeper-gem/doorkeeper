@@ -26,12 +26,11 @@ module Doorkeeper
 
         def token_from_basic_header(header, pattern)
           encoded_header = token_from_header(header, pattern)
-          token, _ = decode_basic_credentials(encoded_header)
-          token
+          decode_basic_credentials_token(encoded_header)
         end
 
-        def decode_basic_credentials(encoded_header)
-          Base64.decode64(encoded_header).split(/:/, 2)
+        def decode_basic_credentials_token(encoded_header)
+          Base64.decode64(encoded_header).split(/:/, 2).first
         end
 
         def token_from_header(header, pattern)

@@ -14,7 +14,7 @@ module Doorkeeper
           'expires_in'    => token.expires_in_seconds,
           'refresh_token' => token.refresh_token,
           'scope'         => token.scopes_string,
-          'created_at'    => token.created_at.to_i,
+          'created_at'    => token.created_at.to_i
         }.reject { |_, value| value.blank? }
       end
 

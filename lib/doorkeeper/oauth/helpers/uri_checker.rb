@@ -10,7 +10,8 @@ module Doorkeeper
         end
 
         def self.matches?(url, client_url)
-          url, client_url = as_uri(url), as_uri(client_url)
+          url = as_uri(url)
+          client_url = as_uri(client_url)
           url.query = nil
           url == client_url
         end

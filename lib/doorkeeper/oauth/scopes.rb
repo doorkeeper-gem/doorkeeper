@@ -46,14 +46,14 @@ module Doorkeeper
 
       def +(other)
         if other.is_a? Scopes
-          self.class.from_array(self.all + other.all)
+          self.class.from_array(all + other.all)
         else
           super(other)
         end
       end
 
       def <=>(other)
-        self.map(&:to_s).sort <=> other.map(&:to_s).sort
+        map(&:to_s).sort <=> other.map(&:to_s).sort
       end
 
       def &(other)

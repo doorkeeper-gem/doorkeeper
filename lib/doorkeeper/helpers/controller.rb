@@ -54,7 +54,7 @@ module Doorkeeper
 
       def handle_token_exception(exception)
         error = get_error_response_from_exception exception
-        self.headers.merge! error.headers
+        headers.merge! error.headers
         self.response_body = error.body.to_json
         self.status        = error.status
       end

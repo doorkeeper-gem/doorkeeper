@@ -15,7 +15,7 @@ module Doorkeeper
         inverse_of: :access_grants
       }
       if defined?(ActiveRecord::Base) && ActiveRecord::VERSION::MAJOR >= 5
-        belongs_to_options.merge!(optional: true)
+        belongs_to_options[:optional] = true
       end
 
       belongs_to :application, belongs_to_options
@@ -28,7 +28,7 @@ module Doorkeeper
 
     module ClassMethods
       def by_token(token)
-        where(token: token.to_s).limit(1).to_a.first
+        find_by(token: token.to_s)
       end
     end
 

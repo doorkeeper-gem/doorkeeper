@@ -54,7 +54,7 @@ module Doorkeeper
   end
 
   def self.database_installed?
-    [AccessToken, AccessGrant, Application].all? { |model| model.table_exists? }
+    [AccessToken, AccessGrant, Application].all?(&:table_exists?)
   end
 
   def self.installed?

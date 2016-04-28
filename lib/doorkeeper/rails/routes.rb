@@ -18,7 +18,8 @@ module Doorkeeper
       attr_accessor :routes
 
       def initialize(routes, &block)
-        @routes, @block = routes, block
+        @routes = routes
+        @block = block
       end
 
       def generate_routes!(options)
