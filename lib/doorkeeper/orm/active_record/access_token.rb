@@ -10,7 +10,7 @@ module Doorkeeper
     end
     private_class_method :delete_all_for
 
-    def self.for(resource_owner)
+    def self.active_for(resource_owner)
       where(resource_owner_id: resource_owner.id, revoked_at: nil)
     end
 

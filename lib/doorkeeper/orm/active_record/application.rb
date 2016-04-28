@@ -12,7 +12,7 @@ module Doorkeeper
     has_many :authorized_applications, through: :authorized_tokens, source: :application
 
     def self.authorized_for(resource_owner)
-      resource_access_tokens = Doorkeeper::AccessToken.for(resource_owner)
+      resource_access_tokens = AccessToken.active_for(resource_owner)
       where(id: resource_access_tokens.select(:application_id).distinct)
     end
   end

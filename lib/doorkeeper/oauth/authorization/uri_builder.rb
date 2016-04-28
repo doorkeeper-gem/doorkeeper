@@ -20,7 +20,7 @@ module Doorkeeper
         end
 
         def build_query(parameters = {})
-          parameters = parameters.reject { |_k, v| v.blank? }
+          parameters = parameters.reject { |_, v| v.blank? }
           super parameters
         end
       end
