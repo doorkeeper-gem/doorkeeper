@@ -2,11 +2,13 @@ require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
   describe RefreshTokenRequest do
+    before do
+      allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
+    end
     let(:server) do
       double :server,
              access_token_expires_in: 2.minutes,
-             custom_access_token_expires_in: -> (_oauth_client) { nil },
-             refresh_token_revoked_on_use?: false
+             custom_access_token_expires_in: -> (_oauth_client) { nil }
     end
     let(:refresh_token) do
       FactoryGirl.create(:access_token, use_refresh_token: true)
@@ -17,15 +19,16 @@ module Doorkeeper::OAuth
     subject { RefreshTokenRequest.new server, refresh_token, credentials }
 
     it 'issues a new token for the client' do
-      expect { subject.authorize }.to change { client.access_tokens.count }.by(1)
+      expect { subject.authorize }.to change { client.reload.access_tokens.count }.by(1)
       expect(client.reload.access_tokens.last.expires_in).to eq(120)
     end
 
     it 'issues a new token for the client with custom expires_in' do
       server = double :server,
                       access_token_expires_in: 2.minutes,
-                      custom_access_token_expires_in: ->(_oauth_client) { 1234 },
-                      refresh_token_revoked_on_use?: false
+                      custom_access_token_expires_in: ->(_oauth_client) { 1234 }
+
+      allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
 
       RefreshTokenRequest.new(server, refresh_token, credentials).authorize
 
@@ -71,12 +74,15 @@ module Doorkeeper::OAuth
       let(:server) do
         double :server,
                access_token_expires_in: 2.minutes,
-               custom_access_token_expires_in: ->(_oauth_client) { 1234 },
-               refresh_token_revoked_on_use?: true
+               custom_access_token_expires_in: ->(_oauth_client) { 1234 }
+      end
+
+      before do
+        allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(true)
       end
 
       it 'issues a new token for the client' do
-        expect { subject.authorize }.to change { client.access_tokens.count }.by(1)
+        expect { subject.authorize }.to change { client.reload.access_tokens.count }.by(1)
       end
 
       it 'does not revoke the previous token' do

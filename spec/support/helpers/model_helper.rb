@@ -40,6 +40,22 @@ module ModelHelper
     grant = Doorkeeper::AccessToken.last
     expect(grant.scopes).to eq(Doorkeeper::OAuth::Scopes.from_array(args))
   end
+
+  def uniqueness_error
+    case DOORKEEPER_ORM
+    when :active_record
+      ActiveRecord::RecordNotUnique
+    when :sequel
+      error_classes = [Sequel::UniqueConstraintViolation, Sequel::ValidationFailed]
+      proc { |error| expect(error.class).to be_in(error_classes) }
+    when :mongo_mapper
+      MongoMapper::DocumentNotValid
+    when /mongoid/
+      Mongoid::Errors::Validations
+    else
+      raise "'#{DOORKEEPER_ORM}' ORM is not supported!"
+    end
+  end
 end
 
 RSpec.configuration.send :include, ModelHelper

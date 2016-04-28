@@ -23,7 +23,7 @@ module Doorkeeper
       end
 
       def refresh_token_revoked_on_use?
-        Doorkeeper.configuration.refresh_token_revoked_on_use?
+        AccessToken.refresh_token_revoked_on_use?
       end
     end
   end

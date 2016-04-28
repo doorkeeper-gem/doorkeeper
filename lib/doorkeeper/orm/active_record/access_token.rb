@@ -14,6 +14,10 @@ module Doorkeeper
       :order
     end
 
+    def self.refresh_token_revoked_on_use?
+      column_names.include?('previous_refresh_token')
+    end
+
     def self.created_at_desc
       'created_at desc'
     end

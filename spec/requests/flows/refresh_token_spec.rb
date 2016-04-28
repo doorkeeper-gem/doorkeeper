@@ -70,7 +70,7 @@ describe 'Refresh Token Flow' do
 
     context "refresh_token revoked on refresh_token request" do
       before do
-        config_is_set(:refresh_token_revoked_on_use, false)
+        allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
       end
 
       it 'client request a token with refresh token' do
@@ -152,7 +152,7 @@ describe 'Refresh Token Flow' do
 
     context "refresh_token revoked on refresh_token request" do
       before do
-        config_is_set(:refresh_token_revoked_on_use, false)
+        allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
       end
 
       it 'client request a token after creating another token with the same user' do
