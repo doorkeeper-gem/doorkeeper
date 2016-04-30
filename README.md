@@ -252,13 +252,13 @@ class Api::V1::ProductsController < Api::V1::ApiController
 end
 ```
 
-Please note that there is a logical OR between multiple required scopes. In
+Please note that there is a logical OR between multiple required scopes. In the
 above example, `doorkeeper_authorize! :admin, :write` means that the access
-token is required to have either `:admin` scope or `:write` scope, but not need
-have both of them.
+token is required to have either `:admin` scope or `:write` scope, but does not
+need have both of them.
 
-If want to require the access token to have multiple scopes at the same time,
-use multiple `doorkeeper_authorize!`, for example:
+If you want to require the access token to have multiple scopes at the same
+time, use multiple `doorkeeper_authorize!`, for example:
 
 ```ruby
 class Api::V1::ProductsController < Api::V1::ApiController
@@ -270,8 +270,8 @@ class Api::V1::ProductsController < Api::V1::ApiController
 end
 ```
 
-In above example, a client can call `:create` action only if its access token
-have both `:admin` and `:write` scopes.
+In the above example, a client can call `:create` action only if its access token
+has both `:admin` and `:write` scopes.
 
 ### Custom Access Token Generator
 
@@ -319,7 +319,7 @@ token owner.
 
 ### Applications list
 
-By default, the applications list (`/oauth/applications`) is public available.
+By default, the applications list (`/oauth/applications`) is publicly available.
 To protect the endpoint you should uncomment these lines:
 
 ```ruby
@@ -333,9 +333,9 @@ end
 
 The logic is the same as the `resource_owner_authenticator` block. **Note:**
 since the application list is just a scaffold, it's recommended to either
-customize the controller used by the list or skip the controller at all. For
-more information see the page [in the
-wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki/Customizing-routes).
+customize the controller used by the list or skip the controller all together.
+For more information see the page
+[in the wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki/Customizing-routes).
 
 ## Other customizations
 
