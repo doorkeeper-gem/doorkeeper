@@ -19,11 +19,11 @@ module Doorkeeper
 
     module ClassMethods
       def by_uid_and_secret(uid, secret)
-        where(uid: uid.to_s, secret: secret.to_s).limit(1).to_a.first
+        find_by(uid: uid.to_s, secret: secret.to_s)
       end
 
       def by_uid(uid)
-        where(uid: uid.to_s).limit(1).to_a.first
+        find_by(uid: uid.to_s)
       end
     end
 
@@ -31,7 +31,7 @@ module Doorkeeper
 
     def has_scopes?
       Doorkeeper.configuration.orm != :active_record ||
-        Application.new.attributes.include?("scopes")
+        Doorkeeper::Application.column_names.include?("scopes")
     end
 
     def generate_uid

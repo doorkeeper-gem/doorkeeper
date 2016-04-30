@@ -12,7 +12,7 @@ module Doorkeeper
       attr_reader :response
       attr_writer :issuer
 
-      alias :error_response :response
+      alias_method :error_response, :response
 
       delegate :error, to: :issuer
 
@@ -21,8 +21,9 @@ module Doorkeeper
       end
 
       def initialize(server, client, parameters = {})
-        @client, @server = client, server
-        @response        = nil
+        @client = client
+        @server = server
+        @response = nil
         @original_scopes = parameters[:scope]
       end
 

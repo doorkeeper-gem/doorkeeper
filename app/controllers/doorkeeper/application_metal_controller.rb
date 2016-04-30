@@ -6,7 +6,7 @@ module Doorkeeper
       ActionController::Rendering,
       ActionController::Renderers::All,
       Helpers::Controller
-    ]
+    ].freeze
 
     MODULES.each do |mod|
       include mod

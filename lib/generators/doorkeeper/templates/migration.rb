@@ -26,7 +26,7 @@ class CreateDoorkeeperTables < ActiveRecord::Migration
     add_foreign_key(
       :oauth_access_grants,
       :oauth_applications,
-      column: :application_id,
+      column: :application_id
     )
 
     create_table :oauth_access_tokens do |t|
@@ -62,7 +62,7 @@ class CreateDoorkeeperTables < ActiveRecord::Migration
     add_foreign_key(
       :oauth_access_tokens,
       :oauth_applications,
-      column: :application_id,
+      column: :application_id
     )
   end
 end

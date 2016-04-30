@@ -7,7 +7,7 @@ module Doorkeeper
         end
 
         def map(&block)
-          self.instance_eval(&block) if block
+          instance_eval(&block) if block
           @mapping
         end
 

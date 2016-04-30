@@ -2,7 +2,7 @@ module Doorkeeper
   class TokensController < Doorkeeper::ApplicationMetalController
     def create
       response = authorize_response
-      self.headers.merge! response.headers
+      headers.merge! response.headers
       self.response_body = response.body.to_json
       self.status        = response.status
     rescue Errors::DoorkeeperError => e

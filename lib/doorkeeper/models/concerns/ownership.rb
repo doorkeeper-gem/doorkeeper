@@ -6,7 +6,7 @@ module Doorkeeper
       included do
         belongs_to_options = { polymorphic: true }
         if defined?(ActiveRecord::Base) && ActiveRecord::VERSION::MAJOR >= 5
-          belongs_to_options.merge!(optional: true)
+          belongs_to_options[:optional] = true
         end
 
         belongs_to :owner, belongs_to_options

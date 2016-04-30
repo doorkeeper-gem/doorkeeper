@@ -14,7 +14,7 @@ module Doorkeeper
   end
 
   def self.configuration
-    @config || (fail MissingConfiguration.new)
+    @config || (fail MissingConfiguration)
   end
 
   def self.check_requirements
@@ -136,17 +136,17 @@ doorkeeper.
           remove_method name if method_defined?(name)
           define_method name do |*args, &block|
             # TODO: is builder_class option being used?
-            value = unless attribute_builder
-                      block ? block : args.first
-                    else
+            value = if attribute_builder
                       attribute_builder.new(&block).build
+                    else
+                      block ? block : args.first
                     end
 
             @config.instance_variable_set(:"@#{attribute}", value)
           end
         end
 
-        define_method attribute do |*args|
+        define_method attribute do |*_args|
           if instance_variable_defined?(:"@#{attribute}")
             instance_variable_get(:"@#{attribute}")
           else
@@ -181,7 +181,7 @@ doorkeeper.
 
     option :skip_authorization,             default: ->(_routes) {}
     option :access_token_expires_in,        default: 7200
-    option :custom_access_token_expires_in, default: lambda { |_app| nil }
+    option :custom_access_token_expires_in, default: ->(_app) { nil }
     option :authorization_code_expires_in,  default: 600
     option :orm,                            default: :active_record
     option :native_redirect_uri,            default: 'urn:ietf:wg:oauth:2.0:oob'
