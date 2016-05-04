@@ -149,7 +149,7 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
-  describe 'access_token_credentials' do
+  describe 'access_token_methods' do
     it 'has defaults order' do
       expect(subject.access_token_methods).to eq([:from_bearer_authorization, :from_access_token_param, :from_bearer_param])
     end
