@@ -76,17 +76,11 @@ to generate the migration tables:
     rails generate doorkeeper:migration
 
 You may want to add foreign keys to your migration. For example, if you plan on
-using `User` as the resource owner, change the line in the migration
-file:
+using `User` as the resource owner, add the following line to the migration file
+for each table that includes a `resource_owner_id` column:
 
 ```ruby
-t.integer    :resource_owner_id, null: false
-```
-
-to:
-
-```ruby
-t.references :user, foreign_key: true, null: false
+add_foreign_key :table_name, :users, column: :resource_owner_id
 ```
 
 Then run migrations:
