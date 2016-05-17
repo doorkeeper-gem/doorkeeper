@@ -12,6 +12,6 @@ class HomeController < ApplicationController
   end
 
   def callback
-    render text: 'ok'
+    render plain: 'ok'
   end
 end

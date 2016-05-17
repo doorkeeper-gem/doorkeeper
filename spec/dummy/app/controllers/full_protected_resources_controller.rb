@@ -3,10 +3,10 @@ class FullProtectedResourcesController < ApplicationController
   before_action :doorkeeper_authorize!, only: :index
 
   def index
-    render text: 'index'
+    render plain: 'index'
   end
 
   def show
-    render text: 'show'
+    render plain: 'show'
   end
 end
