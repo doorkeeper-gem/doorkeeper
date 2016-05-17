@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 - [#745] Add created_at timestamp to token generation options
 - [#838] Drop `Application#scopes` generator and warning, introduced for
   upgrading doorkeeper from v2 to v3.
+- [#801] Fix Rails 5 warning messages
 
 ---
 
