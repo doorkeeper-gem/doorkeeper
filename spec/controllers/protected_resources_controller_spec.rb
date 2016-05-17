@@ -2,11 +2,11 @@ require 'spec_helper_integration'
 
 module ControllerActions
   def index
-    render text: 'index'
+    render plain: 'index'
   end
 
   def show
-    render text: 'show'
+    render plain: 'show'
   end
 
   def doorkeeper_unauthorized_render_options(*)
@@ -22,7 +22,7 @@ describe 'doorkeeper authorize filter' do
       before_action :doorkeeper_authorize!
 
       def index
-        render text: 'index'
+        render plain: 'index'
       end
     end
 
@@ -100,7 +100,7 @@ describe 'doorkeeper authorize filter' do
 
   context 'defined with scopes' do
     controller do
-      before_filter -> { doorkeeper_authorize! :write }
+      before_action -> { doorkeeper_authorize! :write }
 
       include ControllerActions
     end
@@ -137,7 +137,7 @@ describe 'doorkeeper authorize filter' do
 
   context 'when custom unauthorized render options are configured' do
     controller do
-      before_filter :doorkeeper_authorize!
+      before_action :doorkeeper_authorize!
 
       include ControllerActions
     end
@@ -175,7 +175,7 @@ describe 'doorkeeper authorize filter' do
         module ControllerActions
           remove_method :doorkeeper_unauthorized_render_options
           def doorkeeper_unauthorized_render_options(error: nil)
-            { text: 'Unauthorized' }
+            { plain: 'Unauthorized' }
           end
         end
       end
@@ -190,7 +190,7 @@ describe 'doorkeeper authorize filter' do
       it 'it renders a custom text response', token: :invalid do
         get :index, access_token: token_string
         expect(response.status).to eq 401
-        expect(response.content_type).to eq('text/html')
+        expect(response.content_type).to eq('text/plain')
         expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
         expect(response.body).to eq('Unauthorized')
       end
@@ -212,7 +212,7 @@ describe 'doorkeeper authorize filter' do
     end
 
     controller do
-      before_filter -> { doorkeeper_authorize! :write }
+      before_action -> { doorkeeper_authorize! :write }
 
       include ControllerActions
     end
@@ -268,7 +268,7 @@ describe 'doorkeeper authorize filter' do
         module ControllerActions
           remove_method :doorkeeper_forbidden_render_options
           def doorkeeper_forbidden_render_options(*)
-            { text: 'Forbidden' }
+            { plain: 'Forbidden' }
           end
         end
       end
@@ -286,7 +286,7 @@ describe 'doorkeeper authorize filter' do
         module ControllerActions
           remove_method :doorkeeper_forbidden_render_options
           def doorkeeper_forbidden_render_options(*)
-            { respond_not_found_when_forbidden: true, text: 'Not Found' }
+            { respond_not_found_when_forbidden: true, plain: 'Not Found' }
           end
         end
       end

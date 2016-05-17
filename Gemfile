@@ -4,6 +4,10 @@ source "https://rubygems.org"
 
 gem "rails", "~> #{ENV["rails"]}"
 
+if ENV['rails'].start_with?('5')
+  gem 'rspec-rails', '3.5.0.beta3'
+end
+
 gem "activerecord-jdbcsqlite3-adapter", platform: :jruby
 gem "sqlite3", platform: [:ruby, :mswin, :mingw]
 
