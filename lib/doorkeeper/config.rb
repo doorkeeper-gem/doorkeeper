@@ -10,15 +10,10 @@ module Doorkeeper
     setup_orm_adapter
     setup_orm_models
     setup_application_owner if @config.enable_application_owner?
-    check_requirements
   end
 
   def self.configuration
     @config || (fail MissingConfiguration)
-  end
-
-  def self.check_requirements
-    @orm_adapter.check_requirements!(configuration)
   end
 
   def self.setup_orm_adapter
