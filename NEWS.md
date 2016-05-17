@@ -2,14 +2,17 @@
 
 User-visible changes worth mentioning.
 
-- [#823] Make configuration and specs ORM independent
+## master
+
+## 4.0.0.rc4
+
 - [#777] Add support for public client in password grant flow
+- [#823] Make configuration and specs ORM independent
 - [#745] Add created_at timestamp to token generation options
 - [#838] Drop `Application#scopes` generator and warning, introduced for
   upgrading doorkeeper from v2 to v3.
 - [#801] Fix Rails 5 warning messages
-
----
+- Test against Rails 5 RC1
 
 ## 4.0.0.rc3
 
