@@ -24,11 +24,11 @@ module Doorkeeper::OAuth
       end.to change { client.reload.access_tokens.count }.by(1)
     end
 
-    it 'issues a new token without a client' do
+    it 'does not issue a new token without a client' do
       expect do
         subject.client = nil
         subject.authorize
-      end.to change { Doorkeeper::AccessToken.count }.by(1)
+      end.to_not change { Doorkeeper::AccessToken.count }
     end
 
     it 'does not issue a new token with an invalid client' do
