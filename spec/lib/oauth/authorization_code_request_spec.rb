@@ -59,7 +59,7 @@ module Doorkeeper::OAuth
     it "matches the redirect_uri with grant's one" do
       subject.redirect_uri = 'http://other.com'
       subject.validate
-      expect(subject.error).to eq(:invalid_redirect_uri)
+      expect(subject.error).to eq(:invalid_grant)
     end
 
     it "matches the client with grant's one" do

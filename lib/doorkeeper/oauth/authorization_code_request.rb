@@ -7,7 +7,7 @@ module Doorkeeper
       validate :attributes,   error: :invalid_request
       validate :client,       error: :invalid_client
       validate :grant,        error: :invalid_grant
-      validate :redirect_uri, error: :invalid_redirect_uri
+      validate :redirect_uri, error: :invalid_grant
 
       attr_accessor :server, :grant, :client, :redirect_uri, :access_token
 
