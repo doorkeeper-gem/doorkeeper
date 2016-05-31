@@ -282,6 +282,16 @@ end
 JWT token support is available with
 [Doorkeeper-JWT](https://github.com/chriswarren/doorkeeper-jwt).
 
+### Custom Base Controller
+
+By default Doorkeeper's main controller `Doorkeeper::ApplicationController` inherits from `ActionController::Base`.
+You may want to use your own controller to inherit from, to keep Doorkeeper controllers in the same context than the rest your app:
+
+```ruby
+Doorkeeper.configure do
+  base_controller 'ApplicationController'
+end
+```
 
 ### Authenticated resource owner
 

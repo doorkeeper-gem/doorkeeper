@@ -89,9 +89,11 @@ doorkeeper.
       end
 
       def access_token_generator(access_token_generator)
-        @config.instance_variable_set(
-          '@access_token_generator', access_token_generator
-        )
+        @config.instance_variable_set('@access_token_generator', access_token_generator)
+      end
+
+      def base_controller(base_controller)
+        @config.instance_variable_set('@base_controller', base_controller)
       end
     end
 
@@ -184,7 +186,8 @@ doorkeeper.
     option :realm,                          default: 'Doorkeeper'
     option :force_ssl_in_redirect_uri,      default: !Rails.env.development?
     option :grant_flows,                    default: %w(authorization_code client_credentials)
-    option :access_token_generator,         default: "Doorkeeper::OAuth::Helpers::UniqueToken"
+    option :access_token_generator,         default: 'Doorkeeper::OAuth::Helpers::UniqueToken'
+    option :base_controller,                default: 'ActionController::Base'
 
     attr_reader :reuse_access_token
 
