@@ -370,6 +370,17 @@ module Doorkeeper
         expect(last_token).to be_nil
       end
 
+      it 'matches token with one of application`s scopes' do
+        scopes = Doorkeeper::OAuth::Scopes.from_string('public')
+        application = FactoryGirl.create :application, scopes: "public write"
+        token = FactoryGirl.create :access_token, default_attributes.merge(
+          application: application,
+          scopes: 'public'
+        )
+        last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
+        expect(last_token).to eq(token)
+      end
+
       it 'returns the last created token' do
         FactoryGirl.create :access_token, default_attributes.merge(created_at: 1.day.ago)
         token = FactoryGirl.create :access_token, default_attributes
