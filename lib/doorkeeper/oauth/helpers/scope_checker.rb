@@ -19,7 +19,7 @@ module Doorkeeper
           end
 
           def match?
-            valid? && @parsed_scopes == @server_scopes
+            valid? && parsed_scopes == @server_scopes
           end
 
           private
