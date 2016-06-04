@@ -7,6 +7,7 @@ module Doorkeeper
 
           def initialize(scope_str, server_scopes, application_scopes)
             @parsed_scopes = OAuth::Scopes.from_string(scope_str)
+            @server_scopes = server_scopes
             @scope_str = scope_str
             @valid_scopes = valid_scopes(server_scopes, application_scopes)
           end
@@ -18,7 +19,7 @@ module Doorkeeper
           end
 
           def match?
-            valid? && parsed_scopes.has_scopes?(@valid_scopes)
+            valid? && @parsed_scopes == @server_scopes
           end
 
           private
