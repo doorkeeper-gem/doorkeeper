@@ -4,6 +4,8 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#834] Fix AssetNotPrecompiled error with Sprockets 4
+
 ## 4.0.0.rc4
 
 - [#777] Add support for public client in password grant flow
