@@ -14,5 +14,14 @@ module Doorkeeper
         include Doorkeeper::Rails::Helpers
       end
     end
+
+    if defined?(Sprockets) && Sprockets::VERSION.chr.to_i >= 4
+      initializer 'doorkeeper.assets.precompile' do |app|
+        app.config.assets.precompile += %w(
+          doorkeeper/application.css
+          doorkeeper/admin/application.css
+        )
+      end
+    end
   end
 end
