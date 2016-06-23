@@ -119,5 +119,6 @@ en:
         nav:
           oauth2_provider: 'OAuth2 Provider'
           applications: 'Applications'
+          home: 'Home'
       application:
         title: 'OAuth authorization required'
