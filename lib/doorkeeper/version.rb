@@ -1,3 +1,3 @@
 module Doorkeeper
-  VERSION = "4.0.0.rc4".freeze
+  VERSION = "4.0.0".freeze
 end
