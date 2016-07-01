@@ -4,7 +4,11 @@ User-visible changes worth mentioning.
 
 ## master
 
+## 4.0.0
+
 - [#834] Fix AssetNotPrecompiled error with Sprockets 4
+- [#843] Revert "Fix validation error messages"
+- [#847] Specify Null option to timestamps
 
 ## 4.0.0.rc4
 
