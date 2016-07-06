@@ -91,10 +91,16 @@ rake db:migrate
 
 ### Other ORMs
 
-See [doorkeeper-mongodb project] for mongoid and mongomapper support. Follow along
+See [doorkeeper-mongodb project] for Mongoid and MongoMapper support. Follow along
 the implementation in that repository to extend doorkeeper with other ORMs.
 
 [doorkeeper-mongodb project]: https://github.com/doorkeeper-gem/doorkeeper-mongodb
+
+If you are using [Sequel gem] then you can add [doorkeeper-sequel extension] to your project.
+Follow configuration instructions for setting up the necessary Doorkeeper ORM.
+
+[Sequel gem]: https://github.com/jeremyevans/sequel/
+[doorkeeper-sequel extension]: https://github.com/nbulaj/doorkeeper-sequel
 
 ### Routes
 
