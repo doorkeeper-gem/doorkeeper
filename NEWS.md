@@ -4,6 +4,8 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#868] `Scopes#&` and `Scopes#+` now take an array or any other enumerable
+  object.
 - [#1019] Remove translation not in use: `invalid_resource_owner`.
 - Use Ruby 2 hash style syntax (min required Ruby version = 2.1)
 - [#948] Make Scopes.<=> work with any "other" value.
