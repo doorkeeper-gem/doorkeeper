@@ -314,4 +314,21 @@ describe Doorkeeper, 'configuration' do
       expect(subject.access_token_generator).to eq('Example')
     end
   end
+
+  describe 'base_controller' do
+    context 'default' do
+      it { expect(Doorkeeper.configuration.base_controller).to eq('ActionController::Base') }
+    end
+
+    context 'custom' do
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          base_controller 'ApplicationController'
+        end
+      end
+
+      it { expect(Doorkeeper.configuration.base_controller).to eq('ApplicationController') }
+    end
+  end
 end

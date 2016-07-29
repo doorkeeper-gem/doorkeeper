@@ -1,5 +1,7 @@
 module Doorkeeper
-  class ApplicationController < ActionController::Base
+  class ApplicationController <
+    Doorkeeper.configuration.base_controller.constantize
+
     include Helpers::Controller
 
     if ::Rails.version.to_i < 4
