@@ -4,6 +4,11 @@ User-visible changes worth mentioning.
 
 ## master
 
+## 4.1.0
+
+- [#845] Allow customising the `Doorkeeper::ApplicationController` base
+  controller
+
 ## 4.0.0
 
 - [#834] Fix AssetNotPrecompiled error with Sprockets 4
