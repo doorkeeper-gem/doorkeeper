@@ -30,7 +30,7 @@ module Doorkeeper
       context 'application owner is required' do
         before(:each) do
           require_owner
-          @owner = FactoryGirl.build_stubbed(:user)
+          @owner = FactoryGirl.build_stubbed(:doorkeeper_testing_user)
         end
 
         it 'is invalid without an owner' do
