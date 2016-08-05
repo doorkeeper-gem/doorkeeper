@@ -64,7 +64,7 @@ describe Doorkeeper::TokensController do
   describe 'when revoke authorization has failed' do
     # http://tools.ietf.org/html/rfc7009#section-2.2
     it 'returns no error response' do
-      token = double(:token, authorize: false)
+      token = double(:token, authorize: false, application_id?: true)
       allow(controller).to receive(:token) { token }
 
       post :revoke
