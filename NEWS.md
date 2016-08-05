@@ -4,6 +4,9 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#871] Allow downstream users to better utilize doorkeeper spec factories by
+  eliminating name conflict on `:user` factory.
+
 ## 4.1.0
 
 - [#845] Allow customising the `Doorkeeper::ApplicationController` base
