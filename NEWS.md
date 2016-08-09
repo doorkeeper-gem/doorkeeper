@@ -3,7 +3,7 @@
 User-visible changes worth mentioning.
 
 ## master
-
+- [#873] Add hooks to Doorkeeper::ApplicationMetalController
 - [#871] Allow downstream users to better utilize doorkeeper spec factories by
   eliminating name conflict on `:user` factory.
 
