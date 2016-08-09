@@ -11,5 +11,7 @@ module Doorkeeper
     MODULES.each do |mod|
       include mod
     end
+
+    ActiveSupport.run_load_hooks(:doorkeeper_metal_controller, self)
   end
 end
