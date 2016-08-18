@@ -3,6 +3,11 @@
 User-visible changes worth mentioning.
 
 ## master
+
+## 4.2.0
+
+- Security fix: Address CVE-2016-6582, implement token revocation according to
+    spec (tokens might not be revoked if client follows the spec).
 - [#873] Add hooks to Doorkeeper::ApplicationMetalController
 - [#871] Allow downstream users to better utilize doorkeeper spec factories by
   eliminating name conflict on `:user` factory.
