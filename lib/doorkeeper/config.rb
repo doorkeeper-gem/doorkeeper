@@ -53,6 +53,9 @@ doorkeeper.
       # application (disabled by default)
       # Optional parameter confirmation: true (default false) if you want
       # to enforce ownership of a registered application
+      #
+      # @param [Hash] opts the options to confirm if an application owner is present
+      # @option opts[Boolean] :confirmation (false) Set confirm_application_owner variable
       def enable_application_owner(opts = {})
         @config.instance_variable_set('@enable_application_owner', true)
         confirm_application_owner if opts[:confirmation].present? && opts[:confirmation]
@@ -62,11 +65,16 @@ doorkeeper.
         @config.instance_variable_set('@confirm_application_owner', true)
       end
 
-      # Define access token scopes for your provider
+      # Define default access token scopes for your provider
+      #
+      # @param [Array] scopes (OAuth::Scopes.new) Default set of access token scopes
       def default_scopes(*scopes)
         @config.instance_variable_set('@default_scopes', OAuth::Scopes.from_array(scopes))
       end
 
+      # Define default access token scopes for your provider
+      #
+      # @param [Array] scopes (OAuth::Scopes.new) Optional set of access token scopes
       def optional_scopes(*scopes)
         @config.instance_variable_set('@optional_scopes', OAuth::Scopes.from_array(scopes))
       end
@@ -75,6 +83,8 @@ doorkeeper.
       # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then
       # falls back to the `:client_id` and `:client_secret` params from the
       # `params` object.
+      #
+      # @param [Array] methods Define client credentials
       def client_credentials(*methods)
         @config.instance_variable_set('@client_credentials', methods)
       end
@@ -83,6 +93,8 @@ doorkeeper.
       # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then
       # falls back to the `:access_token` or `:bearer_token` params from the
       # `params` object.
+      #
+      # @param [Array] Define access token methods
       def access_token_methods(*methods)
         @config.instance_variable_set('@access_token_methods', methods)
       end
@@ -93,6 +105,8 @@ doorkeeper.
       end
 
       # WWW-Authenticate Realm (default "Doorkeeper").
+      #
+      # @param [String] ("Doorkeeper") Authentication realm
       def realm(realm)
         @config.instance_variable_set('@realm', realm)
       end
@@ -108,12 +122,16 @@ doorkeeper.
       # (enabled by default in non-development environments). OAuth2
       # delegates security in communication to the HTTPS protocol so it is
       # wise to keep this enabled.
+      #
+      # @param [Boolean] boolean value for the parameter, true by default in non-development environment
       def force_ssl_in_redirect_uri(boolean)
         @config.instance_variable_set("@force_ssl_in_redirect_uri", boolean)
       end
 
       # Use a custom class for generating the access token.
       # https://github.com/doorkeeper-gem/doorkeeper#custom-access-token-generator
+      #
+      # @param [String] the name of the access token generator class
       def access_token_generator(access_token_generator)
         @config.instance_variable_set(
           '@access_token_generator', access_token_generator
@@ -123,6 +141,8 @@ doorkeeper.
       # The controller Doorkeeper::ApplicationController inherits from.
       # Defaults to ActionController::Base.
       # https://github.com/doorkeeper-gem/doorkeeper#custom-base-controller
+      #
+      # @param [String] the name of the base controller
       def base_controller(base_controller)
         @config.instance_variable_set('@base_controller', base_controller)
       end
