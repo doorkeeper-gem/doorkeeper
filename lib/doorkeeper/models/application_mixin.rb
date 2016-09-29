@@ -7,8 +7,8 @@ module Doorkeeper
     include ActiveModel::MassAssignmentSecurity if defined?(::ProtectedAttributes)
 
     included do
-      has_many :access_grants, dependent: :destroy, class_name: 'Doorkeeper::AccessGrant'
-      has_many :access_tokens, dependent: :destroy, class_name: 'Doorkeeper::AccessToken'
+      has_many :access_grants, dependent: :delete_all, class_name: 'Doorkeeper::AccessGrant'
+      has_many :access_tokens, dependent: :delete_all, class_name: 'Doorkeeper::AccessToken'
 
       validates :name, :secret, :uid, presence: true
       validates :uid, uniqueness: true
