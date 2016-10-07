@@ -42,6 +42,10 @@ Rails.application.routes.draw do
     end
   end
 
+  scope "api_only" do
+    use_doorkeeper api_only: true
+  end
+
   get 'metal.json' => 'metal#index'
 
   get '/callback', to: 'home#callback'
