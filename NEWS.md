@@ -4,7 +4,7 @@ User-visible changes worth mentioning.
 
 ## master
 
-##4.2.1
+## 4.3.0
 
 - [#879] Add api_only option to use doorkeeper without management views
   for API only Rails applications
