@@ -10,7 +10,7 @@ module Doorkeeper
       validate :scopes,         error: :invalid_scope
 
       attr_accessor :server, :client, :resource_owner, :parameters,
-                    :access_token
+                    :access_token, :nonce
 
       def initialize(server, client, resource_owner, parameters = {})
         @server          = server
@@ -18,6 +18,7 @@ module Doorkeeper
         @client          = client
         @parameters      = parameters
         @original_scopes = parameters[:scope]
+        @nonce           = parameters[:nonce]
       end
 
       private
