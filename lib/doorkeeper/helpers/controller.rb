@@ -1,3 +1,5 @@
+# Define methods that can be called in any controller that inherits from
+# Doorkeeper::ApplicationMetalController or Doorkeeper::ApplicationController
 module Doorkeeper
   module Helpers
     module Controller
