@@ -20,10 +20,10 @@ Gem::Specification.new do |s|
   s.required_ruby_version = ">= 2.1"
 
   s.add_development_dependency "capybara"
-  s.add_development_dependency "database_cleaner", "~> 1.3.0"
-  s.add_development_dependency "factory_girl", "~> 4.5.0"
-  s.add_development_dependency "generator_spec", "~> 0.9.0"
-  s.add_development_dependency "rake", "> 10.5.0"
+  s.add_development_dependency "database_cleaner", "~> 1.5.3"
+  s.add_development_dependency "factory_girl", "~> 4.7.0"
+  s.add_development_dependency "generator_spec", "~> 0.9.3"
+  s.add_development_dependency "rake", ">= 11.3.0"
   s.add_development_dependency "rspec-rails"
-  s.add_development_dependency "timecop", "~> 0.7.0"
+  s.add_development_dependency "timecop", "~> 0.8.1"
 end
