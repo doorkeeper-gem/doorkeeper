@@ -5,6 +5,10 @@ module Doorkeeper
 
       private
 
+      # Define methods that can be called in any controller that inherits from
+      # Doorkeeper::ApplicationMetalController or
+      # Doorkeeper::ApplicationController
+
       def authenticate_resource_owner!
         current_resource_owner
       end
