@@ -12,3 +12,8 @@ spec/generators/tmp
 .rvmrc
 *.swp
 .idea
+/.yardoc/
+/_yardoc/
+/doc/
+/rdoc/
+coverage
