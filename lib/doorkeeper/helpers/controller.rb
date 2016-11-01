@@ -1,13 +1,14 @@
+# frozen_string_literal: true
+# Define methods that can be called in any controller that inherits from
+# Doorkeeper::ApplicationMetalController or
+# Doorkeeper::ApplicationController
+
 module Doorkeeper
   module Helpers
     module Controller
       extend ActiveSupport::Concern
 
       private
-
-      # Define methods that can be called in any controller that inherits from
-      # Doorkeeper::ApplicationMetalController or
-      # Doorkeeper::ApplicationController
 
       def authenticate_resource_owner!
         current_resource_owner
