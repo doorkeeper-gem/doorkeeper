@@ -18,10 +18,26 @@ module Doorkeeper
     end
 
     module ClassMethods
+      # Returns an instance of the Doorkeeper::Application with
+      # specific UID and secret.
+      #
+      # @param uid [#to_s] UID (any object that responds to `#to_s`)
+      # @param secret [#to_s] secret (any object that responds to `#to_s`)
+      #
+      # @return [Doorkeeper::Application, nil] Application instance or nil
+      #   if there is no record with such credentials
+      #
       def by_uid_and_secret(uid, secret)
         find_by(uid: uid.to_s, secret: secret.to_s)
       end
 
+      # Returns an instance of the Doorkeeper::Application with specific UID.
+      #
+      # @param uid [#to_s] UID (any object that responds to `#to_s`)
+      #
+      # @return [Doorkeeper::Application, nil] Application instance or nil
+      #   if there is no record with such UID
+      #
       def by_uid(uid)
         find_by(uid: uid.to_s)
       end

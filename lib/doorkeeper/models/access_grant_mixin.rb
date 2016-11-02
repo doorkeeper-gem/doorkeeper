@@ -27,6 +27,14 @@ module Doorkeeper
     end
 
     module ClassMethods
+      # Searches for Doorkeeper::AccessGrant record with the
+      # specific token value.
+      #
+      # @param token [#to_s] token value (any object that responds to `#to_s`)
+      #
+      # @return [Doorkeeper::AccessGrant, nil] AccessGrant object or nil
+      #   if there is no record with such token
+      #
       def by_token(token)
         find_by(token: token.to_s)
       end
@@ -34,6 +42,10 @@ module Doorkeeper
 
     private
 
+    # Generates token value with UniqueToken class.
+    #
+    # @return [String] token value
+    #
     def generate_token
       self.token = UniqueToken.generate
     end
