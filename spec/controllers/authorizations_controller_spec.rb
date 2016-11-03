@@ -12,8 +12,9 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     I18n.translate key, scope: [:doorkeeper, :errors, :messages]
   end
 
-  let(:client) { FactoryGirl.create :application }
-  let(:user)   { User.create!(name: 'Joe', password: 'sekret') }
+  let(:client)        { FactoryGirl.create :application }
+  let(:user)          { User.create!(name: 'Joe', password: 'sekret') }
+  let(:access_token)  { FactoryGirl.build :access_token, resource_owner_id: user.id, application_id: client.id }
 
   before do
     allow(Doorkeeper.configuration).to receive(:grant_flows).and_return(["implicit"])
@@ -86,7 +87,20 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
   end
 
   describe 'POST #create with application already authorized' do
-    it 'returns the existing access token in a fragment'
+    before do
+      allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
+
+      access_token.save!
+      post :create, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
+    end
+
+    it 'returns the existing access token in a fragment' do
+      expect(fragments('access_token')).to eq(access_token.token)
+    end
+
+    it 'does not creates a new access token' do
+      expect(Doorkeeper::AccessToken.count).to eq(1)
+    end
   end
 
   describe 'GET #new token request with native url and skip_authorization true' do
