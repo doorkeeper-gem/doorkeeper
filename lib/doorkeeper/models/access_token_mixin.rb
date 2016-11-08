@@ -69,30 +69,33 @@ module Doorkeeper
                             else
                               resource_owner_or_id
                             end
-        token = last_authorized_token_for(application.try(:id), resource_owner_id)
-        if token && scopes_match?(token.scopes, scopes, application.try(:scopes))
-          token
+        tokens = authorized_tokens_for(application.try(:id), resource_owner_id)
+        tokens.detect do |token|
+          scopes_match?(token.scopes, scopes, application.try(:scopes))
         end
       end
 
-      # Checks whether the token scopes match the scopes from the parameters or
-      # Application scopes (if present).
+      # Checks whether the token scopes match the scopes from the parameters
       #
       # @param token_scopes [#to_s]
       #   set of scopes (any object that responds to `#to_s`)
-      # @param param_scopes [String]
+      # @param param_scopes [Doorkeeper::OAuth::Scopes]
       #   scopes from params
-      # @param app_scopes [String]
+      # @param app_scopes [Doorkeeper::OAuth::Scopes]
       #   Application scopes
       #
-      # @return [Boolean] true if all scopes are blank or matches
+      # @return [Boolean] true if the param scopes match the token scopes,
+      #   and all the param scopes are defined in the application (or in the
+      #   server configuration if the application doesn't define any scopes),
       #   and false in other cases
       #
       def scopes_match?(token_scopes, param_scopes, app_scopes)
-        (!token_scopes.present? && !param_scopes.present?) ||
-          Doorkeeper::OAuth::Helpers::ScopeChecker.match?(
-            token_scopes.to_s,
-            param_scopes,
+        return true if token_scopes.empty? && param_scopes.empty?
+
+        (token_scopes.sort == param_scopes.sort) &&
+          Doorkeeper::OAuth::Helpers::ScopeChecker.valid?(
+            param_scopes.to_s,
+            Doorkeeper.configuration.scopes,
             app_scopes
           )
       end
@@ -131,8 +134,25 @@ module Doorkeeper
         )
       end
 
-      # Looking for not revoked Access Token record that belongs to specific
+      # Looking for not revoked Access Token records that belongs to specific
       # Application and Resource Owner.
+      #
+      # @param application_id [Integer]
+      #   ID of the Application model instance
+      # @param resource_owner_id [Integer]
+      #   ID of the Resource Owner model instance
+      #
+      # @return [Doorkeeper::AccessToken] array of matching AccessToken objects
+      #
+      def authorized_tokens_for(application_id, resource_owner_id)
+        ordered_by(:created_at, :desc).
+          where(application_id: application_id,
+                resource_owner_id: resource_owner_id,
+                revoked_at: nil)
+      end
+
+      # Convenience method for backwards-compatibility, return the last
+      # matching token for the given Application and Resource Owner.
       #
       # @param application_id [Integer]
       #   ID of the Application model instance
@@ -143,10 +163,7 @@ module Doorkeeper
       #   nil if nothing was found
       #
       def last_authorized_token_for(application_id, resource_owner_id)
-        ordered_by(:created_at, :desc).
-          find_by(application_id: application_id,
-                  resource_owner_id: resource_owner_id,
-                  revoked_at: nil)
+        authorized_tokens_for(application_id, resource_owner_id).first
       end
     end
 
