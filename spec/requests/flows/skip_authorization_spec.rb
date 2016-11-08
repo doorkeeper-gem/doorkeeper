@@ -16,7 +16,18 @@ feature 'Skip authorization form' do
 
     scenario 'skips the authorization and return a new grant code' do
       client_is_authorized(@client, @resource_owner, scopes: 'public')
-      visit authorization_endpoint_url(client: @client)
+      visit authorization_endpoint_url(client: @client, scope: 'public')
+
+      i_should_not_see 'Authorize'
+      client_should_be_authorized @client
+      i_should_be_on_client_callback @client
+      url_should_have_param 'code', Doorkeeper::AccessGrant.first.token
+    end
+
+    scenario 'skips the authorization if the application has additional scopes which are not requested' do
+      client_exists scopes: 'public read write'
+      client_is_authorized(@client, @resource_owner, scopes: 'public')
+      visit authorization_endpoint_url(client: @client, scope: 'public')
 
       i_should_not_see 'Authorize'
       client_should_be_authorized @client
