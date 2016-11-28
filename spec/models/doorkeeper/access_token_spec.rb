@@ -331,31 +331,31 @@ module Doorkeeper
         expect(last_token).to be_nil
       end
 
-      it 'excludes tokens with a different application' do
+      it "excludes tokens with a different application" do
         FactoryGirl.create :access_token, default_attributes.merge(application: FactoryGirl.create(:application))
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
       end
 
-      it 'excludes tokens with a different resource owner' do
+      it "excludes tokens with a different resource owner" do
         FactoryGirl.create :access_token, default_attributes.merge(resource_owner_id: 2)
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
       end
 
-      it 'excludes tokens with fewer scopes' do
+      it "excludes tokens with fewer scopes" do
         FactoryGirl.create :access_token, default_attributes.merge(scopes: 'public')
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
       end
 
-      it 'excludes tokens with different scopes' do
+      it "excludes tokens with different scopes" do
         FactoryGirl.create :access_token, default_attributes.merge(scopes: 'public email')
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
       end
 
-      it 'excludes tokens with more scopes' do
+      it "excludes tokens with more scopes" do
         FactoryGirl.create :access_token, default_attributes.merge(scopes: 'public write email')
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
@@ -369,8 +369,8 @@ module Doorkeeper
       end
     end
 
-    describe '#as_json' do
-      it 'returns as_json hash' do
+    describe "#as_json" do
+      it "returns as_json hash" do
         token = FactoryGirl.create :access_token
         token_hash = {
           resource_owner_id:  token.resource_owner_id,
