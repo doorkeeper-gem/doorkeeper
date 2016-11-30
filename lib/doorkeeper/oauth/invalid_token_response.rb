@@ -1,6 +1,8 @@
 module Doorkeeper
   module OAuth
     class InvalidTokenResponse < ErrorResponse
+      attr_reader :reason
+
       def self.from_access_token(access_token, attributes = {})
         reason = case
                  when access_token.try(:revoked?)

@@ -14,14 +14,42 @@ module Doorkeeper::OAuth
     end
 
     describe :from_access_token do
-      it 'revoked' do
-        response = InvalidTokenResponse.from_access_token double(revoked?: true, expired?: true)
-        expect(response.description).to include('revoked')
+      let(:response) { InvalidTokenResponse.from_access_token(access_token) }
+
+      context 'revoked' do
+        let(:access_token) { double(revoked?: true, expired?: true) }
+
+        it 'sets a description' do
+          expect(response.description).to include('revoked')
+        end
+
+        it 'sets the reason' do
+          expect(response.reason).to eq(:revoked)
+        end
       end
 
-      it 'expired' do
-        response = InvalidTokenResponse.from_access_token double(revoked?: false, expired?: true)
-        expect(response.description).to include('expired')
+      context 'expired' do
+        let(:access_token) { double(revoked?: false, expired?: true) }
+
+        it 'sets a description' do
+          expect(response.description).to include('expired')
+        end
+
+        it 'sets the reason' do
+          expect(response.reason).to eq(:expired)
+        end
+      end
+
+      context 'unkown' do
+        let(:access_token) { double(revoked?: false, expired?: false) }
+
+        it 'sets a description' do
+          expect(response.description).to include('invalid')
+        end
+
+        it 'sets the reason' do
+          expect(response.reason).to eq(:unknown)
+        end
       end
     end
   end
