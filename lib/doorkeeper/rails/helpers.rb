@@ -1,8 +1,6 @@
 module Doorkeeper
   module Rails
     module Helpers
-      extend ActiveSupport::Concern
-
       def doorkeeper_authorize!(*scopes)
         @_doorkeeper_scopes = scopes.presence || Doorkeeper.configuration.default_scopes
 

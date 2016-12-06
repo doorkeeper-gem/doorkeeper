@@ -3,8 +3,6 @@
 module Doorkeeper
   module Helpers
     module Controller
-      extend ActiveSupport::Concern
-
       private
 
       def authenticate_resource_owner!
