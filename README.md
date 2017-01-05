@@ -176,7 +176,7 @@ You can pass any option `before_action` accepts, such as `if`, `only`,
 
 ### Protect your API with OAuth when using Grape
 
-As of [PR 567] doorkeeper has helpers for Grape. One of them is
+As of [PR 567] doorkeeper has helpers for Grape >= 0.10. One of them is
 `doorkeeper_authorize!` and can be used in a similar way as an example above.
 Note that you have to use `require 'doorkeeper/grape/helpers'` and
 `helpers Doorkeeper::Grape::Helpers`.
@@ -196,6 +196,11 @@ module API
 
       before do
         doorkeeper_authorize!
+      end
+
+      route_setting :scopes, ['user:email']
+      get :emails do
+        [{'email' => current_user.email}]
       end
 
       # ...
