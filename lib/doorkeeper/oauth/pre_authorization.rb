@@ -8,7 +8,7 @@ module Doorkeeper
       validate :scopes, error: :invalid_scope
       validate :redirect_uri, error: :invalid_redirect_uri
 
-      attr_accessor :server, :client, :response_type, :redirect_uri, :state
+      attr_accessor :server, :client, :response_type, :redirect_uri, :state, :nonce
       attr_writer   :scope
 
       def initialize(server, client, attrs = {})
@@ -18,6 +18,7 @@ module Doorkeeper
         @redirect_uri  = attrs[:redirect_uri]
         @scope         = attrs[:scope]
         @state         = attrs[:state]
+        @nonce         = attrs[:nonce]
       end
 
       def authorizable?

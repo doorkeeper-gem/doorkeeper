@@ -15,7 +15,8 @@ module Doorkeeper
             resource_owner_id: resource_owner.id,
             expires_in: configuration.authorization_code_expires_in,
             redirect_uri: pre_auth.redirect_uri,
-            scopes: pre_auth.scopes.to_s
+            scopes: pre_auth.scopes.to_s,
+            nonce: pre_auth.nonce
           )
         end
 

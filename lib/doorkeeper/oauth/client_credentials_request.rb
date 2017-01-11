@@ -8,7 +8,7 @@ module Doorkeeper
       include Validations
       include OAuth::RequestConcern
 
-      attr_accessor :server, :client, :original_scopes
+      attr_accessor :server, :client, :original_scopes, :nonce
       attr_reader :response
       attr_writer :issuer
 
@@ -25,6 +25,7 @@ module Doorkeeper
         @server = server
         @response = nil
         @original_scopes = parameters[:scope]
+        @nonce = parameters[:nonce]
       end
 
       def access_token
