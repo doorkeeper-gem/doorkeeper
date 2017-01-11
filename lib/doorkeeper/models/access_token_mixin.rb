@@ -44,7 +44,7 @@ module Doorkeeper
       #   if there is no record with such token
       #
       def by_token(token)
-        find_by(token: token.to_s)
+        where(token: token.to_s).first
       end
 
       # Returns an instance of the Doorkeeper::AccessToken
@@ -57,7 +57,7 @@ module Doorkeeper
       #   if there is no record with such refresh token
       #
       def by_refresh_token(refresh_token)
-        find_by(refresh_token: refresh_token.to_s)
+        where(refresh_token: refresh_token.to_s).first
       end
 
       # Revokes AccessToken records that have not been revoked and associated
@@ -169,9 +169,9 @@ module Doorkeeper
       #
       def last_authorized_token_for(application_id, resource_owner_id)
         send(order_method, created_at_desc).
-          find_by(application_id: application_id,
-                  resource_owner_id: resource_owner_id,
-                  revoked_at: nil)
+          where(application_id: application_id,
+                resource_owner_id: resource_owner_id,
+                revoked_at: nil).first
       end
     end
 

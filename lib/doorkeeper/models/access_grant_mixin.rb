@@ -36,7 +36,7 @@ module Doorkeeper
       #   if there is no record with such token
       #
       def by_token(token)
-        find_by(token: token.to_s)
+        where(token: token.to_s).first
       end
     end
 
