@@ -44,11 +44,7 @@ module Doorkeeper
     end
 
     def application_params
-      if params.respond_to?(:permit)
-        params.require(:doorkeeper_application).permit(:name, :redirect_uri, :scopes)
-      else
-        params[:doorkeeper_application].slice(:name, :redirect_uri, :scopes) rescue nil
-      end
+      params.require(:doorkeeper_application).permit(:name, :redirect_uri, :scopes)
     end
   end
 end
