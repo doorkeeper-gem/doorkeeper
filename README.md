@@ -35,6 +35,8 @@ https://github.com/doorkeeper-gem/doorkeeper/releases
 - [Protecting resources with OAuth (a.k.a your API endpoint)](#protecting-resources-with-oauth-aka-your-api-endpoint)
   - [Protect your API with OAuth when using Grape](#protect-your-api-with-oauth-when-using-grape)
   - [Route Constraints and other integrations](#route-constraints-and-other-integrations)
+  - [API Only option for use with Rails
+    API](#api-only-option-for-use-with-rails-api)
   - [Access Token Scopes](#access-token-scopes)
   - [Custom Access Token Generator](#custom-access-token-generator)
   - [Authenticated resource owner](#authenticated-resource-owner)
@@ -232,6 +234,20 @@ end
 For more information about integration and other integrations, check out [the
 related wiki
 page](https://github.com/doorkeeper-gem/doorkeeper/wiki/ActionController::Metal-with-doorkeeper).
+
+### API only option for use with Rails API
+
+By default, Doorkeeper comes with a user interface showing the
+[list of registered client applications](#applications-list) as well as authorized applications
+list for an authorized resource owner. If you have a Rails API application and don't need this feature,
+you can disable it with the `:api_only` option in the `use_doorkeeper`
+block in your `routes.rb` file as follows:
+
+```ruby
+Rails.application.routes.draw do
+  use_doorkeeper api_only: true
+end
+```
 
 ### Access Token Scopes
 

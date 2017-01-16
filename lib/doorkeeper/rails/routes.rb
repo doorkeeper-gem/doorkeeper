@@ -5,7 +5,6 @@ module Doorkeeper
   module Rails
     class Routes
       module Helper
-        # TODO: options hash is not being used
         def use_doorkeeper(options = {}, &block)
           Doorkeeper::Rails::Routes.new(self, &block).generate_routes!(options)
         end
@@ -24,6 +23,7 @@ module Doorkeeper
 
       def generate_routes!(options)
         @mapping = Mapper.new.map(&@block)
+        skip_controllers_if_api(options)
         routes.scope options[:scope] || 'oauth', as: 'oauth' do
           map_route(:authorizations, :authorization_routes)
           map_route(:tokens, :token_routes)
@@ -35,6 +35,12 @@ module Doorkeeper
       end
 
       private
+
+      def skip_controllers_if_api(options)
+        if options[:api_only]
+          @mapping.skips.push(:applications, :authorized_applications)
+        end
+      end
 
       def map_route(name, method)
         unless @mapping.skipped?(name)

@@ -4,6 +4,11 @@ User-visible changes worth mentioning.
 
 ## master
 
+## 4.3.0
+
+- [#879] Add api_only option to use doorkeeper without management views
+  for API only Rails applications
+
 ## 4.2.0
 
 - Security fix: Address CVE-2016-6582, implement token revocation according to
