@@ -10,11 +10,16 @@ rvm:
 before_install:
   - gem install bundler -v '~> 1.10'
 
-env:
-  - rails=4.2.0
-  - rails=5.0.0
+gemfile:
+  - gemfiles/rails_4_2.gemfile
+  - gemfiles/rails_5_0.gemfile
+  - gemfiles/rails_5_1.gemfile
 
 matrix:
   exclude:
-    - env: rails=5.0.0
+    - gemfile: gemfiles/rails_5_0.gemfile
       rvm: 2.1
+    - gemfile: gemfiles/rails_5_1.gemfile
+      rvm: 2.1
+  allowed_failures:
+    - gemfile: gemfiles/rails_5_1.gemfile
