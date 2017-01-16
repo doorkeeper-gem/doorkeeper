@@ -3,7 +3,7 @@ require 'doorkeeper/rails/routes/mapper'
 
 module Doorkeeper
   module Rails
-    class Routes
+    class Routes # :nodoc:
       module Helper
         # TODO: options hash is not being used
         def use_doorkeeper(options = {}, &block)
@@ -15,15 +15,14 @@ module Doorkeeper
         ActionDispatch::Routing::Mapper.send :include, Doorkeeper::Rails::Routes::Helper
       end
 
-      attr_accessor :routes
+      attr_reader :routes
 
       def initialize(routes, &block)
         @routes = routes
-        @block = block
+        @mapping = Mapper.new.map(&block)
       end
 
       def generate_routes!(options)
-        @mapping = Mapper.new.map(&@block)
         routes.scope options[:scope] || 'oauth', as: 'oauth' do
           map_route(:authorizations, :authorization_routes)
           map_route(:tokens, :token_routes)
