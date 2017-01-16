@@ -1,6 +1,6 @@
 module Doorkeeper
   module Rails
-    class Routes
+    class Routes # :nodoc:
       class Mapping
         attr_accessor :controllers, :as, :skips
 
