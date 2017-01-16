@@ -16,9 +16,9 @@ module Doorkeeper
 
       private
 
-        def grant
-          AccessGrant.by_token(parameters[:code])
-        end
+      def grant
+        AccessGrant.by_token(parameters[:code])
+      end
     end
   end
 end
