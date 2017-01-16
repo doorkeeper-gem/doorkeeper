@@ -33,14 +33,6 @@ module Doorkeeper
       context.send :current_resource_owner
     end
 
-    def current_refresh_token
-      AccessToken.by_refresh_token(parameters[:refresh_token])
-    end
-
-    def grant
-      AccessGrant.by_token(parameters[:code])
-    end
-
     # TODO: Use configuration and evaluate proper context on block
     def resource_owner
       context.send :resource_owner_from_credentials

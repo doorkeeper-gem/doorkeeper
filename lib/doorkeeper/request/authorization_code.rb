@@ -3,7 +3,7 @@ require 'doorkeeper/request/strategy'
 module Doorkeeper
   module Request
     class AuthorizationCode < Strategy
-      delegate :grant, :client, :parameters, to: :server
+      delegate :client, :parameters, to: :server
 
       def request
         @request ||= OAuth::AuthorizationCodeRequest.new(
@@ -13,6 +13,12 @@ module Doorkeeper
           parameters
         )
       end
+
+      private
+
+        def grant
+          AccessGrant.by_token(parameters[:code])
+        end
     end
   end
 end
