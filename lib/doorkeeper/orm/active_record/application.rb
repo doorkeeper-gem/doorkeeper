@@ -4,11 +4,7 @@ module Doorkeeper
 
     include ApplicationMixin
 
-    if ActiveRecord::VERSION::MAJOR >= 4
-      has_many :authorized_tokens, -> { where(revoked_at: nil) }, class_name: 'AccessToken'
-    else
-      has_many :authorized_tokens, class_name: 'AccessToken', conditions: { revoked_at: nil }
-    end
+    has_many :authorized_tokens, -> { where(revoked_at: nil) }, class_name: 'AccessToken'
     has_many :authorized_applications, through: :authorized_tokens, source: :application
 
     # Returns Applications associated with active (not revoked) Access Tokens
