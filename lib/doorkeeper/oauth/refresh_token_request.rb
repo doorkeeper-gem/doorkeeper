@@ -1,8 +1,6 @@
 module Doorkeeper
   module OAuth
-    class RefreshTokenRequest
-      include Validations
-      include OAuth::RequestConcern
+    class RefreshTokenRequest < BaseRequest
       include OAuth::Helpers
 
       validate :token_presence, error: :invalid_request

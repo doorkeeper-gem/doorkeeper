@@ -1,8 +1,6 @@
 module Doorkeeper
   module OAuth
-    class PasswordAccessTokenRequest
-      include Validations
-      include OAuth::RequestConcern
+    class PasswordAccessTokenRequest < BaseRequest
       include OAuth::Helpers
 
       validate :client,         error: :invalid_client
