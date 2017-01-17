@@ -4,7 +4,7 @@ require 'doorkeeper/oauth/helpers/scope_checker'
 
 module Doorkeeper
   module OAuth
-    class ClientCredentialsRequest
+    class ClientCredentialsRequest < BaseRequest
       class Validation
         include Validations
         include OAuth::Helpers

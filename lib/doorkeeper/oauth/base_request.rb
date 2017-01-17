@@ -1,6 +1,8 @@
 module Doorkeeper
   module OAuth
-    module RequestConcern
+    class BaseRequest
+      include Validations
+
       def authorize
         validate
         if valid?
