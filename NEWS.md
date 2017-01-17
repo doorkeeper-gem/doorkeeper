@@ -4,6 +4,10 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#928] Test against more recent Ruby versions
+- Small refactorings within the codebase
+- [#921] Switch to Appraisal, and test against Rails master
+
 ## 4.2.0
 
 - Security fix: Address CVE-2016-6582, implement token revocation according to
