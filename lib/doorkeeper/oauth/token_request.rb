@@ -1,11 +1,10 @@
 module Doorkeeper
   module OAuth
     class TokenRequest
-      attr_accessor :pre_auth, :resource_owner, :client
+      attr_accessor :pre_auth, :resource_owner
 
       def initialize(pre_auth, resource_owner)
         @pre_auth       = pre_auth
-        @client         = pre_auth.client
         @resource_owner = resource_owner
       end
 
