@@ -16,6 +16,7 @@ require 'doorkeeper/oauth/helpers/unique_token'
 
 require 'doorkeeper/oauth/scopes'
 require 'doorkeeper/oauth/error'
+require 'doorkeeper/oauth/base_response'
 require 'doorkeeper/oauth/code_response'
 require 'doorkeeper/oauth/token_response'
 require 'doorkeeper/oauth/error_response'
