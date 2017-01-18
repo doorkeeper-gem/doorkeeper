@@ -18,6 +18,10 @@ module Doorkeeper::OAuth
         id: '1'
     end
 
+    let(:scopes_array) do
+      %w(public write)
+    end
+
     let(:server) do
       double :server,
         access_token_expires_in: 100,
@@ -68,15 +72,19 @@ module Doorkeeper::OAuth
         end
 
         it "returns an ErrorResponse object" do
+          error_description = I18n.translate(
+            "server_error",
+            scope: [:doorkeeper, :errors, :messages]
+          )
+
           result = subject.authorize
 
           expect(result).to be_an_instance_of(ErrorResponse)
+
           expect(result.body).to eq(
-            {
-              error: "server_error",
-              error_description: I18n.translate("server_error", scope: [:doorkeeper, :errors, :messages]),
-              state: "hello"
-            }
+            error: "server_error",
+            error_description: error_description,
+            state: "hello"
           )
         end
       end
@@ -95,8 +103,8 @@ module Doorkeeper::OAuth
       it "returns an instance of AccessToken" do
         result = subject.find_or_create_access_token(
           client,
-          '1',
-          'public',
+          "1",
+          "public",
           server
         )
 
@@ -113,7 +121,7 @@ module Doorkeeper::OAuth
         it "returns array of @original_scopes" do
           result = subject.scopes
 
-          expect(result).to eq(["public", "write"])
+          expect(result).to eq(scopes_array)
         end
       end
 
@@ -124,11 +132,11 @@ module Doorkeeper::OAuth
 
         it "calls #default_scopes" do
           allow(subject).to receive(:server).and_return(server).once
-          allow(server).to receive(:default_scopes).and_return(["public", "write"]).once
+          allow(server).to receive(:default_scopes).and_return(scopes_array).once
 
           result = subject.scopes
 
-          expect(result).to eq(["public", "write"])
+          expect(result).to eq(scopes_array)
         end
       end
     end
