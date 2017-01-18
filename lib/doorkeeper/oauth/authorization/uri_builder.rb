@@ -18,6 +18,8 @@ module Doorkeeper
             uri.to_s
           end
 
+          private
+
           def build_query(parameters = {})
             parameters = parameters.reject { |_, v| v.blank? }
             Rack::Utils.build_query parameters
