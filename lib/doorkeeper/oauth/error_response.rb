@@ -1,6 +1,6 @@
 module Doorkeeper
   module OAuth
-    class ErrorResponse
+    class ErrorResponse < BaseResponse
       include OAuth::Helpers
 
       def self.from_request(request, attributes = {})
@@ -41,10 +41,6 @@ module Doorkeeper
         end
       end
 
-      def authenticate_info
-        %(Bearer realm="#{realm}", error="#{name}", error_description="#{description}")
-      end
-
       def headers
         { 'Cache-Control' => 'no-store',
           'Pragma' => 'no-cache',
@@ -58,6 +54,12 @@ module Doorkeeper
 
       def configuration
         Doorkeeper.configuration
+      end
+
+      private
+
+      def authenticate_info
+        %(Bearer realm="#{realm}", error="#{name}", error_description="#{description}")
       end
     end
   end

@@ -1,6 +1,6 @@
 module Doorkeeper
   module OAuth
-    class CodeResponse
+    class CodeResponse < BaseResponse
       include OAuth::Helpers
 
       attr_accessor :pre_auth, :auth, :response_on_fragment
