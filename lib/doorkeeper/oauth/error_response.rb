@@ -1,7 +1,6 @@
 module Doorkeeper
   module OAuth
     class ErrorResponse
-      include OAuth::Authorization::URIBuilder
       include OAuth::Helpers
 
       def self.from_request(request, attributes = {})
@@ -36,9 +35,9 @@ module Doorkeeper
 
       def redirect_uri
         if @response_on_fragment
-          uri_with_fragment @redirect_uri, body
+          Authorization::URIBuilder.uri_with_fragment @redirect_uri, body
         else
-          uri_with_query @redirect_uri, body
+          Authorization::URIBuilder.uri_with_query @redirect_uri, body
         end
       end
 
