@@ -16,7 +16,7 @@ module Doorkeeper
     end
 
     def token_strategy(grant_type)
-      get_strategy grant_type, token_grant_types
+      get_strategy grant_type.chomp, token_grant_types
     rescue NameError
       raise Errors::InvalidTokenStrategy
     end
