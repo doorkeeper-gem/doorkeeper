@@ -43,6 +43,13 @@ describe Doorkeeper do
         expect(Doorkeeper.configured?).to eq(false)
       end
     end
+
+    it "is deprecated" do
+      expect(ActiveSupport::Deprecation).to receive(:warn).
+        with("Method `Doorkeeper#configured?` has been deprecated without replacement.")
+
+      Doorkeeper.configured?
+    end
   end
 
   describe "#database_installed?" do
@@ -62,26 +69,44 @@ describe Doorkeeper do
     end
 
     context "all tables exist" do
-      it "returns true" do
+      before do
         klass = double table_exists?: true
 
         Doorkeeper.const_set(:AccessToken, klass)
         Doorkeeper.const_set(:AccessGrant, klass)
         Doorkeeper.const_set(:Application, klass)
+      end
 
+      it "returns true" do
         expect(Doorkeeper.database_installed?).to eq(true)
+      end
+
+      it "is deprecated" do
+        expect(ActiveSupport::Deprecation).to receive(:warn).
+          with("Method `Doorkeeper#database_installed?` has been deprecated without replacement.")
+
+        Doorkeeper.database_installed?
       end
     end
 
     context "all tables do not exist" do
-      it "returns false" do
+      before do
         klass = double table_exists?: false
 
         Doorkeeper.const_set(:AccessToken, klass)
         Doorkeeper.const_set(:AccessGrant, klass)
         Doorkeeper.const_set(:Application, klass)
+      end
 
+      it "returns false" do
         expect(Doorkeeper.database_installed?).to eq(false)
+      end
+
+      it "is deprecated" do
+        expect(ActiveSupport::Deprecation).to receive(:warn).
+          with("Method `Doorkeeper#database_installed?` has been deprecated without replacement.")
+
+        Doorkeeper.database_installed?
       end
     end
   end
@@ -107,6 +132,19 @@ describe Doorkeeper do
       it "returns false" do
         expect(Doorkeeper.installed?).to eq(false)
       end
+    end
+
+    it "is deprecated" do
+      expect(ActiveSupport::Deprecation).to receive(:warn).
+        with("Method `Doorkeeper#configured?` has been deprecated without replacement.")
+
+      expect(ActiveSupport::Deprecation).to receive(:warn).
+        with("Method `Doorkeeper#database_installed?` has been deprecated without replacement.")
+
+      expect(ActiveSupport::Deprecation).to receive(:warn).
+        with("Method `Doorkeeper#installed?` has been deprecated without replacement.")
+
+      Doorkeeper.installed?
     end
   end
 end
