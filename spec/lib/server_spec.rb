@@ -1,7 +1,4 @@
 require 'spec_helper'
-require 'active_support/all'
-require 'doorkeeper/errors'
-require 'doorkeeper/server'
 
 describe Doorkeeper::Server do
   let(:fake_class) { double :fake_class }
