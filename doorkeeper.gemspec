@@ -5,8 +5,8 @@ require "doorkeeper/version"
 Gem::Specification.new do |s|
   s.name        = "doorkeeper"
   s.version     = Doorkeeper::VERSION
-  s.authors     = ["Felipe Elias Philipp", "Tute Costa"]
-  s.email       = %w(tutecosta@gmail.com)
+  s.authors     = ["Felipe Elias Philipp", "Tute Costa", "Jon Moss"]
+  s.email       = %w(me@jonathanmoss.me)
   s.homepage    = "https://github.com/doorkeeper-gem/doorkeeper"
   s.summary     = "OAuth 2 provider for Rails and Grape"
   s.description = "Doorkeeper is an OAuth 2 provider for Rails and Grape."
