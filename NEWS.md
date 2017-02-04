@@ -2,11 +2,10 @@
 
 User-visible changes worth mentioning.
 
-- Add `InvalidTokenResponse#reason` reader method to allow read the kind of
-  invalid token error.
-
 ## master
 
+- [#909] Add `InvalidTokenResponse#reason` reader method to allow read the kind
+  of invalid token error.
 - [#928] Test against more recent Ruby versions
 - Small refactorings within the codebase
 - [#921] Switch to Appraisal, and test against Rails master
