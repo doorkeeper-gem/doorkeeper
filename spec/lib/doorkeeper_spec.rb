@@ -74,7 +74,7 @@ describe Doorkeeper do
     end
 
     context "all tables do not exist" do
-      it "returns true" do
+      it "returns false" do
         klass = double table_exists?: false
 
         Doorkeeper.const_set(:AccessToken, klass)
