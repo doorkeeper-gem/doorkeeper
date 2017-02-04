@@ -4,7 +4,7 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [] Deprecate `Doorkeeper#configured?`, `Doorkeeper#database_installed?`, and
+- [#936] Deprecate `Doorkeeper#configured?`, `Doorkeeper#database_installed?`, and
   `Doorkeeper#installed?`
 - [#909] Add `InvalidTokenResponse#reason` reader method to allow read the kind
   of invalid token error.
