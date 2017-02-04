@@ -2,6 +2,9 @@
 
 User-visible changes worth mentioning.
 
+- Add `InvalidTokenResponse#reason` reader method to allow read the kind of
+  invalid token error.
+
 ## master
 
 - [#928] Test against more recent Ruby versions
