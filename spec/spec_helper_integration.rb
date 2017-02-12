@@ -16,7 +16,6 @@ require 'capybara/rspec'
 require 'dummy/config/environment'
 require 'rspec/rails'
 require 'generator_spec/test_case'
-require 'timecop'
 require 'database_cleaner'
 
 # Load JRuby SQLite3 if in that platform

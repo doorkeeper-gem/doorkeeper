@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'timecop'
 require 'active_support/time'
 require 'doorkeeper/models/concerns/expirable'
 
