@@ -11,6 +11,7 @@ User-visible changes worth mentioning.
 - [#928] Test against more recent Ruby versions
 - Small refactorings within the codebase
 - [#921] Switch to Appraisal, and test against Rails master
+- [#892] Add minimum Ruby version requirement
 
 ## 4.2.0
 
