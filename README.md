@@ -1,4 +1,4 @@
-# Doorkeeper - awesome oauth provider for your Rails app.
+# Doorkeeper - awesome OAuth2 provider for your Rails app.
 
 [![Build Status](https://travis-ci.org/doorkeeper-gem/doorkeeper.svg?branch=master)](https://travis-ci.org/doorkeeper-gem/doorkeeper)
 [![Dependency Status](https://gemnasium.com/doorkeeper-gem/doorkeeper.svg?travis)](https://gemnasium.com/doorkeeper-gem/doorkeeper)
