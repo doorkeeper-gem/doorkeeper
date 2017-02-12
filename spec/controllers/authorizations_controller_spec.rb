@@ -3,9 +3,13 @@ require 'spec_helper_integration'
 describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
   include AuthorizationRequestHelper
 
-  def fragments(param)
-    fragment = URI.parse(response.location).fragment
-    Rack::Utils.parse_query(fragment)[param]
+  class ActionController::TestResponse
+    def query_params
+      @_query_params ||= begin
+        fragment = URI.parse(location).fragment
+        Rack::Utils.parse_query(fragment)
+      end
+    end
   end
 
   def translated_error_message(key)
@@ -35,15 +39,15 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
 
     it 'includes access token in fragment' do
-      expect(fragments('access_token')).to eq(Doorkeeper::AccessToken.first.token)
+      expect(response.query_params['access_token']).to eq(Doorkeeper::AccessToken.first.token)
     end
 
     it 'includes token type in fragment' do
-      expect(fragments('token_type')).to eq('bearer')
+      expect(response.query_params['token_type']).to eq('bearer')
     end
 
     it 'includes token expiration in fragment' do
-      expect(fragments('expires_in').to_i).to eq(2.hours.to_i)
+      expect(response.query_params['expires_in'].to_i).to eq(2.hours.to_i)
     end
 
     it 'issues the token for the current client' do
@@ -70,15 +74,15 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
 
     it 'does not include access token in fragment' do
-      expect(fragments('access_token')).to be_nil
+      expect(response.query_params['access_token']).to be_nil
     end
 
     it 'includes error in fragment' do
-      expect(fragments('error')).to eq('invalid_scope')
+      expect(response.query_params['error']).to eq('invalid_scope')
     end
 
     it 'includes error description in fragment' do
-      expect(fragments('error_description')).to eq(translated_error_message(:invalid_scope))
+      expect(response.query_params['error_description']).to eq(translated_error_message(:invalid_scope))
     end
 
     it 'does not issue any access token' do
@@ -95,7 +99,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
 
     it 'returns the existing access token in a fragment' do
-      expect(fragments('access_token')).to eq(access_token.token)
+      expect(response.query_params['access_token']).to eq(access_token.token)
     end
 
     it 'does not creates a new access token' do
@@ -169,11 +173,11 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
 
     it 'includes token type in fragment' do
-      expect(fragments('token_type')).to eq('bearer')
+      expect(response.query_params['token_type']).to eq('bearer')
     end
 
     it 'includes token expiration in fragment' do
-      expect(fragments('expires_in').to_i).to eq(2.hours.to_i)
+      expect(response.query_params['expires_in'].to_i).to eq(2.hours.to_i)
     end
 
     it 'issues the token for the current client' do
