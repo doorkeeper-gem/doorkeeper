@@ -2,7 +2,7 @@
 
 User-visible changes worth mentioning.
 
-## master
+## 4.2.5
 
 - [#936] Deprecate `Doorkeeper#configured?`, `Doorkeeper#database_installed?`, and
   `Doorkeeper#installed?`
