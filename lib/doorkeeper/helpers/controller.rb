@@ -34,22 +34,7 @@ module Doorkeeper
       end
 
       def get_error_response_from_exception(exception)
-        error_name = case exception
-                     when Errors::InvalidTokenStrategy
-                       :unsupported_grant_type
-                     when Errors::InvalidAuthorizationStrategy
-                       :unsupported_response_type
-                     when Errors::MissingRequestStrategy
-                       :invalid_request
-                     when Errors::InvalidTokenReuse
-                       :invalid_request
-                     when Errors::InvalidGrantReuse
-                       :invalid_grant
-                     when Errors::DoorkeeperError
-                       exception.message
-                     end
-
-        OAuth::ErrorResponse.new name: error_name, state: params[:state]
+        OAuth::ErrorResponse.new name: exception.type, state: params[:state]
       end
 
       def handle_token_exception(exception)
