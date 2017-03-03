@@ -49,7 +49,7 @@ shared_context 'expired token', token: :expired do
 
   before :each do
     allow(
-        Doorkeeper::AccessToken
+      Doorkeeper::AccessToken
     ).to receive(:by_token).with(token_string).and_return(token)
   end
 end
@@ -68,7 +68,7 @@ shared_context 'revoked token', token: :revoked do
 
   before :each do
     allow(
-        Doorkeeper::AccessToken
+      Doorkeeper::AccessToken
     ).to receive(:by_token).with(token_string).and_return(token)
   end
 end
@@ -86,7 +86,7 @@ shared_context 'forbidden token', token: :forbidden do
 
   before :each do
     allow(
-        Doorkeeper::AccessToken
+      Doorkeeper::AccessToken
     ).to receive(:by_token).with(token_string).and_return(token)
   end
 end
