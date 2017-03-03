@@ -116,7 +116,8 @@ Doorkeeper.configure do
   #
   # If you want to render error response yourself, set
   # handle_auth_errors = :raise
-  # and rescue following errors:
+  # and rescue Doorkeeper::Errors::InvalidToken
+  # or following specific errors:
   # Doorkeeper::Errors::TokenForbidden, Doorkeeper::Errors::TokenExpired,
   # Doorkeeper::Errors::TokenRevoked, Doorkeeper::Errors::TokenUnknown
   #
