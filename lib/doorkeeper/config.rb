@@ -243,6 +243,7 @@ doorkeeper.
     option :realm,                          default: 'Doorkeeper'
     option :force_ssl_in_redirect_uri,      default: !Rails.env.development?
     option :grant_flows,                    default: %w(authorization_code client_credentials)
+    option :handle_auth_errors,             default: :render
     option :access_token_generator,
            default: 'Doorkeeper::OAuth::Helpers::UniqueToken'
     option :base_controller,

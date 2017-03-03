@@ -41,5 +41,14 @@ module Doorkeeper
 
     class TokenGeneratorNotFound < DoorkeeperError
     end
+
+    class TokenExpired < DoorkeeperError
+    end
+    class TokenRevoked < DoorkeeperError
+    end
+    class TokenUnknown < DoorkeeperError
+    end
+    class TokenForbidden < DoorkeeperError
+    end
   end
 end
