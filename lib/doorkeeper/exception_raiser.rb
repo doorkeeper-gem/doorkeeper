@@ -1,7 +1,5 @@
 module Doorkeeper
   class ExceptionRaiser
-    attr_reader :error
-
     def initialize(error)
       @error = error
     end
@@ -9,13 +7,15 @@ module Doorkeeper
     def raise_if_handled
       return unless raise_errors?
 
-      raise_invalid_token if error.is_a? OAuth::InvalidTokenResponse
+      raise_invalid_token_error if error.is_a? OAuth::InvalidTokenResponse
       raise Doorkeeper::Errors::TokenForbidden, error.description if error.is_a? OAuth::ForbiddenTokenResponse
     end
 
     private
 
-    def raise_invalid_token
+    attr_reader :error
+
+    def raise_invalid_token_error
       errors = {
           expired: Doorkeeper::Errors::TokenExpired,
           revoked: Doorkeeper::Errors::TokenRevoked,
