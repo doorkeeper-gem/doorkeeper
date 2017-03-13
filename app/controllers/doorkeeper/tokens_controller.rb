@@ -71,7 +71,7 @@ module Doorkeeper
     end
 
     def strategy
-      @strategy ||= server.token_request params[:grant_type]
+      @strategy ||= server.token_request params[:grant_type].chomp
     end
 
     def authorize_response
