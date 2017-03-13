@@ -133,6 +133,14 @@ module Doorkeeper::OAuth
       expect(subject).not_to be_authorizable
     end
 
+    it 'matches the redirect uri against development_uris' do
+      subject.redirect_uri = 'http://nothesame.com'
+
+      Doorkeeper.configuration.instance_variable_set '@development_uris', 'http://nothesame.com/'
+      expect(subject).to be_authorizable
+    end
+
+
     it 'stores the state' do
       expect(subject.state).to eq('save-this')
     end

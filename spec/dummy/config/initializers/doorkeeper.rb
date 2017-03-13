@@ -93,4 +93,14 @@ Doorkeeper.configure do
 
   # WWW-Authenticate Realm (default "Doorkeeper").
   realm "Doorkeeper"
+
+  # URIs for development environment
+  # These won't get validated against redirect_uris of a client and will always
+  # be redirect after an successful authorization.
+  # Also, only host will be matched, and subdomains will be ignored
+  # Example: set to 'https://devs.your-company.com:3000'
+  # Redirect from 'http://this-dev.devs.your-company.com:3001/whatever?and=so_on'
+  # will be redirect to the given URL
+  # If this setting is set to :disabled, behavior won't change
+  development_uris :disabled
 end

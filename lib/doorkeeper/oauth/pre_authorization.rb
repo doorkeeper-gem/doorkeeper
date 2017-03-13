@@ -58,8 +58,11 @@ module Doorkeeper
       # TODO: test uri should be matched against the client's one
       def validate_redirect_uri
         return false unless redirect_uri.present?
-        Helpers::URIChecker.native_uri?(redirect_uri) ||
-          Helpers::URIChecker.valid_for_authorization?(redirect_uri, client.redirect_uri)
+        result = Helpers::URIChecker.native_uri?(redirect_uri)
+        result |= Helpers::URIChecker.valid_for_authorization?(redirect_uri, client.redirect_uri)
+        result |= Helpers::URIChecker.matches_development_urls?(redirect_uri)
+
+        result
       end
     end
   end

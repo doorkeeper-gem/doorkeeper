@@ -16,8 +16,25 @@ module Doorkeeper
           url == client_url
         end
 
+        def self.matches_development_urls?(url)
+          return false if Doorkeeper.configuration.development_uris == :disabled
+
+          Doorkeeper.configuration.development_uris.split.any? do |dev_url|
+            host_match?(url, dev_url)
+          end
+        end
+
         def self.valid_for_authorization?(url, client_url)
           valid?(url) && client_url.split.any? { |other_url| matches?(url, other_url) }
+        end
+
+        def self.host_match?(url1, url2)
+          host1 = as_uri(url1).host
+          host2 = as_uri(url2).host
+
+          # check domains, ignore subdomains
+          check_length = [host1.length, host2.length].min
+          host1[-check_length..-1] == host2[-check_length..-1]
         end
 
         def self.as_uri(url)
