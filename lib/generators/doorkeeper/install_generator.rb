@@ -6,6 +6,7 @@ class Doorkeeper::InstallGenerator < ::Rails::Generators::Base
   def install
     template 'initializer.rb', 'config/initializers/doorkeeper.rb'
     copy_file File.expand_path('../../../../config/locales/en.yml', __FILE__), 'config/locales/doorkeeper.en.yml'
+    copy_file File.expand_path('../../../../config/locales/zh-TW.yml', __FILE__), 'config/locales/doorkeeper.zh-TW.yml'
     route 'use_doorkeeper'
     readme 'README'
   end
