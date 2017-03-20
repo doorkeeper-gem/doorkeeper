@@ -8,6 +8,7 @@ LineLength:
 
 StringLiterals:
   Enabled: false
+  EnforcedStyle: single_quotes
 
 TrailingBlankLines:
   Enabled: true
