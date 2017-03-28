@@ -4,6 +4,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#948] Make Scopes.<=> work with any "other" value.
 - [#970] Escape certain attributes in authorization forms.
 
 ## 4.2.5
