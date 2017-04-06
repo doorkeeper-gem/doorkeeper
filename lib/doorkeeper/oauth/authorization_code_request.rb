@@ -44,7 +44,7 @@ module Doorkeeper
       end
 
       def validate_redirect_uri
-        grant.redirect_uri == redirect_uri
+        Helpers::URIChecker.valid_for_authorization?(redirect_uri, grant.redirect_uri)
       end
     end
   end
