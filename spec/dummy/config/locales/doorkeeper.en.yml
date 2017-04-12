@@ -1,5 +1,6 @@
 en:
   doorkeeper:
     scopes:
-      public: "Access your public data"
-      write:  "Update your data"
+      public:  "Access your public data"
+      write:   "Update your data"
+      billing: "Update your billing information"

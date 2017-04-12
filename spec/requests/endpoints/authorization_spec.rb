@@ -25,10 +25,48 @@ feature 'Authorization endpoint' do
 
     scenario 'displays all requested scopes' do
       default_scopes_exist :public
-      optional_scopes_exist :write
+      optional_scopes_exist :write, :billing
       visit authorization_endpoint_url(client: @client, scope: 'public write')
       i_should_see 'Access your public data'
       i_should_see 'Update your data'
+      i_should_not_see 'Update your billing information'
+    end
+
+    scenario 'displays default scopes' do
+      default_scopes_exist :public
+      optional_scopes_exist :write, :billing
+      visit authorization_endpoint_url(client: @client)
+      i_should_see 'Access your public data'
+      i_should_not_see 'Update your data'
+      i_should_not_see 'Update your billing information'
+    end
+
+    context 'with an application that does not have scopes' do
+      background do
+        client_exists(name: 'MyBillableApp')
+      end
+
+      scenario 'displays default scopes if none on application' do
+        default_scopes_exist :public
+        optional_scopes_exist :write, :billing
+        visit authorization_endpoint_url(client: @client)
+        i_should_see 'Access your public data'
+        i_should_not_see 'Update your data'
+        i_should_not_see 'Update your billing information'
+      end
+    end
+    context "with extended scopes on application" do
+      background do
+        client_exists(name: 'MyBillableApp', scopes: 'public write billing')
+      end
+
+      scenario 'displays application scopes as default if no global default scope' do
+        optional_scopes_exist :public, :write
+        visit authorization_endpoint_url(client: @client)
+        i_should_see 'Access your public data'
+        i_should_see 'Update your data'
+        i_should_see 'Update your billing information'
+      end
     end
   end
 
@@ -36,6 +74,18 @@ feature 'Authorization endpoint' do
     background do
       create_resource_owner
       sign_in
+    end
+
+    context 'application with specific scopes' do
+      background do
+        client_exists(name: 'MyApp', scopes: 'public write')
+      end
+      scenario 'displays an error when requesting scopes outside application' do
+        default_scopes_exist :public
+        optional_scopes_exist :write, :billing
+        visit authorization_endpoint_url(client: @client, scope: "public write billing")
+        i_should_see_translated_error_message :invalid_scope
+      end
     end
 
     scenario 'displays the related error' do
