@@ -6,6 +6,10 @@ module Doorkeeper
       if pre_auth.authorizable?
         if skip_authorization? || matching_token?
           auth = authorization.authorize
+          # This is sure to break things
+          if params['nonce'] && auth.auth.resource_owner.respond_to?(:nonce)
+            auth.auth.resource_owner.update_attributes!(nonce: params['nonce'])
+          end
           redirect_to auth.redirect_uri
         else
           render :new
