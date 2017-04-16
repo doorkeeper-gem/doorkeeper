@@ -1,0 +1,151 @@
+pt-BE:
+  activerecord:
+    attributes:
+      doorkeeper/application:
+        name: 'Nome'
+        redirect_uri: 'URI de redirecionamento'
+    errors:
+      models:
+        doorkeeper/application:
+          attributes:
+            redirect_uri:
+              fragment_present: 'Não pode conter um fragmento.'
+              invalid_uri: 'deve ser uma URI válida.'
+              relative_uri: 'dever ser uma URI absoluta.'
+              secured_uri: 'deve ser uma URI HTTPS/SSL.'
+
+  mongoid:
+    attributes:
+      doorkeeper/application:
+        name: 'Nome'
+        redirect_uri: 'URI de redirecionamento'
+    errors:
+      models:
+        doorkeeper/application:
+          attributes:
+            redirect_uri:
+              fragment_present: 'Não pode conter um fragmento.'
+              invalid_uri: 'deve ser uma URI válida.'
+              relative_uri: 'dever ser uma URI absoluta.'
+              secured_uri: 'deve ser uma URI HTTPS/SSL.'
+
+  mongo_mapper:
+    attributes:
+      doorkeeper/application:
+        name: 'Nome'
+        redirect_uri: 'URI de redirecionamento'
+    errors:
+      models:
+        doorkeeper/application:
+          attributes:
+            redirect_uri:
+              fragment_present: 'Não pode conter um fragmento.'
+              invalid_uri: 'deve ser uma URI válida.'
+              relative_uri: 'dever ser uma URI absoluta.'
+              secured_uri: 'deve ser uma URI HTTPS/SSL.'
+
+  doorkeeper:
+    applications:
+      confirmations:
+        destroy: 'Você tem certeza?'
+      buttons:
+        edit: 'Editar'
+        destroy: 'Deletar'
+        submit: 'Submeter'
+        cancel: 'Cancelar'
+        authorize: 'Autorizar'
+      form:
+        error: 'Whoops! Veja o form para possíveis erros'
+      help:
+        redirect_uri: 'Use uma linha por URI'
+        native_redirect_uri: 'Use %{native_redirect_uri} para testes locais'
+      edit:
+        title: 'Editar aplicação'
+      index:
+        title: 'Suas aplicações'
+        new: 'Nova Aplicação'
+        name: 'Nome'
+        callback_url: 'URL de Callback'
+      new:
+        title: 'Nova Aplicação'
+      show:
+        title: 'Aplicação: %{name}'
+        application_id: 'Id da Aplicação (Application Id)'
+        secret: 'Segredo (Secret)'
+        callback_urls: 'urls de Callback'
+        actions: 'Ações'
+
+    authorizations:
+      buttons:
+        authorize: 'Autorizar'
+        deny: 'Negar'
+      error:
+        title: 'Ocorreu um erro'
+      new:
+        title: 'Autorização necessária'
+        prompt: 'Autorizar %{client_name} a usar sua conta?'
+        able_to: 'Essa aplicação será capaz de'
+      show:
+        title: 'Código de autorização'
+
+    authorized_applications:
+      confirmations:
+        revoke: 'Você tem certeza?'
+      buttons:
+        revoke: 'Revogar'
+      index:
+        title: 'Suas aplicações autorizadas'
+        application: 'Aplicação'
+        created_at: 'Criado em'
+        date_format: '%Y-%m-%d %H:%M:%S'
+
+    errors:
+      messages:
+        # Common error messages
+        invalid_request: 'A requisição não possui um parâmetro obrigatório, inclui um parâmetro inválido ou está malformada.'
+        invalid_redirect_uri: 'A uri de redirecionamento incluída não é válida.'
+        unauthorized_client: 'O cliente não está autorizado a realizar essa requisição usando este método.'
+        access_denied: 'O dono do recurso (resource owner) ou servidor de autorização (authorization server) negou a requisição.'
+        invalid_scope: 'O escopo requisitado é inválido, desconhecido ou malformado.'
+        server_error: 'O servidor de autorização (authorization server) encontrou uma condição inesperada que o impediu de completar a requisição.'
+        temporarily_unavailable: 'O servidor de autorização (authorization server) não foi rapaz de processar a requisição devido a um problema tempoário de sobrecarga ou manuntenção.'
+
+        #configuration error messages
+        credential_flow_not_configured: 'Resource Owner Password Credentials flow falhou porque o Doorkeeper.configure.resource_owner_from_credentials não foi configurado.'
+        resource_owner_authenticator_not_configured: 'Resource Owner find falhou porque o Doorkeeper.configure.resource_owner_authenticator não foi configurado.'
+
+        # Access grant errors
+        unsupported_response_type: 'O servidor de autorização não suporta este tipo de resposta.'
+
+        # Access token errors
+        invalid_client: 'Autenticação do cliente falhou devido a um cliente desconhecido, a falta de inclusão da autenticação do cliente, ou a um método não suportado de autenticação.'
+        invalid_grant: 'A permissão de autorização (authorization grant) provida é inválida, expirada, revogada, não bate com a URI de redirecionamento usada na requisição de autorização, ou foi dada a outro cliente.'
+        unsupported_grant_type: 'O tipo de permissão de autorização (authorization grant) não é suportado pelo servidor de autorização(authorization server) The authorization grant type is not supported by the authorization server.'
+
+        # Password Access token errors
+        invalid_resource_owner: 'As credenciais do dono de recurso (resource owner) dadas não são válidas, ou o dono de recurso (resource owner) não foi achado.'
+
+        invalid_token:
+          revoked: "O token de acesso (access token) foi revogado"
+          expired: "O token de acesso (access token) expirou"
+          unknown: "O token de acesso (access token) é inválido"
+
+    flash:
+      applications:
+        create:
+          notice: 'Aplicação criada.'
+        destroy:
+          notice: 'Aplicação deletada.'
+        update:
+          notice: 'Aplicação atualizada.'
+      authorized_applications:
+        destroy:
+          notice: 'Aplicação revogada.'
+
+    layouts:
+      admin:
+        nav:
+          oauth2_provider: 'Provedor OAuth2 (OAuth2 Provider)'
+          applications: 'Aplicações'
+      application:
+        title: 'Autorização OAuth necessária'

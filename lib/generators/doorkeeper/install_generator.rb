@@ -5,8 +5,17 @@ class Doorkeeper::InstallGenerator < ::Rails::Generators::Base
 
   def install
     template 'initializer.rb', 'config/initializers/doorkeeper.rb'
-    copy_file File.expand_path('../../../../config/locales/en.yml', __FILE__), 'config/locales/doorkeeper.en.yml'
+    install_locales
     route 'use_doorkeeper'
     readme 'README'
+  end
+
+  private
+
+  def install_locales
+    Dir.glob(File.expand_path('../../../../config/locales/*.yml', __FILE__)) do |file|
+      locale = File.basename(file, ".yml")
+      copy_file file, "config/locales/doorkeeper.#{locale}.yml"
+    end
   end
 end
