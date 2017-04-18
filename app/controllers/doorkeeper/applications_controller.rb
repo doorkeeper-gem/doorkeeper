@@ -9,6 +9,8 @@ module Doorkeeper
       @applications = Application.all
     end
 
+    def show; end
+
     def new
       @application = Application.new
     end
@@ -22,6 +24,8 @@ module Doorkeeper
         render :new
       end
     end
+
+    def edit; end
 
     def update
       if @application.update_attributes(application_params)
