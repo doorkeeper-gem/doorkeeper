@@ -13,6 +13,7 @@ module Doorkeeper
         @client = client
         @grant  = grant
         @redirect_uri = parameters[:redirect_uri]
+        @original_scopes = parameters[:scope]
       end
 
       private

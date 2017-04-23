@@ -4,6 +4,8 @@ User-visible changes worth mentioning.
 
 ## master
 
+- Change to allow optional scopes in the authorization code request
+
 ## 4.2.5
 
 - [#936] Deprecate `Doorkeeper#configured?`, `Doorkeeper#database_installed?`, and
