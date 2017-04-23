@@ -19,7 +19,7 @@ module Doorkeeper
         end
 
         def from_access_token_param(request)
-          request.parameters[:access_token]
+          request.parameters[:access_token] || request.headers['X-Access-Token']
         end
 
         def from_bearer_param(request)
