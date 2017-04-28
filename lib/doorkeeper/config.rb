@@ -19,6 +19,7 @@ module Doorkeeper
   end
 
   def self.setup_orm_adapter
+    pry
     @orm_adapter = "doorkeeper/orm/#{configuration.orm}".classify.constantize
   rescue NameError => e
     fail e, "ORM adapter not found (#{configuration.orm})", <<-ERROR_MSG.squish
@@ -238,6 +239,11 @@ doorkeeper.
     option :custom_access_token_expires_in, default: ->(_app) { nil }
     option :authorization_code_expires_in,  default: 600
     option :orm,                            default: :active_record
+    option :access_token_class,             default: 'Access_token'
+    option :access_grant_class,             default: 'Access_grant'
+    option :application,                    default: 'Application'
+    option :user,                           default: 'User'
+    option :location,                       default: 'Location'
     option :native_redirect_uri,            default: 'urn:ietf:wg:oauth:2.0:oob'
     option :active_record_options,          default: {}
     option :realm,                          default: 'Doorkeeper'
