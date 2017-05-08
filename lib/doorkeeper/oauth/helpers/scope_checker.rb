@@ -8,6 +8,7 @@ module Doorkeeper
           def initialize(scope_str, server_scopes, application_scopes)
             @parsed_scopes = OAuth::Scopes.from_string(scope_str)
             @scope_str = scope_str
+            @server_scopes = server_scopes
             @valid_scopes = valid_scopes(server_scopes, application_scopes)
           end
 
@@ -19,6 +20,11 @@ module Doorkeeper
 
           def match?
             valid? && parsed_scopes.has_scopes?(@valid_scopes)
+          end
+
+          def match_exactly?
+            server_scopes_array = @server_scopes.to_a.uniq.sort
+            match? && (server_scopes_array == parsed_scopes.to_a.sort)
           end
 
           private
@@ -38,6 +44,10 @@ module Doorkeeper
 
         def self.match?(scope_str, server_scopes, application_scopes = nil)
           Validator.new(scope_str, server_scopes, application_scopes).match?
+        end
+
+        def self.match_exactly?(scope_str, server_scopes, application_scopes = nil)
+          Validator.new(scope_str, server_scopes, application_scopes).match_exactly?
         end
       end
     end

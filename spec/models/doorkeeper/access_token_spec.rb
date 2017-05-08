@@ -370,6 +370,30 @@ module Doorkeeper
         expect(last_token).to be_nil
       end
 
+      it "does not match token if empty scope requested and token/app scopes present" do
+        application = FactoryGirl.create :application, scopes: "sample:scope"
+        app_params = {
+          application_id: application.id, scopes: "sample:scope",
+          resource_owner_id: 100
+        }
+        FactoryGirl.create :access_token, app_params
+        empty_scopes = Doorkeeper::OAuth::Scopes.from_string("")
+        last_token = AccessToken.matching_token_for(application, 100, empty_scopes)
+        expect(last_token).to be_nil
+      end
+
+      it "does not match token if scope requested contains extra scopes" do
+        application = FactoryGirl.create :application, scopes: "sample:scope"
+        app_params = {
+          application_id: application.id, scopes: "sample:scope",
+          resource_owner_id: 100
+        }
+        FactoryGirl.create :access_token, app_params
+        empty_scopes = Doorkeeper::OAuth::Scopes.from_string("sample:scope other:scope")
+        last_token = AccessToken.matching_token_for(application, 100, empty_scopes)
+        expect(last_token).to be_nil
+      end
+
       it 'returns the last created token' do
         FactoryGirl.create :access_token, default_attributes.merge(created_at: 1.day.ago)
         token = FactoryGirl.create :access_token, default_attributes

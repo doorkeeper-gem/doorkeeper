@@ -75,6 +75,7 @@ module Doorkeeper::OAuth
 
       it 'creates a new token if scopes do not match' do
         allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
+        allow(application.scopes).to receive(:to_a).and_return(["public"])
         FactoryGirl.create(:access_token, application_id: pre_auth.client.id,
                            resource_owner_id: owner.id, scopes: '')
         expect do
@@ -86,6 +87,7 @@ module Doorkeeper::OAuth
         allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
         allow(application.scopes).to receive(:has_scopes?).and_return(true)
         allow(application.scopes).to receive(:all?).and_return(true)
+        allow(application.scopes).to receive(:to_a).and_return(["public"])
         FactoryGirl.create(:access_token, application_id: pre_auth.client.id,
                            resource_owner_id: owner.id, scopes: 'public')
 
