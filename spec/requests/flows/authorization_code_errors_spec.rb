@@ -15,10 +15,10 @@ feature 'Authorization Code Flow Errors' do
 
   context "with a client trying to xss resource owner" do
     let(:client_name) { "<div id='xss'>XSS</div>" }
-    let(:client_params) { {name: client_name } }
-    scenario 'resource owner visit authorization endpoint' do
+    let(:client_params) { { name: client_name } }
+    scenario "resource owner visit authorization endpoint" do
       visit authorization_endpoint_url(client: @client)
-      expect(page).not_to have_css('#xss')
+      expect(page).not_to have_css("#xss")
     end
   end
 
