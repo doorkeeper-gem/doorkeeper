@@ -4,7 +4,7 @@
 
 <main role="main">
   <p class="h4">
-    <%= raw t('.prompt', client_name: "<strong class=\"text-info\">#{ @pre_auth.client.name }</strong>") %>
+    <%= raw t('.prompt', client_name: content_tag(:strong, class: 'text-info') { @pre_auth.client.name }) %>
   </p>
 
   <% if @pre_auth.scopes.count > 0 %>
