@@ -4,6 +4,8 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#970] Escape certain attributes in authorization forms.
+
 ## 4.2.5
 
 - [#936] Deprecate `Doorkeeper#configured?`, `Doorkeeper#database_installed?`, and
