@@ -46,15 +46,10 @@ describe 'Resource Owner Password Credentials Flow' do
       should_have_json 'access_token', token.token
     end
 
-    it 'should issue new token without client credentials' do
+    it 'does not issue a new token without a client' do
       expect do
         post password_token_endpoint_url(resource_owner: @resource_owner)
-      end.to change { Doorkeeper::AccessToken.count }.by(1)
-
-      token = Doorkeeper::AccessToken.first
-
-      expect(token.application_id).to be_nil
-      should_have_json 'access_token', token.token
+      end.not_to change { Doorkeeper::AccessToken.count }
     end
 
     it 'should issue a refresh token if enabled' do

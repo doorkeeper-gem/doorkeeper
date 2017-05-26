@@ -34,7 +34,7 @@ module Doorkeeper
       end
 
       def validate_client
-        !parameters[:client_id] || !!client
+        !!client
       end
     end
   end
