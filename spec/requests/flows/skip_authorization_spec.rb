@@ -15,13 +15,24 @@ feature 'Skip authorization form' do
     end
 
     scenario 'skips the authorization and return a new grant code' do
-      client_is_authorized(@client, @resource_owner, scopes: 'public')
-      visit authorization_endpoint_url(client: @client)
+      client_is_authorized(@client, @resource_owner, scopes: "public")
+      visit authorization_endpoint_url(client: @client, scope: "public")
 
-      i_should_not_see 'Authorize'
+      i_should_not_see "Authorize"
       client_should_be_authorized @client
       i_should_be_on_client_callback @client
-      url_should_have_param 'code', Doorkeeper::AccessGrant.first.token
+      url_should_have_param "code", Doorkeeper::AccessGrant.first.token
+    end
+
+    scenario "skips the authorization if other scopes are not requested" do
+      client_exists scopes: "public read write"
+      client_is_authorized(@client, @resource_owner, scopes: "public")
+      visit authorization_endpoint_url(client: @client, scope: "public")
+
+      i_should_not_see "Authorize"
+      client_should_be_authorized @client
+      i_should_be_on_client_callback @client
+      url_should_have_param "code", Doorkeeper::AccessGrant.first.token
     end
 
     scenario 'does not skip authorization when scopes differ (new request has fewer scopes)' do
