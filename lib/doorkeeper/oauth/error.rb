@@ -1,6 +1,6 @@
 module Doorkeeper
   module OAuth
-    class Error < Struct.new(:name, :state)
+    Error = Struct.new(:name, :state) do
       def description
         I18n.translate(
           name,

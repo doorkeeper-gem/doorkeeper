@@ -1,7 +1,7 @@
 module Doorkeeper
   module OAuth
     class Client
-      class Credentials < Struct.new(:uid, :secret)
+      Credentials = Struct.new(:uid, :secret) do
         class << self
           def from_request(request, *credentials_methods)
             credentials_methods.inject(nil) do |credentials, method|
