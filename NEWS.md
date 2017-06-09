@@ -5,6 +5,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#970] Escape certain attributes in authorization forms.
+- [#958] Redirect URI is checked without query params within AuthorizationCodeRequest.
 
 ## 4.2.5
 
