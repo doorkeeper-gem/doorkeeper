@@ -4,6 +4,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#976] Fix to invalidate the second redirect URI when the first URI is the native URI
 - [#1035] Allow `Application#redirect_uri=` to handle array of URIs.
 - [#1036] Allow to forbid Application redirect URI's with specific rules.
 - [#1029] Deprecate `order_method` and introduce `ordered_by`. Sort applications
