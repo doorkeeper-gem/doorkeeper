@@ -4,18 +4,20 @@ module Doorkeeper
       include Validations
       include OAuth::RequestConcern
 
-      validate :attributes,   error: :invalid_request
-      validate :client,       error: :invalid_client
-      validate :grant,        error: :invalid_grant
-      validate :redirect_uri, error: :invalid_grant
+      validate :attributes,            error: :invalid_request
+      validate :client,                error: :invalid_client
+      validate :grant,                 error: :invalid_grant
+      validate :redirect_uri,          error: :invalid_grant
+      validate :code_verifier,         error: :invalid_code_verifier
 
-      attr_accessor :server, :grant, :client, :redirect_uri, :access_token
+      attr_accessor :server, :grant, :client, :redirect_uri, :access_token, :code_verifier
 
       def initialize(server, grant, client, parameters = {})
         @server = server
         @client = client
         @grant  = grant
         @redirect_uri = parameters[:redirect_uri]
+        @code_verifier = parameters[:code_verifier]
       end
 
       private
@@ -48,6 +50,10 @@ module Doorkeeper
 
       def validate_redirect_uri
         grant.redirect_uri == redirect_uri
+      end
+
+      def validate_code_verifier
+        grant.verify_code(code_verifier)
       end
     end
   end
