@@ -6,15 +6,20 @@ class Doorkeeper::MigrationGenerator < ::Rails::Generators::Base
   desc 'Installs Doorkeeper migration file.'
 
   def install
-    migration_template 'migration.rb', 'db/migrate/create_doorkeeper_tables.rb'
-    rails_v = "#{Rails::VERSION::MAJOR}.#{Rails::VERSION::MINOR}".to_f
-    return if rails_v <= 5.0
-    migration_file = Dir.entries("db/migrate").select { |file| file[/(\d+)_create_doorkeeper_tables.rb/] }.last
-    gsub_file("db/migrate/#{migration_file}", "class CreateDoorkeeperTables < ActiveRecord::Migration",
-                                              "class CreateDoorkeeperTables < ActiveRecord::Migration#{[rails_v]}" )
+    migration_template 'migration.rb', 'db/migrate/create_doorkeeper_tables.rb', migration_version: migration_version
   end
 
   def self.next_migration_number(dirname)
     ActiveRecord::Generators::Base.next_migration_number(dirname)
+  end
+
+  def rails5?
+    Rails.version.start_with? '5'
+  end
+
+  def migration_version
+   if rails5?
+     "[#{Rails::VERSION::MAJOR}.#{Rails::VERSION::MINOR}]"
+   end
   end
 end
