@@ -19,6 +19,8 @@ https://github.com/doorkeeper-gem/doorkeeper/releases
 
 - See the [wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki)
 - For general questions, please post in [Stack Overflow](http://stackoverflow.com/questions/tagged/doorkeeper)
+- See [SECURITY.md](SECURITY.md) for this project's security disclose
+  policy
 
 ## Table of Contents
 
