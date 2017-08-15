@@ -275,7 +275,7 @@ module Doorkeeper
 
       it 'revokes all tokens for given application and resource owner' do
         FactoryGirl.create :access_token, default_attributes
-        AccessToken.revoke_all_for application.id, resource_owner
+        AccessToken.revoke_all_for application, resource_owner
         AccessToken.all.each do |token|
           expect(token).to be_revoked
         end
@@ -283,13 +283,13 @@ module Doorkeeper
 
       it 'matches application' do
         FactoryGirl.create :access_token, default_attributes.merge(application: FactoryGirl.create(:application))
-        AccessToken.revoke_all_for application.id, resource_owner
+        AccessToken.revoke_all_for application, resource_owner
         expect(AccessToken.all).not_to be_empty
       end
 
       it 'matches resource owner' do
         FactoryGirl.create :access_token, default_attributes.merge(resource_owner_id: 90)
-        AccessToken.revoke_all_for application.id, resource_owner
+        AccessToken.revoke_all_for application, resource_owner
         expect(AccessToken.all).not_to be_empty
       end
     end

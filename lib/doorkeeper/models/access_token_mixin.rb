@@ -46,7 +46,7 @@ module Doorkeeper
       #
       def by_token(token)
         token_accessor = Doorkeeper.configuration.token_accessor.constantize
-        token_accessor.find_or_create_token(token: token)
+        token_accessor.get_by_token(token)
       end
 
       # Returns an instance of the Doorkeeper::AccessToken
@@ -60,7 +60,7 @@ module Doorkeeper
       #
       def by_refresh_token(refresh_token)
         token_accessor = Doorkeeper.configuration.token_accessor.constantize
-        token_accessor.find_or_create_token(refresh_token: refresh_token)
+        token_accessor.get_by_refresh_token(refresh_token)
       end
 
       # Revokes AccessToken records that have not been revoked and associated
@@ -71,11 +71,11 @@ module Doorkeeper
       # @param resource_owner [ActiveRecord::Base]
       #   instance of the Resource Owner model
       #
-      def revoke_all_for(application_id, resource_owner)
-        where(application_id: application_id,
-              resource_owner_id: resource_owner.id,
-              revoked_at: nil).
-          each(&:revoke)
+      def revoke_all_for(application, resource_owner)
+        token_accessor = Doorkeeper.configuration.token_accessor.constantize
+        token_accessor
+          .get_tokens_by_app_and_resource_owner(application, resource_owner)
+          .each(&:revoke)
       end
 
       # Looking for not expired Access Token with a matching set of scopes

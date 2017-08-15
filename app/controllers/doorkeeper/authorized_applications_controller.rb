@@ -7,8 +7,11 @@ module Doorkeeper
     end
 
     def destroy
-      AccessToken.revoke_all_for params[:id], current_resource_owner
-      redirect_to oauth_authorized_applications_url, notice: I18n.t(:notice, scope: [:doorkeeper, :flash, :authorized_applications, :destroy])
+      application = Application.find_by_id(params[:id])
+      if application.present?
+        AccessToken.revoke_all_for application, current_resource_owner
+        redirect_to oauth_authorized_applications_url, notice: I18n.t(:notice, scope: [:doorkeeper, :flash, :authorized_applications, :destroy])
+      end
     end
   end
 end
