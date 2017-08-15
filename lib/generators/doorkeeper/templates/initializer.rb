@@ -109,4 +109,8 @@ Doorkeeper.configure do
 
   # WWW-Authenticate Realm (default "Doorkeeper").
   # realm "Doorkeeper"
+
+  # Use a custom class for finding and creating access tokens
+  # See lib/doorkeeper/orm/helpers/db_token_accessor.rb for example
+  # token_accessor '::Doorkeeper::Orm::Helpers::DbTokenAccessor'
 end

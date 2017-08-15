@@ -152,6 +152,14 @@ doorkeeper.
       def base_controller(base_controller)
         @config.instance_variable_set('@base_controller', base_controller)
       end
+
+      # @param token_accessor [String]
+      #   the name of the access token accessor class
+      def token_accessor(token_accessor)
+        @config.instance_variable_set(
+          '@token_accessor', token_accessor
+        )
+      end
     end
 
     module Option
@@ -245,6 +253,8 @@ doorkeeper.
     option :grant_flows,                    default: %w(authorization_code client_credentials)
     option :access_token_generator,
            default: 'Doorkeeper::OAuth::Helpers::UniqueToken'
+    option :token_accessor,
+           default: 'Doorkeeper::Orm::Helpers::DbTokenAccessor'
     option :base_controller,
            default: 'ActionController::Base'
 

@@ -13,6 +13,7 @@ require 'doorkeeper/oauth/authorization/uri_builder'
 require 'doorkeeper/oauth/helpers/scope_checker'
 require 'doorkeeper/oauth/helpers/uri_checker'
 require 'doorkeeper/oauth/helpers/unique_token'
+require 'doorkeeper/orm/helpers/db_token_accessor'
 
 require 'doorkeeper/oauth/scopes'
 require 'doorkeeper/oauth/error'

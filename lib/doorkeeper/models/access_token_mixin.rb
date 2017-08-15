@@ -14,6 +14,7 @@ module Doorkeeper
         class_name: 'Doorkeeper::Application',
         inverse_of: :access_tokens
       }
+
       if defined?(ActiveRecord::Base) && ActiveRecord::VERSION::MAJOR >= 5
         belongs_to_options[:optional] = true
       end
@@ -44,7 +45,8 @@ module Doorkeeper
       #   if there is no record with such token
       #
       def by_token(token)
-        find_by(token: token.to_s)
+        token_accessor = Doorkeeper.configuration.token_accessor.constantize
+        token_accessor.find_or_create_token(token: token)
       end
 
       # Returns an instance of the Doorkeeper::AccessToken
@@ -57,7 +59,8 @@ module Doorkeeper
       #   if there is no record with such refresh token
       #
       def by_refresh_token(refresh_token)
-        find_by(refresh_token: refresh_token.to_s)
+        token_accessor = Doorkeeper.configuration.token_accessor.constantize
+        token_accessor.find_or_create_token(refresh_token: refresh_token)
       end
 
       # Revokes AccessToken records that have not been revoked and associated
@@ -148,10 +151,10 @@ module Doorkeeper
         end
 
         create!(
-          application_id:    application.try(:id),
+          application_id: application.try(:id),
           resource_owner_id: resource_owner_id,
-          scopes:            scopes.to_s,
-          expires_in:        expires_in,
+          scopes: scopes.to_s,
+          expires_in: expires_in,
           use_refresh_token: use_refresh_token
         )
       end
@@ -193,11 +196,11 @@ module Doorkeeper
     # @return [Hash] hash with token data
     def as_json(_options = {})
       {
-        resource_owner_id:  resource_owner_id,
-        scopes:             scopes,
+        resource_owner_id: resource_owner_id,
+        scopes: scopes,
         expires_in_seconds: expires_in_seconds,
-        application:        { uid: application.try(:uid) },
-        created_at:         created_at.to_i
+        application: {uid: application.try(:uid)},
+        created_at: created_at.to_i
       }
     end
 
