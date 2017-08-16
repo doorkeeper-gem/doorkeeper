@@ -91,13 +91,8 @@ module Doorkeeper
       # @return [Doorkeeper::AccessToken, nil] Access Token instance or
       #   nil if matching record was not found
       #
-      def matching_token_for(application, resource_owner_or_id, scopes)
-        resource_owner_id = if resource_owner_or_id.respond_to?(:to_key)
-                              resource_owner_or_id.id
-                            else
-                              resource_owner_or_id
-                            end
-        token = last_authorized_token_for(application.try(:id), resource_owner_id)
+      def matching_token_for(application, resource_owner, scopes)
+        token = last_authorized_token_for(application.try(:id), resource_owner)
         if token && scopes_match?(token.scopes, scopes, application.try(:scopes))
           token
         end
@@ -142,9 +137,9 @@ module Doorkeeper
       #
       # @return [Doorkeeper::AccessToken] existing record or a new one
       #
-      def find_or_create_for(application, resource_owner_id, scopes, expires_in, use_refresh_token)
+      def find_or_create_for(application, resource_owner, scopes, expires_in, use_refresh_token)
         if Doorkeeper.configuration.reuse_access_token
-          access_token = matching_token_for(application, resource_owner_id, scopes)
+          access_token = matching_token_for(application, resource_owner, scopes)
           if access_token && !access_token.expired?
             return access_token
           end
@@ -152,7 +147,7 @@ module Doorkeeper
 
         create!(
           application_id: application.try(:id),
-          resource_owner_id: resource_owner_id,
+          resource_owner_id: resource_owner.try(:id),
           scopes: scopes.to_s,
           expires_in: expires_in,
           use_refresh_token: use_refresh_token
@@ -170,10 +165,10 @@ module Doorkeeper
       # @return [Doorkeeper::AccessToken, nil] matching AccessToken object or
       #   nil if nothing was found
       #
-      def last_authorized_token_for(application_id, resource_owner_id)
+      def last_authorized_token_for(application_id, resource_owner)
         send(order_method, created_at_desc).
           find_by(application_id: application_id,
-                  resource_owner_id: resource_owner_id,
+                  resource_owner_id: resource_owner.try(:id),
                   revoked_at: nil)
       end
     end

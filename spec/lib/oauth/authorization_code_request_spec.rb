@@ -8,7 +8,10 @@ module Doorkeeper::OAuth
              refresh_token_enabled?: false,
              custom_access_token_expires_in: ->(_app) { nil }
     end
-    let(:grant)  { FactoryGirl.create :access_grant }
+    let(:owner) do
+      User.create!
+    end
+    let(:grant)  { FactoryGirl.create :access_grant, resource_owner_id: owner.id }
     let(:client) { grant.application }
 
     subject do

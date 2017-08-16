@@ -167,7 +167,7 @@ describe 'Refresh Token Flow' do
 
     def last_token
       Doorkeeper::AccessToken.last_authorized_token_for(
-        @client.id, @resource_owner.id
+        @client.id, @resource_owner
       )
     end
   end

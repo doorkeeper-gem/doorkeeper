@@ -160,6 +160,14 @@ doorkeeper.
           '@token_accessor', token_accessor
         )
       end
+
+      # @param token_accessor [String]
+      #   the name of the resource owner accessor class
+      def resource_owner_accessor(resource_owner_accessor)
+        @config.instance_variable_set(
+          '@resource_owner_accessor', resource_owner_accessor
+        )
+      end
     end
 
     module Option
@@ -255,6 +263,8 @@ doorkeeper.
            default: 'Doorkeeper::OAuth::Helpers::UniqueToken'
     option :token_accessor,
            default: 'Doorkeeper::Orm::Helpers::DbTokenAccessor'
+    option :resource_owner_accessor,
+           default: 'Doorkeeper::Orm::Helpers::DbResourceOwnerAccessor'
     option :base_controller,
            default: 'ActionController::Base'
 

@@ -12,7 +12,9 @@ module Doorkeeper::OAuth
       )
     end
     let(:client) { FactoryGirl.create(:application) }
-    let(:owner)  { double :owner, id: 99 }
+    let(:owner) do
+      User.create!
+    end
 
     subject do
       PasswordAccessTokenRequest.new(server, client, owner)

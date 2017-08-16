@@ -113,4 +113,8 @@ Doorkeeper.configure do
   # Use a custom class for finding and creating access tokens
   # See lib/doorkeeper/orm/helpers/db_token_accessor.rb for example
   # token_accessor '::Doorkeeper::Orm::Helpers::DbTokenAccessor'
+
+  # Use a custom class for finding and creating resource owners
+  # See lib/doorkeeper/orm/helpers/db_resource_owner_accessor.rb for example
+  # resource_owner_accessor '::Doorkeeper::Orm::Helpers::DbResourceOwnerAccessor'
 end
