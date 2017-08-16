@@ -41,7 +41,8 @@ module Doorkeeper
           access_token_generator "Doorkeeper::CustomGeneratorArgs"
         end
 
-        token = FactoryGirl.create :access_token
+        user = User.create!
+        token = FactoryGirl.create :access_token, resource_owner_id: user.id
         expect(token.token).to match(%r{custom_generator_token_\d+})
       end
 

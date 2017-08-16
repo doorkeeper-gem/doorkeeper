@@ -92,7 +92,7 @@ module Doorkeeper
       #   nil if matching record was not found
       #
       def matching_token_for(application, resource_owner, scopes)
-        token = last_authorized_token_for(application.try(:id), resource_owner)
+        token = last_authorized_token_for(application, resource_owner)
         if token && scopes_match?(token.scopes, scopes, application.try(:scopes))
           token
         end
@@ -165,11 +165,9 @@ module Doorkeeper
       # @return [Doorkeeper::AccessToken, nil] matching AccessToken object or
       #   nil if nothing was found
       #
-      def last_authorized_token_for(application_id, resource_owner)
-        send(order_method, created_at_desc).
-          find_by(application_id: application_id,
-                  resource_owner_id: resource_owner.try(:id),
-                  revoked_at: nil)
+      def last_authorized_token_for(application, resource_owner)
+        token_accessor = Doorkeeper.configuration.token_accessor.constantize
+        token = token_accessor.get_tokens_by_app_and_resource_owner(application, resource_owner).first
       end
     end
 
@@ -229,7 +227,8 @@ module Doorkeeper
     # @return [String] refresh token value
     #
     def generate_refresh_token
-      write_attribute :refresh_token, UniqueToken.generate
+      token_accessor = Doorkeeper.configuration.token_accessor.constantize
+      write_attribute :refresh_token, token_accessor.generate_refresh_token
     end
 
     # Generates and sets the token value with the
@@ -244,19 +243,15 @@ module Doorkeeper
     #
     def generate_token
       self.created_at ||= Time.now.utc
+      token_accessor = Doorkeeper.configuration.token_accessor.constantize
+      r_owner_accessor = Doorkeeper.configuration.resource_owner_accessor.constantize
 
-      generator = Doorkeeper.configuration.access_token_generator.constantize
-      self.token = generator.generate(
-        resource_owner_id: resource_owner_id,
-        scopes: scopes,
-        application: application,
-        expires_in: expires_in,
-        created_at: created_at
-      )
+      resource_owner = r_owner_accessor.get_by_id(resource_owner_id)
+      self.token = token_accessor.generate_token(application, resource_owner, scopes, expires_in, created_at)
     rescue NoMethodError
-      raise Errors::UnableToGenerateToken, "#{generator} does not respond to `.generate`."
+      raise Errors::UnableToGenerateToken, "#{Doorkeeper.configuration.access_token_generator} does not respond to `.generate`."
     rescue NameError
-      raise Errors::TokenGeneratorNotFound, "#{generator} not found"
+      raise Errors::TokenGeneratorNotFound, "#{Doorkeeper.configuration.access_token_generator} not found"
     end
   end
 end
