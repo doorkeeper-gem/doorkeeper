@@ -145,12 +145,13 @@ module Doorkeeper
           end
         end
 
-        create!(
-          application_id: application.try(:id),
-          resource_owner_id: resource_owner.try(:id),
-          scopes: scopes.to_s,
-          expires_in: expires_in,
-          use_refresh_token: use_refresh_token
+        token_accessor = Doorkeeper.configuration.token_accessor.constantize
+        token_accessor.create(
+          application,
+          resource_owner,
+          scopes,
+          expires_in,
+          use_refresh_token
         )
       end
 

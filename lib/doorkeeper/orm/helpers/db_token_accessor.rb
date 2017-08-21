@@ -32,6 +32,16 @@ module Doorkeeper
         def self.generate_refresh_token
           Doorkeeper::OAuth::Helpers::UniqueToken.generate
         end
+
+        def self.create(application, resource_owner, scopes, expires_in, use_refresh_token)
+          AccessToken.create!(
+            application_id: application.try(:id),
+            resource_owner_id: resource_owner.try(:id),
+            scopes: scopes.to_s,
+            expires_in: expires_in,
+            use_refresh_token: use_refresh_token
+          )
+        end
       end
     end
   end
