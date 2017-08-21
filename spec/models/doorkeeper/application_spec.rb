@@ -131,7 +131,6 @@ module Doorkeeper
         skip 'does not work after remove active record relations'
         FactoryGirl.create(:access_token, application_id: new_application.id)
         FactoryGirl.create(:access_token, application_id: new_application.id, revoked_at: Time.now.utc)
-        binding.pry
         expect do
           new_application.destroy
         end.to change { Doorkeeper::AccessToken.count }.by(-2)

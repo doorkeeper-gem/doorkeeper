@@ -230,7 +230,7 @@ module Doorkeeper
     #
     def generate_refresh_token
       token_accessor = Doorkeeper.configuration.token_accessor.constantize
-      write_attribute :refresh_token, token_accessor.generate_refresh_token
+      token_accessor.generate_refresh_token(save: true, instance: self)
     end
 
     # Generates and sets the token value with the

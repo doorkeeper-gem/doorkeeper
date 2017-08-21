@@ -29,8 +29,12 @@ module Doorkeeper
           )
         end
 
-        def self.generate_refresh_token
-          Doorkeeper::OAuth::Helpers::UniqueToken.generate
+        def self.generate_refresh_token(save: false, instance: nil)
+          token = Doorkeeper::OAuth::Helpers::UniqueToken.generate
+          if save && instance
+            instance.update_attribute :refresh_token, token
+          end
+          token
         end
 
         def self.create(application, resource_owner, scopes, expires_in, use_refresh_token)
