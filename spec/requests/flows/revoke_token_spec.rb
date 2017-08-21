@@ -10,7 +10,7 @@ describe 'Revoke Token Flow' do
     let(:resource_owner) { User.create!(name: 'John', password: 'sekret') }
     let(:access_token) do
       FactoryGirl.create(:access_token,
-                         application: client_application,
+                         application_id: client_application.id,
                          resource_owner_id: resource_owner.id,
                          use_refresh_token: true)
     end
@@ -103,7 +103,7 @@ describe 'Revoke Token Flow' do
     context 'with public OAuth 2.0 client/application' do
       let(:access_token) do
         FactoryGirl.create(:access_token,
-                           application: nil,
+                           application_id: nil,
                            resource_owner_id: resource_owner.id,
                            use_refresh_token: true)
       end
@@ -129,7 +129,7 @@ describe 'Revoke Token Flow' do
       context 'with a valid token issued for a confidential client' do
         let(:access_token) do
           FactoryGirl.create(:access_token,
-                             application: client_application,
+                             application_id: client_application.id,
                              resource_owner_id: resource_owner.id,
                              use_refresh_token: true)
         end

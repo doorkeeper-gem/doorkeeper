@@ -10,16 +10,16 @@ module Doorkeeper
     include ActiveModel::MassAssignmentSecurity if defined?(::ProtectedAttributes)
 
     included do
-      belongs_to_options = {
-        class_name: 'Doorkeeper::Application',
-        inverse_of: :access_tokens
-      }
+      #belongs_to_options = {
+      #  class_name: 'Doorkeeper::Application',
+      #  inverse_of: :access_tokens
+      #}
 
       if defined?(ActiveRecord::Base) && ActiveRecord::VERSION::MAJOR >= 5
         belongs_to_options[:optional] = true
       end
 
-      belongs_to :application, belongs_to_options
+      #belongs_to :application, belongs_to_options
 
       validates :token, presence: true, uniqueness: true
       validates :refresh_token, uniqueness: true, if: :use_refresh_token?
@@ -188,6 +188,7 @@ module Doorkeeper
     #
     # @return [Hash] hash with token data
     def as_json(_options = {})
+      application = Application.find_by_id(application_id)
       {
         resource_owner_id: resource_owner_id,
         scopes: scopes,
@@ -247,6 +248,7 @@ module Doorkeeper
       r_owner_accessor = Doorkeeper.configuration.resource_owner_accessor.constantize
 
       resource_owner = r_owner_accessor.get_by_id(resource_owner_id)
+      application = Application.find_by_id(application_id)
       self.token = token_accessor.generate_token(application, resource_owner, scopes, expires_in, created_at)
     rescue NoMethodError
       raise Errors::UnableToGenerateToken, "#{Doorkeeper.configuration.access_token_generator} does not respond to `.generate`."

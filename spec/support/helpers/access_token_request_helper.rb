@@ -1,7 +1,7 @@
 module AccessTokenRequestHelper
   def client_is_authorized(client, resource_owner, access_token_attributes = {})
     attributes = {
-      application: client,
+      application_id: client.id,
       resource_owner_id: resource_owner.id
     }.merge(access_token_attributes)
     FactoryGirl.create(:access_token, attributes)

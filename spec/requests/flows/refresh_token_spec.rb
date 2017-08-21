@@ -39,7 +39,7 @@ describe 'Refresh Token Flow' do
     before do
       @token = FactoryGirl.create(
         :access_token,
-        application: @client,
+        application_id: @client.id,
         resource_owner_id: 1,
         use_refresh_token: true
       )
@@ -132,7 +132,7 @@ describe 'Refresh Token Flow' do
 
       @token = FactoryGirl.create(
         :access_token,
-        application: @client,
+        application_id: @client.id,
         resource_owner_id: @resource_owner.id,
         use_refresh_token: true
       )

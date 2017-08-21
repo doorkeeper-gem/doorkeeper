@@ -197,7 +197,7 @@ module Doorkeeper
         let(:resource_owner_id) { 100 }
         let(:application)    { FactoryGirl.create :application }
         let(:default_attributes) do
-          { application: application, resource_owner_id: resource_owner_id }
+          { application_id: application.id, resource_owner_id: resource_owner_id }
         end
         let(:access_token1) { FactoryGirl.create :access_token, default_attributes }
 
@@ -210,7 +210,7 @@ module Doorkeeper
 
         context 'the second token has same owner and different app' do
           let(:other_application) { FactoryGirl.create :application }
-          let(:access_token2) { FactoryGirl.create :access_token, application: other_application, resource_owner_id: resource_owner_id }
+          let(:access_token2) { FactoryGirl.create :access_token, application_id: other_application.id, resource_owner_id: resource_owner_id }
 
           it 'fail' do
             expect(access_token1.same_credential?(access_token2)).to be_falsey
@@ -220,7 +220,7 @@ module Doorkeeper
         context 'the second token has different owner and different app' do
 
           let(:other_application) { FactoryGirl.create :application }
-          let(:access_token2) { FactoryGirl.create :access_token, application: other_application, resource_owner_id: 42 }
+          let(:access_token2) { FactoryGirl.create :access_token, application_id: other_application.id, resource_owner_id: 42 }
 
           it 'fail' do
             expect(access_token1.same_credential?(access_token2)).to be_falsey
@@ -228,7 +228,7 @@ module Doorkeeper
         end
 
         context 'the second token has different owner and same app' do
-          let(:access_token2) { FactoryGirl.create :access_token, application: application, resource_owner_id: 42 }
+          let(:access_token2) { FactoryGirl.create :access_token, application_id: application.id, resource_owner_id: 42 }
 
           it 'fail' do
             expect(access_token1.same_credential?(access_token2)).to be_falsey
@@ -271,7 +271,7 @@ module Doorkeeper
       let(:resource_owner) { double(id: 100) }
       let(:application)    { FactoryGirl.create :application }
       let(:default_attributes) do
-        { application: application, resource_owner_id: resource_owner.id }
+        { application_id: application.id, resource_owner_id: resource_owner.id }
       end
 
       it 'revokes all tokens for given application and resource owner' do
@@ -283,7 +283,7 @@ module Doorkeeper
       end
 
       it 'matches application' do
-        FactoryGirl.create :access_token, default_attributes.merge(application: FactoryGirl.create(:application))
+        FactoryGirl.create :access_token, default_attributes.merge(application_id: FactoryGirl.create(:application).id)
         AccessToken.revoke_all_for application, resource_owner
         expect(AccessToken.all).not_to be_empty
       end
@@ -301,7 +301,7 @@ module Doorkeeper
       let(:scopes) { Doorkeeper::OAuth::Scopes.from_string('public write') }
       let(:default_attributes) do
         {
-          application: application,
+          application_id: application.id,
           resource_owner_id: resource_owner_id,
           scopes: scopes.to_s
         }
@@ -337,7 +337,7 @@ module Doorkeeper
 
       it 'matches the application' do
         resource_owner = double(to_key: true, id: 100)
-        FactoryGirl.create :access_token, default_attributes.merge(application: FactoryGirl.create(:application))
+        FactoryGirl.create :access_token, default_attributes.merge(application_id: FactoryGirl.create(:application).id)
         last_token = AccessToken.matching_token_for(application, resource_owner, scopes)
         expect(last_token).to be_nil
       end
@@ -374,7 +374,7 @@ module Doorkeeper
         resource_owner = double(to_key: true, id: 100)
         application = FactoryGirl.create :application, scopes: "private read"
         FactoryGirl.create :access_token, default_attributes.merge(
-          application: application
+          application_id: application.id
         )
         last_token = AccessToken.matching_token_for(application, resource_owner, scopes)
         expect(last_token).to be_nil
@@ -394,7 +394,7 @@ module Doorkeeper
           resource_owner_id:  token.resource_owner_id,
           scopes:             token.scopes,
           expires_in_seconds: token.expires_in_seconds,
-          application:        { uid: token.application.uid },
+          application:        { uid: Doorkeeper::Application.find_by_id(token.application_id).uid },
           created_at:         token.created_at.to_i,
         }
         expect(token.as_json).to eq token_hash

@@ -13,14 +13,14 @@ module Doorkeeper::OAuth
     let(:refresh_token) do
       FactoryGirl.create(:access_token, use_refresh_token: true)
     end
-    let(:client) { refresh_token.application }
+    let(:client) { Doorkeeper::Application.find_by_id(refresh_token.application_id) }
     let(:credentials) { Client::Credentials.new(client.uid, client.secret) }
 
     subject { RefreshTokenRequest.new server, refresh_token, credentials }
 
     it 'issues a new token for the client' do
-      expect { subject.authorize }.to change { client.reload.access_tokens.count }.by(1)
-      expect(client.reload.access_tokens.last.expires_in).to eq(120)
+      expect { subject.authorize }.to change { Doorkeeper::AccessToken.where(application_id: client.id).count }.by(1)
+      expect(Doorkeeper::AccessToken.where(application_id: client.id).last.expires_in).to eq(120)
     end
 
     it 'issues a new token for the client with custom expires_in' do
@@ -32,7 +32,7 @@ module Doorkeeper::OAuth
 
       RefreshTokenRequest.new(server, refresh_token, credentials).authorize
 
-      expect(client.reload.access_tokens.last.expires_in).to eq(1234)
+      expect(Doorkeeper::AccessToken.where(application_id: client.id).last.expires_in).to eq(1234)
     end
 
     it 'revokes the previous token' do
@@ -82,7 +82,7 @@ module Doorkeeper::OAuth
       end
 
       it 'issues a new token for the client' do
-        expect { subject.authorize }.to change { client.reload.access_tokens.count }.by(1)
+        expect { subject.authorize }.to change { Doorkeeper::AccessToken.where(application_id: client.id).count }.by(1)
       end
 
       it 'does not revoke the previous token' do
@@ -93,7 +93,7 @@ module Doorkeeper::OAuth
       it 'sets the previous refresh token in the new access token' do
         subject.authorize
         expect(
-          client.access_tokens.last.previous_refresh_token
+          Doorkeeper::AccessToken.where(application_id: client.id).last.previous_refresh_token
         ).to eq(refresh_token.refresh_token)
       end
     end
