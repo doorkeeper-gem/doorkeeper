@@ -25,15 +25,8 @@ module Doorkeeper
 
       before_validation :generate_token, on: :create
 
-      def verify_code(code_verifier)
-        return true unless code_challenge.present?
-        return false unless code_verifier
-
-        if code_challenge_method == 'S256'
-          code_challenge == Base64.urlsafe_encode64(Digest::SHA256.digest(code_verifier))
-        else
-          code_challenge == code_verifier
-        end
+      def uses_pkce?
+        code_challenge.present? && code_challenge_method.present?
       end
     end
 
