@@ -29,7 +29,7 @@ module Doorkeeper
         return true unless code_challenge.present?
         return false unless code_verifier
 
-        if transformation_method == 'S256'
+        if code_challenge_method == 'S256'
           code_challenge == Base64.urlsafe_encode64(Digest::SHA256.digest(code_verifier))
         else
           code_challenge == code_verifier

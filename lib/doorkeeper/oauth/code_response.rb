@@ -32,7 +32,7 @@ module Doorkeeper
             code: auth.token.token,
             state: pre_auth.state,
             code_challenge: pre_auth.code_challenge,
-            transformation_method: pre_auth.code_transformation_method
+            code_challenge_method: pre_auth.code_challenge_method
           )
         end
       end

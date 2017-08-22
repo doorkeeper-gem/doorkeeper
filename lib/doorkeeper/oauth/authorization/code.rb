@@ -17,7 +17,7 @@ module Doorkeeper
             redirect_uri: pre_auth.redirect_uri,
             scopes: pre_auth.scopes.to_s,
             code_challenge: pre_auth.code_challenge,
-            transformation_method: pre_auth.code_challenge_method
+            code_challenge_method: pre_auth.code_challenge_method
           )
         end
 
