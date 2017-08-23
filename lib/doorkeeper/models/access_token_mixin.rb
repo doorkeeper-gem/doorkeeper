@@ -21,7 +21,7 @@ module Doorkeeper
 
       #belongs_to :application, belongs_to_options
 
-      validates :token, presence: true, uniqueness: true
+      #validates :token, presence: true, uniqueness: true
       validates :refresh_token, uniqueness: true, if: :use_refresh_token?
 
       # @attr_writer [Boolean, nil] use_refresh_token
@@ -273,7 +273,7 @@ module Doorkeeper
     #
     def generate_refresh_token
       token_accessor = Doorkeeper.configuration.token_accessor.constantize
-      token_accessor.generate_refresh_token(save: true, instance: self)
+      self.refresh_token = token_accessor.generate_refresh_token(save: true, instance: self)
     end
 
     # Generates and sets the token value with the

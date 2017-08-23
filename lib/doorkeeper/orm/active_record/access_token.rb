@@ -4,6 +4,8 @@ module Doorkeeper
 
     include AccessTokenMixin
 
+    attr_accessor :token
+
     # Deletes all the Access Tokens created for the specific
     # Application and Resource Owner.
     #
