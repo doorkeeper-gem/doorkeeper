@@ -46,6 +46,14 @@ module Doorkeeper
             use_refresh_token: use_refresh_token
           )
         end
+
+        def self.revoke_token(instance, clock)
+          instance.update_attribute :revoked_at, clock.now.utc
+        end
+
+        def self.revoked?(instance)
+          !!(instance.revoked_at && instance.revoked_at <= Time.now.utc)
+        end
       end
     end
   end
