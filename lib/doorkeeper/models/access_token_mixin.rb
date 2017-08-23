@@ -21,7 +21,7 @@ module Doorkeeper
 
       #belongs_to :application, belongs_to_options
 
-      #validates :token, presence: true, uniqueness: true
+      # validates :token, presence: true, uniqueness: true
       validates :refresh_token, uniqueness: true, if: :use_refresh_token?
 
       # @attr_writer [Boolean, nil] use_refresh_token

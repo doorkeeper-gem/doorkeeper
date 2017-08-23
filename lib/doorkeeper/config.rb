@@ -168,6 +168,14 @@ doorkeeper.
           '@resource_owner_accessor', resource_owner_accessor
         )
       end
+
+      # @param token_present [Boolean]
+      #   value for whether token should be ignored
+      def token_present(token_present)
+        @config.instance_variable_set(
+          '@token_present', token_present
+        )
+      end
     end
 
     module Option
@@ -265,6 +273,8 @@ doorkeeper.
            default: 'Doorkeeper::Orm::Helpers::DbTokenAccessor'
     option :resource_owner_accessor,
            default: 'Doorkeeper::Orm::Helpers::DbResourceOwnerAccessor'
+    option :token_present,
+           default: true
     option :base_controller,
            default: 'ActionController::Base'
 

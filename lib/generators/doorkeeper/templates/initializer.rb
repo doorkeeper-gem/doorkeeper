@@ -117,4 +117,8 @@ Doorkeeper.configure do
   # Use a custom class for finding and creating resource owners
   # See lib/doorkeeper/orm/helpers/db_resource_owner_accessor.rb for example
   # resource_owner_accessor '::Doorkeeper::Orm::Helpers::DbResourceOwnerAccessor'
+
+  # If false, assume that the token field is not present on AccessToken in the database
+  # Defaults to true (assume field is present)
+  # token_present false
 end

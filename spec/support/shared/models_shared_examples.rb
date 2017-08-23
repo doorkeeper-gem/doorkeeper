@@ -34,6 +34,7 @@ shared_examples 'a unique token' do
     end
 
     it 'is not valid if token exists' do
+      skip 'uniqueness validation has been removed for tokens'
       token1 = FactoryGirl.create factory_name
       token2 = FactoryGirl.create factory_name
       token2.token = token1.token
