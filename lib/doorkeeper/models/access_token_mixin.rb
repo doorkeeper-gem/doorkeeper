@@ -15,9 +15,9 @@ module Doorkeeper
       #  inverse_of: :access_tokens
       #}
 
-      if defined?(ActiveRecord::Base) && ActiveRecord::VERSION::MAJOR >= 5
-        belongs_to_options[:optional] = true
-      end
+      #if defined?(ActiveRecord::Base) && ActiveRecord::VERSION::MAJOR >= 5
+      #  belongs_to_options[:optional] = true
+      #end
 
       #belongs_to :application, belongs_to_options
 
