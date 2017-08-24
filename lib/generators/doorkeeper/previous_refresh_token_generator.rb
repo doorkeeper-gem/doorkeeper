@@ -8,6 +8,12 @@ class Doorkeeper::PreviousRefreshTokenGenerator < Rails::Generators::Base
   def self.next_migration_number(path)
     ActiveRecord::Generators::Base.next_migration_number(path)
   end
+  
+  def migration_version
+    if Rails.version >= "5.0.0"
+      "[#{Rails::VERSION::MAJOR}.#{Rails::VERSION::MINOR}]"
+    end
+  end
 
   def previous_refresh_token
     if no_previous_refresh_token_column?
