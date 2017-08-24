@@ -1,4 +1,4 @@
-class AddPreviousRefreshTokenToAccessTokens < ActiveRecord::Migration
+class AddPreviousRefreshTokenToAccessTokens < ActiveRecord::Migration<%= migration_version %>
   def change
     add_column(
       :oauth_access_tokens,
