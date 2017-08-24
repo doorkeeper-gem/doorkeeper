@@ -7,8 +7,9 @@ class Doorkeeper::ApplicationOwnerGenerator < Rails::Generators::Base
 
   def application_owner
     migration_template(
-      'add_owner_to_application_migration.rb',
-      'db/migrate/add_owner_to_application.rb'
+      'add_owner_to_application_migration.rb.erb',
+      'db/migrate/add_owner_to_application.rb',
+      migration_version: migration_version
     )
   end
 
