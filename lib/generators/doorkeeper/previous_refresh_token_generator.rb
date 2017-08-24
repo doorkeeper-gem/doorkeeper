@@ -12,8 +12,9 @@ class Doorkeeper::PreviousRefreshTokenGenerator < Rails::Generators::Base
   def previous_refresh_token
     if no_previous_refresh_token_column?
       migration_template(
-        'add_previous_refresh_token_to_access_tokens.rb',
-        'db/migrate/add_previous_refresh_token_to_access_tokens.rb'
+        'add_previous_refresh_token_to_access_tokens.rb.erb',
+        'db/migrate/add_previous_refresh_token_to_access_tokens.rb',
+        migration_version: migration_version
       )
     end
   end
