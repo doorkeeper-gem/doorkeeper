@@ -7,7 +7,10 @@ class Doorkeeper::MigrationGenerator < ::Rails::Generators::Base
 
   def install
     @migration_version = Rails::VERSION::STRING[0..2].to_f
-    migration_template 'migration.rb.erb', 'db/migrate/create_doorkeeper_tables.rb'
+    migration_template(
+      "migration.rb.erb",
+      "db/migrate/create_doorkeeper_tables.rb"
+    )
   end
 
   def self.next_migration_number(dirname)
