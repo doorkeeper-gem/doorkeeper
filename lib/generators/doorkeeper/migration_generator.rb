@@ -6,10 +6,10 @@ class Doorkeeper::MigrationGenerator < ::Rails::Generators::Base
   desc 'Installs Doorkeeper migration file.'
 
   def install
-    @migration_version = Rails::VERSION::STRING[0..2].to_f
     migration_template(
       "migration.rb.erb",
-      "db/migrate/create_doorkeeper_tables.rb"
+      "db/migrate/create_doorkeeper_tables.rb",
+      migration_version: migration_version
     )
   end
 
