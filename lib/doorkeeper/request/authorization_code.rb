@@ -22,7 +22,7 @@ module Doorkeeper
       end
 
       def client_for_request
-        if parameters.include?(:code_verifier)
+        if parameters.include?(:code_verifier) && parameters[:code_verifier].present?
           client_via_uid
         else
           client

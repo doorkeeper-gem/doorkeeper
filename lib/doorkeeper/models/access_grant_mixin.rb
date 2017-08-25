@@ -26,7 +26,7 @@ module Doorkeeper
       before_validation :generate_token, on: :create
 
       def uses_pkce?
-        code_challenge.present? && code_challenge_method.present?
+        code_challenge.present?
       end
     end
 

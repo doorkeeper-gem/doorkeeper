@@ -34,7 +34,7 @@ module Doorkeeper
 
       def validate_attributes
         if grant && grant.uses_pkce?
-          return false unless code_verifier.present?
+          return false if code_verifier.blank?
         end
 
         redirect_uri.present?
