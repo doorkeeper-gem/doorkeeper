@@ -37,7 +37,7 @@ module Doorkeeper
           token
         end
 
-        def self.create(application, resource_owner, scopes, expires_in, use_refresh_token)
+        def self.create_access_token(application, resource_owner, scopes, expires_in, use_refresh_token)
           Doorkeeper::AccessToken.create!(
             application_id: application.try(:id),
             resource_owner_id: resource_owner.try(:id),

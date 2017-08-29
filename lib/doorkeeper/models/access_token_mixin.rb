@@ -146,7 +146,7 @@ module Doorkeeper
         end
 
         token_accessor = Doorkeeper.configuration.token_accessor.constantize
-        token_accessor.create(
+        token_accessor.create_access_token(
           application,
           resource_owner,
           scopes,
