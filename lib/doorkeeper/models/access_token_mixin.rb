@@ -294,8 +294,6 @@ module Doorkeeper
       resource_owner = r_owner_accessor.get_by_id(resource_owner_id)
       application = Application.find_by_id(application_id)
       self.token = token_accessor.generate_token(application, resource_owner, scopes, expires_in, created_at)
-    rescue NoMethodError
-      raise Errors::UnableToGenerateToken, "#{Doorkeeper.configuration.access_token_generator} does not respond to `.generate`."
     rescue NameError
       raise Errors::TokenGeneratorNotFound, "#{Doorkeeper.configuration.access_token_generator} not found"
     end
