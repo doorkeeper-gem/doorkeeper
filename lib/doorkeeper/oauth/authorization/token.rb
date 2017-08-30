@@ -5,7 +5,7 @@ module Doorkeeper
         attr_accessor :pre_auth, :resource_owner, :token
 
         def initialize(pre_auth, resource_owner)
-          @pre_auth       = pre_auth
+          @pre_auth = pre_auth
           @resource_owner = resource_owner
         end
 
@@ -18,9 +18,16 @@ module Doorkeeper
         end
 
         def issue_token
+          resource_owner_obj = nil
+          if resource_owner.is_a? Integer
+            r_owner_accessor = Doorkeeper.configuration.resource_owner_accessor.constantize
+            resource_owner_obj = r_owner_accessor.get_by_id(resource_owner)
+          else
+            resource_owner_obj = resource_owner
+          end
           @token ||= AccessToken.find_or_create_for(
             pre_auth.client,
-            resource_owner.id,
+            resource_owner_obj,
             pre_auth.scopes,
             self.class.access_token_expires_in(configuration, pre_auth),
             false

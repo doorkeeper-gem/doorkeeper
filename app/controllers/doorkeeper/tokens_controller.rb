@@ -51,7 +51,7 @@ module Doorkeeper
         # is required
         if token.application_id?
           # We authorize client by checking token's application
-          server.client && server.client.application == token.application
+          server.client && server.client.application.id == token.application_id
         else
           # Client is public, authentication unnecessary
           true

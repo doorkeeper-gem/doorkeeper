@@ -12,7 +12,9 @@ module Doorkeeper::OAuth
       )
     end
     let(:client) { FactoryGirl.create(:application) }
-    let(:owner)  { double :owner, id: 99 }
+    let(:owner) do
+      User.create!
+    end
 
     subject do
       PasswordAccessTokenRequest.new(server, client, owner)
@@ -21,7 +23,7 @@ module Doorkeeper::OAuth
     it 'issues a new token for the client' do
       expect do
         subject.authorize
-      end.to change { client.reload.access_tokens.count }.by(1)
+      end.to change { Doorkeeper::AccessToken.where(application_id: client.id).count }.by(1)
     end
 
     it 'issues a new token without a client' do

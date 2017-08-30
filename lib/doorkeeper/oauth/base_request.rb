@@ -32,12 +32,15 @@ module Doorkeeper
       end
 
       def find_or_create_access_token(client, resource_owner_id, scopes, server)
+        r_owner_accessor = Doorkeeper.configuration.resource_owner_accessor.constantize
+        resource_owner = r_owner_accessor.get_by_id(resource_owner_id)
         @access_token = AccessToken.find_or_create_for(
           client,
-          resource_owner_id,
+          resource_owner,
           scopes,
           Authorization::Token.access_token_expires_in(server, client),
-          server.refresh_token_enabled?)
+          server.refresh_token_enabled?
+        )
       end
 
       def before_successful_response

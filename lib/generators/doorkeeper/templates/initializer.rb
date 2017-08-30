@@ -109,4 +109,16 @@ Doorkeeper.configure do
 
   # WWW-Authenticate Realm (default "Doorkeeper").
   # realm "Doorkeeper"
+
+  # Use a custom class for finding and creating access tokens
+  # See lib/doorkeeper/orm/helpers/db_token_accessor.rb for example
+  # token_accessor '::Doorkeeper::Orm::Helpers::DbTokenAccessor'
+
+  # Use a custom class for finding and creating resource owners
+  # See lib/doorkeeper/orm/helpers/db_resource_owner_accessor.rb for example
+  # resource_owner_accessor '::Doorkeeper::Orm::Helpers::DbResourceOwnerAccessor'
+
+  # If false, assume that the token field is not present on AccessToken in the database
+  # Defaults to true (assume field is present)
+  # token_present false
 end

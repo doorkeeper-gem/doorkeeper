@@ -9,11 +9,11 @@ FactoryGirl.define do
 
   factory :access_token, class: Doorkeeper::AccessToken do
     sequence(:resource_owner_id) { |n| n }
-    application
+    application_id {create(:application).id}
     expires_in 2.hours
 
     factory :clientless_access_token do
-      application nil
+      application_id 0
     end
   end
 
