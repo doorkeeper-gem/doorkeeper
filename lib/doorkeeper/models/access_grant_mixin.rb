@@ -24,6 +24,10 @@ module Doorkeeper
       validates :token, uniqueness: true
 
       before_validation :generate_token, on: :create
+
+      def uses_pkce?
+        code_challenge.present?
+      end
     end
 
     module ClassMethods

@@ -30,7 +30,9 @@ module Doorkeeper
           Authorization::URIBuilder.uri_with_query(
             pre_auth.redirect_uri,
             code: auth.token.token,
-            state: pre_auth.state
+            state: pre_auth.state,
+            code_challenge: pre_auth.code_challenge,
+            code_challenge_method: pre_auth.code_challenge_method
           )
         end
       end
