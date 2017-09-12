@@ -88,7 +88,11 @@ feature 'Authorization Code Flow' do
 
     scenario 'resource owner requests an access token with authorization code and S256 code challenge method' do
       code_verifier = 'a45a9fea-0676-477e-95b1-a40f72ac3cfb'
+<<<<<<< HEAD
       challenge = Doorkeeper::AccessGrant.generate_code_challenge(code_verifier)
+=======
+      challenge = Base64.urlsafe_encode64(Digest::SHA256.digest(code_verifier))
+>>>>>>> 9505b25e1857efc2e2d99729567de50fdf7f9548
 
       visit pkce_authorization_endpoint_url(client: @client,
                                        code_challenge: challenge,
@@ -109,7 +113,11 @@ feature 'Authorization Code Flow' do
 
     scenario 'resource owner requests an access token with authorization code but no code verifier' do
       code_verifier = 'a45a9fea-0676-477e-95b1-a40f72ac3cfb'
+<<<<<<< HEAD
       challenge = Doorkeeper::AccessGrant.generate_code_challenge(code_verifier)
+=======
+      challenge = Base64.urlsafe_encode64(Digest::SHA256.digest(code_verifier))
+>>>>>>> 9505b25e1857efc2e2d99729567de50fdf7f9548
 
       visit pkce_authorization_endpoint_url(client: @client,
                                        code_challenge: challenge,
@@ -139,7 +147,11 @@ feature 'Authorization Code Flow' do
     end
 
     scenario 'resource owner requests an access token with authorization code with wrong verifier' do
+<<<<<<< HEAD
       challenge = Doorkeeper::AccessGrant.generate_code_challenge('a45a9fea-0676-477e-95b1-a40f72ac3cfb')
+=======
+      challenge = Base64.urlsafe_encode64(Digest::SHA256.digest('a45a9fea-0676-477e-95b1-a40f72ac3cfb'))
+>>>>>>> 9505b25e1857efc2e2d99729567de50fdf7f9548
 
       visit pkce_authorization_endpoint_url(client: @client,
                                        code_challenge: challenge,
@@ -154,7 +166,11 @@ feature 'Authorization Code Flow' do
     end
 
     scenario 'resource owner requests an access token with authorization code with missing challenge method' do
+<<<<<<< HEAD
       challenge = Doorkeeper::AccessGrant.generate_code_challenge('a45a9fea-0676-477e-95b1-a40f72ac3cfb')
+=======
+      challenge = Base64.urlsafe_encode64(Digest::SHA256.digest('a45a9fea-0676-477e-95b1-a40f72ac3cfb'))
+>>>>>>> 9505b25e1857efc2e2d99729567de50fdf7f9548
 
       visit pkce_authorization_endpoint_url(client: @client, code_challenge: challenge)
       click_on 'Authorize'

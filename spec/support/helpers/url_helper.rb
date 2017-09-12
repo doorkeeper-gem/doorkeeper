@@ -22,6 +22,18 @@ module UrlHelper
     "/oauth/token?#{build_query(parameters)}"
   end
 
+  def pkce_token_endpoint_url(options = {})
+    parameters = {
+      code: options[:code],
+      client_id: options[:client_id]     || (options[:client] ? options[:client].uid : nil),
+      redirect_uri: options[:redirect_uri]  || (options[:client] ? options[:client].redirect_uri : nil),
+      grant_type: options[:grant_type]    || 'authorization_code',
+      code_verifier: options[:code_verifier],
+      code_challenge_method: 'plain'
+    }
+    "/oauth/token?#{build_query(parameters)}"
+  end
+
   def password_token_endpoint_url(options = {})
     parameters = {
       code: options[:code],
