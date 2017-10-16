@@ -40,7 +40,7 @@ module Doorkeeper::OAuth
         end
       end
 
-      context "unkown" do
+      context "unknown" do
         let(:access_token) { double(revoked?: false, expired?: false) }
 
         it "sets a description" do
