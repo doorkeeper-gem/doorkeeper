@@ -18,7 +18,7 @@ class Doorkeeper::ApplicationOwnerGenerator < Rails::Generators::Base
   end
   
   def migration_version
-    if Rails.version >= "5.0.0"
+    if Rails.version >= 5
       "[#{Rails::VERSION::MAJOR}.#{Rails::VERSION::MINOR}]"
     end
   end
