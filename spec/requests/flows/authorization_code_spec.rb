@@ -38,6 +38,7 @@ feature 'Authorization Code Flow' do
     click_on 'Authorize'
     url_should_have_param('code', Doorkeeper::AccessGrant.first.token)
     url_should_have_param('state', 'return-me')
+    url_should_not_have_param('code_challenge_method')
   end
 
   scenario 'resource owner requests an access token with authorization code' do
@@ -57,6 +58,15 @@ feature 'Authorization Code Flow' do
   end
 
   context 'with PKCE' do
+    scenario 'resource owner authorizes the client with code_challenge parameter set' do
+      code_verifier = 'a45a9fea-0676-477e-95b1-a40f72ac3cfb'
+      visit pkce_authorization_endpoint_url(client: @client, code_challenge: code_verifier)
+      click_on 'Authorize'
+
+      url_should_have_param('code', Doorkeeper::AccessGrant.first.token)
+      url_should_have_param('code_challenge_method', 'plain')
+    end
+
     scenario 'resource owner requests an access token with authorization code but not pkce token' do
       visit authorization_endpoint_url(client: @client)
       click_on 'Authorize'
