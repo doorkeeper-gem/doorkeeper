@@ -57,6 +57,17 @@ feature 'Authorization Code Flow' do
   end
 
   context 'with PKCE' do
+    scenario 'resource owner requests an access token with authorization code but not pkce token' do
+      visit authorization_endpoint_url(client: @client)
+      click_on 'Authorize'
+
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      code_verifier = SecureRandom.uuid
+      create_access_token_with_pkce authorization_code, @client, code_verifier
+
+      should_have_json 'error', 'invalid_grant'
+    end
+
     scenario 'resource owner requests an access token with authorization code and plain code challenge method' do
       code_verifier = 'a45a9fea-0676-477e-95b1-a40f72ac3cfb'
 
@@ -77,7 +88,7 @@ feature 'Authorization Code Flow' do
 
     scenario 'resource owner requests an access token with authorization code and S256 code challenge method' do
       code_verifier = 'a45a9fea-0676-477e-95b1-a40f72ac3cfb'
-      challenge = Base64.urlsafe_encode64(Digest::SHA256.digest(code_verifier))
+      challenge = Doorkeeper::AccessGrant.generate_code_challenge(code_verifier)
 
       visit pkce_authorization_endpoint_url(client: @client,
                                        code_challenge: challenge,
@@ -98,7 +109,7 @@ feature 'Authorization Code Flow' do
 
     scenario 'resource owner requests an access token with authorization code but no code verifier' do
       code_verifier = 'a45a9fea-0676-477e-95b1-a40f72ac3cfb'
-      challenge = Base64.urlsafe_encode64(Digest::SHA256.digest(code_verifier))
+      challenge = Doorkeeper::AccessGrant.generate_code_challenge(code_verifier)
 
       visit pkce_authorization_endpoint_url(client: @client,
                                        code_challenge: challenge,
@@ -128,8 +139,7 @@ feature 'Authorization Code Flow' do
     end
 
     scenario 'resource owner requests an access token with authorization code with wrong verifier' do
-      challenge = Base64.urlsafe_encode64(Digest::SHA256.digest('a45a9fea-0676-477e-95b1-a40f72ac3cfb'))
-
+      challenge = Doorkeeper::AccessGrant.generate_code_challenge('a45a9fea-0676-477e-95b1-a40f72ac3cfb')
       visit pkce_authorization_endpoint_url(client: @client,
                                        code_challenge: challenge,
                                        code_challenge_method: 'S256')
@@ -143,8 +153,7 @@ feature 'Authorization Code Flow' do
     end
 
     scenario 'resource owner requests an access token with authorization code with missing challenge method' do
-      challenge = Base64.urlsafe_encode64(Digest::SHA256.digest('a45a9fea-0676-477e-95b1-a40f72ac3cfb'))
-
+      challenge = Doorkeeper::AccessGrant.generate_code_challenge('a45a9fea-0676-477e-95b1-a40f72ac3cfb')
       visit pkce_authorization_endpoint_url(client: @client, code_challenge: challenge)
       click_on 'Authorize'
 
