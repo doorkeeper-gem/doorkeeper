@@ -35,6 +35,7 @@ module Doorkeeper
           refresh_token.revoke unless refresh_token_revoked_on_use?
           create_access_token
         end
+        super
       end
 
       def refresh_token_revoked_on_use?

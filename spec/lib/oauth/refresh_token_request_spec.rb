@@ -44,6 +44,12 @@ module Doorkeeper::OAuth
       expect { subject.authorize }.to change { refresh_token.revoked? }.from(false).to(true)
     end
 
+    it 'calls BaseRequest callback methods' do
+      expect_any_instance_of(BaseRequest).to receive(:before_successful_response).once
+      expect_any_instance_of(BaseRequest).to receive(:after_successful_response).once
+      subject.authorize
+    end
+
     it 'requires the refresh token' do
       subject.refresh_token = nil
       subject.validate

@@ -28,6 +28,7 @@ module Doorkeeper
                                       grant.scopes,
                                       server)
         end
+        super
       end
 
       def validate_attributes

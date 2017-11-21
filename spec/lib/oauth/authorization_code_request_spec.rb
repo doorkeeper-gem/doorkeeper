@@ -80,6 +80,12 @@ module Doorkeeper::OAuth
       end.to_not change { Doorkeeper::AccessToken.count }
     end
 
+    it 'calls BaseRequest callback methods' do
+      expect_any_instance_of(BaseRequest).to receive(:before_successful_response).once
+      expect_any_instance_of(BaseRequest).to receive(:after_successful_response).once
+      subject.authorize
+    end
+
     context "when redirect_uri contains some query params" do
       let(:redirect_uri) { client.redirect_uri + "?query=q" }
 
