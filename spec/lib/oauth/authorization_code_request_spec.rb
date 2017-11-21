@@ -80,7 +80,7 @@ module Doorkeeper::OAuth
       end.to_not change { Doorkeeper::AccessToken.count }
     end
 
-    it 'calls BaseRequest callback methods' do
+    it "calls BaseRequest callback methods" do
       expect_any_instance_of(BaseRequest).to receive(:before_successful_response).once
       expect_any_instance_of(BaseRequest).to receive(:after_successful_response).once
       subject.authorize
