@@ -154,7 +154,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
 
     it 'should redirect immediately' do
       expect(response).to be_redirect
-      expect(response.location).to match(/oauth\/authorize\//)
+      expect(response.location).to match(/oauth\/authorize\/native\?code=#{Doorkeeper::AccessGrant.first.token}/)
     end
 
     it 'should issue a grant' do

@@ -4,6 +4,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1003] Use URL query param to pass through native redirect auth code so automated apps can find it.
 - [#868] `Scopes#&` and `Scopes#+` now take an array or any other enumerable
   object.
 - [#1019] Remove translation not in use: `invalid_resource_owner`.

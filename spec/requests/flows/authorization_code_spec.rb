@@ -29,6 +29,7 @@ feature 'Authorization Code Flow' do
 
     access_grant_should_exist_for(@client, @resource_owner)
 
+    url_should_have_param('code', Doorkeeper::AccessGrant.first.token)
     i_should_see 'Authorization code:'
     i_should_see Doorkeeper::AccessGrant.first.token
   end
