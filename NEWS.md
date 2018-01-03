@@ -15,6 +15,7 @@ User-visible changes worth mentioning.
 - [#1048] Remove deprecated `Doorkeeper#configured?`, `Doorkeeper#database_installed?`, and
   `Doorkeeper#installed?` method
 - [#1031] Allow public clients to authenticate without `client_secret`. Define an app as either public or private/confidential
+- [#1010] Add configuration to enforce known application scopes
 
 ## 4.3.1
 

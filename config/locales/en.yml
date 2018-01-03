@@ -14,6 +14,8 @@ en:
               relative_uri: 'must be an absolute URI.'
               secured_uri: 'must be an HTTPS/SSL URI.'
               forbidden_uri: 'is forbidden by the server.'
+            scopes:
+              invalid_scope: 'The requested scope is invalid, unknown, or malformed.'
 
   doorkeeper:
     applications:
