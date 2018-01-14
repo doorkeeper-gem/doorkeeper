@@ -133,6 +133,14 @@ doorkeeper.
         @config.instance_variable_set("@force_ssl_in_redirect_uri", boolean)
       end
 
+      # Allows for non HTTPS localhost uris even when force ssl is set to true.
+      #
+      # @param [Boolean] boolean value for the parameter, false by default in
+      # non-development environment
+      def allow_non_secure_localhost_redirects(boolean)
+        @config.instance_variable_set("@allow_non_secure_localhost_redirects", boolean)
+      end
+
       # Use a custom class for generating the access token.
       # https://github.com/doorkeeper-gem/doorkeeper#custom-access-token-generator
       #
@@ -233,16 +241,17 @@ doorkeeper.
              nil
            end)
 
-    option :skip_authorization,             default: ->(_routes) {}
-    option :access_token_expires_in,        default: 7200
-    option :custom_access_token_expires_in, default: ->(_app) { nil }
-    option :authorization_code_expires_in,  default: 600
-    option :orm,                            default: :active_record
-    option :native_redirect_uri,            default: 'urn:ietf:wg:oauth:2.0:oob'
-    option :active_record_options,          default: {}
-    option :realm,                          default: 'Doorkeeper'
-    option :force_ssl_in_redirect_uri,      default: !Rails.env.development?
-    option :grant_flows,                    default: %w(authorization_code client_credentials)
+    option :skip_authorization,                   default: ->(_routes) {}
+    option :access_token_expires_in,              default: 7200
+    option :custom_access_token_expires_in,       default: ->(_app) { nil }
+    option :authorization_code_expires_in,        default: 600
+    option :orm,                                  default: :active_record
+    option :native_redirect_uri,                  default: 'urn:ietf:wg:oauth:2.0:oob'
+    option :active_record_options,                default: {}
+    option :realm,                                default: 'Doorkeeper'
+    option :force_ssl_in_redirect_uri,            default: !Rails.env.development?
+    option :allow_non_secure_localhost_redirects, default: Rails.env.development?
+    option :grant_flows,                          default: %w(authorization_code client_credentials)
     option :access_token_generator,
            default: 'Doorkeeper::OAuth::Helpers::UniqueToken'
     option :base_controller,
