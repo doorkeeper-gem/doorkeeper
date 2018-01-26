@@ -10,9 +10,11 @@ module Doorkeeper::OAuth
     end
     let(:grant)  { FactoryGirl.create :access_grant }
     let(:client) { grant.application }
+    let(:redirect_uri) { client.redirect_uri }
+    let(:params) { { redirect_uri: redirect_uri } }
 
     subject do
-      AuthorizationCodeRequest.new server, grant, client, redirect_uri: client.redirect_uri
+      AuthorizationCodeRequest.new server, grant, client, params
     end
 
     it 'issues a new token for the client' do
@@ -75,6 +77,15 @@ module Doorkeeper::OAuth
       expect do
         subject.authorize
       end.to_not change { Doorkeeper::AccessToken.count }
+    end
+
+    context "when redirect_uri contains some query params" do
+      let(:redirect_uri) { client.redirect_uri + "?query=q" }
+
+      it "compares only host part with grant's redirect_uri" do
+        subject.validate
+        expect(subject.error).to eq(nil)
+      end
     end
   end
 end
