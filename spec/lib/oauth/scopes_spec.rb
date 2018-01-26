@@ -89,6 +89,10 @@ module Doorkeeper::OAuth
       it 'differs from another set of scopes when scopes are not the same' do
         expect(Scopes.from_string('public write')).not_to eq(Scopes.from_string('write'))
       end
+
+      it "does not raise an error when compared to a non-enumerable object" do
+        expect { Scopes.from_string("public") == false }.not_to raise_error
+      end
     end
 
     describe '#has_scopes?' do

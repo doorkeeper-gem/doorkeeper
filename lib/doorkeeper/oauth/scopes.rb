@@ -53,7 +53,11 @@ module Doorkeeper
       end
 
       def <=>(other)
-        map(&:to_s).sort <=> other.map(&:to_s).sort
+        if other.respond_to?(:map)
+          map(&:to_s).sort <=> other.map(&:to_s).sort
+        else
+          super
+        end
       end
 
       def &(other)
