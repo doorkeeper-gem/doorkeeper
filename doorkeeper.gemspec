@@ -21,8 +21,8 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency "capybara"
   s.add_development_dependency "coveralls"
-  s.add_development_dependency "database_cleaner", "~> 1.5.3"
-  s.add_development_dependency "factory_girl", "~> 4.7.0"
+  s.add_development_dependency "database_cleaner", "~> 1.6"
+  s.add_development_dependency "factory_girl", "~> 4.9"
   s.add_development_dependency "generator_spec", "~> 0.9.3"
   s.add_development_dependency "rake", ">= 11.3.0"
   s.add_development_dependency "rspec-rails"
