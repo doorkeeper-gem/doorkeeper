@@ -28,7 +28,7 @@ describe 'Revoke Token Flow' do
 
         access_token.reload
 
-        expect(response).to be_success
+        expect(response).to be_successful
         expect(access_token.revoked?).to be_truthy
       end
 
@@ -37,7 +37,7 @@ describe 'Revoke Token Flow' do
 
         access_token.reload
 
-        expect(response).to be_success
+        expect(response).to be_successful
         expect(access_token.revoked?).to be_truthy
       end
 
@@ -48,7 +48,7 @@ describe 'Revoke Token Flow' do
 
           # The authorization server responds with HTTP status code 200 even if
           # token is invalid
-          expect(response).to be_success
+          expect(response).to be_successful
           expect(Doorkeeper::AccessToken.where(revoked_at: nil).count).to eq(num_prev_revoked_tokens)
         end
       end
@@ -64,7 +64,7 @@ describe 'Revoke Token Flow' do
 
           access_token.reload
 
-          expect(response).to be_success
+          expect(response).to be_successful
           expect(access_token.revoked?).to be_falsey
         end
       end
@@ -75,7 +75,7 @@ describe 'Revoke Token Flow' do
 
           access_token.reload
 
-          expect(response).to be_success
+          expect(response).to be_successful
           expect(access_token.revoked?).to be_falsey
         end
       end
@@ -94,7 +94,7 @@ describe 'Revoke Token Flow' do
 
           access_token.reload
 
-          expect(response).to be_success
+          expect(response).to be_successful
           expect(access_token.revoked?).to be_falsey
         end
       end
@@ -113,7 +113,7 @@ describe 'Revoke Token Flow' do
 
         access_token.reload
 
-        expect(response).to be_success
+        expect(response).to be_successful
         expect(access_token.revoked?).to be_truthy
       end
 
@@ -122,7 +122,7 @@ describe 'Revoke Token Flow' do
 
         access_token.reload
 
-        expect(response).to be_success
+        expect(response).to be_successful
         expect(access_token.revoked?).to be_truthy
       end
 
@@ -139,7 +139,7 @@ describe 'Revoke Token Flow' do
 
           access_token.reload
 
-          expect(response).to be_success
+          expect(response).to be_successful
           expect(access_token.revoked?).to be_falsey
         end
 
@@ -148,7 +148,7 @@ describe 'Revoke Token Flow' do
 
           access_token.reload
 
-          expect(response).to be_success
+          expect(response).to be_successful
           expect(access_token.revoked?).to be_falsey
         end
       end

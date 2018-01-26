@@ -74,12 +74,12 @@ describe 'doorkeeper authorize filter' do
     context 'with valid token', token: :valid do
       it 'allows into index action' do
         get :index, access_token: token_string
-        expect(response).to be_success
+        expect(response).to be_successful
       end
 
       it 'allows into show action' do
         get :show, id: '4', access_token: token_string
-        expect(response).to be_success
+        expect(response).to be_successful
       end
     end
 
@@ -117,7 +117,7 @@ describe 'doorkeeper authorize filter' do
         Doorkeeper::AccessToken
       ).to receive(:by_token).with(token_string).and_return(token)
       get :index, access_token: token_string
-      expect(response).to be_success
+      expect(response).to be_successful
     end
 
     it 'does not allow if the token does not include given scope' do
