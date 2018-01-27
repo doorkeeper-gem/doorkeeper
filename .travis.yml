@@ -4,11 +4,13 @@ sudo: false
 
 rvm:
   - 2.1
-  - 2.2.6
-  - 2.3.3
-  - 2.4.0
+  - 2.2.9
+  - 2.3.6
+  - 2.4.3
+  - 2.5.0
 
 before_install:
+  - gem update --system # Need for Ruby 2.5.0. https://github.com/travis-ci/travis-ci/issues/8978
   - gem install bundler -v '~> 1.10'
 
 gemfile:
