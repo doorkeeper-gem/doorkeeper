@@ -2,11 +2,13 @@ module Doorkeeper
   module DashboardHelper
     def doorkeeper_errors_for(object, method)
       if object.errors[method].present?
-        object.errors[method].map do |msg|
+        output = object.errors[method].map do |msg|
           content_tag(:span, class: 'help-block') do
             msg.capitalize
           end
-        end.join.html_safe
+        end
+
+        safe_join(output)
       end
     end
 
