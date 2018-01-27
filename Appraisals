@@ -8,7 +8,6 @@ appraise "rails-5-0" do
 end
 
 appraise "rails-5-1" do
-  gem "rails", github: "rails/rails"
-  gem "arel", github: "rails/arel"
+  gem "rails", "~> 5.1.0"
   gem "rspec-rails", "~> 3.5"
 end
