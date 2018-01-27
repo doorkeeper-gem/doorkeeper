@@ -4,6 +4,114 @@ require 'doorkeeper/oauth/helpers/scope_checker'
 require 'doorkeeper/oauth/scopes'
 
 module Doorkeeper::OAuth::Helpers
+  describe ScopeChecker, ".match_exactly?" do
+    let(:token_scopes) { Doorkeeper::OAuth::Scopes.new }
+    let(:server_scopes) { Doorkeeper::OAuth::Scopes.new }
+    let(:application_scopes) { Doorkeeper::OAuth::Scopes.new }
+
+    context "with application scopes" do
+      before do
+        token_scopes.add :scope
+        application_scopes.add :scope
+      end
+
+      it "returns true if scopes are the same" do
+        server_scopes.add :scope
+        expect(
+          ScopeChecker.match_exactly?(
+            token_scopes.to_s,
+            server_scopes,
+            application_scopes
+          )
+        ).to be_truthy
+      end
+
+      it "returns false if params contain extra scopes" do
+        server_scopes.add :scope, :other_scope
+        expect(
+          ScopeChecker.match_exactly?(
+            token_scopes.to_s,
+            server_scopes,
+            application_scopes
+          )
+        ).to be_falsey
+      end
+
+      it "false for empty string" do
+        expect(
+          ScopeChecker.match_exactly?(
+            token_scopes.to_s,
+            server_scopes,
+            application_scopes
+          )
+        ).to be_falsey
+      end
+
+      it "returns true if scopes are in different order" do
+        token_scopes.add :other_scope
+        application_scopes.add :other_scope
+        server_scopes.add :other_scope, :scope
+        expect(
+          ScopeChecker.match_exactly?(
+            token_scopes.to_s,
+            server_scopes,
+            application_scopes
+          )
+        ).to be_truthy
+      end
+    end
+
+    context "with only token scopes" do
+      before do
+        token_scopes.add :scope
+      end
+
+      it "returns true if scopes are the same" do
+        server_scopes.add :scope
+        expect(
+          ScopeChecker.match_exactly?(
+            token_scopes.to_s,
+            server_scopes,
+            application_scopes
+          )
+        ).to be_truthy
+      end
+
+      it "returns false if params contain extra scopes" do
+        server_scopes.add :scope, :other_scope
+        expect(
+          ScopeChecker.match_exactly?(
+            token_scopes.to_s,
+            server_scopes,
+            application_scopes
+          )
+        ).to be_falsey
+      end
+
+      it "false for empty string" do
+        expect(
+          ScopeChecker.match_exactly?(
+            token_scopes.to_s,
+            server_scopes,
+            application_scopes
+          )
+        ).to be_falsey
+      end
+
+      it "returns true if scopes are in different order" do
+        token_scopes.add :other_scope
+        server_scopes.add :other_scope, :scope
+        expect(
+          ScopeChecker.match_exactly?(
+            token_scopes.to_s,
+            server_scopes,
+            application_scopes
+          )
+        ).to be_truthy
+      end
+    end
+  end
+
   describe ScopeChecker, '.valid?' do
     let(:server_scopes) { Doorkeeper::OAuth::Scopes.new }
 

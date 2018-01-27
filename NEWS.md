@@ -18,6 +18,7 @@ User-visible changes worth mentioning.
 - Small refactorings within the codebase
 - [#921] Switch to Appraisal, and test against Rails master
 - [#892] Add minimum Ruby version requirement
+- [#957] AccessToken.matching_token_for return wrong values for empty string
 
 ## 4.2.0
 
