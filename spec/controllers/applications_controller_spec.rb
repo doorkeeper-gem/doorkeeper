@@ -38,7 +38,7 @@ module Doorkeeper
       end
 
       it 'does not allow mass assignment of uid or secret' do
-        application = FactoryGirl.create(:application)
+        application = FactoryBot.create(:application)
         put :update, id: application.id, doorkeeper_application: {
           uid: '1A2B3C4D',
           secret: '1A2B3C4D' }
@@ -47,7 +47,7 @@ module Doorkeeper
       end
 
       it 'updates application' do
-        application = FactoryGirl.create(:application)
+        application = FactoryBot.create(:application)
         put :update, id: application.id, doorkeeper_application: {
           name: 'Example',
           redirect_uri: 'https://example.com' }

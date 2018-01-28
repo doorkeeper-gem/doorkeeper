@@ -38,11 +38,11 @@ describe 'Revocable' do
   describe :revoke_previous_refresh_token! do
     it "revokes the previous token if existing, and resets the
       `previous_refresh_token` attribute" do
-      previous_token = FactoryGirl.create(
+      previous_token = FactoryBot.create(
         :access_token,
         refresh_token: "refresh_token"
       )
-      current_token = FactoryGirl.create(
+      current_token = FactoryBot.create(
         :access_token,
         previous_refresh_token: previous_token.refresh_token
       )

@@ -1,7 +1,7 @@
 require 'spec_helper_integration'
 
 describe Doorkeeper::AccessGrant do
-  subject { FactoryGirl.build(:access_grant) }
+  subject { FactoryBot.build(:access_grant) }
 
   it { expect(subject).to be_valid }
 

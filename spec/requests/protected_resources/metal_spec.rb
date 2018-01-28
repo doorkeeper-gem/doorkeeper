@@ -2,7 +2,7 @@ require 'spec_helper_integration'
 
 describe 'ActionController::Metal API' do
   before do
-    @client   = FactoryGirl.create(:application)
+    @client   = FactoryBot.create(:application)
     @resource = User.create!(name: 'Joe', password: 'sekret')
     @token    = client_is_authorized(@client, @resource)
   end

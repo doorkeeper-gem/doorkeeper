@@ -4,7 +4,7 @@ module AccessTokenRequestHelper
       application: client,
       resource_owner_id: resource_owner.id
     }.merge(access_token_attributes)
-    FactoryGirl.create(:access_token, attributes)
+    FactoryBot.create(:access_token, attributes)
   end
 end
 

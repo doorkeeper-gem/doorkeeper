@@ -2,7 +2,7 @@ require 'spec_helper_integration'
 
 module Doorkeeper
   describe AccessToken do
-    subject { FactoryGirl.build(:access_token) }
+    subject { FactoryBot.build(:access_token) }
 
     it { expect(subject).to be_valid }
 
@@ -19,9 +19,9 @@ module Doorkeeper
 
     describe :generate_token do
       it 'generates a token using the default method' do
-        FactoryGirl.create :access_token
+        FactoryBot.create :access_token
 
-        token = FactoryGirl.create :access_token
+        token = FactoryBot.create :access_token
         expect(token.token).to be_a(String)
       end
 
@@ -41,7 +41,7 @@ module Doorkeeper
           access_token_generator "Doorkeeper::CustomGeneratorArgs"
         end
 
-        token = FactoryGirl.create :access_token
+        token = FactoryBot.create :access_token
         expect(token.token).to match(%r{custom_generator_token_\d+})
       end
 
@@ -61,7 +61,7 @@ module Doorkeeper
           access_token_generator "Doorkeeper::CustomGeneratorArgs"
         end
 
-        token = FactoryGirl.create :access_token
+        token = FactoryBot.create :access_token
         expect(token.token).to match(%r{custom_generator_token_Application \d+})
       end
 
@@ -81,7 +81,7 @@ module Doorkeeper
           access_token_generator "Doorkeeper::CustomGeneratorArgs"
         end
 
-        token = FactoryGirl.create :access_token, scopes: 'public write'
+        token = FactoryBot.create :access_token, scopes: 'public write'
 
         expect(token.token).to eq 'custom_generator_token_2_public write'
       end
@@ -102,7 +102,7 @@ module Doorkeeper
           access_token_generator "Doorkeeper::CustomGeneratorArgs"
         end
 
-        token = FactoryGirl.create :access_token
+        token = FactoryBot.create :access_token
         expect(token.token).to eq 'custom_generator_token_7200'
       end
 
@@ -118,7 +118,7 @@ module Doorkeeper
           access_token_generator "Doorkeeper::CustomGeneratorArgs"
         end
 
-        token = FactoryGirl.create :access_token
+        token = FactoryBot.create :access_token
         created_at = token.created_at
         expect(token.token).to eq "custom_generator_token_#{created_at.to_i}"
       end
@@ -132,7 +132,7 @@ module Doorkeeper
           access_token_generator "Doorkeeper::NoGenerate"
         end
 
-        expect { FactoryGirl.create :access_token }.to(
+        expect { FactoryBot.create :access_token }.to(
           raise_error(Doorkeeper::Errors::UnableToGenerateToken))
       end
 
@@ -142,32 +142,32 @@ module Doorkeeper
           access_token_generator "Doorkeeper::NotReal"
         end
 
-        expect { FactoryGirl.create :access_token }.to(
+        expect { FactoryBot.create :access_token }.to(
           raise_error(Doorkeeper::Errors::TokenGeneratorNotFound))
       end
     end
 
     describe :refresh_token do
       it 'has empty refresh token if it was not required' do
-        token = FactoryGirl.create :access_token
+        token = FactoryBot.create :access_token
         expect(token.refresh_token).to be_nil
       end
 
       it 'generates a refresh token if it was requested' do
-        token = FactoryGirl.create :access_token, use_refresh_token: true
+        token = FactoryBot.create :access_token, use_refresh_token: true
         expect(token.refresh_token).not_to be_nil
       end
 
       it 'is not valid if token exists' do
-        token1 = FactoryGirl.create :access_token, use_refresh_token: true
-        token2 = FactoryGirl.create :access_token, use_refresh_token: true
+        token1 = FactoryBot.create :access_token, use_refresh_token: true
+        token2 = FactoryBot.create :access_token, use_refresh_token: true
         token2.refresh_token = token1.refresh_token
         expect(token2).not_to be_valid
       end
 
       it 'expects database to raise an error if refresh tokens are the same' do
-        token1 = FactoryGirl.create :access_token, use_refresh_token: true
-        token2 = FactoryGirl.create :access_token, use_refresh_token: true
+        token1 = FactoryBot.create :access_token, use_refresh_token: true
+        token2 = FactoryBot.create :access_token, use_refresh_token: true
         expect do
           token2.refresh_token = token1.refresh_token
           token2.save(validate: false)
@@ -194,22 +194,22 @@ module Doorkeeper
       context 'with default parameters' do
 
         let(:resource_owner_id) { 100 }
-        let(:application)    { FactoryGirl.create :application }
+        let(:application)    { FactoryBot.create :application }
         let(:default_attributes) do
           { application: application, resource_owner_id: resource_owner_id }
         end
-        let(:access_token1) { FactoryGirl.create :access_token, default_attributes }
+        let(:access_token1) { FactoryBot.create :access_token, default_attributes }
 
         context 'the second token has the same owner and same app' do
-          let(:access_token2) { FactoryGirl.create :access_token, default_attributes }
+          let(:access_token2) { FactoryBot.create :access_token, default_attributes }
           it 'success' do
             expect(access_token1.same_credential?(access_token2)).to be_truthy
           end
         end
 
         context 'the second token has same owner and different app' do
-          let(:other_application) { FactoryGirl.create :application }
-          let(:access_token2) { FactoryGirl.create :access_token, application: other_application, resource_owner_id: resource_owner_id }
+          let(:other_application) { FactoryBot.create :application }
+          let(:access_token2) { FactoryBot.create :access_token, application: other_application, resource_owner_id: resource_owner_id }
 
           it 'fail' do
             expect(access_token1.same_credential?(access_token2)).to be_falsey
@@ -218,8 +218,8 @@ module Doorkeeper
 
         context 'the second token has different owner and different app' do
 
-          let(:other_application) { FactoryGirl.create :application }
-          let(:access_token2) { FactoryGirl.create :access_token, application: other_application, resource_owner_id: 42 }
+          let(:other_application) { FactoryBot.create :application }
+          let(:access_token2) { FactoryBot.create :access_token, application: other_application, resource_owner_id: 42 }
 
           it 'fail' do
             expect(access_token1.same_credential?(access_token2)).to be_falsey
@@ -227,7 +227,7 @@ module Doorkeeper
         end
 
         context 'the second token has different owner and same app' do
-          let(:access_token2) { FactoryGirl.create :access_token, application: application, resource_owner_id: 42 }
+          let(:access_token2) { FactoryBot.create :access_token, application: application, resource_owner_id: 42 }
 
           it 'fail' do
             expect(access_token1.same_credential?(access_token2)).to be_falsey
@@ -238,7 +238,7 @@ module Doorkeeper
 
     describe '#acceptable?' do
       context 'a token that is not accessible' do
-        let(:token) { FactoryGirl.create(:access_token, created_at: 6.hours.ago) }
+        let(:token) { FactoryBot.create(:access_token, created_at: 6.hours.ago) }
 
         it 'should return false' do
           expect(token.acceptable?(nil)).to be false
@@ -246,7 +246,7 @@ module Doorkeeper
       end
 
       context 'a token that has the incorrect scopes' do
-        let(:token) { FactoryGirl.create(:access_token) }
+        let(:token) { FactoryBot.create(:access_token) }
 
         it 'should return false' do
           expect(token.acceptable?(['public'])).to be false
@@ -255,7 +255,7 @@ module Doorkeeper
 
       context 'a token is acceptable with the correct scopes' do
         let(:token) do
-          token = FactoryGirl.create(:access_token)
+          token = FactoryBot.create(:access_token)
           token[:scopes] = 'public'
           token
         end
@@ -268,13 +268,13 @@ module Doorkeeper
 
     describe '.revoke_all_for' do
       let(:resource_owner) { double(id: 100) }
-      let(:application)    { FactoryGirl.create :application }
+      let(:application)    { FactoryBot.create :application }
       let(:default_attributes) do
         { application: application, resource_owner_id: resource_owner.id }
       end
 
       it 'revokes all tokens for given application and resource owner' do
-        FactoryGirl.create :access_token, default_attributes
+        FactoryBot.create :access_token, default_attributes
         AccessToken.revoke_all_for application.id, resource_owner
         AccessToken.all.each do |token|
           expect(token).to be_revoked
@@ -282,13 +282,13 @@ module Doorkeeper
       end
 
       it 'matches application' do
-        FactoryGirl.create :access_token, default_attributes.merge(application: FactoryGirl.create(:application))
+        FactoryBot.create :access_token, default_attributes.merge(application: FactoryBot.create(:application))
         AccessToken.revoke_all_for application.id, resource_owner
         expect(AccessToken.all).not_to be_empty
       end
 
       it 'matches resource owner' do
-        FactoryGirl.create :access_token, default_attributes.merge(resource_owner_id: 90)
+        FactoryBot.create :access_token, default_attributes.merge(resource_owner_id: 90)
         AccessToken.revoke_all_for application.id, resource_owner
         expect(AccessToken.all).not_to be_empty
       end
@@ -296,7 +296,7 @@ module Doorkeeper
 
     describe '.matching_token_for' do
       let(:resource_owner_id) { 100 }
-      let(:application)       { FactoryGirl.create :application }
+      let(:application)       { FactoryBot.create :application }
       let(:scopes) { Doorkeeper::OAuth::Scopes.from_string('public write') }
       let(:default_attributes) do
         {
@@ -307,63 +307,63 @@ module Doorkeeper
       end
 
       it 'returns only one token' do
-        token = FactoryGirl.create :access_token, default_attributes
+        token = FactoryBot.create :access_token, default_attributes
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to eq(token)
       end
 
       it 'accepts resource owner as object' do
         resource_owner = double(to_key: true, id: 100)
-        token = FactoryGirl.create :access_token, default_attributes
+        token = FactoryBot.create :access_token, default_attributes
         last_token = AccessToken.matching_token_for(application, resource_owner, scopes)
         expect(last_token).to eq(token)
       end
 
       it 'accepts nil as resource owner' do
-        token = FactoryGirl.create :access_token, default_attributes.merge(resource_owner_id: nil)
+        token = FactoryBot.create :access_token, default_attributes.merge(resource_owner_id: nil)
         last_token = AccessToken.matching_token_for(application, nil, scopes)
         expect(last_token).to eq(token)
       end
 
       it 'excludes revoked tokens' do
-        FactoryGirl.create :access_token, default_attributes.merge(revoked_at: 1.day.ago)
+        FactoryBot.create :access_token, default_attributes.merge(revoked_at: 1.day.ago)
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
       end
 
       it 'matches the application' do
-        FactoryGirl.create :access_token, default_attributes.merge(application: FactoryGirl.create(:application))
+        FactoryBot.create :access_token, default_attributes.merge(application: FactoryBot.create(:application))
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
       end
 
       it 'matches the resource owner' do
-        FactoryGirl.create :access_token, default_attributes.merge(resource_owner_id: 2)
+        FactoryBot.create :access_token, default_attributes.merge(resource_owner_id: 2)
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
       end
 
       it 'matches token with fewer scopes' do
-        FactoryGirl.create :access_token, default_attributes.merge(scopes: 'public')
+        FactoryBot.create :access_token, default_attributes.merge(scopes: 'public')
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
       end
 
       it 'matches token with different scopes' do
-        FactoryGirl.create :access_token, default_attributes.merge(scopes: 'public email')
+        FactoryBot.create :access_token, default_attributes.merge(scopes: 'public email')
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
       end
 
       it 'matches token with more scopes' do
-        FactoryGirl.create :access_token, default_attributes.merge(scopes: 'public write email')
+        FactoryBot.create :access_token, default_attributes.merge(scopes: 'public write email')
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
       end
 
       it 'matches application scopes' do
-        application = FactoryGirl.create :application, scopes: "private read"
-        FactoryGirl.create :access_token, default_attributes.merge(
+        application = FactoryBot.create :application, scopes: "private read"
+        FactoryBot.create :access_token, default_attributes.merge(
           application: application
         )
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
@@ -371,14 +371,14 @@ module Doorkeeper
       end
 
       it 'returns the last created token' do
-        FactoryGirl.create :access_token, default_attributes.merge(created_at: 1.day.ago)
-        token = FactoryGirl.create :access_token, default_attributes
+        FactoryBot.create :access_token, default_attributes.merge(created_at: 1.day.ago)
+        token = FactoryBot.create :access_token, default_attributes
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to eq(token)
       end
 
       it 'returns as_json hash' do
-        token = FactoryGirl.create :access_token, default_attributes
+        token = FactoryBot.create :access_token, default_attributes
         token_hash = {
           resource_owner_id:  token.resource_owner_id,
           scopes:             token.scopes,

@@ -4,7 +4,7 @@ module Doorkeeper
   describe Application do
     let(:require_owner) { Doorkeeper.configuration.instance_variable_set('@confirm_application_owner', true) }
     let(:unset_require_owner) { Doorkeeper.configuration.instance_variable_set('@confirm_application_owner', false) }
-    let(:new_application) { FactoryGirl.build(:application) }
+    let(:new_application) { FactoryBot.build(:application) }
 
     let(:uid) { SecureRandom.hex(8) }
     let(:secret) { SecureRandom.hex(8) }
@@ -30,7 +30,7 @@ module Doorkeeper
       context 'application owner is required' do
         before(:each) do
           require_owner
-          @owner = FactoryGirl.build_stubbed(:doorkeeper_testing_user)
+          @owner = FactoryBot.build_stubbed(:doorkeeper_testing_user)
         end
 
         it 'is invalid without an owner' do
@@ -80,15 +80,15 @@ module Doorkeeper
     end
 
     it 'checks uniqueness of uid' do
-      app1 = FactoryGirl.create(:application)
-      app2 = FactoryGirl.create(:application)
+      app1 = FactoryBot.create(:application)
+      app2 = FactoryBot.create(:application)
       app2.uid = app1.uid
       expect(app2).not_to be_valid
     end
 
     it 'expects database to throw an error when uids are the same' do
-      app1 = FactoryGirl.create(:application)
-      app2 = FactoryGirl.create(:application)
+      app1 = FactoryBot.create(:application)
+      app2 = FactoryBot.create(:application)
       app2.uid = app1.uid
       expect { app2.save!(validate: false) }.to raise_error(uniqueness_error)
     end
@@ -123,13 +123,13 @@ module Doorkeeper
       end
 
       it 'should destroy its access grants' do
-        FactoryGirl.create(:access_grant, application: new_application)
+        FactoryBot.create(:access_grant, application: new_application)
         expect { new_application.destroy }.to change { Doorkeeper::AccessGrant.count }.by(-1)
       end
 
       it 'should destroy its access tokens' do
-        FactoryGirl.create(:access_token, application: new_application)
-        FactoryGirl.create(:access_token, application: new_application, revoked_at: Time.now.utc)
+        FactoryBot.create(:access_token, application: new_application)
+        FactoryBot.create(:access_token, application: new_application, revoked_at: Time.now.utc)
         expect do
           new_application.destroy
         end.to change { Doorkeeper::AccessToken.count }.by(-2)
@@ -144,33 +144,33 @@ module Doorkeeper
       end
 
       it 'returns only application for a specific resource owner' do
-        FactoryGirl.create(:access_token, resource_owner_id: resource_owner.id + 1)
-        token = FactoryGirl.create(:access_token, resource_owner_id: resource_owner.id)
+        FactoryBot.create(:access_token, resource_owner_id: resource_owner.id + 1)
+        token = FactoryBot.create(:access_token, resource_owner_id: resource_owner.id)
         expect(Application.authorized_for(resource_owner)).to eq([token.application])
       end
 
       it 'excludes revoked tokens' do
-        FactoryGirl.create(:access_token, resource_owner_id: resource_owner.id, revoked_at: 2.days.ago)
+        FactoryBot.create(:access_token, resource_owner_id: resource_owner.id, revoked_at: 2.days.ago)
         expect(Application.authorized_for(resource_owner)).to be_empty
       end
 
       it 'returns all applications that have been authorized' do
-        token1 = FactoryGirl.create(:access_token, resource_owner_id: resource_owner.id)
-        token2 = FactoryGirl.create(:access_token, resource_owner_id: resource_owner.id)
+        token1 = FactoryBot.create(:access_token, resource_owner_id: resource_owner.id)
+        token2 = FactoryBot.create(:access_token, resource_owner_id: resource_owner.id)
         expect(Application.authorized_for(resource_owner)).to eq([token1.application, token2.application])
       end
 
       it 'returns only one application even if it has been authorized twice' do
-        application = FactoryGirl.create(:application)
-        FactoryGirl.create(:access_token, resource_owner_id: resource_owner.id, application: application)
-        FactoryGirl.create(:access_token, resource_owner_id: resource_owner.id, application: application)
+        application = FactoryBot.create(:application)
+        FactoryBot.create(:access_token, resource_owner_id: resource_owner.id, application: application)
+        FactoryBot.create(:access_token, resource_owner_id: resource_owner.id, application: application)
         expect(Application.authorized_for(resource_owner)).to eq([application])
       end
     end
 
     describe :authenticate do
       it 'finds the application via uid/secret' do
-        app = FactoryGirl.create :application
+        app = FactoryBot.create :application
         authenticated = Application.by_uid_and_secret(app.uid, app.secret)
         expect(authenticated).to eq(app)
       end

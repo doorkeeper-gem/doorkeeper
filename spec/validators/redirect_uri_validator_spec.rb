@@ -2,7 +2,7 @@ require 'spec_helper_integration'
 
 describe RedirectUriValidator do
   subject do
-    FactoryGirl.create(:application)
+    FactoryBot.create(:application)
   end
 
   it 'is valid when the uri is a uri' do
