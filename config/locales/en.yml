@@ -28,7 +28,7 @@ en:
         error: 'Whoops! Check your form for possible errors'
       help:
         redirect_uri: 'Use one line per URI'
-        native_redirect_uri: 'Use %{native_redirect_uri} for local tests'
+        native_redirect_uri: 'Use %{native_redirect_uri} if you want to add localhost URIs for development purposes'
         scopes: 'Separate scopes with spaces. Leave blank to use the default scopes.'
       edit:
         title: 'Edit application'

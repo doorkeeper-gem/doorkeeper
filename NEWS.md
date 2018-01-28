@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 - [#948] Make Scopes.<=> work with any "other" value.
 - [#970] Escape certain attributes in authorization forms.
 - [#974] Redirect URI is checked without query params within AuthorizationCodeRequest.
+- [#1004] More explicit help text for `native_redirect_uri`.
 - [#1023] Update Ruby versions and test against 2.5.0 on Travis CI.
 - [#1024] Migrate from FactoryGirl to FactoryBot.
 
