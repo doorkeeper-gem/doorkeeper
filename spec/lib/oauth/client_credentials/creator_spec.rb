@@ -2,7 +2,7 @@ require 'spec_helper_integration'
 
 class Doorkeeper::OAuth::ClientCredentialsRequest
   describe Creator do
-    let(:client) { FactoryGirl.create :application }
+    let(:client) { FactoryBot.create :application }
     let(:scopes) { Doorkeeper::OAuth::Scopes.from_string('public') }
 
     it 'creates a new token' do

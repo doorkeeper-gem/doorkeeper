@@ -37,7 +37,7 @@ describe 'Refresh Token Flow' do
 
   context 'refreshing the token' do
     before do
-      @token = FactoryGirl.create(
+      @token = FactoryBot.create(
         :access_token,
         application: @client,
         resource_owner_id: 1,
@@ -130,7 +130,7 @@ describe 'Refresh Token Flow' do
       )
       last_token.update_attribute :created_at, 5.seconds.ago
 
-      @token = FactoryGirl.create(
+      @token = FactoryBot.create(
         :access_token,
         application: @client,
         resource_owner_id: @resource_owner.id,

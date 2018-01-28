@@ -1,7 +1,7 @@
 require 'spec_helper_integration'
 
 describe 'Client Credentials Request' do
-  let(:client) { FactoryGirl.create :application }
+  let(:client) { FactoryBot.create :application }
 
   context 'a valid request' do
     it 'authorizes the client and returns the token response' do

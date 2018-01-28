@@ -2,7 +2,7 @@ require 'spec_helper_integration'
 
 describe Doorkeeper::TokenInfoController do
   describe 'when requesting tokeninfo with valid token' do
-    let(:doorkeeper_token) { FactoryGirl.create(:access_token) }
+    let(:doorkeeper_token) { FactoryBot.create(:access_token) }
 
     before(:each) do
       allow(controller).to receive(:doorkeeper_token) { doorkeeper_token }

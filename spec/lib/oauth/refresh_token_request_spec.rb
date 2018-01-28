@@ -11,7 +11,7 @@ module Doorkeeper::OAuth
              custom_access_token_expires_in: -> (_oauth_client) { nil }
     end
     let(:refresh_token) do
-      FactoryGirl.create(:access_token, use_refresh_token: true)
+      FactoryBot.create(:access_token, use_refresh_token: true)
     end
     let(:client) { refresh_token.application }
     let(:credentials) { Client::Credentials.new(client.uid, client.secret) }
@@ -52,7 +52,7 @@ module Doorkeeper::OAuth
     end
 
     it "requires the token's client and current client to match" do
-      subject.client = FactoryGirl.create(:application)
+      subject.client = FactoryBot.create(:application)
       subject.validate
       expect(subject.error).to eq(:invalid_grant)
     end
@@ -99,7 +99,7 @@ module Doorkeeper::OAuth
     end
 
     context 'clientless access tokens' do
-      let!(:refresh_token) { FactoryGirl.create(:clientless_access_token, use_refresh_token: true) }
+      let!(:refresh_token) { FactoryBot.create(:clientless_access_token, use_refresh_token: true) }
 
       subject { RefreshTokenRequest.new server, refresh_token, nil }
 
@@ -110,7 +110,7 @@ module Doorkeeper::OAuth
 
     context 'with scopes' do
       let(:refresh_token) do
-        FactoryGirl.create :access_token,
+        FactoryBot.create :access_token,
                            use_refresh_token: true,
                            scopes: 'public write'
       end

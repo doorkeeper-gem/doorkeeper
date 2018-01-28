@@ -34,15 +34,15 @@ shared_examples 'a unique token' do
     end
 
     it 'is not valid if token exists' do
-      token1 = FactoryGirl.create factory_name
-      token2 = FactoryGirl.create factory_name
+      token1 = FactoryBot.create factory_name
+      token2 = FactoryBot.create factory_name
       token2.token = token1.token
       expect(token2).not_to be_valid
     end
 
     it 'expects database to throw an error when tokens are the same' do
-      token1 = FactoryGirl.create factory_name
-      token2 = FactoryGirl.create factory_name
+      token1 = FactoryBot.create factory_name
+      token2 = FactoryBot.create factory_name
       token2.token = token1.token
       expect do
         token2.save!(validate: false)

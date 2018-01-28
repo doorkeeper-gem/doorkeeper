@@ -8,7 +8,7 @@ module Doorkeeper::OAuth
              refresh_token_enabled?: false,
              custom_access_token_expires_in: ->(_app) { nil }
     end
-    let(:grant)  { FactoryGirl.create :access_grant }
+    let(:grant)  { FactoryBot.create :access_grant }
     let(:client) { grant.application }
     let(:redirect_uri) { client.redirect_uri }
     let(:params) { { redirect_uri: redirect_uri } }
@@ -65,14 +65,14 @@ module Doorkeeper::OAuth
     end
 
     it "matches the client with grant's one" do
-      subject.client = FactoryGirl.create :application
+      subject.client = FactoryBot.create :application
       subject.validate
       expect(subject.error).to eq(:invalid_grant)
     end
 
     it 'skips token creation if there is a matching one' do
       allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
-      FactoryGirl.create(:access_token, application_id: client.id,
+      FactoryBot.create(:access_token, application_id: client.id,
         resource_owner_id: grant.resource_owner_id, scopes: grant.scopes.to_s)
       expect do
         subject.authorize
