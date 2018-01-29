@@ -28,7 +28,7 @@ module Doorkeeper
       #   if there is no record with such credentials
       #
       def by_uid_and_secret(uid, secret)
-        find_by(uid: uid.to_s, secret: secret.to_s)
+        where(uid: uid.to_s, secret: secret.to_s).first
       end
 
       # Returns an instance of the Doorkeeper::Application with specific UID.
@@ -39,7 +39,7 @@ module Doorkeeper
       #   if there is no record with such UID
       #
       def by_uid(uid)
-        find_by(uid: uid.to_s)
+        where(uid: uid.to_s).first
       end
     end
 
