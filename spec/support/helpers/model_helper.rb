@@ -57,7 +57,11 @@ module ModelHelper
     when :mongo_mapper
       MongoMapper::DocumentNotValid
     when /mongoid/
-      Mongoid::Errors::Validations
+      error_classes = [Mongoid::Errors::Validations]
+      error_classes << Moped::Errors::OperationFailure if defined?(::Moped) # Mongoid 4
+      error_classes << Mongo::Error::OperationFailure if defined?(::Mongo) # Mongoid 5
+
+      proc { |error| expect(error.class).to be_in(error_classes) }
     else
       raise "'#{DOORKEEPER_ORM}' ORM is not supported!"
     end
