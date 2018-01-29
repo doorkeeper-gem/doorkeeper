@@ -45,11 +45,7 @@ module Doorkeeper
       end
 
       def +(other)
-        if other.is_a? Scopes
-          self.class.from_array(all + other.all)
-        else
-          super(other)
-        end
+        self.class.from_array(all + to_array(other))
       end
 
       def <=>(other)
@@ -61,8 +57,18 @@ module Doorkeeper
       end
 
       def &(other)
-        other_array = other.present? ? other.all : []
-        self.class.from_array(all & other_array)
+        self.class.from_array(all & to_array(other))
+      end
+
+      private
+
+      def to_array(other)
+        case other
+        when Scopes
+          other.all
+        else
+          other.to_a
+        end
       end
     end
   end
