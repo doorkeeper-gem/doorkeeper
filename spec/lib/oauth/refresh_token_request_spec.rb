@@ -5,14 +5,17 @@ module Doorkeeper::OAuth
     before do
       allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
     end
+
     let(:server) do
       double :server,
              access_token_expires_in: 2.minutes,
              custom_access_token_expires_in: -> (_oauth_client) { nil }
     end
+
     let(:refresh_token) do
       FactoryBot.create(:access_token, use_refresh_token: true)
     end
+
     let(:client) { refresh_token.application }
     let(:credentials) { Client::Credentials.new(client.uid, client.secret) }
 
@@ -20,7 +23,7 @@ module Doorkeeper::OAuth
 
     it 'issues a new token for the client' do
       expect { subject.authorize }.to change { client.reload.access_tokens.count }.by(1)
-      expect(client.reload.access_tokens.last.expires_in).to eq(120)
+      expect(client.reload.access_tokens.order(id: :asc).last.expires_in).to eq(120)
     end
 
     it 'issues a new token for the client with custom expires_in' do
@@ -32,7 +35,7 @@ module Doorkeeper::OAuth
 
       RefreshTokenRequest.new(server, refresh_token, credentials).authorize
 
-      expect(client.reload.access_tokens.last.expires_in).to eq(1234)
+      expect(client.reload.access_tokens.order(id: :asc).last.expires_in).to eq(1234)
     end
 
     it 'revokes the previous token' do
@@ -93,7 +96,7 @@ module Doorkeeper::OAuth
       it 'sets the previous refresh token in the new access token' do
         subject.authorize
         expect(
-          client.access_tokens.last.previous_refresh_token
+          client.access_tokens.order(id: :asc).last.previous_refresh_token
         ).to eq(refresh_token.refresh_token)
       end
     end
