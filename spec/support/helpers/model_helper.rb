@@ -55,7 +55,8 @@ module ModelHelper
       error_classes = [Sequel::UniqueConstraintViolation, Sequel::ValidationFailed]
       proc { |error| expect(error.class).to be_in(error_classes) }
     when :mongo_mapper
-      MongoMapper::DocumentNotValid
+      error_classes = [MongoMapper::DocumentNotValid, Mongo::OperationFailure]
+      proc { |error| expect(error.class).to be_in(error_classes) }
     when /mongoid/
       error_classes = [Mongoid::Errors::Validations]
       error_classes << Moped::Errors::OperationFailure if defined?(::Moped) # Mongoid 4

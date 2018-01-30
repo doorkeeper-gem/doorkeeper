@@ -13,14 +13,9 @@ module Doorkeeper::OAuth
         created_at:         0
     end
 
-    let(:client) do
-      double :client,
-        id: '1'
-    end
+    let(:client) { double :client, id: '1' }
 
-    let(:scopes_array) do
-      %w(public write)
-    end
+    let(:scopes_array) { %w(public write) }
 
     let(:server) do
       double :server,

@@ -2,9 +2,7 @@ require 'spec_helper_integration'
 
 describe Doorkeeper::TokensController do
   describe 'when authorization has succeeded' do
-    let :token do
-      double(:token, authorize: true)
-    end
+    let(:token) { double(:token, authorize: true) }
 
     before do
       allow(controller).to receive(:token) { token }

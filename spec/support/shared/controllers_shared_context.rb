@@ -1,7 +1,5 @@
 shared_context 'valid token', token: :valid do
-  let :token_string do
-    '1A2B3C4D'
-  end
+  let(:token_string) { '1A2B3C4D' }
 
   let :token do
     double(Doorkeeper::AccessToken,
@@ -17,9 +15,7 @@ shared_context 'valid token', token: :valid do
 end
 
 shared_context 'invalid token', token: :invalid do
-  let :token_string do
-    '1A2B3C4D'
-  end
+  let(:token_string) { '1A2B3C4D' }
 
   let :token do
     double(Doorkeeper::AccessToken,

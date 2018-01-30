@@ -32,9 +32,7 @@ module Doorkeeper::OAuth
 
     it 'does not create grant when not authorizable' do
       allow(pre_auth).to receive(:authorizable?).and_return(false)
-      expect do
-        subject.authorize
-      end.to_not change { Doorkeeper::AccessGrant.count }
+      expect { subject.authorize }.not_to change { Doorkeeper::AccessGrant.count }
     end
 
     it 'returns a error response' do

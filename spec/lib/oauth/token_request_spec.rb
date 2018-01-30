@@ -6,6 +6,7 @@ module Doorkeeper::OAuth
       scopes = double(all: ['public'])
       double(:application, id: 9990, scopes: scopes)
     end
+
     let :pre_auth do
       double(
         :pre_auth,
@@ -38,9 +39,7 @@ module Doorkeeper::OAuth
 
     it 'does not create token when not authorizable' do
       allow(pre_auth).to receive(:authorizable?).and_return(false)
-      expect do
-        subject.authorize
-      end.to_not change { Doorkeeper::AccessToken.count }
+      expect { subject.authorize }.not_to change { Doorkeeper::AccessToken.count }
     end
 
     it 'returns a error response' do
@@ -86,12 +85,11 @@ module Doorkeeper::OAuth
         allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
         allow(application.scopes).to receive(:has_scopes?).and_return(true)
         allow(application.scopes).to receive(:all?).and_return(true)
+
         FactoryBot.create(:access_token, application_id: pre_auth.client.id,
                            resource_owner_id: owner.id, scopes: 'public')
 
-        expect do
-          subject.authorize
-        end.to_not change { Doorkeeper::AccessToken.count }
+        expect { subject.authorize }.not_to change { Doorkeeper::AccessToken.count }
       end
     end
   end

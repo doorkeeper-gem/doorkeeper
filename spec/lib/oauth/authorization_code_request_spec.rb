@@ -8,6 +8,7 @@ module Doorkeeper::OAuth
              refresh_token_enabled?: false,
              custom_access_token_expires_in: ->(_app) { nil }
     end
+
     let(:grant)  { FactoryBot.create :access_grant }
     let(:client) { grant.application }
     let(:redirect_uri) { client.redirect_uri }
