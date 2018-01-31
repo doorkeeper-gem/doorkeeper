@@ -11,17 +11,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160320211015) do
+ActiveRecord::Schema.define(version: 20170822064514) do
 
   create_table "oauth_access_grants", force: :cascade do |t|
-    t.integer  "resource_owner_id", null: false
-    t.integer  "application_id",    null: false
-    t.string   "token",             null: false
-    t.integer  "expires_in",        null: false
-    t.text     "redirect_uri",      null: false
-    t.datetime "created_at",        null: false
+    t.integer  "resource_owner_id",     null: false
+    t.integer  "application_id",        null: false
+    t.string   "token",                 null: false
+    t.integer  "expires_in",            null: false
+    t.text     "redirect_uri",          null: false
+    t.datetime "created_at",            null: false
     t.datetime "revoked_at"
     t.string   "scopes"
+    t.string   "code_challenge"
+    t.string   "code_challenge_method"
   end
 
   add_index "oauth_access_grants", ["token"], name: "index_oauth_access_grants_on_token", unique: true
@@ -48,8 +50,8 @@ ActiveRecord::Schema.define(version: 20160320211015) do
     t.string   "secret",                    null: false
     t.text     "redirect_uri",              null: false
     t.string   "scopes",       default: "", null: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at",                null: false
+    t.datetime "updated_at",                null: false
     t.integer  "owner_id"
     t.string   "owner_type"
   end

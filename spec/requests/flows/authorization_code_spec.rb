@@ -39,6 +39,7 @@ feature 'Authorization Code Flow' do
     click_on 'Authorize'
     url_should_have_param('code', Doorkeeper::AccessGrant.first.token)
     url_should_have_param('state', 'return-me')
+    url_should_not_have_param('code_challenge_method')
   end
 
   scenario 'resource owner requests an access token with authorization code' do
@@ -55,6 +56,124 @@ feature 'Authorization Code Flow' do
     should_have_json 'access_token', Doorkeeper::AccessToken.first.token
     should_have_json 'token_type', 'bearer'
     should_have_json_within 'expires_in', Doorkeeper::AccessToken.first.expires_in, 1
+  end
+
+  context 'with PKCE' do
+    scenario 'resource owner authorizes the client with code_challenge parameter set' do
+      code_verifier = 'a45a9fea-0676-477e-95b1-a40f72ac3cfb'
+      visit pkce_authorization_endpoint_url(client: @client, code_challenge: code_verifier)
+      click_on 'Authorize'
+
+      url_should_have_param('code', Doorkeeper::AccessGrant.first.token)
+      url_should_have_param('code_challenge_method', 'plain')
+    end
+
+    scenario 'resource owner requests an access token with authorization code but not pkce token' do
+      visit authorization_endpoint_url(client: @client)
+      click_on 'Authorize'
+
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      code_verifier = SecureRandom.uuid
+      create_access_token_with_pkce authorization_code, @client, code_verifier
+
+      should_have_json 'error', 'invalid_grant'
+    end
+
+    scenario 'resource owner requests an access token with authorization code and plain code challenge method' do
+      code_verifier = 'a45a9fea-0676-477e-95b1-a40f72ac3cfb'
+
+      visit pkce_authorization_endpoint_url(client: @client, code_challenge: code_verifier)
+      click_on 'Authorize'
+
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      create_access_token_with_pkce authorization_code, @client, code_verifier
+
+      access_token_should_exist_for(@client, @resource_owner)
+
+      should_not_have_json 'error'
+
+      should_have_json 'access_token', Doorkeeper::AccessToken.first.token
+      should_have_json 'token_type', 'bearer'
+      should_have_json_within 'expires_in', Doorkeeper::AccessToken.first.expires_in, 1
+    end
+
+    scenario 'resource owner requests an access token with authorization code and S256 code challenge method' do
+      code_verifier = 'a45a9fea-0676-477e-95b1-a40f72ac3cfb'
+      challenge = Doorkeeper::AccessGrant.generate_code_challenge(code_verifier)
+
+      visit pkce_authorization_endpoint_url(client: @client,
+                                       code_challenge: challenge,
+                                       code_challenge_method: 'S256')
+      click_on 'Authorize'
+
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      create_access_token_with_pkce authorization_code, @client, code_verifier
+
+      access_token_should_exist_for(@client, @resource_owner)
+
+      should_not_have_json 'error'
+
+      should_have_json 'access_token', Doorkeeper::AccessToken.first.token
+      should_have_json 'token_type', 'bearer'
+      should_have_json_within 'expires_in', Doorkeeper::AccessToken.first.expires_in, 1
+    end
+
+    scenario 'resource owner requests an access token with authorization code but no code verifier' do
+      code_verifier = 'a45a9fea-0676-477e-95b1-a40f72ac3cfb'
+      challenge = Doorkeeper::AccessGrant.generate_code_challenge(code_verifier)
+
+      visit pkce_authorization_endpoint_url(client: @client,
+                                       code_challenge: challenge,
+                                       code_challenge_method: 'S256')
+      click_on 'Authorize'
+
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      create_access_token_with_pkce authorization_code, @client
+
+      should_not_have_json 'access_token'
+      should_have_json 'error', 'invalid_request'
+    end
+
+    scenario 'resource owner requests an access token with authorization code and code_challenge' do
+      code_verifier = 'a45a9fea-0676-477e-95b1-a40f72ac3cfb'
+      visit pkce_authorization_endpoint_url(client: @client,
+                                            code_challenge: code_verifier,
+                                            code_challenge_method: 'plain')
+      click_on 'Authorize'
+
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      puts Doorkeeper::AccessGrant.first.inspect
+      create_access_token_with_pkce authorization_code, @client, code_verifier: nil
+
+      should_not_have_json 'access_token'
+      should_have_json 'error', 'invalid_grant'
+    end
+
+    scenario 'resource owner requests an access token with authorization code with wrong verifier' do
+      challenge = Doorkeeper::AccessGrant.generate_code_challenge('a45a9fea-0676-477e-95b1-a40f72ac3cfb')
+      visit pkce_authorization_endpoint_url(client: @client,
+                                       code_challenge: challenge,
+                                       code_challenge_method: 'S256')
+      click_on 'Authorize'
+
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      create_access_token_with_pkce authorization_code, @client, 'incorrect-code-verifier'
+
+      should_not_have_json 'access_token'
+      should_have_json 'error', 'invalid_grant'
+    end
+
+    scenario 'resource owner requests an access token with authorization code with missing challenge method' do
+      challenge = Doorkeeper::AccessGrant.generate_code_challenge('a45a9fea-0676-477e-95b1-a40f72ac3cfb')
+      visit pkce_authorization_endpoint_url(client: @client, code_challenge: challenge)
+      click_on 'Authorize'
+
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      create_access_token_with_pkce authorization_code, @client, 'incorrect-code-verifier'
+
+      should_not_have_json 'access_token'
+      should_have_json 'error', 'invalid_grant'
+    end
   end
 
   context 'with scopes' do
