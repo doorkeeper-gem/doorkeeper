@@ -4,6 +4,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#972] Replace Struct subclassing with block-form initialization
 - [#1003] Use URL query param to pass through native redirect auth code so automated apps can find it.
 - [#868] `Scopes#&` and `Scopes#+` now take an array or any other enumerable
   object.
