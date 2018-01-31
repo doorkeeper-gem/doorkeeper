@@ -3,7 +3,7 @@ require 'spec_helper_integration'
 describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
   include AuthorizationRequestHelper
 
-  if Rails::VERSION::MAJOR == 5
+  if Rails::VERSION::MAJOR >= 5
     class ActionDispatch::TestResponse
       def query_params
         @_query_params ||= begin

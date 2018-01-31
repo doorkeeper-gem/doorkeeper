@@ -11,7 +11,7 @@ describe 'Token endpoint' do
     should_have_header 'Pragma', 'no-cache'
 
     # Rails 5.2 changed headers
-    if ::Rails::VERSION::MAJOR >= 5 && ::Rails::VERSION::MINOR >= 2
+    if ::Rails::VERSION::MAJOR >= 5 && ::Rails::VERSION::MINOR >= 2 || ::Rails::VERSION::MAJOR >= 6
       should_have_header 'Cache-Control', 'private, no-store'
     else
       should_have_header 'Cache-Control', 'no-store'
