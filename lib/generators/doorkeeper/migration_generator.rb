@@ -7,8 +7,8 @@ class Doorkeeper::MigrationGenerator < ::Rails::Generators::Base
 
   def install
     migration_template(
-      'migration.rb',
-      'db/migrate/create_doorkeeper_tables.rb',
+      "migration.rb.erb",
+      "db/migrate/create_doorkeeper_tables.rb",
       migration_version: migration_version
     )
   end
