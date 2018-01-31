@@ -1,15 +1,19 @@
 require 'spec_helper_integration'
-require 'generators/doorkeeper/migration_generator'
+require 'generators/doorkeeper/previous_refresh_token_generator'
 
-describe 'Doorkeeper::MigrationGenerator' do
+describe 'Doorkeeper::PreviousRefreshTokenGenerator' do
   include GeneratorSpec::TestCase
 
-  tests Doorkeeper::MigrationGenerator
+  tests Doorkeeper::PreviousRefreshTokenGenerator
   destination ::File.expand_path('../tmp/dummy', __FILE__)
 
   describe 'after running the generator' do
     before :each do
       prepare_destination
+
+      allow_any_instance_of(Doorkeeper::PreviousRefreshTokenGenerator).to(
+        receive(:no_previous_refresh_token_column?).and_return(true)
+      )
     end
 
     context 'pre Rails 5.0.0' do
@@ -19,7 +23,7 @@ describe 'Doorkeeper::MigrationGenerator' do
 
         run_generator
 
-        assert_migration 'db/migrate/create_doorkeeper_tables.rb' do |migration|
+        assert_migration 'db/migrate/add_previous_refresh_token_to_access_tokens.rb' do |migration|
           assert migration.include?("ActiveRecord::Migration\n")
         end
       end
@@ -32,7 +36,7 @@ describe 'Doorkeeper::MigrationGenerator' do
 
         run_generator
 
-        assert_migration 'db/migrate/create_doorkeeper_tables.rb' do |migration|
+        assert_migration 'db/migrate/add_previous_refresh_token_to_access_tokens.rb' do |migration|
           assert migration.include?("ActiveRecord::Migration[5.0]\n")
         end
       end

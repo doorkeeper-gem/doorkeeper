@@ -7,7 +7,7 @@ class Doorkeeper::MigrationGenerator < ::Rails::Generators::Base
 
   def install
     migration_template(
-      'migration.rb',
+      'migration.rb.erb',
       'db/migrate/create_doorkeeper_tables.rb',
       migration_version: migration_version
     )
@@ -17,9 +17,11 @@ class Doorkeeper::MigrationGenerator < ::Rails::Generators::Base
     ActiveRecord::Generators::Base.next_migration_number(dirname)
   end
 
+  private
+
   def migration_version
-    if Rails.version >= "5.0.0"
-      "[#{Rails::VERSION::MAJOR}.#{Rails::VERSION::MINOR}]"
+    if ActiveRecord::VERSION::MAJOR >= 5
+      "[#{ActiveRecord::VERSION::MAJOR}.#{ActiveRecord::VERSION::MINOR}]"
     end
   end
 end
