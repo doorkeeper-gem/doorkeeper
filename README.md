@@ -9,8 +9,16 @@
 Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider
 functionality to your Rails or Grape application.
 
-[PR 567]: https://github.com/doorkeeper-gem/doorkeeper/pull/567
+Supported features:
 
+- [The OAuth 2.0 Authorization Framework](https://tools.ietf.org/html/rfc6749)
+  - [Authorization Code Flow](http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-4.1)
+  - [Access Token Scopes](http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-3.3)
+  - [Refresh token](http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-1.5)
+  - [Implicit grant](http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-4.2)
+  - [Resource Owner Password Credentials](http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-4.3)
+  - [Client Credentials](http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-4.4)
+- [OAuth 2.0 Token Revocation](http://tools.ietf.org/html/rfc7009)
 
 ## Documentation valid for `master` branch
 
@@ -29,8 +37,10 @@ https://github.com/doorkeeper-gem/doorkeeper/releases
 
 - [Installation](#installation)
 - [Configuration](#configuration)
-  - [Active Record](#active-record)
-  - [Other ORMs](#other-orms)
+  - [ORM](#orm)
+    - [Active Record](#active-record)
+    - [MongoDB](#mongodb)
+    - [Sequel](#sequel)
   - [Routes](#routes)
   - [Authenticating](#authenticating)
   - [Internationalization (I18n)](#internationalization-i18n)
@@ -71,7 +81,9 @@ This will install the doorkeeper initializer into `config/initializers/doorkeepe
 
 ## Configuration
 
-### Active Record
+### ORM
+
+#### Active Record
 
 By default doorkeeper is configured to use active record, so to start you have
 to generate the migration tables:
@@ -92,12 +104,14 @@ Then run migrations:
 rake db:migrate
 ```
 
-### Other ORMs
+#### MongoDB
 
 See [doorkeeper-mongodb project] for Mongoid and MongoMapper support. Follow along
 the implementation in that repository to extend doorkeeper with other ORMs.
 
 [doorkeeper-mongodb project]: https://github.com/doorkeeper-gem/doorkeeper-mongodb
+
+#### Sequel
 
 If you are using [Sequel gem] then you can add [doorkeeper-sequel extension] to your project.
 Follow configuration instructions for setting up the necessary Doorkeeper ORM.
@@ -119,7 +133,7 @@ end
 
 This will mount following routes:
 
-    GET       /oauth/authorize/:code
+    GET       /oauth/authorize/native?code
     GET       /oauth/authorize
     POST      /oauth/authorize
     DELETE    /oauth/authorize
