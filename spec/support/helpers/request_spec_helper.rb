@@ -31,6 +31,10 @@ module RequestSpecHelper
     respond_to?(:response) ? response : page.driver.response
   end
 
+  def json_response
+    JSON.parse(request_response.body)
+  end
+
   def should_have_header(header, value)
     expect(headers[header]).to eq(value)
   end
@@ -48,15 +52,15 @@ module RequestSpecHelper
   end
 
   def should_have_json(key, value)
-    expect(JSON.parse(request_response.body).fetch(key)).to eq(value)
+    expect(json_response.fetch(key)).to eq(value)
   end
 
   def should_have_json_within(key, value, range)
-    expect(JSON.parse(request_response.body).fetch(key)).to be_within(range).of(value)
+    expect(json_response.fetch(key)).to be_within(range).of(value)
   end
 
   def should_not_have_json(key)
-    expect(JSON.parse(request_response.body)).not_to have_key(key)
+    expect(json_response).not_to have_key(key)
   end
 
   def sign_in

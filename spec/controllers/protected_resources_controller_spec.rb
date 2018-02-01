@@ -9,11 +9,9 @@ module ControllerActions
     render plain: 'show'
   end
 
-  def doorkeeper_unauthorized_render_options(*)
-  end
+  def doorkeeper_unauthorized_render_options(*); end
 
-  def doorkeeper_forbidden_render_options(*)
-  end
+  def doorkeeper_forbidden_render_options(*); end
 end
 
 describe 'doorkeeper authorize filter' do
@@ -116,6 +114,7 @@ describe 'doorkeeper authorize filter' do
       expect(
         Doorkeeper::AccessToken
       ).to receive(:by_token).with(token_string).and_return(token)
+
       get :index, access_token: token_string
       expect(response).to be_successful
     end
@@ -129,6 +128,7 @@ describe 'doorkeeper authorize filter' do
         Doorkeeper::AccessToken
       ).to receive(:by_token).with(token_string).and_return(token)
       expect(token).to receive(:acceptable?).with([:write]).and_return(false)
+
       get :index, access_token: token_string
       expect(response.status).to eq 403
       expect(response.header).to_not include('WWW-Authenticate')
@@ -146,14 +146,17 @@ describe 'doorkeeper authorize filter' do
       before do
         module ControllerActions
           remove_method :doorkeeper_unauthorized_render_options
+
           def doorkeeper_unauthorized_render_options(error: nil)
             { json: ActiveSupport::JSON.encode(error_message: error.description) }
           end
         end
       end
+
       after do
         module ControllerActions
           remove_method :doorkeeper_unauthorized_render_options
+
           def doorkeeper_unauthorized_render_options(error: nil)
           end
         end
@@ -164,9 +167,9 @@ describe 'doorkeeper authorize filter' do
         expect(response.status).to eq 401
         expect(response.content_type).to eq('application/json')
         expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
-        parsed_body = JSON.parse(response.body)
-        expect(parsed_body).not_to be_nil
-        expect(parsed_body['error_message']).to match('token is invalid')
+
+        expect(json_response).not_to be_nil
+        expect(json_response['error_message']).to match('token is invalid')
       end
     end
 
@@ -174,14 +177,17 @@ describe 'doorkeeper authorize filter' do
       before do
         module ControllerActions
           remove_method :doorkeeper_unauthorized_render_options
+
           def doorkeeper_unauthorized_render_options(error: nil)
             { plain: 'Unauthorized' }
           end
         end
       end
+
       after do
         module ControllerActions
           remove_method :doorkeeper_unauthorized_render_options
+
           def doorkeeper_unauthorized_render_options(error: nil)
           end
         end
@@ -206,8 +212,8 @@ describe 'doorkeeper authorize filter' do
     after do
       module ControllerActions
         remove_method :doorkeeper_forbidden_render_options
-        def doorkeeper_forbidden_render_options(*)
-        end
+
+        def doorkeeper_forbidden_render_options(*); end
       end
     end
 
@@ -223,12 +229,14 @@ describe 'doorkeeper authorize filter' do
              expired?: false, previous_refresh_token: "",
              revoke_previous_refresh_token!: true)
     end
+
     let(:token_string) { '1A2DUWE' }
 
     context 'with a JSON custom render' do
       before do
         module ControllerActions
           remove_method :doorkeeper_forbidden_render_options
+
           def doorkeeper_forbidden_render_options(*)
             { json: { error_message: 'Forbidden' } }
           end
@@ -240,9 +248,9 @@ describe 'doorkeeper authorize filter' do
         expect(response.header).to_not include('WWW-Authenticate')
         expect(response.content_type).to eq('application/json')
         expect(response.status).to eq 403
-        parsed_body = JSON.parse(response.body)
-        expect(parsed_body).not_to be_nil
-        expect(parsed_body['error_message']).to match('Forbidden')
+
+        expect(json_response).not_to be_nil
+        expect(json_response['error_message']).to match('Forbidden')
       end
     end
 
@@ -267,6 +275,7 @@ describe 'doorkeeper authorize filter' do
       before do
         module ControllerActions
           remove_method :doorkeeper_forbidden_render_options
+
           def doorkeeper_forbidden_render_options(*)
             { plain: 'Forbidden' }
           end
@@ -285,6 +294,7 @@ describe 'doorkeeper authorize filter' do
       before do
         module ControllerActions
           remove_method :doorkeeper_forbidden_render_options
+
           def doorkeeper_forbidden_render_options(*)
             { respond_not_found_when_forbidden: true, plain: 'Not Found' }
           end
