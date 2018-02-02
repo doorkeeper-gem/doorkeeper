@@ -247,7 +247,11 @@ module Doorkeeper
     def generate_token
       self.created_at ||= Time.now.utc
 
-      generator = Doorkeeper.configuration.access_token_generator.constantize
+      generator = token_generator
+      unless generator.respond_to?(:generate)
+        raise Errors::UnableToGenerateToken, "#{generator} does not respond to `.generate`."
+      end
+
       self.token = generator.generate(
         resource_owner_id: resource_owner_id,
         scopes: scopes,
@@ -255,10 +259,13 @@ module Doorkeeper
         expires_in: expires_in,
         created_at: created_at
       )
-    rescue NoMethodError
-      raise Errors::UnableToGenerateToken, "#{generator} does not respond to `.generate`."
+    end
+
+    def token_generator
+      generator_name = Doorkeeper.configuration.access_token_generator
+      generator_name.constantize
     rescue NameError
-      raise Errors::TokenGeneratorNotFound, "#{generator} not found"
+      raise Errors::TokenGeneratorNotFound, "#{generator_name} not found"
     end
   end
 end

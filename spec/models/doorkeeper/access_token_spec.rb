@@ -133,7 +133,30 @@ module Doorkeeper
         end
 
         expect { FactoryBot.create :access_token }.to(
-          raise_error(Doorkeeper::Errors::UnableToGenerateToken))
+          raise_error(Doorkeeper::Errors::UnableToGenerateToken)
+        )
+      end
+
+      it 'raises original error if something went wrong in custom generator' do
+        eigenclass = class << CustomGeneratorArgs; self; end
+        eigenclass.class_eval do
+          remove_method :generate
+        end
+
+        module CustomGeneratorArgs
+          def self.generate(opts = {})
+            raise LoadError, 'custom behaviour'
+          end
+        end
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_token_generator "Doorkeeper::CustomGeneratorArgs"
+        end
+
+        expect { FactoryBot.create :access_token }.to(
+          raise_error(LoadError)
+        )
       end
 
       it 'raises an error if the custom object does not exist' do
@@ -143,7 +166,8 @@ module Doorkeeper
         end
 
         expect { FactoryBot.create :access_token }.to(
-          raise_error(Doorkeeper::Errors::TokenGeneratorNotFound))
+          raise_error(Doorkeeper::Errors::TokenGeneratorNotFound, /NotReal/)
+        )
       end
     end
 
