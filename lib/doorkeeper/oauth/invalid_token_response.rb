@@ -4,10 +4,9 @@ module Doorkeeper
       attr_reader :reason
 
       def self.from_access_token(access_token, attributes = {})
-        reason = case
-                 when access_token.try(:revoked?)
+        reason = if access_token.try(:revoked?)
                    :revoked
-                 when access_token.try(:expired?)
+                 elsif access_token.try(:expired?)
                    :expired
                  else
                    :unknown

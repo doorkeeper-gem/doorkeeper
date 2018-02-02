@@ -83,4 +83,140 @@ describe Doorkeeper::TokensController do
       post :create
     end
   end
+
+  describe 'when requested token introspection' do
+    context 'authorized using Bearer token' do
+      let(:client) { FactoryBot.create(:application) }
+      let(:access_token) { FactoryBot.create(:access_token, application: client) }
+
+      it 'responds with full token introspection' do
+        request.headers['Authorization'] = "Bearer #{access_token.token}"
+
+        post :introspect, token: access_token.token
+
+        should_have_json 'active', true
+        expect(json_response).to include('client_id', 'token_type', 'exp', 'iat')
+      end
+    end
+
+    context 'authorized using Client Authentication' do
+      let(:client) { FactoryBot.create(:application) }
+      let(:access_token) { FactoryBot.create(:access_token, application: client) }
+
+      it 'responds with full token introspection' do
+        request.headers['Authorization'] = basic_auth_header_for_client(client)
+
+        post :introspect, token: access_token.token
+
+        should_have_json 'active', true
+        expect(json_response).to include('client_id', 'token_type', 'exp', 'iat')
+        should_have_json 'client_id', client.uid
+      end
+    end
+
+    context 'public access token' do
+      let(:client) { FactoryBot.create(:application) }
+      let(:access_token) { FactoryBot.create(:access_token, application: nil) }
+
+      it 'responds with full token introspection' do
+        request.headers['Authorization'] = basic_auth_header_for_client(client)
+
+        post :introspect, token: access_token.token
+
+        should_have_json 'active', true
+        expect(json_response).to include('client_id', 'token_type', 'exp', 'iat')
+        should_have_json 'client_id', nil
+      end
+    end
+
+    context 'token was issued to a different client than is making this request' do
+      let(:client) { FactoryBot.create(:application) }
+      let(:different_client) { FactoryBot.create(:application) }
+      let(:access_token) { FactoryBot.create(:access_token, application: client) }
+
+      it 'responds with only active state' do
+        request.headers['Authorization'] = basic_auth_header_for_client(different_client)
+
+        post :introspect, token: access_token.token
+
+        expect(response).to be_successful
+
+        should_have_json 'active', false
+        expect(json_response).not_to include('client_id', 'token_type', 'exp', 'iat')
+      end
+    end
+
+    context 'using invalid credentials to authorize' do
+      let(:client) { double(uid: '123123', secret: '666999') }
+      let(:access_token) { FactoryBot.create(:access_token) }
+
+      it 'responds with invalid_client error' do
+        request.headers['Authorization'] = basic_auth_header_for_client(client)
+
+        post :introspect, token: access_token.token
+
+        expect(response).not_to be_successful
+        response_status_should_be 401
+
+        should_not_have_json 'active'
+        should_have_json 'error', 'invalid_client'
+      end
+    end
+
+    context 'using wrong token value' do
+      let(:client) { FactoryBot.create(:application) }
+      let(:access_token) { FactoryBot.create(:access_token, application: client) }
+
+      it 'responds with only active state' do
+        request.headers['Authorization'] = basic_auth_header_for_client(client)
+
+        post :introspect, token: SecureRandom.hex(16)
+
+        should_have_json 'active', false
+        expect(json_response).not_to include('client_id', 'token_type', 'exp', 'iat')
+      end
+    end
+
+    context 'when requested Access Token expired' do
+      let(:client) { FactoryBot.create(:application) }
+      let(:access_token) { FactoryBot.create(:access_token, application: client, created_at: 1.year.ago) }
+
+      it 'responds with only active state' do
+        request.headers['Authorization'] = basic_auth_header_for_client(client)
+
+        post :introspect, token: access_token.token
+
+        should_have_json 'active', false
+        expect(json_response).not_to include('client_id', 'token_type', 'exp', 'iat')
+      end
+    end
+
+    context 'when requested Access Token revoked' do
+      let(:client) { FactoryBot.create(:application) }
+      let(:access_token) { FactoryBot.create(:access_token, application: client, revoked_at: 1.year.ago) }
+
+      it 'responds with only active state' do
+        request.headers['Authorization'] = basic_auth_header_for_client(client)
+
+        post :introspect, token: access_token.token
+
+        should_have_json 'active', false
+        expect(json_response).not_to include('client_id', 'token_type', 'exp', 'iat')
+      end
+    end
+
+    context 'unauthorized (no bearer token or client credentials)' do
+      let(:access_token) { FactoryBot.create(:access_token) }
+
+      it 'responds with invalid_request error' do
+        post :introspect, token: access_token.token
+
+        expect(response).not_to be_successful
+        response_status_should_be 401
+
+        should_not_have_json 'active'
+        should_have_json 'error', 'invalid_request'
+      end
+    end
+  end
 end

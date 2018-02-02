@@ -62,7 +62,7 @@ module Doorkeeper::OAuth
     describe '#+' do
       it 'can add to another scope object' do
         scopes = Scopes.from_string('public') + Scopes.from_string('admin')
-        expect(scopes.all).to eq(%w(public admin))
+        expect(scopes.all).to eq(%w[public admin])
       end
 
       it 'does not change the existing object' do
@@ -72,7 +72,7 @@ module Doorkeeper::OAuth
 
       it 'can add an array to a scope object' do
         scopes = Scopes.from_string('public') + ['admin']
-        expect(scopes.all).to eq(%w(public admin))
+        expect(scopes.all).to eq(%w[public admin])
       end
 
       it 'raises an error if cannot handle addition' do
@@ -85,7 +85,7 @@ module Doorkeeper::OAuth
     describe '#&' do
       it 'can get intersection with another scope object' do
         scopes = Scopes.from_string('public admin') & Scopes.from_string('write admin')
-        expect(scopes.all).to eq(%w(admin))
+        expect(scopes.all).to eq(%w[admin])
       end
 
       it 'does not change the existing object' do
@@ -95,8 +95,8 @@ module Doorkeeper::OAuth
       end
 
       it 'can get intersection with an array' do
-        scopes = Scopes.from_string('public admin') & %w(write admin)
-        expect(scopes.all).to eq(%w(admin))
+        scopes = Scopes.from_string('public admin') & %w[write admin]
+        expect(scopes.all).to eq(%w[admin])
       end
     end
 

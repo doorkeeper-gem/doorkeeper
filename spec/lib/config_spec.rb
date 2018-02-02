@@ -216,13 +216,13 @@ describe Doorkeeper, 'configuration' do
   describe "grant_flows" do
     it "is set to all grant flows by default" do
       expect(Doorkeeper.configuration.grant_flows).
-        to eq(%w(authorization_code client_credentials))
+        to eq(%w[authorization_code client_credentials])
     end
 
     it "can change the value" do
       Doorkeeper.configure {
         orm DOORKEEPER_ORM
-        grant_flows [ 'authorization_code', 'implicit' ]
+        grant_flows ['authorization_code', 'implicit']
       }
       expect(subject.grant_flows).to eq ['authorization_code', 'implicit']
     end

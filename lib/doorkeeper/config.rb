@@ -242,7 +242,7 @@ doorkeeper.
     option :active_record_options,          default: {}
     option :realm,                          default: 'Doorkeeper'
     option :force_ssl_in_redirect_uri,      default: !Rails.env.development?
-    option :grant_flows,                    default: %w(authorization_code client_credentials)
+    option :grant_flows,                    default: %w[authorization_code client_credentials]
     option :access_token_generator,
            default: 'Doorkeeper::OAuth::Helpers::UniqueToken'
     option :base_controller,
@@ -278,11 +278,11 @@ doorkeeper.
     end
 
     def client_credentials_methods
-      @client_credentials ||= [:from_basic, :from_params]
+      @client_credentials ||= %i[from_basic from_params]
     end
 
     def access_token_methods
-      @access_token_methods ||= [:from_bearer_authorization, :from_access_token_param, :from_bearer_param]
+      @access_token_methods ||= %i[from_bearer_authorization from_access_token_param from_bearer_param]
     end
 
     def authorization_response_types

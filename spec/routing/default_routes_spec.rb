@@ -21,6 +21,10 @@ describe 'Default routes' do
     expect(post('/oauth/revoke')).to route_to('doorkeeper/tokens#revoke')
   end
 
+  it 'POST /oauth/introspect routes to tokens controller' do
+    expect(post('/oauth/introspect')).to route_to('doorkeeper/tokens#introspect')
+  end
+
   it 'GET /oauth/applications routes to applications controller' do
     expect(get('/oauth/applications')).to route_to('doorkeeper/applications#index')
   end
@@ -29,7 +33,7 @@ describe 'Default routes' do
     expect(get('/oauth/authorized_applications')).to route_to('doorkeeper/authorized_applications#index')
   end
 
-  it 'GET /oauth/token/info route to authorzed tokeninfo controller' do
+  it 'GET /oauth/token/info route to authorized tokeninfo controller' do
     expect(get('/oauth/token/info')).to route_to('doorkeeper/token_info#show')
   end
 end

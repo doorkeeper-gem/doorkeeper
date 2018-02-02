@@ -4,7 +4,7 @@ module Doorkeeper
       def description
         I18n.translate(
           name,
-          scope: [:doorkeeper, :errors, :messages],
+          scope: %i[doorkeeper errors messages],
           default: :server_error
         )
       end

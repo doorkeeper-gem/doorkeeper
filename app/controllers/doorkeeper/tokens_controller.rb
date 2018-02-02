@@ -4,7 +4,7 @@ module Doorkeeper
       response = authorize_response
       headers.merge! response.headers
       self.response_body = response.body.to_json
-      self.status        = response.status
+      self.status = response.status
     rescue Errors::DoorkeeperError => e
       handle_token_exception e
     end
@@ -25,6 +25,18 @@ module Doorkeeper
       # has been revoked successfully or if the client submitted an invalid
       # token
       render json: {}, status: 200
+    end
+
+    def introspect
+      introspection = OAuth::TokenIntrospection.new(server, token)
+
+      if introspection.authorized?
+        render json: introspection.to_json, status: 200
+      else
+        error = OAuth::ErrorResponse.new(name: introspection.error)
+        response.headers.merge!(error.headers)
+        render json: error.body, status: error.status
+      end
     end
 
     private

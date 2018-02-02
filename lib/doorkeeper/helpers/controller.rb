@@ -5,11 +5,13 @@ module Doorkeeper
     module Controller
       private
 
-      def authenticate_resource_owner! # :doc:
+      # :doc:
+      def authenticate_resource_owner!
         current_resource_owner
       end
 
-      def current_resource_owner # :doc:
+      # :doc:
+      def current_resource_owner
         instance_eval(&Doorkeeper.configuration.authenticate_resource_owner)
       end
 
@@ -17,7 +19,8 @@ module Doorkeeper
         instance_eval(&Doorkeeper.configuration.resource_owner_from_credentials)
       end
 
-      def authenticate_admin! # :doc:
+      # :doc:
+      def authenticate_admin!
         instance_eval(&Doorkeeper.configuration.authenticate_admin)
       end
 
@@ -25,7 +28,8 @@ module Doorkeeper
         @server ||= Server.new(self)
       end
 
-      def doorkeeper_token # :doc:
+      # :doc:
+      def doorkeeper_token
         @token ||= OAuth::Token.authenticate request, *config_methods
       end
 
