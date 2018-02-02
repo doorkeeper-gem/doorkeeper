@@ -107,7 +107,7 @@ describe 'doorkeeper authorize filter' do
 
     it 'allows if the token has particular scopes' do
       token = double(Doorkeeper::AccessToken,
-                     accessible?: true, scopes: %w(write public),
+                     accessible?: true, scopes: %w[write public],
                      previous_refresh_token: "",
                      revoke_previous_refresh_token!: true)
       expect(token).to receive(:acceptable?).with([:write]).and_return(true)

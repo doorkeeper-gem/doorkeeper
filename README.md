@@ -19,6 +19,7 @@ Supported features:
   - [Resource Owner Password Credentials](http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-4.3)
   - [Client Credentials](http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-4.4)
 - [OAuth 2.0 Token Revocation](http://tools.ietf.org/html/rfc7009)
+- [OAuth 2.0 Token Introspection](https://tools.ietf.org/html/rfc7662)
 
 ## Documentation valid for `master` branch
 
@@ -139,6 +140,7 @@ This will mount following routes:
     DELETE    /oauth/authorize
     POST      /oauth/token
     POST      /oauth/revoke
+    POST      /oauth/introspect
     resources /oauth/applications
     GET       /oauth/authorized_applications
     DELETE    /oauth/authorized_applications/:id

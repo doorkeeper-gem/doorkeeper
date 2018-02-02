@@ -30,6 +30,7 @@ require 'doorkeeper/oauth/code_request'
 require 'doorkeeper/oauth/token_request'
 require 'doorkeeper/oauth/client'
 require 'doorkeeper/oauth/token'
+require 'doorkeeper/oauth/token_introspection'
 require 'doorkeeper/oauth/invalid_token_response'
 require 'doorkeeper/oauth/forbidden_token_response'
 

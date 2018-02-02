@@ -5,6 +5,7 @@ module Doorkeeper
 
       def authorize
         validate
+
         if valid?
           before_successful_response
           @response = TokenResponse.new(access_token)
@@ -37,14 +38,13 @@ module Doorkeeper
           resource_owner_id,
           scopes,
           Authorization::Token.access_token_expires_in(server, client),
-          server.refresh_token_enabled?)
+          server.refresh_token_enabled?
+        )
       end
 
-      def before_successful_response
-      end
+      def before_successful_response; end
 
-      def after_successful_response
-      end
+      def after_successful_response; end
     end
   end
 end

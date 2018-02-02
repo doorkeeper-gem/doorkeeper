@@ -4,6 +4,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1026] Implement RFC7662 - OAuth 2.0 Token Introspection
 - [#985] Generate valid migration files for Rails >= 5 
 - [#972] Replace Struct subclassing with block-form initialization
 - [#1003] Use URL query param to pass through native redirect auth code so automated apps can find it.

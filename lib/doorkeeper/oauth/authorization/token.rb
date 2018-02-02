@@ -4,17 +4,31 @@ module Doorkeeper
       class Token
         attr_accessor :pre_auth, :resource_owner, :token
 
+        class << self
+          def access_token_expires_in(server, pre_auth_or_oauth_client)
+            if (expiration = custom_expiration(server, pre_auth_or_oauth_client))
+              expiration
+            else
+              server.access_token_expires_in
+            end
+          end
+
+          private
+
+          def custom_expiration(server, pre_auth_or_oauth_client)
+            oauth_client = if pre_auth_or_oauth_client.respond_to?(:client)
+                             pre_auth_or_oauth_client.client
+                           else
+                             pre_auth_or_oauth_client
+                           end
+
+            server.custom_access_token_expires_in.call(oauth_client)
+          end
+        end
+
         def initialize(pre_auth, resource_owner)
           @pre_auth       = pre_auth
           @resource_owner = resource_owner
-        end
-
-        def self.access_token_expires_in(server, pre_auth_or_oauth_client)
-          if expiration = custom_expiration(server, pre_auth_or_oauth_client)
-            expiration
-          else
-            server.access_token_expires_in
-          end
         end
 
         def issue_token
@@ -36,16 +50,6 @@ module Doorkeeper
         end
 
         private
-
-        def self.custom_expiration(server, pre_auth_or_oauth_client)
-          oauth_client = if pre_auth_or_oauth_client.respond_to?(:client)
-                           pre_auth_or_oauth_client.client
-                         else
-                           pre_auth_or_oauth_client
-                         end
-
-          server.custom_access_token_expires_in.call(oauth_client)
-        end
 
         def configuration
           Doorkeeper.configuration
