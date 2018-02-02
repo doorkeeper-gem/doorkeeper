@@ -111,4 +111,17 @@ Doorkeeper.configure do
 
   # WWW-Authenticate Realm (default "Doorkeeper").
   # realm "Doorkeeper"
+
+  # Specify how authorization errors should be handled.
+  # By default, doorkeeper renders json errors when access token
+  # is invalid, expired, revoked or has invalid scopes.
+  #
+  # If you want to render error response yourself, set
+  # handle_auth_errors = :raise
+  # and rescue Doorkeeper::Errors::InvalidToken
+  # or following specific errors:
+  # Doorkeeper::Errors::TokenForbidden, Doorkeeper::Errors::TokenExpired,
+  # Doorkeeper::Errors::TokenRevoked, Doorkeeper::Errors::TokenUnknown
+  #
+  # handle_auth_errors = :raise
 end

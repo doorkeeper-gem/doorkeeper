@@ -36,10 +36,13 @@ module Doorkeeper
       end
     end
 
-    class UnableToGenerateToken < DoorkeeperError
-    end
+    UnableToGenerateToken = Class.new DoorkeeperError
+    TokenGeneratorNotFound = Class.new DoorkeeperError
 
-    class TokenGeneratorNotFound < DoorkeeperError
-    end
+    InvalidToken = Class.new DoorkeeperError
+    TokenExpired = Class.new InvalidToken
+    TokenRevoked = Class.new InvalidToken
+    TokenUnknown = Class.new InvalidToken
+    TokenForbidden = Class.new InvalidToken
   end
 end

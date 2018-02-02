@@ -23,6 +23,8 @@ module Doorkeeper
 
       def doorkeeper_render_error
         error = doorkeeper_error
+        Doorkeeper::ExceptionRaiser.new(error).raise_if_handled
+
         headers.merge! error.headers.reject { |k| "Content-Type" == k }
         doorkeeper_render_error_with(error)
       end

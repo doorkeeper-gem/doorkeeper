@@ -3,6 +3,7 @@ require 'doorkeeper/engine'
 require 'doorkeeper/config'
 
 require 'doorkeeper/errors'
+require 'doorkeeper/exception_raiser'
 require 'doorkeeper/server'
 require 'doorkeeper/request'
 require 'doorkeeper/validations'
