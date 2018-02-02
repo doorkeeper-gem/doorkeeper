@@ -12,6 +12,7 @@ User-visible changes worth mentioning.
 - [#1004] More explicit help text for `native_redirect_uri`.
 - [#1023] Update Ruby versions and test against 2.5.0 on Travis CI.
 - [#1024] Migrate from FactoryGirl to FactoryBot.
+- [#1025] Improve documentation for adding foreign keys
 
 ## 4.2.5
 
