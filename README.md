@@ -87,13 +87,13 @@ add_foreign_key :table_name, :users, column: :resource_owner_id
 ```
 
 Remember to add associations to your model so the related records are deleted.
-If you don't do this a `ActiveRecord::InvalidForeignKey`-error will be raised
-when you try to delete a model with related access grants or access tokens.
+If you don't do this an `ActiveRecord::InvalidForeignKey`-error will be raised
+when you try to destroy a model with related access grants or access tokens.
 
 ```ruby
 class User < ApplicationRecord
-  has_many :oauth_access_grants, class_name: "Doorkeeper::AccessGrant", foreign_key: :resource_owner_id, dependent: :destroy
-  has_many :oauth_access_tokens, class_name: "Doorkeeper::AccessToken", foreign_key: :resource_owner_id, dependent: :destroy
+  has_many :access_grants, class_name: "Doorkeeper::AccessGrant", foreign_key: :resource_owner_id, dependent: :delete_all # or :destroy if you need callbacks
+  has_many :access_tokens, class_name: "Doorkeeper::AccessToken", foreign_key: :resource_owner_id, dependent: :delete_all # or :destroy if you need callbacks
 end
 ```
 
