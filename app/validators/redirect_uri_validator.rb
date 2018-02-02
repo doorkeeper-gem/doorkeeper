@@ -29,6 +29,12 @@ class RedirectUriValidator < ActiveModel::EachValidator
 
   def invalid_ssl_uri?(uri)
     forces_ssl = Doorkeeper.configuration.force_ssl_in_redirect_uri
-    forces_ssl && uri.try(:scheme) == 'http'
+    allow_non_ssl_localhost = Doorkeeper.configuration.allow_non_secure_localhost_redirects
+    return false if allow_non_ssl_localhost && localhost_uri?(uri)
+    forces_ssl && uri.try(:scheme) == "http"
+  end
+
+  def localhost_uri?(uri)
+    uri.host == "localhost"
   end
 end

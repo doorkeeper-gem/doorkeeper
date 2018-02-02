@@ -68,6 +68,22 @@ describe RedirectUriValidator do
       expect(subject).to be_valid
     end
 
+    it 'accepts non secure localhost redirect when allow non ssl localhost is enabled' do
+      subject.redirect_uri = "http://localhost"
+      allow(Doorkeeper.configuration).to receive(
+        :allow_non_secure_localhost_redirects
+      ).and_return(true)
+      expect(subject).to be_valid
+    end
+
+    it 'does not accept non secure localhost redirects when allow non ssl localhost is diabled'  do
+      subject.redirect_uri = "http://localhost"
+      allow(Doorkeeper.configuration).to receive(
+        :allow_non_secure_localhost_redirects
+      ).and_return(false)
+      expect(subject).not_to be_valid
+    end
+
     it 'invalidates the uri when the uri does not use a secure protocol' do
       subject.redirect_uri = 'http://example.com/callback'
       expect(subject).not_to be_valid
