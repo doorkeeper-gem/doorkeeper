@@ -4,6 +4,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#913] Deferred ORM (ActiveRecord) models loading
 - [#943] Fix Access Token token generation when certain errors occur in custom token generators
 - [#1026] Implement RFC7662 - OAuth 2.0 Token Introspection
 - [#985] Generate valid migration files for Rails >= 5 

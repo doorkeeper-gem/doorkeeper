@@ -1,6 +1,11 @@
 if ENV['TRAVIS']
   require 'coveralls'
-  Coveralls.wear!('rails') { add_filter('/spec/') }
+
+  Coveralls.wear!('rails') do
+    add_filter('/spec/')
+    add_filter('/lib/generators/doorkeeper/templates/')
+    add_filter('/lib/version')
+  end
 end
 
 ENV['RAILS_ENV'] ||= 'test'
