@@ -1,5 +1,6 @@
 require 'bundler/setup'
 require 'rspec/core/rake_task'
+require 'af_gems/gem_tasks'
 
 desc 'Default: run specs.'
 task default: :spec
@@ -17,4 +18,3 @@ namespace :doorkeeper do
   end
 end
 
-Bundler::GemHelper.install_tasks

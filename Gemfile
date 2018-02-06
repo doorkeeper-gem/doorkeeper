@@ -1,5 +1,6 @@
 source "https://rubygems.org"
 
+gem 'af_gems'
 gem 'pry'
 
 gem "rails", "~> 4.2.0"
