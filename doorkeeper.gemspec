@@ -5,12 +5,13 @@ require "doorkeeper/version"
 Gem::Specification.new do |s|
   s.name        = "doorkeeper"
   s.version     = Doorkeeper::VERSION
-  s.authors     = ["Felipe Elias Philipp", "Tute Costa", "Jon Moss"]
+  s.authors     = ["Jonathan Easterman", "Aaron Panchal", "Jack Alexander", "Felipe Elias Philipp", "Tute Costa", "Jon Moss"]
   s.email       = %w(me@jonathanmoss.me)
   s.homepage    = "https://github.com/doorkeeper-gem/doorkeeper"
   s.summary     = "OAuth 2 provider for Rails and Grape"
   s.description = "Doorkeeper is an OAuth 2 provider for Rails and Grape."
   s.license     = 'MIT'
+  s.metadata["allowed_push_host"] = "https://gemini.atl.appfolio.com"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- spec/*`.split("\n")
