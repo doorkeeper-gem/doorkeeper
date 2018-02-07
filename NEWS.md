@@ -4,6 +4,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- Fix Grape integration & add specs for it
 - [#913] Deferred ORM (ActiveRecord) models loading
 - [#943] Fix Access Token token generation when certain errors occur in custom token generators
 - [#1026] Implement RFC7662 - OAuth 2.0 Token Introspection

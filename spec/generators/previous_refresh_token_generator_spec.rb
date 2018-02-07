@@ -41,5 +41,17 @@ describe 'Doorkeeper::PreviousRefreshTokenGenerator' do
         end
       end
     end
+
+    context 'already exist' do
+      it 'does not create a migration' do
+        allow_any_instance_of(Doorkeeper::PreviousRefreshTokenGenerator).to(
+          receive(:no_previous_refresh_token_column?).and_return(false)
+        )
+
+        run_generator
+
+        assert_no_migration 'db/migrate/add_previous_refresh_token_to_access_tokens.rb'
+      end
+    end
   end
 end

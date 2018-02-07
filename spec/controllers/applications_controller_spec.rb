@@ -25,7 +25,7 @@ module Doorkeeper
 
     context 'when admin is authenticated' do
       before do
-        allow(Doorkeeper.configuration).to receive(:authenticate_admin).and_return(->(arg) { true })
+        allow(Doorkeeper.configuration).to receive(:authenticate_admin).and_return(->(*) { true })
       end
 
       it 'creates application' do

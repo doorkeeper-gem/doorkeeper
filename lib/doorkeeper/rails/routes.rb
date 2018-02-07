@@ -5,7 +5,6 @@ module Doorkeeper
   module Rails
     class Routes # :nodoc:
       module Helper
-        # TODO: options hash is not being used
         def use_doorkeeper(options = {}, &block)
           Doorkeeper::Rails::Routes.new(self, &block).generate_routes!(options)
         end

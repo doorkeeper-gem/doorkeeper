@@ -55,7 +55,7 @@ describe Doorkeeper::TokensController do
       }
       expect(response.status).to eq 401
       expect(response.headers['WWW-Authenticate']).to match(/Bearer/)
-      expect(JSON.load(response.body)).to eq expected_response_body
+      expect(JSON.parse(response.body)).to eq expected_response_body
     end
   end
 

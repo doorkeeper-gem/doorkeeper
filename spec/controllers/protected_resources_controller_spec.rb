@@ -178,7 +178,7 @@ describe 'doorkeeper authorize filter' do
         module ControllerActions
           remove_method :doorkeeper_unauthorized_render_options
 
-          def doorkeeper_unauthorized_render_options(error: nil)
+          def doorkeeper_unauthorized_render_options(**)
             { plain: 'Unauthorized' }
           end
         end
@@ -188,8 +188,7 @@ describe 'doorkeeper authorize filter' do
         module ControllerActions
           remove_method :doorkeeper_unauthorized_render_options
 
-          def doorkeeper_unauthorized_render_options(error: nil)
-          end
+          def doorkeeper_unauthorized_render_options(error: nil); end
         end
       end
 

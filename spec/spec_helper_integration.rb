@@ -4,7 +4,13 @@ if ENV['TRAVIS']
   Coveralls.wear!('rails') do
     add_filter('/spec/')
     add_filter('/lib/generators/doorkeeper/templates/')
-    add_filter('/lib/version')
+  end
+else
+  require 'simplecov'
+
+  SimpleCov.start do
+    add_filter('/spec/')
+    add_filter('/lib/generators/doorkeeper/templates/')
   end
 end
 
