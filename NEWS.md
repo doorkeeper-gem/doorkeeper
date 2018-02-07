@@ -8,7 +8,7 @@ User-visible changes worth mentioning.
 - [#913] Deferred ORM (ActiveRecord) models loading
 - [#943] Fix Access Token token generation when certain errors occur in custom token generators
 - [#1026] Implement RFC7662 - OAuth 2.0 Token Introspection
-- [#985] Generate valid migration files for Rails >= 5 
+- [#985] Generate valid migration files for Rails >= 5
 - [#972] Replace Struct subclassing with block-form initialization
 - [#1003] Use URL query param to pass through native redirect auth code so automated apps can find it.
 - [#868] `Scopes#&` and `Scopes#+` now take an array or any other enumerable
@@ -22,6 +22,7 @@ User-visible changes worth mentioning.
 - [#1023] Update Ruby versions and test against 2.5.0 on Travis CI.
 - [#1024] Migrate from FactoryGirl to FactoryBot.
 - [#1025] Improve documentation for adding foreign keys
+- [#1028] Make it possible to have composit strategy names.
 
 ## 4.2.5
 
