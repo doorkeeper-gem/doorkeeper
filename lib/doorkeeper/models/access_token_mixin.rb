@@ -68,11 +68,11 @@ module Doorkeeper
       # @param resource_owner [ActiveRecord::Base]
       #   instance of the Resource Owner model
       #
-      def revoke_all_for(application_id, resource_owner)
+      def revoke_all_for(application_id, resource_owner, clock = Time)
         where(application_id: application_id,
               resource_owner_id: resource_owner.id,
               revoked_at: nil).
-          each(&:revoke)
+          update_all(revoked_at: clock.now.utc)
       end
 
       # Looking for not expired Access Token with a matching set of scopes
