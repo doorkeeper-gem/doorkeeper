@@ -45,5 +45,15 @@ describe Doorkeeper::Server do
       expect(fake_class).to receive(:new).with(subject)
       subject.authorization_request :code
     end
+
+    it 'builds the request with composit strategy name' do
+      allow(Doorkeeper.configuration).
+        to receive(:authorization_response_types).
+        and_return(['id_token token'])
+
+      stub_const 'Doorkeeper::Request::IdTokenToken', fake_class
+      expect(fake_class).to receive(:new).with(subject)
+      subject.authorization_request 'id_token token'
+    end
   end
 end
