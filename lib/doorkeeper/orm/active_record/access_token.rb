@@ -1,5 +1,5 @@
 module Doorkeeper
-  class AccessToken < ActiveRecord::Base
+  class AccessToken < BaseRecord
     self.table_name = "#{table_name_prefix}oauth_access_tokens#{table_name_suffix}".to_sym
 
     include AccessTokenMixin
@@ -31,7 +31,7 @@ module Doorkeeper
 
     # ORM-specific order method.
     def self.order_method
-      :order
+      :ordered_by
     end
 
     def self.refresh_token_revoked_on_use?
@@ -40,7 +40,7 @@ module Doorkeeper
 
     # ORM-specific DESC order for `:created_at` column.
     def self.created_at_desc
-      'created_at desc'
+      :created_at
     end
   end
 end

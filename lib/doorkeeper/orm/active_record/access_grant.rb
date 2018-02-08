@@ -1,5 +1,5 @@
 module Doorkeeper
-  class AccessGrant < ActiveRecord::Base
+  class AccessGrant < BaseRecord
     self.table_name = "#{table_name_prefix}oauth_access_grants#{table_name_suffix}".to_sym
 
     include AccessGrantMixin

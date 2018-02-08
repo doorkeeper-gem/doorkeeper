@@ -24,8 +24,19 @@ module Doorkeeper
     end
 
     context 'when admin is authenticated' do
+      render_views
+
       before do
         allow(Doorkeeper.configuration).to receive(:authenticate_admin).and_return(->(*) { true })
+      end
+
+      it 'sorts applications by created_at' do
+        first_application = FactoryBot.create(:application)
+        second_application = FactoryBot.create(:application)
+        expect(Doorkeeper::Application).to receive(:ordered_by).and_call_original
+        get :index
+        expect(response.body).to have_selector("tbody tr:first-child#application_#{first_application.id}")
+        expect(response.body).to have_selector("tbody tr:last-child#application_#{second_application.id}")
       end
 
       it 'creates application' do
