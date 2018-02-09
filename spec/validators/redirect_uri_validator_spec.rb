@@ -10,6 +10,11 @@ describe RedirectUriValidator do
     expect(subject).to be_valid
   end
 
+  it 'is valid when the uri has a query parameter' do
+    subject.redirect_uri = 'https://example.com/abcd?xyz=123'
+    expect(subject).to be_valid
+  end
+
   it 'accepts native redirect uri' do
     subject.redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
     expect(subject).to be_valid
@@ -37,11 +42,6 @@ describe RedirectUriValidator do
     subject.redirect_uri = 'https://example.com/abcd#xyz'
     expect(subject).not_to be_valid
     expect(subject.errors[:redirect_uri].first).to eq('cannot contain a fragment.')
-  end
-
-  it 'is invalid when the uri has a query parameter' do
-    subject.redirect_uri = 'https://example.com/abcd?xyz=123'
-    expect(subject).to be_valid
   end
 
   context 'force secured uri' do

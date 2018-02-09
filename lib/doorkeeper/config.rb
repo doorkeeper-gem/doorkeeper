@@ -210,10 +210,6 @@ doorkeeper.
 
         public attribute
       end
-
-      def extended(base)
-        base.send(:private, :option)
-      end
     end
 
     extend Option
