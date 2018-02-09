@@ -1,47 +1,57 @@
-class Doorkeeper::AuthorizationsController < Doorkeeper::ApplicationController
-  before_filter :authenticate_resource_owner!
+module Doorkeeper
+  class AuthorizationsController < Doorkeeper::ApplicationController
+    before_action :authenticate_resource_owner!
 
-  def new
-    if authorization.valid?
-      if authorization.access_token_exists?
-        authorization.authorize
-        redirect_to authorization.success_redirect_uri
+    def new
+      if pre_auth.authorizable?
+        if skip_authorization? || matching_token?
+          auth = authorization.authorize
+          redirect_to auth.redirect_uri
+        else
+          render :new
+        end
+      else
+        render :error
       end
-    elsif authorization.redirect_on_error?
-      redirect_to authorization.invalid_redirect_uri
-    else
-      @error = authorization.error_response
-      render :error
     end
-  end
 
-  def create
-    if authorization.authorize
-      redirect_to authorization.success_redirect_uri
-    elsif authorization.redirect_on_error?
-      redirect_to authorization.invalid_redirect_uri
-    else
-      @error = authorization.error_response
-      render :error
+    # TODO: Handle raise invalid authorization
+    def create
+      redirect_or_render authorization.authorize
     end
-  end
 
-  def destroy
-    authorization.deny
-    redirect_to authorization.invalid_redirect_uri
-  end
+    def destroy
+      redirect_or_render authorization.deny
+    end
 
-  private
+    private
 
-  def authorization_params
-    params.has_key?(:authorization) ? params[:authorization] : params
-  end
+    def matching_token?
+      AccessToken.matching_token_for pre_auth.client,
+                                     current_resource_owner.id,
+                                     pre_auth.scopes
+    end
 
-  def client
-    @client ||= Doorkeeper::OAuth::Client.find(authorization_params[:client_id])
-  end
+    def redirect_or_render(auth)
+      if auth.redirectable?
+        redirect_to auth.redirect_uri
+      else
+        render json: auth.body, status: auth.status
+      end
+    end
 
-  def authorization
-    @authorization ||= Doorkeeper::OAuth::AuthorizationRequest.new(client, current_resource_owner, authorization_params)
+    def pre_auth
+      @pre_auth ||= OAuth::PreAuthorization.new(Doorkeeper.configuration,
+                                                server.client_via_uid,
+                                                params)
+    end
+
+    def authorization
+      @authorization ||= strategy.request
+    end
+
+    def strategy
+      @strategy ||= server.authorization_request pre_auth.response_type
+    end
   end
 end

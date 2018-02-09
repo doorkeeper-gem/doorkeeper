@@ -1,48 +1,37 @@
-require 'doorkeeper/oauth/error'
-require 'doorkeeper/oauth/error_response'
-require 'doorkeeper/oauth/scopes'
 require 'doorkeeper/oauth/client_credentials/creator'
 require 'doorkeeper/oauth/client_credentials/issuer'
-require 'doorkeeper/oauth/client_credentials/response'
 require 'doorkeeper/oauth/client_credentials/validation'
 
 module Doorkeeper
   module OAuth
-    class ClientCredentialsRequest
-      attr_accessor :issuer, :server, :client, :original_scopes, :scopes
-      attr_reader   :response
-      alias         :authorization :response  # Remove this when API is consistent
-      alias         :error_response :response
+    class ClientCredentialsRequest < BaseRequest
+      attr_accessor :server, :client, :original_scopes
+      attr_reader :response
+      attr_writer :issuer
 
-      delegate :error, :to => :issuer
+      alias_method :error_response, :response
+
+      delegate :error, to: :issuer
 
       def issuer
         @issuer ||= Issuer.new(server, Validation.new(server, self))
       end
 
       def initialize(server, client, parameters = {})
-        @client, @server = client, server
-        @response        = nil
+        @client = client
+        @server = server
+        @response = nil
         @original_scopes = parameters[:scope]
       end
 
-      def authorize
-        status = issuer.create(client, scopes)
-        @response = if status
-          Response.new(issuer.token)
-        else
-          ErrorResponse.from_request(self)
-        end
-        status
+      def access_token
+        issuer.token
       end
 
-      # TODO: duplicated code in all flows
-      def scopes
-        @scopes ||= if @original_scopes.present?
-          Doorkeeper::OAuth::Scopes.from_string(@original_scopes)
-        else
-          server.default_scopes
-        end
+      private
+
+      def valid?
+        issuer.create(client, scopes)
       end
     end
   end

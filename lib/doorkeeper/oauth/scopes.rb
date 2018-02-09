@@ -5,30 +5,30 @@ module Doorkeeper
       include Comparable
 
       def self.from_string(string)
-        string ||= ""
+        string ||= ''
         new.tap do |scope|
-          scope.add *string.split
+          scope.add(*string.split)
         end
       end
 
       def self.from_array(array)
         new.tap do |scope|
-          scope.add *array
+          scope.add(*array)
         end
       end
 
-      delegate :each, :to => :@scopes
+      delegate :each, :empty?, to: :@scopes
 
       def initialize
         @scopes = []
       end
 
       def exists?(scope)
-        @scopes.include? scope.to_sym
+        @scopes.include? scope.to_s
       end
 
       def add(*scopes)
-        @scopes.push *scopes.map(&:to_sym)
+        @scopes.push(*scopes.map(&:to_s))
         @scopes.uniq!
       end
 
@@ -37,7 +37,7 @@ module Doorkeeper
       end
 
       def to_s
-        @scopes.join(" ")
+        @scopes.join(' ')
       end
 
       def has_scopes?(scopes)
@@ -45,15 +45,30 @@ module Doorkeeper
       end
 
       def +(other)
-        if other.is_a? Scopes
-          self.class.from_array(self.all + other.all)
-        else
-          super(other)
-        end
+        self.class.from_array(all + to_array(other))
       end
 
       def <=>(other)
-        self.map(&:to_s).sort <=> other.map(&:to_s).sort
+        if other.respond_to?(:map)
+          map(&:to_s).sort <=> other.map(&:to_s).sort
+        else
+          super
+        end
+      end
+
+      def &(other)
+        self.class.from_array(all & to_array(other))
+      end
+
+      private
+
+      def to_array(other)
+        case other
+        when Scopes
+          other.all
+        else
+          other.to_a
+        end
       end
     end
   end

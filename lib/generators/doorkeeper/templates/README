@@ -17,12 +17,6 @@ And run
 
   rake db:migrate
 
-If you want to use Mongoid, configure the orm in initializers/doorkeeper.rb
-
-Doorkeeper.configure do
-  orm :mongoid
-end
-
 Step 3.
 That's it, that's all. Enjoy!
 

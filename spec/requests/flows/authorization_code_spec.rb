@@ -9,117 +9,141 @@ feature 'Authorization Code Flow' do
   end
 
   scenario 'resource owner authorizes the client' do
-    visit authorization_endpoint_url(:client => @client)
-    click_on "Authorize"
+    visit authorization_endpoint_url(client: @client)
+    click_on 'Authorize'
 
     access_grant_should_exist_for(@client, @resource_owner)
 
     i_should_be_on_client_callback(@client)
 
-    url_should_have_param("code", Doorkeeper::AccessGrant.first.token)
-    url_should_not_have_param("state")
-    url_should_not_have_param("error")
+    url_should_have_param('code', Doorkeeper::AccessGrant.first.token)
+    url_should_not_have_param('state')
+    url_should_not_have_param('error')
+  end
+
+  scenario 'resource owner authorizes using test url' do
+    @client.redirect_uri = Doorkeeper.configuration.native_redirect_uri
+    @client.save!
+    visit authorization_endpoint_url(client: @client)
+    click_on 'Authorize'
+
+    access_grant_should_exist_for(@client, @resource_owner)
+
+    url_should_have_param('code', Doorkeeper::AccessGrant.first.token)
+    i_should_see 'Authorization code:'
+    i_should_see Doorkeeper::AccessGrant.first.token
   end
 
   scenario 'resource owner authorizes the client with state parameter set' do
-    visit authorization_endpoint_url(:client => @client, :state => "return-me")
-    click_on "Authorize"
-    url_should_have_param("code", Doorkeeper::AccessGrant.first.token)
-    url_should_have_param("state", "return-me")
-  end
-
-  scenario 'returns the same token if it is still accessible' do
-    client_is_authorized(@client, @resource_owner)
-    visit authorization_endpoint_url(:client => @client)
-
-    authorization_code = Doorkeeper::AccessGrant.first.token
-    post token_endpoint_url(:code => authorization_code, :client => @client)
-
-    Doorkeeper::AccessToken.count.should be(1)
-
-    should_have_json 'access_token', Doorkeeper::AccessToken.first.token
-  end
-
-  scenario 'revokes and return new token if it is has expired' do
-    client_is_authorized(@client, @resource_owner)
-    token = Doorkeeper::AccessToken.first
-    token.update_column :expires_in, -100
-    visit authorization_endpoint_url(:client => @client)
-
-    authorization_code = Doorkeeper::AccessGrant.first.token
-    post token_endpoint_url(:code => authorization_code, :client => @client)
-
-    token.reload.should be_revoked
-    Doorkeeper::AccessToken.count.should be(2)
-
-    should_have_json 'access_token', Doorkeeper::AccessToken.last.token
+    visit authorization_endpoint_url(client: @client, state: 'return-me')
+    click_on 'Authorize'
+    url_should_have_param('code', Doorkeeper::AccessGrant.first.token)
+    url_should_have_param('state', 'return-me')
   end
 
   scenario 'resource owner requests an access token with authorization code' do
-    visit authorization_endpoint_url(:client => @client)
-    click_on "Authorize"
+    visit authorization_endpoint_url(client: @client)
+    click_on 'Authorize'
 
     authorization_code = Doorkeeper::AccessGrant.first.token
-    post token_endpoint_url(:code => authorization_code, :client => @client)
+    create_access_token authorization_code, @client
 
     access_token_should_exist_for(@client, @resource_owner)
 
     should_not_have_json 'error'
 
     should_have_json 'access_token', Doorkeeper::AccessToken.first.token
-    should_have_json 'token_type',   "bearer"
-    should_have_json 'expires_in',   Doorkeeper::AccessToken.first.expires_in
-
-    should_not_have_json 'refresh_token'
+    should_have_json 'token_type', 'bearer'
+    should_have_json_within 'expires_in', Doorkeeper::AccessToken.first.expires_in, 1
   end
 
   context 'with scopes' do
     background do
-      default_scopes_exist  :public
+      default_scopes_exist :public
       optional_scopes_exist :write
     end
 
     scenario 'resource owner authorizes the client with default scopes' do
-      visit authorization_endpoint_url(:client => @client)
-      click_on "Authorize"
+      visit authorization_endpoint_url(client: @client)
+      click_on 'Authorize'
       access_grant_should_exist_for(@client, @resource_owner)
       access_grant_should_have_scopes :public
     end
 
     scenario 'resource owner authorizes the client with required scopes' do
-      visit authorization_endpoint_url(:client => @client, :scope => "public write")
-      click_on "Authorize"
+      visit authorization_endpoint_url(client: @client, scope: 'public write')
+      click_on 'Authorize'
       access_grant_should_have_scopes :public, :write
     end
 
     scenario 'resource owner authorizes the client with required scopes (without defaults)' do
-      visit authorization_endpoint_url(:client => @client, :scope => "write")
-      click_on "Authorize"
+      visit authorization_endpoint_url(client: @client, scope: 'write')
+      click_on 'Authorize'
       access_grant_should_have_scopes :write
     end
 
     scenario 'new access token matches required scopes' do
-      visit authorization_endpoint_url(:client => @client, :scope => "public write")
-      click_on "Authorize"
+      visit authorization_endpoint_url(client: @client, scope: 'public write')
+      click_on 'Authorize'
 
       authorization_code = Doorkeeper::AccessGrant.first.token
-      post token_endpoint_url(:code => authorization_code, :client => @client)
+      create_access_token authorization_code, @client
 
       access_token_should_exist_for(@client, @resource_owner)
       access_token_should_have_scopes :public, :write
     end
 
     scenario 'returns new token if scopes have changed' do
-      client_is_authorized(@client, @resource_owner, :scopes => "public write")
-      visit authorization_endpoint_url(:client => @client, :scope => "public")
-      click_on "Authorize"
+      client_is_authorized(@client, @resource_owner, scopes: 'public write')
+      visit authorization_endpoint_url(client: @client, scope: 'public')
+      click_on 'Authorize'
 
       authorization_code = Doorkeeper::AccessGrant.first.token
-      post token_endpoint_url(:code => authorization_code, :client => @client)
+      create_access_token authorization_code, @client
 
-      Doorkeeper::AccessToken.count.should be(2)
+      expect(Doorkeeper::AccessToken.count).to be(2)
 
       should_have_json 'access_token', Doorkeeper::AccessToken.last.token
+    end
+
+    scenario 'resource owner authorizes the client with extra scopes' do
+      client_is_authorized(@client, @resource_owner, scopes: 'public')
+      visit authorization_endpoint_url(client: @client, scope: 'public write')
+      click_on 'Authorize'
+
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      create_access_token authorization_code, @client
+
+      expect(Doorkeeper::AccessToken.count).to be(2)
+
+      should_have_json 'access_token', Doorkeeper::AccessToken.last.token
+      access_token_should_have_scopes :public, :write
+    end
+  end
+end
+
+describe 'Authorization Code Flow' do
+  before do
+    Doorkeeper.configure do
+      orm DOORKEEPER_ORM
+      use_refresh_token
+    end
+    client_exists
+  end
+
+  context 'issuing a refresh token' do
+    before do
+      authorization_code_exists application: @client
+    end
+
+    it 'second of simultaneous client requests get an error for revoked acccess token' do
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      allow_any_instance_of(Doorkeeper::AccessGrant).to receive(:revoked?).and_return(false, true)
+
+      post token_endpoint_url(code: authorization_code, client: @client)
+
+      should_not_have_json 'access_token'
+      should_have_json 'error', 'invalid_grant'
     end
   end
 end

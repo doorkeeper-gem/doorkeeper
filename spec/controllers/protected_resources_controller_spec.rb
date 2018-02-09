@@ -2,306 +2,307 @@ require 'spec_helper_integration'
 
 module ControllerActions
   def index
-    render :text => "index"
+    render plain: 'index'
   end
 
   def show
-    render :text => "show"
+    render plain: 'show'
   end
+
+  def doorkeeper_unauthorized_render_options(*); end
+
+  def doorkeeper_forbidden_render_options(*); end
 end
 
-shared_examples "specified for particular actions" do
-  context "with valid token", :token => :valid do
-    it "allows into index action" do
-      get :index, :access_token => token_string
-      response.should be_success
-    end
-
-    it "allows into show action" do
-      get :show, :id => "3", :access_token => token_string
-      response.should be_success
-    end
-  end
-
-  context "with invalid token", :token => :invalid do
-    include_context "invalid token"
-
-    it "does not allow into index action" do
-      get :index, :access_token => token_string
-      response.status.should == 401
-    end
-
-    it "allows into show action" do
-      get :show, :id => "5", :access_token => token_string
-      response.should be_success
-    end
-  end
-end
-
-shared_examples "specified with except" do
-  context "with valid token", :token => :valid do
-    it "allows into index action" do
-      get :index, :access_token => token_string
-      response.should be_success
-    end
-
-    it "allows into show action" do
-      get :show, :id => "4", :access_token => token_string
-      response.should be_success
-    end
-  end
-
-  context "with invalid token", :token => :invalid do
-    it "allows into index action" do
-      get :index, :access_token => token_string
-      response.should be_success
-    end
-
-    it "does not allow into show action" do
-      get :show, :id => "14", :access_token => token_string
-      response.status.should == 401
-    end
-  end
-end
-
-describe "Doorkeeper_for helper" do
-  context "accepts token code specified as" do
+describe 'doorkeeper authorize filter' do
+  context 'accepts token code specified as' do
     controller do
-      doorkeeper_for :all
+      before_action :doorkeeper_authorize!
 
       def index
-        render :text => "index"
+        render plain: 'index'
       end
     end
 
-    let :token_string do
-      "1A2BC3"
+    let(:token_string) { '1A2BC3' }
+    let(:token) do
+      double(Doorkeeper::AccessToken,
+             acceptable?: true, previous_refresh_token: "",
+             revoke_previous_refresh_token!: true)
     end
 
-    it "access_token param" do
-      Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string)
-      get :index, :access_token => token_string
+    it 'access_token param' do
+      expect(Doorkeeper::AccessToken).to receive(:by_token).with(token_string).and_return(token)
+      get :index, access_token: token_string
     end
 
-    it "bearer_token param" do
-      Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string)
-      get :index, :bearer_token => token_string
+    it 'bearer_token param' do
+      expect(Doorkeeper::AccessToken).to receive(:by_token).with(token_string).and_return(token)
+      get :index, bearer_token: token_string
     end
 
-    it "Authorization header" do
-      Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string)
-      request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
+    it 'Authorization header' do
+      expect(Doorkeeper::AccessToken).to receive(:by_token).with(token_string).and_return(token)
+      request.env['HTTP_AUTHORIZATION'] = "Bearer #{token_string}"
       get :index
     end
 
-    it "different kind of Authorization header" do
-      Doorkeeper::AccessToken.should_not_receive(:authenticate)
-      request.env["HTTP_AUTHORIZATION"] = "Basic #{Base64.encode64("foo:bar")}"
+    it 'different kind of Authorization header' do
+      expect(Doorkeeper::AccessToken).not_to receive(:by_token)
+      request.env['HTTP_AUTHORIZATION'] = "MAC #{token_string}"
       get :index
     end
 
-    it "doesn't change Authorization header value" do
-      Doorkeeper::AccessToken.should_receive(:authenticate).exactly(2).times
-      request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
+    it 'does not change Authorization header value' do
+      expect(Doorkeeper::AccessToken).to receive(:by_token).exactly(2).times.and_return(token)
+      request.env['HTTP_AUTHORIZATION'] = "Bearer #{token_string}"
       get :index
+      controller.send(:remove_instance_variable, :@_doorkeeper_token)
       get :index
     end
   end
 
-  context "defined for all actions" do
+  context 'defined for all actions' do
     controller do
-      doorkeeper_for :all
+      before_action :doorkeeper_authorize!
 
       include ControllerActions
     end
 
-    context "with valid token", :token => :valid do
-      it "allows into index action" do
-        get :index, :access_token => token_string
-        response.should be_success
+    context 'with valid token', token: :valid do
+      it 'allows into index action' do
+        get :index, access_token: token_string
+        expect(response).to be_successful
       end
 
-      it "allows into show action" do
-        get :show, :id => "4", :access_token => token_string
-        response.should be_success
+      it 'allows into show action' do
+        get :show, id: '4', access_token: token_string
+        expect(response).to be_successful
       end
     end
 
-    context "with invalid token", :token => :invalid do
-      it "does not allow into index action" do
-        get :index, :access_token => token_string
-        response.status.should == 401
+    context 'with invalid token', token: :invalid do
+      it 'does not allow into index action' do
+        get :index, access_token: token_string
+        expect(response.status).to eq 401
+        expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
       end
 
-      it "does not allow into show action" do
-        get :show, :id => "4", :access_token => token_string
-        response.status.should == 401
+      it 'does not allow into show action' do
+        get :show, id: '4', access_token: token_string
+        expect(response.status).to eq 401
+        expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
       end
     end
   end
 
-  context "defined only for index action" do
+  context 'defined with scopes' do
     controller do
-      doorkeeper_for :index
-
-      include ControllerActions
-    end
-    include_examples "specified for particular actions"
-  end
-
-  context "defined for actions except index" do
-    controller do
-      doorkeeper_for :all, :except => :index
+      before_action -> { doorkeeper_authorize! :write }
 
       include ControllerActions
     end
 
-    include_examples "specified with except"
-  end
+    let(:token_string) { '1A2DUWE' }
 
-  context "defined with scopes" do
-    controller do
-      doorkeeper_for :all, :scopes => [:write]
+    it 'allows if the token has particular scopes' do
+      token = double(Doorkeeper::AccessToken,
+                     accessible?: true, scopes: %w[write public],
+                     previous_refresh_token: "",
+                     revoke_previous_refresh_token!: true)
+      expect(token).to receive(:acceptable?).with([:write]).and_return(true)
+      expect(
+        Doorkeeper::AccessToken
+      ).to receive(:by_token).with(token_string).and_return(token)
 
-      include ControllerActions
+      get :index, access_token: token_string
+      expect(response).to be_successful
     end
 
-    let :token_string do
-      "1A2DUWE"
-    end
+    it 'does not allow if the token does not include given scope' do
+      token = double(Doorkeeper::AccessToken,
+                     accessible?: true, scopes: ['public'], revoked?: false,
+                     expired?: false, previous_refresh_token: "",
+                     revoke_previous_refresh_token!: true)
+      expect(
+        Doorkeeper::AccessToken
+      ).to receive(:by_token).with(token_string).and_return(token)
+      expect(token).to receive(:acceptable?).with([:write]).and_return(false)
 
-    it "allows if the token has particular scopes" do
-      token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => [:write, :public])
-      Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string).and_return(token)
-      get :index, :access_token => token_string
-      response.should be_success
-    end
-
-    it "does not allow if the token does not include given scope" do
-      token = double(Doorkeeper::AccessToken, :accessible? => true, :scopes => [:public])
-      Doorkeeper::AccessToken.should_receive(:authenticate).with(token_string).and_return(token)
-      get :index, :access_token => token_string
-      response.status.should == 401
+      get :index, access_token: token_string
+      expect(response.status).to eq 403
+      expect(response.header).to_not include('WWW-Authenticate')
     end
   end
 
-  context "when custom unauthorized render options are configured" do
+  context 'when custom unauthorized render options are configured' do
     controller do
-      doorkeeper_for :all
+      before_action :doorkeeper_authorize!
 
       include ControllerActions
     end
 
-    context "with a JSON custom render", :token => :invalid do
+    context 'with a JSON custom render', token: :invalid do
       before do
-        controller.should_receive(:doorkeeper_unauthorized_render_options).and_return({ :json => ActiveSupport::JSON.encode({ :error => "Unauthorized" })  } )
+        module ControllerActions
+          remove_method :doorkeeper_unauthorized_render_options
+
+          def doorkeeper_unauthorized_render_options(error: nil)
+            { json: ActiveSupport::JSON.encode(error_message: error.description) }
+          end
+        end
       end
 
-      it "it renders a custom JSON response", :token => :invalid do
-        get :index, :access_token => token_string
-        response.status.should == 401
-        response.content_type.should == 'application/json'
-        parsed_body = JSON.parse(response.body)
-        parsed_body.should_not be_nil
-        parsed_body['error'].should == 'Unauthorized'
+      after do
+        module ControllerActions
+          remove_method :doorkeeper_unauthorized_render_options
+
+          def doorkeeper_unauthorized_render_options(error: nil)
+          end
+        end
       end
 
+      it 'it renders a custom JSON response', token: :invalid do
+        get :index, access_token: token_string
+        expect(response.status).to eq 401
+        expect(response.content_type).to eq('application/json')
+        expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
+
+        expect(json_response).not_to be_nil
+        expect(json_response['error_message']).to match('token is invalid')
+      end
     end
 
-    context "with a text custom render", :token => :invalid do
+    context 'with a text custom render', token: :invalid do
       before do
-        controller.should_receive(:doorkeeper_unauthorized_render_options).and_return({ :text => "Unauthorized"  } )
+        module ControllerActions
+          remove_method :doorkeeper_unauthorized_render_options
+
+          def doorkeeper_unauthorized_render_options(**)
+            { plain: 'Unauthorized' }
+          end
+        end
       end
 
-      it "it renders a custom JSON response", :token => :invalid do
-        get :index, :access_token => token_string
-        response.status.should == 401
-        response.content_type.should == 'text/html'
-        response.body.should == 'Unauthorized'
-      end
-    end
-  end
+      after do
+        module ControllerActions
+          remove_method :doorkeeper_unauthorized_render_options
 
-  context "when defined with conditional if block" do
-    controller do
-      doorkeeper_for :index, :if => lambda { the_false }
-      doorkeeper_for :show, :if => lambda { the_true }
-
-      include ControllerActions
-
-      private
-      def the_true
-        true
+          def doorkeeper_unauthorized_render_options(error: nil); end
+        end
       end
 
-      def the_false
-        false
-      end
-    end
-
-    context "with valid token", :token => :valid do
-      it "enables access if passed block evaluates to false" do
-        get :index, :access_token => token_string
-        response.should be_success
-      end
-
-      it "enables access if passed block evaluates to true" do
-        get :show, :id => 1, :access_token => token_string
-        response.should be_success
-      end
-    end
-
-    context "with invalid token", :token => :invalid do
-      it "enables access if passed block evaluates to false" do
-        get :index, :access_token => token_string
-        response.should be_success
-      end
-
-      it "does not enable access if passed block evaluates to true" do
-        get :show, :id => 3, :access_token => token_string
-        response.status.should == 401
+      it 'it renders a custom text response', token: :invalid do
+        get :index, access_token: token_string
+        expect(response.status).to eq 401
+        expect(response.content_type).to eq('text/plain')
+        expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
+        expect(response.body).to eq('Unauthorized')
       end
     end
   end
 
-  context "when defined with conditional unless block" do
+  context 'when custom forbidden render options are configured' do
+    before do
+      expect(Doorkeeper::AccessToken).to receive(:by_token).with(token_string).and_return(token)
+      expect(token).to receive(:acceptable?).with([:write]).and_return(false)
+    end
+
+    after do
+      module ControllerActions
+        remove_method :doorkeeper_forbidden_render_options
+
+        def doorkeeper_forbidden_render_options(*); end
+      end
+    end
+
     controller do
-      doorkeeper_for :index, :unless => lambda { the_false }
-      doorkeeper_for :show, :unless => lambda { the_true }
+      before_action -> { doorkeeper_authorize! :write }
 
       include ControllerActions
+    end
 
-      def the_true
-        true
+    let(:token) do
+      double(Doorkeeper::AccessToken,
+             accessible?: true, scopes: ['public'], revoked?: false,
+             expired?: false, previous_refresh_token: "",
+             revoke_previous_refresh_token!: true)
+    end
+
+    let(:token_string) { '1A2DUWE' }
+
+    context 'with a JSON custom render' do
+      before do
+        module ControllerActions
+          remove_method :doorkeeper_forbidden_render_options
+
+          def doorkeeper_forbidden_render_options(*)
+            { json: { error_message: 'Forbidden' } }
+          end
+        end
       end
 
-      private
+      it 'renders a custom JSON response' do
+        get :index, access_token: token_string
+        expect(response.header).to_not include('WWW-Authenticate')
+        expect(response.content_type).to eq('application/json')
+        expect(response.status).to eq 403
 
-      def the_false
-        false
+        expect(json_response).not_to be_nil
+        expect(json_response['error_message']).to match('Forbidden')
       end
     end
 
-    context "with valid token", :token => :valid do
-      it "allows access if passed block evaluates to false" do
-        get :index, :access_token => token_string
-        response.should be_success
+    context 'with a status and JSON custom render' do
+      before do
+        module ControllerActions
+          remove_method :doorkeeper_forbidden_render_options
+          def doorkeeper_forbidden_render_options(*)
+            { json: { error_message: 'Not Found' },
+              respond_not_found_when_forbidden: true }
+          end
+        end
       end
 
-      it "allows access if passed block evaluates to true" do
-        get :show, :id => 1, :access_token => token_string
-        response.should be_success
+      it 'overrides the default status code' do
+        get :index, access_token: token_string
+        expect(response.status).to eq 404
       end
     end
 
-    context "with invalid token", :token => :invalid do
-      it "does not allow access if passed block evaluates to false" do
-        get :index, :access_token => token_string
+    context 'with a text custom render' do
+      before do
+        module ControllerActions
+          remove_method :doorkeeper_forbidden_render_options
+
+          def doorkeeper_forbidden_render_options(*)
+            { plain: 'Forbidden' }
+          end
+        end
       end
 
-      it "allows access if passed block evaluates to true" do
-        get :show, :id => 3, :access_token => token_string
-        response.should be_success
+      it 'renders a custom status code and text response' do
+        get :index, access_token: token_string
+        expect(response.header).to_not include('WWW-Authenticate')
+        expect(response.status).to eq 403
+        expect(response.body).to eq('Forbidden')
+      end
+    end
+
+    context 'with a status and text custom render' do
+      before do
+        module ControllerActions
+          remove_method :doorkeeper_forbidden_render_options
+
+          def doorkeeper_forbidden_render_options(*)
+            { respond_not_found_when_forbidden: true, plain: 'Not Found' }
+          end
+        end
+      end
+
+      it 'overrides the default status code' do
+        get :index, access_token: token_string
+        expect(response.status).to eq 404
       end
     end
   end

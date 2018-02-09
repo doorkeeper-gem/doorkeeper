@@ -5,7 +5,7 @@ module Doorkeeper::OAuth
     let(:server) { Doorkeeper.configuration }
 
     context 'with a valid request' do
-      let(:client) { FactoryGirl.create :application }
+      let(:client) { FactoryBot.create :application }
 
       it 'issues an access token' do
         request = ClientCredentialsRequest.new(server, client, {})

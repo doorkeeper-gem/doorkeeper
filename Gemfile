@@ -1,14 +1,10 @@
-source 'http://rubygems.org'
+source "https://rubygems.org"
 
-gem 'jquery-rails'
+gem "rails", "~> 5.1"
 
-group :mongoid do
-  gem 'mongoid', '~> 2.4'
-  gem 'bson_ext', '~> 1.6.0'
-end
+gem "appraisal"
 
-group :active_record do
-  gem 'activerecord', '~> 3.1'
-end
-
+gem "activerecord-jdbcsqlite3-adapter", platform: :jruby
+gem "sqlite3", platform: [:ruby, :mswin, :mingw, :x64_mingw]
+gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw]
 gemspec

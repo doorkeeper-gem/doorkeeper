@@ -1,7 +1,0 @@
-development:
-  database: doorkeeper-development
-  persist_in_safe_mode: true
-
-test:
-  database: doorkeeper-test-suite
-  persist_in_safe_mode: true
