@@ -2,6 +2,10 @@ AllCops:
   Exclude:
     - "spec/dummy/db/*"
 
+Metrics/BlockLength:
+  Exclude:
+    - spec/**/*
+
 LineLength:
   Exclude:
     - spec/**/*
