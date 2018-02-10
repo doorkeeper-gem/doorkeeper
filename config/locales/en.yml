@@ -10,9 +10,23 @@ en:
           attributes:
             redirect_uri:
               fragment_present: 'cannot contain a fragment.'
+              has_query_parameter: 'cannot contain a query parameter.'
               invalid_uri: 'must be a valid URI.'
               relative_uri: 'must be an absolute URI.'
               secured_uri: 'must be an HTTPS/SSL URI.'
+              protocol_error: 'must use either http or https.'
+  mongoid:
+    errors:
+      models:
+        application:
+          attributes:
+            redirect_uri:
+              fragment_present: 'cannot contain a fragment.'
+              has_query_parameter: 'cannot contain a query parameter.'
+              invalid_uri: 'must be a valid URI.'
+              relative_uri: 'must be an absolute URI.'
+              secured_uri: 'must be an HTTPS/SSL URI.'
+              protocol_error: 'must use either http or https.'
 
   doorkeeper:
     applications:

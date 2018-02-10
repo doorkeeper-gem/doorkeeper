@@ -15,6 +15,7 @@ class RedirectUriValidator < ActiveModel::EachValidator
         record.errors.add(attribute, :fragment_present) unless uri.fragment.nil?
         record.errors.add(attribute, :relative_uri) if uri.scheme.nil? || uri.host.nil?
         record.errors.add(attribute, :secured_uri) if invalid_ssl_uri?(uri)
+        record.errors.add(attribute, :protocol_error) unless ['http', 'https', 'urn'].include? uri.scheme
       end
     end
   rescue URI::InvalidURIError
