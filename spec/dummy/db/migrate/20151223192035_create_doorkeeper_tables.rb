@@ -1,4 +1,6 @@
-class CreateDoorkeeperTables < ActiveRecord::Migration
+# frozen_string_literal: true
+
+class CreateDoorkeeperTables < ActiveRecord::Migration[4.2]
   def change
     create_table :oauth_applications do |t|
       t.string  :name,         null: false

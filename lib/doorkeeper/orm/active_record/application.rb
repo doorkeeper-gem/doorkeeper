@@ -11,6 +11,7 @@ module Doorkeeper
     validates :name, :secret, :uid, presence: true
     validates :uid, uniqueness: true
     validates :redirect_uri, redirect_uri: true
+    validates :confidential, inclusion: { in: [true, false] }
 
     before_validation :generate_uid, :generate_secret, on: :create
 
