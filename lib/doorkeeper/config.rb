@@ -229,7 +229,8 @@ doorkeeper.
              nil
            end)
     option :before_successful_strategy_response, default: ->(_request) {}
-    option :after_successful_strategy_response,  default: ->(_request, _response) {}
+    option :after_successful_strategy_response,
+           default: ->(_request, _response) {}
     option :skip_authorization,             default: ->(_routes) {}
     option :access_token_expires_in,        default: 7200
     option :custom_access_token_expires_in, default: ->(_app) { nil }

@@ -47,7 +47,8 @@ module Doorkeeper
       end
 
       def after_successful_response
-        Doorkeeper.configuration.after_successful_strategy_response.call(self, @response)
+        Doorkeeper.configuration.after_successful_strategy_response.
+          call(self, @response)
       end
     end
   end
