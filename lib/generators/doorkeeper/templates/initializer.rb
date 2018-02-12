@@ -82,7 +82,13 @@ Doorkeeper.configure do
   # by default in non-development environments). OAuth2 delegates security in
   # communication to the HTTPS protocol so it is wise to keep this enabled.
   #
+  # Callable objects such as proc, lambda, block or any object that responds to
+  # #call can be used in order to allow conditional checks (to allow non-SSL
+  # redirects to localhost for example).
+  #
   # force_ssl_in_redirect_uri !Rails.env.development?
+  #
+  # force_ssl_in_redirect_uri { |uri| uri.host != 'localhost' }
 
   # Specify what grant flows are enabled in array of Strings. The valid
   # strings and the flows they enable are:

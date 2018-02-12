@@ -10,6 +10,7 @@ describe Doorkeeper, 'configuration' do
         orm DOORKEEPER_ORM
         resource_owner_authenticator(&block)
       end
+
       expect(subject.authenticate_resource_owner).to eq(block)
     end
   end
@@ -37,6 +38,7 @@ describe Doorkeeper, 'configuration' do
         orm DOORKEEPER_ORM
         admin_authenticator(&block)
       end
+
       expect(subject.authenticate_admin).to eq(block)
     end
   end
@@ -59,6 +61,7 @@ describe Doorkeeper, 'configuration' do
         orm DOORKEEPER_ORM
         access_token_expires_in nil
       end
+
       expect(subject.access_token_expires_in).to be_nil
     end
   end
@@ -69,6 +72,7 @@ describe Doorkeeper, 'configuration' do
         orm DOORKEEPER_ORM
         default_scopes :public
       end
+
       expect(subject.default_scopes).to include('public')
     end
 
@@ -77,6 +81,7 @@ describe Doorkeeper, 'configuration' do
         orm DOORKEEPER_ORM
         optional_scopes :write, :update
       end
+
       expect(subject.optional_scopes).to include('write', 'update')
     end
 
@@ -86,6 +91,7 @@ describe Doorkeeper, 'configuration' do
         default_scopes  :normal
         optional_scopes :admin
       end
+
       expect(subject.scopes).to include('normal', 'admin')
     end
   end
@@ -100,6 +106,7 @@ describe Doorkeeper, 'configuration' do
         orm DOORKEEPER_ORM
         use_refresh_token
       end
+
       expect(subject.refresh_token_enabled?).to be_truthy
     end
 
@@ -131,6 +138,7 @@ describe Doorkeeper, 'configuration' do
         orm DOORKEEPER_ORM
         client_credentials :from_digest, :from_params
       end
+
       expect(subject.client_credentials_methods).to eq([:from_digest, :from_params])
     end
   end
@@ -145,7 +153,19 @@ describe Doorkeeper, 'configuration' do
         orm DOORKEEPER_ORM
         force_ssl_in_redirect_uri(false)
       end
+
       expect(subject.force_ssl_in_redirect_uri).to be_falsey
+    end
+
+    it 'can be a callable object' do
+      block = proc { false }
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        force_ssl_in_redirect_uri(&block)
+      end
+
+      expect(subject.force_ssl_in_redirect_uri).to eq(block)
+      expect(subject.force_ssl_in_redirect_uri.call).to be_falsey
     end
   end
 
@@ -159,6 +179,7 @@ describe Doorkeeper, 'configuration' do
         orm DOORKEEPER_ORM
         access_token_methods :from_access_token_param, :from_bearer_param
       end
+
       expect(subject.access_token_methods).to eq([:from_access_token_param, :from_bearer_param])
     end
   end
@@ -175,9 +196,11 @@ describe Doorkeeper, 'configuration' do
           enable_application_owner
         end
       end
+
       it 'adds support for application owner' do
         expect(Doorkeeper::Application.new).to respond_to :owner
       end
+
       it 'Doorkeeper.configuration.confirm_application_owner? returns false' do
         expect(Doorkeeper.configuration.confirm_application_owner?).not_to be_truthy
       end
@@ -190,9 +213,11 @@ describe Doorkeeper, 'configuration' do
           enable_application_owner confirmation: true
         end
       end
+
       it 'adds support for application owner' do
         expect(Doorkeeper::Application.new).to respond_to :owner
       end
+
       it 'Doorkeeper.configuration.confirm_application_owner? returns true' do
         expect(Doorkeeper.configuration.confirm_application_owner?).to be_truthy
       end
@@ -209,6 +234,7 @@ describe Doorkeeper, 'configuration' do
         orm DOORKEEPER_ORM
         realm 'Example'
       end
+
       expect(subject.realm).to eq('Example')
     end
   end
@@ -220,19 +246,20 @@ describe Doorkeeper, 'configuration' do
     end
 
     it "can change the value" do
-      Doorkeeper.configure {
+      Doorkeeper.configure do
         orm DOORKEEPER_ORM
         grant_flows ['authorization_code', 'implicit']
-      }
+      end
+
       expect(subject.grant_flows).to eq ['authorization_code', 'implicit']
     end
 
     context "when including 'authorization_code'" do
       before do
-        Doorkeeper.configure {
+        Doorkeeper.configure do
           orm DOORKEEPER_ORM
           grant_flows ['authorization_code']
-        }
+        end
       end
 
       it "includes 'code' in authorization_response_types" do
@@ -246,10 +273,10 @@ describe Doorkeeper, 'configuration' do
 
     context "when including 'implicit'" do
       before do
-        Doorkeeper.configure {
+        Doorkeeper.configure do
           orm DOORKEEPER_ORM
           grant_flows ['implicit']
-        }
+        end
       end
 
       it "includes 'token' in authorization_response_types" do
@@ -259,10 +286,10 @@ describe Doorkeeper, 'configuration' do
 
     context "when including 'password'" do
       before do
-        Doorkeeper.configure {
+        Doorkeeper.configure do
           orm DOORKEEPER_ORM
           grant_flows ['password']
-        }
+        end
       end
 
       it "includes 'password' in token_grant_types" do
@@ -272,10 +299,10 @@ describe Doorkeeper, 'configuration' do
 
     context "when including 'client_credentials'" do
       before do
-        Doorkeeper.configure {
+        Doorkeeper.configure do
           orm DOORKEEPER_ORM
           grant_flows ['client_credentials']
-        }
+        end
       end
 
       it "includes 'client_credentials' in token_grant_types" do

@@ -4,6 +4,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1033] Allow Doorkeeper configuration option #force_ssl_in_redirect_uri to be a callable object.
 - Fix Grape integration & add specs for it
 - [#913] Deferred ORM (ActiveRecord) models loading
 - [#943] Fix Access Token token generation when certain errors occur in custom token generators
