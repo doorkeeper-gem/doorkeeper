@@ -11,7 +11,7 @@ class RedirectUriValidator < ActiveModel::EachValidator
     else
       value.split.each do |val|
         uri = ::URI.parse(val)
-        return if native_redirect_uri?(uri)
+        return false if native_redirect_uri?(uri)
         record.errors.add(attribute, :fragment_present) unless uri.fragment.nil?
         record.errors.add(attribute, :relative_uri) if uri.scheme.nil? || uri.host.nil?
         record.errors.add(attribute, :secured_uri) if invalid_ssl_uri?(uri)
@@ -29,6 +29,11 @@ class RedirectUriValidator < ActiveModel::EachValidator
 
   def invalid_ssl_uri?(uri)
     forces_ssl = Doorkeeper.configuration.force_ssl_in_redirect_uri
-    forces_ssl && uri.try(:scheme) == 'http'
+
+    if forces_ssl.respond_to?(:call)
+      forces_ssl.call(uri)
+    else
+      forces_ssl && uri.try(:scheme) == 'http'
+    end
   end
 end
