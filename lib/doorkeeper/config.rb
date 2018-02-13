@@ -127,10 +127,16 @@ doorkeeper.
       # delegates security in communication to the HTTPS protocol so it is
       # wise to keep this enabled.
       #
-      # @param [Boolean] boolean value for the parameter, true by default in
+      # @param [Boolean] boolean_or_block value for the parameter, true by default in
       # non-development environment
-      def force_ssl_in_redirect_uri(boolean)
-        @config.instance_variable_set("@force_ssl_in_redirect_uri", boolean)
+      #
+      # @yield [uri] Conditional usage of SSL redirect uris.
+      # @yieldparam [URI] Redirect URI
+      # @yieldreturn [Boolean] Indicates necessity of usage of the HTTPS protocol
+      #   in non-native redirect uris
+      #
+      def force_ssl_in_redirect_uri(boolean_or_block)
+        @config.instance_variable_set("@force_ssl_in_redirect_uri", boolean_or_block)
       end
 
       # Use a custom class for generating the access token.
