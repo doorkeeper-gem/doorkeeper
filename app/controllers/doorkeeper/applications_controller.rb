@@ -10,7 +10,10 @@ module Doorkeeper
       @applications = if applications.respond_to?(:ordered_by)
                         applications.ordered_by(:created_at)
                       else
-                        ActiveSupport::Deprecation.warn "#{Doorkeeper.configuration.orm} must implement #ordered_by method \that will be used by default in Doorkeeper 5."
+                        message = "#{Doorkeeper.configuration.orm} must \
+                          implement #ordered_by method that will be used by \
+                          default in Doorkeeper 5."
+                        ActiveSupport::Deprecation.warn(message)
                         applications
                       end
     end

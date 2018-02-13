@@ -29,18 +29,8 @@ module Doorkeeper
       where(resource_owner_id: resource_owner.id, revoked_at: nil)
     end
 
-    # ORM-specific order method.
-    def self.order_method
-      :ordered_by
-    end
-
     def self.refresh_token_revoked_on_use?
       column_names.include?('previous_refresh_token')
-    end
-
-    # ORM-specific DESC order for `:created_at` column.
-    def self.created_at_desc
-      :created_at
     end
   end
 end

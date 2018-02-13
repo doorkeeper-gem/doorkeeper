@@ -10,7 +10,7 @@ module Doorkeeper
       context 'when a direction is not specifed' do
         subject { described_class.ordered_by(attribute) }
 
-        it 'calls order with a default order of desc' do
+        it 'calls order with a default order of asc' do
           expect(described_class).to receive(:order).with(attribute => :asc)
           subject
         end
