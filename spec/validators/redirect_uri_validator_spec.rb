@@ -60,6 +60,14 @@ describe RedirectUriValidator do
       expect(subject).to be_valid
     end
 
+    it 'invalidates the uri when the uri does uses javascript:' do
+      subject.redirect_uri = 'javascript://%0aalert%28document.cookie%29//'
+
+      expect(subject).not_to be_valid
+      error = subject.errors[:redirect_uri].first
+      expect(error).to eq('must be an HTTPS/SSL URI.')
+    end
+
     it 'accepts a non secured protocol when disabled' do
       subject.redirect_uri = 'http://example.com/callback'
       allow(Doorkeeper.configuration).to receive(
@@ -83,6 +91,7 @@ describe RedirectUriValidator do
 
     it 'invalidates the uri when the uri does not use a secure protocol' do
       subject.redirect_uri = 'http://example.com/callback'
+
       expect(subject).not_to be_valid
       error = subject.errors[:redirect_uri].first
       expect(error).to eq('must be an HTTPS/SSL URI.')
