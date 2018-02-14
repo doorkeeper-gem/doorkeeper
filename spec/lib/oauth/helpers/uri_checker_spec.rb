@@ -39,6 +39,11 @@ module Doorkeeper::OAuth::Helpers
         uri = 'http://'
         expect(URIChecker.valid?(uri)).to be_falsey
       end
+
+      it 'is invalid if is not an uri' do
+        uri = '   '
+        expect(URIChecker.valid?(uri)).to be_falsey
+      end
     end
 
     describe '.matches?' do

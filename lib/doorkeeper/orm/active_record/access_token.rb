@@ -4,18 +4,6 @@ module Doorkeeper
 
     include AccessTokenMixin
 
-    # Deletes all the Access Tokens created for the specific
-    # Application and Resource Owner.
-    #
-    # @param application_id [Integer] Application ID
-    # @param resource_owner [ActiveRecord::Base] Resource Owner model instance
-    #
-    def self.delete_all_for(application_id, resource_owner)
-      where(application_id: application_id,
-            resource_owner_id: resource_owner.id).delete_all
-    end
-    private_class_method :delete_all_for
-
     # Searches for not revoked Access Tokens associated with the
     # specific Resource Owner.
     #

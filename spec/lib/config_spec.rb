@@ -13,6 +13,40 @@ describe Doorkeeper, 'configuration' do
 
       expect(subject.authenticate_resource_owner).to eq(block)
     end
+
+    it 'prints warning message by default' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+
+      expect(Rails.logger).to receive(:warn).with(
+        I18n.t('doorkeeper.errors.messages.resource_owner_authenticator_not_configured')
+      )
+      subject.authenticate_resource_owner.call(nil)
+    end
+  end
+
+  describe 'resource_owner_from_credentials' do
+    it 'sets the block that is accessible via authenticate_resource_owner' do
+      block = proc {}
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        resource_owner_from_credentials(&block)
+      end
+
+      expect(subject.resource_owner_from_credentials).to eq(block)
+    end
+
+    it 'prints warning message by default' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+
+      expect(Rails.logger).to receive(:warn).with(
+        I18n.t('doorkeeper.errors.messages.credential_flow_not_configured')
+      )
+      subject.resource_owner_from_credentials.call(nil)
+    end
   end
 
   describe 'setup_orm_adapter' do
@@ -356,6 +390,31 @@ describe Doorkeeper, 'configuration' do
       end
 
       it { expect(Doorkeeper.configuration.base_controller).to eq('ApplicationController') }
+    end
+  end
+
+  if DOORKEEPER_ORM == :active_record
+    describe 'active_record_options' do
+      let(:models) { [Doorkeeper::AccessGrant, Doorkeeper::AccessToken, Doorkeeper::Application] }
+
+      before do
+        models.each do |model|
+          allow(model).to receive(:establish_connection).and_return(true)
+        end
+      end
+
+      it 'establishes connection for Doorkeeper models based on options' do
+        models.each do |model|
+          expect(model).to receive(:establish_connection)
+        end
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          active_record_options(
+            establish_connection: Rails.configuration.database_configuration[Rails.env]
+          )
+        end
+      end
     end
   end
 end

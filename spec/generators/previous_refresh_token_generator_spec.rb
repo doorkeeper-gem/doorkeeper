@@ -45,7 +45,7 @@ describe 'Doorkeeper::PreviousRefreshTokenGenerator' do
     context 'already exist' do
       it 'does not create a migration' do
         allow_any_instance_of(Doorkeeper::PreviousRefreshTokenGenerator).to(
-          receive(:no_previous_refresh_token_column?).and_return(false)
+          receive(:no_previous_refresh_token_column?).and_call_original
         )
 
         run_generator
