@@ -1,5 +1,5 @@
 module Doorkeeper
-  class Application < ActiveRecord::Base
+  class Application < BaseRecord
     self.table_name = "#{table_name_prefix}oauth_applications#{table_name_suffix}".to_sym
 
     include ApplicationMixin

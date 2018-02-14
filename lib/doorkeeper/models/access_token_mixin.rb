@@ -168,7 +168,7 @@ module Doorkeeper
       #   nil if nothing was found
       #
       def last_authorized_token_for(application_id, resource_owner_id)
-        public_send(order_method, created_at_desc).
+        ordered_by(:created_at, :desc).
           find_by(application_id: application_id,
                   resource_owner_id: resource_owner_id,
                   revoked_at: nil)
