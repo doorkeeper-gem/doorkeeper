@@ -36,10 +36,10 @@ begin
 rescue LoadError
 end
 
-Rails.logger.info "====> Doorkeeper.orm = #{Doorkeeper.configuration.orm.inspect}"
+Rails.logger.info "====> Doorkeeper.orm = #{Doorkeeper.configuration.orm}"
 if Doorkeeper.configuration.orm == :active_record
-  Rails.logger.info "======> active_record.table_name_prefix = #{Rails.configuration.active_record.table_name_prefix.inspect}"
-  Rails.logger.info "======> active_record.table_name_suffix = #{Rails.configuration.active_record.table_name_suffix.inspect}"
+  Rails.logger.info "======> active_record.table_name_prefix = #{Rails.configuration.active_record.table_name_prefix}"
+  Rails.logger.info "======> active_record.table_name_suffix = #{Rails.configuration.active_record.table_name_suffix}"
 end
 Rails.logger.info "====> Rails version: #{Rails.version}"
 Rails.logger.info "====> Ruby version: #{RUBY_VERSION}"

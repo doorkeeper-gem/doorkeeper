@@ -19,7 +19,7 @@ module Doorkeeper
           post :create, doorkeeper_application: {
             name: 'Example',
             redirect_uri: 'https://example.com' }
-        end.to_not change { Doorkeeper::Application.count }
+        end.not_to change { Doorkeeper::Application.count }
       end
     end
 

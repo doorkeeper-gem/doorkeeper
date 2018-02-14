@@ -4,8 +4,7 @@ module Doorkeeper
       include OAuth::Helpers
 
       def self.from_request(request, attributes = {})
-        state = request.state if request.respond_to?(:state)
-        new(attributes.merge(name: request.error, state: state))
+        new(attributes.merge(name: request.error, state: request.try(:state)))
       end
 
       delegate :name, :description, :state, to: :@error

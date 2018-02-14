@@ -4,6 +4,7 @@ module Doorkeeper
       validate :attributes,   error: :invalid_request
       validate :client,       error: :invalid_client
       validate :grant,        error: :invalid_grant
+      # @see https://tools.ietf.org/html/rfc6749#section-5.2
       validate :redirect_uri, error: :invalid_grant
 
       attr_accessor :server, :grant, :client, :redirect_uri, :access_token
