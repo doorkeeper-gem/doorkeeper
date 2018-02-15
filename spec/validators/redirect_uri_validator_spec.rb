@@ -10,6 +10,16 @@ describe RedirectUriValidator do
     expect(subject).to be_valid
   end
 
+  # Most mobile and desktop operating systems allow apps to register a custom URL
+  # scheme that will launch the app when a URL with that scheme is visited from
+  # the system browser.
+  #
+  # @see https://www.oauth.com/oauth2-servers/redirect-uris/redirect-uris-native-apps/
+  it 'is valid when the uri is custom native URI' do
+    subject.redirect_uri = 'myapp://callback'
+    expect(subject).to be_valid
+  end
+
   it 'is valid when the uri has a query parameter' do
     subject.redirect_uri = 'https://example.com/abcd?xyz=123'
     expect(subject).to be_valid
