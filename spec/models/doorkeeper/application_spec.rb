@@ -136,6 +136,24 @@ module Doorkeeper
       end
     end
 
+    describe :ordered_by do
+      let(:applications) { FactoryBot.create_list(:application, 5) }
+
+      context 'when a direction is not specified' do
+        it 'calls order with a default order of asc' do
+          names = applications.map(&:name).sort
+          expect(Application.ordered_by(:name).map(&:name)).to eq(names)
+        end
+      end
+
+      context 'when a direction is specified' do
+        it 'calls order with specified direction' do
+          names = applications.map(&:name).sort.reverse
+          expect(Application.ordered_by(:name, :desc).map(&:name)).to eq(names)
+        end
+      end
+    end
+
     describe :authorized_for do
       let(:resource_owner) { double(:resource_owner, id: 10) }
 
