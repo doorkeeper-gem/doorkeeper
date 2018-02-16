@@ -218,6 +218,23 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
+  describe 'forbid_redirect_uri' do
+    it 'is false by default' do
+      expect(subject.forbid_redirect_uri.call(URI.parse('https://localhost'))).to be_falsey
+    end
+
+    it 'can be a callable object' do
+      block = proc { true }
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        forbid_redirect_uri(&block)
+      end
+
+      expect(subject.forbid_redirect_uri).to eq(block)
+      expect(subject.forbid_redirect_uri.call).to be_truthy
+    end
+  end
+
   describe 'enable_application_owner' do
     it 'is disabled by default' do
       expect(Doorkeeper.configuration.enable_application_owner?).not_to be_truthy

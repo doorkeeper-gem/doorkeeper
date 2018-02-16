@@ -91,6 +91,21 @@ describe RedirectUriValidator do
       expect(application).not_to be_valid
     end
 
+    it 'forbids redirect uri if required' do
+      subject.redirect_uri = 'javascript://document.cookie'
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        forbid_redirect_uri { |uri| uri.scheme == 'javascript' }
+      end
+
+      expect(subject).to be_invalid
+      expect(subject.errors[:redirect_uri].first).to eq('is forbidden by the server.')
+
+      subject.redirect_uri = 'https://localhost/callback'
+      expect(subject).to be_valid
+    end
+
     it 'invalidates the uri when the uri does not use a secure protocol' do
       subject.redirect_uri = 'http://example.com/callback'
       expect(subject).not_to be_valid

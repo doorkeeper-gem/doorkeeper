@@ -59,12 +59,12 @@ doorkeeper.
       # @option opts[Boolean] :confirmation (false)
       #   Set confirm_application_owner variable
       def enable_application_owner(opts = {})
-        @config.instance_variable_set('@enable_application_owner', true)
+        @config.instance_variable_set(:@enable_application_owner, true)
         confirm_application_owner if opts[:confirmation].present? && opts[:confirmation]
       end
 
       def confirm_application_owner
-        @config.instance_variable_set('@confirm_application_owner', true)
+        @config.instance_variable_set(:@confirm_application_owner, true)
       end
 
       # Define default access token scopes for your provider
@@ -72,7 +72,7 @@ doorkeeper.
       # @param scopes [Array] Default set of access (OAuth::Scopes.new)
       # token scopes
       def default_scopes(*scopes)
-        @config.instance_variable_set('@default_scopes', OAuth::Scopes.from_array(scopes))
+        @config.instance_variable_set(:@default_scopes, OAuth::Scopes.from_array(scopes))
       end
 
       # Define default access token scopes for your provider
@@ -80,7 +80,7 @@ doorkeeper.
       # @param scopes [Array] Optional set of access (OAuth::Scopes.new)
       # token scopes
       def optional_scopes(*scopes)
-        @config.instance_variable_set('@optional_scopes', OAuth::Scopes.from_array(scopes))
+        @config.instance_variable_set(:@optional_scopes, OAuth::Scopes.from_array(scopes))
       end
 
       # Change the way client credentials are retrieved from the request object.
@@ -90,7 +90,7 @@ doorkeeper.
       #
       # @param methods [Array] Define client credentials
       def client_credentials(*methods)
-        @config.instance_variable_set('@client_credentials', methods)
+        @config.instance_variable_set(:@client_credentials, methods)
       end
 
       # Change the way access token is authenticated from the request object.
@@ -100,19 +100,19 @@ doorkeeper.
       #
       # @param methods [Array] Define access token methods
       def access_token_methods(*methods)
-        @config.instance_variable_set('@access_token_methods', methods)
+        @config.instance_variable_set(:@access_token_methods, methods)
       end
 
       # Issue access tokens with refresh token (disabled by default)
       def use_refresh_token
-        @config.instance_variable_set('@refresh_token_enabled', true)
+        @config.instance_variable_set(:@refresh_token_enabled, true)
       end
 
       # Reuse access token for the same resource owner within an application
       # (disabled by default)
       # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/383
       def reuse_access_token
-        @config.instance_variable_set("@reuse_access_token", true)
+        @config.instance_variable_set(:@reuse_access_token, true)
       end
     end
 
@@ -201,6 +201,13 @@ doorkeeper.
     option :native_redirect_uri,            default: 'urn:ietf:wg:oauth:2.0:oob'
     option :active_record_options,          default: {}
     option :grant_flows,                    default: %w[authorization_code client_credentials]
+
+    # Allows to forbid specific Application redirect URI's by custom rules.
+    # Doesn't forbid any URI by default.
+    #
+    # @param forbid_redirect_uri [Proc] Block or any object respond to #call
+    #
+    option :forbid_redirect_uri,            default: ->(_uri) { false }
 
     # WWW-Authenticate Realm (default "Doorkeeper").
     #

@@ -90,6 +90,14 @@ Doorkeeper.configure do
   #
   # force_ssl_in_redirect_uri { |uri| uri.host != 'localhost' }
 
+  # Specify what redirect URI's you want to block during creation. Any redirect
+  # URI is whitelisted by default.
+  #
+  # You can use this option in order to forbid URI's with 'javascript' scheme
+  # for example.
+  #
+  # forbid_redirect_uri { |uri| uri.scheme.to_s.downcase == 'javascript' }
+
   # Specify what grant flows are enabled in array of Strings. The valid
   # strings and the flows they enable are:
   #
