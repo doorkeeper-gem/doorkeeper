@@ -43,6 +43,15 @@ module Doorkeeper
       end
     end
 
+    # Set an application's valid redirect URIs.
+    #
+    # @param uris [String, Array] Newline-separated string or array the URI(s)
+    #
+    # @return [String] The redirect URI(s) seperated by newlines.
+    def redirect_uri=(uris)
+      super(uris.is_a?(Array) ? uris.join("\n") : uris)
+    end
+
     private
 
     def has_scopes?

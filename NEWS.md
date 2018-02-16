@@ -4,7 +4,8 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#1036] Allow to forbid Application redirect URI's with specific rules. 
+- [#1035] Allow `Application#redirect_uri=` to handle array of URIs.
+- [#1036] Allow to forbid Application redirect URI's with specific rules.
 - [#1029] Deprecate `order_method` and introduce `ordered_by`. Sort applications
   by `created_at` in index action.
 - [#1033] Allow Doorkeeper configuration option #force_ssl_in_redirect_uri to be a callable object.

@@ -154,6 +154,21 @@ module Doorkeeper
       end
     end
 
+    describe "#redirect_uri=" do
+      context "when array of valid redirect_uris" do
+        it "should join by newline" do
+          new_application.redirect_uri = ['http://localhost/callback1', 'http://localhost/callback2']
+          expect(new_application.redirect_uri).to eq("http://localhost/callback1\nhttp://localhost/callback2")
+        end
+      end
+      context "when string of valid redirect_uris" do
+        it "should store as-is" do
+          new_application.redirect_uri = "http://localhost/callback1\nhttp://localhost/callback2"
+          expect(new_application.redirect_uri).to eq("http://localhost/callback1\nhttp://localhost/callback2")
+        end
+      end
+    end
+
     describe :authorized_for do
       let(:resource_owner) { double(:resource_owner, id: 10) }
 
