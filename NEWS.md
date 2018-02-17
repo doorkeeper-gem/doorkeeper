@@ -4,6 +4,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#997] Allow PKCE authorization_code flow as specified in RCF7636
 - [#907] Fix lookup for matching tokens in certain edge-cases
 
 ## 4.3.1

@@ -127,6 +127,15 @@ Doorkeeper.configure do
   #   puts "AFTER HOOK FIRED! #{request}, #{response}"
   # end
 
+  # If you enabled pkce, by running rails g doorkeeper:pkce and migrating, you
+  # can configure to allow pkce authorization_code grant without providing a
+  # secret. To do so is inconsistent with RCF7636. But since PKCE is created,
+  # because you cannot trust secrets on mobile apps, there are implementations
+  # on Android, which implemented it completely without secret. If you need to
+  # support those libraries, you can do so by uncommenting following line:
+  #
+  # enable_pkce_without_secret
+
   # Under some circumstances you might want to have applications auto-approved,
   # so that the user skips the authorization step.
   # For example if dealing with a trusted application.

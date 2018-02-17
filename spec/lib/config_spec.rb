@@ -122,7 +122,7 @@ describe Doorkeeper, 'configuration' do
     it 'has all scopes' do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
-        default_scopes  :normal
+        default_scopes :normal
         optional_scopes :admin
       end
 
@@ -159,6 +159,21 @@ describe Doorkeeper, 'configuration' do
       it "includes 'refresh_token' in authorization_response_types" do
         expect(subject.token_grant_types).to include 'refresh_token'
       end
+    end
+  end
+
+  describe 'enable_pkce_without_secret' do
+    it 'is false by default' do
+      expect(subject.pkce_without_secret_enabled?).to be_falsey
+    end
+
+    it 'can change the value' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enable_pkce_without_secret
+      end
+
+      expect(subject.pkce_without_secret_enabled?).to be_truthy
     end
   end
 

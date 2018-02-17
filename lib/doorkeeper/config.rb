@@ -103,6 +103,18 @@ doorkeeper.
         @config.instance_variable_set(:@access_token_methods, methods)
       end
 
+      # There is a big Android oAuth library, that does not send a client secret in PKCE authorization_code flow:
+      # https://github.com/openid/AppAuth-Android/blob/7089089ab6a5950da773d68168e2683da523bfd5/library/java/net/openid/
+      # appauth/AuthorizationManagementActivity.java
+      # It is quite easily understandable, why they do not support secrets. Although its defined in RCF7636 where secret
+      # is required, as it is in the standard authorization_code flow it's required. RCF7636 explains itself, that PKCE
+      # is invented, because you never can trust a static client_secret in a mobile app. Still it should be default,
+      # that secret is expected. But whoever wants to support a library as above, can use enable_pkce_without_secret
+      # in doorkeeper initializer to do so.
+      def enable_pkce_without_secret
+        @config.instance_variable_set(:@enable_pkce_without_secret, true)
+      end
+
       # Issue access tokens with refresh token (disabled by default)
       def use_refresh_token
         @config.instance_variable_set(:@refresh_token_enabled, true)
@@ -255,6 +267,10 @@ doorkeeper.
     def refresh_token_enabled?
       @refresh_token_enabled ||= false
       !!@refresh_token_enabled
+    end
+
+    def pkce_without_secret_enabled?
+      @enable_pkce_without_secret ||= false
     end
 
     def enable_application_owner?
