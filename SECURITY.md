@@ -6,7 +6,9 @@ policy as outlined below:
 
 1. Do NOT open up a GitHub issue with your report. Security reports
    should be kept private until a possible fix is determined.
-2. Send an email to Jon Moss, Doorkeeper's maintainer, at doorkeeper AT jonathanmoss.me. You should receive a prompt response.
+2. Send an email to Nikita Bulai at bulaj.nikita AT gmail.com or one of
+   the others Doorkeeper maintainers listed in gemspec. You should receive
+   a prompt response.
 3. Be patient. Since Doorkeeper is in a stable maintenance phase, we want to
    do as little as possible to rock the boat of the project.
 
