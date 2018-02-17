@@ -14,6 +14,12 @@ Tell us what should happen
 Tell us what happens instead
 
 ### System configuration
+You can help us to understand your problem if you will share some very
+useful information about your project environment (don't forget to
+remove any confidential data if it exists).
+
+**Doorkeeper initializer**:
+
 **Ruby version**:
 
-**Gemfile.lock**
+**Gemfile.lock**:
