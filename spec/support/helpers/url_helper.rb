@@ -17,6 +17,7 @@ module UrlHelper
       client_secret: options[:client_secret] || (options[:client] ? options[:client].secret : nil),
       username: options[:resource_owner_username] || (options[:resource_owner] ? options[:resource_owner].name : nil),
       password: options[:resource_owner_password] || (options[:resource_owner] ? options[:resource_owner].password : nil),
+      scope: options[:scope],
       grant_type: 'password'
     }
     "/oauth/token?#{build_query(parameters)}"
