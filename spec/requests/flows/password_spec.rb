@@ -77,6 +77,45 @@ describe 'Resource Owner Password Credentials Flow' do
       expect(Doorkeeper::AccessToken.count).to be(1)
       should_have_json 'access_token', Doorkeeper::AccessToken.first.token
     end
+
+    context 'with valid, default scope' do
+      before do
+        default_scopes_exist :public
+      end
+
+      it 'should issue new token' do
+        expect do
+          post password_token_endpoint_url(client: @client, resource_owner: @resource_owner, scope: 'public')
+        end.to change { Doorkeeper::AccessToken.count }.by(1)
+
+        token = Doorkeeper::AccessToken.first
+
+        expect(token.application_id).to eq @client.id
+        should_have_json 'access_token', token.token
+        should_have_json 'scope', 'public'
+      end
+    end
+  end
+
+  context 'with invalid scopes' do
+    subject do
+      post password_token_endpoint_url(client: @client,
+                                       resource_owner: @resource_owner,
+                                       scope: 'random')
+    end
+
+    it 'should not issue new token' do
+      expect { subject }.to_not(change { Doorkeeper::AccessToken.count })
+    end
+
+    it 'should return invalid_scope error' do
+      subject
+      should_have_json 'error', 'invalid_scope'
+      should_have_json 'error_description', translated_error_message(:invalid_scope)
+      should_not_have_json 'access_token'
+
+      expect(response.status).to eq(401)
+    end
   end
 
   context 'with invalid user credentials' do
