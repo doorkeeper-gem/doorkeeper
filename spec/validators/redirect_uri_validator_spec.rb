@@ -113,4 +113,11 @@ describe RedirectUriValidator do
       expect(error).to eq('must be an HTTPS/SSL URI.')
     end
   end
+
+  context 'multiple redirect uri' do
+    it 'invalidates the second uri when the first uri is native uri' do
+      subject.redirect_uri = "urn:ietf:wg:oauth:2.0:oob\nexample.com/callback"
+      expect(subject).to be_invalid
+    end
+  end
 end

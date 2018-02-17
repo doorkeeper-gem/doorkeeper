@@ -11,7 +11,7 @@ class RedirectUriValidator < ActiveModel::EachValidator
     else
       value.split.each do |val|
         uri = ::URI.parse(val)
-        break if native_redirect_uri?(uri)
+        next if native_redirect_uri?(uri)
         record.errors.add(attribute, :forbidden_uri) if forbidden_uri?(uri)
         record.errors.add(attribute, :fragment_present) unless uri.fragment.nil?
         record.errors.add(attribute, :relative_uri) if uri.scheme.nil? || uri.host.nil?
