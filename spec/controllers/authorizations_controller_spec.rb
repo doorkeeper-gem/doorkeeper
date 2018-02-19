@@ -24,7 +24,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
   end
 
   def translated_error_message(key)
-    I18n.translate key, scope: [:doorkeeper, :errors, :messages]
+    I18n.translate key, scope: %i[doorkeeper errors messages]
   end
 
   let(:client)        { FactoryBot.create :application }

@@ -4,10 +4,10 @@ sudo: false
 
 rvm:
   - 2.1
-  - 2.2.9
-  - 2.3.6
-  - 2.4.3
-  - 2.5.0
+  - 2.2
+  - 2.3
+  - 2.4
+  - 2.5
 
 before_install:
   - gem update --system # Need for Ruby 2.5.0. https://github.com/travis-ci/travis-ci/issues/8978
@@ -30,5 +30,9 @@ matrix:
       rvm: 2.1
     - gemfile: gemfiles/rails_master.gemfile
       rvm: 2.1
+    - gemfile: gemfiles/rails_master.gemfile
+      rvm: 2.2
+    - gemfile: gemfiles/rails_master.gemfile
+      rvm: 2.3
   allow_failures:
     - gemfile: gemfiles/rails_master.gemfile

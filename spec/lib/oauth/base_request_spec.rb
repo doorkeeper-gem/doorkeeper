@@ -69,7 +69,7 @@ module Doorkeeper::OAuth
         it "returns an ErrorResponse object" do
           error_description = I18n.translate(
             "server_error",
-            scope: [:doorkeeper, :errors, :messages]
+            scope: %i[doorkeeper errors messages]
           )
 
           result = subject.authorize

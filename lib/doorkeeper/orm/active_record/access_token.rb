@@ -3,6 +3,29 @@ module Doorkeeper
     self.table_name = "#{table_name_prefix}oauth_access_tokens#{table_name_suffix}".to_sym
 
     include AccessTokenMixin
+    include ActiveModel::MassAssignmentSecurity if defined?(::ProtectedAttributes)
+
+    belongs_to_options = {
+      class_name: 'Doorkeeper::Application',
+      inverse_of: :access_tokens
+    }
+
+    if defined?(ActiveRecord::Base) && ActiveRecord::VERSION::MAJOR >= 5
+      belongs_to_options[:optional] = true
+    end
+
+    belongs_to :application, belongs_to_options
+
+    validates :token, presence: true, uniqueness: true
+    validates :refresh_token, uniqueness: true, if: :use_refresh_token?
+
+    # @attr_writer [Boolean, nil] use_refresh_token
+    #   indicates the possibility of using refresh token
+    attr_writer :use_refresh_token
+
+    before_validation :generate_token, on: :create
+    before_validation :generate_refresh_token,
+                      on: :create, if: :use_refresh_token?
 
     # Searches for not revoked Access Tokens associated with the
     # specific Resource Owner.

@@ -36,7 +36,7 @@ describe Doorkeeper::TokensController do
       allow(I18n).to receive(:translate).
         with(
           custom_message,
-          hash_including(scope: [:doorkeeper, :errors, :messages]),
+          hash_including(scope: %i[doorkeeper errors messages]),
         ).
         and_return('Authorization custom message')
 
