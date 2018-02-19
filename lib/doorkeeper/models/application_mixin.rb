@@ -4,18 +4,6 @@ module Doorkeeper
 
     include OAuth::Helpers
     include Models::Scopes
-    include ActiveModel::MassAssignmentSecurity if defined?(::ProtectedAttributes)
-
-    included do
-      has_many :access_grants, dependent: :delete_all, class_name: 'Doorkeeper::AccessGrant'
-      has_many :access_tokens, dependent: :delete_all, class_name: 'Doorkeeper::AccessToken'
-
-      validates :name, :secret, :uid, presence: true
-      validates :uid, uniqueness: true
-      validates :redirect_uri, redirect_uri: true
-
-      before_validation :generate_uid, :generate_secret, on: :create
-    end
 
     module ClassMethods
       # Returns an instance of the Doorkeeper::Application with
@@ -50,21 +38,6 @@ module Doorkeeper
     # @return [String] The redirect URI(s) seperated by newlines.
     def redirect_uri=(uris)
       super(uris.is_a?(Array) ? uris.join("\n") : uris)
-    end
-
-    private
-
-    def has_scopes?
-      Doorkeeper.configuration.orm != :active_record ||
-        Doorkeeper::Application.column_names.include?("scopes")
-    end
-
-    def generate_uid
-      self.uid = UniqueToken.generate if uid.blank?
-    end
-
-    def generate_secret
-      self.secret = UniqueToken.generate if secret.blank?
     end
   end
 end

@@ -21,7 +21,7 @@ module Doorkeeper
       end
 
       def description
-        scope = { scope: [:doorkeeper, :errors, :messages, :invalid_token] }
+        scope = { scope: %i[doorkeeper errors messages invalid_token] }
         @description ||= I18n.translate @reason, scope
       end
     end
