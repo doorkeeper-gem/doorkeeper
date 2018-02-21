@@ -27,13 +27,16 @@ User-visible changes worth mentioning.
 - [#1019] Remove translation not in use: `invalid_resource_owner`.
 - Use Ruby 2 hash style syntax (min required Ruby version = 2.1)
 - [#948] Make Scopes.<=> work with any "other" value.
-- [#970] Escape certain attributes in authorization forms.
 - [#974] Redirect URI is checked without query params within AuthorizationCodeRequest.
 - [#1004] More explicit help text for `native_redirect_uri`.
 - [#1023] Update Ruby versions and test against 2.5.0 on Travis CI.
 - [#1024] Migrate from FactoryGirl to FactoryBot.
 - [#1025] Improve documentation for adding foreign keys
 - [#1028] Make it possible to have composit strategy names.
+
+## 4.2.6
+
+- [#970] Escape certain attributes in authorization forms.
 
 ## 4.2.5
 

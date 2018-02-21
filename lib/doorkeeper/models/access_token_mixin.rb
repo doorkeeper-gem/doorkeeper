@@ -85,7 +85,7 @@ module Doorkeeper
       # @param app_scopes [String]
       #   Application scopes
       #
-      # @return [Boolean] true if all scopes and blank or matches
+      # @return [Boolean] true if all scopes are blank or matches
       #   and false in other cases
       #
       def scopes_match?(token_scopes, param_scopes, app_scopes)
