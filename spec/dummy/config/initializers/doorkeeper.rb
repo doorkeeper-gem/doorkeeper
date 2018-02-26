@@ -84,6 +84,17 @@ Doorkeeper.configure do
   #
   # grant_flows %w[authorization_code client_credentials]
 
+  # Hook into the strategies' request & response life-cycle in case your
+  # application needs advanced customization or logging:
+  #
+  # before_successful_strategy_response do |request|
+  #   puts "BEFORE HOOK FIRED! #{request}"
+  # end
+  #
+  # after_successful_strategy_response do |request, response|
+  #   puts "AFTER HOOK FIRED! #{request}, #{response}"
+  # end
+
   # Under some circumstances you might want to have applications auto-approved,
   # so that the user skips the authorization step.
   # For example if dealing with a trusted application.
