@@ -17,6 +17,10 @@ module Doorkeeper
         instance_eval(&Doorkeeper.configuration.resource_owner_from_credentials)
       end
 
+      def resource_owners_from_credentials
+        instance_eval(&Doorkeeper.configuration.resource_owners_from_credentials)
+      end
+
       def authenticate_admin! # :doc:
         instance_eval(&Doorkeeper.configuration.authenticate_admin)
       end
