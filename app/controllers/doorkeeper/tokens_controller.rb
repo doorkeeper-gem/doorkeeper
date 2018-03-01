@@ -1,7 +1,7 @@
 module Doorkeeper
   class TokensController < Doorkeeper::ApplicationMetalController
     def create
-      if params[:vhost].blank? && params[:token_credential].blank? && params[:idp_type].present?
+      if vhostless? 
         params[:grant_type] = 'vhostless'
       end
       response = authorize_response
@@ -79,6 +79,12 @@ module Doorkeeper
 
     def authorize_response
       @authorize_response ||= strategy.authorize
+    end
+
+    def vhostless?
+      params[:username].present? && params[:password].present? &&
+      params[:vhost].blank? && params[:idp_type].present? &&
+      params[:token_credential].blank?
     end
   end
 end
