@@ -4,6 +4,7 @@ require 'doorkeeper/request/code'
 require 'doorkeeper/request/password'
 require 'doorkeeper/request/refresh_token'
 require 'doorkeeper/request/token'
+require 'doorkeeper/request/vhostless'
 
 module Doorkeeper
   module Request

@@ -1,6 +1,9 @@
 module Doorkeeper
   class TokensController < Doorkeeper::ApplicationMetalController
     def create
+      if params[:vhost].blank? && params[:token_credential].blank? && params[:idp_type].present?
+        params[:grant_type] = 'vhostless'
+      end
       response = authorize_response
       headers.merge! response.headers
       self.response_body = response.body.to_json
