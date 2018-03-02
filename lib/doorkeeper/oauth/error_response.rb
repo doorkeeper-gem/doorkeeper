@@ -11,6 +11,7 @@ module Doorkeeper
       delegate :name, :description, :state, to: :@error
 
       def initialize(attributes = {})
+        @status = attributes[:status]
         @error = OAuth::Error.new(*attributes.values_at(:name, :state))
         @redirect_uri = attributes[:redirect_uri]
         @response_on_fragment = attributes[:response_on_fragment]
@@ -25,7 +26,7 @@ module Doorkeeper
       end
 
       def status
-        :unauthorized
+        @status ||= :unauthorized
       end
 
       def redirectable?

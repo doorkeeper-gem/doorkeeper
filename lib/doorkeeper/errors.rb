@@ -1,6 +1,13 @@
 module Doorkeeper
   module Errors
     class DoorkeeperError < StandardError
+      attr_accessor :status
+
+      def initialize(message=nil, status: nil)
+        super(message)
+        @status = status
+      end
+
       def type
         message
       end

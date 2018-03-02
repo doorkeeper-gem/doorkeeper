@@ -38,7 +38,7 @@ module Doorkeeper
       end
 
       def get_error_response_from_exception(exception)
-        OAuth::ErrorResponse.new name: exception.type, state: params[:state]
+        OAuth::ErrorResponse.new name: exception.type, state: params[:state], status: exception.status
       end
 
       def handle_token_exception(exception)
