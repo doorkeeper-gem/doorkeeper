@@ -36,6 +36,23 @@ feature 'Listing applications' do
   end
 end
 
+feature 'Renders assets' do
+  scenario 'admin stylesheets' do
+    visit '/assets/doorkeeper/admin/application.css'
+
+    i_should_see 'Bootstrap'
+    i_should_see '.doorkeeper-admin'
+  end
+
+  scenario 'application stylesheets' do
+    visit '/assets/doorkeeper/application.css'
+
+    i_should_see 'Bootstrap'
+    i_should_see '#oauth-permissions'
+    i_should_see '#container'
+  end
+end
+
 feature 'Show application' do
   given :app do
     FactoryBot.create :application, name: 'Just another oauth app'

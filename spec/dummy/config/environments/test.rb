@@ -7,6 +7,10 @@ Dummy::Application.configure do
   # and recreated between test runs.  Don't rely on the data there!
   config.cache_classes = true
 
+  config.assets.enabled = true
+  config.assets.version = '1.0'
+  config.assets.digest = false
+
   # Do not eager load code on boot. This avoids loading your whole application
   # just for the purpose of running a single test. If you are using a tool that
   # preloads Rails for running tests, you may have to set it to true.
