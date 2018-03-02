@@ -3,6 +3,7 @@ module Doorkeeper
     extend ActiveSupport::Concern
 
     include OAuth::Helpers
+    include Models::Orderable
     include Models::Scopes
 
     module ClassMethods

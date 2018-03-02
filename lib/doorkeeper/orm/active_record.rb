@@ -5,7 +5,6 @@ module Doorkeeper
     module ActiveRecord
       def self.initialize_models!
         lazy_load do
-          require 'doorkeeper/models/concerns/orderable'
           require 'doorkeeper/orm/active_record/access_grant'
           require 'doorkeeper/orm/active_record/access_token'
           require 'doorkeeper/orm/active_record/application'

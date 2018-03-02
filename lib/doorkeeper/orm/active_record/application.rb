@@ -2,7 +2,6 @@ module Doorkeeper
   class Application < ActiveRecord::Base
     self.table_name = "#{table_name_prefix}oauth_applications#{table_name_suffix}".to_sym
 
-    include Models::Orderable
     include ApplicationMixin
     include ActiveModel::MassAssignmentSecurity if defined?(::ProtectedAttributes)
 

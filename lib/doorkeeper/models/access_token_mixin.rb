@@ -6,6 +6,7 @@ module Doorkeeper
     include Models::Expirable
     include Models::Revocable
     include Models::Accessible
+    include Models::Orderable
     include Models::Scopes
 
     module ClassMethods
