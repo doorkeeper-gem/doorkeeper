@@ -4,6 +4,12 @@ User-visible changes worth mentioning.
 
 ## master
 
+Replace this text with you changelog entry. Look at the examples below.
+
+## 4.3.1
+
+- Remove `BaseRecord` and introduce additional concern for ordering methods to fix
+  braking changes for Doorkeeper models.
 - [#1032] Refactor BaseRequest callbacks into configurable lambdas
 - [#1040] Clear mixins from ActiveRecord DSL and save only overridable API. It
   allows to use this mixins in Doorkeeper ORM extensions with minimum code boilerplate.
