@@ -70,9 +70,12 @@ module Doorkeeper::OAuth
     end
 
     it 'skips token creation if there is a matching one' do
+      scopes = grant.scopes
+
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
         reuse_access_token
+        default_scopes(*scopes)
       end
 
       FactoryBot.create(:access_token, application_id: client.id,
