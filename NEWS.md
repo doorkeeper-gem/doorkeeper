@@ -5,6 +5,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#907] Fix lookup for matching tokens in certain edge-cases
+- [#1045] Validate redirect_uri as the native URI when making authorization code requests
 
 ## 4.3.1
 
