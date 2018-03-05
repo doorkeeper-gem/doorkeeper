@@ -4,7 +4,7 @@ User-visible changes worth mentioning.
 
 ## master
 
-Replace this text with you changelog entry. Look at the examples below.
+- [#907] Fix lookup for matching tokens in certain edge-cases
 
 ## 4.3.1
 
@@ -13,7 +13,6 @@ Replace this text with you changelog entry. Look at the examples below.
 - [#1032] Refactor BaseRequest callbacks into configurable lambdas
 - [#1040] Clear mixins from ActiveRecord DSL and save only overridable API. It
   allows to use this mixins in Doorkeeper ORM extensions with minimum code boilerplate.
-- [#907] Fix lookup for matching tokens in certain edge-cases
 
 ## 4.3.0
 
@@ -40,7 +39,7 @@ Replace this text with you changelog entry. Look at the examples below.
 - [#1023] Update Ruby versions and test against 2.5.0 on Travis CI.
 - [#1024] Migrate from FactoryGirl to FactoryBot.
 - [#1025] Improve documentation for adding foreign keys
-- [#1028] Make it possible to have composit strategy names.
+- [#1028] Make it possible to have composite strategy names.
 
 ## 4.2.6
 
