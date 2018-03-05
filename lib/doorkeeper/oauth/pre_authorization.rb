@@ -36,6 +36,18 @@ module Doorkeeper
         OAuth::ErrorResponse.from_request(self)
       end
 
+      def as_json(_options)
+        {
+          client_id: client.uid,
+          redirect_uri: redirect_uri,
+          state: state,
+          response_type: response_type,
+          scope: scope,
+          client_name: client.name,
+          status: 'preauthorization'
+        }
+      end
+
       private
 
       def validate_response_type
