@@ -72,6 +72,9 @@ en:
         created_at: 'Created At'
         date_format: '%Y-%m-%d %H:%M:%S'
 
+    pre_authorization:
+      status: 'Pre-authorization'
+
     errors:
       messages:
         # Common error messages

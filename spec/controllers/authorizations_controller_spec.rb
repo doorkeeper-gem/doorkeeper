@@ -72,7 +72,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
 
   describe "POST #create in API mode" do
     before do
-      allow(Doorkeeper.configuration).to receive(:api_mode).and_return(true)
+      allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
       post :create, client_id: client.uid, response_type: "token", redirect_uri: client.redirect_uri
     end
 
@@ -141,7 +141,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
 
   describe 'POST #create in API mode with errors' do
     before do
-      allow(Doorkeeper.configuration).to receive(:api_mode).and_return(true)
+      allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
       default_scopes_exist :public
       post :create, client_id: client.uid, response_type: 'token', scope: 'invalid', redirect_uri: client.redirect_uri
     end
@@ -277,7 +277,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
       allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
         true
       end)
-      allow(Doorkeeper.configuration).to receive(:api_mode).and_return(true)
+      allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
       get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
     end
 

@@ -435,17 +435,18 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
-  describe "api_mode" do
+  describe "api_only" do
     it "is false by default" do
-      expect(subject.api_mode).to be_falsey
+      expect(subject.api_only).to be_falsey
     end
 
     it "can change the value" do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
-        api_mode
+        api_only
       end
-      expect(subject.api_mode).to be_truthy
+
+      expect(subject.api_only).to be_truthy
     end
   end
 end

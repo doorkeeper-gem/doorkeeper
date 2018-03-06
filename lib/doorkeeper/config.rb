@@ -117,8 +117,8 @@ doorkeeper.
 
       # Use an API mode for applications generated with --api argument
       # It will skip applications controller, disable forgery protection
-      def api_mode
-        @config.instance_variable_set("@api_mode", true)
+      def api_only
+        @config.instance_variable_set(:@api_only, true)
       end
     end
 
@@ -257,7 +257,7 @@ doorkeeper.
            default: 'ActionController::Base'
 
     attr_reader :reuse_access_token
-    attr_reader :api_mode
+    attr_reader :api_only
 
     def refresh_token_enabled?
       @refresh_token_enabled ||= false

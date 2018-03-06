@@ -44,6 +44,7 @@ https://github.com/doorkeeper-gem/doorkeeper/releases
     - [MongoDB](#mongodb)
     - [Sequel](#sequel)
     - [Couchbase](#couchbase)
+  - [API mode](#api-mode)
   - [Routes](#routes)
   - [Authenticating](#authenticating)
   - [Internationalization (I18n)](#internationalization-i18n)
@@ -145,6 +146,24 @@ Follow configuration instructions for setting up the necessary Doorkeeper ORM.
 Use [doorkeeper-couchbase] extension if you are using Couchbase database.
 
 [doorkeeper-couchbase]: https://github.com/acaprojects/doorkeeper-couchbase
+
+### API mode
+
+By default Doorkeeper uses default Rails stack to provide full OAuth 2 functionality
+with additional features like administration area for managing applications. By the
+way, you can use Doorkeeper API mode for you [API only Rails 5 applications](http://edgeguides.rubyonrails.org/api_app.html).
+All you need is just to configure the gem to work in required mode:
+
+``` ruby
+Doorkeeper.configure do
+  # ...
+  
+  api_only
+end
+```
+
+Keep in mind, that in this mode you will not be able to access `Applications` or
+`Authorized Applications` controllers because they will be skipped.
 
 ### Routes
 

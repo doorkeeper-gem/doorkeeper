@@ -155,12 +155,16 @@ module Doorkeeper::OAuth
     describe "as_json" do
       let(:client_id) { "client_uid_123" }
       let(:client_name) { "Acme Co." }
+
       before do
         allow(client).to receive(:uid).and_return client_id
         allow(client).to receive(:name).and_return client_name
       end
+
       let(:json) { subject.as_json({}) }
+
       it { is_expected.to respond_to :as_json }
+
       it "returns correct values" do
         expect(json[:client_id]).to eq client_id
         expect(json[:redirect_uri]).to eq subject.redirect_uri
@@ -168,7 +172,7 @@ module Doorkeeper::OAuth
         expect(json[:response_type]).to eq subject.response_type
         expect(json[:scope]).to eq subject.scope
         expect(json[:client_name]).to eq client_name
-        expect(json[:status]).to eq "preauthorization"
+        expect(json[:status]).to eq I18n.t('doorkeeper.pre_authorization.status')
       end
     end
   end

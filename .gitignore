@@ -17,3 +17,4 @@ gemfiles/*.lock
 /doc/
 /rdoc/
 coverage
+*.gem

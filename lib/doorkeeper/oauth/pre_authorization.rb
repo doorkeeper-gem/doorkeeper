@@ -44,7 +44,7 @@ module Doorkeeper
           response_type: response_type,
           scope: scope,
           client_name: client.name,
-          status: 'preauthorization'
+          status: I18n.t('doorkeeper.pre_authorization.status')
         }
       end
 

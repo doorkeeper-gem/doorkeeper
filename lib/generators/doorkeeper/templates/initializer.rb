@@ -17,6 +17,12 @@ Doorkeeper.configure do
   #   Admin.find_by_id(session[:admin_id]) || redirect_to(new_admin_session_url)
   # end
 
+  # If you are planning to use Doorkeeper in Rails 5 API-only application, then you possible
+  # want to use API mode that will skip all the views management and change the way how
+  # Doorkeeper responds to a requests:
+  #
+  # api_only
+
   # Authorization Code expiration time (default 10 minutes).
   # authorization_code_expires_in 10.minutes
 
