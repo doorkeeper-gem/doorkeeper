@@ -107,5 +107,14 @@ module Doorkeeper::OAuth
         expect(subject.error).to eq(:invalid_grant)
       end
     end
+
+    context "when redirect_uri is the native one" do
+      let(:redirect_uri) { 'urn:ietf:wg:oauth:2.0:oob' }
+
+      it "compares redirect_uri with the configured redirect native URI" do
+        subject.validate
+        expect(subject.error).to eq(nil)
+      end
+    end
   end
 end
