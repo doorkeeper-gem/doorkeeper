@@ -19,7 +19,7 @@ Supported features:
   - [Implicit grant](http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-4.2)
   - [Resource Owner Password Credentials](http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-4.3)
   - [Client Credentials](http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-4.4)
-  - [PKCE flow](https://tools.ietf.org/html/rfc7636)
+  - [Proof Key for Code Exchange](https://tools.ietf.org/html/rfc7636)
 - [OAuth 2.0 Token Revocation](http://tools.ietf.org/html/rfc7009)
 - [OAuth 2.0 Token Introspection](https://tools.ietf.org/html/rfc7662)
 
