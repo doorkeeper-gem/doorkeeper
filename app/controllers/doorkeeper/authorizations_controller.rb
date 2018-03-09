@@ -48,13 +48,15 @@ module Doorkeeper
     end
 
     def redirect_or_render(auth)
-      if auth.redirectable? && Doorkeeper.configuration.api_only
-        render(
-          json: { status: :redirect, redirect_uri: auth.redirect_uri },
-          status: auth.status
-        )
-      elsif auth.redirectable?
-        redirect_to auth.redirect_uri
+      if auth.redirectable?
+        if Doorkeeper.configuration.api_only
+          render(
+            json: { status: :redirect, redirect_uri: auth.redirect_uri },
+            status: auth.status
+          )
+        else
+          redirect_to auth.redirect_uri
+        end
       else
         render json: auth.body, status: auth.status
       end

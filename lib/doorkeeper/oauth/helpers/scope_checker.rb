@@ -17,10 +17,6 @@ module Doorkeeper
               @valid_scopes.has_scopes?(parsed_scopes)
           end
 
-          def match?
-            valid? && parsed_scopes.has_scopes?(@valid_scopes)
-          end
-
           private
 
           def valid_scopes(server_scopes, application_scopes)
@@ -34,10 +30,6 @@ module Doorkeeper
 
         def self.valid?(scope_str, server_scopes, application_scopes = nil)
           Validator.new(scope_str, server_scopes, application_scopes).valid?
-        end
-
-        def self.match?(scope_str, server_scopes, application_scopes = nil)
-          Validator.new(scope_str, server_scopes, application_scopes).match?
         end
       end
     end

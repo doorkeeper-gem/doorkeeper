@@ -9,6 +9,8 @@ User-visible changes worth mentioning.
 - [#992] Add API option to use Doorkeeper without management views for API only
   Rails applications (`api_only`)
 - [#1045] Validate redirect_uri as the native URI when making authorization code requests
+- [#1048] Remove deprecated `Doorkeeper#configured?`, `Doorkeeper#database_installed?`, and
+  `Doorkeeper#installed?` method
 
 ## 4.3.1
 

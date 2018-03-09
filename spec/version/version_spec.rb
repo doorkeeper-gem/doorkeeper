@@ -1,6 +1,6 @@
 require 'spec_helper_integration'
 
-describe 'Doorkeeper version' do
+describe Doorkeeper::VERSION do
   context '#gem_version' do
     it 'returns Gem::Version instance' do
       expect(Doorkeeper.gem_version).to be_an_instance_of(Gem::Version)
