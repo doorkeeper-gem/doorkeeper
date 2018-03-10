@@ -170,21 +170,22 @@ Use [doorkeeper-couchbase] extension if you are using Couchbase database.
 
 ### API mode
 
-By default Doorkeeper uses default Rails stack to provide full OAuth 2 functionality
+By default Doorkeeper uses full Rails stack to provide all the OAuth 2 functionality
 with additional features like administration area for managing applications. By the
-way, you can use Doorkeeper API mode for you [API only Rails 5 applications](http://edgeguides.rubyonrails.org/api_app.html).
-All you need is just to configure the gem to work in required mode:
+way, starting from Doorkeeper 5 you can use API mode for your [API only Rails 5 applications](http://edgeguides.rubyonrails.org/api_app.html).
+All you need is just to configure the gem to work in desired mode:
 
 ``` ruby
 Doorkeeper.configure do
   # ...
-  
+
   api_only
 end
 ```
 
 Keep in mind, that in this mode you will not be able to access `Applications` or
-`Authorized Applications` controllers because they will be skipped.
+`Authorized Applications` controllers because they will be skipped. Also all the
+redirects will be returned as JSON response with corresponding locations.
 
 ### Routes
 
