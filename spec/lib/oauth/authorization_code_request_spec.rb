@@ -6,7 +6,7 @@ module Doorkeeper::OAuth
       double :server,
              access_token_expires_in: 2.days,
              refresh_token_enabled?: false,
-             custom_access_token_expires_in: ->(_app) { nil }
+             custom_access_token_expires_in: ->(_app, grant) { grant == Doorkeeper::OAuth::AUTHORIZATION_CODE ? 1234 : nil }
     end
 
     let(:grant)  { FactoryBot.create :access_grant }
@@ -22,6 +22,8 @@ module Doorkeeper::OAuth
       expect do
         subject.authorize
       end.to change { client.reload.access_tokens.count }.by(1)
+
+      expect(client.reload.access_tokens.sort_by(&:created_at).last.expires_in).to eq(1234)
     end
 
     it "issues the token with same grant's scopes" do

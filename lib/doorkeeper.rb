@@ -14,6 +14,7 @@ require 'doorkeeper/oauth/helpers/scope_checker'
 require 'doorkeeper/oauth/helpers/uri_checker'
 require 'doorkeeper/oauth/helpers/unique_token'
 
+require 'doorkeeper/oauth'
 require 'doorkeeper/oauth/scopes'
 require 'doorkeeper/oauth/error'
 require 'doorkeeper/oauth/base_response'

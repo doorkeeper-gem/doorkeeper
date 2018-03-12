@@ -8,7 +8,7 @@ module Doorkeeper::OAuth
         default_scopes: Doorkeeper::OAuth::Scopes.new,
         access_token_expires_in: 2.hours,
         refresh_token_enabled?: false,
-        custom_access_token_expires_in: ->(_app) { nil }
+        custom_access_token_expires_in: ->(_app, grant) { grant == Doorkeeper::OAuth::PASSWORD ? 1234 : nil }
       )
     end
     let(:client) { FactoryBot.create(:application) }
@@ -22,6 +22,7 @@ module Doorkeeper::OAuth
       expect do
         subject.authorize
       end.to change { client.reload.access_tokens.count }.by(1)
+      expect(client.reload.access_tokens.sort_by(&:created_at).last.expires_in).to eq(1234)
     end
 
     it 'issues a new token without a client' do

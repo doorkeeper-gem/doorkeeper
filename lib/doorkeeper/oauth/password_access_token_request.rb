@@ -16,6 +16,7 @@ module Doorkeeper
         @client          = client
         @parameters      = parameters
         @original_scopes = parameters[:scope]
+        @grant_type      = Doorkeeper::OAuth::PASSWORD
       end
 
       private
