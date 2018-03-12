@@ -34,6 +34,9 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
   before do
     allow(Doorkeeper.configuration).to receive(:grant_flows).and_return(["implicit"])
     allow(controller).to receive(:current_resource_owner).and_return(user)
+    allow(Doorkeeper.configuration).to receive(:custom_access_token_expires_in).and_return(proc { |_app, grant|
+      grant == Doorkeeper::OAuth::IMPLICIT ? 1234 : nil
+    })
   end
 
   describe 'POST #create' do
@@ -58,7 +61,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
 
     it 'includes token expiration in fragment' do
-      expect(response.query_params['expires_in'].to_i).to eq(2.hours.to_i)
+      expect(response.query_params['expires_in'].to_i).to eq(1234)
     end
 
     it 'issues the token for the current client' do
@@ -96,7 +99,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
 
     it "includes token expiration in fragment" do
-      expect(redirect_uri.match(/expires_in=(\d+)&?/)[1].to_i).to eq 2.hours
+      expect(redirect_uri.match(/expires_in=(\d+)&?/)[1].to_i).to eq 1234
     end
 
     it "issues the token for the current client" do
@@ -260,7 +263,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
 
     it 'includes token expiration in fragment' do
-      expect(response.query_params['expires_in'].to_i).to eq(2.hours.to_i)
+      expect(response.query_params['expires_in'].to_i).to eq(1234)
     end
 
     it 'issues the token for the current client' do
@@ -297,7 +300,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
       redirect_uri = JSON.parse(response.body)["redirect_uri"]
       expect(redirect_uri).to_not be_nil
       expect(redirect_uri.match(/token_type=(\w+)&?/)[1]).to eq "bearer"
-      expect(redirect_uri.match(/expires_in=(\d+)&?/)[1].to_i).to eq 2.hours
+      expect(redirect_uri.match(/expires_in=(\d+)&?/)[1].to_i).to eq 1234
       expect(
         redirect_uri.match(/access_token=([a-f0-9]+)&?/)[1]
       ).to eq Doorkeeper::AccessToken.first.token

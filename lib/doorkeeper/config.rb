@@ -215,7 +215,7 @@ doorkeeper.
            default: ->(_request, _response) {}
     option :skip_authorization,             default: ->(_routes) {}
     option :access_token_expires_in,        default: 7200
-    option :custom_access_token_expires_in, default: ->(_app) { nil }
+    option :custom_access_token_expires_in, default: ->(_app, _grant) { nil }
     option :authorization_code_expires_in,  default: 600
     option :orm,                            default: :active_record
     option :native_redirect_uri,            default: 'urn:ietf:wg:oauth:2.0:oob'

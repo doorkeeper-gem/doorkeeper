@@ -15,6 +15,7 @@ module Doorkeeper
         @server = server
         @client = client
         @grant  = grant
+        @grant_type = Doorkeeper::OAuth::AUTHORIZATION_CODE
         @redirect_uri = parameters[:redirect_uri]
         @code_verifier = parameters[:code_verifier]
         @client = client_by_uid(parameters) if no_secret_allowed_for_pkce?
