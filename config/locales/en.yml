@@ -28,6 +28,7 @@ en:
       form:
         error: 'Whoops! Check your form for possible errors'
       help:
+        confidential: 'Application will be used where the client secret can be kept confidential. Native mobile apps and Single Page Apps are considered non-confidential.'
         redirect_uri: 'Use one line per URI'
         native_redirect_uri: 'Use %{native_redirect_uri} if you want to add localhost URIs for development purposes'
         scopes: 'Separate scopes with spaces. Leave blank to use the default scopes.'
@@ -38,6 +39,10 @@ en:
         new: 'New Application'
         name: 'Name'
         callback_url: 'Callback URL'
+        confidential: 'Confidential?'
+        confidentiality:
+          yes: 'Yes'
+          no: 'No'
       new:
         title: 'New Application'
       show:
@@ -45,6 +50,7 @@ en:
         application_id: 'Application Id'
         secret: 'Secret'
         scopes: 'Scopes'
+        confidential: 'Confidential'
         callback_urls: 'Callback urls'
         actions: 'Actions'
 
