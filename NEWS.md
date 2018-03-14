@@ -1,5 +1,8 @@
 # News
 
+See https://github.com/doorkeeper-gem/doorkeeper/wiki/Migration-from-old-versions for
+upgrade guides.
+
 User-visible changes worth mentioning.
 
 ## master

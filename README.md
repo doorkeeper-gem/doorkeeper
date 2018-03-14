@@ -29,6 +29,7 @@ Please check the documentation for the version of doorkeeper you are using in:
 https://github.com/doorkeeper-gem/doorkeeper/releases
 
 - See the [wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki)
+- See [upgrade guides](https://github.com/doorkeeper-gem/doorkeeper/wiki/Migration-from-old-versions)
 - For general questions, please post in [Stack Overflow](http://stackoverflow.com/questions/tagged/doorkeeper)
 - See [SECURITY.md](SECURITY.md) for this project's security disclose
   policy
