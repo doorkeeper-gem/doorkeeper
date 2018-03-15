@@ -4,7 +4,7 @@ require 'rails/generators/active_record'
 
 class Doorkeeper::PkceGenerator < Rails::Generators::Base
   include Rails::Generators::Migration
-  source_root File.expand_path('../templates', __FILE__)
+  source_root File.expand_path('templates', __dir__)
   desc 'Provide support for PKCE.'
 
   def pkce

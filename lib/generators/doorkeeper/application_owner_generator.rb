@@ -2,7 +2,7 @@ require 'rails/generators/active_record'
 
 class Doorkeeper::ApplicationOwnerGenerator < Rails::Generators::Base
   include Rails::Generators::Migration
-  source_root File.expand_path('../templates', __FILE__)
+  source_root File.expand_path('templates', __dir__)
   desc 'Provide support for client application ownership.'
 
   def application_owner

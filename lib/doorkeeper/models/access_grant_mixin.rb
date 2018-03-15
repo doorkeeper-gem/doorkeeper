@@ -64,7 +64,7 @@ module Doorkeeper
       # urlsafe_encode64(bin)
       # Returns the Base64-encoded version of bin. This method complies with
       # “Base 64 Encoding with URL and Filename Safe Alphabet” in RFC 4648.
-      # The alphabet uses ‘-’ instead of ‘+’ and ‘_’ instead of ‘/’.
+      # The alphabet uses '-' instead of '+' and '_' instead of '/'.
 
       # @param code_verifier [#to_s] a one time use value (any object that responds to `#to_s`)
       #

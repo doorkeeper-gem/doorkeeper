@@ -4,7 +4,7 @@ require 'rails/generators/active_record'
 
 class Doorkeeper::ConfidentialApplicationsGenerator < Rails::Generators::Base
   include Rails::Generators::Migration
-  source_root File.expand_path('../templates', __FILE__)
+  source_root File.expand_path('templates', __dir__)
   desc 'Add confidential column to Doorkeeper applications'
 
   def pkce

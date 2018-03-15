@@ -6,7 +6,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
   if Rails::VERSION::MAJOR >= 5
     class ActionDispatch::TestResponse
       def query_params
-        @_query_params ||= begin
+        @query_params ||= begin
           fragment = URI.parse(location).fragment
           Rack::Utils.parse_query(fragment)
         end
@@ -15,7 +15,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
   else
     class ActionController::TestResponse
       def query_params
-        @_query_params ||= begin
+        @query_params ||= begin
           fragment = URI.parse(location).fragment
           Rack::Utils.parse_query(fragment)
         end

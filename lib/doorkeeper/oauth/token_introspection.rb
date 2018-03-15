@@ -47,12 +47,12 @@ module Doorkeeper
 
       # Client Authentication
       def authorized_client
-        @_authorized_client ||= server.credentials && server.client
+        @authorized_client ||= server.credentials && server.client
       end
 
       # Bearer Token Authentication
       def authorized_token
-        @_authorized_token ||=
+        @authorized_token ||=
           OAuth::Token.authenticate(server.context.request, :from_bearer_authorization)
       end
 

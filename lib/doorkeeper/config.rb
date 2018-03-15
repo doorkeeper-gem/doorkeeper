@@ -21,13 +21,13 @@ module Doorkeeper
   def self.setup_orm_adapter
     @orm_adapter = "doorkeeper/orm/#{configuration.orm}".classify.constantize
   rescue NameError => e
-    fail e, "ORM adapter not found (#{configuration.orm})", <<-ERROR_MSG.squish
-[doorkeeper] ORM adapter not found (#{configuration.orm}), or there was an error
-trying to load it.
+    fail e, "ORM adapter not found (#{configuration.orm})", <<-ERROR_MSG.strip_heredoc
+      [doorkeeper] ORM adapter not found (#{configuration.orm}), or there was an error
+      trying to load it.
 
-You probably need to add the related gem for this adapter to work with
-doorkeeper.
-      ERROR_MSG
+      You probably need to add the related gem for this adapter to work with
+      doorkeeper.
+    ERROR_MSG
   end
 
   def self.setup_orm_models

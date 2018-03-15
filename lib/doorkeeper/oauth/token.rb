@@ -3,7 +3,7 @@ module Doorkeeper
     class Token
       class << self
         def from_request(request, *methods)
-          methods.inject(nil) do |credentials, method|
+          methods.inject(nil) do |_, method|
             method = self.method(method) if method.is_a?(Symbol)
             credentials = method.call(request)
             break credentials unless credentials.blank?

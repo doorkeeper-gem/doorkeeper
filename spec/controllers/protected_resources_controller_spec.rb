@@ -57,7 +57,7 @@ describe 'doorkeeper authorize filter' do
       expect(Doorkeeper::AccessToken).to receive(:by_token).exactly(2).times.and_return(token)
       request.env['HTTP_AUTHORIZATION'] = "Bearer #{token_string}"
       get :index
-      controller.send(:remove_instance_variable, :@_doorkeeper_token)
+      controller.send(:remove_instance_variable, :@doorkeeper_token)
       get :index
     end
   end
