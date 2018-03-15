@@ -4,9 +4,6 @@ describe Doorkeeper::TokensController do
   describe 'when authorization has succeeded' do
     let(:token) { double(:token, authorize: true) }
 
-    before do
-      allow(controller).to receive(:token) { token }
-    end
 
     it 'returns the authorization' do
       skip 'verify need of these specs'

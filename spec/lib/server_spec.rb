@@ -46,7 +46,7 @@ describe Doorkeeper::Server do
       subject.authorization_request :code
     end
 
-    it 'builds the request with composit strategy name' do
+    it 'builds the request with composite strategy name' do
       allow(Doorkeeper.configuration).
         to receive(:authorization_response_types).
         and_return(['id_token token'])

@@ -26,7 +26,7 @@ module Doorkeeper
         auth = authorization.authorize
         redirect_or_render auth
       elsif Doorkeeper.configuration.api_only
-        render json: @pre_auth
+        render json: pre_auth
       else
         render :new
       end
@@ -34,7 +34,7 @@ module Doorkeeper
 
     def render_error
       if Doorkeeper.configuration.api_only
-        render json: @pre_auth.error_response.body[:error_description],
+        render json: pre_auth.error_response.body[:error_description],
                status: :bad_request
       else
         render :error

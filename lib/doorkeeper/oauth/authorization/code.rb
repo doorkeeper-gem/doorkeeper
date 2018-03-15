@@ -36,12 +36,12 @@ module Doorkeeper
         end
 
         def pkce_attributes
-          if pkce_supported?
-            { code_challenge: pre_auth.code_challenge,
-              code_challenge_method: pre_auth.code_challenge_method }
-          else
-            {}
-          end
+          return {} unless pkce_supported?
+
+          {
+            code_challenge: pre_auth.code_challenge,
+            code_challenge_method: pre_auth.code_challenge_method
+          }
         end
 
         # ensures firstly, if migration with additional pcke columns was

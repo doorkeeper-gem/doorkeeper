@@ -83,7 +83,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     let(:redirect_uri) { response_json_body["redirect_uri"] }
 
     it "renders success after authorization" do
-      expect(response).to be_success
+      expect(response).to be_successful
     end
 
     it "renders correct redirect uri" do
@@ -148,6 +148,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
       default_scopes_exist :public
       post :create, client_id: client.uid, response_type: 'token', scope: 'invalid', redirect_uri: client.redirect_uri
     end
+
     let(:response_json_body) { JSON.parse(response.body) }
     let(:redirect_uri) { response_json_body['redirect_uri'] }
 
@@ -275,17 +276,39 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
   end
 
-  describe 'GET #new in API mode with skip_authorization true' do
+  describe 'GET #new in API mode' do
     before do
-      allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
-        true
-      end)
       allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
       get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
     end
 
     it 'should render success' do
-      expect(response).to be_success
+      expect(response).to be_successful
+    end
+
+    it "sets status to pre-authorization" do
+      expect(json_response["status"]).to eq(I18n.t('doorkeeper.pre_authorization.status'))
+    end
+
+    it "sets correct values" do
+      expect(json_response['client_id']).to eq(client.uid)
+      expect(json_response['redirect_uri']).to eq(client.redirect_uri)
+      expect(json_response['state']).to be_nil
+      expect(json_response['response_type']).to eq('token')
+      expect(json_response['scope']).to eq('')
+    end
+  end
+
+  describe 'GET #new in API mode with skip_authorization true' do
+    before do
+      allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc { true })
+      allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
+
+      get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
+    end
+
+    it 'should render success' do
+      expect(response).to be_successful
     end
 
     it 'should issue a token' do
