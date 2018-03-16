@@ -63,7 +63,8 @@ Doorkeeper.configure do
 
   # Forbids creating/updating applications with arbitrary scopes that are
   # not in configuration, i.e. `default_scopes` or `optional_scopes`.
-  # (Disabled by default)
+  # (disabled by default)
+  #
   # enforce_configured_scopes
 
   # Provide support for an owner to be assigned to each registered application (disabled by default)

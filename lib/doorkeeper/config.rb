@@ -135,9 +135,9 @@ module Doorkeeper
 
       # Forbids creating/updating applications with arbitrary scopes that are
       # not in configuration, i.e. `default_scopes` or `optional_scopes`.
-      # (Disabled by default)
+      # (disabled by default)
       def enforce_configured_scopes
-        @config.instance_variable_set("@enforce_configured_scopes", true)
+        @config.instance_variable_set(:@enforce_configured_scopes, true)
       end
     end
 

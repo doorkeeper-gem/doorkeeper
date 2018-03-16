@@ -15,7 +15,7 @@ en:
               secured_uri: 'must be an HTTPS/SSL URI.'
               forbidden_uri: 'is forbidden by the server.'
             scopes:
-              invalid_scope: 'The requested scope is invalid, unknown, or malformed.'
+              not_match_configured: "doesn't match configured on the server."
 
   doorkeeper:
     applications:

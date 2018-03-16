@@ -162,6 +162,21 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
+  describe 'enforce_configured_scopes' do
+    it 'is false by default' do
+      expect(subject.enforce_configured_scopes?).to be_falsey
+    end
+
+    it 'can change the value' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enforce_configured_scopes
+      end
+
+      expect(subject.enforce_configured_scopes?).to be_truthy
+    end
+  end
+
   describe 'enable_pkce_without_secret' do
     it 'is false by default' do
       expect(subject.pkce_without_secret_enabled?).to be_falsey

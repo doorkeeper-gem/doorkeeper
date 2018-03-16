@@ -14,8 +14,10 @@ User-visible changes worth mentioning.
 - [#1045] Validate redirect_uri as the native URI when making authorization code requests
 - [#1048] Remove deprecated `Doorkeeper#configured?`, `Doorkeeper#database_installed?`, and
   `Doorkeeper#installed?` method
-- [#1031] Allow public clients to authenticate without `client_secret`. Define an app as either public or private/confidential
-- [#1010] Add configuration to enforce known application scopes
+- [#1031] Allow public clients to authenticate without `client_secret`. Define an app as
+  either public or private/confidential
+- [#1010] Add configuration to enforce configured scopes (`default_scopes` and
+  `optional_scopes`) for applications
 
 ## 4.3.1
 
