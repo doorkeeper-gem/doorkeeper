@@ -132,6 +132,13 @@ module Doorkeeper
       def api_only
         @config.instance_variable_set(:@api_only, true)
       end
+
+      # Forbids creating/updating applications with arbitrary scopes that are
+      # not in configuration, i.e. `default_scopes` or `optional_scopes`.
+      # (Disabled by default)
+      def enforce_configured_scopes
+        @config.instance_variable_set("@enforce_configured_scopes", true)
+      end
     end
 
     module Option
@@ -278,6 +285,11 @@ module Doorkeeper
 
     def pkce_without_secret_enabled?
       @enable_pkce_without_secret ||= false
+    end
+
+    def enforce_configured_scopes?
+      @enforce_configured_scopes ||= false
+      !!@enforce_configured_scopes
     end
 
     def enable_application_owner?

@@ -20,6 +20,73 @@ feature 'Adding applications' do
       click_button 'Submit'
       i_should_see 'Whoops! Check your form for possible errors'
     end
+
+    scenario "adding app ignoring bad scope" do
+      config_is_set("enforce_configured_scopes", false)
+
+      fill_in "doorkeeper_application[name]", with: "My Application"
+      fill_in "doorkeeper_application[redirect_uri]",
+              with: "https://example.com"
+      fill_in "doorkeeper_application[scopes]", with: "blahblah"
+
+      click_button "Submit"
+      i_should_see "Application created"
+      i_should_see "My Application"
+    end
+
+    scenario "adding app validating bad scope" do
+      config_is_set("enforce_configured_scopes", true)
+
+      fill_in "doorkeeper_application[name]", with: "My Application"
+      fill_in "doorkeeper_application[redirect_uri]",
+              with: "https://example.com"
+      fill_in "doorkeeper_application[scopes]", with: "blahblah"
+
+      click_button "Submit"
+      i_should_see "Whoops! Check your form for possible errors"
+    end
+
+    scenario "adding app validating scope, blank scope is accepted" do
+      config_is_set("enforce_configured_scopes", true)
+
+      fill_in "doorkeeper_application[name]", with: "My Application"
+      fill_in "doorkeeper_application[redirect_uri]",
+              with: "https://example.com"
+      fill_in "doorkeeper_application[scopes]", with: ""
+
+      click_button "Submit"
+      i_should_see "Application created"
+      i_should_see "My Application"
+    end
+
+    scenario "adding app validating scope, multiple scopes configured" do
+      config_is_set("enforce_configured_scopes", true)
+      scopes = Doorkeeper::OAuth::Scopes.from_array(%w(read write admin))
+      config_is_set("optional_scopes", scopes)
+
+      fill_in "doorkeeper_application[name]", with: "My Application"
+      fill_in "doorkeeper_application[redirect_uri]",
+              with: "https://example.com"
+      fill_in "doorkeeper_application[scopes]", with: "read write"
+
+      click_button "Submit"
+      i_should_see "Application created"
+      i_should_see "My Application"
+    end
+
+    scenario "adding app validating scope, bad scope with multiple scopes configured" do
+      config_is_set("enforce_configured_scopes", true)
+      scopes = Doorkeeper::OAuth::Scopes.from_array(%w(read write admin))
+      config_is_set("optional_scopes", scopes)
+
+      fill_in "doorkeeper_application[name]", with: "My Application"
+      fill_in "doorkeeper_application[redirect_uri]",
+              with: "https://example.com"
+      fill_in "doorkeeper_application[scopes]", with: "read blah"
+
+      click_button "Submit"
+      i_should_see "Whoops! Check your form for possible errors"
+    end
   end
 end
 
