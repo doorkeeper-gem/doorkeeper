@@ -18,6 +18,7 @@ User-visible changes worth mentioning.
   either public or private/confidential
 - [#1010] Add configuration to enforce configured scopes (`default_scopes` and
   `optional_scopes`) for applications
+- [#1053] Support authorizing with query params in the request `redirect_uri` if explicitly present in app's `Application#redirect_uri`
 
 ## 4.3.1
 
