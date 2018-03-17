@@ -1,10 +1,24 @@
 # News
 
+See https://github.com/doorkeeper-gem/doorkeeper/wiki/Migration-from-old-versions for
+upgrade guides.
+
 User-visible changes worth mentioning.
 
 ## master
-
-Replace this text with you changelog entry. Look at the examples below.
+- [#996] Expiration Time Base On Grant Type
+- [#997] Allow PKCE authorization_code flow as specified in RCF7636
+- [#907] Fix lookup for matching tokens in certain edge-cases
+- [#992] Add API option to use Doorkeeper without management views for API only
+  Rails applications (`api_only`)
+- [#1045] Validate redirect_uri as the native URI when making authorization code requests
+- [#1048] Remove deprecated `Doorkeeper#configured?`, `Doorkeeper#database_installed?`, and
+  `Doorkeeper#installed?` method
+- [#1031] Allow public clients to authenticate without `client_secret`. Define an app as
+  either public or private/confidential
+- [#1010] Add configuration to enforce configured scopes (`default_scopes` and
+  `optional_scopes`) for applications
+- [#1053] Support authorizing with query params in the request `redirect_uri` if explicitly present in app's `Application#redirect_uri`
 
 ## 4.3.1
 
@@ -39,7 +53,7 @@ Replace this text with you changelog entry. Look at the examples below.
 - [#1023] Update Ruby versions and test against 2.5.0 on Travis CI.
 - [#1024] Migrate from FactoryGirl to FactoryBot.
 - [#1025] Improve documentation for adding foreign keys
-- [#1028] Make it possible to have composit strategy names.
+- [#1028] Make it possible to have composite strategy names.
 
 ## 4.2.6
 
