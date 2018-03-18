@@ -240,7 +240,8 @@ You may want to check other ways of authentication
 
 ### Internationalization (I18n)
 
-See language files in [the I18n repository](https://github.com/doorkeeper-gem/doorkeeper-i18n).
+Doorkeeper support multiple languages. See language files in
+[the I18n repository](https://github.com/doorkeeper-gem/doorkeeper-i18n).
 
 ## Protecting resources with OAuth (a.k.a your API endpoint)
 
@@ -440,6 +441,22 @@ since the application list is just a scaffold, it's recommended to either
 customize the controller used by the list or skip the controller all together.
 For more information see the page
 [in the wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki/Customizing-routes).
+
+By default, everybody can create application with any scopes. However,
+you can enforce users to create applications only with configured scopes
+(`default_scopes` and `optional_scopes` from the Doorkeeper initializer):
+
+```ruby
+# config/initializers/doorkeeper.rb
+Doorkeeper.configure do
+  # ...
+
+  default_scopes :read, :write
+  optional_scopes :create, :update
+
+  enforce_configured_scopes
+end
+```
 
 ## Other customizations
 
