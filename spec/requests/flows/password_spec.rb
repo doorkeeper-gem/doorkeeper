@@ -140,6 +140,31 @@ describe 'Resource Owner Password Credentials Flow' do
     end
   end
 
+  context 'when application scope is present and no scope is passed' do
+    before do
+      default_scopes_exist :public
+      @client.update_attributes(scopes: 'abc')
+    end
+    subject do
+      post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
+    end
+
+    it 'should not issue new token' do
+      skip 'this is a failing test case: remove this line once fixed'
+      expect { subject }.to_not(change { Doorkeeper::AccessToken.count })
+    end
+
+    it 'should return invalid_scope error' do
+      skip 'this is a failing test case: remove this line once fixed'
+      subject
+      should_have_json 'error', 'invalid_scope'
+      should_have_json 'error_description', translated_error_message(:invalid_scope)
+      should_not_have_json 'access_token'
+
+      expect(response.status).to eq(401)
+    end
+  end
+
   context 'with invalid scopes' do
     subject do
       post password_token_endpoint_url(client: @client,
