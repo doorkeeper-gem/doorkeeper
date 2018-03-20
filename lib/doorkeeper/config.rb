@@ -323,11 +323,11 @@ module Doorkeeper
     end
 
     def authorization_response_types
-      @authorization_response_types ||= calculate_authorization_response_types
+      @authorization_response_types ||= calculate_authorization_response_types.freeze
     end
 
     def token_grant_types
-      @token_grant_types ||= calculate_token_grant_types
+      @token_grant_types ||= calculate_token_grant_types.freeze
     end
 
     private
