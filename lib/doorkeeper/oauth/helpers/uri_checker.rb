@@ -3,6 +3,7 @@ module Doorkeeper
     module Helpers
       module URIChecker
         def self.valid?(url)
+          return true if native_uri?(url)
           uri = as_uri(url)
           uri.fragment.nil? && !uri.host.nil? && !uri.scheme.nil?
         rescue URI::InvalidURIError

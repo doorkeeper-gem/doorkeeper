@@ -44,6 +44,11 @@ module Doorkeeper::OAuth::Helpers
         uri = '   '
         expect(URIChecker.valid?(uri)).to be_falsey
       end
+
+      it 'is valid for native uris' do
+        uri = 'urn:ietf:wg:oauth:2.0:oob'
+        expect(URIChecker.valid?(uri)).to be_truthy
+      end
     end
 
     describe '.matches?' do
