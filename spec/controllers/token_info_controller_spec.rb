@@ -5,7 +5,7 @@ describe Doorkeeper::TokenInfoController do
     let(:doorkeeper_token) { FactoryBot.create(:access_token) }
 
     describe 'successful request' do
-      it 'responds with tokeninfo' do
+      it 'responds with token info' do
         get :show, access_token: doorkeeper_token.token
 
         expect(response.body).to eq(doorkeeper_token.to_json)

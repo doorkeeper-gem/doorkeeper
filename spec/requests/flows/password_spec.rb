@@ -7,7 +7,7 @@ describe 'Resource Owner Password Credentials Flow not set up' do
   end
 
   context 'with valid user credentials' do
-    it 'doesn\'t issue new token' do
+    it 'does not issue new token' do
       expect do
         post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
       end.to_not(change { Doorkeeper::AccessToken.count })

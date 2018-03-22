@@ -14,7 +14,7 @@ describe 'Refresh Token Flow' do
       authorization_code_exists application: @client
     end
 
-    it 'client gets the refresh token and refreshses it' do
+    it 'client gets the refresh token and refreshes it' do
       post token_endpoint_url(code: @authorization.token, client: @client)
 
       token = Doorkeeper::AccessToken.first
