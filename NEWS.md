@@ -20,6 +20,7 @@ User-visible changes worth mentioning.
   `optional_scopes`) for applications
 - [#1053] Support authorizing with query params in the request `redirect_uri` if explicitly present in app's `Application#redirect_uri`
 - [#1060] Ensure that the native redirect_uri parameter matches with redirect_uri of the client
+- [#1064] Add :before_successful_authorization and :after_successful_authorization hooks
 
 ## 4.3.1
 
