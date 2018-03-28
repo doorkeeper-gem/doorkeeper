@@ -217,6 +217,8 @@ module Doorkeeper
              ::Rails.logger.warn(I18n.t('doorkeeper.errors.messages.credential_flow_not_configured'))
              nil
            end)
+    option :before_successful_authorization, default: ->(_context) {}
+    option :after_successful_authorization, default: ->(_context) {}
     option :before_successful_strategy_response, default: ->(_request) {}
     option :after_successful_strategy_response,
            default: ->(_request, _response) {}

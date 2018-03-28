@@ -20,6 +20,7 @@ User-visible changes worth mentioning.
 - [#1010] Add configuration to enforce configured scopes (`default_scopes` and
   `optional_scopes`) for applications
 - [#1060] Ensure that the native redirect_uri parameter matches with redirect_uri of the client
+- [#1064] Add :before_successful_authorization and :after_successful_authorization hooks
 
 ## 4.3.2
 

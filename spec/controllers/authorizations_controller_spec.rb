@@ -352,4 +352,20 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
       expect(Doorkeeper::AccessToken.count).to eq 0
     end
   end
+
+  describe 'GET #new with callbacks' do
+    after do
+      allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc { true })
+      client.update_attribute :redirect_uri, 'urn:ietf:wg:oauth:2.0:oob'
+      get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
+    end
+
+    it 'should call :before_successful_authorization callback' do
+      expect(Doorkeeper.configuration).to receive_message_chain(:before_successful_authorization, :call).with(instance_of(described_class))
+    end
+
+    it 'should call :after_successful_authorization callback' do
+      expect(Doorkeeper.configuration).to receive_message_chain(:after_successful_authorization, :call).with(instance_of(described_class))
+    end
+  end
 end
