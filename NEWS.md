@@ -6,6 +6,7 @@ upgrade guides.
 User-visible changes worth mentioning.
 
 ## master
+
 - [#996] Expiration Time Base On Grant Type
 - [#997] Allow PKCE authorization_code flow as specified in RCF7636
 - [#907] Fix lookup for matching tokens in certain edge-cases
@@ -18,8 +19,11 @@ User-visible changes worth mentioning.
   either public or private/confidential
 - [#1010] Add configuration to enforce configured scopes (`default_scopes` and
   `optional_scopes`) for applications
-- [#1053] Support authorizing with query params in the request `redirect_uri` if explicitly present in app's `Application#redirect_uri`
 - [#1060] Ensure that the native redirect_uri parameter matches with redirect_uri of the client
+
+## 4.3.2
+
+- [#1053] Support authorizing with query params in the request `redirect_uri` if explicitly present in app's `Application#redirect_uri`
 
 ## 4.3.1
 
