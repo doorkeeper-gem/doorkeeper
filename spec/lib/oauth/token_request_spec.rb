@@ -3,8 +3,7 @@ require 'spec_helper_integration'
 module Doorkeeper::OAuth
   describe TokenRequest do
     let :application do
-      scopes = double(all: ['public'])
-      double(:application, id: 9990, scopes: scopes)
+      FactoryBot.create(:application, scopes: "public")
     end
 
     let :pre_auth do
