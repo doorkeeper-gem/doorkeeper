@@ -153,8 +153,22 @@ Doorkeeper.configure do
   #   puts "AFTER HOOK FIRED! #{request}, #{response}"
   # end
 
-  # If you enabled pkce, by running rails g doorkeeper:pkce and migrating, you
-  # can configure to allow pkce authorization_code grant without providing a
+  # Hook into Authorization flow in order to implement Single Sign Out
+  # or add ny other functionality.
+  #
+  # before_successful_authorization do |controller|
+  #   Rails.logger.info(params.inspect)
+  # end
+  #
+  # after_successful_authorization do |controller|
+  #   controller.session[:logout_urls] <<
+  #     Doorkeeper::Application
+  #       .find_by(controller.request.params.slice(:redirect_uri))
+  #       .logout_uri
+  # end
+
+  # If you enabled PKCE by running rails g doorkeeper:pkce and migrating, you
+  # can configure to allow PKCE authorization_code grant without providing a
   # secret. To do so is inconsistent with RCF7636. But since PKCE is created,
   # because you cannot trust secrets on mobile apps, there are implementations
   # on Android, which implemented it completely without secret. If you need to
