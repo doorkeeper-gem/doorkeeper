@@ -3,7 +3,7 @@ module Doorkeeper
     def doorkeeper_errors_for(object, method)
       if object.errors[method].present?
         output = object.errors[method].map do |msg|
-          content_tag(:span, class: 'help-block') do
+          content_tag(:span, class: 'form-text') do
             msg.capitalize
           end
         end
