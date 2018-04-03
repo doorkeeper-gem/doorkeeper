@@ -488,7 +488,7 @@ To run the local engine server:
 
 ```
 bundle install
-bundle exec rails server
+bundle exec rake doorkeeper:server
 ````
 
 By default, it uses the latest Rails version with ActiveRecord. To run the

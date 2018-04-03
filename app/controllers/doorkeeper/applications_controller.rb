@@ -3,7 +3,7 @@ module Doorkeeper
     layout 'doorkeeper/admin'
 
     before_action :authenticate_admin!
-    before_action :set_application, only: [:show, :edit, :update, :destroy]
+    before_action :set_application, only: %i[show edit update destroy]
 
     def index
       @applications = Application.ordered_by(:created_at)
