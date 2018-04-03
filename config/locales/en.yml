@@ -42,6 +42,7 @@ en:
         name: 'Name'
         callback_url: 'Callback URL'
         confidential: 'Confidential?'
+        actions: 'Actions'
         confidentiality:
           yes: 'Yes'
           no: 'No'
@@ -49,7 +50,7 @@ en:
         title: 'New Application'
       show:
         title: 'Application: %{name}'
-        application_id: 'Application Id'
+        application_id: 'Application UID'
         secret: 'Secret'
         scopes: 'Scopes'
         confidential: 'Confidential'
@@ -126,6 +127,7 @@ en:
 
     layouts:
       admin:
+        title: 'Doorkeeper'
         nav:
           oauth2_provider: 'OAuth2 Provider'
           applications: 'Applications'

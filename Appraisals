@@ -12,11 +12,6 @@ appraise "rails-5-1" do
   gem "rspec-rails", "~> 3.5"
 end
 
-appraise "rails-5-2" do
-  gem "rails", "5.2.0.rc2"
-  gem "rspec-rails", "~> 3.5"
-end
-
 appraise "rails-master" do
   gem "rails", git: 'https://github.com/rails/rails'
   gem "arel", git: 'https://github.com/rails/arel'
