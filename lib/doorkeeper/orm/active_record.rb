@@ -1,5 +1,7 @@
 require 'active_support/lazy_load_hooks'
 
+require 'doorkeeper/orm/active_record/stale_records_cleaner'
+
 module Doorkeeper
   module Orm
     module ActiveRecord

@@ -50,6 +50,7 @@ https://github.com/doorkeeper-gem/doorkeeper/releases
   - [Routes](#routes)
   - [Authenticating](#authenticating)
   - [Internationalization (I18n)](#internationalization-i18n)
+  - [Rake Tasks](#rake-tasks)
 - [Protecting resources with OAuth (a.k.a your API endpoint)](#protecting-resources-with-oauth-aka-your-api-endpoint)
   - [Ruby on Rails controllers](#ruby-on-rails-controllers)
   - [Grape endpoints](#grape-endpoints)
@@ -106,7 +107,7 @@ for each table that includes a `resource_owner_id` column:
 add_foreign_key :table_name, :users, column: :resource_owner_id
 ```
 
-If you want to enable [PKCE flow] for mobile apps, you need to generate another 
+If you want to enable [PKCE flow] for mobile apps, you need to generate another
 migration:
 
 [PKCE flow]: https://tools.ietf.org/html/rfc7636
@@ -115,7 +116,7 @@ migration:
     rails generate doorkeeper:pkce
 ```
 
-If you want to allow PKCE flow without secrets, you can configure doorkeeper to 
+If you want to allow PKCE flow without secrets, you can configure doorkeeper to
 allow this:
 
 ```ruby
@@ -242,6 +243,34 @@ You may want to check other ways of authentication
 
 Doorkeeper support multiple languages. See language files in
 [the I18n repository](https://github.com/doorkeeper-gem/doorkeeper-i18n).
+
+### Rake Tasks
+
+If you are using `rake`, you can load rake tasks provided by this gem, by adding
+the following line to your `Rakefile`:
+
+```ruby
+Doorkeeper::Rake.load_tasks
+```
+
+#### Cleaning up
+
+By default Doorkeeper is retaining expired and revoked access tokens and grants.
+This allows to keep an audit log of those records, but it also leads to the
+corresponding tables to grow large over the lifetime of your application.
+
+If you are concerned about those tables growing too large,
+you can regularly run the following rake task to remove stale entries
+from the database:
+
+```rake
+rake doorkeeper:db:cleanup
+```
+
+Note that this will remove tokens that are expired according to the configured TTL
+in `Doorkeeper.configuration.access_token_expires_in`. The specific `expires_in`
+value of each access token **is not considered**. The same is true for access
+grants.
 
 ## Protecting resources with OAuth (a.k.a your API endpoint)
 
@@ -471,7 +500,7 @@ Doorkeeper 4.3.0 it uses [ActiveSupport lazy loading hooks](http://api.rubyonrai
 to load models. There are [known issue](https://github.com/doorkeeper-gem/doorkeeper/issues/1043)
 with the `factory_bot_rails` gem (it executes factories building before `ActiveRecord::Base`
 is initialized using hooks in gem railtie, so you can catch a `uninitialized constant` error).
-It is recommended to use pure `factory_bot` gem to solve this problem. 
+It is recommended to use pure `factory_bot` gem to solve this problem.
 
 ## Upgrading
 
