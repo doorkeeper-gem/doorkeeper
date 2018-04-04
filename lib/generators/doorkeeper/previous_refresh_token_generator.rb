@@ -2,7 +2,7 @@ require 'rails/generators/active_record'
 
 class Doorkeeper::PreviousRefreshTokenGenerator < Rails::Generators::Base
   include Rails::Generators::Migration
-  source_root File.expand_path('../templates', __FILE__)
+  source_root File.expand_path('templates', __dir__)
   desc 'Support revoke refresh token on access token use'
 
   def self.next_migration_number(path)

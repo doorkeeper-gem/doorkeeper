@@ -34,7 +34,9 @@ module Doorkeeper
         first_application = FactoryBot.create(:application)
         second_application = FactoryBot.create(:application)
         expect(Doorkeeper::Application).to receive(:ordered_by).and_call_original
+
         get :index
+
         expect(response.body).to have_selector("tbody tr:first-child#application_#{first_application.id}")
         expect(response.body).to have_selector("tbody tr:last-child#application_#{second_application.id}")
       end
@@ -45,6 +47,7 @@ module Doorkeeper
             name: 'Example',
             redirect_uri: 'https://example.com' }
         end.to change { Doorkeeper::Application.count }.by(1)
+
         expect(response).to be_redirect
       end
 
@@ -52,7 +55,8 @@ module Doorkeeper
         application = FactoryBot.create(:application)
         put :update, id: application.id, doorkeeper_application: {
           uid: '1A2B3C4D',
-          secret: '1A2B3C4D' }
+          secret: '1A2B3C4D'
+        }
 
         expect(application.reload.uid).not_to eq '1A2B3C4D'
       end
@@ -61,7 +65,9 @@ module Doorkeeper
         application = FactoryBot.create(:application)
         put :update, id: application.id, doorkeeper_application: {
           name: 'Example',
-          redirect_uri: 'https://example.com' }
+          redirect_uri: 'https://example.com'
+        }
+
         expect(application.reload.name).to eq 'Example'
       end
     end

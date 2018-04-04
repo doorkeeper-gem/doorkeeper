@@ -20,7 +20,7 @@ module Doorkeeper::OAuth
     let(:server) do
       double :server,
         access_token_expires_in: 100,
-        custom_access_token_expires_in: ->(_) { nil },
+        custom_access_token_expires_in: ->(_app, _grant) { nil },
         refresh_token_enabled?: false
     end
 

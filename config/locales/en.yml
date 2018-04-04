@@ -14,6 +14,8 @@ en:
               relative_uri: 'must be an absolute URI.'
               secured_uri: 'must be an HTTPS/SSL URI.'
               forbidden_uri: 'is forbidden by the server.'
+            scopes:
+              not_match_configured: "doesn't match configured on the server."
 
   doorkeeper:
     applications:
@@ -28,6 +30,7 @@ en:
       form:
         error: 'Whoops! Check your form for possible errors'
       help:
+        confidential: 'Application will be used where the client secret can be kept confidential. Native mobile apps and Single Page Apps are considered non-confidential.'
         redirect_uri: 'Use one line per URI'
         native_redirect_uri: 'Use %{native_redirect_uri} if you want to add localhost URIs for development purposes'
         scopes: 'Separate scopes with spaces. Leave blank to use the default scopes.'
@@ -38,13 +41,19 @@ en:
         new: 'New Application'
         name: 'Name'
         callback_url: 'Callback URL'
+        confidential: 'Confidential?'
+        actions: 'Actions'
+        confidentiality:
+          yes: 'Yes'
+          no: 'No'
       new:
         title: 'New Application'
       show:
         title: 'Application: %{name}'
-        application_id: 'Application Id'
+        application_id: 'Application UID'
         secret: 'Secret'
         scopes: 'Scopes'
+        confidential: 'Confidential'
         callback_urls: 'Callback urls'
         actions: 'Actions'
 
@@ -72,6 +81,9 @@ en:
         created_at: 'Created At'
         date_format: '%Y-%m-%d %H:%M:%S'
 
+    pre_authorization:
+      status: 'Pre-authorization'
+
     errors:
       messages:
         # Common error messages
@@ -80,6 +92,7 @@ en:
         unauthorized_client: 'The client is not authorized to perform this request using this method.'
         access_denied: 'The resource owner or authorization server denied the request.'
         invalid_scope: 'The requested scope is invalid, unknown, or malformed.'
+        invalid_code_challenge_method: 'The code challenge method must be plain or S256.'
         server_error: 'The authorization server encountered an unexpected condition which prevented it from fulfilling the request.'
         temporarily_unavailable: 'The authorization server is currently unable to handle the request due to a temporary overloading or maintenance of the server.'
 
@@ -114,6 +127,7 @@ en:
 
     layouts:
       admin:
+        title: 'Doorkeeper'
         nav:
           oauth2_provider: 'OAuth2 Provider'
           applications: 'Applications'

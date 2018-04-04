@@ -7,9 +7,11 @@ class Doorkeeper::OAuth::Client
     let(:client_id) { 'some-uid' }
     let(:client_secret) { 'some-secret' }
 
-    it 'is blank when any of the credentials is blank' do
+    it 'is blank when the uid in credentials is blank' do
+      expect(Credentials.new(nil, nil)).to be_blank
       expect(Credentials.new(nil, 'something')).to be_blank
-      expect(Credentials.new('something', nil)).to be_blank
+      expect(Credentials.new('something', nil)).to be_present
+      expect(Credentials.new('something', 'something')).to be_present
     end
 
     describe :from_request do

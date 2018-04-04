@@ -9,7 +9,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
       double(
         :server,
         access_token_expires_in: 100,
-        custom_access_token_expires_in: ->(_app) { nil }
+        custom_access_token_expires_in: ->(_app, _grant) { nil }
       )
     end
     let(:validation) { double :validation, valid?: true }
@@ -63,11 +63,11 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
       end
 
       context 'with custom expirations' do
-        let(:custom_ttl) { 1233 }
+        let(:custom_ttl) { 1234 }
         let(:server) do
           double(
             :server,
-            custom_access_token_expires_in: ->(_app) { custom_ttl }
+            custom_access_token_expires_in: ->(_app, grant) { grant == Doorkeeper::OAuth::CLIENT_CREDENTIALS ? custom_ttl : nil }
           )
         end
 

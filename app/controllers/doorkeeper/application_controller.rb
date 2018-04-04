@@ -4,8 +4,9 @@ module Doorkeeper
 
     include Helpers::Controller
 
-    protect_from_forgery with: :exception
-
-    helper 'doorkeeper/dashboard'
+    unless Doorkeeper.configuration.api_only
+      protect_from_forgery with: :exception
+      helper 'doorkeeper/dashboard'
+    end
   end
 end

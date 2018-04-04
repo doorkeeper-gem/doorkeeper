@@ -7,17 +7,21 @@ module Doorkeeper
       validate :client, error: :invalid_client
       validate :scopes, error: :invalid_scope
       validate :redirect_uri, error: :invalid_redirect_uri
+      validate :code_challenge_method, error: :invalid_code_challenge_method
 
-      attr_accessor :server, :client, :response_type, :redirect_uri, :state
+      attr_accessor :server, :client, :response_type, :redirect_uri, :state,
+                    :code_challenge, :code_challenge_method
       attr_writer   :scope
 
       def initialize(server, client, attrs = {})
-        @server        = server
-        @client        = client
-        @response_type = attrs[:response_type]
-        @redirect_uri  = attrs[:redirect_uri]
-        @scope         = attrs[:scope]
-        @state         = attrs[:state]
+        @server                = server
+        @client                = client
+        @response_type         = attrs[:response_type]
+        @redirect_uri          = attrs[:redirect_uri]
+        @scope                 = attrs[:scope]
+        @state                 = attrs[:state]
+        @code_challenge        = attrs[:code_challenge]
+        @code_challenge_method = attrs[:code_challenge_method]
       end
 
       def authorizable?
@@ -36,6 +40,18 @@ module Doorkeeper
         OAuth::ErrorResponse.from_request(self)
       end
 
+      def as_json(_options)
+        {
+          client_id: client.uid,
+          redirect_uri: redirect_uri,
+          state: state,
+          response_type: response_type,
+          scope: scope,
+          client_name: client.name,
+          status: I18n.t('doorkeeper.pre_authorization.status')
+        }
+      end
+
       private
 
       def validate_response_type
@@ -47,7 +63,8 @@ module Doorkeeper
       end
 
       def validate_scopes
-        return true unless scope.present?
+        return true if scope.blank?
+
         Helpers::ScopeChecker.valid?(
           scope,
           server.scopes,
@@ -55,11 +72,17 @@ module Doorkeeper
         )
       end
 
-      # TODO: test uri should be matched against the client's one
       def validate_redirect_uri
-        return false unless redirect_uri.present?
-        Helpers::URIChecker.native_uri?(redirect_uri) ||
-          Helpers::URIChecker.valid_for_authorization?(redirect_uri, client.redirect_uri)
+        return false if redirect_uri.blank?
+
+        Helpers::URIChecker.valid_for_authorization?(
+          redirect_uri,
+          client.redirect_uri
+        )
+      end
+
+      def validate_code_challenge_method
+        !code_challenge.present? || (code_challenge_method.present? && code_challenge_method =~ /^plain$|^S256$/)
       end
     end
   end

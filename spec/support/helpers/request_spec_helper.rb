@@ -68,8 +68,8 @@ module RequestSpecHelper
     click_on 'Sign in'
   end
 
-  def create_access_token(authorization_code, client)
-    page.driver.post token_endpoint_url(code: authorization_code, client: client)
+  def create_access_token(authorization_code, client, code_verifier = nil)
+    page.driver.post token_endpoint_url(code: authorization_code, client: client, code_verifier: code_verifier)
   end
 
   def i_should_see_translated_error_message(key)

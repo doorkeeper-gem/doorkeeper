@@ -8,11 +8,12 @@ module Doorkeeper::OAuth
     let(:server) do
       double(
         default_scopes: nil,
-        custom_access_token_expires_in: ->(_app) { nil }
+        access_token_expires_in: 2.hours,
+        custom_access_token_expires_in: ->(_app, _grant) { nil }
       )
     end
 
-    let(:application)   { double :application, scopes: Scopes.from_string('') }
+    let(:application)   { FactoryBot.create(:application, scopes: '') }
     let(:client)        { double :client, application: application }
     let(:token_creator) { double :issuer, create: true, token: double }
 

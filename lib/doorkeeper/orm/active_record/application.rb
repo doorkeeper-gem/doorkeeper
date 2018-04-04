@@ -11,6 +11,9 @@ module Doorkeeper
     validates :name, :secret, :uid, presence: true
     validates :uid, uniqueness: true
     validates :redirect_uri, redirect_uri: true
+    validates :confidential, inclusion: { in: [true, false] }
+
+    validate :scopes_match_configured, if: :enforce_scopes?
 
     before_validation :generate_uid, :generate_secret, on: :create
 
@@ -39,6 +42,17 @@ module Doorkeeper
 
     def generate_secret
       self.secret = UniqueToken.generate if secret.blank?
+    end
+
+    def scopes_match_configured
+      if scopes.present? &&
+         !ScopeChecker.valid?(scopes.to_s, Doorkeeper.configuration.scopes)
+        errors.add(:scopes, :not_match_configured)
+      end
+    end
+
+    def enforce_scopes?
+      Doorkeeper.configuration.enforce_configured_scopes?
     end
   end
 end

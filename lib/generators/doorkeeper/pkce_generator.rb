@@ -1,14 +1,16 @@
+# frozen_string_literal: true
+
 require 'rails/generators/active_record'
 
-class Doorkeeper::ApplicationOwnerGenerator < Rails::Generators::Base
+class Doorkeeper::PkceGenerator < Rails::Generators::Base
   include Rails::Generators::Migration
   source_root File.expand_path('templates', __dir__)
-  desc 'Provide support for client application ownership.'
+  desc 'Provide support for PKCE.'
 
-  def application_owner
+  def pkce
     migration_template(
-      'add_owner_to_application_migration.rb.erb',
-      'db/migrate/add_owner_to_application.rb',
+      'enable_pkce_migration.rb.erb',
+      'db/migrate/enable_pkce.rb',
       migration_version: migration_version
     )
   end

@@ -21,13 +21,13 @@ module Doorkeeper
   def self.setup_orm_adapter
     @orm_adapter = "doorkeeper/orm/#{configuration.orm}".classify.constantize
   rescue NameError => e
-    fail e, "ORM adapter not found (#{configuration.orm})", <<-ERROR_MSG.squish
-[doorkeeper] ORM adapter not found (#{configuration.orm}), or there was an error
-trying to load it.
+    fail e, "ORM adapter not found (#{configuration.orm})", <<-ERROR_MSG.strip_heredoc
+      [doorkeeper] ORM adapter not found (#{configuration.orm}), or there was an error
+      trying to load it.
 
-You probably need to add the related gem for this adapter to work with
-doorkeeper.
-      ERROR_MSG
+      You probably need to add the related gem for this adapter to work with
+      doorkeeper.
+    ERROR_MSG
   end
 
   def self.setup_orm_models
@@ -103,6 +103,18 @@ doorkeeper.
         @config.instance_variable_set(:@access_token_methods, methods)
       end
 
+      # There is a big Android oAuth library, that does not send a client secret in PKCE authorization_code flow:
+      # https://github.com/openid/AppAuth-Android/blob/7089089ab6a5950da773d68168e2683da523bfd5/library/java/net/openid/
+      # appauth/AuthorizationManagementActivity.java
+      # It is quite easily understandable, why they do not support secrets. Although its defined in RCF7636 where secret
+      # is required, as it is in the standard authorization_code flow it's required. RCF7636 explains itself, that PKCE
+      # is invented, because you never can trust a static client_secret in a mobile app. Still it should be default,
+      # that secret is expected. But whoever wants to support a library as above, can use enable_pkce_without_secret
+      # in doorkeeper initializer to do so.
+      def enable_pkce_without_secret
+        @config.instance_variable_set(:@enable_pkce_without_secret, true)
+      end
+
       # Issue access tokens with refresh token (disabled by default)
       def use_refresh_token
         @config.instance_variable_set(:@refresh_token_enabled, true)
@@ -113,6 +125,19 @@ doorkeeper.
       # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/383
       def reuse_access_token
         @config.instance_variable_set(:@reuse_access_token, true)
+      end
+
+      # Use an API mode for applications generated with --api argument
+      # It will skip applications controller, disable forgery protection
+      def api_only
+        @config.instance_variable_set(:@api_only, true)
+      end
+
+      # Forbids creating/updating applications with arbitrary scopes that are
+      # not in configuration, i.e. `default_scopes` or `optional_scopes`.
+      # (disabled by default)
+      def enforce_configured_scopes
+        @config.instance_variable_set(:@enforce_configured_scopes, true)
       end
     end
 
@@ -192,12 +217,14 @@ doorkeeper.
              ::Rails.logger.warn(I18n.t('doorkeeper.errors.messages.credential_flow_not_configured'))
              nil
            end)
+    option :before_successful_authorization, default: ->(_context) {}
+    option :after_successful_authorization, default: ->(_context) {}
     option :before_successful_strategy_response, default: ->(_request) {}
     option :after_successful_strategy_response,
            default: ->(_request, _response) {}
     option :skip_authorization,             default: ->(_routes) {}
     option :access_token_expires_in,        default: 7200
-    option :custom_access_token_expires_in, default: ->(_app) { nil }
+    option :custom_access_token_expires_in, default: ->(_app, _grant) { nil }
     option :authorization_code_expires_in,  default: 600
     option :orm,                            default: :active_record
     option :native_redirect_uri,            default: 'urn:ietf:wg:oauth:2.0:oob'
@@ -251,10 +278,20 @@ doorkeeper.
            default: 'ActionController::Base'
 
     attr_reader :reuse_access_token
+    attr_reader :api_only
 
     def refresh_token_enabled?
       @refresh_token_enabled ||= false
       !!@refresh_token_enabled
+    end
+
+    def pkce_without_secret_enabled?
+      @enable_pkce_without_secret ||= false
+    end
+
+    def enforce_configured_scopes?
+      @enforce_configured_scopes ||= false
+      !!@enforce_configured_scopes
     end
 
     def enable_application_owner?
@@ -288,11 +325,11 @@ doorkeeper.
     end
 
     def authorization_response_types
-      @authorization_response_types ||= calculate_authorization_response_types
+      @authorization_response_types ||= calculate_authorization_response_types.freeze
     end
 
     def token_grant_types
-      @token_grant_types ||= calculate_token_grant_types
+      @token_grant_types ||= calculate_token_grant_types.freeze
     end
 
     private

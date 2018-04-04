@@ -3,6 +3,7 @@ module Doorkeeper
     module Helpers
       module URIChecker
         def self.valid?(url)
+          return true if native_uri?(url)
           uri = as_uri(url)
           uri.fragment.nil? && !uri.host.nil? && !uri.scheme.nil?
         rescue URI::InvalidURIError
@@ -12,6 +13,13 @@ module Doorkeeper
         def self.matches?(url, client_url)
           url = as_uri(url)
           client_url = as_uri(client_url)
+
+          if client_url.query.present?
+            return false unless query_matches?(url.query, client_url.query)
+            # Clear out queries so rest of URI can be tested. This allows query
+            # params to be in the request but order not mattering.
+            client_url.query = nil
+          end
           url.query = nil
           url == client_url
         end
@@ -22,6 +30,13 @@ module Doorkeeper
 
         def self.as_uri(url)
           URI.parse(url)
+        end
+
+        def self.query_matches?(query, client_query)
+          return true if client_query.nil? && query.nil?
+          return false if client_query.nil? || query.nil?
+          # Will return true independent of query order
+          client_query.split('&').sort == query.split('&').sort
         end
 
         def self.native_uri?(url)

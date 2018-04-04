@@ -3,6 +3,8 @@ module Doorkeeper
     class BaseRequest
       include Validations
 
+      attr_reader :grant_type
+
       def authorize
         validate
 
@@ -37,7 +39,7 @@ module Doorkeeper
           client,
           resource_owner_id,
           scopes,
-          Authorization::Token.access_token_expires_in(server, client),
+          Authorization::Token.access_token_expires_in(server, client, grant_type),
           server.refresh_token_enabled?
         )
       end

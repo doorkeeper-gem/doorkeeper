@@ -33,7 +33,7 @@ describe 'Default routes' do
     expect(get('/oauth/authorized_applications')).to route_to('doorkeeper/authorized_applications#index')
   end
 
-  it 'GET /oauth/token/info route to authorized tokeninfo controller' do
+  it 'GET /oauth/token/info route to authorized TokenInfo controller' do
     expect(get('/oauth/token/info')).to route_to('doorkeeper/token_info#show')
   end
 end

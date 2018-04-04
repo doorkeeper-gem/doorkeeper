@@ -10,7 +10,9 @@ module Doorkeeper::OAuth
         scopes: nil,
         state: nil,
         error: nil,
-        authorizable?: true
+        authorizable?: true,
+        code_challenge: nil,
+        code_challenge_method: nil,
       )
     end
 

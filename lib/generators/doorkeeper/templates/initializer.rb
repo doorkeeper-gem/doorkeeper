@@ -10,50 +10,74 @@ Doorkeeper.configure do
     #   User.find_by_id(session[:user_id]) || redirect_to(new_user_session_url)
   end
 
-  # If you want to restrict access to the web interface for adding oauth authorized applications, you need to declare the block below.
+  # If you want to restrict access to the web interface for adding oauth authorized applications,
+  # you need to declare the block below.
+  #
   # admin_authenticator do
   #   # Put your admin authentication logic here.
   #   # Example implementation:
   #   Admin.find_by_id(session[:admin_id]) || redirect_to(new_admin_session_url)
   # end
 
+  # If you are planning to use Doorkeeper in Rails 5 API-only application, then you might
+  # want to use API mode that will skip all the views management and change the way how
+  # Doorkeeper responds to a requests.
+  #
+  # api_only
+
   # Authorization Code expiration time (default 10 minutes).
+  #
   # authorization_code_expires_in 10.minutes
 
   # Access token expiration time (default 2 hours).
   # If you want to disable expiration, set this to nil.
+  #
   # access_token_expires_in 2.hours
 
-  # Assign a custom TTL for implicit grants.
-  # custom_access_token_expires_in do |oauth_client|
+  # Assign custom TTL for access tokens. Will be used instead of access_token_expires_in
+  # option if defined.
+  #
+  # custom_access_token_expires_in do |oauth_client, grant_type|
   #   oauth_client.application.additional_settings.implicit_oauth_expiration
   # end
 
   # Use a custom class for generating the access token.
-  # https://github.com/doorkeeper-gem/doorkeeper#custom-access-token-generator
+  # See https://github.com/doorkeeper-gem/doorkeeper#custom-access-token-generator
+  #
   # access_token_generator '::Doorkeeper::JWT'
 
   # The controller Doorkeeper::ApplicationController inherits from.
   # Defaults to ActionController::Base.
-  # https://github.com/doorkeeper-gem/doorkeeper#custom-base-controller
+  # See https://github.com/doorkeeper-gem/doorkeeper#custom-base-controller
+  #
   # base_controller 'ApplicationController'
 
   # Reuse access token for the same resource owner within an application (disabled by default)
   # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/383
+  #
   # reuse_access_token
 
   # Issue access tokens with refresh token (disabled by default)
+  #
   # use_refresh_token
+
+  # Forbids creating/updating applications with arbitrary scopes that are
+  # not in configuration, i.e. `default_scopes` or `optional_scopes`.
+  # (disabled by default)
+  #
+  # enforce_configured_scopes
 
   # Provide support for an owner to be assigned to each registered application (disabled by default)
   # Optional parameter confirmation: true (default false) if you want to enforce ownership of
   # a registered application
   # Note: you must also run the rails g doorkeeper:application_owner generator to provide the necessary support
+  #
   # enable_application_owner confirmation: false
 
   # Define access token scopes for your provider
   # For more information go to
   # https://github.com/doorkeeper-gem/doorkeeper/wiki/Using-Scopes
+  #
   # default_scopes  :public
   # optional_scopes :write, :update
 
@@ -62,6 +86,7 @@ Doorkeeper.configure do
   # falls back to the `:client_id` and `:client_secret` params from the `params` object.
   # Check out https://github.com/doorkeeper-gem/doorkeeper/wiki/Changing-how-clients-are-authenticated
   # for more information on customization
+  #
   # client_credentials :from_basic, :from_params
 
   # Change the way access token is authenticated from the request object.
@@ -69,6 +94,7 @@ Doorkeeper.configure do
   # falls back to the `:access_token` or `:bearer_token` params from the `params` object.
   # Check out https://github.com/doorkeeper-gem/doorkeeper/wiki/Changing-how-clients-are-authenticated
   # for more information on customization
+  #
   # access_token_methods :from_bearer_authorization, :from_access_token_param, :from_bearer_param
 
   # Change the native redirect uri for client apps
@@ -90,8 +116,8 @@ Doorkeeper.configure do
   #
   # force_ssl_in_redirect_uri { |uri| uri.host != 'localhost' }
 
-  # Specify what redirect URI's you want to block during creation. Any redirect
-  # URI is whitelisted by default.
+  # Specify what redirect URI's you want to block during Application creation.
+  # Any redirect URI is whitelisted by default.
   #
   # You can use this option in order to forbid URI's with 'javascript' scheme
   # for example.
@@ -127,13 +153,38 @@ Doorkeeper.configure do
   #   puts "AFTER HOOK FIRED! #{request}, #{response}"
   # end
 
+  # Hook into Authorization flow in order to implement Single Sign Out
+  # or add ny other functionality.
+  #
+  # before_successful_authorization do |controller|
+  #   Rails.logger.info(params.inspect)
+  # end
+  #
+  # after_successful_authorization do |controller|
+  #   controller.session[:logout_urls] <<
+  #     Doorkeeper::Application
+  #       .find_by(controller.request.params.slice(:redirect_uri))
+  #       .logout_uri
+  # end
+
+  # If you enabled PKCE by running rails g doorkeeper:pkce and migrating, you
+  # can configure to allow PKCE authorization_code grant without providing a
+  # secret. To do so is inconsistent with RCF7636. But since PKCE is created,
+  # because you cannot trust secrets on mobile apps, there are implementations
+  # on Android, which implemented it completely without secret. If you need to
+  # support those libraries, you can do so by uncommenting following line:
+  #
+  # enable_pkce_without_secret
+
   # Under some circumstances you might want to have applications auto-approved,
   # so that the user skips the authorization step.
   # For example if dealing with a trusted application.
+  #
   # skip_authorization do |resource_owner, client|
   #   client.superapp? or resource_owner.admin?
   # end
 
   # WWW-Authenticate Realm (default "Doorkeeper").
+  #
   # realm "Doorkeeper"
 end

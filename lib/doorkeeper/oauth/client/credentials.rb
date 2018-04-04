@@ -4,7 +4,7 @@ module Doorkeeper
       Credentials = Struct.new(:uid, :secret) do
         class << self
           def from_request(request, *credentials_methods)
-            credentials_methods.inject(nil) do |credentials, method|
+            credentials_methods.inject(nil) do |_, method|
               method = self.method(method) if method.is_a?(Symbol)
               credentials = Credentials.new(*method.call(request))
               break credentials unless credentials.blank?
@@ -23,8 +23,10 @@ module Doorkeeper
           end
         end
 
+        # Public clients may have their secret blank, but "credentials" are
+        # still present
         def blank?
-          uid.blank? || secret.blank?
+          uid.blank?
         end
       end
     end

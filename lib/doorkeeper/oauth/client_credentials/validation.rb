@@ -25,7 +25,7 @@ module Doorkeeper
         end
 
         def validate_scopes
-          return true unless @request.scopes.present?
+          return true if @request.scopes.blank?
 
           application_scopes = if @client.present?
                                  @client.application.scopes
