@@ -12,7 +12,7 @@ module Doorkeeper
 
     # TODO: Handle raise invalid authorization
     def create
-      redirect_or_render authorization.authorize
+      redirect_or_render authorize_response
     end
 
     def destroy
@@ -24,7 +24,7 @@ module Doorkeeper
     def render_success
       before_successful_authorization
       if skip_authorization? || matching_token?
-        auth = authorization.authorize
+        auth = authorize_response
         after_successful_authorization
         redirect_or_render auth
       elsif Doorkeeper.configuration.api_only
@@ -81,6 +81,10 @@ module Doorkeeper
 
     def strategy
       @strategy ||= server.authorization_request pre_auth.response_type
+    end
+
+    def authorize_response
+      @authorize_response ||= strategy.authorize
     end
 
     def after_successful_authorization

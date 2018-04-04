@@ -74,7 +74,8 @@ describe Doorkeeper::TokensController do
       expect(strategy).to receive(:authorize).once
       allow(controller).to receive(:strategy) { strategy }
       allow(controller).to receive(:create) do
-        controller.send :authorize_response
+        2.times { controller.send :authorize_response }
+        controller.render json: {}, status: :ok
       end
 
       post :create
