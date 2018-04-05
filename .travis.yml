@@ -19,7 +19,6 @@ gemfile:
   - gemfiles/rails_5_1.gemfile
   - gemfiles/rails_5_2.gemfile
   - gemfiles/rails_master.gemfile
-  - gemfiles/rails_sprockets_4.gemfile
 
 matrix:
   exclude:
@@ -35,7 +34,5 @@ matrix:
       rvm: 2.2
     - gemfile: gemfiles/rails_master.gemfile
       rvm: 2.3
-    - gemfile: gemfiles/rails_sprockets_4.gemfile
-      rvm: 2.1
   allow_failures:
     - gemfile: gemfiles/rails_master.gemfile

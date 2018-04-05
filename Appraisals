@@ -12,12 +12,6 @@ appraise "rails-5-1" do
   gem "rspec-rails", "~> 3.7"
 end
 
-appraise "rails-sprockets-4" do
-  gem "rails"
-  gem "sprockets", '~> 4.0.0.beta7'
-  gem "rspec-rails", "~> 3.7"
-end
-
 appraise "rails-master" do
   gem "rails", git: 'https://github.com/rails/rails'
   gem "arel", git: 'https://github.com/rails/arel'
