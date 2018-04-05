@@ -22,6 +22,7 @@ User-visible changes worth mentioning.
 - [#1060] Ensure that the native redirect_uri parameter matches with redirect_uri of the client
 - [#1064] Add :before_successful_authorization and :after_successful_authorization hooks
 - [#1069] Upgrade Bootstrap to 4 for Admin
+- [#1068] Add rake task to cleanup databases that can become large over time
 
 ## 4.3.2
 

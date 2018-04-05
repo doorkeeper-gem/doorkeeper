@@ -45,6 +45,5 @@ describe 'Expirable' do
       allow(subject).to receive(:expires_in).and_return(nil)
       expect(subject.expires_in_seconds).to be_nil
     end
-
   end
 end
