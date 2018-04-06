@@ -21,6 +21,7 @@ gemfile:
   - gemfiles/rails_master.gemfile
 
 matrix:
+  fast_finish: true
   exclude:
     - gemfile: gemfiles/rails_5_0.gemfile
       rvm: 2.1
