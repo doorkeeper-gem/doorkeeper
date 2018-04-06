@@ -25,6 +25,8 @@ User-visible changes worth mentioning.
 - [#1068] Add rake task to cleanup databases that can become large over time
 - [#1072] AuthorizationsController: Memoize strategy.authorize_response result to enable
   subclasses to use the response object.
+- [#1075] Call `before_successful_authorization` and `after_successful_authorization` hooks
+  on `create` action as well as `new`
 
 ## 4.3.2
 
