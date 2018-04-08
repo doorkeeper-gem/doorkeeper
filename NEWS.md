@@ -31,6 +31,7 @@ User-visible changes worth mentioning.
   customized Token Info route).
 - [#1086, #1088] Fix bug with receiving default scopes in the token even if they are
   not present in the application scopes (use scopes intersection).
+- [#1076] Add config to enforce content type to application/x-www-form-urlencoded
 
 ## 4.3.2
 

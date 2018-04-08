@@ -139,6 +139,12 @@ module Doorkeeper
       def enforce_configured_scopes
         @config.instance_variable_set(:@enforce_configured_scopes, true)
       end
+
+      # Enforce request content type as the spec requires:
+      # disabled by default for backward compatibility.
+      def enforce_content_type
+        @config.instance_variable_set(:@enforce_content_type, true)
+      end
     end
 
     module Option
@@ -284,6 +290,7 @@ module Doorkeeper
 
     attr_reader :reuse_access_token
     attr_reader :api_only
+    attr_reader :enforce_content_type
 
     def refresh_token_enabled?
       defined?(@refresh_token_enabled) && @refresh_token_enabled

@@ -8,7 +8,7 @@ describe 'Client Credentials Request' do
       headers = authorization client.uid, client.secret
       params  = { grant_type: 'client_credentials' }
 
-      post '/oauth/token', params, headers
+      post '/oauth/token', params: params, headers: headers
 
       should_have_json 'access_token', Doorkeeper::AccessToken.first.token
       should_have_json_within 'expires_in', Doorkeeper.configuration.access_token_expires_in, 1
@@ -29,7 +29,7 @@ describe 'Client Credentials Request' do
         headers = authorization client.uid, client.secret
         params  = { grant_type: 'client_credentials', scope: 'write' }
 
-        post '/oauth/token', params, headers
+        post '/oauth/token', params: params, headers: headers
 
         should_have_json 'access_token', Doorkeeper::AccessToken.first.token
         should_have_json 'scope', 'write'
@@ -40,7 +40,7 @@ describe 'Client Credentials Request' do
           headers = authorization client.uid, client.secret
           params  = { grant_type: 'client_credentials', scope: 'public' }
 
-          post '/oauth/token', params, headers
+          post '/oauth/token', params: params, headers: headers
 
           should_have_json 'access_token', Doorkeeper::AccessToken.first.token
           should_have_json 'scope', 'public'
@@ -52,7 +52,7 @@ describe 'Client Credentials Request' do
           headers = authorization client.uid, client.secret
           params  = { grant_type: 'client_credentials', scope: 'random' }
 
-          post '/oauth/token', params, headers
+          post '/oauth/token', params: params, headers: headers
 
           should_have_json 'error', 'invalid_scope'
           should_have_json 'error_description', translated_error_message(:invalid_scope)
@@ -76,7 +76,7 @@ describe 'Client Credentials Request' do
       params  = { grant_type: 'client_credentials' }
 
       expect do
-        post '/oauth/token', params, headers
+        post '/oauth/token', params: params, headers: headers
       end.to change { Doorkeeper::AccessToken.count }.by(1)
 
       token = Doorkeeper::AccessToken.first
@@ -93,7 +93,7 @@ describe 'Client Credentials Request' do
       params  = { grant_type: 'client_credentials' }
 
       expect do
-        post '/oauth/token', params, headers
+        post '/oauth/token', params: params, headers: headers
       end.to change { Doorkeeper::AccessToken.count }.by(1)
 
       token = Doorkeeper::AccessToken.first
@@ -109,7 +109,7 @@ describe 'Client Credentials Request' do
       headers = {}
       params  = { grant_type: 'client_credentials' }
 
-      post '/oauth/token', params, headers
+      post '/oauth/token', params: params, headers: headers
 
       should_have_json 'error', 'invalid_client'
       should_have_json 'error_description', translated_error_message(:invalid_client)

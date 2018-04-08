@@ -55,11 +55,13 @@ describe 'Implicit Grant Flow (request spec)' do
       token = client_is_authorized(@client, @resource_owner)
 
       post "/oauth/authorize",
-           client_id: @client.uid,
-           state: '',
-           redirect_uri: @client.redirect_uri,
-           response_type: 'token',
-           commit: 'Authorize'
+           params: {
+             client_id: @client.uid,
+             state: '',
+             redirect_uri: @client.redirect_uri,
+             response_type: 'token',
+             commit: 'Authorize'
+           }
 
       expect(response.location).not_to include(token.token)
     end
@@ -70,11 +72,13 @@ describe 'Implicit Grant Flow (request spec)' do
       token = client_is_authorized(@client, @resource_owner)
 
       post "/oauth/authorize",
-           client_id: @client.uid,
-           state: '',
-           redirect_uri: @client.redirect_uri,
-           response_type: 'token',
-           commit: 'Authorize'
+           params: {
+             client_id: @client.uid,
+             state: '',
+             redirect_uri: @client.redirect_uri,
+             response_type: 'token',
+             commit: 'Authorize'
+           }
 
       expect(response.location).to include(token.token)
     end

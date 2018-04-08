@@ -6,13 +6,13 @@ describe Doorkeeper::TokenInfoController do
 
     describe 'successful request' do
       it 'responds with token info' do
-        get :show, access_token: doorkeeper_token.token
+        get :show, params: { access_token: doorkeeper_token.token }
 
         expect(response.body).to eq(doorkeeper_token.to_json)
       end
 
       it 'responds with a 200 status' do
-        get :show, access_token: doorkeeper_token.token
+        get :show, params: { access_token: doorkeeper_token.token }
 
         expect(response.status).to eq 200
       end

@@ -51,6 +51,11 @@ module Doorkeeper
       def skip_authorization?
         !!instance_exec([@server.current_resource_owner, @pre_auth.client], &Doorkeeper.configuration.skip_authorization)
       end
+
+      def enforce_content_type
+        return if request.content_type == 'application/x-www-form-urlencoded'
+        render json: {}, status: :unsupported_media_type
+      end
     end
   end
 end
