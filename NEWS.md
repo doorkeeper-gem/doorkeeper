@@ -23,6 +23,8 @@ User-visible changes worth mentioning.
 - [#1064] Add :before_successful_authorization and :after_successful_authorization hooks
 - [#1069] Upgrade Bootstrap to 4 for Admin
 - [#1068] Add rake task to cleanup databases that can become large over time
+- [#1072] AuthorizationsController: Memoize strategy.authorize_response result to enable
+  subclasses to use the response object.
 
 ## 4.3.2
 

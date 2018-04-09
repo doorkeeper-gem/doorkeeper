@@ -368,4 +368,18 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
       expect(Doorkeeper.configuration).to receive_message_chain(:after_successful_authorization, :call).with(instance_of(described_class))
     end
   end
+
+  describe 'authorize response memoization' do
+    it 'memoizes the result of the authorization' do
+      strategy = double(:strategy, authorize: true)
+      expect(strategy).to receive(:authorize).once
+      allow(controller).to receive(:strategy) { strategy }
+      allow(controller).to receive(:create) do
+        2.times { controller.send :authorize_response }
+        controller.render json: {}, status: :ok
+      end
+
+      post :create
+    end
+  end
 end
