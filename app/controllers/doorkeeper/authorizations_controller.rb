@@ -22,13 +22,9 @@ module Doorkeeper
     private
 
     def render_success
-      before_successful_authorization
       if skip_authorization? || matching_token?
-        auth = authorize_response
-        after_successful_authorization
-        redirect_or_render auth
+        redirect_or_render authorize_response
       elsif Doorkeeper.configuration.api_only
-        after_successful_authorization
         render json: pre_auth
       else
         render :new
@@ -84,7 +80,13 @@ module Doorkeeper
     end
 
     def authorize_response
-      @authorize_response ||= strategy.authorize
+      @authorize_response ||= begin
+        authorizable = pre_auth.authorizable?
+        before_successful_authorization if authorizable
+        auth = strategy.authorize
+        after_successful_authorization if authorizable
+        auth
+      end
     end
 
     def after_successful_authorization

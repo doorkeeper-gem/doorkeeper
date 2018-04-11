@@ -194,6 +194,40 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
   end
 
+  describe 'POST #create with callbacks' do
+    after do
+      client.update_attribute :redirect_uri, 'urn:ietf:wg:oauth:2.0:oob'
+    end
+
+    describe 'when successful' do
+      after do
+        post :create, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
+      end
+
+      it 'should call :before_successful_authorization callback' do
+        expect(Doorkeeper.configuration).to receive_message_chain(:before_successful_authorization, :call).with(instance_of(described_class))
+      end
+
+      it 'should call :after_successful_authorization callback' do
+        expect(Doorkeeper.configuration).to receive_message_chain(:after_successful_authorization, :call).with(instance_of(described_class))
+      end
+    end
+
+    describe 'with errors' do
+      after do
+        post :create, client_id: client.uid, response_type: 'token', redirect_uri: 'bad_uri'
+      end
+
+      it 'should not call :before_successful_authorization callback' do
+        expect(Doorkeeper.configuration).not_to receive(:before_successful_authorization)
+      end
+
+      it 'should not call :after_successful_authorization callback' do
+        expect(Doorkeeper.configuration).not_to receive(:after_successful_authorization)
+      end
+    end
+  end
+
   describe 'GET #new token request with native url and skip_authorization true' do
     before do
       allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
@@ -355,17 +389,51 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
 
   describe 'GET #new with callbacks' do
     after do
-      allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc { true })
       client.update_attribute :redirect_uri, 'urn:ietf:wg:oauth:2.0:oob'
       get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
     end
 
-    it 'should call :before_successful_authorization callback' do
-      expect(Doorkeeper.configuration).to receive_message_chain(:before_successful_authorization, :call).with(instance_of(described_class))
+    describe 'when authorizing' do
+      before do
+        allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc { true })
+      end
+
+      it 'should call :before_successful_authorization callback' do
+        expect(Doorkeeper.configuration).to receive_message_chain(:before_successful_authorization, :call).with(instance_of(described_class))
+      end
+
+      it 'should call :after_successful_authorization callback' do
+        expect(Doorkeeper.configuration).to receive_message_chain(:after_successful_authorization, :call).with(instance_of(described_class))
+      end
     end
 
-    it 'should call :after_successful_authorization callback' do
-      expect(Doorkeeper.configuration).to receive_message_chain(:after_successful_authorization, :call).with(instance_of(described_class))
+    describe 'when not authorizing' do
+      before do
+        allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc { false })
+      end
+
+      it 'should not call :before_successful_authorization callback' do
+        expect(Doorkeeper.configuration).not_to receive(:before_successful_authorization)
+      end
+
+      it 'should not call :after_successful_authorization callback' do
+        expect(Doorkeeper.configuration).not_to receive(:after_successful_authorization)
+      end
+    end
+
+    describe 'when not authorizing in api mode' do
+      before do
+        allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc { false })
+        allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
+      end
+
+      it 'should not call :before_successful_authorization callback' do
+        expect(Doorkeeper.configuration).not_to receive(:before_successful_authorization)
+      end
+
+      it 'should not call :after_successful_authorization callback' do
+        expect(Doorkeeper.configuration).not_to receive(:after_successful_authorization)
+      end
     end
   end
 
