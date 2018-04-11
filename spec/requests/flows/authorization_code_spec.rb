@@ -103,7 +103,7 @@ feature 'Authorization Code Flow' do
       end
 
       scenario 'mobile app requests an access token with authorization code and without secret but doorkeeper allows' do
-        Doorkeeper.configuration.instance_variable_set :@enable_pkce_without_secret, true
+        Doorkeeper.configuration.instance_variable_set :@pkce_without_secret_enabled, true
         visit authorization_endpoint_url(client: @client, code_challenge: code_challenge, code_challenge_method: 'S256')
         click_on 'Authorize'
 
@@ -219,7 +219,7 @@ feature 'Authorization Code Flow' do
         end
 
         scenario 'mobile app requests an access token with authorization code and without secret but doorkeeper allows' do
-          Doorkeeper.configuration.instance_variable_set :@enable_pkce_without_secret, true
+          Doorkeeper.configuration.instance_variable_set :@pkce_without_secret_enabled, true
           visit authorization_endpoint_url(client: @client, code_challenge: code_challenge, code_challenge_method: 'S256')
           click_on 'Authorize'
 

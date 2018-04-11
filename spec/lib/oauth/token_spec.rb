@@ -14,7 +14,7 @@ module Doorkeeper
         let(:request) { double.as_null_object }
 
         let(:method) do
-          ->(request) { return 'token-value' }
+          ->(*) { 'token-value' }
         end
 
         it 'accepts anything that responds to #call' do

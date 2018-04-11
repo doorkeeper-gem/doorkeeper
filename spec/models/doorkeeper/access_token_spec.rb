@@ -144,7 +144,7 @@ module Doorkeeper
         end
 
         module CustomGeneratorArgs
-          def self.generate(opts = {})
+          def self.generate(_opts = {})
             raise LoadError, 'custom behaviour'
           end
         end
@@ -218,7 +218,7 @@ module Doorkeeper
       context 'with default parameters' do
 
         let(:resource_owner_id) { 100 }
-        let(:application)    { FactoryBot.create :application }
+        let(:application) { FactoryBot.create :application }
         let(:default_attributes) do
           { application: application, resource_owner_id: resource_owner_id }
         end
@@ -443,7 +443,7 @@ module Doorkeeper
           scopes:             token.scopes,
           expires_in_seconds: token.expires_in_seconds,
           application:        { uid: token.application.uid },
-          created_at:         token.created_at.to_i,
+          created_at:         token.created_at.to_i
         }
         expect(token.as_json).to eq token_hash
       end

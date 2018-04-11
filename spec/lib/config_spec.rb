@@ -329,10 +329,10 @@ describe Doorkeeper, 'configuration' do
     it "can change the value" do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
-        grant_flows ['authorization_code', 'implicit']
+        grant_flows %w[authorization_code implicit]
       end
 
-      expect(subject.grant_flows).to eq ['authorization_code', 'implicit']
+      expect(subject.grant_flows).to eq %w[authorization_code implicit]
     end
 
     context "when including 'authorization_code'" do

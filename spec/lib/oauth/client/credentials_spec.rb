@@ -18,7 +18,7 @@ class Doorkeeper::OAuth::Client
       let(:request) { double.as_null_object }
 
       let(:method) do
-        ->(_request) { return 'uid', 'secret' }
+        ->(_request) { ['uid', 'secret'] }
       end
 
       it 'accepts anything that responds to #call' do

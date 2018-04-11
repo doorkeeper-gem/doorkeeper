@@ -41,7 +41,7 @@ module Doorkeeper
       end
 
       def has_scopes?(scopes)
-        scopes.all? { |s| exists?(s) }
+        scopes.all? { |scope| exists?(scope) }
       end
 
       def +(other)

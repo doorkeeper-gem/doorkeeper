@@ -30,11 +30,11 @@ module Doorkeeper
 
       # :doc:
       def doorkeeper_token
-        @token ||= OAuth::Token.authenticate request, *config_methods
+        @doorkeeper_token ||= OAuth::Token.authenticate request, *config_methods
       end
 
       def config_methods
-        @methods ||= Doorkeeper.configuration.access_token_methods
+        @config_methods ||= Doorkeeper.configuration.access_token_methods
       end
 
       def get_error_response_from_exception(exception)

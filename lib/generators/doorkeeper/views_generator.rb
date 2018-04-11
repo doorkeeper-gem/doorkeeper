@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   module Generators
     class ViewsGenerator < ::Rails::Generators::Base

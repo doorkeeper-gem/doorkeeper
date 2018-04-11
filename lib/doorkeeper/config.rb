@@ -15,13 +15,13 @@ module Doorkeeper
   end
 
   def self.configuration
-    @config || (fail MissingConfiguration)
+    @config || (raise MissingConfiguration)
   end
 
   def self.setup_orm_adapter
     @orm_adapter = "doorkeeper/orm/#{configuration.orm}".classify.constantize
-  rescue NameError => e
-    fail e, "ORM adapter not found (#{configuration.orm})", <<-ERROR_MSG.strip_heredoc
+  rescue NameError => error
+    raise error, "ORM adapter not found (#{configuration.orm})", <<-ERROR_MSG.strip_heredoc
       [doorkeeper] ORM adapter not found (#{configuration.orm}), or there was an error
       trying to load it.
 
@@ -90,7 +90,7 @@ module Doorkeeper
       #
       # @param methods [Array] Define client credentials
       def client_credentials(*methods)
-        @config.instance_variable_set(:@client_credentials, methods)
+        @config.instance_variable_set(:@client_credentials_methods, methods)
       end
 
       # Change the way access token is authenticated from the request object.
@@ -112,7 +112,7 @@ module Doorkeeper
       # that secret is expected. But whoever wants to support a library as above, can use enable_pkce_without_secret
       # in doorkeeper initializer to do so.
       def enable_pkce_without_secret
-        @config.instance_variable_set(:@enable_pkce_without_secret, true)
+        @config.instance_variable_set(:@pkce_without_secret_enabled, true)
       end
 
       # Issue access tokens with refresh token (disabled by default)
@@ -204,7 +204,10 @@ module Doorkeeper
     option :resource_owner_authenticator,
            as: :authenticate_resource_owner,
            default: (lambda do |_routes|
-             ::Rails.logger.warn(I18n.t('doorkeeper.errors.messages.resource_owner_authenticator_not_configured'))
+             ::Rails.logger.warn(
+               I18n.t('doorkeeper.errors.messages.resource_owner_authenticator_not_configured')
+             )
+
              nil
            end)
 
@@ -214,7 +217,10 @@ module Doorkeeper
 
     option :resource_owner_from_credentials,
            default: (lambda do |_routes|
-             ::Rails.logger.warn(I18n.t('doorkeeper.errors.messages.credential_flow_not_configured'))
+             ::Rails.logger.warn(
+               I18n.t('doorkeeper.errors.messages.credential_flow_not_configured')
+             )
+
              nil
            end)
     option :before_successful_authorization, default: ->(_context) {}
@@ -259,7 +265,6 @@ module Doorkeeper
     #
     option :force_ssl_in_redirect_uri,      default: !Rails.env.development?
 
-
     # Use a custom class for generating the access token.
     # https://github.com/doorkeeper-gem/doorkeeper#custom-access-token-generator
     #
@@ -281,27 +286,23 @@ module Doorkeeper
     attr_reader :api_only
 
     def refresh_token_enabled?
-      @refresh_token_enabled ||= false
-      !!@refresh_token_enabled
+      defined?(@refresh_token_enabled) && @refresh_token_enabled
     end
 
     def pkce_without_secret_enabled?
-      @enable_pkce_without_secret ||= false
+      defined?(@pkce_without_secret_enabled) && @pkce_without_secret_enabled
     end
 
     def enforce_configured_scopes?
-      @enforce_configured_scopes ||= false
-      !!@enforce_configured_scopes
+      defined?(@enforce_configured_scopes) && @enforce_configured_scopes
     end
 
     def enable_application_owner?
-      @enable_application_owner ||= false
-      !!@enable_application_owner
+      defined?(@enable_application_owner) && @enable_application_owner
     end
 
     def confirm_application_owner?
-      @confirm_application_owner ||= false
-      !!@confirm_application_owner
+      defined?(@confirm_application_owner) && @confirm_application_owner
     end
 
     def default_scopes
@@ -317,7 +318,7 @@ module Doorkeeper
     end
 
     def client_credentials_methods
-      @client_credentials ||= %i[from_basic from_params]
+      @client_credentials_methods ||= %i[from_basic from_params]
     end
 
     def access_token_methods

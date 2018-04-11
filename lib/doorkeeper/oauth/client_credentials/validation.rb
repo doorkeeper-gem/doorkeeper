@@ -13,7 +13,9 @@ module Doorkeeper
         validate :scopes, error: :invalid_scope
 
         def initialize(server, request)
-          @server, @request, @client = server, request, request.client
+          @server = server
+          @request = request
+          @client = request.client
 
           validate
         end

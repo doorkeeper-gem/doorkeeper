@@ -2,12 +2,12 @@ require 'spec_helper_integration'
 
 module Doorkeeper::OAuth
   describe PreAuthorization do
-    let(:server) {
+    let(:server) do
       server = Doorkeeper.configuration
       allow(server).to receive(:default_scopes).and_return(Scopes.new)
       allow(server).to receive(:scopes).and_return(Scopes.from_string('public profile'))
       server
-    }
+    end
 
     let(:application) do
       application = double :application

@@ -21,8 +21,8 @@ module Doorkeeper
       end
 
       def get_strategy(grant_or_request_type, available)
-        fail Errors::MissingRequestStrategy if grant_or_request_type.blank?
-        fail NameError unless available.include?(grant_or_request_type.to_s)
+        raise Errors::MissingRequestStrategy if grant_or_request_type.blank?
+        raise NameError unless available.include?(grant_or_request_type.to_s)
 
         build_strategy_class(grant_or_request_type)
       end

@@ -131,13 +131,13 @@ module Doorkeeper::OAuth
 
       it 'transfers scopes from the old token to the new token' do
         subject.authorize
-        expect(Doorkeeper::AccessToken.last.scopes).to eq([:public, :write])
+        expect(Doorkeeper::AccessToken.last.scopes).to eq(%i[public write])
       end
 
       it 'reduces scopes to the provided scopes' do
         parameters[:scopes] = 'public'
         subject.authorize
-        expect(Doorkeeper::AccessToken.last.scopes).to eq([:public])
+        expect(Doorkeeper::AccessToken.last.scopes).to eq(%i[public])
       end
 
       it 'validates that scopes are included in the original access token' do
@@ -151,7 +151,7 @@ module Doorkeeper::OAuth
         parameters[:scopes] = 'public update'
         parameters[:scope] = 'public'
         subject.authorize
-        expect(Doorkeeper::AccessToken.last.scopes).to eq([:public])
+        expect(Doorkeeper::AccessToken.last.scopes).to eq(%i[public])
       end
 
       it 'uses params[:scope] in favor of scopes if present (invalid)' do
