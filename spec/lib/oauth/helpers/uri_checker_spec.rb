@@ -1,6 +1,4 @@
 require 'spec_helper'
-require 'uri'
-require 'doorkeeper/oauth/helpers/uri_checker'
 
 module Doorkeeper::OAuth::Helpers
   describe URIChecker do

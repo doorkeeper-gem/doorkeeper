@@ -1,6 +1,4 @@
 require 'spec_helper'
-require 'active_support/all'
-require 'doorkeeper/oauth/client_credentials/issuer'
 
 class Doorkeeper::OAuth::ClientCredentialsRequest
   describe Issuer do

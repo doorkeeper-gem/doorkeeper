@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 feature 'Implicit Grant Flow (feature spec)' do
   background do

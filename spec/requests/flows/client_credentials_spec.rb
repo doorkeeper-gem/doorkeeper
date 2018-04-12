@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 describe 'Client Credentials Request' do
   let(:client) { FactoryBot.create :application }

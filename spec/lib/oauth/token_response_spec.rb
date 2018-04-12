@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'doorkeeper/oauth/token_response'
 
 module Doorkeeper::OAuth
   describe TokenResponse do

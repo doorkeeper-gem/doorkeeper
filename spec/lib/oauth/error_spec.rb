@@ -1,6 +1,4 @@
 require 'spec_helper'
-require 'active_support/i18n'
-require 'doorkeeper/oauth/error'
 
 module Doorkeeper::OAuth
   describe Error do

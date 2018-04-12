@@ -1,7 +1,4 @@
 require 'spec_helper'
-require 'active_support/all'
-require 'active_model'
-require 'doorkeeper/oauth/client_credentials_request'
 
 module Doorkeeper::OAuth
   describe ClientCredentialsRequest do

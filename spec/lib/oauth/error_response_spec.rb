@@ -1,7 +1,4 @@
 require 'spec_helper'
-require 'active_model'
-require 'doorkeeper/oauth/error'
-require 'doorkeeper/oauth/error_response'
 
 module Doorkeeper::OAuth
   describe ErrorResponse do

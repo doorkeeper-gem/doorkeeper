@@ -1,7 +1,4 @@
 require 'spec_helper'
-require 'active_model'
-require 'doorkeeper'
-require 'doorkeeper/oauth/invalid_token_response'
 
 module Doorkeeper::OAuth
   describe InvalidTokenResponse do

@@ -1,8 +1,4 @@
 require 'spec_helper'
-require 'active_support/core_ext/string'
-require 'uri'
-require 'rack/utils'
-require 'doorkeeper/oauth/authorization/uri_builder'
 
 module Doorkeeper::OAuth::Authorization
   describe URIBuilder do

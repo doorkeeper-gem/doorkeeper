@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'spec_helper_integration'
+require 'spec_helper'
 require 'generators/doorkeeper/pkce_generator'
 
 describe 'Doorkeeper::PkceGenerator' do

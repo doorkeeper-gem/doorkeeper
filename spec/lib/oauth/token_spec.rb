@@ -1,6 +1,4 @@
 require 'spec_helper'
-require 'active_support/core_ext/string'
-require 'doorkeeper/oauth/token'
 
 module Doorkeeper
   unless defined?(AccessToken)

@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 describe 'Resource Owner Password Credentials Flow not set up' do
   before do

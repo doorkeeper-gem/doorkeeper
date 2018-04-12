@@ -1,7 +1,4 @@
 require 'spec_helper'
-require 'active_support/core_ext/module/delegation'
-require 'active_support/core_ext/string'
-require 'doorkeeper/oauth/scopes'
 
 module Doorkeeper::OAuth
   describe Scopes do

@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 class Doorkeeper::OAuth::ClientCredentialsRequest
   describe Creator do

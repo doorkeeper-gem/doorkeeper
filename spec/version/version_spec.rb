@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 describe Doorkeeper::VERSION do
   context '#gem_version' do

@@ -1,6 +1,4 @@
 require 'spec_helper'
-require 'active_support/all'
-require 'doorkeeper/oauth/client_credentials/validation'
 
 class Doorkeeper::OAuth::ClientCredentialsRequest
   describe Validation do

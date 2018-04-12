@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 require 'grape'
 require 'rack/test'
 require 'doorkeeper/grape/helpers'

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'spec_helper_integration'
+require 'spec_helper'
 require 'generators/doorkeeper/confidential_applications_generator'
 
 describe 'Doorkeeper::ConfidentialApplicationsGenerator' do

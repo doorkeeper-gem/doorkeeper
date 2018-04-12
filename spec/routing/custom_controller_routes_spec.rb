@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 describe 'Custom controller for routes' do
   it 'GET /space/scope/authorize routes to custom authorizations controller' do

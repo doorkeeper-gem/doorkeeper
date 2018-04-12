@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 require 'generators/doorkeeper/previous_refresh_token_generator'
 
 describe 'Doorkeeper::PreviousRefreshTokenGenerator' do

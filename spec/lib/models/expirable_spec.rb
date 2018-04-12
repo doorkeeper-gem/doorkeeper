@@ -1,6 +1,4 @@
 require 'spec_helper'
-require 'active_support/time'
-require 'doorkeeper/models/concerns/expirable'
 
 describe 'Expirable' do
   subject do
