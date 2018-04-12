@@ -47,7 +47,7 @@ module Doorkeeper
 
         def native_redirect
           {
-            controller: 'doorkeeper/token_info',
+            controller: controller,
             action: :show,
             access_token: token.token
           }
@@ -57,6 +57,13 @@ module Doorkeeper
 
         def configuration
           Doorkeeper.configuration
+        end
+
+        def controller
+          @controller ||= begin
+            mapping = Doorkeeper::Rails::Routes.mapping[:token_info] || {}
+            mapping[:controllers] || 'doorkeeper/token_info'
+          end
         end
       end
     end
