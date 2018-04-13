@@ -1,6 +1,20 @@
 require 'spec_helper'
 
 describe 'Scoped routes' do
+  before :all do
+    Rails.application.routes.disable_clear_and_finalize = true
+
+    Rails.application.routes.draw do
+      use_doorkeeper scope: 'scope'
+    end
+  end
+
+  after :all do
+    Rails.application.routes.clear!
+
+    load File.expand_path('../dummy/config/routes.rb', __dir__)
+  end
+
   it 'GET /scope/authorize routes to authorizations controller' do
     expect(get('/scope/authorize')).to route_to('doorkeeper/authorizations#new')
   end
