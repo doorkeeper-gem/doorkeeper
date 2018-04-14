@@ -27,6 +27,8 @@ User-visible changes worth mentioning.
   subclasses to use the response object.
 - [#1075] Call `before_successful_authorization` and `after_successful_authorization` hooks
   on `create` action as well as `new`
+- [#1082] Fix #916: remember routes mapping and use it required places (fix error with
+  customized Token Info route).
 
 ## 4.3.2
 

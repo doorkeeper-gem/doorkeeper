@@ -17,8 +17,9 @@ module Doorkeeper
 
     def create
       @application = Application.new(application_params)
+
       if @application.save
-        flash[:notice] = I18n.t(:notice, scope: [:doorkeeper, :flash, :applications, :create])
+        flash[:notice] = I18n.t(:notice, scope: %i[doorkeeper flash applications create])
         redirect_to oauth_application_url(@application)
       else
         render :new
@@ -29,7 +30,7 @@ module Doorkeeper
 
     def update
       if @application.update_attributes(application_params)
-        flash[:notice] = I18n.t(:notice, scope: [:doorkeeper, :flash, :applications, :update])
+        flash[:notice] = I18n.t(:notice, scope: %i[doorkeeper flash applications update])
         redirect_to oauth_application_url(@application)
       else
         render :edit
@@ -37,7 +38,7 @@ module Doorkeeper
     end
 
     def destroy
-      flash[:notice] = I18n.t(:notice, scope: [:doorkeeper, :flash, :applications, :destroy]) if @application.destroy
+      flash[:notice] = I18n.t(:notice, scope: %i[doorkeeper flash applications destroy]) if @application.destroy
       redirect_to oauth_applications_url
     end
 

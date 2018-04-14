@@ -1,15 +1,15 @@
 module Doorkeeper
   module DashboardHelper
     def doorkeeper_errors_for(object, method)
-      if object.errors[method].present?
-        output = object.errors[method].map do |msg|
-          content_tag(:span, class: 'form-text') do
-            msg.capitalize
-          end
-        end
+      return if object.errors[method].blank?
 
-        safe_join(output)
+      output = object.errors[method].map do |msg|
+        content_tag(:span, class: 'form-text') do
+          msg.capitalize
+        end
       end
+
+      safe_join(output)
     end
 
     def doorkeeper_submit_path(application)

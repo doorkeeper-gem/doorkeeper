@@ -54,7 +54,7 @@ module Doorkeeper
       end
 
       def validate_client
-        !!client
+        !client.nil?
       end
 
       def validate_grant

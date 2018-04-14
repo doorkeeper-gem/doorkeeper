@@ -34,11 +34,11 @@ module Doorkeeper
       end
 
       def validate_resource_owner
-        !!resource_owner
+        !resource_owner.nil?
       end
 
       def validate_client
-        !parameters[:client_id] || !!client
+        !parameters[:client_id] || !client.nil?
       end
     end
   end

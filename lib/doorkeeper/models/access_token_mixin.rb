@@ -70,6 +70,7 @@ module Doorkeeper
                             else
                               resource_owner_or_id
                             end
+
         tokens = authorized_tokens_for(application.try(:id), resource_owner_id)
         tokens.detect do |token|
           scopes_match?(token.scopes, scopes, application.try(:scopes))
@@ -121,9 +122,8 @@ module Doorkeeper
       def find_or_create_for(application, resource_owner_id, scopes, expires_in, use_refresh_token)
         if Doorkeeper.configuration.reuse_access_token
           access_token = matching_token_for(application, resource_owner_id, scopes)
-          if access_token && !access_token.expired?
-            return access_token
-          end
+
+          return access_token if access_token && !access_token.expired?
         end
 
         create!(
@@ -146,10 +146,10 @@ module Doorkeeper
       # @return [Doorkeeper::AccessToken] array of matching AccessToken objects
       #
       def authorized_tokens_for(application_id, resource_owner_id)
-        ordered_by(:created_at, :desc).
-          where(application_id: application_id,
-                resource_owner_id: resource_owner_id,
-                revoked_at: nil)
+        ordered_by(:created_at, :desc)
+          .where(application_id: application_id,
+                 resource_owner_id: resource_owner_id,
+                 revoked_at: nil)
       end
 
       # Convenience method for backwards-compatibility, return the last

@@ -17,9 +17,7 @@ module Doorkeeper
       # Doorkeeper does not use the token_type_hint logic described in the
       # RFC 7009 due to the refresh token implementation that is a field in
       # the access token model.
-      if authorized?
-        revoke_token
-      end
+      revoke_token if authorized?
 
       # The authorization server responds with HTTP status code 200 if the token
       # has been revoked successfully or if the client submitted an invalid
@@ -72,9 +70,7 @@ module Doorkeeper
     end
 
     def revoke_token
-      if token.accessible?
-        token.revoke
-      end
+      token.revoke if token.accessible?
     end
 
     def token
