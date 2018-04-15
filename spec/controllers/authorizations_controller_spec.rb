@@ -30,6 +30,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
   let(:client)        { FactoryBot.create :application }
   let(:user)          { User.create!(name: 'Joe', password: 'sekret') }
   let(:access_token)  { FactoryBot.build :access_token, resource_owner_id: user.id, application_id: client.id }
+  let(:prompt)        { nil }
 
   before do
     allow(Doorkeeper.configuration).to receive(:grant_flows).and_return(["implicit"])
@@ -228,13 +229,85 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
   end
 
+  describe 'GET #new with no authenticated user' do
+    before do
+      allow(controller).to receive(:current_resource_owner).and_raise(StandardError.new('drat!'))
+      allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
+    end
+
+    subject { get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri, prompt: prompt }
+
+    context 'when prompt is none' do
+      let(:prompt) { 'none' }
+      it 'should respond unauthorized' do
+        expect(subject).to have_http_status(:unauthorized)
+      end
+      it 'should not issue a grant' do
+        subject
+        expect(Doorkeeper::AccessGrant.count).to be 0
+      end
+      it 'should not issue a token' do
+        subject
+        expect(Doorkeeper::AccessToken.count).to be 0
+      end
+      it 'should render login_required' do
+        subject
+        expect(json_response['error']).to eq('login_required')
+        expect(json_response['error_description']).to eq(I18n.t('doorkeeper.errors.messages.login_required'))
+      end
+    end
+
+    context 'when prompt is consent' do
+      let(:prompt) { 'consent' }
+      it 'should raise error' do
+        expect { subject }.to raise_error('drat!')
+      end
+      it 'should not issue a grant' do
+        begin
+          subject
+          raise
+        rescue StandardError
+          expect(Doorkeeper::AccessGrant.count).to be 0
+        end
+      end
+      it 'should not issue a token' do
+        begin
+          subject
+          raise
+        rescue StandardError
+          expect(Doorkeeper::AccessToken.count).to be 0
+        end
+      end
+    end
+
+    context 'when prompt is login' do
+      let(:prompt) { 'login' }
+      it 'should respond unauthorized' do
+        expect(subject).to have_http_status(:unauthorized)
+      end
+      it 'should not issue a grant' do
+        subject
+        expect(Doorkeeper::AccessGrant.count).to be 0
+      end
+      it 'should not issue a token' do
+        subject
+        expect(Doorkeeper::AccessToken.count).to be 0
+      end
+      it 'should render login_required' do
+        subject
+        expect(json_response['error']).to eq('login_required')
+        expect(json_response['error_description']).to eq(I18n.t('doorkeeper.errors.messages.login_required'))
+      end
+    end
+  end
+
   describe 'GET #new token request with native url and skip_authorization true' do
     before do
       allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
         true
       end)
       client.update_attribute :redirect_uri, 'urn:ietf:wg:oauth:2.0:oob'
-      get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
+      get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri, prompt: prompt
     end
 
     it 'should redirect immediately' do
@@ -249,6 +322,38 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     it 'should issue a token' do
       expect(Doorkeeper::AccessToken.count).to be 1
     end
+
+    context 'when prompt is none' do
+      let(:prompt) { 'none' }
+      it 'should redirect immediately' do
+        expect(response).to be_redirect
+        expect(response.location).to match(/oauth\/token\/info\?access_token=/)
+      end
+    end
+
+    context 'when prompt is consent' do
+      let(:prompt) { 'consent' }
+      it 'should redirect immediately' do
+        expect(response).to be_redirect
+        expect(response.location).to match(/oauth\/token\/info\?access_token=/)
+      end
+    end
+
+    context 'when prompt is login' do
+      let(:prompt) { 'login' }
+
+      it 'should not redirect' do
+        expect(response).not_to be_redirect
+      end
+
+      it 'should not issue a grant' do
+        expect(Doorkeeper::AccessGrant.count).to be 0
+      end
+
+      it 'should not issue a token' do
+        expect(Doorkeeper::AccessToken.count).to be 0
+      end
+    end
   end
 
   describe 'GET #new code request with native url and skip_authorization true' do
@@ -258,7 +363,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
         true
       end)
       client.update_attribute :redirect_uri, 'urn:ietf:wg:oauth:2.0:oob'
-      get :new, client_id: client.uid, response_type: 'code', redirect_uri: client.redirect_uri
+      get :new, client_id: client.uid, response_type: 'code', redirect_uri: client.redirect_uri, prompt: prompt
     end
 
     it 'should redirect immediately' do
@@ -273,6 +378,38 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     it 'should not issue a token' do
       expect(Doorkeeper::AccessToken.count).to be 0
     end
+
+    context 'when prompt is none' do
+      let(:prompt) { 'none' }
+      it 'should redirect immediately' do
+        expect(response).to be_redirect
+        expect(response.location).to match(/oauth\/authorize\/native\?code=#{Doorkeeper::AccessGrant.first.token}/)
+      end
+    end
+
+    context 'when prompt is consent' do
+      let(:prompt) { 'consent' }
+      it 'should redirect immediately' do
+        expect(response).to be_redirect
+        expect(response.location).to match(/oauth\/authorize\/native\?code=#{Doorkeeper::AccessGrant.first.token}/)
+      end
+    end
+
+    context 'when prompt is login' do
+      let(:prompt) { 'login' }
+
+      it 'should not redirect' do
+        expect(response).not_to be_redirect
+      end
+
+      it 'should not issue a grant' do
+        expect(Doorkeeper::AccessGrant.count).to be 0
+      end
+
+      it 'should not issue a token' do
+        expect(Doorkeeper::AccessToken.count).to be 0
+      end
+    end
   end
 
   describe 'GET #new with skip_authorization true' do
@@ -280,7 +417,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
       allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
         true
       end)
-      get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
+      get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri, prompt: prompt
     end
 
     it 'should redirect immediately' do
@@ -307,12 +444,44 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     it 'issues the token for the current resource owner' do
       expect(Doorkeeper::AccessToken.first.resource_owner_id).to eq(user.id)
     end
+
+    context 'when prompt is none' do
+      let(:prompt) { 'none' }
+      it 'should redirect immediately' do
+        expect(response).to be_redirect
+        expect(response.location).to match(%r{^#{client.redirect_uri}})
+      end
+    end
+
+    context 'when prompt is consent' do
+      let(:prompt) { 'consent' }
+      it 'should redirect immediately' do
+        expect(response).to be_redirect
+        expect(response.location).to match(%r{^#{client.redirect_uri}})
+      end
+    end
+
+    context 'when prompt is login' do
+      let(:prompt) { 'login' }
+
+      it 'should not redirect' do
+        expect(response).not_to be_redirect
+      end
+
+      it 'should not issue a grant' do
+        expect(Doorkeeper::AccessGrant.count).to be 0
+      end
+
+      it 'should not issue a token' do
+        expect(Doorkeeper::AccessToken.count).to be 0
+      end
+    end
   end
 
   describe 'GET #new in API mode' do
     before do
       allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
-      get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
+      get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri, prompt: prompt
     end
 
     it 'should render success' do
@@ -330,6 +499,54 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
       expect(json_response['response_type']).to eq('token')
       expect(json_response['scope']).to eq('')
     end
+
+    context 'when prompt is none' do
+      let(:prompt) { 'none' }
+      it 'should respond unauthorized' do
+        expect(response).to have_http_status(:unauthorized)
+      end
+      it 'should not issue a grant' do
+        expect(Doorkeeper::AccessGrant.count).to be 0
+      end
+      it 'should not issue a token' do
+        expect(Doorkeeper::AccessToken.count).to be 0
+      end
+      it 'should render consent_required' do
+        expect(json_response['error']).to eq('consent_required')
+        expect(json_response['error_description']).to eq(I18n.t('doorkeeper.errors.messages.consent_required'))
+      end
+    end
+
+    context 'when prompt is consent' do
+      let(:prompt) { 'consent' }
+
+      it 'should render success' do
+        expect(response).to be_successful
+      end
+
+      it "sets status to pre-authorization" do
+        expect(json_response["status"]).to eq(I18n.t('doorkeeper.pre_authorization.status'))
+      end
+
+      it "sets correct values" do
+        expect(json_response['client_id']).to eq(client.uid)
+        expect(json_response['redirect_uri']).to eq(client.redirect_uri)
+        expect(json_response['state']).to be_nil
+        expect(json_response['response_type']).to eq('token')
+        expect(json_response['scope']).to eq('')
+      end
+    end
+
+    context 'when prompt is login' do
+      let(:prompt) { 'login' }
+      it 'should respond unauthorized' do
+        expect(response).to have_http_status(:unauthorized)
+      end
+      it 'should render login_required' do
+        expect(json_response['error']).to eq('login_required')
+        expect(json_response['error_description']).to eq(I18n.t('doorkeeper.errors.messages.login_required'))
+      end
+    end
   end
 
   describe 'GET #new in API mode with skip_authorization true' do
@@ -337,7 +554,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
       allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc { true })
       allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
 
-      get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
+      get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri, prompt: prompt
     end
 
     it 'should render success' do
@@ -368,6 +585,38 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
 
     it "issues the token for the current resource owner" do
       expect(Doorkeeper::AccessToken.first.resource_owner_id).to eq(user.id)
+    end
+
+    context 'when prompt is none' do
+      let(:prompt) { 'none' }
+      it 'should render success' do
+        expect(response).to be_successful
+      end
+    end
+
+    context 'when prompt is consent' do
+      let(:prompt) { 'consent' }
+      it 'should render success' do
+        expect(response).to be_successful
+      end
+    end
+
+    context 'when prompt is login' do
+      let(:prompt) { 'login' }
+      it 'should respond unauthorized' do
+        expect(response).to have_http_status(:unauthorized)
+      end
+      it 'should not issue a grant' do
+        expect(Doorkeeper::AccessGrant.count).to be 0
+      end
+
+      it 'should not issue a token' do
+        expect(Doorkeeper::AccessToken.count).to be 0
+      end
+      it 'should render login_required' do
+        expect(json_response['error']).to eq('login_required')
+        expect(json_response['error_description']).to eq(I18n.t('doorkeeper.errors.messages.login_required'))
+      end
     end
   end
 

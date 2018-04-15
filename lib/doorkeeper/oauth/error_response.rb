@@ -29,7 +29,7 @@ module Doorkeeper
         }.reject { |_, v| v.blank? }
       end
 
-      def as_json(_options)
+      def as_json(_options = {})
         body
       end
 
