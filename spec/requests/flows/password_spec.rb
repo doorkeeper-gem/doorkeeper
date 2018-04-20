@@ -165,6 +165,26 @@ describe 'Resource Owner Password Credentials Flow' do
     end
   end
 
+  context 'when application scopes contain some of the default scopes and no scope is passed' do
+    before do
+      default_scopes_exist :public
+      @client.update_attributes(scopes: 'read write public')
+    end
+
+    it 'should issue new token with default scopes that are present in application scopes' do
+      skip 'this is a failing test case for issue #1002: remove this line once fixed'
+      expect do
+        post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
+      end.to change { Doorkeeper::AccessToken.count }.by(1)
+
+      token = Doorkeeper::AccessToken.first
+
+      expect(token.application_id).to eq @client.id
+      should_have_json 'access_token', token.token
+      should_have_json 'scope', 'public'
+    end
+  end
+
   context 'with invalid scopes' do
     subject do
       post password_token_endpoint_url(client: @client,
