@@ -171,7 +171,7 @@ describe 'Resource Owner Password Credentials Flow' do
     end
 
     it 'should issue new token with one default scope that are present in application scopes' do
-      default_scopes_exist :public
+      default_scopes_exist :public, :admin
 
       expect do
         post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
@@ -195,7 +195,7 @@ describe 'Resource Owner Password Credentials Flow' do
 
       expect(token.application_id).to eq @client.id
       should_have_json 'access_token', token.token
-      should_have_json 'scope', 'public read'
+      should_have_json 'scope', 'read public'
     end
   end
 
