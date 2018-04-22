@@ -6,6 +6,7 @@
 [![Code Climate](https://codeclimate.com/github/doorkeeper-gem/doorkeeper.svg)](https://codeclimate.com/github/doorkeeper-gem/doorkeeper)
 [![Coverage Status](https://coveralls.io/repos/github/doorkeeper-gem/doorkeeper/badge.svg?branch=master)](https://coveralls.io/github/doorkeeper-gem/doorkeeper?branch=master)
 [![Security](https://hakiri.io/github/doorkeeper-gem/doorkeeper/master.svg)](https://hakiri.io/github/doorkeeper-gem/doorkeeper/master)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fdoorkeeper-gem%2Fdoorkeeper.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fdoorkeeper-gem%2Fdoorkeeper?ref=badge_shield)
 
 Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider
 functionality to your Rails or Grape application.
@@ -73,6 +74,9 @@ https://github.com/doorkeeper-gem/doorkeeper/releases
   - [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fdoorkeeper-gem%2Fdoorkeeper.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fdoorkeeper-gem%2Fdoorkeeper?ref=badge_large)
 
 ## Installation
 
