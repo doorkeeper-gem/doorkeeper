@@ -19,11 +19,7 @@ module Doorkeeper
       end
 
       def scopes
-        @scopes ||= if @original_scopes.present?
-                      OAuth::Scopes.from_string(@original_scopes)
-                    else
-                      default_scopes
-                    end
+        @scopes ||= build_scopes
       end
 
       def default_scopes
@@ -50,6 +46,19 @@ module Doorkeeper
 
       def after_successful_response
         Doorkeeper.configuration.after_successful_strategy_response.call(self, @response)
+      end
+
+      private
+
+      def build_scopes
+        if @original_scopes.present?
+          OAuth::Scopes.from_string(@original_scopes)
+        else
+          client_scopes = @client.try(:scopes)
+          return default_scopes if client_scopes.blank?
+
+          default_scopes & @client.scopes
+        end
       end
     end
   end

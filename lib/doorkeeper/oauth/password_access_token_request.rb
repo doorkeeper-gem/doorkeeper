@@ -27,12 +27,10 @@ module Doorkeeper
       end
 
       def validate_scopes
-        application_scopes = client.try(:scopes)
-        if @original_scopes.blank?
-          return true if application_scopes.blank?
-          @original_scopes = (application_scopes & server.default_scopes).to_s
-        end
-        ScopeChecker.valid? @original_scopes, server.scopes, application_scopes
+        client_scopes = client.try(:scopes)
+        return true if @original_scopes.blank? && client_scopes.blank?
+
+        ScopeChecker.valid?(scopes.to_s, server.scopes, client_scopes)
       end
 
       def validate_resource_owner
