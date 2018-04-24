@@ -1,8 +1,15 @@
 module Doorkeeper
   class AuthorizationsController < Doorkeeper::ApplicationController
-    before_action :authenticate_resource_owner!
+    before_action do
+      render_prompt_error(:login_required) unless begin
+                                                    authenticate_resource_owner!
+                                                  rescue StandardError => e
+                                                    raise e unless no_prompt? || prompt_login?
+                                                  end
+    end
 
     def new
+      return render_prompt_error(:login_required) if prompt_login?
       if pre_auth.authorizable?
         render_success
       else
@@ -22,12 +29,15 @@ module Doorkeeper
     private
 
     def render_success
-      if skip_authorization? || matching_token?
+      if skip_authorization? || (!prompt_consent? && matching_token?)
         redirect_or_render authorize_response
-      elsif Doorkeeper.configuration.api_only
-        render json: pre_auth
       else
-        render :new
+        return render_prompt_error(:consent_required) if no_prompt?
+        if Doorkeeper.configuration.api_only
+          render json: pre_auth
+        else
+          render :new
+        end
       end
     end
 
@@ -35,6 +45,19 @@ module Doorkeeper
       if Doorkeeper.configuration.api_only
         render json: pre_auth.error_response.body[:error_description],
                status: :bad_request
+      else
+        render :error
+      end
+    end
+
+    def render_prompt_error(type)
+      @prompt_error = OAuth::ErrorResponse.new(
+        name: type,
+        state: pre_auth.state,
+        redirect_uri: pre_auth.redirect_uri
+      )
+      if Doorkeeper.configuration.api_only
+        render json: @prompt_error, status: :unauthorized
       else
         render :error
       end
@@ -70,6 +93,8 @@ module Doorkeeper
                                                 server.client_via_uid,
                                                 params)
     end
+
+    delegate :no_prompt?, :prompt_consent?, :prompt_login?, to: :pre_auth
 
     def authorization
       @authorization ||= strategy.request

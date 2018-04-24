@@ -93,6 +93,10 @@ en:
         access_denied: 'The resource owner or authorization server denied the request.'
         invalid_scope: 'The requested scope is invalid, unknown, or malformed.'
         invalid_code_challenge_method: 'The code challenge method must be plain or S256.'
+        invalid_prompt: 'The requested prompt is invalid, unknown, or malformed.'
+        login_required: 'The authorization server requires resource owner authentication.'
+        interaction_required: 'The authorization server requires resource owner interaction.'
+        consent_required: 'The authorization server requires resource owner consent.'
         server_error: 'The authorization server encountered an unexpected condition which prevented it from fulfilling the request.'
         temporarily_unavailable: 'The authorization server is currently unable to handle the request due to a temporary overloading or maintenance of the server.'
 

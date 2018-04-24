@@ -3,5 +3,5 @@
 </div>
 
 <main role="main">
-  <pre><%= @pre_auth.error_response.body[:error_description] %></pre>
+  <pre><%= @prompt_error || @pre_auth.error_response.body[:error_description] %></pre>
 </main>

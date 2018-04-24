@@ -46,6 +46,72 @@ module Doorkeeper::OAuth
       expect(subject).to be_authorizable
     end
 
+    context 'when prompt' do
+      let :attributes do
+        {
+          response_type: 'code',
+          redirect_uri: 'http://tst.com/auth',
+          state: 'save-this',
+          prompt: prompt
+        }
+      end
+      context 'is invalid' do
+        let(:prompt) { 'garbage' }
+
+        it 'is not authorizable' do
+          expect(subject).not_to be_authorizable
+        end
+      end
+      context 'is none' do
+        let(:prompt) { 'none' }
+
+        it 'is authorizable' do
+          expect(subject).to be_authorizable
+        end
+        it 'should have prompt_login? as false' do
+          expect(subject.prompt_login?).to eq(false)
+        end
+        it 'should have prompt_consent? as false' do
+          expect(subject.prompt_consent?).to eq(false)
+        end
+        it 'should have no_prompt? as true' do
+          expect(subject.no_prompt?).to eq(true)
+        end
+      end
+      context 'is login' do
+        let(:prompt) { 'login' }
+
+        it 'is authorizable' do
+          expect(subject).to be_authorizable
+        end
+        it 'should have prompt_login? as true' do
+          expect(subject.prompt_login?).to eq(true)
+        end
+        it 'should have prompt_consent? as false' do
+          expect(subject.prompt_consent?).to eq(false)
+        end
+        it 'should have no_prompt? as false' do
+          expect(subject.no_prompt?).to eq(false)
+        end
+      end
+      context 'is consent' do
+        let(:prompt) { 'consent' }
+
+        it 'is authorizable' do
+          expect(subject).to be_authorizable
+        end
+        it 'should have prompt_login? as false' do
+          expect(subject.prompt_login?).to eq(false)
+        end
+        it 'should have prompt_consent? as true' do
+          expect(subject.prompt_consent?).to eq(true)
+        end
+        it 'should have no_prompt? as false' do
+          expect(subject.no_prompt?).to eq(false)
+        end
+      end
+    end
+
     context 'when using default grant flows' do
       it 'accepts "code" as response type' do
         subject.response_type = 'code'

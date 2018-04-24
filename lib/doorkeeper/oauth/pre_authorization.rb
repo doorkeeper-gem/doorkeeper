@@ -8,9 +8,10 @@ module Doorkeeper
       validate :scopes, error: :invalid_scope
       validate :redirect_uri, error: :invalid_redirect_uri
       validate :code_challenge_method, error: :invalid_code_challenge_method
+      validate :prompt, error: :invalid_prompt
 
       attr_accessor :server, :client, :response_type, :redirect_uri, :state,
-                    :code_challenge, :code_challenge_method
+                    :code_challenge, :code_challenge_method, :prompt
       attr_writer   :scope
 
       def initialize(server, client, attrs = {})
@@ -22,6 +23,7 @@ module Doorkeeper
         @state                 = attrs[:state]
         @code_challenge        = attrs[:code_challenge]
         @code_challenge_method = attrs[:code_challenge_method]
+        @prompt                = attrs[:prompt].try(:to_sym)
       end
 
       def authorizable?
@@ -50,6 +52,18 @@ module Doorkeeper
           client_name: client.name,
           status: I18n.t('doorkeeper.pre_authorization.status')
         }
+      end
+
+      def prompt_login?
+        prompt == :login
+      end
+
+      def prompt_consent?
+        prompt == :consent
+      end
+
+      def no_prompt?
+        prompt == :none
       end
 
       private
@@ -92,6 +106,12 @@ module Doorkeeper
 
       def validate_code_challenge_method
         !code_challenge.present? || (code_challenge_method.present? && code_challenge_method =~ /^plain$|^S256$/)
+      end
+
+      def validate_prompt
+        # TODO: Should we handle `select_account` as specified in OIDC 1.0?
+        return true unless prompt.present?
+        %i[none login consent].include?(prompt)
       end
     end
   end
