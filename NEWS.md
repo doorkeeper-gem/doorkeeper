@@ -29,6 +29,8 @@ User-visible changes worth mentioning.
   on `create` action as well as `new`
 - [#1082] Fix #916: remember routes mapping and use it required places (fix error with
   customized Token Info route).
+- [#1086, #1088] Fix bug with receiving default scopes in the token even if they are
+  not present in the application scopes (use scopes intersection).
 
 ## 4.3.2
 
