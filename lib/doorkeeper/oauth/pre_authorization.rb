@@ -33,7 +33,7 @@ module Doorkeeper
       end
 
       def scope
-        @scope.presence || server.default_scopes.to_s
+        @scope.presence || build_scopes
       end
 
       def error_response
@@ -54,6 +54,15 @@ module Doorkeeper
 
       private
 
+      def build_scopes
+        client_scopes = client.application.scopes
+        if client_scopes.blank?
+          server.default_scopes.to_s
+        else
+          (server.default_scopes & client_scopes).to_s
+        end
+      end
+
       def validate_response_type
         server.authorization_response_types.include? response_type
       end
@@ -63,7 +72,7 @@ module Doorkeeper
       end
 
       def validate_scopes
-        return true if scope.blank?
+        return true if scope.blank? && client.application.scopes.blank?
 
         Helpers::ScopeChecker.valid?(
           scope,
