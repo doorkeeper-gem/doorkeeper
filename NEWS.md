@@ -8,7 +8,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#996] Expiration Time Base On Grant Type
-- [#997] Allow PKCE authorization_code flow as specified in RCF7636
+- [#997] Allow PKCE authorization_code flow as specified in RFC7636
 - [#907] Fix lookup for matching tokens in certain edge-cases
 - [#992] Add API option to use Doorkeeper without management views for API only
   Rails applications (`api_only`)
