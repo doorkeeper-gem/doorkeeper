@@ -479,4 +479,19 @@ describe Doorkeeper, 'configuration' do
       expect(subject.api_only).to be_truthy
     end
   end
+
+  describe 'strict_content_type' do
+    it 'is false by default' do
+      expect(subject.enforce_content_type).to be_falsey
+    end
+
+    it "can change the value" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enforce_content_type
+      end
+
+      expect(subject.enforce_content_type).to be_truthy
+    end
+  end
 end

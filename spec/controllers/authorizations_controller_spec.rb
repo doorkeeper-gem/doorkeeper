@@ -41,7 +41,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
 
   describe 'POST #create' do
     before do
-      post :create, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
+      post :create, params: { client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri }
     end
 
     it 'redirects after authorization' do
@@ -76,7 +76,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
   describe "POST #create in API mode" do
     before do
       allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
-      post :create, client_id: client.uid, response_type: "token", redirect_uri: client.redirect_uri
+      post :create, params: { client_id: client.uid, response_type: "token", redirect_uri: client.redirect_uri }
     end
 
     let(:response_json_body) { JSON.parse(response.body) }
@@ -114,7 +114,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
   describe 'POST #create with errors' do
     before do
       default_scopes_exist :public
-      post :create, client_id: client.uid, response_type: 'token', scope: 'invalid', redirect_uri: client.redirect_uri
+      post :create, params: { client_id: client.uid, response_type: 'token', scope: 'invalid', redirect_uri: client.redirect_uri }
     end
 
     it 'redirects after authorization' do
@@ -146,7 +146,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     before do
       allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
       default_scopes_exist :public
-      post :create, client_id: client.uid, response_type: 'token', scope: 'invalid', redirect_uri: client.redirect_uri
+      post :create, params: { client_id: client.uid, response_type: 'token', scope: 'invalid', redirect_uri: client.redirect_uri }
     end
 
     let(:response_json_body) { JSON.parse(response.body) }
@@ -182,7 +182,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
       allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
 
       access_token.save!
-      post :create, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
+      post :create, params: { client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri }
     end
 
     it 'returns the existing access token in a fragment' do
@@ -201,7 +201,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
 
     describe 'when successful' do
       after do
-        post :create, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
+        post :create, params: { client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri }
       end
 
       it 'should call :before_successful_authorization callback' do
@@ -215,7 +215,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
 
     describe 'with errors' do
       after do
-        post :create, client_id: client.uid, response_type: 'token', redirect_uri: 'bad_uri'
+        post :create, params: { client_id: client.uid, response_type: 'token', redirect_uri: 'bad_uri' }
       end
 
       it 'should not call :before_successful_authorization callback' do
@@ -234,7 +234,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
         true
       end)
       client.update_attribute :redirect_uri, 'urn:ietf:wg:oauth:2.0:oob'
-      get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
+      get :new, params: { client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri }
     end
 
     it 'should redirect immediately' do
@@ -258,7 +258,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
         true
       end)
       client.update_attribute :redirect_uri, 'urn:ietf:wg:oauth:2.0:oob'
-      get :new, client_id: client.uid, response_type: 'code', redirect_uri: client.redirect_uri
+      get :new, params: { client_id: client.uid, response_type: 'code', redirect_uri: client.redirect_uri }
     end
 
     it 'should redirect immediately' do
@@ -280,7 +280,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
       allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
         true
       end)
-      get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
+      get :new, params: { client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri }
     end
 
     it 'should redirect immediately' do
@@ -312,7 +312,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
   describe 'GET #new in API mode' do
     before do
       allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
-      get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
+      get :new, params: { client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri }
     end
 
     it 'should render success' do
@@ -337,7 +337,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
       allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc { true })
       allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
 
-      get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
+      get :new, params: { client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri }
     end
 
     it 'should render success' do
@@ -374,7 +374,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
   describe 'GET #new with errors' do
     before do
       default_scopes_exist :public
-      get :new, an_invalid: 'request'
+      get :new, params: { an_invalid: 'request' }
     end
 
     it 'does not redirect' do
@@ -390,7 +390,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
   describe 'GET #new with callbacks' do
     after do
       client.update_attribute :redirect_uri, 'urn:ietf:wg:oauth:2.0:oob'
-      get :new, client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri
+      get :new, params: { client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri }
     end
 
     describe 'when authorizing' do

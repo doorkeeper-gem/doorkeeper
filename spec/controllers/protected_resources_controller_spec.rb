@@ -33,12 +33,12 @@ describe 'doorkeeper authorize filter' do
 
     it 'access_token param' do
       expect(Doorkeeper::AccessToken).to receive(:by_token).with(token_string).and_return(token)
-      get :index, access_token: token_string
+      get :index, params: { access_token: token_string }
     end
 
     it 'bearer_token param' do
       expect(Doorkeeper::AccessToken).to receive(:by_token).with(token_string).and_return(token)
-      get :index, bearer_token: token_string
+      get :index, params: { bearer_token: token_string }
     end
 
     it 'Authorization header' do
@@ -71,25 +71,25 @@ describe 'doorkeeper authorize filter' do
 
     context 'with valid token', token: :valid do
       it 'allows into index action' do
-        get :index, access_token: token_string
+        get :index, params: { access_token: token_string }
         expect(response).to be_successful
       end
 
       it 'allows into show action' do
-        get :show, id: '4', access_token: token_string
+        get :show, params: { id: '4', access_token: token_string }
         expect(response).to be_successful
       end
     end
 
     context 'with invalid token', token: :invalid do
       it 'does not allow into index action' do
-        get :index, access_token: token_string
+        get :index, params: { access_token: token_string }
         expect(response.status).to eq 401
         expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
       end
 
       it 'does not allow into show action' do
-        get :show, id: '4', access_token: token_string
+        get :show, params: { id: '4', access_token: token_string }
         expect(response.status).to eq 401
         expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
       end
@@ -115,7 +115,7 @@ describe 'doorkeeper authorize filter' do
         Doorkeeper::AccessToken
       ).to receive(:by_token).with(token_string).and_return(token)
 
-      get :index, access_token: token_string
+      get :index, params: { access_token: token_string }
       expect(response).to be_successful
     end
 
@@ -129,7 +129,7 @@ describe 'doorkeeper authorize filter' do
       ).to receive(:by_token).with(token_string).and_return(token)
       expect(token).to receive(:acceptable?).with([:write]).and_return(false)
 
-      get :index, access_token: token_string
+      get :index, params: { access_token: token_string }
       expect(response.status).to eq 403
       expect(response.header).to_not include('WWW-Authenticate')
     end
@@ -163,7 +163,7 @@ describe 'doorkeeper authorize filter' do
       end
 
       it 'it renders a custom JSON response', token: :invalid do
-        get :index, access_token: token_string
+        get :index, params: { access_token: token_string }
         expect(response.status).to eq 401
         expect(response.content_type).to eq('application/json')
         expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
@@ -193,7 +193,7 @@ describe 'doorkeeper authorize filter' do
       end
 
       it 'it renders a custom text response', token: :invalid do
-        get :index, access_token: token_string
+        get :index, params: { access_token: token_string }
         expect(response.status).to eq 401
         expect(response.content_type).to eq('text/plain')
         expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
@@ -243,7 +243,7 @@ describe 'doorkeeper authorize filter' do
       end
 
       it 'renders a custom JSON response' do
-        get :index, access_token: token_string
+        get :index, params: { access_token: token_string }
         expect(response.header).to_not include('WWW-Authenticate')
         expect(response.content_type).to eq('application/json')
         expect(response.status).to eq 403
@@ -265,7 +265,7 @@ describe 'doorkeeper authorize filter' do
       end
 
       it 'overrides the default status code' do
-        get :index, access_token: token_string
+        get :index, params: { access_token: token_string }
         expect(response.status).to eq 404
       end
     end
@@ -282,7 +282,7 @@ describe 'doorkeeper authorize filter' do
       end
 
       it 'renders a custom status code and text response' do
-        get :index, access_token: token_string
+        get :index, params: { access_token: token_string }
         expect(response.header).to_not include('WWW-Authenticate')
         expect(response.status).to eq 403
         expect(response.body).to eq('Forbidden')
@@ -301,7 +301,7 @@ describe 'doorkeeper authorize filter' do
       end
 
       it 'overrides the default status code' do
-        get :index, access_token: token_string
+        get :index, params: { access_token: token_string }
         expect(response.status).to eq 404
       end
     end

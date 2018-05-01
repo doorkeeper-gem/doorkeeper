@@ -25,6 +25,11 @@ Doorkeeper.configure do
   #
   # api_only
 
+  # Enforce token request content type to application/x-www-form-urlencoded.
+  # It is not enabled by default to not break prior versions of the gem.
+  #
+  # enforce_content_type
+
   # Authorization Code expiration time (default 10 minutes).
   #
   # authorization_code_expires_in 10.minutes
