@@ -87,8 +87,14 @@ describe RedirectUriValidator do
       application = FactoryBot.build(:application, redirect_uri: 'http://localhost/callback')
       expect(application).to be_valid
 
+      application = FactoryBot.build(:application, redirect_uri: 'https://test.com/callback')
+      expect(application).to be_valid
+
       application = FactoryBot.build(:application, redirect_uri: 'http://localhost2/callback')
       expect(application).not_to be_valid
+
+      application = FactoryBot.build(:application, redirect_uri: 'https://test.com/callback')
+      expect(application).to be_valid
     end
 
     it 'forbids redirect uri if required' do
