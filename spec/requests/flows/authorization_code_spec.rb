@@ -280,11 +280,13 @@ feature 'Authorization Code Flow' do
       @client.update_attributes(scopes: 'public write read')
     end
 
-    scenario 'it displays error if application scopes are different from default scopes' do
+    scenario 'access grant has no scope' do
       default_scopes_exist :admin
       visit authorization_endpoint_url(client: @client)
-      access_grant_should_not_exist
-      expect(page).to have_content 'An error has occurred'
+      click_on 'Authorize'
+      access_grant_should_exist_for(@client, @resource_owner)
+      grant = Doorkeeper::AccessGrant.first
+      expect(grant.scopes).to be_empty
     end
 
     scenario 'access grant have scopes which are common in application scopees and default scopes' do
