@@ -146,22 +146,17 @@ describe 'Resource Owner Password Credentials Flow' do
       @client.update_attributes(scopes: 'abc')
     end
 
-    subject do
+    it 'issues new token without any scope' do
+      expect do
       post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
-    end
+      end.to change { Doorkeeper::AccessToken.count }.by(1)
 
-    it 'should not issue new token' do
-      expect { subject }.to_not(change { Doorkeeper::AccessToken.count })
-    end
+      token = Doorkeeper::AccessToken.first
 
-    it 'should return invalid_scope error' do
-      subject
-
-      should_have_json 'error', 'invalid_scope'
-      should_have_json 'error_description', translated_error_message(:invalid_scope)
-      should_not_have_json 'access_token'
-
-      expect(response.status).to eq(401)
+      expect(token.application_id).to eq @client.id
+      expect(token.scopes).to be_empty
+      should_have_json 'access_token', token.token
+      should_not_have_json 'scope'
     end
   end
 

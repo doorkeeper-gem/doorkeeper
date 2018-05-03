@@ -72,7 +72,7 @@ module Doorkeeper
       end
 
       def validate_scopes
-        return true if scope.blank? && client.application.scopes.blank?
+        return true if scope.blank?
 
         Helpers::ScopeChecker.valid?(
           scope,
