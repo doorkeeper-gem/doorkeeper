@@ -9,7 +9,7 @@ describe Doorkeeper::VERSION do
 
   context 'VERSION' do
     it 'returns gem version string' do
-      expect(Doorkeeper::VERSION::STRING).to match(/^\d+\.\d+\.\d+[.\w]?$/)
+      expect(Doorkeeper::VERSION::STRING).to match(/^\d+\.\d+\.\d+(\.\w+)?$/)
     end
   end
 end
