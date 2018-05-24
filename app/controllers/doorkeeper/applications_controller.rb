@@ -1,6 +1,6 @@
 module Doorkeeper
   class ApplicationsController < Doorkeeper::ApplicationController
-    layout 'doorkeeper/admin'
+    try(:layout, 'doorkeeper/admin') # there's no layout method in API-only mode
 
     before_action :authenticate_admin!
     before_action :set_application, only: %i[show edit update destroy]
