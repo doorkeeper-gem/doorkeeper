@@ -132,7 +132,7 @@ describe Doorkeeper, 'configuration' do
 
   describe 'use_refresh_token' do
     it 'is false by default' do
-      expect(subject.refresh_token_enabled?).to be_falsey
+      expect(subject.refresh_token_enabled?).to eq(false)
     end
 
     it 'can change the value' do
@@ -141,7 +141,7 @@ describe Doorkeeper, 'configuration' do
         use_refresh_token
       end
 
-      expect(subject.refresh_token_enabled?).to be_truthy
+      expect(subject.refresh_token_enabled?).to eq(true)
     end
 
     it "does not includes 'refresh_token' in authorization_response_types" do
@@ -164,7 +164,7 @@ describe Doorkeeper, 'configuration' do
 
   describe 'enforce_configured_scopes' do
     it 'is false by default' do
-      expect(subject.enforce_configured_scopes?).to be_falsey
+      expect(subject.enforce_configured_scopes?).to eq(false)
     end
 
     it 'can change the value' do
@@ -173,13 +173,13 @@ describe Doorkeeper, 'configuration' do
         enforce_configured_scopes
       end
 
-      expect(subject.enforce_configured_scopes?).to be_truthy
+      expect(subject.enforce_configured_scopes?).to eq(true)
     end
   end
 
   describe 'enable_pkce_without_secret' do
     it 'is false by default' do
-      expect(subject.pkce_without_secret_enabled?).to be_falsey
+      expect(subject.pkce_without_secret_enabled?).to eq(false)
     end
 
     it 'can change the value' do
@@ -188,7 +188,7 @@ describe Doorkeeper, 'configuration' do
         enable_pkce_without_secret
       end
 
-      expect(subject.pkce_without_secret_enabled?).to be_truthy
+      expect(subject.pkce_without_secret_enabled?).to eq(true)
     end
   end
 
@@ -209,7 +209,7 @@ describe Doorkeeper, 'configuration' do
 
   describe 'force_ssl_in_redirect_uri' do
     it 'is true by default in non-development environments' do
-      expect(subject.force_ssl_in_redirect_uri).to be_truthy
+      expect(subject.force_ssl_in_redirect_uri).to eq(true)
     end
 
     it 'can change the value' do
@@ -218,7 +218,7 @@ describe Doorkeeper, 'configuration' do
         force_ssl_in_redirect_uri(false)
       end
 
-      expect(subject.force_ssl_in_redirect_uri).to be_falsey
+      expect(subject.force_ssl_in_redirect_uri).to eq(false)
     end
 
     it 'can be a callable object' do
@@ -229,7 +229,7 @@ describe Doorkeeper, 'configuration' do
       end
 
       expect(subject.force_ssl_in_redirect_uri).to eq(block)
-      expect(subject.force_ssl_in_redirect_uri.call).to be_falsey
+      expect(subject.force_ssl_in_redirect_uri.call).to eq(false)
     end
   end
 
@@ -250,7 +250,7 @@ describe Doorkeeper, 'configuration' do
 
   describe 'forbid_redirect_uri' do
     it 'is false by default' do
-      expect(subject.forbid_redirect_uri.call(URI.parse('https://localhost'))).to be_falsey
+      expect(subject.forbid_redirect_uri.call(URI.parse('https://localhost'))).to eq(false)
     end
 
     it 'can be a callable object' do
@@ -261,13 +261,13 @@ describe Doorkeeper, 'configuration' do
       end
 
       expect(subject.forbid_redirect_uri).to eq(block)
-      expect(subject.forbid_redirect_uri.call).to be_truthy
+      expect(subject.forbid_redirect_uri.call).to eq(true)
     end
   end
 
   describe 'enable_application_owner' do
     it 'is disabled by default' do
-      expect(Doorkeeper.configuration.enable_application_owner?).not_to be_truthy
+      expect(Doorkeeper.configuration.enable_application_owner?).not_to eq(true)
     end
 
     context 'when enabled without confirmation' do
@@ -283,7 +283,7 @@ describe Doorkeeper, 'configuration' do
       end
 
       it 'Doorkeeper.configuration.confirm_application_owner? returns false' do
-        expect(Doorkeeper.configuration.confirm_application_owner?).not_to be_truthy
+        expect(Doorkeeper.configuration.confirm_application_owner?).not_to eq(true)
       end
     end
 
@@ -300,7 +300,7 @@ describe Doorkeeper, 'configuration' do
       end
 
       it 'Doorkeeper.configuration.confirm_application_owner? returns true' do
-        expect(Doorkeeper.configuration.confirm_application_owner?).to be_truthy
+        expect(Doorkeeper.configuration.confirm_application_owner?).to eq(true)
       end
     end
   end
@@ -467,7 +467,7 @@ describe Doorkeeper, 'configuration' do
 
   describe "api_only" do
     it "is false by default" do
-      expect(subject.api_only).to be_falsey
+      expect(subject.api_only).to eq(false)
     end
 
     it "can change the value" do
@@ -476,13 +476,13 @@ describe Doorkeeper, 'configuration' do
         api_only
       end
 
-      expect(subject.api_only).to be_truthy
+      expect(subject.api_only).to eq(true)
     end
   end
 
   describe 'strict_content_type' do
     it 'is false by default' do
-      expect(subject.enforce_content_type).to be_falsey
+      expect(subject.enforce_content_type).to eq(false)
     end
 
     it "can change the value" do
@@ -491,7 +491,7 @@ describe Doorkeeper, 'configuration' do
         enforce_content_type
       end
 
-      expect(subject.enforce_content_type).to be_truthy
+      expect(subject.enforce_content_type).to eq(true)
     end
   end
 end

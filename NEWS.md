@@ -6,7 +6,10 @@ upgrade guides.
 User-visible changes worth mentioning.
 
 ## master
-
+- [#1099] All the configuration variables in `Doorkeeper.configuration` now
+          always return a non-nil value (`true` or `false`)
+- [#1099] ORM / Query optimization: Do not revoke the refresh token if it is not enabled
+          in `doorkeeper.rb`
 - [#996] Expiration Time Base On Grant Type
 - [#997] Allow PKCE authorization_code flow as specified in RFC7636
 - [#907] Fix lookup for matching tokens in certain edge-cases
