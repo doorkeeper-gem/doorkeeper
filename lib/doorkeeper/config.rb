@@ -292,24 +292,32 @@ module Doorkeeper
     attr_reader :api_only
     attr_reader :enforce_content_type
 
+    def api_only
+      @api_only ||= false
+    end
+
+    def enforce_content_type
+      @enforce_content_type ||= false
+    end
+
     def refresh_token_enabled?
-      defined?(@refresh_token_enabled) && @refresh_token_enabled
+      !!(defined?(@refresh_token_enabled) && @refresh_token_enabled)
     end
 
     def pkce_without_secret_enabled?
-      defined?(@pkce_without_secret_enabled) && @pkce_without_secret_enabled
+      !!(defined?(@pkce_without_secret_enabled) && @pkce_without_secret_enabled)
     end
 
     def enforce_configured_scopes?
-      defined?(@enforce_configured_scopes) && @enforce_configured_scopes
+      !!(defined?(@enforce_configured_scopes) && @enforce_configured_scopes)
     end
 
     def enable_application_owner?
-      defined?(@enable_application_owner) && @enable_application_owner
+      !!(defined?(@enable_application_owner) && @enable_application_owner)
     end
 
     def confirm_application_owner?
-      defined?(@confirm_application_owner) && @confirm_application_owner
+      !!(defined?(@confirm_application_owner) && @confirm_application_owner)
     end
 
     def default_scopes
