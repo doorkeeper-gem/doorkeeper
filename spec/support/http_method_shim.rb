@@ -18,9 +18,10 @@ end
 
 module ControllerHTTPMethodShim
   def process(action, http_method = 'GET', **args)
-    if as = args.delete(:as)
+    if (as = args.delete(:as))
       @request.headers['Content-Type'] = Mime[as].to_s
     end
+
     super(action, http_method, args[:params], args[:session], args[:flash])
   end
 end

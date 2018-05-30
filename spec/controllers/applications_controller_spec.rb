@@ -16,8 +16,8 @@ module Doorkeeper
              doorkeeper_application: {
                name: 'Example',
                redirect_uri: 'https://example.com'
-             }
-           }, format: :json
+             }, format: :json
+           }
         end.to change { Doorkeeper::Application.count }
 
         expect(response).to be_successful
@@ -33,8 +33,8 @@ module Doorkeeper
           post :create, params: {
              doorkeeper_application: {
                name: 'Example'
-             }
-           }, format: :json
+             }, format: :json
+           }
         end.not_to change { Doorkeeper::Application.count }
 
         expect(response).to have_http_status(422)
@@ -45,7 +45,7 @@ module Doorkeeper
       it 'returns application info' do
         application = FactoryBot.create(:application, name: 'Change me')
 
-        get :show, params: { id: application.id }, format: :json
+        get :show, params: { id: application.id, format: :json }
 
         expect(response).to be_successful
 
@@ -60,8 +60,8 @@ module Doorkeeper
           doorkeeper_application: {
             name: 'Example App',
             redirect_uri: 'https://example.com'
-          }
-        }, format: :json
+          }, format: :json
+        }
 
         expect(application.reload.name).to eq 'Example App'
 
@@ -76,8 +76,8 @@ module Doorkeeper
           doorkeeper_application: {
             name: 'Example App',
             redirect_uri: 'localhost:3000'
-          }
-        }, format: :json
+          }, format: :json
+        }
 
         expect(response).to have_http_status(422)
 
@@ -87,7 +87,7 @@ module Doorkeeper
       it 'destroys an application' do
         application = FactoryBot.create(:application)
 
-        delete :destroy, params: { id: application.id }, format: :json
+        delete :destroy, params: { id: application.id, format: :json }
 
         expect(response).to have_http_status(204)
         expect(Application.count).to be_zero
