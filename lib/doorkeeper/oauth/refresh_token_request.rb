@@ -68,7 +68,8 @@ module Doorkeeper
         Authorization::Token.access_token_expires_in(
           server,
           client,
-          Doorkeeper::OAuth::REFRESH_TOKEN
+          Doorkeeper::OAuth::REFRESH_TOKEN,
+          scopes
         )
       end
 

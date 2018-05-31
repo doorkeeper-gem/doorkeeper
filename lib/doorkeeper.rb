@@ -8,6 +8,7 @@ require 'doorkeeper/request'
 require 'doorkeeper/validations'
 
 require 'doorkeeper/oauth/authorization/code'
+require 'doorkeeper/oauth/authorization/context'
 require 'doorkeeper/oauth/authorization/token'
 require 'doorkeeper/oauth/authorization/uri_builder'
 require 'doorkeeper/oauth/helpers/scope_checker'

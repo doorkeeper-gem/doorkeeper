@@ -50,8 +50,8 @@ module Doorkeeper::OAuth
       before do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
-          custom_access_token_expires_in do |_oauth_client, grant_type|
-            grant_type == Doorkeeper::OAuth::IMPLICIT ? 1234 : nil
+          custom_access_token_expires_in do |context|
+            context.grant_type == Doorkeeper::OAuth::IMPLICIT ? 1234 : nil
           end
         end
       end

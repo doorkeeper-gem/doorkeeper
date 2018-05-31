@@ -9,7 +9,7 @@ module Doorkeeper::OAuth
     let(:server) do
       double :server,
              access_token_expires_in: 2.minutes,
-             custom_access_token_expires_in: ->(_oauth_client, _grant) { nil }
+             custom_access_token_expires_in: ->(_context) { nil }
     end
 
     let(:refresh_token) do
@@ -30,7 +30,9 @@ module Doorkeeper::OAuth
     it 'issues a new token for the client with custom expires_in' do
       server = double :server,
                       access_token_expires_in: 2.minutes,
-                      custom_access_token_expires_in: ->(_app, grant) { grant == Doorkeeper::OAuth::REFRESH_TOKEN ? 1234 : nil }
+                      custom_access_token_expires_in: lambda { |context|
+                        context.grant_type == Doorkeeper::OAuth::REFRESH_TOKEN ? 1234 : nil
+                      }
 
       allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
 
@@ -85,7 +87,9 @@ module Doorkeeper::OAuth
       let(:server) do
         double :server,
                access_token_expires_in: 2.minutes,
-               custom_access_token_expires_in: ->(_oauth_client, grant) { grant == Doorkeeper::OAuth::REFRESH_TOKEN ? 1234 : nil }
+               custom_access_token_expires_in: lambda { |context|
+                 context.grant_type == Doorkeeper::OAuth::REFRESH_TOKEN ? 1234 : nil
+               }
       end
 
       before do

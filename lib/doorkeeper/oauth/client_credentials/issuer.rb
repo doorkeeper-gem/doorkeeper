@@ -28,7 +28,8 @@ module Doorkeeper
           ttl = Authorization::Token.access_token_expires_in(
             @server,
             client,
-            Doorkeeper::OAuth::CLIENT_CREDENTIALS
+            Doorkeeper::OAuth::CLIENT_CREDENTIALS,
+            scopes
           )
 
           creator.call(
