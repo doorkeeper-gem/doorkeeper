@@ -31,12 +31,13 @@ module Doorkeeper
       end
 
       def find_or_create_access_token(client, resource_owner_id, scopes, server)
+        context = Authorization::Token.build_context(client, grant_type, scopes)
         @access_token = AccessToken.find_or_create_for(
           client,
           resource_owner_id,
           scopes,
-          Authorization::Token.access_token_expires_in(server, client, grant_type, scopes),
-          server.refresh_token_enabled?
+          Authorization::Token.access_token_expires_in(server, context),
+          Authorization::Token.refresh_token_enabled?(server, context)
         )
       end
 

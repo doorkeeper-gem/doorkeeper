@@ -65,12 +65,12 @@ module Doorkeeper
       end
 
       def access_token_expires_in
-        Authorization::Token.access_token_expires_in(
-          server,
+        context = Authorization::Token.build_context(
           client,
           Doorkeeper::OAuth::REFRESH_TOKEN,
           scopes
         )
+        Authorization::Token.access_token_expires_in(server, context)
       end
 
       def validate_token_presence

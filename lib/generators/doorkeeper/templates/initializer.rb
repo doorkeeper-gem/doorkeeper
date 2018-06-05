@@ -66,7 +66,14 @@ Doorkeeper.configure do
   #
   # reuse_access_token
 
-  # Issue access tokens with refresh token (disabled by default)
+  # Issue access tokens with refresh token (disabled by default), you may also
+  # pass a block which accepts `context` to customize when to give a refresh
+  # token or not. Similar to `custom_access_token_expires_in`, `context` has
+  # the properties:
+  #
+  # `client` - the OAuth client application (see Doorkeeper::OAuth::Client)
+  # `grant_type` - the grant type of the request (see Doorkeeper::OAuth)
+  # `scopes` - the requested scopes (see Doorkeeper::OAuth::Scopes)
   #
   # use_refresh_token
 

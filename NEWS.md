@@ -6,6 +6,7 @@ upgrade guides.
 User-visible changes worth mentioning.
 
 ## master
+- [#1103] Allow customizing use_refresh_token
 - [#1089] Removed enable_pkce_without_secret configuration option
 - [#1102] Expiration time based on scopes
 - [#1099] All the configuration variables in `Doorkeeper.configuration` now
