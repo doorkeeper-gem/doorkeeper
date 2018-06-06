@@ -6,7 +6,9 @@ module Doorkeeper::OAuth
       double :server,
              access_token_expires_in: 2.days,
              refresh_token_enabled?: false,
-             custom_access_token_expires_in: ->(_app, grant) { grant == Doorkeeper::OAuth::AUTHORIZATION_CODE ? 1234 : nil }
+             custom_access_token_expires_in: lambda { |context|
+               context.grant_type == Doorkeeper::OAuth::AUTHORIZATION_CODE ? 1234 : nil
+             }
     end
 
     let(:grant)  { FactoryBot.create :access_grant }

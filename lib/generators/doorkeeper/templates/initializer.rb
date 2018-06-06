@@ -40,10 +40,14 @@ Doorkeeper.configure do
   # access_token_expires_in 2.hours
 
   # Assign custom TTL for access tokens. Will be used instead of access_token_expires_in
-  # option if defined.
+  # option if defined. `context` has the following properties available
   #
-  # custom_access_token_expires_in do |oauth_client, grant_type|
-  #   oauth_client.application.additional_settings.implicit_oauth_expiration
+  # `client` - the OAuth client application (see Doorkeeper::OAuth::Client)
+  # `grant_type` - the grant type of the request (see Doorkeeper::OAuth)
+  # `scopes` - the requested scopes (see Doorkeeper::OAuth::Scopes)
+  #
+  # custom_access_token_expires_in do |context|
+  #   context.client.application.additional_settings.implicit_oauth_expiration
   # end
 
   # Use a custom class for generating the access token.

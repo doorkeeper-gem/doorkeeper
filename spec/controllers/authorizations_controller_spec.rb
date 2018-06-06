@@ -34,8 +34,8 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
   before do
     allow(Doorkeeper.configuration).to receive(:grant_flows).and_return(["implicit"])
     allow(controller).to receive(:current_resource_owner).and_return(user)
-    allow(Doorkeeper.configuration).to receive(:custom_access_token_expires_in).and_return(proc { |_app, grant|
-      grant == Doorkeeper::OAuth::IMPLICIT ? 1234 : nil
+    allow(Doorkeeper.configuration).to receive(:custom_access_token_expires_in).and_return(proc { |context|
+      context.grant_type == Doorkeeper::OAuth::IMPLICIT ? 1234 : nil
     })
   end
 
