@@ -18,16 +18,9 @@ module Doorkeeper
         @grant_type = Doorkeeper::OAuth::AUTHORIZATION_CODE
         @redirect_uri = parameters[:redirect_uri]
         @code_verifier = parameters[:code_verifier]
-        @client = client_by_uid(parameters) if no_secret_allowed_for_pkce?
       end
 
       private
-
-      def no_secret_allowed_for_pkce?
-        Doorkeeper.configuration.pkce_without_secret_enabled? &&
-          grant.pkce_supported? &&
-          grant.code_challenge.present? && @client.blank?
-      end
 
       def client_by_uid(parameters)
         Doorkeeper::Application.by_uid(parameters[:client_id])

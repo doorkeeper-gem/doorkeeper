@@ -177,21 +177,6 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
-  describe 'enable_pkce_without_secret' do
-    it 'is false by default' do
-      expect(subject.pkce_without_secret_enabled?).to eq(false)
-    end
-
-    it 'can change the value' do
-      Doorkeeper.configure do
-        orm DOORKEEPER_ORM
-        enable_pkce_without_secret
-      end
-
-      expect(subject.pkce_without_secret_enabled?).to eq(true)
-    end
-  end
-
   describe 'client_credentials' do
     it 'has defaults order' do
       expect(subject.client_credentials_methods).to eq([:from_basic, :from_params])
