@@ -218,8 +218,8 @@ feature 'Authorization Code Flow' do
           should_not_have_json 'access_token'
         end
 
-        scenario 'mobile app requests an access token with authorization code and without secret but doorkeeper allows' do
-          Doorkeeper.configuration.instance_variable_set :@pkce_without_secret_enabled, true
+        scenario 'mobile app requests an access token with authorization code and without secret but is marked as not confidential' do
+          @client.update_attribute :confidential, false
           visit authorization_endpoint_url(client: @client, code_challenge: code_challenge, code_challenge_method: 'S256')
           click_on 'Authorize'
 

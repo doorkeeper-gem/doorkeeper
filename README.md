@@ -116,22 +116,16 @@ migration:
     rails generate doorkeeper:pkce
 ```
 
-If you want to allow PKCE flow without secrets, you can configure doorkeeper to
-allow this:
-
-```ruby
-Doorkeeper.configure do
-  # ...
-  enable_pkce_without_secret
-  # ...
-end
-```
-
 Then run migrations:
 
 ```sh
 rake db:migrate
 ```
+
+Ensure to use non-confidential apps for pkce. PKCE is created, because
+you cannot trust its apps' secret. So whatever app needs pkce: it means, it cannot
+be a confidential app by design.
+
 
 Remember to add associations to your model so the related records are deleted.
 If you don't do this an `ActiveRecord::InvalidForeignKey`-error will be raised
