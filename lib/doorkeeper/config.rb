@@ -103,9 +103,12 @@ module Doorkeeper
         @config.instance_variable_set(:@access_token_methods, methods)
       end
 
-      # Issue access tokens with refresh token (disabled by default)
-      def use_refresh_token
-        @config.instance_variable_set(:@refresh_token_enabled, true)
+      # Issue access tokens with refresh token (disabled if not set)
+      def use_refresh_token(enabled = true, &block)
+        @config.instance_variable_set(
+          :@refresh_token_enabled,
+          block ? block : enabled
+        )
       end
 
       # Reuse access token for the same resource owner within an application
@@ -289,7 +292,11 @@ module Doorkeeper
     end
 
     def refresh_token_enabled?
-      !!(defined?(@refresh_token_enabled) && @refresh_token_enabled)
+      if defined?(@refresh_token_enabled)
+        @refresh_token_enabled
+      else
+        false
+      end
     end
 
     def enforce_configured_scopes?

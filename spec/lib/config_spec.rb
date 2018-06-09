@@ -144,6 +144,24 @@ describe Doorkeeper, 'configuration' do
       expect(subject.refresh_token_enabled?).to eq(true)
     end
 
+    it 'can accept a boolean parameter' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_refresh_token false
+      end
+
+      expect(subject.refresh_token_enabled?).to eq(false)
+    end
+
+    it 'can accept a block parameter' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_refresh_token { |_context| nil }
+      end
+
+      expect(subject.refresh_token_enabled?).to be_a(Proc)
+    end
+
     it "does not includes 'refresh_token' in authorization_response_types" do
       expect(subject.token_grant_types).not_to include 'refresh_token'
     end

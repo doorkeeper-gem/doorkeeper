@@ -119,6 +119,30 @@ module Doorkeeper::OAuth
         )
         expect(result.expires_in).to eql(500)
       end
+
+      it "respects use_refresh_token with a block" do
+        server = double(:server,
+                        access_token_expires_in: 100,
+                        custom_access_token_expires_in: ->(_context) { nil },
+                        refresh_token_enabled?: lambda { |context|
+                          context.scopes == "public"
+                        })
+        result = subject.find_or_create_access_token(
+          client,
+          "1",
+          "public",
+          server
+        )
+        expect(result.refresh_token).to_not be_nil
+
+        result = subject.find_or_create_access_token(
+          client,
+          "1",
+          "private",
+          server
+        )
+        expect(result.refresh_token).to be_nil
+      end
     end
 
     describe "#scopes" do
