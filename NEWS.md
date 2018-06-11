@@ -6,6 +6,11 @@ upgrade guides.
 User-visible changes worth mentioning.
 
 ## master
+
+- [] Add new entries here.
+
+## 5.0.0.rc1
+
 - [#1103] Allow customizing use_refresh_token
 - [#1089] Removed enable_pkce_without_secret configuration option
 - [#1102] Expiration time based on scopes
