@@ -18,3 +18,4 @@ gemfiles/*.lock
 /rdoc/
 coverage
 *.gem
+tags

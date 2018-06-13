@@ -37,6 +37,10 @@ module Doorkeeper
       def by_uid(uid)
         find_by(uid: uid.to_s)
       end
+
+      def secrets_encryption_enabled?
+        Doorkeeper.configuration.secrets_encryption_enabled?
+      end
     end
 
     # Set an application's valid redirect URIs.

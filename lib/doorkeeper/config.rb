@@ -131,6 +131,11 @@ module Doorkeeper
         @config.instance_variable_set(:@enforce_configured_scopes, true)
       end
 
+      # Enable encrypting secrets
+      def encrypt_secrets
+        @config.instance_variable_set(:@secrets_encryption_enabled, true)
+      end
+
       # Enforce request content type as the spec requires:
       # disabled by default for backward compatibility.
       def enforce_content_type
@@ -234,6 +239,18 @@ module Doorkeeper
     option :active_record_options,          default: {}
     option :grant_flows,                    default: %w[authorization_code client_credentials]
 
+    option :encryption_handler,             default: ->(secret) do
+      {
+        "data" => secret,
+      }
+    end 
+    option :decryption_handler,             default: ->(encrypted_secret) do
+      encrypted_secret["data"]
+    end
+    option :hashing_handler,                default: ->(secret) do
+      secret
+    end 
+
     # Allows to forbid specific Application redirect URI's by custom rules.
     # Doesn't forbid any URI by default.
     #
@@ -301,6 +318,10 @@ module Doorkeeper
 
     def enforce_configured_scopes?
       !!(defined?(@enforce_configured_scopes) && @enforce_configured_scopes)
+    end
+
+    def secrets_encryption_enabled?
+      !!(defined?(@secrets_encryption_enabled) && @secrets_encryption_enabled)
     end
 
     def enable_application_owner?
