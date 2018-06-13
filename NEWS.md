@@ -7,7 +7,8 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [] Add new entries here.
+- [#1106] Restrict access to AdminController with 'Forbidden 403' if admin_authenticator is not
+  configured by developers..
 
 ## 5.0.0.rc1
 
@@ -15,9 +16,9 @@ User-visible changes worth mentioning.
 - [#1089] Removed enable_pkce_without_secret configuration option
 - [#1102] Expiration time based on scopes
 - [#1099] All the configuration variables in `Doorkeeper.configuration` now
-          always return a non-nil value (`true` or `false`)
+  always return a non-nil value (`true` or `false`)
 - [#1099] ORM / Query optimization: Do not revoke the refresh token if it is not enabled
-          in `doorkeeper.rb`
+  in `doorkeeper.rb`
 - [#996] Expiration Time Base On Grant Type
 - [#997] Allow PKCE authorization_code flow as specified in RFC7636
 - [#907] Fix lookup for matching tokens in certain edge-cases

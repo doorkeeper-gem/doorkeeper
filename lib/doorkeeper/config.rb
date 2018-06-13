@@ -210,7 +210,13 @@ module Doorkeeper
 
     option :admin_authenticator,
            as: :authenticate_admin,
-           default: ->(_routes) {}
+           default: (lambda do |_routes|
+             ::Rails.logger.warn(
+               I18n.t('doorkeeper.errors.messages.admin_authenticator_not_configured')
+             )
+
+             head :forbidden
+           end)
 
     option :resource_owner_from_credentials,
            default: (lambda do |_routes|
