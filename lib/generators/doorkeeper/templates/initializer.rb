@@ -10,8 +10,10 @@ Doorkeeper.configure do
     #   User.find_by_id(session[:user_id]) || redirect_to(new_user_session_url)
   end
 
-  # If you want to restrict access to the web interface for adding oauth authorized applications,
-  # you need to declare the block below.
+  # If you didn't skip applications controller from Doorkeeper routes in your application routes.rb
+  # file then you need to declare this block in order to restrict access to the web interface for
+  # adding oauth authorized applications. In other case it will return 403 Forbidden response
+  # every time somebody will try to access the admin web interface.
   #
   # admin_authenticator do
   #   # Put your admin authentication logic here.
