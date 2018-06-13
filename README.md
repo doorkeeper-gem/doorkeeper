@@ -1,14 +1,13 @@
-# Doorkeeper - awesome OAuth 2 provider for your Rails app.
+# Doorkeeper — awesome OAuth 2 provider for your Rails / Grape app.
 
 [![Gem Version](https://badge.fury.io/rb/doorkeeper.svg)](https://rubygems.org/gems/doorkeeper)
 [![Build Status](https://travis-ci.org/doorkeeper-gem/doorkeeper.svg?branch=master)](https://travis-ci.org/doorkeeper-gem/doorkeeper)
-[![Dependency Status](https://gemnasium.com/doorkeeper-gem/doorkeeper.svg?travis)](https://gemnasium.com/doorkeeper-gem/doorkeeper)
 [![Code Climate](https://codeclimate.com/github/doorkeeper-gem/doorkeeper.svg)](https://codeclimate.com/github/doorkeeper-gem/doorkeeper)
 [![Coverage Status](https://coveralls.io/repos/github/doorkeeper-gem/doorkeeper/badge.svg?branch=master)](https://coveralls.io/github/doorkeeper-gem/doorkeeper?branch=master)
 [![Security](https://hakiri.io/github/doorkeeper-gem/doorkeeper/master.svg)](https://hakiri.io/github/doorkeeper-gem/doorkeeper/master)
 
-Doorkeeper is a gem that makes it easy to introduce OAuth 2 provider
-functionality to your Rails or Grape application.
+Doorkeeper is a gem (Rails engine) that makes it easy to introduce OAuth 2 provider
+functionality to your Ruby on Rails or Grape application.
 
 Supported features:
 
@@ -28,7 +27,7 @@ Supported features:
 Please check the documentation for the version of doorkeeper you are using in:
 https://github.com/doorkeeper-gem/doorkeeper/releases
 
-- See the [wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki)
+- See the [Wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki)
 - See [upgrade guides](https://github.com/doorkeeper-gem/doorkeeper/wiki/Migration-from-old-versions)
 - For general questions, please post in [Stack Overflow](http://stackoverflow.com/questions/tagged/doorkeeper)
 - See [SECURITY.md](SECURITY.md) for this project's security disclose
@@ -276,7 +275,9 @@ protect. For example:
 
 ``` ruby
 class Api::V1::ProductsController < Api::V1::ApiController
-  before_action :doorkeeper_authorize! # Require access token for all actions
+  before_action :doorkeeper_authorize! # Requires access token for all actions
+  
+  # before_action -> { doorkeeper_authorize! :read, :write }
 
   # your actions
 end
