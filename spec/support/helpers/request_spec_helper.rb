@@ -1,4 +1,8 @@
 module RequestSpecHelper
+  def i_am_logged_in
+    allow(Doorkeeper.configuration).to receive(:authenticate_admin).and_return(->(*) {})
+  end
+
   def i_should_see(content)
     expect(page).to have_content(content)
   end
@@ -37,6 +41,10 @@ module RequestSpecHelper
 
   def should_have_header(header, value)
     expect(headers[header]).to eq(value)
+  end
+
+  def should_have_status(status)
+    expect(page.driver.response.status).to eq(status)
   end
 
   def with_access_token_header(token)

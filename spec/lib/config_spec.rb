@@ -67,6 +67,17 @@ describe Doorkeeper, 'configuration' do
 
   describe 'admin_authenticator' do
     it 'sets the block that is accessible via authenticate_admin' do
+      default_behaviour = 'default behaviour'
+      allow(Doorkeeper::Config).to receive(:head).and_return(default_behaviour)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+
+      expect(subject.authenticate_admin.call({})).to eq(default_behaviour)
+    end
+
+    it 'sets the block that is accessible via authenticate_admin' do
       block = proc {}
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
