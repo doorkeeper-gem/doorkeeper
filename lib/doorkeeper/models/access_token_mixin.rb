@@ -20,7 +20,12 @@ module Doorkeeper
       #   if there is no record with such token
       #
       def by_token(token)
-        find_by(token: token.to_s)
+        if secrets_encryption_enabled?
+          token_hash = Doorkeeper.configuration.hashing_handler.call(token)
+          find_by(hashed_token: token_hash.to_s)
+        else
+          find_by(token: token.to_s)
+        end
       end
 
       # Returns an instance of the Doorkeeper::AccessToken
@@ -33,7 +38,12 @@ module Doorkeeper
       #   if there is no record with such refresh token
       #
       def by_refresh_token(refresh_token)
-        find_by(refresh_token: refresh_token.to_s)
+        if secrets_encryption_enabled?
+          refresh_token_hash = Doorkeeper.configuration.hashing_handler.call(refresh_token)
+          find_by(hashed_refresh_token: refresh_token_hash.to_s)
+        else
+          find_by(refresh_token: refresh_token.to_s)
+        end
       end
 
       # Revokes AccessToken records that have not been revoked and associated
@@ -166,6 +176,10 @@ module Doorkeeper
       def last_authorized_token_for(application_id, resource_owner_id)
         authorized_tokens_for(application_id, resource_owner_id).first
       end
+
+      def secrets_encryption_enabled?
+        Doorkeeper.configuration.secrets_encryption_enabled?
+      end
     end
 
     # Access Token type: Bearer.
@@ -227,6 +241,12 @@ module Doorkeeper
       self.refresh_token = UniqueToken.generate
     end
 
+    def generate_encrypted_refresh_token
+      refresh_token = UniqueToken.generate
+      self.encrypted_refresh_token = Doorkeeper.configuration.encryption_handler.call(refresh_token)
+      self.hashed_refresh_token = Doorkeeper.configuration.hashing_handler.call(refresh_token)
+    end
+
     # Generates and sets the token value with the
     # configured Generator class (see Doorkeeper.configuration).
     #
@@ -247,6 +267,19 @@ module Doorkeeper
         expires_in: expires_in,
         created_at: created_at
       )
+    end
+
+    def generate_encrypted_token
+      self.created_at ||= Time.now.utc
+      token = token_generator.generate(
+        resource_owner_id: resource_owner_id,
+        scopes: scopes,
+        application: application,
+        expires_in: expires_in,
+        created_at: created_at
+      )
+      self.encrypted_token = Doorkeeper.configuration.encryption_handler.call(token)
+      self.hashed_token = Doorkeeper.configuration.hashing_handler.call(token)
     end
 
     def token_generator

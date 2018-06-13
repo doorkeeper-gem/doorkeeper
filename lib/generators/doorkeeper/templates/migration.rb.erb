@@ -4,6 +4,7 @@ class CreateDoorkeeperTables < ActiveRecord::Migration<%= migration_version %>
       t.string  :name,         null: false
       t.string  :uid,          null: false
       t.string  :secret,       null: false
+      # t.jsonb  :encrypted_secret, null: false
       t.text    :redirect_uri, null: false
       t.string  :scopes,       null: false, default: ''
       t.boolean :confidential, null: false, default: true
@@ -40,8 +41,10 @@ class CreateDoorkeeperTables < ActiveRecord::Migration<%= migration_version %>
       # https://github.com/doorkeeper-gem/doorkeeper/tree/v3.0.0.rc1#custom-access-token-generator
       #
       # t.text     :token,             null: false
+      # t.jsonb  :encrypted_token,     null: false
       t.string   :token,                  null: false
 
+      # t.jsonb  :encrypted_refresh_token, null: true
       t.string   :refresh_token
       t.integer  :expires_in
       t.datetime :revoked_at

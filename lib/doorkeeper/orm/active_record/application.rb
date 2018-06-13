@@ -15,7 +15,13 @@ module Doorkeeper
 
     validate :scopes_match_configured, if: :enforce_scopes?
 
-    before_validation :generate_uid, :generate_secret, on: :create
+    before_validation :generate_uid, on: :create
+
+    if secrets_encryption_enabled?
+      before_validation :generate_encrypted_secret, on: :create
+    else
+      before_validation :generate_secret, on: :create
+    end
 
     has_many :authorized_tokens, -> { where(revoked_at: nil) }, class_name: 'AccessToken'
     has_many :authorized_applications, through: :authorized_tokens, source: :application
@@ -34,6 +40,10 @@ module Doorkeeper
       where(id: resource_access_tokens.select(:application_id).distinct)
     end
 
+    def secret
+      @secret ||= Doorkeeper.configuration.decryption_handler.call(self.encrypted_secret)
+    end
+
     private
 
     def generate_uid
@@ -42,6 +52,11 @@ module Doorkeeper
 
     def generate_secret
       self.secret = UniqueToken.generate if secret.blank?
+    end
+
+    def generate_encrypted_secret
+      secret = UniqueToken.generate
+      self.encrypted_secret = Doorkeeper.configuration.encryption_handler.call(secret)
     end
 
     def scopes_match_configured

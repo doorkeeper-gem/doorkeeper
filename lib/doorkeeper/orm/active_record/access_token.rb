@@ -16,16 +16,31 @@ module Doorkeeper
 
     belongs_to :application, belongs_to_options
 
-    validates :token, presence: true, uniqueness: true
-    validates :refresh_token, uniqueness: true, if: :use_refresh_token?
+    if secrets_encryption_enabled?
+      validates :encrypted_refresh_token, presence: true, if: :use_refresh_token?
+      validates :hashed_refresh_token, presence: true, uniqueness: true, if: :use_refresh_token?
+
+      validates :encrypted_token, presence: true
+      validates :hashed_token, presence: true, uniqueness: true
+    else
+      validates :token, presence: true, uniqueness: true
+      validates :refresh_token, uniqueness: true, if: :use_refresh_token?
+    end
+
+      # self.encrypted_refresh_token = Doorkeeper.configuration.encryption_handler.call(refresh_token)
+      # self.hashed_refresh_token = Doorkeeper.configuration.hashing_handler.call(refresh_token)
 
     # @attr_writer [Boolean, nil] use_refresh_token
     #   indicates the possibility of using refresh token
     attr_writer :use_refresh_token
 
-    before_validation :generate_token, on: :create
-    before_validation :generate_refresh_token,
-                      on: :create, if: :use_refresh_token?
+    if secrets_encryption_enabled?
+      before_validation :generate_encrypted_token, on: :create
+      before_validation :generate_encrypted_refresh_token, on: :create, if: :use_refresh_token?
+    else
+      before_validation :generate_token, on: :create
+      before_validation :generate_refresh_token, on: :create, if: :use_refresh_token?
+    end
 
     # Searches for not revoked Access Tokens associated with the
     # specific Resource Owner.
@@ -42,6 +57,14 @@ module Doorkeeper
 
     def self.refresh_token_revoked_on_use?
       column_names.include?('previous_refresh_token')
+    end
+
+    def token
+      @token ||= Doorkeeper.configuration.decryption_handler.call(self.encrypted_token)
+    end
+
+    def refresh_token
+      @refresh_token ||= Doorkeeper.configuration.decryption_handler.call(self.encrypted_refresh_token)
     end
   end
 end
