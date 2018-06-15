@@ -9,6 +9,7 @@ User-visible changes worth mentioning.
 
 - [#1106] Restrict access to AdminController with 'Forbidden 403' if admin_authenticator is not
   configured by developers..
+- [#1108] Simple formating of callback URLs when listing oauth applications
 
 ## 5.0.0.rc1
 
