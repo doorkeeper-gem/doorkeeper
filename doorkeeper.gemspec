@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
   s.add_dependency "railties", ">= 4.2"
   s.required_ruby_version = ">= 2.1"
 
-  s.add_development_dependency "capybara"
+  s.add_development_dependency "capybara", '~> 2.18'
   s.add_development_dependency "coveralls"
   s.add_development_dependency "grape"
   s.add_development_dependency "database_cleaner", "~> 1.6"
