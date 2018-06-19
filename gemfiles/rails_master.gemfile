@@ -9,6 +9,9 @@ gem "appraisal"
 gem "activerecord-jdbcsqlite3-adapter", platform: :jruby
 gem "sqlite3", platform: [:ruby, :mswin, :mingw, :x64_mingw]
 gem "tzinfo-data", platforms: [:mingw, :mswin, :x64_mingw]
-gem "rspec-rails", "~> 3.7"
+
+%w[rspec-core rspec-expectations rspec-mocks rspec-rails rspec-support].each do |lib|
+  gem lib, git: "https://github.com/rspec/#{lib}.git", branch: 'master'
+end
 
 gemspec path: "../"
