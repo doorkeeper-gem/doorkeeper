@@ -21,7 +21,7 @@
         <%= link_to application.name, oauth_application_path(application) %>
       </td>
       <td class="align-middle">
-        <%= application.redirect_uri %>
+        <%= simple_format(application.redirect_uri) %>
       </td>
       <td class="align-middle">
         <%= application.confidential? ? t('doorkeeper.applications.index.confidentiality.yes') : t('doorkeeper.applications.index.confidentiality.no') %>
