@@ -1,5 +1,3 @@
-require 'doorkeeper/request/strategy'
-
 module Doorkeeper
   module Request
     class AuthorizationCode < Strategy

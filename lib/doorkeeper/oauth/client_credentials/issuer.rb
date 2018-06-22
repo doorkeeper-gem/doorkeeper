@@ -1,5 +1,3 @@
-require 'doorkeeper/oauth/client_credentials/validation'
-
 module Doorkeeper
   module OAuth
     class ClientCredentialsRequest < BaseRequest

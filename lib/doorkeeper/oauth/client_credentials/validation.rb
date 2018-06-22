@@ -1,7 +1,3 @@
-require 'doorkeeper/validations'
-require 'doorkeeper/oauth/scopes'
-require 'doorkeeper/oauth/helpers/scope_checker'
-
 module Doorkeeper
   module OAuth
     class ClientCredentialsRequest < BaseRequest
