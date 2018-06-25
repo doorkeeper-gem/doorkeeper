@@ -12,6 +12,7 @@ User-visible changes worth mentioning.
 - [#1108] Simple formating of callback URLs when listing oauth applications
 - [#1116] `AccessGrant`s will now be revoked along with `AccessToken`s when
   hitting the `AuthorizedApplicationController#destroy` route.
+- [#1114] Make token info endpoint's attributes consistent with token creation
 
 ## 5.0.0.rc1
 
