@@ -84,6 +84,7 @@ module Doorkeeper
         authorizable = pre_auth.authorizable?
         before_successful_authorization if authorizable
         auth = strategy.authorize
+        warn_improper_usage
         after_successful_authorization if authorizable
         auth
       end
@@ -95,6 +96,21 @@ module Doorkeeper
 
     def before_successful_authorization
       Doorkeeper.configuration.before_successful_authorization.call(self)
+    end
+
+    def warn_improper_usage
+      return if pre_auth.client.confidential?
+      case strategy
+      when Request::RefreshToken
+        # TODO: suppress warning if refresh token was obtained via PKCE. This
+        #       will likely require storing the strategy used to obtain a token
+        #       in the database... Useful info in any event
+        # TODO: Expose a Doorkeeper.configuration.logger for non-Rails compat.
+        # TODO: Don't link to Auth0 but instead helpful Doorkeeper wiki pages
+        ::Rails.logger.warn "[Doorkeeper] It is dangerous to allow refresh token strategy on a public/non-confidential application. Please see https://auth0.com/docs/api-auth/which-oauth-flow-to-use"
+      when Request::Code
+        ::Rails.logger.warn "[Doorkeeper] It is dangerous to use the authorization code strategy on a public/non-confidential application without Proof Key for Code Exchange (PKCE). Please see https://auth0.com/docs/api-auth/which-oauth-flow-to-use"
+      end
     end
   end
 end
