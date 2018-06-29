@@ -306,15 +306,25 @@ module Doorkeeper
       end
 
       it 'matches application' do
-        FactoryBot.create :access_token, default_attributes.merge(application: FactoryBot.create(:application))
+        access_token_for_different_app = FactoryBot.create(
+          :access_token,
+          default_attributes.merge(application: FactoryBot.create(:application))
+        )
+
         AccessToken.revoke_all_for application.id, resource_owner
-        expect(AccessToken.all).not_to be_empty
+
+        expect(access_token_for_different_app.reload).not_to be_revoked
       end
 
       it 'matches resource owner' do
-        FactoryBot.create :access_token, default_attributes.merge(resource_owner_id: 90)
+        access_token_for_different_owner = FactoryBot.create(
+          :access_token,
+          default_attributes.merge(resource_owner_id: 90)
+        )
+
         AccessToken.revoke_all_for application.id, resource_owner
-        expect(AccessToken.all).not_to be_empty
+
+        expect(access_token_for_different_owner.reload).not_to be_revoked
       end
     end
 

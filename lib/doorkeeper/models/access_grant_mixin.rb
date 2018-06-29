@@ -31,6 +31,21 @@ module Doorkeeper
         find_by(token: token.to_s)
       end
 
+      # Revokes AccessGrant records that have not been revoked and associated
+      # with the specific Application and Resource Owner.
+      #
+      # @param application_id [Integer]
+      #   ID of the Application
+      # @param resource_owner [ActiveRecord::Base]
+      #   instance of the Resource Owner model
+      #
+      def revoke_all_for(application_id, resource_owner, clock = Time)
+        where(application_id: application_id,
+              resource_owner_id: resource_owner.id,
+              revoked_at: nil).
+          update_all(revoked_at: clock.now.utc)
+      end
+
       # Implements PKCE code_challenge encoding without base64 padding as described in the spec.
       # https://tools.ietf.org/html/rfc7636#appendix-A
       #   Appendix A.  Notes on Implementing Base64url Encoding without Padding

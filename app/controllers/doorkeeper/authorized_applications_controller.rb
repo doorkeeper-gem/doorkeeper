@@ -12,7 +12,10 @@ module Doorkeeper
     end
 
     def destroy
-      AccessToken.revoke_all_for params[:id], current_resource_owner
+      Application.revoke_tokens_and_grants_for(
+        params[:id],
+        current_resource_owner
+      )
 
       respond_to do |format|
         format.html do
