@@ -34,6 +34,17 @@ module Doorkeeper
       where(id: resource_access_tokens.select(:application_id).distinct)
     end
 
+    # Revokes AccessToken and AccessGrant records that have not been revoked and
+    # associated with the specific Application and Resource Owner.
+    #
+    # @param resource_owner [ActiveRecord::Base]
+    #   instance of the Resource Owner model
+    #
+    def self.revoke_tokens_and_grants_for(id, resource_owner)
+      AccessToken.revoke_all_for(id, resource_owner)
+      AccessGrant.revoke_all_for(id, resource_owner)
+    end
+
     private
 
     def generate_uid
