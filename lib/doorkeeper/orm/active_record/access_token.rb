@@ -17,6 +17,7 @@ module Doorkeeper
     belongs_to :application, belongs_to_options
 
     validates :token, presence: true, uniqueness: true
+    validates :strategy_used, presence: true, inclusion: { in: (Doorkeeper::OAuth::GRANT_TYPES + ["#{Doorkeeper::OAuth::AUTHORIZATION_CODE}_with_pkce"]).freeze }
     validates :refresh_token, uniqueness: true, if: :use_refresh_token?
 
     # @attr_writer [Boolean, nil] use_refresh_token

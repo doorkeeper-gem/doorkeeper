@@ -119,7 +119,7 @@ module Doorkeeper
       #
       # @return [Doorkeeper::AccessToken] existing record or a new one
       #
-      def find_or_create_for(application, resource_owner_id, scopes, expires_in, use_refresh_token)
+      def find_or_create_for(application, resource_owner_id, scopes, expires_in, use_refresh_token, strategy)
         if Doorkeeper.configuration.reuse_access_token
           access_token = matching_token_for(application, resource_owner_id, scopes)
 
@@ -131,6 +131,7 @@ module Doorkeeper
           resource_owner_id: resource_owner_id,
           scopes:            scopes.to_s,
           expires_in:        expires_in,
+          strategy_used:     strategy,
           use_refresh_token: use_refresh_token
         )
       end

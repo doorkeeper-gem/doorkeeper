@@ -37,7 +37,8 @@ module Doorkeeper
           resource_owner_id,
           scopes,
           Authorization::Token.access_token_expires_in(server, context),
-          Authorization::Token.refresh_token_enabled?(server, context)
+          Authorization::Token.refresh_token_enabled?(server, context),
+          strategy
         )
       end
 
@@ -50,6 +51,21 @@ module Doorkeeper
       end
 
       private
+
+      def strategy
+        case self
+        when ClientCredentialsRequest
+          CLIENT_CREDENTIALS
+        when AuthorizationCodeRequest
+          grant.uses_pkce? ? "#{AUTHORIZATION_CODE}_with_pkce" : AUTHORIZATION_CODE
+        when RefreshTokenRequest
+          REFRESH_TOKEN
+        when PasswordAccessTokenRequest
+          PASSWORD
+        when CodeResponse
+          IMPLICIT
+        end
+      end
 
       def build_scopes
         if @original_scopes.present?

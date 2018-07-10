@@ -54,7 +54,8 @@ module Doorkeeper
             resource_owner.id,
             pre_auth.scopes,
             self.class.access_token_expires_in(configuration, context),
-            false
+            false,
+            Doorkeeper::OAuth::IMPLICIT
           )
         end
 
