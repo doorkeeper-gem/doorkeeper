@@ -56,15 +56,67 @@ describe Doorkeeper::TokensController do
     end
   end
 
-  describe 'when revoke authorization has failed' do
-    # http://tools.ietf.org/html/rfc7009#section-2.2
-    it 'returns no error response' do
-      token = double(:token, authorize: false, application_id?: true)
-      allow(controller).to receive(:token) { token }
+  # http://tools.ietf.org/html/rfc7009#section-2.2
+  describe 'revoking tokens' do
+    let(:client) { FactoryBot.create(:application) }
+    let(:access_token) { FactoryBot.create(:access_token, application: client) }
 
-      post :revoke
+    before(:each) do
+      allow(controller).to receive(:token) { access_token }
+    end
 
-      expect(response.status).to eq 200
+    context 'when associated app is public' do
+      let(:client) { FactoryBot.create(:application, confidential: false) }
+
+      it 'returns 200' do
+        post :revoke
+
+        expect(response.status).to eq 200
+      end
+
+      it 'revokes the access token' do
+        post :revoke
+
+        expect(access_token.reload).to have_attributes(revoked?: true)
+      end
+    end
+
+    context 'when associated app is confidential' do
+      let(:client) { FactoryBot.create(:application, confidential: true) }
+      let(:oauth_client) { Doorkeeper::OAuth::Client.new(client) }
+
+      before(:each) do
+        allow_any_instance_of(Doorkeeper::Server).to receive(:client) { oauth_client }
+      end
+
+      it 'returns 200' do
+        post :revoke
+
+        expect(response.status).to eq 200
+      end
+
+      it 'revokes the access token' do
+        post :revoke
+
+        expect(access_token.reload).to have_attributes(revoked?: true)
+      end
+
+      context 'when authorization fails' do
+        let(:some_other_client) { FactoryBot.create(:application, confidential: true) }
+        let(:oauth_client) { Doorkeeper::OAuth::Client.new(some_other_client) }
+
+        it 'returns 200' do
+          post :revoke
+
+          expect(response.status).to eq 200
+        end
+
+        it 'does not revoke the access token' do
+          post :revoke
+
+          expect(access_token.reload).to have_attributes(revoked?: false)
+        end
+      end
     end
   end
 

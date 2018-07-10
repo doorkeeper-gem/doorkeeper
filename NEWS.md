@@ -13,6 +13,7 @@ User-visible changes worth mentioning.
 - [#1116] `AccessGrant`s will now be revoked along with `AccessToken`s when
   hitting the `AuthorizedApplicationController#destroy` route.
 - [#1114] Make token info endpoint's attributes consistent with token creation
+- [#1119] Fix token revocation for OAuth apps using "implicit" grant flow
 
 ## 5.0.0.rc1
 
