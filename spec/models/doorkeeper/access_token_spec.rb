@@ -450,8 +450,8 @@ module Doorkeeper
         token = FactoryBot.create :access_token
         token_hash = {
           resource_owner_id:  token.resource_owner_id,
-          scopes:             token.scopes,
-          expires_in_seconds: token.expires_in_seconds,
+          scope:              token.scopes,
+          expires_in:         token.expires_in_seconds,
           application:        { uid: token.application.uid },
           created_at:         token.created_at.to_i
         }
