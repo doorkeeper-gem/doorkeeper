@@ -58,16 +58,15 @@ module Doorkeeper
     # https://tools.ietf.org/html/rfc6749#section-2.1
     # https://tools.ietf.org/html/rfc7009
     def authorized?
-      if token.present?
-        # Client is confidential, therefore client authentication & authorization
-        # is required
-        if token.application_id?
-          # We authorize client by checking token's application
-          server.client && server.client.application == token.application
-        else
-          # Client is public, authentication unnecessary
-          true
-        end
+      return unless token.present?
+      # Client is confidential, therefore client authentication & authorization
+      # is required
+      if token.application_id? && token.application.confidential?
+        # We authorize client by checking token's application
+        server.client && server.client.application == token.application
+      else
+        # Client is public, authentication unnecessary
+        true
       end
     end
 
