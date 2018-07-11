@@ -32,6 +32,14 @@ module Doorkeeper
       where(id: resource_access_tokens.select(:application_id).distinct)
     end
 
+    # Fallback to existing, default behaviour of assuming all apps to be
+    # confidential if the migration hasn't been run
+    def confidential
+      self.class.column_names.include?('confidential') ? super : true
+    end
+
+    alias_method :confidential?, :confidential
+
     private
 
     def generate_uid
