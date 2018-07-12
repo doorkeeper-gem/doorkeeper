@@ -4,6 +4,10 @@ User-visible changes worth mentioning.
 
 ## master
 
+## 4.4.0
+
+- [#1120] Backport security fix from 5.x for token revocation when using public clients
+
 ## 4.3.2
 
 - [#1053] Support authorizing with query params in the request `redirect_uri` if explicitly present in app's `Application#redirect_uri`
