@@ -1,5 +1,5 @@
 module Doorkeeper
-  CVE_2018_1000211_WARNING = <<-HEREDOC
+  CVE_2018_1000211_WARNING = <<-HEREDOC.freeze
 
 
   WARNING: This is a security release that addresses token revocation not working for public apps (CVE-2018-1000211)

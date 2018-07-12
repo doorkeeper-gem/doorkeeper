@@ -35,7 +35,7 @@ module Doorkeeper
     # Fallback to existing, default behaviour of assuming all apps to be
     # confidential if the migration hasn't been run
     def confidential
-      return super if self.class.column_names.include?('confidentialz')
+      return super if self.class.column_names.include?('confidential')
       ActiveSupport::Deprecation.warn 'You are susceptible to security bug ' \
         'CVE-2018-1000211. Please follow instructions outlined in ' \
         'Doorkeeper::CVE_2018_1000211_WARNING'
