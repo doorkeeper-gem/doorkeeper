@@ -1,5 +1,5 @@
 module Doorkeeper
-  CVE_2018_1000211_WARNING = %q{
+  CVE_2018_1000211_WARNING = <<-HEREDOC
 
 
   WARNING: This is a security release that addresses token revocation not working for public apps (CVE-2018-1000211)
@@ -18,8 +18,7 @@ module Doorkeeper
     * https://github.com/doorkeeper-gem/doorkeeper/issues/891
 
 
-
-  }.freeze
+HEREDOC
 
   def self.gem_version
     Gem::Version.new VERSION::STRING
