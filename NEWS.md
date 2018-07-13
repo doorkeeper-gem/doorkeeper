@@ -14,6 +14,7 @@ User-visible changes worth mentioning.
   hitting the `AuthorizedApplicationController#destroy` route.
 - [#1114] Make token info endpoint's attributes consistent with token creation
 - [#1119] Fix token revocation for OAuth apps using "implicit" grant flow
+- [#1122] Fix AuthorizationsController#new error response to be in JSON format
 
 ## 5.0.0.rc1
 
