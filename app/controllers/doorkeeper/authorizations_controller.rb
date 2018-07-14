@@ -33,7 +33,7 @@ module Doorkeeper
 
     def render_error
       if Doorkeeper.configuration.api_only
-        render json: pre_auth.error_response.body[:error_description],
+        render json: pre_auth.error_response.body,
                status: :bad_request
       else
         render :error

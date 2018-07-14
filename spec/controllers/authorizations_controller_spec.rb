@@ -387,6 +387,33 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
   end
 
+  describe 'GET #new in API mode with errors' do
+    let(:response_json_body) { JSON.parse(response.body) }
+
+    before do
+      default_scopes_exist :public
+      allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
+      get :new, params: { an_invalid: 'request' }
+    end
+
+    it 'should render bad request' do
+      expect(response).to have_http_status(:bad_request)
+    end
+
+    it 'includes error in body' do
+      expect(response_json_body['error']).to eq('unsupported_response_type')
+    end
+
+    it 'includes error description in body' do
+      expect(response_json_body['error_description']).to eq(translated_error_message(:unsupported_response_type))
+    end
+
+    it 'does not issue any token' do
+      expect(Doorkeeper::AccessGrant.count).to eq 0
+      expect(Doorkeeper::AccessToken.count).to eq 0
+    end
+  end
+
   describe 'GET #new with callbacks' do
     after do
       client.update_attribute :redirect_uri, 'urn:ietf:wg:oauth:2.0:oob'
