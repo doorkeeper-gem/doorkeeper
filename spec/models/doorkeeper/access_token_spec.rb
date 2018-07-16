@@ -406,7 +406,7 @@ module Doorkeeper
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
       end
-      
+
       it 'matches token with one of application`s scopes' do
         scopes = Doorkeeper::OAuth::Scopes.from_string('public')
         application = FactoryGirl.create :application, scopes: "public write"
