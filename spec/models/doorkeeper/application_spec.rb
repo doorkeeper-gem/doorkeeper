@@ -253,5 +253,34 @@ module Doorkeeper
         it { expect(subject).to eq(false) }
       end
     end
+
+    describe :confidential do
+      subject { FactoryBot.create(:application, confidential: confidential).confidential }
+
+      context 'when application is private/confidential' do
+        let(:confidential) { true }
+        it { expect(subject).to eq(true) }
+      end
+
+      context 'when application is public/non-confidential' do
+        let(:confidential) { false }
+        it { expect(subject).to eq(false) }
+      end
+    end
+
+    describe :supports_confidentiality? do
+      context 'when no column' do
+        it 'returns false' do
+          expect(Application).to receive(:column_names).and_return(%w[foo bar])
+          expect(Application.supports_confidentiality?).to eq(false)
+        end
+      end
+      context 'when column' do
+        it 'returns true' do
+          expect(Application).to receive(:column_names).and_return(%w[foo bar confidential])
+          expect(Application.supports_confidentiality?).to eq(true)
+        end
+      end
+    end
   end
 end
