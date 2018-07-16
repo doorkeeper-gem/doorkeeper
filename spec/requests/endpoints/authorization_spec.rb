@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 feature 'Authorization endpoint' do
   background do
@@ -59,13 +59,12 @@ feature 'Authorization endpoint' do
     end
 
     scenario 'raises exception on forged requests' do
-      skip 'TODO: need to add request helpers to this feature spec'
-      allow_any_instance_of(ActionController::Base).to receive(:handle_unverified_request)
       allowing_forgery_protection do
-        post "/oauth/authorize",
-          client_id:      @client.uid,
-          redirect_uri:   @client.redirect_uri,
-          response_type:  'code'
+        expect {
+          page.driver.post authorization_endpoint_url(client_id: @client.uid,
+                                                      redirect_uri: @client.redirect_uri,
+                                                      response_type:  'code')
+        }.to raise_error(ActionController::InvalidAuthenticityToken)
       end
     end
   end

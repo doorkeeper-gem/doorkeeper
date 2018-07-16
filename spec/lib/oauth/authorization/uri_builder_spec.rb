@@ -1,13 +1,8 @@
 require 'spec_helper'
-require 'active_support/core_ext/string'
-require 'uri'
-require 'rack/utils'
-require 'doorkeeper/oauth/authorization/uri_builder'
 
 module Doorkeeper::OAuth::Authorization
   describe URIBuilder do
-
-    subject { Object.new.class.send :include, URIBuilder }
+    subject { URIBuilder }
 
     describe :uri_with_query do
       it 'returns the uri with query' do

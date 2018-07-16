@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 describe 'Refresh Token Flow' do
   before do
@@ -14,7 +14,7 @@ describe 'Refresh Token Flow' do
       authorization_code_exists application: @client
     end
 
-    it 'client gets the refresh token and refreshses it' do
+    it 'client gets the refresh token and refreshes it' do
       post token_endpoint_url(code: @authorization.token, client: @client)
 
       token = Doorkeeper::AccessToken.first
@@ -37,7 +37,7 @@ describe 'Refresh Token Flow' do
 
   context 'refreshing the token' do
     before do
-      @token = FactoryGirl.create(
+      @token = FactoryBot.create(
         :access_token,
         application: @client,
         resource_owner_id: 1,
@@ -101,14 +101,14 @@ describe 'Refresh Token Flow' do
       should_have_json 'error', 'invalid_grant'
     end
 
-    it 'client gets an error for revoked acccess token' do
+    it 'client gets an error for revoked access token' do
       @token.revoke
       post refresh_token_endpoint_url(client: @client, refresh_token: @token.refresh_token)
       should_not_have_json 'refresh_token'
       should_have_json 'error', 'invalid_grant'
     end
 
-    it 'second of simultaneous client requests get an error for revoked acccess token' do
+    it 'second of simultaneous client requests get an error for revoked access token' do
       allow_any_instance_of(Doorkeeper::AccessToken).to receive(:revoked?).and_return(false, true)
       post refresh_token_endpoint_url(client: @client, refresh_token: @token.refresh_token)
 
@@ -130,7 +130,7 @@ describe 'Refresh Token Flow' do
       )
       last_token.update_attribute :created_at, 5.seconds.ago
 
-      @token = FactoryGirl.create(
+      @token = FactoryBot.create(
         :access_token,
         application: @client,
         resource_owner_id: @resource_owner.id,

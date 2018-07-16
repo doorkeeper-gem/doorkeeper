@@ -1,6 +1,6 @@
 module Doorkeeper
   module OAuth
-    class ClientCredentialsRequest
+    class ClientCredentialsRequest < BaseRequest
       class Creator
         def call(client, scopes, attributes = {})
           AccessToken.find_or_create_for(

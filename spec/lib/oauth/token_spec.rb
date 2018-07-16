@@ -1,6 +1,4 @@
 require 'spec_helper'
-require 'active_support/core_ext/string'
-require 'doorkeeper/oauth/token'
 
 module Doorkeeper
   unless defined?(AccessToken)
@@ -14,7 +12,7 @@ module Doorkeeper
         let(:request) { double.as_null_object }
 
         let(:method) do
-          ->(request) { return 'token-value' }
+          ->(*) { 'token-value' }
         end
 
         it 'accepts anything that responds to #call' do
@@ -96,19 +94,44 @@ module Doorkeeper
       end
 
       describe :authenticate do
-        it 'calls the finder if token was returned' do
-          token = ->(_r) { 'token' }
-          expect(AccessToken).to receive(:by_token).with('token')
-          Token.authenticate double, token
+        context 'refresh tokens are disabled (default)' do
+          context 'refresh tokens are enabled' do
+            it 'does not revoke previous refresh_token if token was found' do
+              token = ->(_r) { 'token' }
+              expect(
+                AccessToken
+              ).to receive(:by_token).with('token').and_return(token)
+              expect(token).not_to receive(:revoke_previous_refresh_token!)
+              Token.authenticate double, token
+            end
+          end
+
+          it 'calls the finder if token was returned' do
+            token = ->(_r) { 'token' }
+            expect(AccessToken).to receive(:by_token).with('token')
+            Token.authenticate double, token
+          end
         end
 
-        it 'revokes previous refresh_token if token was found' do
-          token = ->(_r) { 'token' }
-          expect(
-            AccessToken
-          ).to receive(:by_token).with('token').and_return(token)
-          expect(token).to receive(:revoke_previous_refresh_token!)
-          Token.authenticate double, token
+        context 'refresh tokens are enabled' do
+          before do
+            Doorkeeper.configure { use_refresh_token }
+          end
+
+          it 'revokes previous refresh_token if token was found' do
+            token = ->(_r) { 'token' }
+            expect(
+              AccessToken
+            ).to receive(:by_token).with('token').and_return(token)
+            expect(token).to receive(:revoke_previous_refresh_token!)
+            Token.authenticate double, token
+          end
+
+          it 'calls the finder if token was returned' do
+            token = ->(_r) { 'token' }
+            expect(AccessToken).to receive(:by_token).with('token')
+            Token.authenticate double, token
+          end
         end
       end
     end

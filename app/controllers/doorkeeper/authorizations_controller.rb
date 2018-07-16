@@ -4,20 +4,15 @@ module Doorkeeper
 
     def new
       if pre_auth.authorizable?
-        if skip_authorization? || matching_token?
-          auth = authorization.authorize
-          redirect_to auth.redirect_uri
-        else
-          render :new
-        end
+        render_success
       else
-        render :error
+        render_error
       end
     end
 
     # TODO: Handle raise invalid authorization
     def create
-      redirect_or_render authorization.authorize
+      redirect_or_render authorize_response
     end
 
     def destroy
@@ -26,15 +21,45 @@ module Doorkeeper
 
     private
 
+    def render_success
+      if skip_authorization? || matching_token?
+        redirect_or_render authorize_response
+      elsif Doorkeeper.configuration.api_only
+        render json: pre_auth
+      else
+        render :new
+      end
+    end
+
+    def render_error
+      if Doorkeeper.configuration.api_only
+        render json: pre_auth.error_response.body,
+               status: :bad_request
+      else
+        render :error
+      end
+    end
+
     def matching_token?
-      AccessToken.matching_token_for pre_auth.client,
-                                     current_resource_owner.id,
-                                     pre_auth.scopes
+      token = AccessToken.matching_token_for(
+        pre_auth.client,
+        current_resource_owner.id,
+        pre_auth.scopes
+      )
+
+      token && token.accessible?
     end
 
     def redirect_or_render(auth)
       if auth.redirectable?
-        redirect_to auth.redirect_uri
+        if Doorkeeper.configuration.api_only
+          render(
+            json: { status: :redirect, redirect_uri: auth.redirect_uri },
+            status: auth.status
+          )
+        else
+          redirect_to auth.redirect_uri
+        end
       else
         render json: auth.body, status: auth.status
       end
@@ -52,6 +77,24 @@ module Doorkeeper
 
     def strategy
       @strategy ||= server.authorization_request pre_auth.response_type
+    end
+
+    def authorize_response
+      @authorize_response ||= begin
+        authorizable = pre_auth.authorizable?
+        before_successful_authorization if authorizable
+        auth = strategy.authorize
+        after_successful_authorization if authorizable
+        auth
+      end
+    end
+
+    def after_successful_authorization
+      Doorkeeper.configuration.after_successful_authorization.call(self)
+    end
+
+    def before_successful_authorization
+      Doorkeeper.configuration.before_successful_authorization.call(self)
     end
   end
 end

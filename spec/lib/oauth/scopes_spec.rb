@@ -1,7 +1,4 @@
 require 'spec_helper'
-require 'active_support/core_ext/module/delegation'
-require 'active_support/core_ext/string'
-require 'doorkeeper/oauth/scopes'
 
 module Doorkeeper::OAuth
   describe Scopes do
@@ -62,7 +59,7 @@ module Doorkeeper::OAuth
     describe '#+' do
       it 'can add to another scope object' do
         scopes = Scopes.from_string('public') + Scopes.from_string('admin')
-        expect(scopes.all).to eq(%w(public admin))
+        expect(scopes.all).to eq(%w[public admin])
       end
 
       it 'does not change the existing object' do
@@ -70,10 +67,33 @@ module Doorkeeper::OAuth
         expect(origin.to_s).to eq('public')
       end
 
+      it 'can add an array to a scope object' do
+        scopes = Scopes.from_string('public') + ['admin']
+        expect(scopes.all).to eq(%w[public admin])
+      end
+
       it 'raises an error if cannot handle addition' do
         expect do
           Scopes.from_string('public') + 'admin'
         end.to raise_error(NoMethodError)
+      end
+    end
+
+    describe '#&' do
+      it 'can get intersection with another scope object' do
+        scopes = Scopes.from_string('public admin') & Scopes.from_string('write admin')
+        expect(scopes.all).to eq(%w[admin])
+      end
+
+      it 'does not change the existing object' do
+        origin = Scopes.from_string('public admin')
+        origin & Scopes.from_string('write admin')
+        expect(origin.to_s).to eq('public admin')
+      end
+
+      it 'can get intersection with an array' do
+        scopes = Scopes.from_string('public admin') & %w[write admin]
+        expect(scopes.all).to eq(%w[admin])
       end
     end
 
@@ -88,6 +108,10 @@ module Doorkeeper::OAuth
 
       it 'differs from another set of scopes when scopes are not the same' do
         expect(Scopes.from_string('public write')).not_to eq(Scopes.from_string('write'))
+      end
+
+      it "does not raise an error when compared to a non-enumerable object" do
+        expect { Scopes.from_string("public") == false }.not_to raise_error
       end
     end
 

@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 describe 'Revoke Token Flow' do
   before do
@@ -6,137 +6,151 @@ describe 'Revoke Token Flow' do
   end
 
   context 'with default parameters' do
-    let(:client_application) { FactoryGirl.create :application }
+    let(:client_application) { FactoryBot.create :application }
     let(:resource_owner) { User.create!(name: 'John', password: 'sekret') }
-    let(:authorization_access_token) do
-      FactoryGirl.create(:access_token,
+    let(:access_token) do
+      FactoryBot.create(:access_token,
                          application: client_application,
                          resource_owner_id: resource_owner.id,
                          use_refresh_token: true)
     end
-    let(:headers) { { 'HTTP_AUTHORIZATION' => "Bearer #{authorization_access_token.token}" } }
 
-    context 'With invalid token to revoke' do
-      it 'client wants to revoke the given access token' do
-        post revocation_token_endpoint_url, { token: 'I_AM_AN_INVALIDE_TOKEN' }, headers
+    context 'with authenticated, confidential OAuth 2.0 client/application' do
+      let(:headers) do
+        client_id = client_application.uid
+        client_secret = client_application.secret
+        credentials = Base64.encode64("#{client_id}:#{client_secret}")
+        { 'HTTP_AUTHORIZATION' => "Basic #{credentials}" }
+      end
 
-        authorization_access_token.reload
-        # The authorization server responds with HTTP status code 200 if the token
-        # has been revoked successfully or if the client submitted an invalid token.
-        expect(response).to be_success
-        expect(authorization_access_token).to_not be_revoked
+      it 'should revoke the access token provided' do
+        post revocation_token_endpoint_url, params: { token: access_token.token }, headers: headers
+
+        access_token.reload
+
+        expect(response).to be_successful
+        expect(access_token.revoked?).to be_truthy
+      end
+
+      it 'should revoke the refresh token provided' do
+        post revocation_token_endpoint_url, params: { token: access_token.refresh_token }, headers: headers
+
+        access_token.reload
+
+        expect(response).to be_successful
+        expect(access_token.revoked?).to be_truthy
+      end
+
+      context 'with invalid token to revoke' do
+        it 'should not revoke any tokens and respond successfully' do
+          num_prev_revoked_tokens = Doorkeeper::AccessToken.where(revoked_at: nil).count
+          post revocation_token_endpoint_url, params: { token: 'I_AM_AN_INVALID_TOKEN' }, headers: headers
+
+          # The authorization server responds with HTTP status code 200 even if
+          # token is invalid
+          expect(response).to be_successful
+          expect(Doorkeeper::AccessToken.where(revoked_at: nil).count).to eq(num_prev_revoked_tokens)
+        end
+      end
+
+      context 'with bad credentials and a valid token' do
+        let(:headers) do
+          client_id = client_application.uid
+          credentials = Base64.encode64("#{client_id}:poop")
+          { 'HTTP_AUTHORIZATION' => "Basic #{credentials}" }
+        end
+        it 'should not revoke any tokens and respond successfully' do
+          post revocation_token_endpoint_url, params: { token: access_token.token }, headers: headers
+
+          access_token.reload
+
+          expect(response).to be_successful
+          expect(access_token.revoked?).to be_falsey
+        end
+      end
+
+      context 'with no credentials and a valid token' do
+        it 'should not revoke any tokens and respond successfully' do
+          post revocation_token_endpoint_url, params: { token: access_token.token }
+
+          access_token.reload
+
+          expect(response).to be_successful
+          expect(access_token.revoked?).to be_falsey
+        end
+      end
+
+      context 'with valid token for another client application' do
+        let(:other_client_application) { FactoryBot.create :application }
+        let(:headers) do
+          client_id = other_client_application.uid
+          client_secret = other_client_application.secret
+          credentials = Base64.encode64("#{client_id}:#{client_secret}")
+          { 'HTTP_AUTHORIZATION' => "Basic #{credentials}" }
+        end
+
+        it 'should not revoke the token as its unauthorized' do
+          post revocation_token_endpoint_url, params: { token: access_token.token }, headers: headers
+
+          access_token.reload
+
+          expect(response).to be_successful
+          expect(access_token.revoked?).to be_falsey
+        end
       end
     end
 
-    context 'The access token to revoke is the same than the authorization access token' do
-      let(:token_to_revoke) { authorization_access_token }
-
-      it 'client wants to revoke the given access token' do
-        post revocation_token_endpoint_url, { token: token_to_revoke.token }, headers
-
-        token_to_revoke.reload
-        authorization_access_token.reload
-
-        expect(response).to be_success
-        expect(token_to_revoke.revoked?).to be_truthy
-        expect(Doorkeeper::AccessToken.by_refresh_token(token_to_revoke.refresh_token).revoked?).to be_truthy
-      end
-
-      it 'client wants to revoke the given access token using the POST query string' do
-        url_with_query_string = revocation_token_endpoint_url + '?' + Rack::Utils.build_query(token: token_to_revoke.token)
-        post url_with_query_string, {}, headers
-
-        token_to_revoke.reload
-        authorization_access_token.reload
-
-        expect(response).to be_success
-        expect(token_to_revoke.revoked?).to be_falsey
-        expect(Doorkeeper::AccessToken.by_refresh_token(token_to_revoke.refresh_token).revoked?).to be_falsey
-        expect(authorization_access_token.revoked?).to be_falsey
-      end
-    end
-
-    context 'The access token to revoke app and owners are the same than the authorization access token' do
-      let(:token_to_revoke) do
-        FactoryGirl.create(:access_token,
-                           application: client_application,
+    context 'with public OAuth 2.0 client/application' do
+      let(:access_token) do
+        FactoryBot.create(:access_token,
+                           application: nil,
                            resource_owner_id: resource_owner.id,
                            use_refresh_token: true)
       end
 
-      it 'client wants to revoke the given access token' do
-        post revocation_token_endpoint_url, { token: token_to_revoke.token }, headers
+      it 'should revoke the access token provided' do
+        post revocation_token_endpoint_url, params: { token: access_token.token }
 
-        token_to_revoke.reload
-        authorization_access_token.reload
+        access_token.reload
 
-        expect(response).to be_success
-        expect(token_to_revoke.revoked?).to be_truthy
-        expect(Doorkeeper::AccessToken.by_refresh_token(token_to_revoke.refresh_token).revoked?).to be_truthy
-        expect(authorization_access_token.revoked?).to be_falsey
-      end
-    end
-
-    context 'The access token to revoke authorization owner is the same than the authorization access token' do
-      let(:other_client_application) { FactoryGirl.create :application }
-      let(:token_to_revoke) do
-        FactoryGirl.create(:access_token,
-                           application: other_client_application,
-                           resource_owner_id: resource_owner.id,
-                           use_refresh_token: true)
+        expect(response).to be_successful
+        expect(access_token.revoked?).to be_truthy
       end
 
-      it 'client wants to revoke the given access token' do
-        post revocation_token_endpoint_url, { token: token_to_revoke.token }, headers
+      it 'should revoke the refresh token provided' do
+        post revocation_token_endpoint_url, params: { token: access_token.refresh_token }
 
-        token_to_revoke.reload
-        authorization_access_token.reload
+        access_token.reload
 
-        expect(response).to be_success
-        expect(token_to_revoke.revoked?).to be_falsey
-        expect(Doorkeeper::AccessToken.by_refresh_token(token_to_revoke.refresh_token).revoked?).to be_falsey
-        expect(authorization_access_token.revoked?).to be_falsey
-      end
-    end
-
-    context 'The access token to revoke app is the same than the authorization access token' do
-      let(:other_resource_owner) { User.create!(name: 'Matheo', password: 'pareto') }
-      let(:token_to_revoke) do
-        FactoryGirl.create(:access_token,
-                           application: client_application,
-                           resource_owner_id: other_resource_owner.id,
-                           use_refresh_token: true)
+        expect(response).to be_successful
+        expect(access_token.revoked?).to be_truthy
       end
 
-      it 'client wants to revoke the given access token' do
-        post revocation_token_endpoint_url, { token: token_to_revoke.token }, headers
+      context 'with a valid token issued for a confidential client' do
+        let(:access_token) do
+          FactoryBot.create(:access_token,
+                             application: client_application,
+                             resource_owner_id: resource_owner.id,
+                             use_refresh_token: true)
+        end
 
-        token_to_revoke.reload
-        authorization_access_token.reload
+        it 'should not revoke the access token provided' do
+          post revocation_token_endpoint_url, params: { token: access_token.token }
 
-        expect(response).to be_success
-        expect(token_to_revoke.revoked?).to be_falsey
-        expect(Doorkeeper::AccessToken.by_refresh_token(token_to_revoke.refresh_token).revoked?).to be_falsey
-        expect(authorization_access_token.revoked?).to be_falsey
-      end
-    end
+          access_token.reload
 
-    context 'With valid refresh token to revoke' do
-      let(:token_to_revoke) do
-        FactoryGirl.create(:access_token,
-                           application: client_application,
-                           resource_owner_id: resource_owner.id,
-                           use_refresh_token: true)
-      end
+          expect(response).to be_successful
+          expect(access_token.revoked?).to be_falsey
+        end
 
-      it 'client wants to revoke the given refresh token' do
-        post revocation_token_endpoint_url, { token: token_to_revoke.refresh_token, token_type_hint: 'refresh_token' }, headers
-        authorization_access_token.reload
-        token_to_revoke.reload
+        it 'should not revoke the refresh token provided' do
+          post revocation_token_endpoint_url, params: { token: access_token.token }
 
-        expect(response).to be_success
-        expect(Doorkeeper::AccessToken.by_refresh_token(token_to_revoke.refresh_token).revoked?).to be_truthy
-        expect(authorization_access_token).to_not be_revoked
+          access_token.reload
+
+          expect(response).to be_successful
+          expect(access_token.revoked?).to be_falsey
+        end
       end
     end
   end

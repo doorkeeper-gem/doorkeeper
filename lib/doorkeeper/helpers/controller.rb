@@ -1,14 +1,16 @@
+# Define methods that can be called in any controller that inherits from
+# Doorkeeper::ApplicationMetalController or Doorkeeper::ApplicationController
 module Doorkeeper
   module Helpers
     module Controller
-      extend ActiveSupport::Concern
-
       private
 
+      # :doc:
       def authenticate_resource_owner!
         current_resource_owner
       end
 
+      # :doc:
       def current_resource_owner
         instance_eval(&Doorkeeper.configuration.authenticate_resource_owner)
       end
@@ -17,6 +19,7 @@ module Doorkeeper
         instance_eval(&Doorkeeper.configuration.resource_owner_from_credentials)
       end
 
+      # :doc:
       def authenticate_admin!
         instance_eval(&Doorkeeper.configuration.authenticate_admin)
       end
@@ -25,31 +28,17 @@ module Doorkeeper
         @server ||= Server.new(self)
       end
 
+      # :doc:
       def doorkeeper_token
-        @token ||= OAuth::Token.authenticate request, *config_methods
+        @doorkeeper_token ||= OAuth::Token.authenticate request, *config_methods
       end
 
       def config_methods
-        @methods ||= Doorkeeper.configuration.access_token_methods
+        @config_methods ||= Doorkeeper.configuration.access_token_methods
       end
 
       def get_error_response_from_exception(exception)
-        error_name = case exception
-                     when Errors::InvalidTokenStrategy
-                       :unsupported_grant_type
-                     when Errors::InvalidAuthorizationStrategy
-                       :unsupported_response_type
-                     when Errors::MissingRequestStrategy
-                       :invalid_request
-                     when Errors::InvalidTokenReuse
-                       :invalid_request
-                     when Errors::InvalidGrantReuse
-                       :invalid_grant
-                     when Errors::DoorkeeperError
-                       exception.message
-                     end
-
-        OAuth::ErrorResponse.new name: error_name, state: params[:state]
+        OAuth::ErrorResponse.new name: exception.type, state: params[:state]
       end
 
       def handle_token_exception(exception)
@@ -61,6 +50,11 @@ module Doorkeeper
 
       def skip_authorization?
         !!instance_exec([@server.current_resource_owner, @pre_auth.client], &Doorkeeper.configuration.skip_authorization)
+      end
+
+      def enforce_content_type
+        return if request.content_type == 'application/x-www-form-urlencoded'
+        render json: {}, status: :unsupported_media_type
       end
     end
   end

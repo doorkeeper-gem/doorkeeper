@@ -1,12 +1,9 @@
 require 'spec_helper'
-require 'active_model'
-require 'doorkeeper'
-require 'doorkeeper/oauth/forbidden_token_response'
 
 module Doorkeeper::OAuth
   describe ForbiddenTokenResponse do
     describe '#name' do
-      it  { expect(subject.name).to eq(:invalid_scope) }
+      it { expect(subject.name).to eq(:invalid_scope) }
     end
 
     describe '#status' do

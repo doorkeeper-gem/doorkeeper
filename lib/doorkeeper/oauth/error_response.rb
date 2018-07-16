@@ -1,12 +1,16 @@
 module Doorkeeper
   module OAuth
-    class ErrorResponse
-      include OAuth::Authorization::URIBuilder
+    class ErrorResponse < BaseResponse
       include OAuth::Helpers
 
       def self.from_request(request, attributes = {})
-        state = request.state if request.respond_to?(:state)
-        new(attributes.merge(name: request.error, state: state))
+        new(
+          attributes.merge(
+            name: request.error,
+            state: request.try(:state),
+            redirect_uri: request.try(:redirect_uri)
+          )
+        )
       end
 
       delegate :name, :description, :state, to: :@error
@@ -36,21 +40,19 @@ module Doorkeeper
 
       def redirect_uri
         if @response_on_fragment
-          uri_with_fragment @redirect_uri, body
+          Authorization::URIBuilder.uri_with_fragment @redirect_uri, body
         else
-          uri_with_query @redirect_uri, body
+          Authorization::URIBuilder.uri_with_query @redirect_uri, body
         end
       end
 
-      def authenticate_info
-        %(Bearer realm="#{realm}", error="#{name}", error_description="#{description}")
-      end
-
       def headers
-        { 'Cache-Control' => 'no-store',
+        {
+          'Cache-Control' => 'no-store',
           'Pragma' => 'no-cache',
           'Content-Type' => 'application/json; charset=utf-8',
-          'WWW-Authenticate' => authenticate_info }
+          'WWW-Authenticate' => authenticate_info
+        }
       end
 
       protected
@@ -59,6 +61,12 @@ module Doorkeeper
 
       def configuration
         Doorkeeper.configuration
+      end
+
+      private
+
+      def authenticate_info
+        %(Bearer realm="#{realm}", error="#{name}", error_description="#{description}")
       end
     end
   end

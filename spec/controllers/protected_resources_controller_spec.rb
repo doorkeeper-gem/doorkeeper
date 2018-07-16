@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 module ControllerActions
   def index
@@ -9,11 +9,9 @@ module ControllerActions
     render plain: 'show'
   end
 
-  def doorkeeper_unauthorized_render_options(*)
-  end
+  def doorkeeper_unauthorized_render_options(*); end
 
-  def doorkeeper_forbidden_render_options(*)
-  end
+  def doorkeeper_forbidden_render_options(*); end
 end
 
 describe 'doorkeeper authorize filter' do
@@ -35,12 +33,12 @@ describe 'doorkeeper authorize filter' do
 
     it 'access_token param' do
       expect(Doorkeeper::AccessToken).to receive(:by_token).with(token_string).and_return(token)
-      get :index, access_token: token_string
+      get :index, params: { access_token: token_string }
     end
 
     it 'bearer_token param' do
       expect(Doorkeeper::AccessToken).to receive(:by_token).with(token_string).and_return(token)
-      get :index, bearer_token: token_string
+      get :index, params: { bearer_token: token_string }
     end
 
     it 'Authorization header' do
@@ -59,7 +57,7 @@ describe 'doorkeeper authorize filter' do
       expect(Doorkeeper::AccessToken).to receive(:by_token).exactly(2).times.and_return(token)
       request.env['HTTP_AUTHORIZATION'] = "Bearer #{token_string}"
       get :index
-      controller.send(:remove_instance_variable, :@_doorkeeper_token)
+      controller.send(:remove_instance_variable, :@doorkeeper_token)
       get :index
     end
   end
@@ -73,25 +71,25 @@ describe 'doorkeeper authorize filter' do
 
     context 'with valid token', token: :valid do
       it 'allows into index action' do
-        get :index, access_token: token_string
-        expect(response).to be_success
+        get :index, params: { access_token: token_string }
+        expect(response).to be_successful
       end
 
       it 'allows into show action' do
-        get :show, id: '4', access_token: token_string
-        expect(response).to be_success
+        get :show, params: { id: '4', access_token: token_string }
+        expect(response).to be_successful
       end
     end
 
     context 'with invalid token', token: :invalid do
       it 'does not allow into index action' do
-        get :index, access_token: token_string
+        get :index, params: { access_token: token_string }
         expect(response.status).to eq 401
         expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
       end
 
       it 'does not allow into show action' do
-        get :show, id: '4', access_token: token_string
+        get :show, params: { id: '4', access_token: token_string }
         expect(response.status).to eq 401
         expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
       end
@@ -109,15 +107,16 @@ describe 'doorkeeper authorize filter' do
 
     it 'allows if the token has particular scopes' do
       token = double(Doorkeeper::AccessToken,
-                     accessible?: true, scopes: %w(write public),
+                     accessible?: true, scopes: %w[write public],
                      previous_refresh_token: "",
                      revoke_previous_refresh_token!: true)
       expect(token).to receive(:acceptable?).with([:write]).and_return(true)
       expect(
         Doorkeeper::AccessToken
       ).to receive(:by_token).with(token_string).and_return(token)
-      get :index, access_token: token_string
-      expect(response).to be_success
+
+      get :index, params: { access_token: token_string }
+      expect(response).to be_successful
     end
 
     it 'does not allow if the token does not include given scope' do
@@ -129,7 +128,8 @@ describe 'doorkeeper authorize filter' do
         Doorkeeper::AccessToken
       ).to receive(:by_token).with(token_string).and_return(token)
       expect(token).to receive(:acceptable?).with([:write]).and_return(false)
-      get :index, access_token: token_string
+
+      get :index, params: { access_token: token_string }
       expect(response.status).to eq 403
       expect(response.header).to_not include('WWW-Authenticate')
     end
@@ -146,27 +146,30 @@ describe 'doorkeeper authorize filter' do
       before do
         module ControllerActions
           remove_method :doorkeeper_unauthorized_render_options
+
           def doorkeeper_unauthorized_render_options(error: nil)
             { json: ActiveSupport::JSON.encode(error_message: error.description) }
           end
         end
       end
+
       after do
         module ControllerActions
           remove_method :doorkeeper_unauthorized_render_options
+
           def doorkeeper_unauthorized_render_options(error: nil)
           end
         end
       end
 
       it 'it renders a custom JSON response', token: :invalid do
-        get :index, access_token: token_string
+        get :index, params: { access_token: token_string }
         expect(response.status).to eq 401
         expect(response.content_type).to eq('application/json')
         expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
-        parsed_body = JSON.parse(response.body)
-        expect(parsed_body).not_to be_nil
-        expect(parsed_body['error_message']).to match('token is invalid')
+
+        expect(json_response).not_to be_nil
+        expect(json_response['error_message']).to match('token is invalid')
       end
     end
 
@@ -174,21 +177,23 @@ describe 'doorkeeper authorize filter' do
       before do
         module ControllerActions
           remove_method :doorkeeper_unauthorized_render_options
-          def doorkeeper_unauthorized_render_options(error: nil)
+
+          def doorkeeper_unauthorized_render_options(**)
             { plain: 'Unauthorized' }
           end
         end
       end
+
       after do
         module ControllerActions
           remove_method :doorkeeper_unauthorized_render_options
-          def doorkeeper_unauthorized_render_options(error: nil)
-          end
+
+          def doorkeeper_unauthorized_render_options(error: nil); end
         end
       end
 
       it 'it renders a custom text response', token: :invalid do
-        get :index, access_token: token_string
+        get :index, params: { access_token: token_string }
         expect(response.status).to eq 401
         expect(response.content_type).to eq('text/plain')
         expect(response.header['WWW-Authenticate']).to match(/^Bearer/)
@@ -206,8 +211,8 @@ describe 'doorkeeper authorize filter' do
     after do
       module ControllerActions
         remove_method :doorkeeper_forbidden_render_options
-        def doorkeeper_forbidden_render_options(*)
-        end
+
+        def doorkeeper_forbidden_render_options(*); end
       end
     end
 
@@ -223,12 +228,14 @@ describe 'doorkeeper authorize filter' do
              expired?: false, previous_refresh_token: "",
              revoke_previous_refresh_token!: true)
     end
+
     let(:token_string) { '1A2DUWE' }
 
     context 'with a JSON custom render' do
       before do
         module ControllerActions
           remove_method :doorkeeper_forbidden_render_options
+
           def doorkeeper_forbidden_render_options(*)
             { json: { error_message: 'Forbidden' } }
           end
@@ -236,13 +243,13 @@ describe 'doorkeeper authorize filter' do
       end
 
       it 'renders a custom JSON response' do
-        get :index, access_token: token_string
+        get :index, params: { access_token: token_string }
         expect(response.header).to_not include('WWW-Authenticate')
         expect(response.content_type).to eq('application/json')
         expect(response.status).to eq 403
-        parsed_body = JSON.parse(response.body)
-        expect(parsed_body).not_to be_nil
-        expect(parsed_body['error_message']).to match('Forbidden')
+
+        expect(json_response).not_to be_nil
+        expect(json_response['error_message']).to match('Forbidden')
       end
     end
 
@@ -258,7 +265,7 @@ describe 'doorkeeper authorize filter' do
       end
 
       it 'overrides the default status code' do
-        get :index, access_token: token_string
+        get :index, params: { access_token: token_string }
         expect(response.status).to eq 404
       end
     end
@@ -267,6 +274,7 @@ describe 'doorkeeper authorize filter' do
       before do
         module ControllerActions
           remove_method :doorkeeper_forbidden_render_options
+
           def doorkeeper_forbidden_render_options(*)
             { plain: 'Forbidden' }
           end
@@ -274,7 +282,7 @@ describe 'doorkeeper authorize filter' do
       end
 
       it 'renders a custom status code and text response' do
-        get :index, access_token: token_string
+        get :index, params: { access_token: token_string }
         expect(response.header).to_not include('WWW-Authenticate')
         expect(response.status).to eq 403
         expect(response.body).to eq('Forbidden')
@@ -285,6 +293,7 @@ describe 'doorkeeper authorize filter' do
       before do
         module ControllerActions
           remove_method :doorkeeper_forbidden_render_options
+
           def doorkeeper_forbidden_render_options(*)
             { respond_not_found_when_forbidden: true, plain: 'Not Found' }
           end
@@ -292,7 +301,7 @@ describe 'doorkeeper authorize filter' do
       end
 
       it 'overrides the default status code' do
-        get :index, access_token: token_string
+        get :index, params: { access_token: token_string }
         expect(response.status).to eq 404
       end
     end

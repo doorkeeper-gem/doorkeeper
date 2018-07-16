@@ -1,6 +1,6 @@
 module ModelHelper
   def client_exists(client_attributes = {})
-    @client = FactoryGirl.create(:application, client_attributes)
+    @client = FactoryBot.create(:application, client_attributes)
   end
 
   def create_resource_owner
@@ -8,7 +8,7 @@ module ModelHelper
   end
 
   def authorization_code_exists(options = {})
-    @authorization = FactoryGirl.create(:access_grant, options)
+    @authorization = FactoryBot.create(:access_grant, options)
   end
 
   def access_grant_should_exist_for(client, resource_owner)
@@ -55,9 +55,14 @@ module ModelHelper
       error_classes = [Sequel::UniqueConstraintViolation, Sequel::ValidationFailed]
       proc { |error| expect(error.class).to be_in(error_classes) }
     when :mongo_mapper
-      MongoMapper::DocumentNotValid
+      error_classes = [MongoMapper::DocumentNotValid, Mongo::OperationFailure]
+      proc { |error| expect(error.class).to be_in(error_classes) }
     when /mongoid/
-      Mongoid::Errors::Validations
+      error_classes = [Mongoid::Errors::Validations]
+      error_classes << Moped::Errors::OperationFailure if defined?(::Moped) # Mongoid 4
+      error_classes << Mongo::Error::OperationFailure if defined?(::Mongo) # Mongoid 5
+
+      proc { |error| expect(error.class).to be_in(error_classes) }
     else
       raise "'#{DOORKEEPER_ORM}' ORM is not supported!"
     end

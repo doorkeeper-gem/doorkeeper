@@ -10,7 +10,7 @@ module Doorkeeper
       end
 
       def includes_scope?(*required_scopes)
-        required_scopes.blank? || required_scopes.any? { |s| scopes.exists?(s.to_s) }
+        required_scopes.blank? || required_scopes.any? { |scope| scopes.exists?(scope.to_s) }
       end
     end
   end

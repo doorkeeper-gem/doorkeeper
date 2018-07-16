@@ -21,7 +21,7 @@ module Doorkeeper
       end
 
       def description
-        scope = { scope: [:doorkeeper, :scopes] }
+        scope = { scope: %i[doorkeeper scopes] }
         @description ||= @scopes.map { |r| I18n.translate r, scope }.join('\n')
       end
     end

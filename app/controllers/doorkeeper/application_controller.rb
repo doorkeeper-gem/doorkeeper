@@ -1,13 +1,12 @@
 module Doorkeeper
-  class ApplicationController < ActionController::Base
+  class ApplicationController <
+    Doorkeeper.configuration.base_controller.constantize
+
     include Helpers::Controller
 
-    if ::Rails.version.to_i < 4
-      protect_from_forgery
-    else
+    unless Doorkeeper.configuration.api_only
       protect_from_forgery with: :exception
+      helper 'doorkeeper/dashboard'
     end
-
-    helper 'doorkeeper/dashboard'
   end
 end

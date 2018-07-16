@@ -15,6 +15,12 @@ namespace :doorkeeper do
     cd 'spec/dummy'
     system 'bundle exec rails g doorkeeper:install --force'
   end
+
+  desc 'Runs local test server'
+  task :server do
+    cd 'spec/dummy'
+    system 'bundle exec rails server'
+  end
 end
 
 Bundler::GemHelper.install_tasks

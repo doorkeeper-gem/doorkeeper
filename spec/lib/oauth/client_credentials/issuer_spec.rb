@@ -1,6 +1,4 @@
 require 'spec_helper'
-require 'active_support/all'
-require 'doorkeeper/oauth/client_credentials/issuer'
 
 class Doorkeeper::OAuth::ClientCredentialsRequest
   describe Issuer do
@@ -9,7 +7,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
       double(
         :server,
         access_token_expires_in: 100,
-        custom_access_token_expires_in: ->(_app) { nil }
+        custom_access_token_expires_in: ->(_context) { nil }
       )
     end
     let(:validation) { double :validation, valid?: true }
@@ -63,22 +61,43 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
       end
 
       context 'with custom expirations' do
-        let(:custom_ttl) { 1233 }
+        let(:custom_ttl_grant) { 1234 }
+        let(:custom_ttl_scope) { 1235 }
+        let(:custom_scope) { 'special' }
         let(:server) do
           double(
             :server,
-            custom_access_token_expires_in: ->(_app) { custom_ttl }
+            custom_access_token_expires_in: lambda { |context|
+              # scopes is normally an object but is a string in this test
+              if context.scopes == custom_scope
+                custom_ttl_scope
+              elsif context.grant_type == Doorkeeper::OAuth::CLIENT_CREDENTIALS
+                custom_ttl_grant
+              else
+                nil
+              end
+            }
           )
         end
 
-        it 'creates with correct token parameters' do
+        it 'respects grant based rules' do
           expect(creator).to receive(:call).with(
             client,
             scopes,
-            expires_in: custom_ttl,
+            expires_in: custom_ttl_grant,
             use_refresh_token: false
           )
           subject.create client, scopes, creator
+        end
+
+        it 'respects scope based rules' do
+          expect(creator).to receive(:call).with(
+            client,
+            custom_scope,
+            expires_in: custom_ttl_scope,
+            use_refresh_token: false
+          )
+          subject.create client, custom_scope, creator
         end
       end
     end

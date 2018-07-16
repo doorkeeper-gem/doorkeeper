@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 describe 'Token endpoint' do
   before do
@@ -9,15 +9,24 @@ describe 'Token endpoint' do
   it 'respond with correct headers' do
     post token_endpoint_url(code: @authorization.token, client: @client)
     should_have_header 'Pragma', 'no-cache'
-    should_have_header 'Cache-Control', 'no-store'
+
+    # Rails 5.2 changed headers
+    if ::Rails::VERSION::MAJOR >= 5 && ::Rails::VERSION::MINOR >= 2 || ::Rails::VERSION::MAJOR >= 6
+      should_have_header 'Cache-Control', 'private, no-store'
+    else
+      should_have_header 'Cache-Control', 'no-store'
+    end
+
     should_have_header 'Content-Type', 'application/json; charset=utf-8'
   end
 
   it 'accepts client credentials with basic auth header' do
-    post token_endpoint_url(
-      code: @authorization.token,
-      redirect_uri: @client.redirect_uri
-    ), {}, 'HTTP_AUTHORIZATION' => basic_auth_header_for_client(@client)
+    post token_endpoint_url,
+         params: {
+           code: @authorization.token,
+           redirect_uri: @client.redirect_uri
+         },
+         headers: { 'HTTP_AUTHORIZATION' => basic_auth_header_for_client(@client) }
 
     should_have_json 'access_token', Doorkeeper::AccessToken.first.token
   end

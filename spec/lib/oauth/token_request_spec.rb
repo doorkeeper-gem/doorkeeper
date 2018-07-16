@@ -1,11 +1,11 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 module Doorkeeper::OAuth
   describe TokenRequest do
     let :application do
-      scopes = double(all: ['public'])
-      double(:application, id: 9990, scopes: scopes)
+      FactoryBot.create(:application, scopes: "public")
     end
+
     let :pre_auth do
       double(
         :pre_auth,
@@ -38,9 +38,7 @@ module Doorkeeper::OAuth
 
     it 'does not create token when not authorizable' do
       allow(pre_auth).to receive(:authorizable?).and_return(false)
-      expect do
-        subject.authorize
-      end.to_not change { Doorkeeper::AccessToken.count }
+      expect { subject.authorize }.not_to change { Doorkeeper::AccessToken.count }
     end
 
     it 'returns a error response' do
@@ -52,8 +50,8 @@ module Doorkeeper::OAuth
       before do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
-          custom_access_token_expires_in do |_oauth_client|
-            1234
+          custom_access_token_expires_in do |context|
+            context.grant_type == Doorkeeper::OAuth::IMPLICIT ? 1234 : nil
           end
         end
       end
@@ -75,7 +73,7 @@ module Doorkeeper::OAuth
 
       it 'creates a new token if scopes do not match' do
         allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
-        FactoryGirl.create(:access_token, application_id: pre_auth.client.id,
+        FactoryBot.create(:access_token, application_id: pre_auth.client.id,
                            resource_owner_id: owner.id, scopes: '')
         expect do
           subject.authorize
@@ -86,12 +84,11 @@ module Doorkeeper::OAuth
         allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
         allow(application.scopes).to receive(:has_scopes?).and_return(true)
         allow(application.scopes).to receive(:all?).and_return(true)
-        FactoryGirl.create(:access_token, application_id: pre_auth.client.id,
+
+        FactoryBot.create(:access_token, application_id: pre_auth.client.id,
                            resource_owner_id: owner.id, scopes: 'public')
 
-        expect do
-          subject.authorize
-        end.to_not change { Doorkeeper::AccessToken.count }
+        expect { subject.authorize }.not_to change { Doorkeeper::AccessToken.count }
       end
     end
   end

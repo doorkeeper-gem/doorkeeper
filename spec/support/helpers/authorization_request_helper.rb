@@ -28,13 +28,13 @@ module AuthorizationRequestHelper
     expect(client.redirect_uri).to eq("#{current_uri.scheme}://#{current_uri.host}#{current_uri.path}")
   end
 
-  def allowing_forgery_protection(&block)
-    _original_value = ActionController::Base.allow_forgery_protection
+  def allowing_forgery_protection(&_block)
+    original_value = ActionController::Base.allow_forgery_protection
     ActionController::Base.allow_forgery_protection = true
 
-    block.call
+    yield
   ensure
-    ActionController::Base.allow_forgery_protection = _original_value
+    ActionController::Base.allow_forgery_protection = original_value
   end
 end
 

@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 module Doorkeeper::OAuth
   describe CodeRequest do
@@ -10,7 +10,9 @@ module Doorkeeper::OAuth
         scopes: nil,
         state: nil,
         error: nil,
-        authorizable?: true
+        authorizable?: true,
+        code_challenge: nil,
+        code_challenge_method: nil,
       )
     end
 
@@ -32,9 +34,7 @@ module Doorkeeper::OAuth
 
     it 'does not create grant when not authorizable' do
       allow(pre_auth).to receive(:authorizable?).and_return(false)
-      expect do
-        subject.authorize
-      end.to_not change { Doorkeeper::AccessGrant.count }
+      expect { subject.authorize }.not_to change { Doorkeeper::AccessGrant.count }
     end
 
     it 'returns a error response' do

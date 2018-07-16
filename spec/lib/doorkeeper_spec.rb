@@ -1,28 +1,25 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 describe Doorkeeper do
-  describe 'authenticate' do
-    let(:token) { double('Token') }
-    let(:request) { double('ActionDispatch::Request') }
-    before do
-      allow(Doorkeeper::OAuth::Token).to receive(:authenticate).
-        with(request, *token_strategies) { token }
+  describe "#authenticate" do
+    let(:request) { double }
+
+    it "calls OAuth::Token#authenticate" do
+      token_strategies = Doorkeeper.configuration.access_token_methods
+
+      expect(Doorkeeper::OAuth::Token).to receive(:authenticate).
+        with(request, *token_strategies)
+
+      Doorkeeper.authenticate(request)
     end
 
-    context 'with specific access token strategies' do
-      let(:token_strategies) { [:first_way, :second_way] }
+    it "accepts custom token strategies" do
+      token_strategies = [:first_way, :second_way]
 
-      it 'authenticates the token from the request' do
-        expect(Doorkeeper.authenticate(request, token_strategies)).to eq(token)
-      end
-    end
+      expect(Doorkeeper::OAuth::Token).to receive(:authenticate).
+        with(request, *token_strategies)
 
-    context 'with default access token strategies' do
-      let(:token_strategies) { Doorkeeper.configuration.access_token_methods }
-
-      it 'authenticates the token from the request' do
-        expect(Doorkeeper.authenticate(request)).to eq(token)
-      end
+      Doorkeeper.authenticate(request, token_strategies)
     end
   end
 end

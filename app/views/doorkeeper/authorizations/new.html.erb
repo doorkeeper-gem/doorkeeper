@@ -4,7 +4,7 @@
 
 <main role="main">
   <p class="h4">
-    <%= raw t('.prompt', client_name: "<strong class=\"text-info\">#{ @pre_auth.client.name }</strong>") %>
+    <%= raw t('.prompt', client_name: content_tag(:strong, class: 'text-info') { @pre_auth.client.name }) %>
   </p>
 
   <% if @pre_auth.scopes.count > 0 %>
@@ -26,6 +26,8 @@
       <%= hidden_field_tag :state, @pre_auth.state %>
       <%= hidden_field_tag :response_type, @pre_auth.response_type %>
       <%= hidden_field_tag :scope, @pre_auth.scope %>
+      <%= hidden_field_tag :code_challenge, @pre_auth.code_challenge %>
+      <%= hidden_field_tag :code_challenge_method, @pre_auth.code_challenge_method %>
       <%= submit_tag t('doorkeeper.authorizations.buttons.authorize'), class: "btn btn-success btn-lg btn-block" %>
     <% end %>
     <%= form_tag oauth_authorization_path, method: :delete do %>
@@ -34,6 +36,8 @@
       <%= hidden_field_tag :state, @pre_auth.state %>
       <%= hidden_field_tag :response_type, @pre_auth.response_type %>
       <%= hidden_field_tag :scope, @pre_auth.scope %>
+      <%= hidden_field_tag :code_challenge, @pre_auth.code_challenge %>
+      <%= hidden_field_tag :code_challenge_method, @pre_auth.code_challenge_method %>
       <%= submit_tag t('doorkeeper.authorizations.buttons.deny'), class: "btn btn-danger btn-lg btn-block" %>
     <% end %>
   </div>

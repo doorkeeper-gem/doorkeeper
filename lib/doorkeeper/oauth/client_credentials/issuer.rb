@@ -1,8 +1,6 @@
-require 'doorkeeper/oauth/client_credentials/validation'
-
 module Doorkeeper
   module OAuth
-    class ClientCredentialsRequest
+    class ClientCredentialsRequest < BaseRequest
       class Issuer
         attr_accessor :token, :validation, :error
 
@@ -25,7 +23,12 @@ module Doorkeeper
         private
 
         def create_token(client, scopes, creator)
-          ttl = Authorization::Token.access_token_expires_in(@server, client)
+          context = Authorization::Token.build_context(
+            client,
+            Doorkeeper::OAuth::CLIENT_CREDENTIALS,
+            scopes
+          )
+          ttl = Authorization::Token.access_token_expires_in(@server, context)
 
           creator.call(
             client,

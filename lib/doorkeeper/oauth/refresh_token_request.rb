@@ -1,8 +1,6 @@
 module Doorkeeper
   module OAuth
-    class RefreshTokenRequest
-      include Validations
-      include OAuth::RequestConcern
+    class RefreshTokenRequest < BaseRequest
       include OAuth::Helpers
 
       validate :token_presence, error: :invalid_request
@@ -12,9 +10,7 @@ module Doorkeeper
       validate :scope,        error: :invalid_scope
 
       attr_accessor :access_token, :client, :credentials, :refresh_token,
-                    :server, :refresh_token_parameter
-
-      private :refresh_token_parameter, :refresh_token_parameter=
+                    :server
 
       def initialize(server, refresh_token, credentials, parameters = {})
         @server          = server
@@ -39,6 +35,7 @@ module Doorkeeper
           refresh_token.revoke unless refresh_token_revoked_on_use?
           create_access_token
         end
+        super
       end
 
       def refresh_token_revoked_on_use?
@@ -68,11 +65,16 @@ module Doorkeeper
       end
 
       def access_token_expires_in
-        Authorization::Token.access_token_expires_in(server, client)
+        context = Authorization::Token.build_context(
+          client,
+          Doorkeeper::OAuth::REFRESH_TOKEN,
+          scopes
+        )
+        Authorization::Token.access_token_expires_in(server, context)
       end
 
       def validate_token_presence
-        refresh_token.present? || refresh_token_parameter.present?
+        refresh_token.present? || @refresh_token_parameter.present?
       end
 
       def validate_token

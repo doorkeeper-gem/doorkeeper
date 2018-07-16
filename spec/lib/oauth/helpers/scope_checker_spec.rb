@@ -1,7 +1,4 @@
 require 'spec_helper'
-require 'active_support/core_ext/string'
-require 'doorkeeper/oauth/helpers/scope_checker'
-require 'doorkeeper/oauth/scopes'
 
 module Doorkeeper::OAuth::Helpers
   describe ScopeChecker, '.valid?' do

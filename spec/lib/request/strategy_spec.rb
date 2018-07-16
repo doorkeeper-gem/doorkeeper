@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'doorkeeper/request/strategy'
 
 module Doorkeeper
   module Request

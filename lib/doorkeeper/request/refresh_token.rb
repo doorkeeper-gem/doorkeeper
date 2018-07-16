@@ -1,12 +1,10 @@
-require 'doorkeeper/request/strategy'
-
 module Doorkeeper
   module Request
     class RefreshToken < Strategy
       delegate :credentials, :parameters, to: :server
 
       def refresh_token
-        server.current_refresh_token
+        AccessToken.by_refresh_token(parameters[:refresh_token])
       end
 
       def request

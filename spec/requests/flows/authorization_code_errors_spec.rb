@@ -1,15 +1,25 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 feature 'Authorization Code Flow Errors' do
+  let(:client_params) { {} }
   background do
     config_is_set(:authenticate_resource_owner) { User.first || redirect_to('/sign_in') }
-    client_exists
+    client_exists client_params
     create_resource_owner
     sign_in
   end
 
   after do
     access_grant_should_not_exist
+  end
+
+  context "with a client trying to xss resource owner" do
+    let(:client_name) { "<div id='xss'>XSS</div>" }
+    let(:client_params) { { name: client_name } }
+    scenario "resource owner visit authorization endpoint" do
+      visit authorization_endpoint_url(client: @client)
+      expect(page).not_to have_css("#xss")
+    end
   end
 
   context 'when access was denied' do

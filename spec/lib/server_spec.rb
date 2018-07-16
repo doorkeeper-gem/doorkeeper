@@ -1,7 +1,4 @@
 require 'spec_helper'
-require 'active_support/all'
-require 'doorkeeper/errors'
-require 'doorkeeper/server'
 
 describe Doorkeeper::Server do
   let(:fake_class) { double :fake_class }
@@ -47,6 +44,16 @@ describe Doorkeeper::Server do
       stub_const 'Doorkeeper::Request::Code', fake_class
       expect(fake_class).to receive(:new).with(subject)
       subject.authorization_request :code
+    end
+
+    it 'builds the request with composite strategy name' do
+      allow(Doorkeeper.configuration).
+        to receive(:authorization_response_types).
+        and_return(['id_token token'])
+
+      stub_const 'Doorkeeper::Request::IdTokenToken', fake_class
+      expect(fake_class).to receive(:new).with(subject)
+      subject.authorization_request 'id_token token'
     end
   end
 end

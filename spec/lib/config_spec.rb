@@ -1,4 +1,4 @@
-require 'spec_helper_integration'
+require 'spec_helper'
 
 describe Doorkeeper, 'configuration' do
   subject { Doorkeeper.configuration }
@@ -10,7 +10,42 @@ describe Doorkeeper, 'configuration' do
         orm DOORKEEPER_ORM
         resource_owner_authenticator(&block)
       end
+
       expect(subject.authenticate_resource_owner).to eq(block)
+    end
+
+    it 'prints warning message by default' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+
+      expect(Rails.logger).to receive(:warn).with(
+        I18n.t('doorkeeper.errors.messages.resource_owner_authenticator_not_configured')
+      )
+      subject.authenticate_resource_owner.call(nil)
+    end
+  end
+
+  describe 'resource_owner_from_credentials' do
+    it 'sets the block that is accessible via authenticate_resource_owner' do
+      block = proc {}
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        resource_owner_from_credentials(&block)
+      end
+
+      expect(subject.resource_owner_from_credentials).to eq(block)
+    end
+
+    it 'prints warning message by default' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+
+      expect(Rails.logger).to receive(:warn).with(
+        I18n.t('doorkeeper.errors.messages.credential_flow_not_configured')
+      )
+      subject.resource_owner_from_credentials.call(nil)
     end
   end
 
@@ -32,11 +67,23 @@ describe Doorkeeper, 'configuration' do
 
   describe 'admin_authenticator' do
     it 'sets the block that is accessible via authenticate_admin' do
+      default_behaviour = 'default behaviour'
+      allow(Doorkeeper::Config).to receive(:head).and_return(default_behaviour)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+
+      expect(subject.authenticate_admin.call({})).to eq(default_behaviour)
+    end
+
+    it 'sets the block that is accessible via authenticate_admin' do
       block = proc {}
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
         admin_authenticator(&block)
       end
+
       expect(subject.authenticate_admin).to eq(block)
     end
   end
@@ -59,6 +106,7 @@ describe Doorkeeper, 'configuration' do
         orm DOORKEEPER_ORM
         access_token_expires_in nil
       end
+
       expect(subject.access_token_expires_in).to be_nil
     end
   end
@@ -69,6 +117,7 @@ describe Doorkeeper, 'configuration' do
         orm DOORKEEPER_ORM
         default_scopes :public
       end
+
       expect(subject.default_scopes).to include('public')
     end
 
@@ -77,22 +126,24 @@ describe Doorkeeper, 'configuration' do
         orm DOORKEEPER_ORM
         optional_scopes :write, :update
       end
+
       expect(subject.optional_scopes).to include('write', 'update')
     end
 
     it 'has all scopes' do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
-        default_scopes  :normal
+        default_scopes :normal
         optional_scopes :admin
       end
+
       expect(subject.scopes).to include('normal', 'admin')
     end
   end
 
   describe 'use_refresh_token' do
     it 'is false by default' do
-      expect(subject.refresh_token_enabled?).to be_falsey
+      expect(subject.refresh_token_enabled?).to eq(false)
     end
 
     it 'can change the value' do
@@ -100,7 +151,26 @@ describe Doorkeeper, 'configuration' do
         orm DOORKEEPER_ORM
         use_refresh_token
       end
-      expect(subject.refresh_token_enabled?).to be_truthy
+
+      expect(subject.refresh_token_enabled?).to eq(true)
+    end
+
+    it 'can accept a boolean parameter' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_refresh_token false
+      end
+
+      expect(subject.refresh_token_enabled?).to eq(false)
+    end
+
+    it 'can accept a block parameter' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_refresh_token { |_context| nil }
+      end
+
+      expect(subject.refresh_token_enabled?).to be_a(Proc)
     end
 
     it "does not includes 'refresh_token' in authorization_response_types" do
@@ -121,6 +191,21 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
+  describe 'enforce_configured_scopes' do
+    it 'is false by default' do
+      expect(subject.enforce_configured_scopes?).to eq(false)
+    end
+
+    it 'can change the value' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enforce_configured_scopes
+      end
+
+      expect(subject.enforce_configured_scopes?).to eq(true)
+    end
+  end
+
   describe 'client_credentials' do
     it 'has defaults order' do
       expect(subject.client_credentials_methods).to eq([:from_basic, :from_params])
@@ -131,13 +216,14 @@ describe Doorkeeper, 'configuration' do
         orm DOORKEEPER_ORM
         client_credentials :from_digest, :from_params
       end
+
       expect(subject.client_credentials_methods).to eq([:from_digest, :from_params])
     end
   end
 
   describe 'force_ssl_in_redirect_uri' do
     it 'is true by default in non-development environments' do
-      expect(subject.force_ssl_in_redirect_uri).to be_truthy
+      expect(subject.force_ssl_in_redirect_uri).to eq(true)
     end
 
     it 'can change the value' do
@@ -145,7 +231,19 @@ describe Doorkeeper, 'configuration' do
         orm DOORKEEPER_ORM
         force_ssl_in_redirect_uri(false)
       end
-      expect(subject.force_ssl_in_redirect_uri).to be_falsey
+
+      expect(subject.force_ssl_in_redirect_uri).to eq(false)
+    end
+
+    it 'can be a callable object' do
+      block = proc { false }
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        force_ssl_in_redirect_uri(&block)
+      end
+
+      expect(subject.force_ssl_in_redirect_uri).to eq(block)
+      expect(subject.force_ssl_in_redirect_uri.call).to eq(false)
     end
   end
 
@@ -159,13 +257,31 @@ describe Doorkeeper, 'configuration' do
         orm DOORKEEPER_ORM
         access_token_methods :from_access_token_param, :from_bearer_param
       end
+
       expect(subject.access_token_methods).to eq([:from_access_token_param, :from_bearer_param])
+    end
+  end
+
+  describe 'forbid_redirect_uri' do
+    it 'is false by default' do
+      expect(subject.forbid_redirect_uri.call(URI.parse('https://localhost'))).to eq(false)
+    end
+
+    it 'can be a callable object' do
+      block = proc { true }
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        forbid_redirect_uri(&block)
+      end
+
+      expect(subject.forbid_redirect_uri).to eq(block)
+      expect(subject.forbid_redirect_uri.call).to eq(true)
     end
   end
 
   describe 'enable_application_owner' do
     it 'is disabled by default' do
-      expect(Doorkeeper.configuration.enable_application_owner?).not_to be_truthy
+      expect(Doorkeeper.configuration.enable_application_owner?).not_to eq(true)
     end
 
     context 'when enabled without confirmation' do
@@ -175,11 +291,13 @@ describe Doorkeeper, 'configuration' do
           enable_application_owner
         end
       end
+
       it 'adds support for application owner' do
         expect(Doorkeeper::Application.new).to respond_to :owner
       end
+
       it 'Doorkeeper.configuration.confirm_application_owner? returns false' do
-        expect(Doorkeeper.configuration.confirm_application_owner?).not_to be_truthy
+        expect(Doorkeeper.configuration.confirm_application_owner?).not_to eq(true)
       end
     end
 
@@ -190,11 +308,13 @@ describe Doorkeeper, 'configuration' do
           enable_application_owner confirmation: true
         end
       end
+
       it 'adds support for application owner' do
         expect(Doorkeeper::Application.new).to respond_to :owner
       end
+
       it 'Doorkeeper.configuration.confirm_application_owner? returns true' do
-        expect(Doorkeeper.configuration.confirm_application_owner?).to be_truthy
+        expect(Doorkeeper.configuration.confirm_application_owner?).to eq(true)
       end
     end
   end
@@ -209,6 +329,7 @@ describe Doorkeeper, 'configuration' do
         orm DOORKEEPER_ORM
         realm 'Example'
       end
+
       expect(subject.realm).to eq('Example')
     end
   end
@@ -216,23 +337,24 @@ describe Doorkeeper, 'configuration' do
   describe "grant_flows" do
     it "is set to all grant flows by default" do
       expect(Doorkeeper.configuration.grant_flows).
-        to eq(%w(authorization_code client_credentials))
+        to eq(%w[authorization_code client_credentials])
     end
 
     it "can change the value" do
-      Doorkeeper.configure {
+      Doorkeeper.configure do
         orm DOORKEEPER_ORM
-        grant_flows [ 'authorization_code', 'implicit' ]
-      }
-      expect(subject.grant_flows).to eq ['authorization_code', 'implicit']
+        grant_flows %w[authorization_code implicit]
+      end
+
+      expect(subject.grant_flows).to eq %w[authorization_code implicit]
     end
 
     context "when including 'authorization_code'" do
       before do
-        Doorkeeper.configure {
+        Doorkeeper.configure do
           orm DOORKEEPER_ORM
           grant_flows ['authorization_code']
-        }
+        end
       end
 
       it "includes 'code' in authorization_response_types" do
@@ -246,10 +368,10 @@ describe Doorkeeper, 'configuration' do
 
     context "when including 'implicit'" do
       before do
-        Doorkeeper.configure {
+        Doorkeeper.configure do
           orm DOORKEEPER_ORM
           grant_flows ['implicit']
-        }
+        end
       end
 
       it "includes 'token' in authorization_response_types" do
@@ -259,10 +381,10 @@ describe Doorkeeper, 'configuration' do
 
     context "when including 'password'" do
       before do
-        Doorkeeper.configure {
+        Doorkeeper.configure do
           orm DOORKEEPER_ORM
           grant_flows ['password']
-        }
+        end
       end
 
       it "includes 'password' in token_grant_types" do
@@ -272,10 +394,10 @@ describe Doorkeeper, 'configuration' do
 
     context "when including 'client_credentials'" do
       before do
-        Doorkeeper.configure {
+        Doorkeeper.configure do
           orm DOORKEEPER_ORM
           grant_flows ['client_credentials']
-        }
+        end
       end
 
       it "includes 'client_credentials' in token_grant_types" do
@@ -312,6 +434,78 @@ describe Doorkeeper, 'configuration' do
         access_token_generator 'Example'
       end
       expect(subject.access_token_generator).to eq('Example')
+    end
+  end
+
+  describe 'base_controller' do
+    context 'default' do
+      it { expect(Doorkeeper.configuration.base_controller).to eq('ActionController::Base') }
+    end
+
+    context 'custom' do
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          base_controller 'ApplicationController'
+        end
+      end
+
+      it { expect(Doorkeeper.configuration.base_controller).to eq('ApplicationController') }
+    end
+  end
+
+  if DOORKEEPER_ORM == :active_record
+    describe 'active_record_options' do
+      let(:models) { [Doorkeeper::AccessGrant, Doorkeeper::AccessToken, Doorkeeper::Application] }
+
+      before do
+        models.each do |model|
+          allow(model).to receive(:establish_connection).and_return(true)
+        end
+      end
+
+      it 'establishes connection for Doorkeeper models based on options' do
+        models.each do |model|
+          expect(model).to receive(:establish_connection)
+        end
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          active_record_options(
+            establish_connection: Rails.configuration.database_configuration[Rails.env]
+          )
+        end
+      end
+    end
+  end
+
+  describe "api_only" do
+    it "is false by default" do
+      expect(subject.api_only).to eq(false)
+    end
+
+    it "can change the value" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        api_only
+      end
+
+      expect(subject.api_only).to eq(true)
+    end
+  end
+
+  describe 'strict_content_type' do
+    it 'is false by default' do
+      expect(subject.enforce_content_type).to eq(false)
+    end
+
+    it "can change the value" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enforce_content_type
+      end
+
+      expect(subject.enforce_content_type).to eq(true)
     end
   end
 end

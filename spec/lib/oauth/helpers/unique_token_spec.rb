@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'doorkeeper/oauth/helpers/unique_token'
 
 module Doorkeeper::OAuth::Helpers
   describe UniqueToken do

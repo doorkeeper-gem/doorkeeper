@@ -5,6 +5,6 @@
  *= require_tree .
 */
 
-td {
-  vertical-align: middle !important;
+.doorkeeper-admin .form-group > .field_with_errors {
+  width: 16.66667%;
 }

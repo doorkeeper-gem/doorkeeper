@@ -1,17 +1,10 @@
 # Releasing doorkeeper
 
+How to release doorkeeper in five easy steps!
+
 1. Update `lib/doorkeeper/version.rb` file accordingly.
 2. Update `NEWS.md` to reflect the changes since last release.
-3. Commit changes. There shouldn’t be code changes, and thus CI doesn’t need to
-   run, you can then add “[ci skip]” to the commit message.
-4. Tag the release: `git tag vVERSION -m "Release vVERSION"`
-5. Push changes: `git push && git push --tags`
-6. Build and publish the gem:
-
-   ```bash
-   gem build doorkeeper.gemspec
-   gem push doorkeeper-*.gem
-   ```
-
-7. Announce the new release, making sure to say “thank you” to the contributors
+3. Commit changes: `git commit -am 'Bump to vVERSION'`
+4. Run `rake release`
+5. Announce the new release, making sure to say “thank you” to the contributors
    who helped shape this version!

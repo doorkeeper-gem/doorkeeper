@@ -1,13 +1,6 @@
-require 'doorkeeper/oauth/client_credentials/creator'
-require 'doorkeeper/oauth/client_credentials/issuer'
-require 'doorkeeper/oauth/client_credentials/validation'
-
 module Doorkeeper
   module OAuth
-    class ClientCredentialsRequest
-      include Validations
-      include OAuth::RequestConcern
-
+    class ClientCredentialsRequest < BaseRequest
       attr_accessor :server, :client, :original_scopes
       attr_reader :response
       attr_writer :issuer

@@ -3,47 +3,49 @@ module Doorkeeper
     extend ActiveSupport::Concern
 
     include OAuth::Helpers
+    include Models::Orderable
     include Models::Scopes
-    include ActiveModel::MassAssignmentSecurity if defined?(::ProtectedAttributes)
-
-    included do
-      has_many :access_grants, dependent: :destroy, class_name: 'Doorkeeper::AccessGrant'
-      has_many :access_tokens, dependent: :destroy, class_name: 'Doorkeeper::AccessToken'
-
-      validates :name, :secret, :uid, presence: true
-      validates :uid, uniqueness: true
-      validates :redirect_uri, redirect_uri: true
-
-      before_validation :generate_uid, :generate_secret, on: :create
-    end
 
     module ClassMethods
+      # Returns an instance of the Doorkeeper::Application with
+      # specific UID and secret.
+      #
+      # Public/Non-confidential applications will only find by uid if secret is
+      # blank.
+      #
+      # @param uid [#to_s] UID (any object that responds to `#to_s`)
+      # @param secret [#to_s] secret (any object that responds to `#to_s`)
+      #
+      # @return [Doorkeeper::Application, nil] Application instance or nil
+      #   if there is no record with such credentials
+      #
       def by_uid_and_secret(uid, secret)
-        find_by(uid: uid.to_s, secret: secret.to_s)
+        app = by_uid(uid)
+        return unless app
+        return app if secret.blank? && !app.confidential?
+        return unless app.secret == secret
+        app
       end
 
+      # Returns an instance of the Doorkeeper::Application with specific UID.
+      #
+      # @param uid [#to_s] UID (any object that responds to `#to_s`)
+      #
+      # @return [Doorkeeper::Application, nil] Application instance or nil
+      #   if there is no record with such UID
+      #
       def by_uid(uid)
         find_by(uid: uid.to_s)
       end
     end
 
-    private
-
-    def has_scopes?
-      Doorkeeper.configuration.orm != :active_record ||
-        Doorkeeper::Application.column_names.include?("scopes")
-    end
-
-    def generate_uid
-      if uid.blank?
-        self.uid = UniqueToken.generate
-      end
-    end
-
-    def generate_secret
-      if secret.blank?
-        self.secret = UniqueToken.generate
-      end
+    # Set an application's valid redirect URIs.
+    #
+    # @param uris [String, Array] Newline-separated string or array the URI(s)
+    #
+    # @return [String] The redirect URI(s) seperated by newlines.
+    def redirect_uri=(uris)
+      super(uris.is_a?(Array) ? uris.join("\n") : uris)
     end
   end
 end
