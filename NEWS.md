@@ -7,6 +7,10 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#] Add description here
+
+## 5.0.0.rc2
+
 - [#1106] Restrict access to AdminController with 'Forbidden 403' if admin_authenticator is not
   configured by developers..
 - [#1108] Simple formating of callback URLs when listing oauth applications
@@ -52,6 +56,10 @@ User-visible changes worth mentioning.
 - [#1076] Add config to enforce content type to application/x-www-form-urlencoded
 - Fix bug with `force_ssl_in_redirect_uri` when it breaks existing applications with an
   SSL redirect_uri.
+  
+## 4.4.0
+  
+- [#1120] Backport security fix from 5.x for token revocation when using public clients
 
 ## 4.3.2
 
