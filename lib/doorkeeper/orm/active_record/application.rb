@@ -11,6 +11,7 @@ module Doorkeeper
     validates :name, :secret, :uid, presence: true
     validates :uid, uniqueness: true
     validates :redirect_uri, redirect_uri: true
+    validates :confidential, inclusion: { in: [true, false] }
 
     before_validation :generate_uid, :generate_secret, on: :create
 
@@ -29,6 +30,22 @@ module Doorkeeper
     def self.authorized_for(resource_owner)
       resource_access_tokens = AccessToken.active_for(resource_owner)
       where(id: resource_access_tokens.select(:application_id).distinct)
+    end
+
+    # Fallback to existing, default behaviour of assuming all apps to be
+    # confidential if the migration hasn't been run
+    def confidential
+      return super if self.class.supports_confidentiality?
+      ActiveSupport::Deprecation.warn 'You are susceptible to security bug ' \
+        'CVE-2018-1000211. Please follow instructions outlined in ' \
+        'Doorkeeper::CVE_2018_1000211_WARNING'
+      true
+    end
+
+    alias_method :confidential?, :confidential
+
+    def self.supports_confidentiality?
+      column_names.include?('confidential')
     end
 
     private

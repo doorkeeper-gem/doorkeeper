@@ -27,6 +27,17 @@
     </div>
   <% end %>
 
+  <%= content_tag :div, class: "form-group#{' has-error' if application.errors[:confidential].present?}" do %>
+    <%= f.label :confidential, class: 'col-sm-2 control-label' %>
+    <div class="col-sm-10">
+      <%= f.check_box :confidential, class: 'form-control', disabled: !Doorkeeper::Application.supports_confidentiality? %>
+      <%= doorkeeper_errors_for application, :confidential %>
+      <span class="help-block">
+        <%= t('doorkeeper.applications.help.confidential') %>
+      </span>
+    </div>
+  <% end %>
+
   <%= content_tag :div, class: "form-group#{' has-error' if application.errors[:scopes].present?}" do %>
     <%= f.label :scopes, class: 'col-sm-2 control-label' %>
     <div class="col-sm-10">

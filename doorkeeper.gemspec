@@ -27,4 +27,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency "generator_spec", "~> 0.9.3"
   s.add_development_dependency "rake", ">= 11.3.0"
   s.add_development_dependency "rspec-rails"
+
+  s.post_install_message = Doorkeeper::CVE_2018_1000211_WARNING
 end

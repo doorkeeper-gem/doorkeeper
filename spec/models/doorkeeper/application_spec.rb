@@ -49,6 +49,11 @@ module Doorkeeper
       expect(new_application).not_to be_valid
     end
 
+    it 'is invalid without determining confidentiality' do
+      new_application.confidential = nil
+      expect(new_application).not_to be_valid
+    end
+
     it 'generates uid on create' do
       expect(new_application.uid).to be_nil
       new_application.save
@@ -201,11 +206,80 @@ module Doorkeeper
       end
     end
 
-    describe :authenticate do
-      it 'finds the application via uid/secret' do
-        app = FactoryBot.create :application
-        authenticated = Application.by_uid_and_secret(app.uid, app.secret)
-        expect(authenticated).to eq(app)
+    describe :by_uid_and_secret do
+      context "when application is private/confidential" do
+        it "finds the application via uid/secret" do
+          app = FactoryBot.create :application
+          authenticated = Application.by_uid_and_secret(app.uid, app.secret)
+          expect(authenticated).to eq(app)
+        end
+        context "when secret is wrong" do
+          it "should not find the application" do
+            app = FactoryBot.create :application
+            authenticated = Application.by_uid_and_secret(app.uid, 'bad')
+            expect(authenticated).to eq(nil)
+          end
+        end
+      end
+
+      context "when application is public/non-confidential" do
+        context "when secret is blank" do
+          it "should find the application" do
+            app = FactoryBot.create :application, confidential: false
+            authenticated = Application.by_uid_and_secret(app.uid, nil)
+            expect(authenticated).to eq(app)
+          end
+        end
+        context "when secret is wrong" do
+          it "should not find the application" do
+            app = FactoryBot.create :application, confidential: false
+            authenticated = Application.by_uid_and_secret(app.uid, 'bad')
+            expect(authenticated).to eq(nil)
+          end
+        end
+      end
+    end
+
+    describe :confidential? do
+      subject { FactoryBot.create(:application, confidential: confidential).confidential? }
+
+      context 'when application is private/confidential' do
+        let(:confidential) { true }
+        it { expect(subject).to eq(true) }
+      end
+
+      context 'when application is public/non-confidential' do
+        let(:confidential) { false }
+        it { expect(subject).to eq(false) }
+      end
+    end
+
+    describe :confidential do
+      subject { FactoryBot.create(:application, confidential: confidential).confidential }
+
+      context 'when application is private/confidential' do
+        let(:confidential) { true }
+        it { expect(subject).to eq(true) }
+      end
+
+      context 'when application is public/non-confidential' do
+        let(:confidential) { false }
+        it { expect(subject).to eq(false) }
+      end
+    end
+
+    describe :supports_confidentiality? do
+      context 'when no column' do
+        it 'returns false' do
+          expect(Application).to receive(:column_names).and_return(%w[foo bar])
+          expect(Application.supports_confidentiality?).to eq(false)
+        end
+      end
+      context 'when column' do
+        it 'returns true' do
+          expect(Application).to receive(:column_names).and_return(%w[foo bar confidential])
+          expect(Application.supports_confidentiality?).to eq(true)
+        end
       end
     end
   end

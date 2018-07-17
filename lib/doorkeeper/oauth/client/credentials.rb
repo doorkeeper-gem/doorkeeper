@@ -23,8 +23,10 @@ module Doorkeeper
           end
         end
 
+        # Public clients may have their secret blank, but "credentials" are
+        # still present
         def blank?
-          uid.blank? || secret.blank?
+          uid.blank?
         end
       end
     end
