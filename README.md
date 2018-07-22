@@ -5,6 +5,8 @@
 [![Code Climate](https://codeclimate.com/github/doorkeeper-gem/doorkeeper.svg)](https://codeclimate.com/github/doorkeeper-gem/doorkeeper)
 [![Coverage Status](https://coveralls.io/repos/github/doorkeeper-gem/doorkeeper/badge.svg?branch=master)](https://coveralls.io/github/doorkeeper-gem/doorkeeper?branch=master)
 [![Security](https://hakiri.io/github/doorkeeper-gem/doorkeeper/master.svg)](https://hakiri.io/github/doorkeeper-gem/doorkeeper/master)
+[![Backers on Open Collective](https://opencollective.com/doorkeeper/backers/badge.svg)](#backers) 
+[![Sponsors on Open Collective](https://opencollective.com/doorkeeper/sponsors/badge.svg)](#sponsors) 
 
 Doorkeeper is a gem (Rails engine) that makes it easy to introduce OAuth 2 provider
 functionality to your Ruby on Rails or Grape application.
@@ -559,11 +561,41 @@ here](https://github.com/doorkeeper-gem/doorkeeper/wiki/Testing-your-provider-wi
 Thanks to all our [awesome
 contributors](https://github.com/doorkeeper-gem/doorkeeper/graphs/contributors)!
 
+
+This project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)].
+<a href="graphs/contributors"><img src="https://opencollective.com/doorkeeper/contributors.svg?width=890&button=false" /></a>
+
+
+### Backers
+
+Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/doorkeeper#backer)]
+
+<a href="https://opencollective.com/doorkeeper#backers" target="_blank"><img src="https://opencollective.com/doorkeeper/backers.svg?width=890"></a>
+
+
+### Sponsors
+
+Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/doorkeeper#sponsor)]
+
+<a href="https://opencollective.com/doorkeeper/sponsor/0/website" target="_blank"><img src="https://opencollective.com/doorkeeper/sponsor/0/avatar.svg"></a>
+<a href="https://opencollective.com/doorkeeper/sponsor/1/website" target="_blank"><img src="https://opencollective.com/doorkeeper/sponsor/1/avatar.svg"></a>
+<a href="https://opencollective.com/doorkeeper/sponsor/2/website" target="_blank"><img src="https://opencollective.com/doorkeeper/sponsor/2/avatar.svg"></a>
+<a href="https://opencollective.com/doorkeeper/sponsor/3/website" target="_blank"><img src="https://opencollective.com/doorkeeper/sponsor/3/avatar.svg"></a>
+<a href="https://opencollective.com/doorkeeper/sponsor/4/website" target="_blank"><img src="https://opencollective.com/doorkeeper/sponsor/4/avatar.svg"></a>
+<a href="https://opencollective.com/doorkeeper/sponsor/5/website" target="_blank"><img src="https://opencollective.com/doorkeeper/sponsor/5/avatar.svg"></a>
+<a href="https://opencollective.com/doorkeeper/sponsor/6/website" target="_blank"><img src="https://opencollective.com/doorkeeper/sponsor/6/avatar.svg"></a>
+<a href="https://opencollective.com/doorkeeper/sponsor/7/website" target="_blank"><img src="https://opencollective.com/doorkeeper/sponsor/7/avatar.svg"></a>
+<a href="https://opencollective.com/doorkeeper/sponsor/8/website" target="_blank"><img src="https://opencollective.com/doorkeeper/sponsor/8/avatar.svg"></a>
+<a href="https://opencollective.com/doorkeeper/sponsor/9/website" target="_blank"><img src="https://opencollective.com/doorkeeper/sponsor/9/avatar.svg"></a>
+
+
+
 ### IETF Standards
 
 * [The OAuth 2.0 Authorization Framework](http://tools.ietf.org/html/rfc6749)
 * [OAuth 2.0 Threat Model and Security Considerations](http://tools.ietf.org/html/rfc6819)
 * [OAuth 2.0 Token Revocation](http://tools.ietf.org/html/rfc7009)
+
 
 ### License
 
