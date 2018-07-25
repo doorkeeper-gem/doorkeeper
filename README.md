@@ -179,8 +179,7 @@ end
 ```
 
 Keep in mind, that in this mode you will not be able to access `Applications` or
-`Authorized Applications` controllers because they will be skipped. Also all the
-redirects will be returned as JSON response with corresponding locations.
+`Authorized Applications` controllers because they will be skipped. CSRF protections (which are otherwise enabled) will be skipped, and all the redirects will be returned as JSON response with corresponding locations.
 
 ### Routes
 
