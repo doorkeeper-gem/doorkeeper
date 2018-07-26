@@ -41,8 +41,8 @@ en:
         callback_url: 'Callback URL'
         confidential: 'Confidential?'
         confidentiality:
-          yes: 'Yes'
-          no: 'No'
+          'yes': 'Yes'
+          'no': 'No'
       new:
         title: 'New Application'
       show:
