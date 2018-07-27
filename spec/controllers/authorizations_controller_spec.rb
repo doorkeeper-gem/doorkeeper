@@ -57,7 +57,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
 
     it 'includes token type in fragment' do
-      expect(response.query_params['token_type']).to eq('bearer')
+      expect(response.query_params['token_type']).to eq('Bearer')
     end
 
     it 'includes token expiration in fragment' do
@@ -95,7 +95,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
 
     it "includes token type in fragment" do
-      expect(redirect_uri.match(/token_type=(\w+)&?/)[1]).to eq "bearer"
+      expect(redirect_uri.match(/token_type=(\w+)&?/)[1]).to eq "Bearer"
     end
 
     it "includes token expiration in fragment" do
@@ -293,7 +293,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
 
     it 'includes token type in fragment' do
-      expect(response.query_params['token_type']).to eq('bearer')
+      expect(response.query_params['token_type']).to eq('Bearer')
     end
 
     it 'includes token expiration in fragment' do
@@ -355,7 +355,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     it "sets redirect_uri to correct value" do
       redirect_uri = JSON.parse(response.body)["redirect_uri"]
       expect(redirect_uri).to_not be_nil
-      expect(redirect_uri.match(/token_type=(\w+)&?/)[1]).to eq "bearer"
+      expect(redirect_uri.match(/token_type=(\w+)&?/)[1]).to eq "Bearer"
       expect(redirect_uri.match(/expires_in=(\d+)&?/)[1].to_i).to eq 1234
       expect(
         redirect_uri.match(/access_token=([a-f0-9]+)&?/)[1]
