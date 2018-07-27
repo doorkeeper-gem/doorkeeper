@@ -70,47 +70,6 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
   end
 
-<<<<<<< HEAD
-=======
-  describe "POST #create in API mode" do
-    before do
-      allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
-      post :create, params: { client_id: client.uid, response_type: "token", redirect_uri: client.redirect_uri }
-    end
-
-    let(:response_json_body) { JSON.parse(response.body) }
-    let(:redirect_uri) { response_json_body["redirect_uri"] }
-
-    it "renders success after authorization" do
-      expect(response).to be_successful
-    end
-
-    it "renders correct redirect uri" do
-      expect(redirect_uri).to match(/^#{client.redirect_uri}/)
-    end
-
-    it "includes access token in fragment" do
-      expect(redirect_uri.match(/access_token=([a-f0-9]+)&?/)[1]).to eq(Doorkeeper::AccessToken.first.token)
-    end
-
-    it "includes token type in fragment" do
-      expect(redirect_uri.match(/token_type=(\w+)&?/)[1]).to eq "Bearer"
-    end
-
-    it "includes token expiration in fragment" do
-      expect(redirect_uri.match(/expires_in=(\d+)&?/)[1].to_i).to eq 1234
-    end
-
-    it "issues the token for the current client" do
-      expect(Doorkeeper::AccessToken.first.application_id).to eq(client.id)
-    end
-
-    it "issues the token for the current resource owner" do
-      expect(Doorkeeper::AccessToken.first.resource_owner_id).to eq(user.id)
-    end
-  end
-
->>>>>>> 9a42b98... Change the token_type initials of the Banner Token to uppercase.
   describe 'POST #create with errors' do
     before do
       default_scopes_exist :public
@@ -241,71 +200,6 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
   end
 
-<<<<<<< HEAD
-=======
-  describe 'GET #new in API mode' do
-    before do
-      allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
-      get :new, params: { client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri }
-    end
-
-    it 'should render success' do
-      expect(response).to be_successful
-    end
-
-    it "sets status to pre-authorization" do
-      expect(json_response["status"]).to eq(I18n.t('doorkeeper.pre_authorization.status'))
-    end
-
-    it "sets correct values" do
-      expect(json_response['client_id']).to eq(client.uid)
-      expect(json_response['redirect_uri']).to eq(client.redirect_uri)
-      expect(json_response['state']).to be_nil
-      expect(json_response['response_type']).to eq('token')
-      expect(json_response['scope']).to eq('')
-    end
-  end
-
-  describe 'GET #new in API mode with skip_authorization true' do
-    before do
-      allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc { true })
-      allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
-
-      get :new, params: { client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri }
-    end
-
-    it 'should render success' do
-      expect(response).to be_successful
-    end
-
-    it 'should issue a token' do
-      expect(Doorkeeper::AccessToken.count).to be 1
-    end
-
-    it "sets status to redirect" do
-      expect(JSON.parse(response.body)["status"]).to eq("redirect")
-    end
-
-    it "sets redirect_uri to correct value" do
-      redirect_uri = JSON.parse(response.body)["redirect_uri"]
-      expect(redirect_uri).to_not be_nil
-      expect(redirect_uri.match(/token_type=(\w+)&?/)[1]).to eq "Bearer"
-      expect(redirect_uri.match(/expires_in=(\d+)&?/)[1].to_i).to eq 1234
-      expect(
-        redirect_uri.match(/access_token=([a-f0-9]+)&?/)[1]
-      ).to eq Doorkeeper::AccessToken.first.token
-    end
-
-    it "issues the token for the current client" do
-      expect(Doorkeeper::AccessToken.first.application_id).to eq(client.id)
-    end
-
-    it "issues the token for the current resource owner" do
-      expect(Doorkeeper::AccessToken.first.resource_owner_id).to eq(user.id)
-    end
-  end
-
->>>>>>> 9a42b98... Change the token_type initials of the Banner Token to uppercase.
   describe 'GET #new with errors' do
     before do
       default_scopes_exist :public
