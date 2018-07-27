@@ -63,7 +63,7 @@ module Doorkeeper::OAuth
                expires_in_seconds: '',
                scopes_string:      '',
                refresh_token:      '',
-               token_type:         'bearer',
+               token_type:         'Bearer',
                created_at:         0
       end
 

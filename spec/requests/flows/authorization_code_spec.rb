@@ -53,7 +53,7 @@ feature 'Authorization Code Flow' do
     should_not_have_json 'error'
 
     should_have_json 'access_token', Doorkeeper::AccessToken.first.token
-    should_have_json 'token_type', 'bearer'
+    should_have_json 'token_type', 'Bearer'
     should_have_json_within 'expires_in', Doorkeeper::AccessToken.first.expires_in, 1
   end
 

@@ -54,7 +54,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
 
     it 'includes token type in fragment' do
-      expect(response.query_params['token_type']).to eq('bearer')
+      expect(response.query_params['token_type']).to eq('Bearer')
     end
 
     it 'includes token expiration in fragment' do
@@ -184,7 +184,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
 
     it 'includes token type in fragment' do
-      expect(response.query_params['token_type']).to eq('bearer')
+      expect(response.query_params['token_type']).to eq('Bearer')
     end
 
     it 'includes token expiration in fragment' do
