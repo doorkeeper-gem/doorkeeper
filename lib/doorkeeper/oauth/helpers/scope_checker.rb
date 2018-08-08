@@ -14,7 +14,7 @@ module Doorkeeper
           def valid?
             scope_str.present? &&
               scope_str !~ /[\n\r\t]/ &&
-              parsed_scopes == @valid_scopes
+              @valid_scopes.has_scopes?(parsed_scopes)
           end
 
           private

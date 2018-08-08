@@ -409,8 +409,8 @@ module Doorkeeper
 
       it 'matches token with one of application`s scopes' do
         scopes = Doorkeeper::OAuth::Scopes.from_string('public')
-        application = FactoryGirl.create :application, scopes: "public write"
-        token = FactoryGirl.create :access_token, default_attributes.merge(
+        application = FactoryBot.create :application, scopes: "public write"
+        token = FactoryBot.create :access_token, default_attributes.merge(
           application: application,
           scopes: 'public'
         )
