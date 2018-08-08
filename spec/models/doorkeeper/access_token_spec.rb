@@ -407,6 +407,17 @@ module Doorkeeper
         expect(last_token).to be_nil
       end
 
+      it 'matches token with one of application`s scopes' do
+        scopes = Doorkeeper::OAuth::Scopes.from_string('public')
+        application = FactoryBot.create :application, scopes: "public write"
+        token = FactoryBot.create :access_token, default_attributes.merge(
+          application: application,
+          scopes: 'public'
+        )
+        last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
+        expect(last_token).to eq(token)
+      end
+
       it 'excludes tokens with scopes that are not present in application scopes' do
         application = FactoryBot.create :application, scopes: "private read"
         FactoryBot.create :access_token, default_attributes.merge(
