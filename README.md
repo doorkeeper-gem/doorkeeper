@@ -5,6 +5,7 @@
 [![Code Climate](https://codeclimate.com/github/doorkeeper-gem/doorkeeper.svg)](https://codeclimate.com/github/doorkeeper-gem/doorkeeper)
 [![Coverage Status](https://coveralls.io/repos/github/doorkeeper-gem/doorkeeper/badge.svg?branch=master)](https://coveralls.io/github/doorkeeper-gem/doorkeeper?branch=master)
 [![Security](https://hakiri.io/github/doorkeeper-gem/doorkeeper/master.svg)](https://hakiri.io/github/doorkeeper-gem/doorkeeper/master)
+[![Reviewed by Hound](https://img.shields.io/badge/Reviewed_by-Hound-8E64B0.svg)](https://houndci.com)
 
 Doorkeeper is a gem (Rails engine) that makes it easy to introduce OAuth 2 provider
 functionality to your Ruby on Rails or Grape application.
@@ -179,8 +180,7 @@ end
 ```
 
 Keep in mind, that in this mode you will not be able to access `Applications` or
-`Authorized Applications` controllers because they will be skipped. Also all the
-redirects will be returned as JSON response with corresponding locations.
+`Authorized Applications` controllers because they will be skipped. CSRF protections (which are otherwise enabled) will be skipped, and all the redirects will be returned as JSON response with corresponding locations.
 
 ### Routes
 

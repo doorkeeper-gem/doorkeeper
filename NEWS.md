@@ -7,6 +7,10 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1127] Change the token_type initials of the Banner Token to uppercase to comply with the RFC6750 specification.
+
+## 5.0.0.rc2
+
 - [#1106] Restrict access to AdminController with 'Forbidden 403' if admin_authenticator is not
   configured by developers..
 - [#1108] Simple formating of callback URLs when listing oauth applications
@@ -52,6 +56,15 @@ User-visible changes worth mentioning.
 - [#1076] Add config to enforce content type to application/x-www-form-urlencoded
 - Fix bug with `force_ssl_in_redirect_uri` when it breaks existing applications with an
   SSL redirect_uri.
+  
+## 4.4.1
+
+- [#1127] Backport token type to comply with the RFC6750 specification.
+- [#1125] Backport Quote surround I18n yes/no keys
+  
+## 4.4.0
+  
+- [#1120] Backport security fix from 5.x for token revocation when using public clients
 
 ## 4.3.2
 
