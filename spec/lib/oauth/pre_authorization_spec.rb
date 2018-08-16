@@ -123,14 +123,19 @@ module Doorkeeper::OAuth
       expect(subject.scopes).to eq(Scopes.from_string('default'))
     end
 
-    it 'accepts test uri' do
-      subject.redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
-      expect(subject).to be_authorizable
-    end
+    context 'with native redirect uri' do
+      let(:native_redirect_uri) { 'urn:ietf:wg:oauth:2.0:oob' }
 
-    it 'matches the redirect uri against client\'s one' do
-      subject.redirect_uri = 'http://nothesame.com'
-      expect(subject).not_to be_authorizable
+      it 'accepts redirect_uri when it matches with the client' do
+        subject.redirect_uri = native_redirect_uri
+        allow(subject.client).to receive(:redirect_uri) { native_redirect_uri }
+        expect(subject).to be_authorizable
+      end
+
+      it 'invalidates redirect_uri when it does\'n match with the client' do
+        subject.redirect_uri = native_redirect_uri
+        expect(subject).not_to be_authorizable
+      end
     end
 
     it 'stores the state' do
