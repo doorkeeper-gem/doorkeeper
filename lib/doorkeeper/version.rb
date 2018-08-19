@@ -28,7 +28,7 @@ HEREDOC
     # Semantic versioning
     MAJOR = 4
     MINOR = 4
-    TINY = 1
+    TINY = 2
 
     # Full version number
     STRING = [MAJOR, MINOR, TINY].compact.join('.')

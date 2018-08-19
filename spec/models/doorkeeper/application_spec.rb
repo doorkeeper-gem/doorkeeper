@@ -266,6 +266,23 @@ module Doorkeeper
         let(:confidential) { false }
         it { expect(subject).to eq(false) }
       end
+
+      context 'when the application does not support confidentiality' do
+        let(:confidential) { false }
+
+        before { allow(Application).to receive(:supports_confidentiality?).and_return(false) }
+
+        it 'warns of the CVE' do
+          expect(ActiveSupport::Deprecation).to receive(:warn).with(
+            'You are susceptible to security bug ' \
+            'CVE-2018-1000211. Please follow instructions outlined in ' \
+            'Doorkeeper::CVE_2018_1000211_WARNING'
+          )
+          Application.new.confidential
+        end
+
+        it { expect(subject).to eq(true) }
+      end
     end
 
     describe :supports_confidentiality? do

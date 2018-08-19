@@ -5,6 +5,11 @@ require 'doorkeeper/oauth/helpers/uri_checker'
 module Doorkeeper::OAuth::Helpers
   describe URIChecker do
     describe '.valid?' do
+      it 'is valid for native uris' do
+        uri = 'urn:ietf:wg:oauth:2.0:oob'
+        expect(URIChecker.valid?(uri)).to be_truthy
+      end
+
       it 'is valid for valid uris' do
         uri = 'http://app.co'
         expect(URIChecker.valid?(uri)).to be_truthy
