@@ -57,6 +57,10 @@ User-visible changes worth mentioning.
 - Fix bug with `force_ssl_in_redirect_uri` when it breaks existing applications with an
   SSL redirect_uri.
   
+## 4.4.2
+
+- [#1130] Backport fix for native redirect_uri from 5.x.
+  
 ## 4.4.1
 
 - [#1127] Backport token type to comply with the RFC6750 specification.
