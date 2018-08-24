@@ -44,11 +44,11 @@ module Doorkeeper
       private
 
       def map_route(name, method)
-       unless @mapping.skipped?(name)
-         send(method, @mapping[name])
+        return if @mapping.skipped?(name)
 
-         mapping[name] = @mapping[name]
-       end
+        send(method, @mapping[name])
+
+        mapping[name] = @mapping[name]
       end
 
       def authorization_routes(mapping)

@@ -34,8 +34,6 @@ module Doorkeeper
               !!server.refresh_token_enabled?
             end
           end
-
-          private
         end
 
         def initialize(pre_auth, resource_owner)

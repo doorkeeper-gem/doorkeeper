@@ -7,6 +7,10 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#PR ID] Add PR description.
+
+## 5.0.0
+
 - [#1127] Change the token_type initials of the Banner Token to uppercase to comply with the RFC6750 specification.
 
 ## 5.0.0.rc2
