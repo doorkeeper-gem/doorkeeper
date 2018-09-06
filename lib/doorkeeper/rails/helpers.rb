@@ -19,6 +19,8 @@ module Doorkeeper
 
       def doorkeeper_render_error
         error = doorkeeper_error
+        error.raise_exception! if Doorkeeper.configuration.raise_on_errors?
+
         headers.merge!(error.headers.reject { |k| k == "Content-Type" })
         doorkeeper_render_error_with(error)
       end

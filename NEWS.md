@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#PR ID] Add PR description.
+- [#1140] Allow rendering custom errors from exceptions (issue #844). Originally opened as [#944].
 
 ## 5.0.0
 
