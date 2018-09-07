@@ -239,6 +239,7 @@ module Doorkeeper
     option :native_redirect_uri,            default: 'urn:ietf:wg:oauth:2.0:oob'
     option :active_record_options,          default: {}
     option :grant_flows,                    default: %w[authorization_code client_credentials]
+    option :handle_auth_errors,             default: :render
 
     # Allows to forbid specific Application redirect URI's by custom rules.
     # Doesn't forbid any URI by default.
@@ -315,6 +316,10 @@ module Doorkeeper
 
     def confirm_application_owner?
       !!(defined?(@confirm_application_owner) && @confirm_application_owner)
+    end
+
+    def raise_on_errors?
+      handle_auth_errors == :raise
     end
 
     def default_scopes

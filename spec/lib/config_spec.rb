@@ -508,4 +508,17 @@ describe Doorkeeper, 'configuration' do
       expect(subject.enforce_content_type).to eq(true)
     end
   end
+
+  describe 'handle_auth_errors' do
+    it 'is set to render by default' do
+      expect(Doorkeeper.configuration.handle_auth_errors).to eq(:render)
+    end
+    it 'can change the value' do
+      Doorkeeper.configure {
+        orm DOORKEEPER_ORM
+        handle_auth_errors :raise
+      }
+      expect(subject.handle_auth_errors).to eq(:raise)
+    end
+  end
 end

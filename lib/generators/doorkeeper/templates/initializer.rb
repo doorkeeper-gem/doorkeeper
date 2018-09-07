@@ -121,7 +121,8 @@ Doorkeeper.configure do
   # access_token_methods :from_bearer_authorization, :from_access_token_param, :from_bearer_param
 
   # Change the native redirect uri for client apps
-  # When clients register with the following redirect uri, they won't be redirected to any server and the authorization code will be displayed within the provider
+  # When clients register with the following redirect uri, they won't be redirected to any server and
+  # the authorizationcode will be displayed within the provider
   # The value can be any string. Use nil to disable this feature. When disabled, clients must provide a valid URL
   # (Similar behaviour: https://developers.google.com/accounts/docs/OAuth2InstalledApp#choosingredirecturi)
   #
@@ -146,6 +147,19 @@ Doorkeeper.configure do
   # for example.
   #
   # forbid_redirect_uri { |uri| uri.scheme.to_s.downcase == 'javascript' }
+
+  # Specify how authorization errors should be handled.
+  # By default, doorkeeper renders json errors when access token
+  # is invalid, expired, revoked or has invalid scopes.
+  #
+  # If you want to render error response yourself (i.e. rescue exceptions),
+  # set  handle_auth_errors to `:raise` and rescue Doorkeeper::Errors::InvalidToken
+  # or following specific errors:
+  #
+  #   Doorkeeper::Errors::TokenForbidden, Doorkeeper::Errors::TokenExpired,
+  #   Doorkeeper::Errors::TokenRevoked, Doorkeeper::Errors::TokenUnknown
+  #
+  # handle_auth_errors = :raise
 
   # Specify what grant flows are enabled in array of Strings. The valid
   # strings and the flows they enable are:
