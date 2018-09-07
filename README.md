@@ -50,6 +50,7 @@ https://github.com/doorkeeper-gem/doorkeeper/releases
   - [Routes](#routes)
   - [Authenticating](#authenticating)
   - [Internationalization (I18n)](#internationalization-i18n)
+  - [Customizing errors](#customizing-errors)
   - [Rake Tasks](#rake-tasks)
 - [Protecting resources with OAuth (a.k.a your API endpoint)](#protecting-resources-with-oauth-aka-your-api-endpoint)
   - [Ruby on Rails controllers](#ruby-on-rails-controllers)
@@ -236,6 +237,14 @@ You may want to check other ways of authentication
 
 Doorkeeper support multiple languages. See language files in
 [the I18n repository](https://github.com/doorkeeper-gem/doorkeeper-i18n).
+
+### Customizing errors
+
+If you don't want to use default Doorkeeper error responses you can raise and rescue it's
+exceptions. All you need is to set configuration option `handle_auth_errors` to `:raise`.
+In this case Doorkeeper will raise `Doorkeeper::Errors::TokenForbidden`,
+`Doorkeeper::Errors::TokenExpired`, `Doorkeeper::Errors::TokenRevoked` or other exceptions
+that you need to care about.
 
 ### Rake Tasks
 
