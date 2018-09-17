@@ -381,7 +381,7 @@ end
 Please note that there is a logical OR between multiple required scopes. In the
 above example, `doorkeeper_authorize! :admin, :write` means that the access
 token is required to have either `:admin` scope or `:write` scope, but does not
-need have both of them.
+need to have both of them.
 
 If you want to require the access token to have multiple scopes at the same
 time, use multiple `doorkeeper_authorize!`, for example:
