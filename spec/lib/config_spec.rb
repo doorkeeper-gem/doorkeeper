@@ -253,6 +253,31 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
+  describe 'use_url_path_for_native_authorization' do
+    around(:each) do |example|
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_url_path_for_native_authorization
+      end
+
+      Rails.application.reload_routes!
+
+      subject { Doorkeeper.configuration }
+
+      example.run
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+
+      Rails.application.reload_routes!
+    end
+
+    it 'sets the native authorization code route /:code' do
+      expect(subject.native_authorization_code_route).to eq('/:code')
+    end
+  end
+
   describe "client_credentials" do
     it "has defaults order" do
       expect(config.client_credentials_methods)
