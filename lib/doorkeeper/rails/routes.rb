@@ -47,7 +47,7 @@ module Doorkeeper
           as: mapping[:as],
           controller: mapping[:controllers]
         ) do
-          routes.get '/native', action: :show, on: :member
+          routes.get native_authorization_code_route, action: :show, on: :member
           routes.get '/', action: :new, on: :member
         end
       end
@@ -84,6 +84,10 @@ module Doorkeeper
 
       def authorized_applications_routes(mapping)
         routes.resources :authorized_applications, only: %i[index destroy], controller: mapping[:controllers]
+      end
+
+      def native_authorization_code_route
+        Doorkeeper.configuration.native_authorization_code_route
       end
     end
   end

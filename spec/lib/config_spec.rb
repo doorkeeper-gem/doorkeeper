@@ -162,6 +162,31 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
+  describe 'opt_out_native_route_change' do
+    around(:each) do |example|
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        opt_out_native_route_change
+      end
+
+      Rails.application.reload_routes!
+
+      subject { Doorkeeper.configuration }
+
+      example.run
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+
+      Rails.application.reload_routes!
+    end
+
+    it 'sets the native authorization code route /:code' do
+      expect(subject.native_authorization_code_route).to eq('/:code')
+    end
+  end
+
   describe 'client_credentials' do
     it 'has defaults order' do
       expect(subject.client_credentials_methods).to eq([:from_basic, :from_params])
