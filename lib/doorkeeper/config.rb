@@ -114,6 +114,15 @@ doorkeeper.
       def reuse_access_token
         @config.instance_variable_set(:@reuse_access_token, true)
       end
+
+      # Opt out of breaking api change to the native authorization code flow.
+      # Opting out sets the authorization code response route for native
+      # redirect uris to oauth/authorize/<code>. The default is
+      # oauth/authorize/native?code=<code>.
+      # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/1143
+      def opt_out_native_route_change
+        @config.instance_variable_set(:@opt_out_native_route_change, true)
+      end
     end
 
     module Option
@@ -293,6 +302,11 @@ doorkeeper.
 
     def token_grant_types
       @token_grant_types ||= calculate_token_grant_types
+    end
+
+    def native_authorization_code_route
+      @opt_out_native_route_change ||= false
+      @opt_out_native_route_change ? '/:code' : '/native'
     end
 
     private

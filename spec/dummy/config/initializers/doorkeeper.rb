@@ -29,6 +29,11 @@ Doorkeeper.configure do
   # Issue access tokens with refresh token (disabled by default)
   use_refresh_token
 
+  # Opt out of breaking api change to the native authorization code flow. Opting out sets the authorization
+  # code response route for native redirect uris to oauth/authorize/<code>. The default is oauth/authorize/native?code=<code>.
+  # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/1143
+  # opt_out_native_route_change
+
   # Provide support for an owner to be assigned to each registered application (disabled by default)
   # Optional parameter confirmation: true (default false) if you want to enforce ownership of
   # a registered application

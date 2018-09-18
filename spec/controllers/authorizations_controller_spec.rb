@@ -164,6 +164,38 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     it 'should not issue a token' do
       expect(Doorkeeper::AccessToken.count).to be 0
     end
+
+    context 'with opt_out_native_route_change' do
+      around(:each) do |example|
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          opt_out_native_route_change
+        end
+
+        Rails.application.reload_routes!
+
+        example.run
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+        end
+
+        Rails.application.reload_routes!
+      end
+
+      it 'should redirect immediately' do
+        expect(response).to be_redirect
+        expect(response.location).to match(/oauth\/authorize\/#{Doorkeeper::AccessGrant.first.token}/)
+      end
+
+      it 'should issue a grant' do
+        expect(Doorkeeper::AccessGrant.count).to be 1
+      end
+
+      it 'should not issue a token' do
+        expect(Doorkeeper::AccessToken.count).to be 0
+      end
+    end
   end
 
   describe 'GET #new with skip_authorization true' do
