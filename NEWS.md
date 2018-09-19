@@ -81,7 +81,7 @@ User-visible changes worth mentioning.
 - [#1120] Backport security fix from 5.x for token revocation when using public clients
   
   **[IMPORTANT]**: all the applications (clients) now are considered as private by default.
-  You need to manually change `confidential` column to `true` if you are using public clients,
+  You need to manually change `confidential` column to `false` if you are using public clients,
   in other case your mobile (or other) applications will not be able to authorize.
   See [#1142](https://github.com/doorkeeper-gem/doorkeeper/issues/1142) for more details.
 
@@ -112,6 +112,10 @@ User-visible changes worth mentioning.
 - [#985] Generate valid migration files for Rails >= 5
 - [#972] Replace Struct subclassing with block-form initialization
 - [#1003] Use URL query param to pass through native redirect auth code so automated apps can find it.
+
+  **[IMPORTANT]**: Previously authorization code response route was `/oauth/authorize/<code>`,
+  now it is `oauth/authorize/native?code=<code>` (in order to help applications to automatically find the code value).
+
 - [#868] `Scopes#&` and `Scopes#+` now take an array or any other enumerable
   object.
 - [#1019] Remove translation not in use: `invalid_resource_owner`.
