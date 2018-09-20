@@ -71,6 +71,20 @@ feature 'Authorization Code Flow' do
     should_have_json 'error', 'invalid_client'
   end
 
+  scenario 'silently authorizes if matching token exists' do
+    default_scopes_exist :public, :write
+
+    access_token_exists application: @client,
+                        expires_in: -100, # even expired token
+                        resource_owner_id: @resource_owner.id,
+                        scopes: 'public write'
+
+    visit authorization_endpoint_url(client: @client, scope: 'public write')
+
+    response_status_should_be 200
+    i_should_not_see 'Authorize'
+  end
+
   context 'with PKCE' do
     context 'plain' do
       let(:code_challenge) { 'a45a9fea-0676-477e-95b1-a40f72ac3cfb' }
