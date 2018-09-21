@@ -14,12 +14,13 @@ module Doorkeeper
           url = as_uri(url)
           client_url = as_uri(client_url)
 
-          if client_url.query.present?
+          unless client_url.query.nil?
             return false unless query_matches?(url.query, client_url.query)
             # Clear out queries so rest of URI can be tested. This allows query
             # params to be in the request but order not mattering.
             client_url.query = nil
           end
+
           url.query = nil
           url == client_url
         end
@@ -33,7 +34,7 @@ module Doorkeeper
         end
 
         def self.query_matches?(query, client_query)
-          return true if client_query.nil? && query.nil?
+          return true if client_query.blank? && query.blank?
           return false if client_query.nil? || query.nil?
           # Will return true independent of query order
           client_query.split('&').sort == query.split('&').sort

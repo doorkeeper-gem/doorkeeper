@@ -116,6 +116,22 @@ module Doorkeeper::OAuth::Helpers
       it 'is true if valid and matches' do
         uri = client_uri = 'http://app.co/aaa'
         expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be_truthy
+
+        uri = client_uri = 'http://app.co/aaa?b=c'
+        expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be_truthy
+      end
+
+      it 'is true if uri includes blank query' do
+        uri = client_uri = 'http://app.co/aaa?'
+        expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be_truthy
+
+        uri = 'http://app.co/aaa?'
+        client_uri = 'http://app.co/aaa'
+        expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be_truthy
+
+        uri = 'http://app.co/aaa'
+        client_uri = 'http://app.co/aaa?'
+        expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be_truthy
       end
 
       it 'is false if valid and mismatches' do
@@ -136,12 +152,7 @@ module Doorkeeper::OAuth::Helpers
         expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be_falsey
       end
 
-      it 'is true if valid and matches' do
-        uri = client_uri = 'http://app.co/aaa'
-        expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be true
-      end
-
-      it 'is false if invalid' do
+      it 'is false if queries does not match' do
         uri = 'http://app.co/aaa?pankcakes=abc'
         client_uri = 'http://app.co/aaa?waffles=abc'
         expect(URIChecker.valid_for_authorization?(uri, client_uri)).to be false
