@@ -68,7 +68,11 @@ Doorkeeper.configure do
   #
   # base_controller 'ApplicationController'
 
-  # Reuse access token for the same resource owner within an application (disabled by default)
+  # Reuse access token for the same resource owner within an application (disabled by default).
+  #
+  # This option protects your application from creating new tokens before old valid one becomes
+  # expired so your database doesn't bloat. Keep in mind that when this option is `on` Doorkeeper
+  # doesn't updates existing token expiration time, it will create a new token instead.
   # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/383
   #
   # reuse_access_token
