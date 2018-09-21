@@ -70,6 +70,12 @@ User-visible changes worth mentioning.
 - Fix bug with `force_ssl_in_redirect_uri` when it breaks existing applications with an
   SSL redirect_uri.
   
+## 4.4.3
+  
+- [#1143] Adds a config option `opt_out_native_route_change` to opt out of the breaking api
+  changed introduced in https://github.com/doorkeeper-gem/doorkeeper/pull/1003
+
+  
 ## 4.4.2
 
 - [#1130] Backport fix for native redirect_uri from 5.x.
