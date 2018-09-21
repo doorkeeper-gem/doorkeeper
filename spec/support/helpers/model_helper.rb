@@ -11,6 +11,10 @@ module ModelHelper
     @authorization = FactoryBot.create(:access_grant, options)
   end
 
+  def access_token_exists(options = {})
+    @access_token = FactoryBot.create(:access_token, options)
+  end
+
   def access_grant_should_exist_for(client, resource_owner)
     grant = Doorkeeper::AccessGrant.first
 

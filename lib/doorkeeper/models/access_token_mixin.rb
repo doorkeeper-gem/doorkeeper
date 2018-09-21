@@ -51,7 +51,7 @@ module Doorkeeper
           update_all(revoked_at: clock.now.utc)
       end
 
-      # Looking for not expired Access Token with a matching set of scopes
+      # Looking for not revoked Access Token with a matching set of scopes
       # that belongs to specific Application and Resource Owner.
       #
       # @param application [Doorkeeper::Application]
