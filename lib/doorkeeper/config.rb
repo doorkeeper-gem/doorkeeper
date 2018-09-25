@@ -107,7 +107,7 @@ module Doorkeeper
       def use_refresh_token(enabled = true, &block)
         @config.instance_variable_set(
           :@refresh_token_enabled,
-          block ? block : enabled
+          block || enabled
         )
       end
 

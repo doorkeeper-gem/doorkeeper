@@ -82,11 +82,17 @@ module Doorkeeper
       end
 
       def validate_client
-        !credentials || !!client
+        return true if credentials.blank?
+
+        client.present?
       end
 
+      # @see https://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-1.5
+      #
       def validate_client_match
-        !client || refresh_token.application_id == client.id
+        return true if refresh_token.application_id.blank?
+
+        client && refresh_token.application_id == client.id
       end
 
       def validate_scope
