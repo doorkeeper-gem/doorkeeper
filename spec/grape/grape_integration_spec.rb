@@ -68,7 +68,7 @@ describe 'Grape integration' do
   def json_body
     JSON.parse(last_response.body)
   end
-  
+
   let(:client) { FactoryBot.create(:application) }
   let(:resource) { FactoryBot.create(:doorkeeper_testing_user, name: 'Joe', password: 'sekret') }
   let(:access_token) { client_is_authorized(client, resource) }

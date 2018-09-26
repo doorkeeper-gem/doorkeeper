@@ -11,6 +11,7 @@ User-visible changes worth mentioning.
 - [#1138] Revert regression bug (check for token expiration in Authorizations controller so authorization
   triggers every time)
 - [#1149] Fix for `URIChecker#valid_for_authorization?` false negative when query is blank, but `?` present.
+- [#1151] Fix Refresh Token strategy: add proper validation of client credentials both for Public & Private clients.
 
 ## 5.0.0
 

@@ -6,6 +6,7 @@ describe 'Refresh Token Flow' do
       orm DOORKEEPER_ORM
       use_refresh_token
     end
+
     client_exists
   end
 
@@ -92,6 +93,62 @@ describe 'Refresh Token Flow' do
           'refresh_token', Doorkeeper::AccessToken.last.refresh_token
         )
         expect(@token.reload).to be_revoked
+      end
+    end
+
+    context "public & private clients" do
+      let(:public_client) do
+        FactoryBot.create(
+          :application,
+          confidential: false
+        )
+      end
+
+      let(:token_for_private_client) do
+        FactoryBot.create(
+          :access_token,
+          application: @client,
+          resource_owner_id: 1,
+          use_refresh_token: true
+        )
+      end
+
+      let(:token_for_public_client) do
+        FactoryBot.create(
+          :access_token,
+          application: public_client,
+          resource_owner_id: 1,
+          use_refresh_token: true
+        )
+      end
+
+      it 'issues a new token without client_secret when refresh token was issued to a public client' do
+        post refresh_token_endpoint_url(
+          client_id: public_client.uid,
+          refresh_token: token_for_public_client.refresh_token
+        )
+
+        new_token = Doorkeeper::AccessToken.last
+        should_have_json 'access_token',  new_token.token
+        should_have_json 'refresh_token', new_token.refresh_token
+      end
+
+      it 'returns an error without credentials' do
+        post refresh_token_endpoint_url(refresh_token: token_for_private_client.refresh_token)
+
+        should_not_have_json 'refresh_token'
+        should_have_json 'error', 'invalid_grant'
+      end
+
+      it 'returns an error with wrong credentials' do
+        post refresh_token_endpoint_url(
+          client_id: '1',
+          client_secret: '1',
+          refresh_token: token_for_private_client.refresh_token
+        )
+
+        should_not_have_json 'refresh_token'
+        should_have_json 'error', 'invalid_client'
       end
     end
 
