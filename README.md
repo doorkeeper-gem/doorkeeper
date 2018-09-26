@@ -23,6 +23,9 @@ Supported features:
 - [OAuth 2.0 Token Revocation](http://tools.ietf.org/html/rfc7009)
 - [OAuth 2.0 Token Introspection](https://tools.ietf.org/html/rfc7662)
 
+See [list of tutorials](https://github.com/doorkeeper-gem/doorkeeper/wiki#how-tos--tutorials) in order to
+learn how to use the gem or integrate it with other solutions / gems.
+
 ## Documentation valid for `master` branch
 
 Please check the documentation for the version of doorkeeper you are using in:
@@ -457,8 +460,11 @@ token owner.
 
 ### Applications list
 
-By default, the applications list (`/oauth/applications`) is publicly available.
-To protect the endpoint you should uncomment these lines:
+By default, the applications list (`/oauth/applications`) is publicly available (before 5.0 release).
+Starting from Doorkeeper 5.0 it returns 403 Forbidden if `admin_authenticator` option is not configured
+by developers.
+
+To change the protection rules of this endpoint you should uncomment these lines:
 
 ```ruby
 # config/initializers/doorkeeper.rb
