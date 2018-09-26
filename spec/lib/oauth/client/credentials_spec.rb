@@ -16,7 +16,7 @@ class Doorkeeper::OAuth::Client
       let(:request) { double.as_null_object }
 
       let(:method) do
-        ->(_request) { ['uid', 'secret'] }
+        ->(_request) { %w[uid secret] }
       end
 
       it 'accepts anything that responds to #call' do
@@ -77,7 +77,7 @@ class Doorkeeper::OAuth::Client
       end
 
       it 'is blank if Authorization is not Basic' do
-        request     = double authorization: "#{credentials}"
+        request     = double authorization: credentials.to_s
         uid, secret = Credentials.from_basic(request)
 
         expect(uid).to    be_blank

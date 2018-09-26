@@ -41,10 +41,10 @@ feature 'Private API' do
   end
 
   scenario 'access token with no default scopes' do
-    Doorkeeper.configuration.instance_eval {
+    Doorkeeper.configuration.instance_eval do
       @default_scopes = Doorkeeper::OAuth::Scopes.from_array([:public])
       @scopes = default_scopes + optional_scopes
-    }
+    end
     @token.update_attribute :scopes, 'dummy'
     with_access_token_header @token.token
     visit '/full_protected_resources'

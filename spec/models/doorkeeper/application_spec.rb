@@ -210,10 +210,10 @@ module Doorkeeper
       it 'revokes all access tokens and access grants' do
         application_id = 42
         resource_owner = double
-        expect(Doorkeeper::AccessToken).
-          to receive(:revoke_all_for).with(application_id, resource_owner)
-        expect(Doorkeeper::AccessGrant).
-          to receive(:revoke_all_for).with(application_id, resource_owner)
+        expect(Doorkeeper::AccessToken)
+          .to receive(:revoke_all_for).with(application_id, resource_owner)
+        expect(Doorkeeper::AccessGrant)
+          .to receive(:revoke_all_for).with(application_id, resource_owner)
 
         Application.revoke_tokens_and_grants_for(application_id, resource_owner)
       end

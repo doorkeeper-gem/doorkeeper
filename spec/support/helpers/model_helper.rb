@@ -18,8 +18,8 @@ module ModelHelper
   def access_grant_should_exist_for(client, resource_owner)
     grant = Doorkeeper::AccessGrant.first
 
-    expect(grant.application).to have_attributes(id: client.id).
-      and(be_instance_of(Doorkeeper::Application))
+    expect(grant.application).to have_attributes(id: client.id)
+      .and(be_instance_of(Doorkeeper::Application))
 
     expect(grant.resource_owner_id).to eq(resource_owner.id)
   end
@@ -27,8 +27,8 @@ module ModelHelper
   def access_token_should_exist_for(client, resource_owner)
     token = Doorkeeper::AccessToken.first
 
-    expect(token.application).to have_attributes(id: client.id).
-      and(be_instance_of(Doorkeeper::Application))
+    expect(token.application).to have_attributes(id: client.id)
+      .and(be_instance_of(Doorkeeper::Application))
 
     expect(token.resource_owner_id).to eq(resource_owner.id)
   end

@@ -22,9 +22,9 @@ describe Doorkeeper::Server do
 
     context 'when only Authorization Code strategy is enabled' do
       before do
-        allow(Doorkeeper.configuration).
-          to receive(:grant_flows).
-          and_return(['authorization_code'])
+        allow(Doorkeeper.configuration)
+          .to receive(:grant_flows)
+          .and_return(['authorization_code'])
       end
 
       it 'raises error when using the disabled Implicit strategy' do
@@ -47,9 +47,9 @@ describe Doorkeeper::Server do
     end
 
     it 'builds the request with composite strategy name' do
-      allow(Doorkeeper.configuration).
-        to receive(:authorization_response_types).
-        and_return(['id_token token'])
+      allow(Doorkeeper.configuration)
+        .to receive(:authorization_response_types)
+        .and_return(['id_token token'])
 
       stub_const 'Doorkeeper::Request::IdTokenToken', fake_class
       expect(fake_class).to receive(:new).with(subject)

@@ -14,8 +14,8 @@ feature 'Implicit Grant Flow Errors' do
   end
 
   [
-    [:client_id,     :invalid_client],
-    [:redirect_uri,  :invalid_redirect_uri]
+    %i[client_id invalid_client],
+    %i[redirect_uri invalid_redirect_uri]
   ].each do |error|
     scenario "displays #{error.last} error for invalid #{error.first}" do
       visit authorization_endpoint_url(client: @client, error.first => 'invalid', response_type: 'token')

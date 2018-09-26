@@ -60,11 +60,11 @@ feature 'Authorization endpoint' do
 
     scenario 'raises exception on forged requests' do
       allowing_forgery_protection do
-        expect {
+        expect do
           page.driver.post authorization_endpoint_url(client_id: @client.uid,
                                                       redirect_uri: @client.redirect_uri,
                                                       response_type:  'code')
-        }.to raise_error(ActionController::InvalidAuthenticityToken)
+        end.to raise_error(ActionController::InvalidAuthenticityToken)
       end
     end
   end

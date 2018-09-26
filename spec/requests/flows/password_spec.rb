@@ -57,7 +57,11 @@ describe 'Resource Owner Password Credentials Flow' do
         context "when client_secret incorrect" do
           it "should not issue new token" do
             expect do
-              post password_token_endpoint_url(client_id: @client.uid, client_secret: 'foobar', resource_owner: @resource_owner)
+              post password_token_endpoint_url(
+                client_id: @client.uid,
+                client_secret: 'foobar',
+                resource_owner: @resource_owner
+              )
             end.not_to(change { Doorkeeper::AccessToken.count })
 
             expect(response).not_to be_ok
@@ -148,7 +152,7 @@ describe 'Resource Owner Password Credentials Flow' do
 
     it 'issues new token without any scope' do
       expect do
-      post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
+        post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
       end.to change { Doorkeeper::AccessToken.count }.by(1)
 
       token = Doorkeeper::AccessToken.first

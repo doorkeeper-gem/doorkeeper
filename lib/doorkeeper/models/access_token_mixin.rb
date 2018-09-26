@@ -47,8 +47,8 @@ module Doorkeeper
       def revoke_all_for(application_id, resource_owner, clock = Time)
         where(application_id: application_id,
               resource_owner_id: resource_owner.id,
-              revoked_at: nil).
-          update_all(revoked_at: clock.now.utc)
+              revoked_at: nil)
+          .update_all(revoked_at: clock.now.utc)
       end
 
       # Looking for not revoked Access Token with a matching set of scopes

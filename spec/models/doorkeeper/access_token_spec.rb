@@ -13,8 +13,7 @@ module Doorkeeper
     end
 
     module CustomGeneratorArgs
-      def self.generate
-      end
+      def self.generate; end
     end
 
     describe :generate_token do
@@ -42,7 +41,7 @@ module Doorkeeper
         end
 
         token = FactoryBot.create :access_token
-        expect(token.token).to match(%r{custom_generator_token_\d+})
+        expect(token.token).to match(/custom_generator_token_\d+/)
       end
 
       it 'allows the custom generator to access the application details' do
@@ -62,7 +61,7 @@ module Doorkeeper
         end
 
         token = FactoryBot.create :access_token
-        expect(token.token).to match(%r{custom_generator_token_Application \d+})
+        expect(token.token).to match(/custom_generator_token_Application \d+/)
       end
 
       it 'allows the custom generator to access the scopes' do
@@ -214,9 +213,7 @@ module Doorkeeper
     end
 
     describe '#same_credential?' do
-
       context 'with default parameters' do
-
         let(:resource_owner_id) { 100 }
         let(:application) { FactoryBot.create :application }
         let(:default_attributes) do
@@ -233,7 +230,11 @@ module Doorkeeper
 
         context 'the second token has same owner and different app' do
           let(:other_application) { FactoryBot.create :application }
-          let(:access_token2) { FactoryBot.create :access_token, application: other_application, resource_owner_id: resource_owner_id }
+          let(:access_token2) do
+            FactoryBot.create :access_token,
+                              application: other_application,
+                              resource_owner_id: resource_owner_id
+          end
 
           it 'fail' do
             expect(access_token1.same_credential?(access_token2)).to be_falsey
@@ -241,9 +242,10 @@ module Doorkeeper
         end
 
         context 'the second token has different owner and different app' do
-
           let(:other_application) { FactoryBot.create :application }
-          let(:access_token2) { FactoryBot.create :access_token, application: other_application, resource_owner_id: 42 }
+          let(:access_token2) do
+            FactoryBot.create :access_token, application: other_application, resource_owner_id: 42
+          end
 
           it 'fail' do
             expect(access_token1.same_credential?(access_token2)).to be_falsey
@@ -251,7 +253,9 @@ module Doorkeeper
         end
 
         context 'the second token has different owner and same app' do
-          let(:access_token2) { FactoryBot.create :access_token, application: application, resource_owner_id: 42 }
+          let(:access_token2) do
+            FactoryBot.create :access_token, application: application, resource_owner_id: 42
+          end
 
           it 'fail' do
             expect(access_token1.same_credential?(access_token2)).to be_falsey

@@ -91,11 +91,16 @@ module Doorkeeper
       end
 
       def application_routes(mapping)
-        routes.resources :doorkeeper_applications, controller: mapping[:controllers], as: :applications, path: 'applications'
+        routes.resources :doorkeeper_applications,
+                         controller: mapping[:controllers],
+                         as: :applications,
+                         path: 'applications'
       end
 
       def authorized_applications_routes(mapping)
-        routes.resources :authorized_applications, only: %i[index destroy], controller: mapping[:controllers]
+        routes.resources :authorized_applications,
+                         only: %i[index destroy],
+                         controller: mapping[:controllers]
       end
     end
   end

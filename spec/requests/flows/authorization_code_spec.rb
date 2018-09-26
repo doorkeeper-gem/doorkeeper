@@ -91,7 +91,11 @@ feature 'Authorization Code Flow' do
       let(:code_verifier) { 'a45a9fea-0676-477e-95b1-a40f72ac3cfb' }
 
       scenario 'resource owner authorizes the client with code_challenge parameter set' do
-        visit authorization_endpoint_url(client: @client, code_challenge: code_challenge, code_challenge_method: 'plain')
+        visit authorization_endpoint_url(
+          client: @client,
+          code_challenge: code_challenge,
+          code_challenge_method: 'plain'
+        )
         click_on 'Authorize'
 
         url_should_have_param('code', Doorkeeper::AccessGrant.first.token)
@@ -110,7 +114,11 @@ feature 'Authorization Code Flow' do
       end
 
       scenario 'mobile app requests an access token with authorization code and plain code challenge method' do
-        visit authorization_endpoint_url(client: @client, code_challenge: code_challenge, code_challenge_method: 'plain')
+        visit authorization_endpoint_url(
+          client: @client,
+          code_challenge: code_challenge,
+          code_challenge_method: 'plain'
+        )
         click_on 'Authorize'
 
         authorization_code = current_params['code']
@@ -144,7 +152,11 @@ feature 'Authorization Code Flow' do
       let(:code_verifier) { 'a45a9fea-0676-477e-95b1-a40f72ac3cfb' }
 
       scenario 'resource owner authorizes the client with code_challenge parameter set' do
-        visit authorization_endpoint_url(client: @client, code_challenge: code_challenge, code_challenge_method: 'S256')
+        visit authorization_endpoint_url(
+          client: @client,
+          code_challenge: code_challenge,
+          code_challenge_method: 'S256'
+        )
         click_on 'Authorize'
 
         url_should_have_param('code', Doorkeeper::AccessGrant.first.token)
@@ -153,7 +165,11 @@ feature 'Authorization Code Flow' do
       end
 
       scenario 'mobile app requests an access token with authorization code and S256 code challenge method' do
-        visit authorization_endpoint_url(client: @client, code_challenge: code_challenge, code_challenge_method: 'S256')
+        visit authorization_endpoint_url(
+          client: @client,
+          code_challenge: code_challenge,
+          code_challenge_method: 'S256'
+        )
         click_on 'Authorize'
 
         authorization_code = current_params['code']
@@ -169,7 +185,11 @@ feature 'Authorization Code Flow' do
       end
 
       scenario 'mobile app requests an access token with authorization code and without code_verifier' do
-        visit authorization_endpoint_url(client: @client, code_challenge: code_challenge, code_challenge_method: 'S256')
+        visit authorization_endpoint_url(
+          client: @client,
+          code_challenge: code_challenge,
+          code_challenge_method: 'S256'
+        )
         click_on 'Authorize'
         authorization_code = current_params['code']
         create_access_token authorization_code, @client
@@ -178,7 +198,11 @@ feature 'Authorization Code Flow' do
       end
 
       scenario 'mobile app requests an access token with authorization code and without secret' do
-        visit authorization_endpoint_url(client: @client, code_challenge: code_challenge, code_challenge_method: 'S256')
+        visit authorization_endpoint_url(
+          client: @client,
+          code_challenge: code_challenge,
+          code_challenge_method: 'S256'
+        )
         click_on 'Authorize'
 
         authorization_code = current_params['code']
@@ -194,8 +218,12 @@ feature 'Authorization Code Flow' do
         click_on 'Authorize'
 
         authorization_code = current_params['code']
-        page.driver.post token_endpoint_url(code: authorization_code, client_id: @client.uid,
-                                            redirect_uri: @client.redirect_uri, code_verifier: code_verifier)
+        page.driver.post token_endpoint_url(
+          code: authorization_code,
+          client_id: @client.uid,
+          redirect_uri: @client.redirect_uri,
+          code_verifier: code_verifier
+        )
         should_not_have_json 'error'
 
         should_have_json 'access_token', Doorkeeper::AccessToken.first.token
@@ -204,7 +232,11 @@ feature 'Authorization Code Flow' do
       end
 
       scenario 'mobile app requests an access token with authorization code but no code verifier' do
-        visit authorization_endpoint_url(client: @client, code_challenge: code_challenge, code_challenge_method: 'S256')
+        visit authorization_endpoint_url(
+          client: @client,
+          code_challenge: code_challenge,
+          code_challenge_method: 'S256'
+        )
         click_on 'Authorize'
 
         authorization_code = current_params['code']
@@ -215,7 +247,11 @@ feature 'Authorization Code Flow' do
       end
 
       scenario 'mobile app requests an access token with authorization code with wrong verifier' do
-        visit authorization_endpoint_url(client: @client, code_challenge: code_challenge, code_challenge_method: 'S256')
+        visit authorization_endpoint_url(
+          client: @client,
+          code_challenge: code_challenge,
+          code_challenge_method: 'S256'
+        )
         click_on 'Authorize'
 
         authorization_code = current_params['code']
@@ -226,12 +262,20 @@ feature 'Authorization Code Flow' do
       end
 
       scenario 'code_challenge_mehthod in token request is totally ignored' do
-        visit authorization_endpoint_url(client: @client, code_challenge: code_challenge, code_challenge_method: 'S256')
+        visit authorization_endpoint_url(
+          client: @client,
+          code_challenge: code_challenge,
+          code_challenge_method: 'S256'
+        )
         click_on 'Authorize'
 
         authorization_code = current_params['code']
-        page.driver.post token_endpoint_url(code: authorization_code, client: @client, code_verifier: code_challenge,
-                                            code_challenge_method: 'plain')
+        page.driver.post token_endpoint_url(
+          code: authorization_code,
+          client: @client,
+          code_verifier: code_challenge,
+          code_challenge_method: 'plain'
+        )
 
         should_not_have_json 'access_token'
         should_have_json 'error', 'invalid_grant'
@@ -338,6 +382,7 @@ describe 'Authorization Code Flow' do
       orm DOORKEEPER_ORM
       use_refresh_token
     end
+
     client_exists
   end
 
@@ -348,7 +393,8 @@ describe 'Authorization Code Flow' do
 
     it 'second of simultaneous client requests get an error for revoked acccess token' do
       authorization_code = Doorkeeper::AccessGrant.first.token
-      allow_any_instance_of(Doorkeeper::AccessGrant).to receive(:revoked?).and_return(false, true)
+      allow_any_instance_of(Doorkeeper::AccessGrant)
+        .to receive(:revoked?).and_return(false, true)
 
       post token_endpoint_url(code: authorization_code, client: @client)
 

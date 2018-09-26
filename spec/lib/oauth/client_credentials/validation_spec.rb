@@ -23,7 +23,8 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
         server_scopes = Doorkeeper::OAuth::Scopes.from_string 'email'
         allow(server).to receive(:scopes).and_return(server_scopes)
         allow(request).to receive(:scopes).and_return(
-          Doorkeeper::OAuth::Scopes.from_string 'invalid')
+          Doorkeeper::OAuth::Scopes.from_string('invalid')
+        )
         expect(subject).not_to be_valid
       end
 

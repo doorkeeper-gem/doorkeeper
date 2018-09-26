@@ -12,7 +12,7 @@ module Doorkeeper::OAuth
         error: nil,
         authorizable?: true,
         code_challenge: nil,
-        code_challenge_method: nil,
+        code_challenge_method: nil
       )
     end
 
@@ -34,7 +34,7 @@ module Doorkeeper::OAuth
 
     it 'does not create grant when not authorizable' do
       allow(pre_auth).to receive(:authorizable?).and_return(false)
-      expect { subject.authorize }.not_to change { Doorkeeper::AccessGrant.count }
+      expect { subject.authorize }.not_to(change { Doorkeeper::AccessGrant.count })
     end
 
     it 'returns a error response' do

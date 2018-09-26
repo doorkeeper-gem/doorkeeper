@@ -4,13 +4,13 @@ module Doorkeeper::OAuth
   describe BaseRequest do
     let(:access_token) do
       double :access_token,
-        token:              "some-token",
-        expires_in:         "3600",
-        expires_in_seconds: "300",
-        scopes_string:      "two scopes",
-        refresh_token:      "some-refresh-token",
-        token_type:         "bearer",
-        created_at:         0
+             token:              "some-token",
+             expires_in:         "3600",
+             expires_in_seconds: "300",
+             scopes_string:      "two scopes",
+             refresh_token:      "some-refresh-token",
+             token_type:         "bearer",
+             created_at:         0
     end
 
     let(:client) { double :client, id: '1' }
@@ -19,9 +19,9 @@ module Doorkeeper::OAuth
 
     let(:server) do
       double :server,
-        access_token_expires_in: 100,
-        custom_access_token_expires_in: ->(_context) { nil },
-        refresh_token_enabled?: false
+             access_token_expires_in: 100,
+             custom_access_token_expires_in: ->(_context) { nil },
+             refresh_token_enabled?: false
     end
 
     subject do

@@ -24,7 +24,7 @@ module Doorkeeper::OAuth
     it 'issues a new token for the client' do
       expect { subject.authorize }.to change { client.reload.access_tokens.count }.by(1)
       # #sort_by used for MongoDB ORM extensions for valid ordering
-      expect(client.reload.access_tokens.sort_by(&:created_at).last.expires_in).to eq(120)
+      expect(client.reload.access_tokens.max_by(&:created_at).expires_in).to eq(120)
     end
 
     it 'issues a new token for the client with custom expires_in' do
@@ -39,7 +39,7 @@ module Doorkeeper::OAuth
       RefreshTokenRequest.new(server, refresh_token, credentials).authorize
 
       # #sort_by used for MongoDB ORM extensions for valid ordering
-      expect(client.reload.access_tokens.sort_by(&:created_at).last.expires_in).to eq(1234)
+      expect(client.reload.access_tokens.max_by(&:created_at).expires_in).to eq(1234)
     end
 
     it 'revokes the previous token' do
@@ -47,8 +47,12 @@ module Doorkeeper::OAuth
     end
 
     it "calls configured request callback methods" do
-      expect(Doorkeeper.configuration.before_successful_strategy_response).to receive(:call).with(subject).once
-      expect(Doorkeeper.configuration.after_successful_strategy_response).to receive(:call).with(subject, instance_of(Doorkeeper::OAuth::TokenResponse)).once
+      expect(Doorkeeper.configuration.before_successful_strategy_response)
+        .to receive(:call).with(subject).once
+
+      expect(Doorkeeper.configuration.after_successful_strategy_response)
+        .to receive(:call).with(subject, instance_of(Doorkeeper::OAuth::TokenResponse)).once
+
       subject.authorize
     end
 
@@ -109,7 +113,7 @@ module Doorkeeper::OAuth
         subject.authorize
         expect(
           # #sort_by used for MongoDB ORM extensions for valid ordering
-          client.access_tokens.sort_by(&:created_at).last.previous_refresh_token
+          client.access_tokens.max_by(&:created_at).previous_refresh_token
         ).to eq(refresh_token.refresh_token)
       end
     end
@@ -127,8 +131,8 @@ module Doorkeeper::OAuth
     context 'with scopes' do
       let(:refresh_token) do
         FactoryBot.create :access_token,
-                           use_refresh_token: true,
-                           scopes: 'public write'
+                          use_refresh_token: true,
+                          scopes: 'public write'
       end
       let(:parameters) { {} }
       subject { RefreshTokenRequest.new server, refresh_token, credentials, parameters }

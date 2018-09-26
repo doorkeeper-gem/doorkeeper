@@ -28,7 +28,7 @@ class CreateDoorkeeperTables < ActiveRecord::Migration[4.2]
     add_foreign_key(
       :oauth_access_grants,
       :oauth_applications,
-      column: :application_id,
+      column: :application_id
     )
 
     create_table :oauth_access_tokens do |t|
@@ -41,12 +41,12 @@ class CreateDoorkeeperTables < ActiveRecord::Migration[4.2]
       # https://github.com/doorkeeper-gem/doorkeeper/tree/v3.0.0.rc1#custom-access-token-generator
       #
       # t.text     :token,             null: false
-      t.string   :token,             null: false
+      t.string   :token, null: false
 
       t.string   :refresh_token
       t.integer  :expires_in
       t.datetime :revoked_at
-      t.datetime :created_at,        null: false
+      t.datetime :created_at, null: false
       t.string   :scopes
     end
 
@@ -56,7 +56,7 @@ class CreateDoorkeeperTables < ActiveRecord::Migration[4.2]
     add_foreign_key(
       :oauth_access_tokens,
       :oauth_applications,
-      column: :application_id,
+      column: :application_id
     )
   end
 end

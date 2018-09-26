@@ -179,10 +179,10 @@ describe Doorkeeper, 'configuration' do
 
     context "is enabled" do
       before do
-        Doorkeeper.configure {
+        Doorkeeper.configure do
           orm DOORKEEPER_ORM
           use_refresh_token
-        }
+        end
       end
 
       it "includes 'refresh_token' in authorization_response_types" do
@@ -208,7 +208,8 @@ describe Doorkeeper, 'configuration' do
 
   describe 'client_credentials' do
     it 'has defaults order' do
-      expect(subject.client_credentials_methods).to eq([:from_basic, :from_params])
+      expect(subject.client_credentials_methods)
+        .to eq(%i[from_basic from_params])
     end
 
     it 'can change the value' do
@@ -217,7 +218,8 @@ describe Doorkeeper, 'configuration' do
         client_credentials :from_digest, :from_params
       end
 
-      expect(subject.client_credentials_methods).to eq([:from_digest, :from_params])
+      expect(subject.client_credentials_methods)
+        .to eq(%i[from_digest from_params])
     end
   end
 
@@ -249,7 +251,8 @@ describe Doorkeeper, 'configuration' do
 
   describe 'access_token_methods' do
     it 'has defaults order' do
-      expect(subject.access_token_methods).to eq([:from_bearer_authorization, :from_access_token_param, :from_bearer_param])
+      expect(subject.access_token_methods)
+        .to eq(%i[from_bearer_authorization from_access_token_param from_bearer_param])
     end
 
     it 'can change the value' do
@@ -258,7 +261,8 @@ describe Doorkeeper, 'configuration' do
         access_token_methods :from_access_token_param, :from_bearer_param
       end
 
-      expect(subject.access_token_methods).to eq([:from_access_token_param, :from_bearer_param])
+      expect(subject.access_token_methods)
+        .to eq(%i[from_access_token_param from_bearer_param])
     end
   end
 
@@ -336,8 +340,8 @@ describe Doorkeeper, 'configuration' do
 
   describe "grant_flows" do
     it "is set to all grant flows by default" do
-      expect(Doorkeeper.configuration.grant_flows).
-        to eq(%w[authorization_code client_credentials])
+      expect(Doorkeeper.configuration.grant_flows)
+        .to eq(%w[authorization_code client_credentials])
     end
 
     it "can change the value" do
@@ -514,10 +518,10 @@ describe Doorkeeper, 'configuration' do
       expect(Doorkeeper.configuration.handle_auth_errors).to eq(:render)
     end
     it 'can change the value' do
-      Doorkeeper.configure {
+      Doorkeeper.configure do
         orm DOORKEEPER_ORM
         handle_auth_errors :raise
-      }
+      end
       expect(subject.handle_auth_errors).to eq(:raise)
     end
   end

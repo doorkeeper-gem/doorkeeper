@@ -34,7 +34,7 @@ describe Doorkeeper::Orm::ActiveRecord::StaleRecordsCleaner do
           end
 
           it 'keeps the record' do
-            expect { subject }.not_to change { model.count }
+            expect { subject }.not_to(change { model.count })
           end
         end
 
@@ -44,7 +44,7 @@ describe Doorkeeper::Orm::ActiveRecord::StaleRecordsCleaner do
           end
 
           it 'keeps the record' do
-            expect { subject }.not_to change { model.count }
+            expect { subject }.not_to(change { model.count })
           end
         end
       end
@@ -70,7 +70,7 @@ describe Doorkeeper::Orm::ActiveRecord::StaleRecordsCleaner do
           end
 
           it 'keeps the record' do
-            expect { subject }.not_to change { model.count }
+            expect { subject }.not_to(change { model.count })
           end
         end
       end

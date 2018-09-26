@@ -25,7 +25,7 @@ module Doorkeeper::OAuth
         subject.authorize
       end.to change { client.reload.access_tokens.count }.by(1)
 
-      expect(client.reload.access_tokens.sort_by(&:created_at).last.expires_in).to eq(1234)
+      expect(client.reload.access_tokens.max_by(&:created_at).expires_in).to eq(1234)
     end
 
     it "issues the token with same grant's scopes" do
@@ -34,7 +34,7 @@ module Doorkeeper::OAuth
     end
 
     it 'revokes the grant' do
-      expect { subject.authorize }.to change { grant.reload.accessible? }
+      expect { subject.authorize }.to(change { grant.reload.accessible? })
     end
 
     it 'requires the grant to be accessible' do
@@ -83,14 +83,17 @@ module Doorkeeper::OAuth
       end
 
       FactoryBot.create(:access_token, application_id: client.id,
-        resource_owner_id: grant.resource_owner_id, scopes: grant.scopes.to_s)
+                                       resource_owner_id: grant.resource_owner_id, scopes: grant.scopes.to_s)
 
-      expect { subject.authorize }.to_not change { Doorkeeper::AccessToken.count }
+      expect { subject.authorize }.to_not(change { Doorkeeper::AccessToken.count })
     end
 
     it "calls configured request callback methods" do
-      expect(Doorkeeper.configuration.before_successful_strategy_response).to receive(:call).with(subject).once
-      expect(Doorkeeper.configuration.after_successful_strategy_response).to receive(:call).with(subject, instance_of(Doorkeeper::OAuth::TokenResponse)).once
+      expect(Doorkeeper.configuration.before_successful_strategy_response)
+        .to receive(:call).with(subject).once
+      expect(Doorkeeper.configuration.after_successful_strategy_response)
+        .to receive(:call).with(subject, instance_of(Doorkeeper::OAuth::TokenResponse)).once
+
       subject.authorize
     end
 

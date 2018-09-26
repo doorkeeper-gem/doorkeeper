@@ -42,8 +42,8 @@ module Doorkeeper
       def revoke_all_for(application_id, resource_owner, clock = Time)
         where(application_id: application_id,
               resource_owner_id: resource_owner.id,
-              revoked_at: nil).
-          update_all(revoked_at: clock.now.utc)
+              revoked_at: nil)
+          .update_all(revoked_at: clock.now.utc)
       end
 
       # Implements PKCE code_challenge encoding without base64 padding as described in the spec.
@@ -78,7 +78,7 @@ module Doorkeeper
       #
       # urlsafe_encode64(bin)
       # Returns the Base64-encoded version of bin. This method complies with
-      # “Base 64 Encoding with URL and Filename Safe Alphabet” in RFC 4648.
+      # "Base 64 Encoding with URL and Filename Safe Alphabet" in RFC 4648.
       # The alphabet uses '-' instead of '+' and '_' instead of '/'.
 
       # @param code_verifier [#to_s] a one time use value (any object that responds to `#to_s`)

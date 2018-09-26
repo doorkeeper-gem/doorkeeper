@@ -4,7 +4,5 @@
 if Rails::VERSION::MAJOR >= 5
   Rails.application.config.active_record.belongs_to_required_by_default = true
 
-  if Rails::VERSION::MINOR >= 2
-    Rails.application.config.active_record.sqlite3.represent_boolean_as_integer = true
-  end
+  Rails.application.config.active_record.sqlite3.represent_boolean_as_integer = true if Rails::VERSION::MINOR >= 2
 end

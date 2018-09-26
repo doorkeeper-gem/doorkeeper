@@ -77,8 +77,8 @@ module Doorkeeper
     end
 
     def application_params
-      params.require(:doorkeeper_application).
-        permit(:name, :redirect_uri, :scopes, :confidential)
+      params.require(:doorkeeper_application)
+        .permit(:name, :redirect_uri, :scopes, :confidential)
     end
   end
 end

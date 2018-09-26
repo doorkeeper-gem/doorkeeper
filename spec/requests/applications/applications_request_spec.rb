@@ -62,7 +62,7 @@ feature 'Adding applications' do
 
     scenario "adding app validating scope, multiple scopes configured" do
       config_is_set("enforce_configured_scopes", true)
-      scopes = Doorkeeper::OAuth::Scopes.from_array(%w(read write admin))
+      scopes = Doorkeeper::OAuth::Scopes.from_array(%w[read write admin])
       config_is_set("optional_scopes", scopes)
 
       fill_in "doorkeeper_application[name]", with: "My Application"
@@ -77,7 +77,7 @@ feature 'Adding applications' do
 
     scenario "adding app validating scope, bad scope with multiple scopes configured" do
       config_is_set("enforce_configured_scopes", true)
-      scopes = Doorkeeper::OAuth::Scopes.from_array(%w(read write admin))
+      scopes = Doorkeeper::OAuth::Scopes.from_array(%w[read write admin])
       config_is_set("optional_scopes", scopes)
 
       fill_in "doorkeeper_application[name]", with: "My Application"

@@ -3,7 +3,7 @@ require 'spec_helper'
 module Doorkeeper::OAuth
   describe TokenRequest do
     let :application do
-      FactoryBot.create(:application, scopes: "public")
+      FactoryBot.create(:application, scopes: 'public')
     end
 
     let :pre_auth do
@@ -38,7 +38,7 @@ module Doorkeeper::OAuth
 
     it 'does not create token when not authorizable' do
       allow(pre_auth).to receive(:authorizable?).and_return(false)
-      expect { subject.authorize }.not_to change { Doorkeeper::AccessToken.count }
+      expect { subject.authorize }.not_to(change { Doorkeeper::AccessToken.count })
     end
 
     it 'returns a error response' do
@@ -74,7 +74,7 @@ module Doorkeeper::OAuth
       it 'creates a new token if scopes do not match' do
         allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
         FactoryBot.create(:access_token, application_id: pre_auth.client.id,
-                           resource_owner_id: owner.id, scopes: '')
+                                         resource_owner_id: owner.id, scopes: '')
         expect do
           subject.authorize
         end.to change { Doorkeeper::AccessToken.count }.by(1)
@@ -86,9 +86,9 @@ module Doorkeeper::OAuth
         allow(application.scopes).to receive(:all?).and_return(true)
 
         FactoryBot.create(:access_token, application_id: pre_auth.client.id,
-                           resource_owner_id: owner.id, scopes: 'public')
+                                         resource_owner_id: owner.id, scopes: 'public')
 
-        expect { subject.authorize }.not_to change { Doorkeeper::AccessToken.count }
+        expect { subject.authorize }.not_to(change { Doorkeeper::AccessToken.count })
       end
     end
   end

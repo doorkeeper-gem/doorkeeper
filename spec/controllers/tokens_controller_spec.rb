@@ -4,7 +4,6 @@ describe Doorkeeper::TokensController do
   describe 'when authorization has succeeded' do
     let(:token) { double(:token, authorize: true) }
 
-
     it 'returns the authorization' do
       skip 'verify need of these specs'
 
@@ -30,12 +29,12 @@ describe Doorkeeper::TokensController do
     it 'returns the error response with a custom message' do
       # I18n looks for `doorkeeper.errors.messages.custom_message` in locale files
       custom_message = "my_message"
-      allow(I18n).to receive(:translate).
-        with(
+      allow(I18n).to receive(:translate)
+        .with(
           custom_message,
           hash_including(scope: %i[doorkeeper errors messages])
-        ).
-        and_return('Authorization custom message')
+        )
+        .and_return('Authorization custom message')
 
       doorkeeper_error = Doorkeeper::Errors::DoorkeeperError.new(custom_message)
 

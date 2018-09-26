@@ -43,18 +43,18 @@ module Doorkeeper::OAuth::Helpers
 
       it 'is valid if scope is included in the application scope list' do
         expect(ScopeChecker.valid?(
-          'app123',
-          server_scopes,
-          application_scopes
-        )).to be_truthy
+                 'app123',
+                 server_scopes,
+                 application_scopes
+               )).to be_truthy
       end
 
       it 'is invalid if any scope is not included in the application' do
         expect(ScopeChecker.valid?(
-          'svr',
-          server_scopes,
-          application_scopes
-        )).to be_falsey
+                 'svr',
+                 server_scopes,
+                 application_scopes
+               )).to be_falsey
       end
     end
   end

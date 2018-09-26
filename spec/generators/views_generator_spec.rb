@@ -5,7 +5,7 @@ describe Doorkeeper::Generators::ViewsGenerator do
   include GeneratorSpec::TestCase
 
   tests Doorkeeper::Generators::ViewsGenerator
-  destination File.expand_path('../tmp/dummy', __FILE__)
+  destination File.expand_path('tmp/dummy', __dir__)
 
   before :each do
     prepare_destination

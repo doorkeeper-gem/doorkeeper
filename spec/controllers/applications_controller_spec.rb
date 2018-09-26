@@ -13,12 +13,12 @@ module Doorkeeper
       it 'creates an application' do
         expect do
           post :create, params: {
-             doorkeeper_application: {
-               name: 'Example',
-               redirect_uri: 'https://example.com'
-             }, format: :json
-           }
-        end.to change { Doorkeeper::Application.count }
+            doorkeeper_application: {
+              name: 'Example',
+              redirect_uri: 'https://example.com'
+            }, format: :json
+          }
+        end.to(change { Doorkeeper::Application.count })
 
         expect(response).to be_successful
 
@@ -31,11 +31,11 @@ module Doorkeeper
       it 'returns validation errors on wrong create params' do
         expect do
           post :create, params: {
-             doorkeeper_application: {
-               name: 'Example'
-             }, format: :json
-           }
-        end.not_to change { Doorkeeper::Application.count }
+            doorkeeper_application: {
+              name: 'Example'
+            }, format: :json
+          }
+        end.not_to(change { Doorkeeper::Application.count })
 
         expect(response).to have_http_status(422)
 
@@ -108,14 +108,13 @@ module Doorkeeper
 
       it 'does not create application' do
         expect do
-          post :create,
-               params: {
-                 doorkeeper_application: {
-                   name: 'Example',
-                   redirect_uri: 'https://example.com'
-                 }
-               }
-        end.not_to change { Doorkeeper::Application.count }
+          post :create, params: {
+            doorkeeper_application: {
+              name: 'Example',
+              redirect_uri: 'https://example.com'
+            }
+          }
+        end.not_to(change { Doorkeeper::Application.count })
       end
     end
 
@@ -139,13 +138,12 @@ module Doorkeeper
 
       it 'creates application' do
         expect do
-          post :create,
-               params: {
-                 doorkeeper_application: {
-                   name: 'Example',
-                   redirect_uri: 'https://example.com'
-                 }
-               }
+          post :create, params: {
+            doorkeeper_application: {
+              name: 'Example',
+              redirect_uri: 'https://example.com'
+            }
+          }
         end.to change { Doorkeeper::Application.count }.by(1)
 
         expect(response).to be_redirect
@@ -153,27 +151,25 @@ module Doorkeeper
 
       it 'does not allow mass assignment of uid or secret' do
         application = FactoryBot.create(:application)
-        put :update,
-            params: {
-              id: application.id,
-              doorkeeper_application: {
-                uid: '1A2B3C4D',
-                secret: '1A2B3C4D'
-              }
-            }
+        put :update, params: {
+          id: application.id,
+          doorkeeper_application: {
+            uid: '1A2B3C4D',
+            secret: '1A2B3C4D'
+          }
+        }
 
         expect(application.reload.uid).not_to eq '1A2B3C4D'
       end
 
       it 'updates application' do
         application = FactoryBot.create(:application)
-        put :update,
-            params: {
-              id: application.id, doorkeeper_application: {
-                name: 'Example',
-                redirect_uri: 'https://example.com'
-              }
-            }
+        put :update, params: {
+          id: application.id, doorkeeper_application: {
+            name: 'Example',
+            redirect_uri: 'https://example.com'
+          }
+        }
 
         expect(application.reload.name).to eq 'Example'
       end

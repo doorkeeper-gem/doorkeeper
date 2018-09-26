@@ -73,8 +73,6 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
                 custom_ttl_scope
               elsif context.grant_type == Doorkeeper::OAuth::CLIENT_CREDENTIALS
                 custom_ttl_grant
-              else
-                nil
               end
             }
           )

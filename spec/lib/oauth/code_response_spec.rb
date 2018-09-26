@@ -11,7 +11,7 @@ module Doorkeeper
               client: double(:application, id: 1),
               redirect_uri: 'http://tst.com/cb',
               state: nil,
-              scopes: Scopes.from_string('public'),
+              scopes: Scopes.from_string('public')
             )
           end
 

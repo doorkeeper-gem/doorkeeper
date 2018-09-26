@@ -119,4 +119,3 @@ shared_context 'forbidden token', token: :forbidden do
     ).to receive(:by_token).with(token_string).and_return(token)
   end
 end
-
