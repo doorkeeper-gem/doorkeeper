@@ -67,6 +67,7 @@ require 'doorkeeper/rails/routes'
 require 'doorkeeper/rails/helpers'
 
 require 'doorkeeper/rake'
+require 'doorkeeper/stale_records_cleaner'
 
 require 'doorkeeper/orm/active_record'
 

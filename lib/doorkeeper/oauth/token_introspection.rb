@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   module OAuth
     # RFC7662 OAuth 2.0 Token Introspection

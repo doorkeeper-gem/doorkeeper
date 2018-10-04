@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   class AuthorizedApplicationsController < Doorkeeper::ApplicationController
     before_action :authenticate_resource_owner!

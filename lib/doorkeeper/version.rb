@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   def self.gem_version
     Gem::Version.new VERSION::STRING

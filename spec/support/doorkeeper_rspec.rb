@@ -4,7 +4,8 @@ module Doorkeeper
     # Doorkeeper configuration, etc.
     def self.print_configuration_info
       puts <<-INFO.strip_heredoc
-        ====> Doorkeeper ORM = #{Doorkeeper.configuration.orm}
+        ====> Doorkeeper ORM: '#{Doorkeeper.configuration.orm}'
+        ====> Doorkeeper version: #{Doorkeeper.gem_version}
         ====> Rails version: #{::Rails.version}
         ====> Ruby version: #{RUBY_VERSION} on #{RUBY_PLATFORM}
       INFO

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   class ApplicationsController < Doorkeeper::ApplicationController
     layout 'doorkeeper/admin' unless Doorkeeper.configuration.api_only

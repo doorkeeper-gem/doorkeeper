@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   class Engine < Rails::Engine
     initializer "doorkeeper.params.filter" do |app|

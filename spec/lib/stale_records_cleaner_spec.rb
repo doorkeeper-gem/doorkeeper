@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-describe Doorkeeper::Orm::ActiveRecord::StaleRecordsCleaner do
+describe Doorkeeper::StaleRecordsCleaner do
   let(:cleaner) { described_class.new(model) }
   let(:models_by_name) do
     {

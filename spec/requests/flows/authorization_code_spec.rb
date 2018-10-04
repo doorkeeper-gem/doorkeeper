@@ -66,7 +66,7 @@ feature 'Authorization Code Flow' do
     page.driver.post token_endpoint_url(code: authorization_code, client_id: @client.uid,
                                         redirect_uri: @client.redirect_uri)
 
-    expect(Doorkeeper::AccessToken).not_to exist
+    expect(Doorkeeper::AccessToken.count).to be_zero
 
     should_have_json 'error', 'invalid_client'
   end
