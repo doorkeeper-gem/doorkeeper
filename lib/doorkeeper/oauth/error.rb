@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   module OAuth
     Error = Struct.new(:name, :state) do

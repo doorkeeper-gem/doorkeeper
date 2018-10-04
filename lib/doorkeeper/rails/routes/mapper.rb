@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   module Rails
     class Routes # :nodoc:

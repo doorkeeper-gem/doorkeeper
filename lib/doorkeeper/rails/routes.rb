@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'doorkeeper/rails/routes/mapping'
 require 'doorkeeper/rails/routes/mapper'
 

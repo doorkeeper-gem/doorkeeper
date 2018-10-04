@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   class Server
     attr_accessor :context

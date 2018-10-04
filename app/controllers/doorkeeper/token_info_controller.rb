@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   class TokenInfoController < Doorkeeper::ApplicationMetalController
     def show

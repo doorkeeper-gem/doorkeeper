@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   module DashboardHelper
     def doorkeeper_errors_for(object, method)
