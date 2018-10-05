@@ -11,6 +11,16 @@ describe Doorkeeper::StaleRecordsCleaner do
     }
   end
 
+  context 'when ORM has no cleaner class' do
+    it 'raises an error' do
+      allow_any_instance_of(Doorkeeper::Config).to receive(:orm).and_return('hibernate')
+
+      expect do
+        described_class.for(Doorkeeper::AccessToken)
+      end.to raise_error(Doorkeeper::Errors::NoOrmCleaner, /has no cleaner/)
+    end
+  end
+
   %i[access_token access_grant].each do |model_name|
     context "(#{model_name})" do
       let(:model) { models_by_name.fetch(model_name) }
