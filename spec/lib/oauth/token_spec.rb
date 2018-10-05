@@ -115,7 +115,10 @@ module Doorkeeper
 
         context 'refresh tokens are enabled' do
           before do
-            Doorkeeper.configure { use_refresh_token }
+            Doorkeeper.configure do
+              orm DOORKEEPER_ORM
+              use_refresh_token
+            end
           end
 
           it 'revokes previous refresh_token if token was found' do
