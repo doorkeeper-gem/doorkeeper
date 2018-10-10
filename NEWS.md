@@ -7,6 +7,10 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#] Add your description here.
+
+## 5.0.1
+
 - [#1140] Allow rendering custom errors from exceptions (issue #844). Originally opened as [#944].
 - [#1138] Revert regression bug (check for token expiration in Authorizations controller so authorization
   triggers every time)
