@@ -7,12 +7,11 @@ end
 
 def changelog_entry_example
   pr_number = github.pr_json['number']
-  pr_url = github.pr_json['html_url']
   pr_title = github.pr_title
                    .sub(/[?.!,;]?$/, '')
                    .capitalize
 
-  "- [##{pr_number}](#{pr_url}): #{pr_title}."
+  "- [##{pr_number}]: #{pr_title}."
 end
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -54,4 +53,12 @@ Here's an example of a #{CHANGELOG_FILE} entry:
   MARKDOWN
 
   fail("Please include a changelog entry. \nYou can find it at [#{CHANGELOG_FILE}](#{GITHUB_REPO}/blob/master/#{CHANGELOG_FILE}).")
+end
+
+if git.commits.any? { |commit| commit.message =~ /^Merge branch '#{github.branch_for_base}'/ }
+  warn('Please rebase to get rid of the merge commits in this PR')
+end
+
+if git.commits.length > 1
+  warn('Please squash all your commits to a single one')
 end
