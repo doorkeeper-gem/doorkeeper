@@ -7,6 +7,8 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#] Add your description here.
+- [#1158] Fix initializer template: change `handle_auth_errors` option
 - [#1157] Remove redundant index from migration template.
 
 ## 5.0.1
