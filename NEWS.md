@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#] Add your description here.
+- [#1157] Remove redundant index from migration template.
 
 ## 5.0.1
 
