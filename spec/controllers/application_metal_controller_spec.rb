@@ -7,6 +7,10 @@ describe Doorkeeper::ApplicationMetalController do
     def index
       render json: {}, status: 200
     end
+
+    def create
+      render json: {}, status: 200
+    end
   end
 
   it "lazy run hooks" do
@@ -22,13 +26,18 @@ describe Doorkeeper::ApplicationMetalController do
     context 'enabled' do
       let(:flag) { true }
 
-      it '200 for the correct media type' do
-        get :index, params: {}, as: :url_encoded_form
+      it 'returns a 200 for the requests without body' do
+        get :index, params: {}
         expect(response).to have_http_status 200
       end
 
-      it 'returns a 415 for an incorrect media type' do
-        get :index, as: :json
+      it 'returns a 200 for the requests with body and correct media type' do
+        post :create, params: {}, as: :url_encoded_form
+        expect(response).to have_http_status 200
+      end
+
+      it 'returns a 415 for the requests with body and incorrect media type' do
+        post :create, params: {}, as: :json
         expect(response).to have_http_status 415
       end
     end
@@ -43,6 +52,11 @@ describe Doorkeeper::ApplicationMetalController do
 
       it 'returns a 200 for an incorrect media type' do
         get :index, as: :json
+        expect(response).to have_http_status 200
+      end
+
+      it 'returns a 200 for the requests with body and incorrect media type' do
+        post :create, params: {}, as: :json
         expect(response).to have_http_status 200
       end
     end

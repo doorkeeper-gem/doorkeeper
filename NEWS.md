@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#] Add your description here.
+- [#1162] Fix `enforce_content_type` for requests without body.
 
 ## 5.0.2
 
