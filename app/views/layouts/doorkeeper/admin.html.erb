@@ -17,9 +17,11 @@
       <li class="nav-item <%= 'active' if request.path == oauth_applications_path %>">
         <%= link_to t('doorkeeper.layouts.admin.nav.applications'), oauth_applications_path, class: 'nav-link' %>
       </li>
-      <li class="nav-item">
-        <%= link_to t('doorkeeper.layouts.admin.nav.home'), root_path, class: 'nav-link' %>
-      </li>
+      <% if respond_to?(:root_path) %>
+        <li class="nav-item">
+          <%= link_to t('doorkeeper.layouts.admin.nav.home'), root_path, class: 'nav-link' %>
+        </li>
+      <% end %>
     </ul>
   </div>
 </nav>
