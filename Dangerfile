@@ -17,7 +17,7 @@ end
 # --------------------------------------------------------------------------------------------------------------------
 # Has any changes happened inside the actual library code?
 # --------------------------------------------------------------------------------------------------------------------
-has_app_changes = !git.modified_files.grep(/lib/).empty?
+has_app_changes = !git.modified_files.grep(/lib|app/).empty?
 has_spec_changes = !git.modified_files.grep(/spec/).empty?
 
 # --------------------------------------------------------------------------------------------------------------------
