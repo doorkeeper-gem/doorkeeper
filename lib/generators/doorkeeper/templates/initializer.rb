@@ -195,7 +195,7 @@ Doorkeeper.configure do
   # end
 
   # Hook into Authorization flow in order to implement Single Sign Out
-  # or add ny other functionality.
+  # or add any other functionality.
   #
   # before_successful_authorization do |controller|
   #   Rails.logger.info(params.inspect)
