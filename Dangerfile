@@ -52,7 +52,10 @@ Here's an example of a #{CHANGELOG_FILE} entry:
 ```
   MARKDOWN
 
-  fail("Please include a changelog entry. \nYou can find it at [#{CHANGELOG_FILE}](#{GITHUB_REPO}/blob/master/#{CHANGELOG_FILE}).")
+  warn(
+    "Please include a changelog entry. \nYou can find it at [#{CHANGELOG_FILE}](#{GITHUB_REPO}/blob/master/#{CHANGELOG_FILE})." +
+      "You can skip this warning only if you made some typo fix or other small changes that didn't affect the API."
+  )
 end
 
 if git.commits.any? { |commit| commit.message =~ /^Merge branch '#{github.branch_for_base}'/ }
