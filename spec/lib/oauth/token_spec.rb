@@ -113,6 +113,20 @@ module Doorkeeper
           end
         end
 
+        context 'token hashing is enabled' do
+          include_context 'with token hashing enabled'
+
+          let(:hashed_token) { hashed_or_plain_token_func.call('token') }
+          let(:token) { ->(_r) { 'token' } }
+
+          it 'searches with the hashed token' do
+            expect(
+              AccessToken
+            ).to receive(:find_by).with(token: hashed_token).and_return(token)
+            Token.authenticate double, token
+          end
+        end
+
         context 'refresh tokens are enabled' do
           before do
             Doorkeeper.configure do

@@ -16,10 +16,29 @@ module Doorkeeper
 
     belongs_to :application, belongs_to_options
 
-    validates :resource_owner_id, :application_id, :token, :expires_in, :redirect_uri, presence: true
+    validates :resource_owner_id,
+              :application_id,
+              :token,
+              :expires_in,
+              :redirect_uri,
+              presence: true
+
     validates :token, uniqueness: true
 
     before_validation :generate_token, on: :create
+
+    # Keep a reference to the generated token during generation
+    # of this access grant. The actual token may be mapped by
+    # the configuration hasher and may not be available in plaintext.
+    #
+    # If hash tokens are enabled, this will return nil on fetched tokens
+    def plaintext_token
+      if perform_secret_hashing?
+        @raw_token
+      else
+        token
+      end
+    end
 
     private
 
@@ -28,7 +47,8 @@ module Doorkeeper
     # @return [String] token value
     #
     def generate_token
-      self.token = UniqueToken.generate
+      @raw_token = UniqueToken.generate
+      self.token = hashed_or_plain_token(@raw_token)
     end
   end
 end

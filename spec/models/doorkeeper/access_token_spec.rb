@@ -2,6 +2,7 @@ require 'spec_helper'
 
 module Doorkeeper
   describe AccessToken do
+    let(:clazz) { Doorkeeper::AccessToken }
     subject { FactoryBot.build(:access_token) }
 
     it { expect(subject).to be_valid }
@@ -22,6 +23,67 @@ module Doorkeeper
 
         token = FactoryBot.create :access_token
         expect(token.token).to be_a(String)
+      end
+
+      context 'with hashing enabled' do
+        let(:token) { FactoryBot.create :access_token }
+        include_context 'with token hashing enabled'
+
+        it 'holds a volatile plaintext token when created' do
+          expect(token.plaintext_token).to be_a(String)
+          expect(token.token)
+            .to eq(hashed_or_plain_token_func.call(token.plaintext_token))
+
+          # Finder method only finds the hashed token
+          loaded = clazz.find_by(token: token.token)
+          expect(loaded).to eq(token)
+          expect(loaded.plaintext_token).to be_nil
+          expect(loaded.token).to eq(token.token)
+        end
+
+        it 'does not find_by plain text tokens' do
+          expect(clazz.find_by(token: token.plaintext_token)).to be_nil
+        end
+
+        describe 'with having a plain text token' do
+          let(:plain_text_token) { 'plain text token' }
+          let(:access_token) { FactoryBot.create :access_token }
+
+          before do
+            # Assume we have a plain text token from before activating the option
+            access_token.update_column(:token, plain_text_token)
+          end
+
+          context 'without fallback lookup' do
+            it 'does not provide lookups with either through by_token' do
+              expect(clazz.by_token(plain_text_token)).to eq(nil)
+              expect(clazz.by_token(access_token.token)).to eq(nil)
+
+              # And it does not touch the token
+              access_token.reload
+              expect(access_token.token).to eq(plain_text_token)
+            end
+          end
+
+          context 'with fallback lookup' do
+            include_context 'with token hashing and fallback lookup enabled'
+
+            it 'upgrades a plain token when falling back to it' do
+              # Side-effect: This will automatically upgrade the token
+              expect(clazz).to receive(:upgrade_fallback_value).and_call_original
+              expect(clazz.by_token(plain_text_token)).to eq(access_token)
+
+              # Will find subsequently by hashing the token
+              expect(clazz.by_token(plain_text_token)).to eq(access_token)
+
+              # And it modifies the token value
+              access_token.reload
+              expect(access_token.token).not_to eq(plain_text_token)
+              expect(clazz.find_by(token: plain_text_token)).to eq(nil)
+              expect(clazz.find_by(token: access_token.token)).not_to be_nil
+            end
+          end
+        end
       end
 
       it 'generates a token using a custom object' do
@@ -195,6 +257,67 @@ module Doorkeeper
           token2.refresh_token = token1.refresh_token
           token2.save(validate: false)
         end.to raise_error(uniqueness_error)
+      end
+
+      context 'with hashing enabled' do
+        include_context 'with token hashing enabled'
+        let(:token) { FactoryBot.create :access_token, use_refresh_token: true }
+
+        it 'holds a volatile refresh token when created' do
+          expect(token.plaintext_refresh_token).to be_a(String)
+          expect(token.refresh_token)
+            .to eq(hashed_or_plain_token_func.call(token.plaintext_refresh_token))
+
+          # Finder method only finds the hashed token
+          loaded = clazz.find_by(refresh_token: token.refresh_token)
+          expect(loaded).to eq(token)
+          expect(loaded.plaintext_refresh_token).to be_nil
+          expect(loaded.refresh_token).to eq(token.refresh_token)
+        end
+
+        it 'does not find_by plain text refresh tokens' do
+          expect(clazz.find_by(refresh_token: token.plaintext_refresh_token)).to be_nil
+        end
+
+        describe 'with having a plain text token' do
+          let(:plain_refresh_token) { 'plain refresh token' }
+          let(:access_token) { FactoryBot.create :access_token }
+
+          before do
+            # Assume we have a plain text token from before activating the option
+            access_token.update_column(:refresh_token, plain_refresh_token)
+          end
+
+          context 'without fallback lookup' do
+            it 'does not provide lookups with either through by_token' do
+              expect(clazz.by_refresh_token(plain_refresh_token)).to eq(nil)
+              expect(clazz.by_refresh_token(access_token.refresh_token)).to eq(nil)
+
+              # And it does not touch the token
+              access_token.reload
+              expect(access_token.refresh_token).to eq(plain_refresh_token)
+            end
+          end
+
+          context 'with fallback lookup' do
+            include_context 'with token hashing and fallback lookup enabled'
+
+            it 'upgrades a plain token when falling back to it' do
+              # Side-effect: This will automatically upgrade the token
+              expect(clazz).to receive(:upgrade_fallback_value).and_call_original
+              expect(clazz.by_refresh_token(plain_refresh_token)).to eq(access_token)
+
+              # Will find subsequently by hashing the token
+              expect(clazz.by_refresh_token(plain_refresh_token)).to eq(access_token)
+
+              # And it modifies the token value
+              access_token.reload
+              expect(access_token.refresh_token).not_to eq(plain_refresh_token)
+              expect(clazz.find_by(refresh_token: plain_refresh_token)).to eq(nil)
+              expect(clazz.find_by(refresh_token: access_token.refresh_token)).not_to be_nil
+            end
+          end
+        end
       end
     end
 

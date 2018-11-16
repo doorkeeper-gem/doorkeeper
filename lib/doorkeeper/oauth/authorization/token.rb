@@ -62,7 +62,7 @@ module Doorkeeper
           {
             controller: controller,
             action: :show,
-            access_token: token.token
+            access_token: token.plaintext_token
           }
         end
 

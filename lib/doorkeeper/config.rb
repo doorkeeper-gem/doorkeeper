@@ -46,6 +46,7 @@ module Doorkeeper
       end
 
       def build
+        @config.validate
         @config
       end
 
@@ -135,6 +136,24 @@ module Doorkeeper
       # disabled by default for backward compatibility.
       def enforce_content_type
         @config.instance_variable_set(:@enforce_content_type, true)
+      end
+
+      # Allow optional hashing of input tokens before persisting them.
+      # Will be used for hashing of input token and grants.
+      def hash_token_secrets
+        @config.instance_variable_set(:@hash_token_secrets, true)
+      end
+
+      # Allow optional hashing of application secrets before persisting them.
+      # Will be used for hashing of input token and grants.
+      def hash_application_secrets
+        @config.instance_variable_set(:@hash_application_secrets, true)
+      end
+
+      # Allow plain value lookup when using +hash_token_secrets+
+      # or +hash_application_secrets+ to avoid disrupting application experience
+      def fallback_to_plain_secrets
+        @config.instance_variable_set(:@fallback_to_plain_secrets, true)
       end
     end
 
@@ -286,9 +305,14 @@ module Doorkeeper
     option :base_controller,
            default: 'ActionController::Base'
 
-    attr_reader :reuse_access_token
-    attr_reader :api_only
-    attr_reader :enforce_content_type
+    attr_reader :api_only,
+                :enforce_content_type,
+                :reuse_access_token
+
+    # Return the valid subset of this configuration
+    def validate
+      validate_reuse_access_token_value
+    end
 
     def api_only
       @api_only ||= false
@@ -307,19 +331,31 @@ module Doorkeeper
     end
 
     def enforce_configured_scopes?
-      !!(defined?(@enforce_configured_scopes) && @enforce_configured_scopes)
+      option_set? :enforce_configured_scopes
     end
 
     def enable_application_owner?
-      !!(defined?(@enable_application_owner) && @enable_application_owner)
+      option_set? :enable_application_owner
     end
 
     def confirm_application_owner?
-      !!(defined?(@confirm_application_owner) && @confirm_application_owner)
+      option_set? :confirm_application_owner
     end
 
     def raise_on_errors?
       handle_auth_errors == :raise
+    end
+
+    def hash_token_secrets?
+      option_set? :hash_token_secrets
+    end
+
+    def hash_application_secrets?
+      option_set? :hash_application_secrets
+    end
+
+    def fallback_to_plain_secrets?
+      option_set? :fallback_to_plain_secrets
     end
 
     def default_scopes
@@ -352,6 +388,12 @@ module Doorkeeper
 
     private
 
+    # Helper to read boolearized configuration option
+    def option_set?(instance_key)
+      var = instance_variable_get("@#{instance_key}")
+      !!(defined?(var) && var)
+    end
+
     # Determines what values are acceptable for 'response_type' param in
     # authorization request endpoint, and return them as an array of strings.
     #
@@ -369,6 +411,20 @@ module Doorkeeper
       types = grant_flows - ['implicit']
       types << 'refresh_token' if refresh_token_enabled?
       types
+    end
+
+    # Determine whether +reuse_access_token+ and +hash_token_secrets+
+    # have both been activated.
+    #
+    # In that case, disable reuse_access_token value and warn the user.
+    def validate_reuse_access_token_value
+      return unless hash_token_secrets? && reuse_access_token
+
+      ::Rails.logger.warn(
+        'You are configured both reuse_access_token AND hash_token_secrets. ' \
+        'This combination is unsupported. reuse_access_token will be disabled'
+      )
+      @reuse_access_token = false
     end
   end
 end

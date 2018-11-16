@@ -45,6 +45,16 @@ module Doorkeeper
       AccessGrant.revoke_all_for(id, resource_owner)
     end
 
+    # We keep a volatile copy of the raw client_secret for initial communication
+    # The stored secret may be mapped and not available in cleartext.
+    def plaintext_secret
+      if perform_secret_hashing?
+        @raw_secret
+      else
+        secret
+      end
+    end
+
     private
 
     def generate_uid
@@ -52,7 +62,10 @@ module Doorkeeper
     end
 
     def generate_secret
-      self.secret = UniqueToken.generate if secret.blank?
+      return unless secret.blank?
+
+      @raw_secret = UniqueToken.generate
+      self.secret = hashed_or_plain_token(@raw_secret)
     end
 
     def scopes_match_configured

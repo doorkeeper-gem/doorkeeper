@@ -17,13 +17,13 @@ module Doorkeeper::OAuth
     describe '.body' do
       let(:access_token) do
         double :access_token,
-               token:              'some-token',
-               expires_in:         '3600',
-               expires_in_seconds: '300',
-               scopes_string:      'two scopes',
-               refresh_token:      'some-refresh-token',
-               token_type:         'bearer',
-               created_at:         0
+               plaintext_token:         "some-token",
+               expires_in:              "3600",
+               expires_in_seconds:      "300",
+               scopes_string:           "two scopes",
+               plaintext_refresh_token: "some-refresh-token",
+               token_type:              "bearer",
+               created_at:              0
       end
 
       subject { TokenResponse.new(access_token).body }
@@ -58,12 +58,12 @@ module Doorkeeper::OAuth
     describe '.body filters out empty values' do
       let(:access_token) do
         double :access_token,
-               token:              'some-token',
-               expires_in_seconds: '',
-               scopes_string:      '',
-               refresh_token:      '',
-               token_type:         'bearer',
-               created_at:         0
+               plaintext_token:         'some-token',
+               expires_in_seconds:      '',
+               scopes_string:           '',
+               plaintext_refresh_token: '',
+               token_type:              'bearer',
+               created_at:              0
       end
 
       subject { TokenResponse.new(access_token).body }

@@ -1,6 +1,7 @@
 require 'spec_helper'
 
 describe Doorkeeper::AccessGrant do
+  let(:clazz) { Doorkeeper::AccessGrant }
   subject { FactoryBot.build(:access_grant) }
 
   it { expect(subject).to be_valid }
@@ -9,6 +10,66 @@ describe Doorkeeper::AccessGrant do
   it_behaves_like 'a revocable token'
   it_behaves_like 'a unique token' do
     let(:factory_name) { :access_grant }
+  end
+
+  context 'with hashing enabled' do
+    let(:grant) { FactoryBot.create :access_grant }
+    include_context 'with token hashing enabled'
+
+    it 'holds a volatile plaintext token when created' do
+      expect(grant.plaintext_token).to be_a(String)
+      expect(grant.token)
+        .to eq(hashed_or_plain_token_func.call(grant.plaintext_token))
+
+      # Finder method only finds the hashed token
+      loaded = clazz.find_by(token: grant.token)
+      expect(loaded).to eq(grant)
+      expect(loaded.plaintext_token).to be_nil
+      expect(loaded.token).to eq(grant.token)
+    end
+
+    it 'does not find_by plain text tokens' do
+      expect(clazz.find_by(token: grant.plaintext_token)).to be_nil
+    end
+
+    describe 'with having a plain text token' do
+      let(:plain_text_token) { 'plain text token' }
+
+      before do
+        # Assume we have a plain text token from before activating the option
+        grant.update_column(:token, plain_text_token)
+      end
+
+      context 'without fallback lookup' do
+        it 'does not provide lookups with either through by_token' do
+          expect(clazz.by_token(plain_text_token)).to eq(nil)
+          expect(clazz.by_token(grant.token)).to eq(nil)
+
+          # And it does not touch the token
+          grant.reload
+          expect(grant.token).to eq(plain_text_token)
+        end
+      end
+
+      context 'with fallback lookup' do
+        include_context 'with token hashing and fallback lookup enabled'
+
+        it 'upgrades a plain token when falling back to it' do
+          # Side-effect: This will automatically upgrade the token
+          expect(clazz).to receive(:upgrade_fallback_value).and_call_original
+          expect(clazz.by_token(plain_text_token)).to eq(grant)
+
+          # Will find subsequently by hashing the token
+          expect(clazz.by_token(plain_text_token)).to eq(grant)
+
+          # And it modifies the token value
+          grant.reload
+          expect(grant.token).not_to eq(plain_text_token)
+          expect(clazz.find_by(token: plain_text_token)).to eq(nil)
+          expect(clazz.find_by(token: grant.token)).not_to be_nil
+        end
+      end
+    end
   end
 
   describe 'validations' do
