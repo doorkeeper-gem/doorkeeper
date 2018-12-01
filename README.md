@@ -117,7 +117,7 @@ migration:
 [PKCE flow]: https://tools.ietf.org/html/rfc7636
 
 ```sh
-    rails generate doorkeeper:pkce
+rails generate doorkeeper:pkce
 ```
 
 Then run migrations:
