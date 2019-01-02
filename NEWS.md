@@ -10,6 +10,7 @@ User-visible changes worth mentioning.
 - [#1162] Fix `enforce_content_type` for requests without body.
 - [#1164] Fix error when `root_path` is not defined.
 - [#1175] Internal refactor: use `scopes_string` inside `scopes`.
+- [#1176] Fix test factory support for `factory_bot_rails`
 
 ## 5.0.2
 
