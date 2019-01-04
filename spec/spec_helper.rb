@@ -28,7 +28,8 @@ end
 Doorkeeper::RSpec.print_configuration_info
 
 # Remove after dropping support of Rails 4.2
-require "#{File.dirname(__FILE__)}/support/http_method_shim.rb"
+require "#{File.dirname(__FILE__)}/support/http_method_shim"
+require "#{File.dirname(__FILE__)}/support/ruby_2_6_rails_4_2_patch"
 
 require "support/orm/#{DOORKEEPER_ORM}"
 
