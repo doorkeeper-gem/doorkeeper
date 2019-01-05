@@ -34,9 +34,10 @@ module Doorkeeper
                                end
 
           ScopeChecker.valid?(
-            @request.scopes.to_s,
-            @server.scopes,
-            application_scopes
+            scope_str: @request.scopes.to_s,
+            server_scopes: @server.scopes,
+            app_scopes: application_scopes,
+            grant_type: Doorkeeper::OAuth::CLIENT_CREDENTIALS
           )
         end
       end

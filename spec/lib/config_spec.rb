@@ -141,6 +141,22 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
+  describe 'scopes_by_grant_type' do
+    it 'is {} by default' do
+      expect(subject.scopes_by_grant_type).to eq({})
+    end
+
+    it 'has hash value' do
+      hash = {}
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        scopes_by_grant_type hash
+      end
+
+      expect(subject.scopes_by_grant_type).to eq(hash)
+    end
+  end
+
   describe 'use_refresh_token' do
     it 'is false by default' do
       expect(subject.refresh_token_enabled?).to eq(false)

@@ -91,6 +91,18 @@ module Doorkeeper::OAuth
         subject.scope = 'invalid'
         expect(subject).not_to be_authorizable
       end
+
+      it 'accepts scopes which are permitted for grant_type' do
+        allow(server).to receive(:scopes_by_grant_type).and_return(authorization_code: [:public])
+        subject.scope = 'public'
+        expect(subject).to be_authorizable
+      end
+
+      it 'rejects scopes which are not permitted for grant_type' do
+        allow(server).to receive(:scopes_by_grant_type).and_return(authorization_code: [:profile])
+        subject.scope = 'public'
+        expect(subject).not_to be_authorizable
+      end
     end
 
     context 'client application restricts valid scopes' do
@@ -113,6 +125,18 @@ module Doorkeeper::OAuth
       it 'rejects (application level) non-valid scopes' do
         subject.scope = 'profile'
         expect(subject).to_not be_authorizable
+      end
+
+      it 'accepts scopes which are permitted for grant_type' do
+        allow(server).to receive(:scopes_by_grant_type).and_return(authorization_code: [:public])
+        subject.scope = 'public'
+        expect(subject).to be_authorizable
+      end
+
+      it 'rejects scopes which are not permitted for grant_type' do
+        allow(server).to receive(:scopes_by_grant_type).and_return(authorization_code: [:profile])
+        subject.scope = 'public'
+        expect(subject).not_to be_authorizable
       end
     end
 

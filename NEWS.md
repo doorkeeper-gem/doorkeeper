@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1177] Limiting `scopes` for certain `grant_types`
 - [#1162] Fix `enforce_content_type` for requests without body.
 - [#1164] Fix error when `root_path` is not defined.
 - [#1175] Internal refactor: use `scopes_string` inside `scopes`.
