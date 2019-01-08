@@ -11,10 +11,10 @@ module Doorkeeper
 
       def body
         {
-          'access_token'  => token.token,
+          'access_token'  => token.plaintext_token,
           'token_type'    => token.token_type,
           'expires_in'    => token.expires_in_seconds,
-          'refresh_token' => token.refresh_token,
+          'refresh_token' => token.plaintext_refresh_token,
           'scope'         => token.scopes_string,
           'created_at'    => token.created_at.to_i
         }.reject { |_, value| value.blank? }

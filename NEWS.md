@@ -11,6 +11,7 @@ User-visible changes worth mentioning.
 - [#1164] Fix error when `root_path` is not defined.
 - [#1175] Internal refactor: use `scopes_string` inside `scopes`.
 - [#1176] Fix test factory support for `factory_bot_rails`
+- [#1168]: Allow optional hashing of tokens and secrets.
 
 ## 5.0.2
 
