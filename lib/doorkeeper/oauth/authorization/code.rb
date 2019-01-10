@@ -16,7 +16,7 @@ module Doorkeeper
         end
 
         def native_redirect
-          { action: :show, code: token.token }
+          { action: :show, code: token.plaintext_token }
         end
 
         def configuration
