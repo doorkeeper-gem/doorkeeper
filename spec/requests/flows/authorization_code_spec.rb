@@ -21,6 +21,33 @@ feature 'Authorization Code Flow' do
     url_should_not_have_param('error')
   end
 
+  context 'with grant hashing enabled' do
+    background do
+      config_is_set(:hash_token_secrets) { true }
+    end
+
+    scenario 'Authorization Code Flow with hashing' do
+      @client.redirect_uri = Doorkeeper.configuration.native_redirect_uri
+      @client.save!
+      visit authorization_endpoint_url(client: @client)
+      click_on 'Authorize'
+
+      access_grant_should_exist_for(@client, @resource_owner)
+
+      code = current_params['code']
+      expect(code).not_to be_nil
+
+      hashed_code = Doorkeeper::AccessGrant.hashed_or_plain_token code
+      expect(hashed_code).to eq Doorkeeper::AccessGrant.first.token
+
+      expect(code).not_to eq(hashed_code)
+
+      i_should_see 'Authorization code:'
+      i_should_see code
+      i_should_not_see hashed_code
+    end
+  end
+
   scenario 'resource owner authorizes using test url' do
     @client.redirect_uri = Doorkeeper.configuration.native_redirect_uri
     @client.save!
