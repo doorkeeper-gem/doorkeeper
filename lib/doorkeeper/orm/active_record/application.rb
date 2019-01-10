@@ -70,7 +70,8 @@ module Doorkeeper
 
     def scopes_match_configured
       if scopes.present? &&
-         !ScopeChecker.valid?(scopes.to_s, Doorkeeper.configuration.scopes)
+         !ScopeChecker.valid?(scope_str: scopes.to_s,
+                              server_scopes: Doorkeeper.configuration.scopes)
         errors.add(:scopes, :not_match_configured)
       end
     end

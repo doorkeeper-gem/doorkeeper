@@ -105,9 +105,9 @@ module Doorkeeper
 
         (token_scopes.sort == param_scopes.sort) &&
           Doorkeeper::OAuth::Helpers::ScopeChecker.valid?(
-            param_scopes.to_s,
-            Doorkeeper.configuration.scopes,
-            app_scopes
+            scope_str: param_scopes.to_s,
+            server_scopes: Doorkeeper.configuration.scopes,
+            app_scopes: app_scopes
           )
       end
 

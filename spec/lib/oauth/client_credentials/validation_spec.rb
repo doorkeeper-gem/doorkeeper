@@ -21,6 +21,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
     context 'with scopes' do
       it 'is invalid when scopes are not included in the server' do
         server_scopes = Doorkeeper::OAuth::Scopes.from_string 'email'
+        allow(request).to receive(:grant_type).and_return(Doorkeeper::OAuth::CLIENT_CREDENTIALS)
         allow(server).to receive(:scopes).and_return(server_scopes)
         allow(request).to receive(:scopes).and_return(
           Doorkeeper::OAuth::Scopes.from_string('invalid')
@@ -34,6 +35,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
           server_scopes = Doorkeeper::OAuth::Scopes.from_string 'email app'
           allow(application).to receive(:scopes).and_return(application_scopes)
           allow(server).to receive(:scopes).and_return(server_scopes)
+          allow(request).to receive(:grant_type).and_return(Doorkeeper::OAuth::CLIENT_CREDENTIALS)
           allow(request).to receive(:scopes).and_return(application_scopes)
           expect(subject).to be_valid
         end
@@ -42,6 +44,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
           application_scopes = Doorkeeper::OAuth::Scopes.from_string 'app'
           server_scopes = Doorkeeper::OAuth::Scopes.from_string 'email app'
           allow(application).to receive(:scopes).and_return(application_scopes)
+          allow(request).to receive(:grant_type).and_return(Doorkeeper::OAuth::CLIENT_CREDENTIALS)
           allow(server).to receive(:scopes).and_return(server_scopes)
           allow(request).to receive(:scopes).and_return(
             Doorkeeper::OAuth::Scopes.from_string('email')

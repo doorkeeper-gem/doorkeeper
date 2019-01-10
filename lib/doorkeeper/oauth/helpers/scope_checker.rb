@@ -7,31 +7,46 @@ module Doorkeeper
         class Validator
           attr_reader :parsed_scopes, :scope_str
 
-          def initialize(scope_str, server_scopes, application_scopes)
+          def initialize(scope_str, server_scopes, app_scopes, grant_type)
             @parsed_scopes = OAuth::Scopes.from_string(scope_str)
             @scope_str = scope_str
-            @valid_scopes = valid_scopes(server_scopes, application_scopes)
+            @valid_scopes = valid_scopes(server_scopes, app_scopes)
+
+            if grant_type
+              @scopes_by_grant_type = Doorkeeper.configuration.scopes_by_grant_type[grant_type.to_sym]
+            end
           end
 
           def valid?
             scope_str.present? &&
               scope_str !~ /[\n\r\t]/ &&
-              @valid_scopes.has_scopes?(parsed_scopes)
+              @valid_scopes.has_scopes?(parsed_scopes) &&
+              permitted_to_grant_type?
           end
 
           private
 
-          def valid_scopes(server_scopes, application_scopes)
-            if application_scopes.present?
-              application_scopes
+          def valid_scopes(server_scopes, app_scopes)
+            if app_scopes.present?
+              app_scopes
             else
               server_scopes
             end
           end
+
+          def permitted_to_grant_type?
+            return true unless @scopes_by_grant_type
+
+            OAuth::Scopes.from_array(@scopes_by_grant_type)
+                         .has_scopes?(parsed_scopes)
+          end
         end
 
-        def self.valid?(scope_str, server_scopes, application_scopes = nil)
-          Validator.new(scope_str, server_scopes, application_scopes).valid?
+        def self.valid?(scope_str:, server_scopes:, app_scopes: nil, grant_type: nil)
+          Validator.new(scope_str,
+                        server_scopes,
+                        app_scopes,
+                        grant_type).valid?
         end
       end
     end

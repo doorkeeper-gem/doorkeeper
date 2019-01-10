@@ -139,6 +139,15 @@ Doorkeeper.configure do
   # default_scopes  :public
   # optional_scopes :write, :update
 
+  # Define scopes_by_grant_type to restrict only certain scopes for grant_type
+  # By default, all the scopes will be available for all the grant types.
+  #
+  # Keys to this hash should be the name of grant_type and
+  # values should be the array of scopes for that grant type.
+  # Note: scopes should be from configured_scopes(i.e. deafult or optional)
+  #
+  # scopes_by_grant_type password: [:write], client_credentials: [:update]
+
   # Change the way client credentials are retrieved from the request object.
   # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then
   # falls back to the `:client_id` and `:client_secret` params from the `params` object.

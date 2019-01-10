@@ -77,10 +77,15 @@ module Doorkeeper
         return true if scope.blank?
 
         Helpers::ScopeChecker.valid?(
-          scope,
-          server.scopes,
-          client.application.scopes
+          scope_str: scope,
+          server_scopes: server.scopes,
+          app_scopes: client.application.scopes,
+          grant_type: grant_type
         )
+      end
+
+      def grant_type
+        response_type == 'code' ? AUTHORIZATION_CODE : IMPLICIT
       end
 
       def validate_redirect_uri

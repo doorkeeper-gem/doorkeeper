@@ -88,19 +88,40 @@ module Doorkeeper::OAuth
         PasswordAccessTokenRequest.new(server, client, owner, scope: 'public')
       end
 
-      it 'validates the current scope' do
-        allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string('another'))
-        subject.validate
-        expect(subject.error).to eq(:invalid_scope)
+      context 'when scopes_by_grant_type is not configured for grant_type' do
+        it 'returns error when scopes are invalid' do
+          allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string('another'))
+          subject.validate
+          expect(subject.error).to eq(:invalid_scope)
+        end
+
+        it 'creates the token with scopes if scopes are valid' do
+          allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string('public'))
+          expect do
+            subject.authorize
+          end.to change { Doorkeeper::AccessToken.count }.by(1)
+
+          expect(Doorkeeper::AccessToken.last.scopes).to include('public')
+        end
       end
 
-      it 'creates the token with scopes' do
-        allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string('public'))
-        expect do
-          subject.authorize
-        end.to change { Doorkeeper::AccessToken.count }.by(1)
+      context 'when scopes_by_grant_type is configured for grant_type' do
+        it 'returns error when scopes are valid but not permitted for grant_type' do
+          allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string('public'))
+          allow(Doorkeeper.configuration).to receive(:scopes_by_grant_type).and_return(password: 'another')
+          subject.validate
+          expect(subject.error).to eq(:invalid_scope)
+        end
 
-        expect(Doorkeeper::AccessToken.last.scopes).to include('public')
+        it 'creates the token with scopes if scopes are valid and permitted for grant_type' do
+          allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string('public'))
+          allow(Doorkeeper.configuration).to receive(:scopes_by_grant_type).and_return(password: [:public])
+          expect do
+            subject.authorize
+          end.to change { Doorkeeper::AccessToken.count }.by(1)
+
+          expect(Doorkeeper::AccessToken.last.scopes).to include('public')
+        end
       end
     end
 

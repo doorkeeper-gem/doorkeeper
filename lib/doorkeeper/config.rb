@@ -84,6 +84,13 @@ module Doorkeeper
         @config.instance_variable_set(:@optional_scopes, OAuth::Scopes.from_array(scopes))
       end
 
+      # Define scopes_by_grant_type to limit certain scope to certain grant_type
+      # @param { Hash } with grant_types as keys.
+      # Default set to {} i.e. no limitation on scopes usage
+      def scopes_by_grant_type(hash = {})
+        @config.instance_variable_set(:@scopes_by_grant_type, hash)
+      end
+
       # Change the way client credentials are retrieved from the request object.
       # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then
       # falls back to the `:client_id` and `:client_secret` params from the
@@ -368,6 +375,10 @@ module Doorkeeper
 
     def scopes
       @scopes ||= default_scopes + optional_scopes
+    end
+
+    def scopes_by_grant_type
+      @scopes_by_grant_type ||= {}
     end
 
     def client_credentials_methods
