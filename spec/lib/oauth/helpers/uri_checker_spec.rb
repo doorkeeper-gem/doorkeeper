@@ -61,16 +61,34 @@ module Doorkeeper::OAuth::Helpers
         expect(URIChecker.matches?(uri, client_uri)).to be_truthy
       end
 
-      it 'doesn\'t allow non-matching domains through' do
+      it "doesn't allow non-matching domains through" do
         uri = 'http://app.abc/?query=hello'
         client_uri = 'http://app.co'
         expect(URIChecker.matches?(uri, client_uri)).to be_falsey
       end
 
-      it 'doesn\'t allow non-matching domains that don\'t start at the beginning' do
+      it "doesn't allow non-matching domains that don't start at the beginning" do
         uri = 'http://app.co/?query=hello'
         client_uri = 'http://example.com?app.co=test'
         expect(URIChecker.matches?(uri, client_uri)).to be_falsey
+      end
+
+      context 'loopback IP redirect URIs' do
+        it 'ignores port for same URIs' do
+          uri = 'http://127.0.0.1:5555/auth/callback'
+          client_uri = 'http://127.0.0.1:48599/auth/callback'
+          expect(URIChecker.matches?(uri, client_uri)).to be_truthy
+
+          uri = 'http://[::1]:5555/auth/callback'
+          client_uri = 'http://[::1]:5555/auth/callback'
+          expect(URIChecker.matches?(uri, client_uri)).to be_truthy
+        end
+
+        it "doesn't ignore port for URIs with different queries" do
+          uri = 'http://127.0.0.1:5555/auth/callback'
+          client_uri = 'http://127.0.0.1:48599/auth/callback2'
+          expect(URIChecker.matches?(uri, client_uri)).to be_falsey
+        end
       end
 
       context "client registered query params" do
