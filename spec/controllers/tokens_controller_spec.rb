@@ -28,7 +28,7 @@ describe Doorkeeper::TokensController do
   describe 'when there is a failure due to a custom error' do
     it 'returns the error response with a custom message' do
       # I18n looks for `doorkeeper.errors.messages.custom_message` in locale files
-      custom_message = "my_message"
+      custom_message = 'my_message'
       allow(I18n).to receive(:translate)
         .with(
           custom_message,
@@ -60,21 +60,17 @@ describe Doorkeeper::TokensController do
     let(:client) { FactoryBot.create(:application) }
     let(:access_token) { FactoryBot.create(:access_token, application: client) }
 
-    before(:each) do
-      allow(controller).to receive(:token) { access_token }
-    end
-
     context 'when associated app is public' do
       let(:client) { FactoryBot.create(:application, confidential: false) }
 
       it 'returns 200' do
-        post :revoke
+        post :revoke, params: { token: access_token.token }
 
         expect(response.status).to eq 200
       end
 
       it 'revokes the access token' do
-        post :revoke
+        post :revoke, params: { token: access_token.token }
 
         expect(access_token.reload).to have_attributes(revoked?: true)
       end
@@ -89,13 +85,13 @@ describe Doorkeeper::TokensController do
       end
 
       it 'returns 200' do
-        post :revoke
+        post :revoke, params: { token: access_token.token }
 
         expect(response.status).to eq 200
       end
 
       it 'revokes the access token' do
-        post :revoke
+        post :revoke, params: { token: access_token.token }
 
         expect(access_token.reload).to have_attributes(revoked?: true)
       end
@@ -105,13 +101,13 @@ describe Doorkeeper::TokensController do
         let(:oauth_client) { Doorkeeper::OAuth::Client.new(some_other_client) }
 
         it 'returns 200' do
-          post :revoke
+          post :revoke, params: { token: access_token.token }
 
           expect(response.status).to eq 200
         end
 
         it 'does not revoke the access token' do
-          post :revoke
+          post :revoke, params: { token: access_token.token }
 
           expect(access_token.reload).to have_attributes(revoked?: false)
         end
