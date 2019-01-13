@@ -18,7 +18,7 @@ module Doorkeeper
       end
 
       def self.authenticate(credentials, method = Application.method(:by_uid_and_secret))
-        return false if credentials.blank?
+        return if credentials.blank?
 
         if (application = method.call(credentials.uid, credentials.secret))
           new(application)
