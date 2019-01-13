@@ -85,6 +85,20 @@ feature 'Authorization Code Flow' do
     should_have_json_within 'expires_in', Doorkeeper::AccessToken.first.expires_in, 1
   end
 
+  scenario 'resource owner requests an access token with authorization code but without client id' do
+    visit authorization_endpoint_url(client: @client)
+    click_on 'Authorize'
+
+    authorization_code = Doorkeeper::AccessGrant.first.token
+    page.driver.post token_endpoint_url(code: authorization_code,
+                                        client_secret: @client.secret,
+                                        redirect_uri: @client.redirect_uri)
+
+    expect(Doorkeeper::AccessToken.count).to be_zero
+
+    should_have_json 'error', 'invalid_grant'
+  end
+
   scenario 'resource owner requests an access token with authorization code but without secret' do
     visit authorization_endpoint_url(client: @client)
     click_on 'Authorize'

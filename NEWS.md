@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1179] Authorization Code flow without client id returns invalid_grant error.
 - [#1182] Fix loopback IP redirect URIs to conform with RFC8252, p. 7.3 (fixes #1170).
 - [#1177] Allow to limit `scopes` for certain `grant_types`
 - [#1162] Fix `enforce_content_type` for requests without body.

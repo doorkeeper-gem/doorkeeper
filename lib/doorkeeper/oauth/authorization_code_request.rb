@@ -53,7 +53,7 @@ module Doorkeeper
       end
 
       def validate_grant
-        return false unless grant && grant.application_id == client.id
+        return false unless grant && client && grant.application_id == client.id
         grant.accessible?
       end
 
