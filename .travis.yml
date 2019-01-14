@@ -12,6 +12,7 @@ rvm:
   - ruby-head
 
 before_install:
+  - "find /home/travis/.rvm/rubies -wholename '*default/bundler-*.gemspec' -delete"
   - rvm @global do gem uninstall bundler -a -x -I || true
   - gem install bundler -v '~> 1.10'
 
