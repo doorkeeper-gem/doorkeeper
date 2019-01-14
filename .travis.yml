@@ -9,6 +9,7 @@ rvm:
   - 2.4
   - 2.5
   - 2.6
+  - ruby-head
 
 before_install:
   - rvm @global do gem uninstall bundler -a -x -I || true
