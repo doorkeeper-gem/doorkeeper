@@ -49,7 +49,7 @@ module Doorkeeper
       end
 
       def validate_client
-        !client.nil?
+        client.present?
       end
 
       def validate_grant

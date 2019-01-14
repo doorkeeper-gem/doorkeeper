@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1179] Authorization Code Grant Flow without client id returns invalid_client error.
 - [#1182] Fix loopback IP redirect URIs to conform with RFC8252, p. 7.3 (fixes #1170).
 - [#1177] Allow to limit `scopes` for certain `grant_types`
 - [#1162] Fix `enforce_content_type` for requests without body.
@@ -64,12 +65,12 @@ User-visible changes worth mentioning.
   `Doorkeeper#installed?` method
 - [#1031] Allow public clients to authenticate without `client_secret`. Define an app as
   either public or private/confidential
-  
+
   **[IMPORTANT]**: all the applications (clients) now are considered as private by default.
     You need to manually change `confidential` column to `false` if you are using public clients,
     in other case your mobile (or other) applications will not be able to authorize.
     See [#1142](https://github.com/doorkeeper-gem/doorkeeper/issues/1142) for more details.
-  
+
 - [#1010] Add configuration to enforce configured scopes (`default_scopes` and
   `optional_scopes`) for applications
 - [#1060] Ensure that the native redirect_uri parameter matches with redirect_uri of the client
@@ -87,26 +88,26 @@ User-visible changes worth mentioning.
 - [#1076] Add config to enforce content type to application/x-www-form-urlencoded
 - Fix bug with `force_ssl_in_redirect_uri` when it breaks existing applications with an
   SSL redirect_uri.
-  
+
 ## 4.4.3
-  
+
 - [#1143] Adds a config option `opt_out_native_route_change` to opt out of the breaking api
   changed introduced in https://github.com/doorkeeper-gem/doorkeeper/pull/1003
 
-  
+
 ## 4.4.2
 
 - [#1130] Backport fix for native redirect_uri from 5.x.
-  
+
 ## 4.4.1
 
 - [#1127] Backport token type to comply with the RFC6750 specification.
 - [#1125] Backport Quote surround I18n yes/no keys
-  
+
 ## 4.4.0
-  
+
 - [#1120] Backport security fix from 5.x for token revocation when using public clients
-  
+
   **[IMPORTANT]**: all the applications (clients) now are considered as private by default.
   You need to manually change `confidential` column to `false` if you are using public clients,
   in other case your mobile (or other) applications will not be able to authorize.

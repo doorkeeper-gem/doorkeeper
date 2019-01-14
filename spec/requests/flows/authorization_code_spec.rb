@@ -98,6 +98,19 @@ feature 'Authorization Code Flow' do
     should_have_json 'error', 'invalid_client'
   end
 
+  scenario 'resource owner requests an access token with authorization code but without client id' do
+    visit authorization_endpoint_url(client: @client)
+    click_on 'Authorize'
+
+    authorization_code = Doorkeeper::AccessGrant.first.token
+    page.driver.post token_endpoint_url(code: authorization_code, client_secret: @client.secret,
+                                        redirect_uri: @client.redirect_uri)
+
+    expect(Doorkeeper::AccessToken.count).to be_zero
+
+    should_have_json 'error', 'invalid_client'
+  end
+
   scenario 'silently authorizes if matching token exists' do
     default_scopes_exist :public, :write
 

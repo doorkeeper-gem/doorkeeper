@@ -64,7 +64,8 @@ describe 'Resource Owner Password Credentials Flow' do
               )
             end.not_to(change { Doorkeeper::AccessToken.count })
 
-            expect(response).not_to be_ok
+            expect(response.status).to eq(401)
+            should_have_json 'error', 'invalid_client'
           end
         end
       end
@@ -88,7 +89,8 @@ describe 'Resource Owner Password Credentials Flow' do
             post password_token_endpoint_url(client_id: @client.uid, resource_owner: @resource_owner)
           end.not_to(change { Doorkeeper::AccessToken.count })
 
-          expect(response).not_to be_ok
+          expect(response.status).to eq(401)
+          should_have_json 'error', 'invalid_client'
         end
       end
     end
