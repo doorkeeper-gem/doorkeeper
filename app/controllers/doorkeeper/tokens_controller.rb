@@ -4,11 +4,11 @@ module Doorkeeper
   class TokensController < Doorkeeper::ApplicationMetalController
     def create
       response = authorize_response
-      headers.merge! response.headers
+      headers.merge!(response.headers)
       self.response_body = response.body.to_json
       self.status = response.status
-    rescue Errors::DoorkeeperError => e
-      handle_token_exception e
+    rescue Errors::DoorkeeperError => error
+      handle_token_exception(error)
     end
 
     # OAuth 2.0 Token Revocation - http://tools.ietf.org/html/rfc7009
@@ -75,12 +75,12 @@ module Doorkeeper
     end
 
     def token
-      @token ||= AccessToken.by_token(request.POST['token']) ||
-        AccessToken.by_refresh_token(request.POST['token'])
+      @token ||= AccessToken.by_token(params['token']) ||
+        AccessToken.by_refresh_token(params['token'])
     end
 
     def strategy
-      @strategy ||= server.token_request params[:grant_type]
+      @strategy ||= server.token_request(params[:grant_type])
     end
 
     def authorize_response

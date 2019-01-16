@@ -26,30 +26,28 @@ describe 'Revoke Token Flow' do
       it 'should revoke the access token provided' do
         post revocation_token_endpoint_url, params: { token: access_token.token }, headers: headers
 
-        access_token.reload
-
         expect(response).to be_successful
-        expect(access_token.revoked?).to be_truthy
+        expect(access_token.reload.revoked?).to be_truthy
       end
 
       it 'should revoke the refresh token provided' do
         post revocation_token_endpoint_url, params: { token: access_token.refresh_token }, headers: headers
 
-        access_token.reload
-
         expect(response).to be_successful
-        expect(access_token.revoked?).to be_truthy
+        expect(access_token.reload.revoked?).to be_truthy
       end
 
       context 'with invalid token to revoke' do
         it 'should not revoke any tokens and respond successfully' do
-          num_prev_revoked_tokens = Doorkeeper::AccessToken.where(revoked_at: nil).count
-          post revocation_token_endpoint_url, params: { token: 'I_AM_AN_INVALID_TOKEN' }, headers: headers
+          expect do
+            post revocation_token_endpoint_url,
+              params: { token: 'I_AM_AN_INVALID_TOKEN' },
+              headers: headers
+            end.not_to(change { Doorkeeper::AccessToken.where(revoked_at: nil).count })
 
           # The authorization server responds with HTTP status code 200 even if
           # token is invalid
           expect(response).to be_successful
-          expect(Doorkeeper::AccessToken.where(revoked_at: nil).count).to eq(num_prev_revoked_tokens)
         end
       end
 
@@ -62,10 +60,8 @@ describe 'Revoke Token Flow' do
         it 'should not revoke any tokens and respond successfully' do
           post revocation_token_endpoint_url, params: { token: access_token.token }, headers: headers
 
-          access_token.reload
-
           expect(response).to be_successful
-          expect(access_token.revoked?).to be_falsey
+          expect(access_token.reload.revoked?).to be_falsey
         end
       end
 
@@ -73,10 +69,8 @@ describe 'Revoke Token Flow' do
         it 'should not revoke any tokens and respond successfully' do
           post revocation_token_endpoint_url, params: { token: access_token.token }
 
-          access_token.reload
-
           expect(response).to be_successful
-          expect(access_token.revoked?).to be_falsey
+          expect(access_token.reload.revoked?).to be_falsey
         end
       end
 
@@ -92,10 +86,8 @@ describe 'Revoke Token Flow' do
         it 'should not revoke the token as its unauthorized' do
           post revocation_token_endpoint_url, params: { token: access_token.token }, headers: headers
 
-          access_token.reload
-
           expect(response).to be_successful
-          expect(access_token.revoked?).to be_falsey
+          expect(access_token.reload.revoked?).to be_falsey
         end
       end
     end
@@ -111,19 +103,15 @@ describe 'Revoke Token Flow' do
       it 'should revoke the access token provided' do
         post revocation_token_endpoint_url, params: { token: access_token.token }
 
-        access_token.reload
-
         expect(response).to be_successful
-        expect(access_token.revoked?).to be_truthy
+        expect(access_token.reload.revoked?).to be_truthy
       end
 
       it 'should revoke the refresh token provided' do
         post revocation_token_endpoint_url, params: { token: access_token.refresh_token }
 
-        access_token.reload
-
         expect(response).to be_successful
-        expect(access_token.revoked?).to be_truthy
+        expect(access_token.reload.revoked?).to be_truthy
       end
 
       context 'with a valid token issued for a confidential client' do
@@ -137,19 +125,15 @@ describe 'Revoke Token Flow' do
         it 'should not revoke the access token provided' do
           post revocation_token_endpoint_url, params: { token: access_token.token }
 
-          access_token.reload
-
           expect(response).to be_successful
-          expect(access_token.revoked?).to be_falsey
+          expect(access_token.reload.revoked?).to be_falsey
         end
 
         it 'should not revoke the refresh token provided' do
           post revocation_token_endpoint_url, params: { token: access_token.token }
 
-          access_token.reload
-
           expect(response).to be_successful
-          expect(access_token.revoked?).to be_falsey
+          expect(access_token.reload.revoked?).to be_falsey
         end
       end
     end
