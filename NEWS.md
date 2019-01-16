@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1188]  Use `params` instead of `request.POST` in tokens controller (fixes #1183).
 - [#1179] Authorization Code Grant Flow without client id returns invalid_client error.
 - [#1182] Fix loopback IP redirect URIs to conform with RFC8252, p. 7.3 (fixes #1170).
 - [#1177] Allow to limit `scopes` for certain `grant_types`
