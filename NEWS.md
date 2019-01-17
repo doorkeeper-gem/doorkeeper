@@ -7,15 +7,19 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#1188]  Use `params` instead of `request.POST` in tokens controller (fixes #1183).
-- [#1179] Authorization Code Grant Flow without client id returns invalid_client error.
+- [#] Add your PR description here.
+
+## 5.1.0.rc1
+
+- [#1188] Use `params` instead of `request.POST` in tokens controller (fixes #1183).
 - [#1182] Fix loopback IP redirect URIs to conform with RFC8252, p. 7.3 (fixes #1170).
+- [#1179] Authorization Code Grant Flow without client id returns invalid_client error.
 - [#1177] Allow to limit `scopes` for certain `grant_types`
-- [#1162] Fix `enforce_content_type` for requests without body.
-- [#1164] Fix error when `root_path` is not defined.
-- [#1175] Internal refactor: use `scopes_string` inside `scopes`.
 - [#1176] Fix test factory support for `factory_bot_rails`
-- [#1168]: Allow optional hashing of tokens and secrets.
+- [#1175] Internal refactor: use `scopes_string` inside `scopes`.
+- [#1168] Allow optional hashing of tokens and secrets.
+- [#1164] Fix error when `root_path` is not defined.
+- [#1162] Fix `enforce_content_type` for requests without body.
 
 ## 5.0.2
 
@@ -24,13 +28,13 @@ User-visible changes worth mentioning.
 
 ## 5.0.1
 
+- [#1154] Refactor `StaleRecordsCleaner` to be ORM agnostic.
+- [#1152] Fix migration template: change resource owner data type from integer to Rails generic `references`
+- [#1151] Fix Refresh Token strategy: add proper validation of client credentials both for Public & Private clients.
+- [#1149] Fix for `URIChecker#valid_for_authorization?` false negative when query is blank, but `?` present.
 - [#1140] Allow rendering custom errors from exceptions (issue #844). Originally opened as [#944].
 - [#1138] Revert regression bug (check for token expiration in Authorizations controller so authorization
   triggers every time)
-- [#1149] Fix for `URIChecker#valid_for_authorization?` false negative when query is blank, but `?` present.
-- [#1151] Fix Refresh Token strategy: add proper validation of client credentials both for Public & Private clients.
-- [#1152] Fix migration template: change resource owner data type from integer to Rails generic `references`
-- [#1154] Refactor `StaleRecordsCleaner` to be ORM agnostic.
 
 ## 5.0.0
 
@@ -38,14 +42,14 @@ User-visible changes worth mentioning.
 
 ## 5.0.0.rc2
 
-- [#1106] Restrict access to AdminController with 'Forbidden 403' if admin_authenticator is not
-  configured by developers..
-- [#1108] Simple formating of callback URLs when listing oauth applications
+- [#1122] Fix AuthorizationsController#new error response to be in JSON format
+- [#1119] Fix token revocation for OAuth apps using "implicit" grant flow
 - [#1116] `AccessGrant`s will now be revoked along with `AccessToken`s when
   hitting the `AuthorizedApplicationController#destroy` route.
 - [#1114] Make token info endpoint's attributes consistent with token creation
-- [#1119] Fix token revocation for OAuth apps using "implicit" grant flow
-- [#1122] Fix AuthorizationsController#new error response to be in JSON format
+- [#1108] Simple formating of callback URLs when listing oauth applications
+- [#1106] Restrict access to AdminController with 'Forbidden 403' if admin_authenticator is not
+  configured by developers.
 
 ## 5.0.0.rc1
 
