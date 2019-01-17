@@ -4,6 +4,8 @@ require "rails/generators"
 require "rails/generators/active_record"
 
 module Doorkeeper
+  # Setup doorkeeper into Rails application: locales, routes, etc.
+  #
   class InstallGenerator < ::Rails::Generators::Base
     include ::Rails::Generators::Migration
     source_root File.expand_path("templates", __dir__)

@@ -8,6 +8,8 @@ class RedirectUriValidator < ActiveModel::EachValidator
   end
 
   def validate_each(record, attribute, value)
+    return if Doorkeeper.configuration.allow_blank_redirect_uri?
+
     if value.blank?
       record.errors.add(attribute, :blank)
     else

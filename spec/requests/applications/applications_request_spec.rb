@@ -94,6 +94,36 @@ feature "Adding applications" do
         true
       )
     end
+
+    context "redirect URI" do
+      scenario "adding app with blank redirect URI when configured flows requires redirect uri" do
+        config_is_set("grant_flows", %w[authorization_code implicit client_credentials])
+
+        fill_in "doorkeeper_application[name]", with: "My Application"
+        fill_in "doorkeeper_application[redirect_uri]",
+                with: ""
+
+        click_button "Submit"
+        i_should_see "Whoops! Check your form for possible errors"
+      end
+
+      scenario "adding app with blank redirect URI when configured flows without redirect uri" do
+        config_is_set("grant_flows", %w[client_credentials password])
+
+        # Visit it once again to consider grant flows
+        visit "/oauth/applications/new"
+
+        i_should_see I18n.t("doorkeeper.applications.help.blank_redirect_uri")
+
+        fill_in "doorkeeper_application[name]", with: "My Application"
+        fill_in "doorkeeper_application[redirect_uri]",
+                with: ""
+
+        click_button "Submit"
+        i_should_see "Application created"
+        i_should_see "My Application"
+      end
+    end
   end
 end
 
