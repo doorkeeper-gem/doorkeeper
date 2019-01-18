@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'bcrypt'
 
 module Doorkeeper
   describe Application do
@@ -127,10 +128,33 @@ module Doorkeeper
       include_context 'with application hashing enabled'
       let(:app) { FactoryBot.create :application }
 
+      context 'assuming we cannot load bcrypt' do
+        after do
+          # Ensure configuration is called again to reset setup
+          allow(described_class).to receive(:bcrypt_present?).and_call_original
+          ::Doorkeeper::Application.configure_secrets_hashing
+          expect(::Doorkeeper::Application.secret_comparer).to be_present
+          expect(::Doorkeeper::Application.secret_hash_function).to be_present
+        end
+
+        it 'uses SHA256 to avoid additional dependencies' do
+          allow(described_class).to receive(:bcrypt_present?).and_return false
+
+          ::Doorkeeper::Application.configure_secrets_hashing
+
+          expect(app.class.secret_comparer).to be_nil
+          expect(app.class.secret_hash_function).to be_nil
+
+          # Ensure token was generated
+          app.validate
+          expect(app.secret).to eq(described_class.default_hash_function(app.plaintext_secret))
+        end
+      end
+
       it 'holds a volatile plaintext and BCrypt secret' do
         expect(app.plaintext_secret).to be_a(String)
         expect(app.secret).not_to eq(app.plaintext_secret)
-        expect { BCrypt::Password.create(app.secret) }.not_to raise_error
+        expect { ::BCrypt::Password.create(app.secret) }.not_to raise_error
       end
 
       it 'does not fallback to plain lookup by default' do

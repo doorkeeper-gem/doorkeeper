@@ -80,8 +80,12 @@ Doorkeeper.configure do
   # reuse_access_token
 
   # Hash access and refresh tokens before persisting them.
-  # Note: This will disable the possibility to use +reuse_access_token+
+  # This will disable the possibility to use +reuse_access_token+
   # since plain values can no longer be retrieved.
+  #
+  # Note: If you are already a user of doorkeeper and have existing tokens
+  # in your installation, they will be invalid without enabling the additional
+  # setting `fallback_to_plain_secrets` below.
   #
   # hash_token_secrets
 
@@ -94,7 +98,7 @@ Doorkeeper.configure do
   # look up the plain text token as a fallback.
   #
   # This will ensure that old access tokens and secrets
-  # will remain valid even if the hashing above is enabled
+  # will remain valid even if the hashing above is enabled.
   #
   # fallback_to_plain_secrets
 

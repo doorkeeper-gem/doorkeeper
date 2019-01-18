@@ -7,7 +7,8 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#] Add your PR description here.
+- [#1191]: Try to load bcrypt for hashing of application secrets, but add fallback.
+
 
 ## 5.1.0.rc1
 

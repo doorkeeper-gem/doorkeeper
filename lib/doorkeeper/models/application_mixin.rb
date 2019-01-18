@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'bcrypt'
-
 module Doorkeeper
   module ApplicationMixin
     extend ActiveSupport::Concern
@@ -12,19 +10,7 @@ module Doorkeeper
     include Models::Scopes
 
     included do
-      # Use BCrypt as the hashing function for applications
-      self.secret_hash_function = lambda do |plain_token|
-        BCrypt::Password.create(plain_token.to_s)
-      end
-
-      # Also need to override the comparer function for BCrypt
-      self.secret_comparer = lambda do |plain, secret|
-        begin
-          BCrypt::Password.new(secret.to_s) == plain.to_s
-        rescue BCrypt::Errors::InvalidHash
-          false
-        end
-      end
+      configure_secrets_hashing
     end
 
     # :nodoc
@@ -64,6 +50,49 @@ module Doorkeeper
       #
       def by_uid(uid)
         find_by(uid: uid.to_s)
+      end
+
+      ##
+      # Configure secrets hashing for applications.
+      # We will try to load bcrypt for hashing, and fall back
+      # when it cannot be loaded.
+      def configure_secrets_hashing
+        if perform_secret_hashing? && bcrypt_present?
+          use_bcrypt_for_hashing
+        else
+          self.secret_comparer = nil
+          self.secret_hash_function = nil
+        end
+      end
+
+      private
+
+      ##
+      # Test if we can require the BCrypt gem
+      def bcrypt_present?
+        require 'bcrypt'
+        true
+      rescue LoadError
+        false
+      end
+
+      ##
+      # Set hash function and comparer to BCrypt password hashing
+      # Requires to bcrypt gem to be present
+      def use_bcrypt_for_hashing
+        # If available, use BCrypt as the hashing function for applications
+        self.secret_hash_function = lambda do |plain_token|
+          ::BCrypt::Password.create(plain_token.to_s)
+        end
+
+        # Also need to override the comparer function for BCrypt
+        self.secret_comparer = lambda do |plain, secret|
+          begin
+            ::BCrypt::Password.new(secret.to_s) == plain.to_s
+          rescue BCrypt::Errors::InvalidHash
+            false
+          end
+        end
       end
     end
 
