@@ -64,13 +64,23 @@ module Doorkeeper::OAuth
       end.to change { Doorkeeper::AccessToken.count }.by(1)
     end
 
-    it 'skips token creation if there is already one' do
+    it 'skips token creation if there is already one reusable' do
       allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
       FactoryBot.create(:access_token, application_id: client.id, resource_owner_id: owner.id)
 
       expect do
         subject.authorize
       end.not_to(change { Doorkeeper::AccessToken.count })
+    end
+
+    it 'creates token when there is already one but non reusable' do
+      allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
+      FactoryBot.create(:access_token, application_id: client.id, resource_owner_id: owner.id)
+      allow_any_instance_of(Doorkeeper::AccessToken).to receive(:reusable?).and_return(false)
+
+      expect do
+        subject.authorize
+      end.to change { Doorkeeper::AccessToken.count }.by(1)
     end
 
     it "calls configured request callback methods" do

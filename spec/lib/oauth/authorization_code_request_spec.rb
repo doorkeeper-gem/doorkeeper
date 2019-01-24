@@ -73,7 +73,7 @@ module Doorkeeper::OAuth
       expect(subject.error).to eq(:invalid_grant)
     end
 
-    it 'skips token creation if there is a matching one' do
+    it 'skips token creation if there is a matching one reusable' do
       scopes = grant.scopes
 
       Doorkeeper.configure do
@@ -86,6 +86,23 @@ module Doorkeeper::OAuth
                                        resource_owner_id: grant.resource_owner_id, scopes: grant.scopes.to_s)
 
       expect { subject.authorize }.to_not(change { Doorkeeper::AccessToken.count })
+    end
+
+    it 'creates token if there is a matching one but non reusable' do
+      scopes = grant.scopes
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        reuse_access_token
+        default_scopes(*scopes)
+      end
+
+      FactoryBot.create(:access_token, application_id: client.id,
+                                       resource_owner_id: grant.resource_owner_id, scopes: grant.scopes.to_s)
+
+      allow_any_instance_of(Doorkeeper::AccessToken).to receive(:reusable?).and_return(false)
+
+      expect { subject.authorize }.to change { Doorkeeper::AccessToken.count }.by(1)
     end
 
     it "calls configured request callback methods" do

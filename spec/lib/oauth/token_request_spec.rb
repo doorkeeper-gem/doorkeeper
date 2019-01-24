@@ -80,7 +80,7 @@ module Doorkeeper::OAuth
         end.to change { Doorkeeper::AccessToken.count }.by(1)
       end
 
-      it 'skips token creation if there is a matching one' do
+      it 'skips token creation if there is a matching one reusable' do
         allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
         allow(application.scopes).to receive(:has_scopes?).and_return(true)
         allow(application.scopes).to receive(:all?).and_return(true)
@@ -89,6 +89,21 @@ module Doorkeeper::OAuth
                                          resource_owner_id: owner.id, scopes: 'public')
 
         expect { subject.authorize }.not_to(change { Doorkeeper::AccessToken.count })
+      end
+
+      it 'creates new token if there is a matching one but non reusable' do
+        allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
+        allow(application.scopes).to receive(:has_scopes?).and_return(true)
+        allow(application.scopes).to receive(:all?).and_return(true)
+
+        FactoryBot.create(:access_token, application_id: pre_auth.client.id,
+                                         resource_owner_id: owner.id, scopes: 'public')
+
+        allow_any_instance_of(Doorkeeper::AccessToken).to receive(:reusable?).and_return(false)
+
+        expect do
+          subject.authorize
+        end.to change { Doorkeeper::AccessToken.count }.by(1)
       end
     end
   end
