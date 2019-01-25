@@ -6,6 +6,7 @@ module Doorkeeper
 
     include OAuth::Helpers
     include Models::Expirable
+    include Models::Reusable
     include Models::Revocable
     include Models::Accessible
     include Models::Orderable
@@ -132,7 +133,7 @@ module Doorkeeper
         if Doorkeeper.configuration.reuse_access_token
           access_token = matching_token_for(application, resource_owner_id, scopes)
 
-          return access_token if access_token && !access_token.expired?
+          return access_token if access_token && access_token.reusable?
         end
 
         create!(

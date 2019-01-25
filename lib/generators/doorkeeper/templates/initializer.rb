@@ -79,6 +79,16 @@ Doorkeeper.configure do
   #
   # reuse_access_token
 
+  # Set a limit for token_reuse if using reuse_access_token option
+  #
+  # This option limits token_reusability to some extent.
+  # If not set then access_token will be reused unless it expires.
+  # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/1189
+  #
+  # This option should be a percentage(i.e. (0,100])
+  #
+  # token_reuse_limit 100
+
   # Hash access and refresh tokens before persisting them.
   # This will disable the possibility to use +reuse_access_token+
   # since plain values can no longer be retrieved.

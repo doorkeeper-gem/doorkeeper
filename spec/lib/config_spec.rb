@@ -207,6 +207,31 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
+  describe 'token_reuse_limit' do
+    it 'is 100 by default' do
+      expect(subject.token_reuse_limit).to eq(100)
+    end
+
+    it 'can change the value' do
+      Doorkeeper.configure do
+        token_reuse_limit 90
+      end
+
+      expect(subject.token_reuse_limit).to eq(90)
+    end
+
+    it 'sets the value to 100 if invalid value is being set' do
+      expect(Rails.logger).to receive(:warn).with(/will be set to default 100/)
+
+      Doorkeeper.configure do
+        reuse_access_token
+        token_reuse_limit 110
+      end
+
+      expect(subject.token_reuse_limit).to eq(100)
+    end
+  end
+
   describe 'enforce_configured_scopes' do
     it 'is false by default' do
       expect(subject.enforce_configured_scopes?).to eq(false)

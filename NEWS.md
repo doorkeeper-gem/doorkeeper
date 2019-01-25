@@ -7,8 +7,8 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#1191]: Try to load bcrypt for hashing of application secrets, but add fallback.
-
+- [#1189] Option to set `token_reuse_limit`.
+- [#1191] Try to load bcrypt for hashing of application secrets, but add fallback.
 
 ## 5.1.0.rc1
 

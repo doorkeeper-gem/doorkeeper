@@ -126,6 +126,15 @@ module Doorkeeper
         @config.instance_variable_set(:@reuse_access_token, true)
       end
 
+      # Sets the token_reuse_limit
+      # It will be used only when reuse_access_token option in enabled
+      # By default it will be 100
+      # It will be used for token reusablity to some threshold percentage
+      # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/1189
+      def token_reuse_limit(percentage)
+        @config.instance_variable_set(:@token_reuse_limit, percentage)
+      end
+
       # Use an API mode for applications generated with --api argument
       # It will skip applications controller, disable forgery protection
       def api_only
@@ -319,6 +328,7 @@ module Doorkeeper
     # Return the valid subset of this configuration
     def validate
       validate_reuse_access_token_value
+      validate_token_reuse_limit
     end
 
     def api_only
@@ -335,6 +345,10 @@ module Doorkeeper
       else
         false
       end
+    end
+
+    def token_reuse_limit
+      @token_reuse_limit ||= 100
     end
 
     def enforce_configured_scopes?
@@ -432,10 +446,21 @@ module Doorkeeper
       return unless hash_token_secrets? && reuse_access_token
 
       ::Rails.logger.warn(
-        'You are configured both reuse_access_token AND hash_token_secrets. ' \
+        'You have configured both reuse_access_token AND hash_token_secrets. ' \
         'This combination is unsupported. reuse_access_token will be disabled'
       )
       @reuse_access_token = false
+    end
+
+    def validate_token_reuse_limit
+      return if !reuse_access_token ||
+                (token_reuse_limit > 0 && token_reuse_limit <= 100)
+
+      ::Rails.logger.warn(
+        'You have configured an invalid value for token_reuse_limit option. ' \
+        'It will be set to default 100'
+      )
+      @token_reuse_limit = 100
     end
   end
 end
