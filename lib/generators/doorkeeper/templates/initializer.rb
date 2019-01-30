@@ -219,6 +219,22 @@ Doorkeeper.configure do
   #
   # handle_auth_errors :raise
 
+  # Customize token introspection response.
+  # Allows to add your own fields to the introspection response
+  # (like `sub`, `aud` and so on). Can be a proc, lambda or any object responds
+  # to `.call` method).
+  #
+  # custom_introspection_response do |token, context|
+  #   {
+  #     "sub": "Z5O3upPC88QrAjx00dis",
+  #     "aud": "https://protected.example.net/resource",
+  #   }
+  # end
+  #
+  # or
+  #
+  # custom_introspection_response CustomIntrospectionResponder
+
   # Specify what grant flows are enabled in array of Strings. The valid
   # strings and the flows they enable are:
   #
