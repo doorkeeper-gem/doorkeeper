@@ -60,14 +60,14 @@ module Doorkeeper
 
       # 2.2. Introspection Response
       def success_response
-        {
+        customize_response(
           active: true,
           scope: @token.scopes_string,
           client_id: @token.try(:application).try(:uid),
           token_type: @token.token_type,
           exp: @token.expires_at.to_i,
           iat: @token.created_at.to_i
-        }
+        )
       end
 
       # If the introspection call is properly authorized but the token is not
@@ -124,6 +124,19 @@ module Doorkeeper
         else
           true
         end
+      end
+
+      # Allows to customize introspection response.
+      # Provides context (controller) and token for generating developer-specific
+      # response.
+      def customize_response(response)
+        customized_response = Doorkeeper.configuration.custom_introspection_response.call(
+          token,
+          server.context
+        )
+        return response if customized_response.blank?
+
+        response.merge(customized_response)
       end
     end
   end

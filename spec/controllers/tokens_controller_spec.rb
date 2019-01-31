@@ -159,6 +159,33 @@ describe Doorkeeper::TokensController do
       end
     end
 
+    context 'using custom introspection response' do
+      let(:client) { FactoryBot.create(:application) }
+      let(:access_token) { FactoryBot.create(:access_token, application: client) }
+
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          custom_introspection_response do |_token, _context|
+            {
+              sub: 'Z5O3upPC88QrAjx00dis',
+              aud: 'https://protected.example.net/resource'
+            }
+          end
+        end
+      end
+
+      it 'responds with full token introspection' do
+        request.headers['Authorization'] = "Bearer #{access_token.token}"
+
+        post :introspect, params: { token: access_token.token }
+
+        expect(json_response).to include('client_id', 'token_type', 'exp', 'iat', 'sub', 'aud')
+        should_have_json 'sub', 'Z5O3upPC88QrAjx00dis'
+        should_have_json 'aud', 'https://protected.example.net/resource'
+      end
+    end
+
     context 'public access token' do
       let(:client) { FactoryBot.create(:application) }
       let(:access_token) { FactoryBot.create(:access_token, application: nil) }
