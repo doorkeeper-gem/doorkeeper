@@ -133,12 +133,6 @@ Doorkeeper.configure do
   #
   # use_refresh_token
 
-  # Forbids creating/updating applications with arbitrary scopes that are
-  # not in configuration, i.e. `default_scopes` or `optional_scopes`.
-  # (disabled by default)
-  #
-  # enforce_configured_scopes
-
   # Provide support for an owner to be assigned to each registered application (disabled by default)
   # Optional parameter confirmation: true (default false) if you want to enforce ownership of
   # a registered application
@@ -161,6 +155,12 @@ Doorkeeper.configure do
   # Note: scopes should be from configured_scopes(i.e. deafult or optional)
   #
   # scopes_by_grant_type password: [:write], client_credentials: [:update]
+
+  # Forbids creating/updating applications with arbitrary scopes that are
+  # not in configuration, i.e. `default_scopes` or `optional_scopes`.
+  # (disabled by default)
+  #
+  # enforce_configured_scopes
 
   # Change the way client credentials are retrieved from the request object.
   # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then
@@ -220,14 +220,16 @@ Doorkeeper.configure do
   # handle_auth_errors :raise
 
   # Customize token introspection response.
-  # Allows to add your own fields to the introspection response
-  # (like `sub`, `aud` and so on). Can be a proc, lambda or any object responds
-  # to `.call` method).
+  # Allows to add your own fields to default one that are required by the OAuth spec
+  # for the introspection response. It could be `sub`, `aud` and so on.
+  # This configuration option can be a proc, lambda or any Ruby object responds
+  # to `.call` method and result of it's invocation must be a Hash.
   #
   # custom_introspection_response do |token, context|
   #   {
   #     "sub": "Z5O3upPC88QrAjx00dis",
   #     "aud": "https://protected.example.net/resource",
+  #     "username": User.find(token.resource_owner_id).username
   #   }
   # end
   #

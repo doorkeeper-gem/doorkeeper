@@ -129,6 +129,9 @@ module Doorkeeper
       # Allows to customize introspection response.
       # Provides context (controller) and token for generating developer-specific
       # response.
+      #
+      # @see https://tools.ietf.org/html/rfc7662#section-2.2
+      #
       def customize_response(response)
         customized_response = Doorkeeper.configuration.custom_introspection_response.call(
           token,
