@@ -91,7 +91,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
 
     it "includes access token in fragment" do
-      expect(redirect_uri.match(/access_token=([a-f0-9]+)&?/)[1]).to eq(Doorkeeper::AccessToken.first.token)
+      expect(redirect_uri.match(/access_token=([a-zA-Z0-9\-_]+)&?/)[1]).to eq(Doorkeeper::AccessToken.first.token)
     end
 
     it "includes token type in fragment" do
@@ -408,7 +408,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
       expect(redirect_uri.match(/token_type=(\w+)&?/)[1]).to eq "Bearer"
       expect(redirect_uri.match(/expires_in=(\d+)&?/)[1].to_i).to eq 1234
       expect(
-        redirect_uri.match(/access_token=([a-f0-9]+)&?/)[1]
+        redirect_uri.match(/access_token=([a-zA-Z0-9\-_]+)&?/)[1]
       ).to eq Doorkeeper::AccessToken.first.token
     end
 
