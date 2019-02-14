@@ -7,6 +7,12 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1201] Fix custom TTL block `client` parameter to always be an `Doorkeeper::Application` instance.
+
+  **[IMPORTANT]**: those who defined `custom_access_token_expires_in` configuration option need to check
+  their block implementation: if you are using `oauth_client.application` to get `Doorkeeper::Application`
+  instance, then you need to replace it with just `oauth_client`.
+
 - [#1195] Allow to customize Token Introspection response (fixes #1194).
 - [#1189] Option to set `token_reuse_limit`.
 - [#1191] Try to load bcrypt for hashing of application secrets, but add fallback.
