@@ -318,6 +318,15 @@ module Doorkeeper
     option :access_token_generator,
            default: 'Doorkeeper::OAuth::Helpers::UniqueToken'
 
+
+    # Default access token generator is a SecureRandom class from Ruby stdlib.
+    # This option defines which method will be used to generate a unique token value.
+    #
+    # @param access_token_generator [String]
+    #   the name of the access token generator class
+    #
+    option :default_generator_method,  default: :urlsafe_base64
+
     # The controller Doorkeeper::ApplicationController inherits from.
     # Defaults to ActionController::Base.
     # https://github.com/doorkeeper-gem/doorkeeper#custom-base-controller

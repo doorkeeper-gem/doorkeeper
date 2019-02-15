@@ -482,6 +482,22 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
+  describe 'default_generator_method' do
+    it "is :urlsafe_base64 by default" do
+      expect(Doorkeeper.configuration.default_generator_method)
+        .to eq(:urlsafe_base64)
+    end
+
+    it 'can change the value' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        default_generator_method :hex
+      end
+
+      expect(subject.default_generator_method).to eq(:hex)
+    end
+  end
+
   describe 'base_controller' do
     context 'default' do
       it { expect(Doorkeeper.configuration.base_controller).to eq('ActionController::Base') }

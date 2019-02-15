@@ -13,6 +13,16 @@ User-visible changes worth mentioning.
   their block implementation: if you are using `oauth_client.application` to get `Doorkeeper::Application`
   instance, then you need to replace it with just `oauth_client`.
 
+- [#1200] Increase default Doorkeeper access token value complexity (`urlsafe_base64` instead of just `hex`)
+  matching RFC6749/RFC6750.
+
+  **[IMPORTANT]**: this change have possible side-effects in case you have custom database constraints for
+  access token value, application secrets, refresh tokens or you patched Doorkeeper models and introduced
+  token value validations, or you are using database with case-insensitive WHERE clause like MySQL
+  (you can face some collisions). Before this change access token value matched `[a-f0-9]` regex, and now
+  it matches `[a-zA-Z0-9\-_]`. In case you have such restrictions and your don't use custom token generator
+  please change configuration option `default_generator_method ` to `:hex`.
+
 - [#1195] Allow to customize Token Introspection response (fixes #1194).
 - [#1189] Option to set `token_reuse_limit`.
 - [#1191] Try to load bcrypt for hashing of application secrets, but add fallback.
