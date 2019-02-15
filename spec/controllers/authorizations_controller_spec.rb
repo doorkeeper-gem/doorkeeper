@@ -165,7 +165,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     let(:redirect_uri) { response_json_body['redirect_uri'] }
 
     it 'renders 400 error' do
-      expect(response.status).to eq 401
+      expect(response.status).to eq 400
     end
 
     it 'includes correct redirect URI' do

@@ -6,7 +6,7 @@ module Doorkeeper
       if doorkeeper_token && doorkeeper_token.accessible?
         render json: doorkeeper_token, status: :ok
       else
-        error = OAuth::ErrorResponse.new(name: :invalid_request)
+        error = OAuth::InvalidTokenResponse.new
         response.headers.merge!(error.headers)
         render json: error.body, status: error.status
       end
