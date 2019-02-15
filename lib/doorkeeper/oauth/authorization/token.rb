@@ -8,7 +8,9 @@ module Doorkeeper
 
         class << self
           def build_context(pre_auth_or_oauth_client, grant_type, scopes)
-            oauth_client = if pre_auth_or_oauth_client.respond_to?(:client)
+            oauth_client = if pre_auth_or_oauth_client.respond_to?(:application)
+                             pre_auth_or_oauth_client.application
+                           elsif pre_auth_or_oauth_client.respond_to?(:client)
                              pre_auth_or_oauth_client.client
                            else
                              pre_auth_or_oauth_client
