@@ -2,6 +2,8 @@ require 'doorkeeper/version'
 require 'doorkeeper/engine'
 require 'doorkeeper/config'
 
+require 'doorkeeper/default_encryption_box.rb'
+
 require 'doorkeeper/request/strategy'
 require 'doorkeeper/request/authorization_code'
 require 'doorkeeper/request/client_credentials'
@@ -58,6 +60,7 @@ require 'doorkeeper/models/concerns/reusable'
 require 'doorkeeper/models/concerns/revocable'
 require 'doorkeeper/models/concerns/accessible'
 require 'doorkeeper/models/concerns/hashable'
+require 'doorkeeper/models/concerns/encryptable'
 
 require 'doorkeeper/models/access_grant_mixin'
 require 'doorkeeper/models/access_token_mixin'

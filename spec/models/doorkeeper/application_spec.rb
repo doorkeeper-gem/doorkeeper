@@ -183,6 +183,16 @@ module Doorkeeper
       end
     end
 
+    context 'with encryption enabled' do
+      include_context 'with encryption enabled'
+      let(:app) { FactoryBot.create :application }
+
+      it 'does not provide access to secret after loading' do
+        lookup = clazz.by_uid_and_secret(app.uid, app.plaintext_secret)
+        expect(lookup.plaintext_secret).to eq(app.plaintext_secret)
+      end
+    end
+
     describe 'destroy related models on cascade' do
       before(:each) do
         new_application.save

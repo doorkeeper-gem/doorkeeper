@@ -25,6 +25,20 @@ module Doorkeeper
         expect(token.token).to be_a(String)
       end
 
+      context 'with encryption enabled' do
+        let(:token) { FactoryBot.create :access_token, use_refresh_token: true }
+        let(:loaded) { clazz.find_by(token: token.token) }
+        include_context 'with encryption enabled'
+
+        it 'decrypts a volatile plaintext token' do
+          expect(loaded.plaintext_token).to eq(token.plaintext_token)
+        end
+
+        it 'decrypts a volatile plaintext refresh token' do
+          expect(loaded.plaintext_refresh_token).to eq(token.plaintext_refresh_token)
+        end
+      end
+
       context 'with hashing enabled' do
         let(:token) { FactoryBot.create :access_token }
         include_context 'with token hashing enabled'

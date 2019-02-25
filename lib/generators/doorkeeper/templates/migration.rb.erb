@@ -7,7 +7,10 @@ class CreateDoorkeeperTables < ActiveRecord::Migration<%= migration_version %>
       t.text    :redirect_uri, null: false
       t.string  :scopes,       null: false, default: ''
       t.boolean :confidential, null: false, default: true
-      t.timestamps             null: false
+      t.timestamps             null: false,
+      
+      # Uncomment following lines if using encrypt_token_secrets
+      # t.binary :encrypted_secret
     end
 
     add_index :oauth_applications, :uid, unique: true
@@ -21,6 +24,9 @@ class CreateDoorkeeperTables < ActiveRecord::Migration<%= migration_version %>
       t.datetime :created_at,        null: false
       t.datetime :revoked_at
       t.string   :scopes
+      
+      # Uncomment following lines if using encrypt_token_secrets
+      # t.binary :encrypted_token
     end
 
     add_index :oauth_access_grants, :token, unique: true
@@ -55,6 +61,10 @@ class CreateDoorkeeperTables < ActiveRecord::Migration<%= migration_version %>
       # Comment out this line if you'd rather have refresh tokens
       # instantly revoked.
       t.string   :previous_refresh_token, null: false, default: ""
+
+      # Uncomment following lines if using encrypt_token_secrets
+      # t.binary :encrypted_token
+      # t.binary :encrypted_refresh_token
     end
 
     add_index :oauth_access_tokens, :token, unique: true

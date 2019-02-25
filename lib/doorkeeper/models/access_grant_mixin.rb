@@ -10,6 +10,7 @@ module Doorkeeper
     include Models::Accessible
     include Models::Orderable
     include Models::Hashable
+    include Models::Encryptable
     include Models::Scopes
 
     # never uses pkce, if pkce migrations were not generated

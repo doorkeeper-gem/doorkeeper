@@ -7,6 +7,7 @@ module Doorkeeper
     include OAuth::Helpers
     include Models::Orderable
     include Models::Hashable
+    include Models::Encryptable
     include Models::Scopes
 
     included do

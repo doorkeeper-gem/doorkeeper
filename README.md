@@ -277,6 +277,26 @@ If you want to use bcrypt, simply add it to your Gemfile.
   gem 'bcrypt', require: false
 ```
 
+### Encryption of tokens and application secrets
+
+To enable encryption of access tokens and refresh tokens, uncomment the initializer lines
+`encrypt_token_secrets` and `encryption_key`. The option automatically enable
+`hash_token_secrets` and `hash_application_secrets`. The plain token/secret value will
+be available for presenting to the user in `token.plaintext_token`/`application.plaintext_secret`.
+
+By default gem uses `ActiveSupport::MessageEncryptor` for encryption. 
+You can redefine encryption algorithm by implementing class with methods `encrypt(plaintext)`
+and `decrypt(ciphertext)` (look default_encryption_box.rb as example)
+
+For example, you can use `rbnacl` SimpleBox for encryption
+Add gem `rbnacl` to you Gemfile and uncomment/add following lines in initializer
+
+```ruby
+encryption_box do
+  key = [Doorkeeper.configuration.encryption_key].pack('H*')
+  RbNaCl::SimpleBox.from_secret_key(key[0, RbNaCl::SecretBox.key_bytes])
+end
+```
 
 ### Internationalization (I18n)
 

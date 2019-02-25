@@ -48,7 +48,9 @@ module Doorkeeper
     # We keep a volatile copy of the raw client_secret for initial communication
     # The stored secret may be mapped and not available in cleartext.
     def plaintext_secret
-      if perform_secret_hashing?
+      if encrypt_token_secrets?
+        @raw_secret ||= decrypt_token(read_attribute(encrypted_column(:secret)))
+      elsif perform_secret_hashing?
         @raw_secret
       else
         secret
@@ -66,6 +68,11 @@ module Doorkeeper
 
       @raw_secret = UniqueToken.generate
       self.secret = hashed_or_plain_token(@raw_secret)
+      if encrypt_token_secrets?
+        assign_attributes(
+          encrypted_column(:secret) => encrypt_token(@raw_secret)
+        )
+      end
     end
 
     def scopes_match_configured

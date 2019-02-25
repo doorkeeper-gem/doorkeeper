@@ -11,6 +11,7 @@ module Doorkeeper
     include Models::Accessible
     include Models::Orderable
     include Models::Hashable
+    include Models::Encryptable
     include Models::Scopes
 
     module ClassMethods
@@ -230,7 +231,10 @@ module Doorkeeper
     # We keep a volatile copy of the raw refresh token for initial communication
     # The stored refresh_token may be mapped and not available in cleartext.
     def plaintext_refresh_token
-      if perform_secret_hashing?
+      if encrypt_token_secrets?
+        @raw_refresh_token ||=
+          decrypt_token(read_attribute(encrypted_column(:refresh_token)))
+      elsif perform_secret_hashing?
         @raw_refresh_token
       else
         refresh_token
@@ -240,7 +244,9 @@ module Doorkeeper
     # We keep a volatile copy of the raw token for initial communication
     # The stored refresh_token may be mapped and not available in cleartext.
     def plaintext_token
-      if perform_secret_hashing?
+      if encrypt_token_secrets?
+        @raw_token ||= decrypt_token(read_attribute(encrypted_column(:token)))
+      elsif perform_secret_hashing?
         @raw_token
       else
         token
@@ -256,6 +262,13 @@ module Doorkeeper
     def generate_refresh_token
       @raw_refresh_token = UniqueToken.generate
       self.refresh_token = hashed_or_plain_token(@raw_refresh_token)
+      if encrypt_token_secrets?
+        assign_attributes(
+          encrypted_column(:refresh_token) => encrypt_token(@raw_refresh_token)
+        )
+      end
+
+      @raw_refresh_token
     end
 
     # Generates and sets the token value with the
@@ -280,6 +293,10 @@ module Doorkeeper
       )
 
       self.token = hashed_or_plain_token(@raw_token)
+      if encrypt_token_secrets?
+        assign_attributes(encrypted_column(:token) => encrypt_token(@raw_token))
+      end
+
       @raw_token
     end
 

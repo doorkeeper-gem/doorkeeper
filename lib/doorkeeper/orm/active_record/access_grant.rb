@@ -33,7 +33,9 @@ module Doorkeeper
     #
     # If hash tokens are enabled, this will return nil on fetched tokens
     def plaintext_token
-      if perform_secret_hashing?
+      if encrypt_token_secrets?
+        @raw_token ||= decrypt_token(read_attribute(encrypted_column(:token)))
+      elsif perform_secret_hashing?
         @raw_token
       else
         token
@@ -49,6 +51,9 @@ module Doorkeeper
     def generate_token
       @raw_token = UniqueToken.generate
       self.token = hashed_or_plain_token(@raw_token)
+      if encrypt_token_secrets?
+        assign_attributes(encrypted_column(:token) => encrypt_token(@raw_token))
+      end
     end
   end
 end

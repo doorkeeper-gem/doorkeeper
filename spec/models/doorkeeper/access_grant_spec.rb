@@ -12,6 +12,17 @@ describe Doorkeeper::AccessGrant do
     let(:factory_name) { :access_grant }
   end
 
+  context 'with encryption enabled' do
+    let(:grant) { FactoryBot.create :access_grant }
+    include_context 'with encryption enabled'
+
+    it 'decrypts a volatile plaintext token' do
+      # Finder method only finds the hashed token
+      loaded = clazz.find_by(token: grant.token)
+      expect(loaded.plaintext_token).to eq(grant.plaintext_token)
+    end
+  end
+
   context 'with hashing enabled' do
     let(:grant) { FactoryBot.create :access_grant }
     include_context 'with token hashing enabled'

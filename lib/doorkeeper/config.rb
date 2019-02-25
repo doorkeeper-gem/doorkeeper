@@ -171,6 +171,12 @@ module Doorkeeper
       def fallback_to_plain_secrets
         @config.instance_variable_set(:@fallback_to_plain_secrets, true)
       end
+
+      # Allow optional encryption of input tokens before persisting them
+      # Will be used for encrypting of input token and grants.
+      def encrypt_token_secrets
+        @config.instance_variable_set(:@encrypt_token_secrets, true)
+      end
     end
 
     module Option
@@ -335,6 +341,14 @@ module Doorkeeper
     option :base_controller,
            default: 'ActionController::Base'
 
+    option :encryption_key
+    option :encryption_prefix_column, default: 'encrypted'
+    option :encryption_box,
+           default: (lambda do
+             key = [Doorkeeper.configuration.encryption_key].pack('H*')
+             Doorkeeper::DefaultEncryptionBox.new(key)
+           end)
+
     attr_reader :api_only,
                 :enforce_content_type,
                 :reuse_access_token
@@ -343,6 +357,7 @@ module Doorkeeper
     def validate
       validate_reuse_access_token_value
       validate_token_reuse_limit
+      enable_hashing_if_encryption_enabled
     end
 
     def api_only
@@ -383,6 +398,10 @@ module Doorkeeper
 
     def hash_token_secrets?
       option_set? :hash_token_secrets
+    end
+
+    def encrypt_token_secrets?
+      option_set? :encrypt_token_secrets
     end
 
     def hash_application_secrets?
@@ -450,6 +469,14 @@ module Doorkeeper
       types = grant_flows - ['implicit']
       types << 'refresh_token' if refresh_token_enabled?
       types
+    end
+
+    # Enables hashing if encrypt_token_secrets enabled
+    def enable_hashing_if_encryption_enabled
+      return unless encrypt_token_secrets?
+
+      @hash_token_secrets = true
+      @hash_application_secrets = true
     end
 
     # Determine whether +reuse_access_token+ and +hash_token_secrets+

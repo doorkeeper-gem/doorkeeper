@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180210183654) do
+ActiveRecord::Schema.define(version: 20190225040212) do
 
   create_table "oauth_access_grants", force: :cascade do |t|
     t.integer "resource_owner_id", null: false
@@ -25,6 +25,7 @@ ActiveRecord::Schema.define(version: 20180210183654) do
       t.string   "code_challenge"
       t.string   "code_challenge_method"
     end
+    t.binary "encrypted_token"
     t.index ["token"], name: "index_oauth_access_grants_on_token", unique: true
   end
 
@@ -38,6 +39,8 @@ ActiveRecord::Schema.define(version: 20180210183654) do
     t.datetime "created_at", null: false
     t.string "scopes"
     t.string "previous_refresh_token", default: "", null: false
+    t.binary "encrypted_token"
+    t.binary "encrypted_refresh_token"
     t.index ["refresh_token"], name: "index_oauth_access_tokens_on_refresh_token", unique: true
     t.index ["resource_owner_id"], name: "index_oauth_access_tokens_on_resource_owner_id"
     t.index ["token"], name: "index_oauth_access_tokens_on_token", unique: true
@@ -54,6 +57,7 @@ ActiveRecord::Schema.define(version: 20180210183654) do
     t.integer "owner_id"
     t.string "owner_type"
     t.boolean "confidential", default: true, null: false
+    t.binary "encrypted_secret"
     t.index ["owner_id", "owner_type"], name: "index_oauth_applications_on_owner_id_and_owner_type"
     t.index ["uid"], name: "index_oauth_applications_on_uid", unique: true
   end

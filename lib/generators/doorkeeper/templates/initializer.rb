@@ -112,6 +112,26 @@ Doorkeeper.configure do
   #
   # fallback_to_plain_secrets
 
+  # Encrypt access, refresh tokens and application secrets
+  # Note: If you are already a user of doorkeeper and have existing tokens
+  # with enabled hashing in your installation, then it's not possible to
+  # retrieve plaintext_token for existing tokens
+  #
+  # encrypt_token_secrets
+  # encryption_key Rails.application.secrets.secret_key_base
+
+  # By default gem uses `ActiveSupport::MessageEncryptor` for encryption
+  # You can redefine encryption algorithm by implementing class with methods
+  # `encrypt(plaintext)` and `decrypt(ciphertext)`
+  #
+  # For example, you can use `rbnacl` SimpleBox for encryption
+  # Add gem `rbnacl` to you Gemfile and uncomment following lines
+  #
+  # encryption_box do
+  #   key = [Doorkeeper.configuration.encryption_key].pack('H*')
+  #   RbNaCl::SimpleBox.from_secret_key(key[0, RbNaCl::SecretBox.key_bytes])
+  # end
+
   #
   # Since old values will not be re-hashed, lookups to tokens and secrets
   # will fall back to plain value comparison so any existing tokens will

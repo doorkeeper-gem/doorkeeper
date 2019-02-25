@@ -7,6 +7,8 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1205] Allow optional encryption of tokens and secrets
+
 - [#1201] Fix custom TTL block `client` parameter to always be an `Doorkeeper::Application` instance.
 
   **[IMPORTANT]**: those who defined `custom_access_token_expires_in` configuration option need to check
