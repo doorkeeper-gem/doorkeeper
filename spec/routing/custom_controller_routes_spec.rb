@@ -2,6 +2,10 @@ require 'spec_helper'
 
 describe 'Custom controller for routes' do
   before :all do
+    Doorkeeper.configure do
+      orm DOORKEEPER_ORM
+    end
+
     Rails.application.routes.disable_clear_and_finalize = true
 
     Rails.application.routes.draw do
