@@ -6,21 +6,11 @@ module Doorkeeper
 
     include OAuth::Helpers
     include Models::Orderable
-    include Models::Hashable
+    include Models::SecretStorable
     include Models::Scopes
-
-    included do
-      configure_secrets_hashing
-    end
 
     # :nodoc
     module ClassMethods
-      # We want to perform secret hashing whenever the user
-      # enables the configuration option +hash_application_secrets+
-      def perform_secret_hashing?
-        Doorkeeper.configuration.hash_application_secrets?
-      end
-
       # Returns an instance of the Doorkeeper::Application with
       # specific UID and secret.
       #
@@ -53,46 +43,17 @@ module Doorkeeper
       end
 
       ##
-      # Configure secrets hashing for applications.
-      # We will try to load bcrypt for hashing, and fall back
-      # when it cannot be loaded.
-      def configure_secrets_hashing
-        if perform_secret_hashing? && bcrypt_present?
-          use_bcrypt_for_hashing
-        else
-          self.secret_comparer = nil
-          self.secret_hash_function = nil
-        end
-      end
-
-      private
-
-      ##
-      # Test if we can require the BCrypt gem
-      def bcrypt_present?
-        require 'bcrypt'
-        true
-      rescue LoadError
-        false
+      # Determines the secret storing transformer
+      # Unless configured otherwise, uses the plain secret strategy
+      def secret_strategy
+        ::Doorkeeper.configuration.application_secret_strategy
       end
 
       ##
-      # Set hash function and comparer to BCrypt password hashing
-      # Requires to bcrypt gem to be present
-      def use_bcrypt_for_hashing
-        # If available, use BCrypt as the hashing function for applications
-        self.secret_hash_function = lambda do |plain_token|
-          ::BCrypt::Password.create(plain_token.to_s)
-        end
-
-        # Also need to override the comparer function for BCrypt
-        self.secret_comparer = lambda do |plain, secret|
-          begin
-            ::BCrypt::Password.new(secret.to_s) == plain.to_s
-          rescue BCrypt::Errors::InvalidHash
-            false
-          end
-        end
+      # Determine the fallback storing strategy
+      # Unless configured, there will be no fallback
+      def fallback_secret_strategy
+        ::Doorkeeper.configuration.application_secret_fallback_strategy
       end
     end
 
@@ -119,12 +80,12 @@ module Doorkeeper
       return false if input.nil? || secret.nil?
 
       # When matching the secret by comparer function, all is well.
-      return true if self.class.secret_matches?(input, secret)
+      return true if secret_strategy.secret_matches?(input, secret)
 
       # When fallback lookup is enabled, ensure applications
       # with plain secrets can still be found
-      if Doorkeeper.configuration.fallback_to_plain_secrets?
-        ActiveSupport::SecurityUtils.secure_compare(input, secret)
+      if fallback_secret_strategy
+        fallback_secret_strategy.secret_matches?(input, secret)
       else
         false
       end

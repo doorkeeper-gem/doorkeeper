@@ -156,20 +156,53 @@ module Doorkeeper
 
       # Allow optional hashing of input tokens before persisting them.
       # Will be used for hashing of input token and grants.
-      def hash_token_secrets
-        @config.instance_variable_set(:@hash_token_secrets, true)
+      #
+      # @param using
+      #   Provide a different secret storage implementation class for tokens
+      # @param fallback
+      #   Provide a fallback secret storage implementation class for tokens
+      #   or use :plain to fallback to plain tokens
+      def hash_token_secrets(using: nil, fallback: nil)
+        default = '::Doorkeeper::SecretStoring::Sha256Hash'
+        configure_secrets_for :token,
+                              using: using || default,
+                              fallback: fallback
       end
 
       # Allow optional hashing of application secrets before persisting them.
       # Will be used for hashing of input token and grants.
-      def hash_application_secrets
-        @config.instance_variable_set(:@hash_application_secrets, true)
+      #
+      # @param using
+      #   Provide a different secret storage implementation for applications
+      # @param fallback
+      #   Provide a fallback secret storage implementation for applications
+      #   or use :plain to fallback to plain application secrets
+      def hash_application_secrets(using: nil, fallback: nil)
+        default = '::Doorkeeper::SecretStoring::Sha256Hash'
+        configure_secrets_for :application,
+                              using: using || default,
+                              fallback: fallback
       end
 
-      # Allow plain value lookup when using +hash_token_secrets+
-      # or +hash_application_secrets+ to avoid disrupting application experience
-      def fallback_to_plain_secrets
-        @config.instance_variable_set(:@fallback_to_plain_secrets, true)
+      private
+
+      # Configure the secret storing functionality
+      def configure_secrets_for(type, using:, fallback:)
+        unless %i[application token].include?(type)
+          raise ArgumentError, "Invalid type #{type}"
+        end
+
+        @config.instance_variable_set(:"@#{type}_secret_strategy",
+                                      using.constantize)
+
+        if fallback.nil?
+          return
+        elsif fallback.to_sym == :plain
+          fallback = '::Doorkeeper::SecretStoring::Plain'
+        end
+
+        @config.instance_variable_set(:"@#{type}_secret_fallback_strategy",
+                                      fallback.constantize)
       end
     end
 
@@ -343,6 +376,7 @@ module Doorkeeper
     def validate
       validate_reuse_access_token_value
       validate_token_reuse_limit
+      validate_secret_strategies
     end
 
     def api_only
@@ -381,16 +415,20 @@ module Doorkeeper
       handle_auth_errors == :raise
     end
 
-    def hash_token_secrets?
-      option_set? :hash_token_secrets
+    def token_secret_strategy
+      @token_secret_strategy ||= ::Doorkeeper::SecretStoring::Plain
     end
 
-    def hash_application_secrets?
-      option_set? :hash_application_secrets
+    def token_secret_fallback_strategy
+      @token_secret_fallback_strategy
     end
 
-    def fallback_to_plain_secrets?
-      option_set? :fallback_to_plain_secrets
+    def application_secret_strategy
+      @application_secret_strategy ||= ::Doorkeeper::SecretStoring::Plain
+    end
+
+    def application_secret_fallback_strategy
+      @application_secret_fallback_strategy
     end
 
     def default_scopes
@@ -452,18 +490,27 @@ module Doorkeeper
       types
     end
 
-    # Determine whether +reuse_access_token+ and +hash_token_secrets+
-    # have both been activated.
+    # Determine whether +reuse_access_token+ and a non-restorable
+    # +token_secret_strategy+ have both been activated.
     #
     # In that case, disable reuse_access_token value and warn the user.
     def validate_reuse_access_token_value
-      return unless hash_token_secrets? && reuse_access_token
+      strategy = token_secret_strategy
+      return if !reuse_access_token || strategy.allows_restoring_secrets?
 
       ::Rails.logger.warn(
-        'You have configured both reuse_access_token AND hash_token_secrets. ' \
-        'This combination is unsupported. reuse_access_token will be disabled'
+        "You have configured both reuse_access_token " \
+        "AND strategy strategy '#{strategy}' that cannot restore tokens. " \
+        "This combination is unsupported. reuse_access_token will be disabled"
       )
       @reuse_access_token = false
+    end
+
+    # Validate that the provided strategies are valid for
+    # tokens and applications
+    def validate_secret_strategies
+      token_secret_strategy.validate_for :token
+      application_secret_strategy.validate_for :application
     end
 
     def validate_token_reuse_limit

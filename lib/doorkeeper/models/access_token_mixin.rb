@@ -10,7 +10,7 @@ module Doorkeeper
     include Models::Revocable
     include Models::Accessible
     include Models::Orderable
-    include Models::Hashable
+    include Models::SecretStorable
     include Models::Scopes
 
     module ClassMethods
@@ -38,12 +38,6 @@ module Doorkeeper
       #
       def by_refresh_token(refresh_token)
         find_by_plaintext_token(:refresh_token, refresh_token)
-      end
-
-      # We want to perform secret hashing whenever the user
-      # enables the configuration option +hash_token_secrets+
-      def perform_secret_hashing?
-        Doorkeeper.configuration.hash_token_secrets?
       end
 
       # Revokes AccessToken records that have not been revoked and associated
@@ -176,6 +170,20 @@ module Doorkeeper
       def last_authorized_token_for(application_id, resource_owner_id)
         authorized_tokens_for(application_id, resource_owner_id).first
       end
+
+      ##
+      # Determines the secret storing transformer
+      # Unless configured otherwise, uses the plain secret strategy
+      def secret_strategy
+        ::Doorkeeper.configuration.token_secret_strategy
+      end
+
+      ##
+      # Determine the fallback storing strategy
+      # Unless configured, there will be no fallback
+      def fallback_secret_strategy
+        ::Doorkeeper.configuration.token_secret_fallback_strategy
+      end
     end
 
     # Access Token type: Bearer.
@@ -230,20 +238,24 @@ module Doorkeeper
     # We keep a volatile copy of the raw refresh token for initial communication
     # The stored refresh_token may be mapped and not available in cleartext.
     def plaintext_refresh_token
-      if perform_secret_hashing?
-        @raw_refresh_token
+      if secret_strategy.allows_restoring_secrets?
+        secret_strategy.restore_secret(self, :refresh_token)
       else
-        refresh_token
+        @raw_refresh_token
       end
     end
 
     # We keep a volatile copy of the raw token for initial communication
     # The stored refresh_token may be mapped and not available in cleartext.
+    #
+    # Some strategies allow restoring stored secrets (e.g. symmetric encryption)
+    # while hashing strategies do not, so you cannot rely on this value
+    # returning a present value for persisted tokens.
     def plaintext_token
-      if perform_secret_hashing?
-        @raw_token
+      if secret_strategy.allows_restoring_secrets?
+        secret_strategy.restore_secret(self, :token)
       else
-        token
+        @raw_token
       end
     end
 
@@ -255,7 +267,7 @@ module Doorkeeper
     #
     def generate_refresh_token
       @raw_refresh_token = UniqueToken.generate
-      self.refresh_token = hashed_or_plain_token(@raw_refresh_token)
+      secret_strategy.store_secret(self, :refresh_token, @raw_refresh_token)
     end
 
     # Generates and sets the token value with the
@@ -279,7 +291,7 @@ module Doorkeeper
         created_at: created_at
       )
 
-      self.token = hashed_or_plain_token(@raw_token)
+      secret_strategy.store_secret(self, :token, @raw_token)
       @raw_token
     end
 
