@@ -32,7 +32,11 @@ module Doorkeeper
       end
 
       def status
-        :unauthorized
+        if name == :invalid_client
+          :unauthorized
+        else
+          :bad_request
+        end
       end
 
       def redirectable?

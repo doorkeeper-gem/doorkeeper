@@ -7,6 +7,11 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1202] Use correct HTTP status codes for error responses
+
+  **[IMPORTANT]**: this change might break your application if you were relying on the previous
+  401 status codes, this is now a 400 by default, or a 401 for `invalid_client` and `invalid_token` errors.
+
 - [#1201] Fix custom TTL block `client` parameter to always be an `Doorkeeper::Application` instance.
 
   **[IMPORTANT]**: those who defined `custom_access_token_expires_in` configuration option need to check

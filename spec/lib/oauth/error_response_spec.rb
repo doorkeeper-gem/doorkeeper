@@ -3,7 +3,13 @@ require 'spec_helper'
 module Doorkeeper::OAuth
   describe ErrorResponse do
     describe '#status' do
-      it 'should have a status of unauthorized' do
+      it 'should have a status of bad_request' do
+        expect(subject.status).to eq(:bad_request)
+      end
+
+      it 'should have a status of unauthorized for an invalid_client error' do
+        subject = described_class.new(name: :invalid_client)
+
         expect(subject.status).to eq(:unauthorized)
       end
     end

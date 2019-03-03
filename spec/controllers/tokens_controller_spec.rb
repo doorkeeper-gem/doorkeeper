@@ -20,7 +20,7 @@ describe Doorkeeper::TokensController do
 
       post :create
 
-      expect(response.status).to eq 401
+      expect(response.status).to eq 400
       expect(response.headers['WWW-Authenticate']).to match(/Bearer/)
     end
   end
@@ -49,7 +49,7 @@ describe Doorkeeper::TokensController do
         "error"             => custom_message,
         "error_description" => "Authorization custom message"
       }
-      expect(response.status).to eq 401
+      expect(response.status).to eq 400
       expect(response.headers['WWW-Authenticate']).to match(/Bearer/)
       expect(JSON.parse(response.body)).to eq expected_response_body
     end
@@ -284,7 +284,7 @@ describe Doorkeeper::TokensController do
         post :introspect, params: { token: access_token.token }
 
         expect(response).not_to be_successful
-        response_status_should_be 401
+        response_status_should_be 400
 
         should_not_have_json 'active'
         should_have_json 'error', 'invalid_request'
