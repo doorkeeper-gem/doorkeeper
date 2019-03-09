@@ -7,7 +7,8 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#1202] Use correct HTTP status codes for error responses
+- [#1209] Fix tokens validation for Token Introspection request.
+- [#1202] Use correct HTTP status codes for error responses.
 
   **[IMPORTANT]**: this change might break your application if you were relying on the previous
   401 status codes, this is now a 400 by default, or a 401 for `invalid_client` and `invalid_token` errors.

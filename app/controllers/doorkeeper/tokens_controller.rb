@@ -33,7 +33,7 @@ module Doorkeeper
       if introspection.authorized?
         render json: introspection.to_json, status: 200
       else
-        error = OAuth::ErrorResponse.new(name: introspection.error)
+        error = introspection.error_response
         response.headers.merge!(error.headers)
         render json: error.body, status: error.status
       end
