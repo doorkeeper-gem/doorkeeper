@@ -66,7 +66,7 @@ describe 'Client Credentials Request' do
 
   context 'when application scopes contain some of the default scopes and no scope is passed' do
     before do
-      client.update_attributes(scopes: 'read write public')
+      client.update(scopes: 'read write public')
     end
 
     it 'issues new token with one default scope that are present in application scopes' do

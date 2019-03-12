@@ -1,6 +1,17 @@
 require File.expand_path('boot', __dir__)
 
-require 'rails/all'
+require "rails"
+
+%w[
+  action_controller/railtie
+  action_view/railtie
+  sprockets/railtie
+].each do |railtie|
+  begin
+    require railtie
+  rescue LoadError
+  end
+end
 
 Bundler.require(*Rails.groups)
 

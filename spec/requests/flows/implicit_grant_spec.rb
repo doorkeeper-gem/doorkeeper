@@ -20,7 +20,7 @@ feature 'Implicit Grant Flow (feature spec)' do
 
   context 'when application scopes are present and no scope is passed' do
     background do
-      @client.update_attributes(scopes: 'public write read')
+      @client.update(scopes: 'public write read')
     end
 
     scenario 'access token has no scopes' do

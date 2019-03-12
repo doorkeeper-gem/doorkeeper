@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1215] Fix deprecates for Rails 6.
 - [#1209] Fix tokens validation for Token Introspection request.
 - [#1202] Use correct HTTP status codes for error responses.
 

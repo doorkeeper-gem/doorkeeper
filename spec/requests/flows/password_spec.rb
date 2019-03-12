@@ -149,7 +149,7 @@ describe 'Resource Owner Password Credentials Flow' do
   context 'when application scopes are present and differs from configured default scopes and no scope is passed' do
     before do
       default_scopes_exist :public
-      @client.update_attributes(scopes: 'abc')
+      @client.update(scopes: 'abc')
     end
 
     it 'issues new token without any scope' do
@@ -168,7 +168,7 @@ describe 'Resource Owner Password Credentials Flow' do
 
   context 'when application scopes contain some of the default scopes and no scope is passed' do
     before do
-      @client.update_attributes(scopes: 'read write public')
+      @client.update(scopes: 'read write public')
     end
 
     it 'issues new token with one default scope that are present in application scopes' do

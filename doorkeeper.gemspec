@@ -19,7 +19,8 @@ Gem::Specification.new do |gem|
   gem.add_dependency 'railties', '>= 4.2'
   gem.required_ruby_version = '>= 2.1'
 
-  gem.add_development_dependency 'capybara', '~> 2.18'
+  gem.add_development_dependency 'appraisal'
+  gem.add_development_dependency 'capybara'
   gem.add_development_dependency 'coveralls'
   gem.add_development_dependency 'danger', '~> 5.0'
   gem.add_development_dependency 'database_cleaner', '~> 1.6'
