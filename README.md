@@ -38,6 +38,7 @@ Supported features:
 - [Extensions](#extensions)
 - [Example Applications](#example-applications)
 - [Tutorials](#tutorials)
+- [Sponsors](#sponsors)
 - [Development](#development)
 - [Contributing](#contributing)
 - [Contributors](#contributors)
@@ -121,6 +122,12 @@ here](https://github.com/doorkeeper-gem/doorkeeper/wiki/Testing-your-provider-wi
 ## Tutorials
 
 See [list of tutorials](https://github.com/doorkeeper-gem/doorkeeper/wiki#how-tos--tutorials) in order to learn how to use the gem or integrate it with other solutions / gems.
+
+## Sponsors
+
+<a href="https://oauth.io" target="_blank"><img src="https://oauth.io/img/logo_text.png"/></a>
+
+> If you prefer not to deal with the gory details of OAuth 2, need dedicated customer support & consulting, try the cloud-based SaaS version: [https://oauth.io](https://oauth.io)
 
 ## Development
 
