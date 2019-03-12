@@ -22,546 +22,105 @@ Supported features:
   - [Proof Key for Code Exchange](https://tools.ietf.org/html/rfc7636)
 - [OAuth 2.0 Token Revocation](http://tools.ietf.org/html/rfc7009)
 - [OAuth 2.0 Token Introspection](https://tools.ietf.org/html/rfc7662)
-
-See [list of tutorials](https://github.com/doorkeeper-gem/doorkeeper/wiki#how-tos--tutorials) in order to
-learn how to use the gem or integrate it with other solutions / gems.
-
-## Documentation valid for `master` branch
-
-Please check the documentation for the version of doorkeeper you are using in:
-https://github.com/doorkeeper-gem/doorkeeper/releases
-
-- See the [Wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki)
-- See [upgrade guides](https://github.com/doorkeeper-gem/doorkeeper/wiki/Migration-from-old-versions)
-- For general questions, please post in [Stack Overflow](http://stackoverflow.com/questions/tagged/doorkeeper)
-- See [SECURITY.md](SECURITY.md) for this project's security disclose
-  policy
+- [OAuth 2.0 Threat Model and Security Considerations](http://tools.ietf.org/html/rfc6819)
 
 ## Table of Contents
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+
+- [Documentation](#documentation)
 - [Installation](#installation)
-- [Configuration](#configuration)
-  - [ORM](#orm)
-    - [Active Record](#active-record)
-    - [MongoDB](#mongodb)
-    - [Sequel](#sequel)
-    - [Couchbase](#couchbase)
-  - [API mode](#api-mode)
-  - [Routes](#routes)
-  - [Authenticating](#authenticating)
-  - [Hashing of token and application secrets](#hashing-of-token-and-application-secrets)
-  - [Internationalization (I18n)](#internationalization-i18n)
-  - [Customizing errors](#customizing-errors)
-  - [Rake Tasks](#rake-tasks)
-- [Protecting resources with OAuth (a.k.a your API endpoint)](#protecting-resources-with-oauth-aka-your-api-endpoint)
-  - [Ruby on Rails controllers](#ruby-on-rails-controllers)
-  - [Grape endpoints](#grape-endpoints)
-  - [Route Constraints and other integrations](#route-constraints-and-other-integrations)
-  - [Access Token Scopes](#access-token-scopes)
-  - [Custom Access Token Generator](#custom-access-token-generator)
-  - [Authenticated resource owner](#authenticated-resource-owner)
-  - [Applications list](#applications-list)
-- [Other customizations](#other-customizations)
-- [Testing](#testing)
-- [Upgrading](#upgrading)
+  - [Ruby on Rails](#ruby-on-rails)
+  - [Grape](#grape)
+- [ORMs](#orms)
+- [Extensions](#extensions)
+- [Example Applications](#example-applications)
+- [Tutorials](#tutorials)
 - [Development](#development)
 - [Contributing](#contributing)
-- [Other resources](#other-resources)
-  - [Wiki](#wiki)
-  - [Screencast](#screencast)
-  - [Client applications](#client-applications)
-  - [Contributors](#contributors)
-  - [IETF Standards](#ietf-standards)
-  - [License](#license)
+- [Contributors](#contributors)
+- [License](#license)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## Documentation
+
+This documentation is valid for `master` branch. Please check the documentation for the version of doorkeeper you are using in:
+https://github.com/doorkeeper-gem/doorkeeper/releases.
+
+Additionally, other resources can be found on:
+
+- [Guides](https://doorkeeper.gitbook.io/guides/) with how-to get started and configuration documentation
+- See the [Wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki) with articles and other documentation
+- Screencast from [railscasts.com](http://railscasts.com/): [#353
+OAuth with
+Doorkeeper](http://railscasts.com/episodes/353-oauth-with-doorkeeper)
+- See [upgrade guides](https://github.com/doorkeeper-gem/doorkeeper/wiki/Migration-from-old-versions)
+- For general questions, please post on [Stack Overflow](http://stackoverflow.com/questions/tagged/doorkeeper)
+- See [SECURITY.md](SECURITY.md) for this project's security disclose
+  policy
+
 ## Installation
 
-Put this in your Gemfile:
+Installation depends on the framework you're using. The first step is to add the following to your Gemfile:
 
-``` ruby
+```ruby
 gem 'doorkeeper'
 ```
 
-Run the installation generator with:
+And run `bundle install`. After this, check out the guide related to the framework you're using.
 
-    rails generate doorkeeper:install
+### Ruby on Rails
 
-This will install the doorkeeper initializer into `config/initializers/doorkeeper.rb`.
+Doorkeeper currently supports Ruby on Rails 5. See the guide [here](https://doorkeeper.gitbook.io/guides/ruby-on-rails/getting-started).
 
-## Configuration
+### Grape
 
-### ORM
+Guide for integration with Grape framework can be found [here](https://doorkeeper.gitbook.io/guides/grape/grape).
 
-#### Active Record
+## ORMs
 
-By default doorkeeper is configured to use Active Record, so to start you have
-to generate the migration tables (supports Rails >= 5 migrations versioning):
+Doorkeeper supports Active Record by default, but can be configured to work with the following ORMs:
 
-    rails generate doorkeeper:migration
+| ORM | Support via |
+| :--- | :--- |
+| Active Record | by default |
+| MongoDB | [doorkeeper-gem/doorkeeper-mongodb](https://github.com/doorkeeper-gem/doorkeeper-mongodb) |
+| Sequel | [nbulaj/doorkeeper-sequel](https://github.com/nbulaj/doorkeeper-sequel) |
+| Couchbase | [acaprojects/doorkeeper-couchbase](https://github.com/acaprojects/doorkeeper-couchbase) |
 
-You may want to add foreign keys to your migration. For example, if you plan on
-using `User` as the resource owner, add the following line to the migration file
-for each table that includes a `resource_owner_id` column:
+## Extensions
 
-```ruby
-add_foreign_key :table_name, :users, column: :resource_owner_id
-```
+Extensions that are not included by default and can be installed separately.
 
-If you want to enable [PKCE flow] for mobile apps, you need to generate another
-migration:
+|  | Link |
+| :--- | :--- |
+| OpenID Connect extension | [doorkeeper-gem/doorkeeper-openid\_connect](https://github.com/doorkeeper-gem/doorkeeper-openid_connect) |
+| JWT Token support | [doorkeeper-gem/doorkeeper-jwt](https://github.com/doorkeeper-gem/doorkeeper-jwt) |
+| Assertion grant extension | [doorkeeper-gem/doorkeeper-grants\_assertion](https://github.com/doorkeeper-gem/doorkeeper-grants_assertion) |
+| I18n translations | [doorkeeper-gem/doorkeeper-i18n](https://github.com/doorkeeper-gem/doorkeeper-i18n) |
 
-[PKCE flow]: https://tools.ietf.org/html/rfc7636
+## Example Applications
 
-```sh
-rails generate doorkeeper:pkce
-```
+These applications show how Doorkeeper works and how to integrate with it. Start with the oAuth2 server and use the clients to connect with the server.
 
-Then run migrations:
+| Application | Link |
+| :--- | :--- |
+| oAuth2 Server with Doorkeeper | [doorkeeper-gem/doorkeeper-provider-app](https://github.com/doorkeeper-gem/doorkeeper-provider-app) |
+| Sinatra Client connected to Provider App | [doorkeeper-gem/doorkeeper-sinatra-client](https://github.com/doorkeeper-gem/doorkeeper-sinatra-client) |
+| Devise + Omniauth Client | [doorkeeper-gem/doorkeeper-devise-client](https://github.com/doorkeeper-gem/doorkeeper-devise-client) |
 
-```sh
-rake db:migrate
-```
+You may want to create a client application to
+test the integration. Check out these [client
+examples](https://github.com/doorkeeper-gem/doorkeeper/wiki/Example-Applications)
+in our wiki or follow this [tutorial
+here](https://github.com/doorkeeper-gem/doorkeeper/wiki/Testing-your-provider-with-OAuth2-gem).
 
-Ensure to use non-confidential apps for pkce. PKCE is created, because
-you cannot trust its apps' secret. So whatever app needs pkce: it means, it cannot
-be a confidential app by design.
+## Tutorials
 
-
-Remember to add associations to your model so the related records are deleted.
-If you don't do this an `ActiveRecord::InvalidForeignKey`-error will be raised
-when you try to destroy a model with related access grants or access tokens.
-
-```ruby
-class User < ApplicationRecord
-  has_many :access_grants, class_name: "Doorkeeper::AccessGrant",
-                           foreign_key: :resource_owner_id,
-                           dependent: :delete_all # or :destroy if you need callbacks
-
-  has_many :access_tokens, class_name: "Doorkeeper::AccessToken",
-                           foreign_key: :resource_owner_id,
-                           dependent: :delete_all # or :destroy if you need callbacks
-end
-```
-
-#### MongoDB
-
-See [doorkeeper-mongodb project] for Mongoid and MongoMapper support. Follow along
-the implementation in that repository to extend doorkeeper with other ORMs.
-
-[doorkeeper-mongodb project]: https://github.com/doorkeeper-gem/doorkeeper-mongodb
-
-#### Sequel
-
-If you are using [Sequel gem] then you can add [doorkeeper-sequel extension] to your project.
-Follow configuration instructions for setting up the necessary Doorkeeper ORM.
-
-[Sequel gem]: https://github.com/jeremyevans/sequel/
-[doorkeeper-sequel extension]: https://github.com/nbulaj/doorkeeper-sequel
-
-#### Couchbase
-
-Use [doorkeeper-couchbase] extension if you are using Couchbase database.
-
-[doorkeeper-couchbase]: https://github.com/acaprojects/doorkeeper-couchbase
-
-### API mode
-
-By default Doorkeeper uses full Rails stack to provide all the OAuth 2 functionality
-with additional features like administration area for managing applications. By the
-way, starting from Doorkeeper 5 you can use API mode for your [API only Rails 5 applications](http://edgeguides.rubyonrails.org/api_app.html).
-All you need is just to configure the gem to work in desired mode:
-
-``` ruby
-Doorkeeper.configure do
-  # ...
-
-  api_only
-end
-```
-
-Keep in mind, that in this mode you will not be able to access `Applications` or
-`Authorized Applications` controllers because they will be skipped. CSRF protections (which are otherwise enabled) will be skipped, and all the redirects will be returned as JSON response with corresponding locations.
-
-### Routes
-
-The installation script will also automatically add the Doorkeeper routes into
-your app, like this:
-
-``` ruby
-Rails.application.routes.draw do
-  use_doorkeeper
-  # your routes
-end
-```
-
-This will mount following routes:
-
-    GET       /oauth/authorize/native?code
-    GET       /oauth/authorize
-    POST      /oauth/authorize
-    DELETE    /oauth/authorize
-    POST      /oauth/token
-    POST      /oauth/revoke
-    POST      /oauth/introspect
-    resources /oauth/applications
-    GET       /oauth/authorized_applications
-    DELETE    /oauth/authorized_applications/:id
-    GET       /oauth/token/info
-
-For more information on how to customize routes, check out [this page on the
-wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki/Customizing-routes).
-
-### Authenticating
-
-You need to configure Doorkeeper in order to provide `resource_owner` model
-and authentication block in `config/initializers/doorkeeper.rb`:
-
-``` ruby
-Doorkeeper.configure do
-  resource_owner_authenticator do
-    User.find_by(id: session[:current_user_id]) || redirect_to(login_url)
-  end
-end
-```
-
-This code is run in the context of your application so you have access to your
-models, session or routes helpers. However, since this code is not run in the
-context of your application's `ApplicationController` it doesn't have access to
-the methods defined over there.
-
-You may want to check other ways of authentication
-[here](https://github.com/doorkeeper-gem/doorkeeper/wiki/Authenticating-using-Clearance-or-DIY).
-
-
-### Hashing of token and application secrets
-
-Doorkeeper can optionally Hash access, refresh tokens, and application secrets before persisting them.
-Since integrations may have decided on showing application secrets later on, both options can be enabled individually.
-
-To enable hashing of access and refresh tokens, uncomment the initializer line `hash_token_secrets`.
-Upon issueing a new token, the plain token value will be available for presenting to the user in `token.plaintext_token`.
-Later comparisons will only be performed on the hashed token and the plain token can no longer be retrieved.
-
-#### Fallback to plain token lookup
-
-When you are upgrading doorkeeper and have existing access or refresh tokens in your database that you want to keep,
-enabling `hash_token_secrets` would implicitly invalidate all plaintext tokens since the plain tokens would no longer be found.
-
-To enable plain values to be found and upgraded to a hashed value whenever it is accessed, you may enable the additional option
-`fallback_to_plain_secrets`. This is only needed for _existing_ doorkeeper installations with plain tokens present.
-
-#### Incompatibility with reuse_access_token
-
-Enabling `hash_token_secrets` is incompatible with the option `reuse_access_token`
-since plain values can no longer be retrieved. If you enabled both,
-the latter will be disabled with a warning.
-
-To enable hashing application secrets (`client_secret`), uncomment the initializer line `hash_application_secrets`.
-This will result in the `secret` value of the application being available during the request that created in as `application.plaintext_secret`.
-In this request, you need to ensure the user noted the secret since you will no longer be able to show it afterwards.
-
-#### Using BCrypt gem for application secrets
-
-The hashing implementation for `Doorkeeper::Application` will try to load and use the `bcrypt` gem for hashing the secret.
-If the gem can not be loaded, it is falling back to a `SHA256` digest.
-
-If you want to use bcrypt, simply add it to your Gemfile.
-
-```
-  gem 'doorkeeper'
-  gem 'bcrypt', require: false
-```
-
-
-### Internationalization (I18n)
-
-Doorkeeper support multiple languages. See language files in
-[the I18n repository](https://github.com/doorkeeper-gem/doorkeeper-i18n).
-
-### Customizing errors
-
-If you don't want to use default Doorkeeper error responses you can raise and rescue it's
-exceptions. All you need is to set configuration option `handle_auth_errors` to `:raise`.
-In this case Doorkeeper will raise `Doorkeeper::Errors::TokenForbidden`,
-`Doorkeeper::Errors::TokenExpired`, `Doorkeeper::Errors::TokenRevoked` or other exceptions
-that you need to care about.
-
-### Rake Tasks
-
-If you are using `rake`, you can load rake tasks provided by this gem, by adding
-the following line to your `Rakefile`:
-
-```ruby
-Doorkeeper::Rake.load_tasks
-```
-
-#### Cleaning up
-
-By default Doorkeeper is retaining expired and revoked access tokens and grants.
-This allows to keep an audit log of those records, but it also leads to the
-corresponding tables to grow large over the lifetime of your application.
-
-If you are concerned about those tables growing too large,
-you can regularly run the following rake task to remove stale entries
-from the database:
-
-```rake
-rake doorkeeper:db:cleanup
-```
-
-Note that this will remove tokens that are expired according to the configured TTL
-in `Doorkeeper.configuration.access_token_expires_in`. The specific `expires_in`
-value of each access token **is not considered**. The same is true for access
-grants.
-
-## Protecting resources with OAuth (a.k.a your API endpoint)
-
-### Ruby on Rails controllers
-
-To protect your controllers (usual one or `ActionController::API`) with OAuth,
-you just need to setup `before_action`s specifying the actions you want to
-protect. For example:
-
-``` ruby
-class Api::V1::ProductsController < Api::V1::ApiController
-  before_action :doorkeeper_authorize! # Requires access token for all actions
-  
-  # before_action -> { doorkeeper_authorize! :read, :write }
-
-  # your actions
-end
-```
-
-You can pass any option `before_action` accepts, such as `if`, `only`,
-`except`, and others.
-
-### Grape endpoints
-
-Starting from version 2.2 Doorkeeper provides helpers for the
-[Grape framework] >= 0.10. One of them is `doorkeeper_authorize!` that
-can be used in a similar way as an example above to protect your API
-with OAuth. Note that you have to use `require 'doorkeeper/grape/helpers'`
-and `helpers Doorkeeper::Grape::Helpers` in your Grape API class.
-
-For more information about integration with Grape see the [Wiki].
-
-[Grape framework]: https://github.com/ruby-grape/grape
-[Wiki]: https://github.com/doorkeeper-gem/doorkeeper/wiki/Grape-Integration
-
-``` ruby
-require 'doorkeeper/grape/helpers'
-
-module API
-  module V1
-    class Users < Grape::API
-      helpers Doorkeeper::Grape::Helpers
-
-      before do
-        doorkeeper_authorize!
-      end
-
-      # route_setting :scopes, ['user:email'] - for old versions of Grape
-      get :emails, scopes: [:user, :write] do
-        [{'email' => current_user.email}]
-      end
-
-      # ...
-    end
-  end
-end
-```
-
-### Route Constraints and other integrations
-
-You can leverage the `Doorkeeper.authenticate` facade to easily extract a
-`Doorkeeper::OAuth::Token` based on the current request. You can then ensure
-that token is still good, find its associated `#resource_owner_id`, etc.
-
-```ruby
-module Constraint
-  class Authenticated
-
-    def matches?(request)
-      token = Doorkeeper.authenticate(request)
-      token && token.accessible?
-    end
-  end
-end
-```
-
-For more information about integration and other integrations, check out [the
-related wiki
-page](https://github.com/doorkeeper-gem/doorkeeper/wiki/ActionController::Metal-with-doorkeeper).
-
-### Access Token Scopes
-
-You can also require the access token to have specific scopes in certain
-actions:
-
-First configure the scopes in `initializers/doorkeeper.rb`
-
-```ruby
-Doorkeeper.configure do
-  default_scopes :public # if no scope was requested, this will be the default
-  optional_scopes :admin, :write
-end
-```
-
-And in your controllers:
-
-```ruby
-class Api::V1::ProductsController < Api::V1::ApiController
-  before_action -> { doorkeeper_authorize! :public }, only: :index
-  before_action only: [:create, :update, :destroy] do
-    doorkeeper_authorize! :admin, :write
-  end
-end
-```
-
-Please note that there is a logical OR between multiple required scopes. In the
-above example, `doorkeeper_authorize! :admin, :write` means that the access
-token is required to have either `:admin` scope or `:write` scope, but does not
-need to have both of them.
-
-If you want to require the access token to have multiple scopes at the same
-time, use multiple `doorkeeper_authorize!`, for example:
-
-```ruby
-class Api::V1::ProductsController < Api::V1::ApiController
-  before_action -> { doorkeeper_authorize! :public }, only: :index
-  before_action only: [:create, :update, :destroy] do
-    doorkeeper_authorize! :admin
-    doorkeeper_authorize! :write
-  end
-end
-```
-
-In the above example, a client can call `:create` action only if its access token
-has both `:admin` and `:write` scopes.
-
-### Custom Access Token Generator
-
-By default a 128 bit access token will be generated. If you require a custom
-token, such as [JWT](http://jwt.io), specify an object that responds to
-`.generate(options = {})` and returns a string to be used as the token.
-
-```ruby
-Doorkeeper.configure do
-  access_token_generator "Doorkeeper::JWT"
-end
-```
-
-JWT token support is available with
-[Doorkeeper-JWT](https://github.com/chriswarren/doorkeeper-jwt).
-
-### Custom Base Controller
-
-By default Doorkeeper's main controller `Doorkeeper::ApplicationController`
-inherits from `ActionController::Base`. You may want to use your own
-controller to inherit from, to keep Doorkeeper controllers in the same
-context than the rest your app:
-
-```ruby
-Doorkeeper.configure do
-  base_controller 'ApplicationController'
-end
-```
-
-### Authenticated resource owner
-
-If you want to return data based on the current resource owner, in other
-words, the access token owner, you may want to define a method in your
-controller that returns the resource owner instance:
-
-``` ruby
-class Api::V1::CredentialsController < Api::V1::ApiController
-  before_action :doorkeeper_authorize!
-  respond_to    :json
-
-  # GET /me.json
-  def me
-    respond_with current_resource_owner
-  end
-
-  private
-
-  # Find the user that owns the access token
-  def current_resource_owner
-    User.find(doorkeeper_token.resource_owner_id) if doorkeeper_token
-  end
-end
-```
-
-In this example, we're returning the credentials (`me.json`) of the access
-token owner.
-
-### Applications list
-
-By default, the applications list (`/oauth/applications`) is publicly available (before 5.0 release).
-Starting from Doorkeeper 5.0 it returns 403 Forbidden if `admin_authenticator` option is not configured
-by developers.
-
-To change the protection rules of this endpoint you should uncomment these lines:
-
-```ruby
-# config/initializers/doorkeeper.rb
-Doorkeeper.configure do
-  admin_authenticator do |routes|
-    Admin.find_by(id: session[:admin_id]) || redirect_to(routes.new_admin_session_url)
-  end
-end
-```
-
-The logic is the same as the `resource_owner_authenticator` block. **Note:**
-since the application list is just a scaffold, it's recommended to either
-customize the controller used by the list or skip the controller all together.
-For more information see the page
-[in the wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki/Customizing-routes).
-
-By default, everybody can create application with any scopes. However,
-you can enforce users to create applications only with configured scopes
-(`default_scopes` and `optional_scopes` from the Doorkeeper initializer):
-
-```ruby
-# config/initializers/doorkeeper.rb
-Doorkeeper.configure do
-  # ...
-
-  default_scopes :read, :write
-  optional_scopes :create, :update
-
-  enforce_configured_scopes
-end
-```
-
-## Other customizations
-
-- [Associate users to OAuth applications (ownership)](https://github.com/doorkeeper-gem/doorkeeper/wiki/Associate-users-to-OAuth-applications-%28ownership%29)
-- [CORS - Cross Origin Resource Sharing](https://github.com/doorkeeper-gem/doorkeeper/wiki/%5BCORS%5D-Cross-Origin-Resource-Sharing)
-- see more on [Wiki page](https://github.com/doorkeeper-gem/doorkeeper/wiki)
-
-## Testing
-
-You can use Doorkeeper models in your application test suite. Note that starting from
-Doorkeeper 4.3.0 it uses [ActiveSupport lazy loading hooks](http://api.rubyonrails.org/classes/ActiveSupport/LazyLoadHooks.html)
-to load models. There are [known issue](https://github.com/doorkeeper-gem/doorkeeper/issues/1043)
-with the `factory_bot_rails` gem (it executes factories building before `ActiveRecord::Base`
-is initialized using hooks in gem railtie, so you can catch a `uninitialized constant` error).
-It is recommended to use pure `factory_bot` gem to solve this problem.
-
-## Upgrading
-
-If you want to upgrade doorkeeper to a new version, check out the [upgrading
-notes](https://github.com/doorkeeper-gem/doorkeeper/wiki/Migration-from-old-versions)
-and take a look at the
-[changelog](https://github.com/doorkeeper-gem/doorkeeper/blob/master/NEWS.md).
-
-Doorkeeper follows [semantic versioning](http://semver.org/).
+See [list of tutorials](https://github.com/doorkeeper-gem/doorkeeper/wiki#how-tos--tutorials) in order to learn how to use the gem or integrate it with other solutions / gems.
 
 ## Development
 
@@ -590,38 +149,11 @@ integrate the gem with your app and let us know!
 Also, check out our [contributing guidelines
 page](https://github.com/doorkeeper-gem/doorkeeper/wiki/Contributing).
 
-## Other resources
-
-### Wiki
-
-You can find everything about Doorkeeper in our [wiki
-here](https://github.com/doorkeeper-gem/doorkeeper/wiki).
-
-### Screencast
-
-Check out this screencast from [railscasts.com](http://railscasts.com/): [#353
-OAuth with
-Doorkeeper](http://railscasts.com/episodes/353-oauth-with-doorkeeper)
-
-### Client applications
-
-After you set up the provider, you may want to create a client application to
-test the integration. Check out these [client
-examples](https://github.com/doorkeeper-gem/doorkeeper/wiki/Example-Applications)
-in our wiki or follow this [tutorial
-here](https://github.com/doorkeeper-gem/doorkeeper/wiki/Testing-your-provider-with-OAuth2-gem).
-
-### Contributors
+## Contributors
 
 Thanks to all our [awesome
 contributors](https://github.com/doorkeeper-gem/doorkeeper/graphs/contributors)!
 
-### IETF Standards
-
-* [The OAuth 2.0 Authorization Framework](http://tools.ietf.org/html/rfc6749)
-* [OAuth 2.0 Threat Model and Security Considerations](http://tools.ietf.org/html/rfc6819)
-* [OAuth 2.0 Token Revocation](http://tools.ietf.org/html/rfc7009)
-
-### License
+## License
 
 MIT License. Copyright 2011 Applicake.
