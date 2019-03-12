@@ -330,7 +330,7 @@ feature 'Authorization Code Flow' do
 
   context 'when application scopes are present and no scope is passed' do
     background do
-      @client.update_attributes(scopes: 'public write read')
+      @client.update(scopes: 'public write read')
     end
 
     scenario 'access grant has no scope' do
