@@ -7,6 +7,10 @@ module Doorkeeper
         OAuth::Scopes.from_string(scopes_string)
       end
 
+      def scopes=(value)
+        super Array(value).join(' ')
+      end
+
       def scopes_string
         self[:scopes]
       end
