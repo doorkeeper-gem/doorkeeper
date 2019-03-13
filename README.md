@@ -125,9 +125,9 @@ See [list of tutorials](https://github.com/doorkeeper-gem/doorkeeper/wiki#how-to
 
 ## Sponsors
 
-<a href="https://oauth.io" target="_blank"><img src="https://oauth.io/img/logo_text.png"/></a>
+<a href="https://oauth.io/?utm_source=doorkeeper-gem" target="_blank"><img src="https://oauth.io/img/logo_text.png"/></a>
 
-> If you prefer not to deal with the gory details of OAuth 2, need dedicated customer support & consulting, try the cloud-based SaaS version: [https://oauth.io](https://oauth.io)
+> If you prefer not to deal with the gory details of OAuth 2, need dedicated customer support & consulting, try the cloud-based SaaS version: [https://oauth.io](https://oauth.io/?utm_source=doorkeeper-gem)
 
 ## Development
 
