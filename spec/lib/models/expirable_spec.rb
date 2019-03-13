@@ -44,4 +44,16 @@ describe 'Expirable' do
       expect(subject.expires_in_seconds).to be_nil
     end
   end
+
+  describe :expires_at do
+    it 'should return the expiration time of the token' do
+      allow(subject).to receive(:expires_in).and_return(2.minutes)
+      expect(subject.expires_at).to be_a(Time)
+    end
+
+    it 'should return nil when expires_in is nil' do
+      allow(subject).to receive(:expires_in).and_return(nil)
+      expect(subject.expires_at).to be_nil
+    end
+  end
 end

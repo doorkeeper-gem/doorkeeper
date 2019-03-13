@@ -24,10 +24,11 @@ module Doorkeeper
 
       # Expiration time (date time of creation + TTL).
       #
-      # @return [Time] expiration time in UTC
+      # @return [Time, nil] expiration time in UTC
+      #   or nil if the object never expires.
       #
       def expires_at
-        created_at + expires_in.seconds
+        expires_in && created_at + expires_in.seconds
       end
     end
   end

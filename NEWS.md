@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1216] Add nil check to `expires_at` method.
 - [#1215] Fix deprecates for Rails 6.
 - [#1214] Scopes field accepts array.
 - [#1209] Fix tokens validation for Token Introspection request.
