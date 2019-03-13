@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe 'Doorkeeper::Models::Scopes' do
   subject do
-    Class.new(Hash) do
+    Class.new(Struct.new(:scopes)) do
       include Doorkeeper::Models::Scopes
     end.new
   end
@@ -18,6 +18,18 @@ describe 'Doorkeeper::Models::Scopes' do
 
     it 'includes scopes' do
       expect(subject.scopes).to include('public')
+    end
+  end
+
+  describe :scopes= do
+    it 'accepts String' do
+      subject.scopes = 'private admin'
+      expect(subject.scopes_string).to eq('private admin')
+    end
+
+    it 'accepts Array' do
+      subject.scopes = %w[private admin]
+      expect(subject.scopes_string).to eq('private admin')
     end
   end
 
