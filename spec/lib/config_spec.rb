@@ -583,71 +583,114 @@ describe Doorkeeper, 'configuration' do
     end
   end
 
-  describe 'hash_application_secrets' do
-    it 'is disabled by default' do
-      expect(subject.hash_application_secrets?).to eq(false)
-      expect(::Doorkeeper::Application.perform_secret_hashing?).to eq(false)
+  describe 'token_secret_strategy' do
+    it 'is plain by default' do
+      expect(subject.token_secret_strategy).to eq(Doorkeeper::SecretStoring::Plain)
+      expect(subject.token_secret_fallback_strategy).to eq(nil)
     end
 
     context 'when provided' do
       before do
         Doorkeeper.configure do
+          hash_token_secrets
+        end
+      end
+
+      it 'will enable hashing for applications' do
+        expect(subject.token_secret_strategy).to eq(Doorkeeper::SecretStoring::Sha256Hash)
+        expect(subject.token_secret_fallback_strategy).to eq(nil)
+      end
+    end
+
+    context 'when manually provided with invalid constant' do
+      it 'raises an exception' do
+        expect {
+          Doorkeeper.configure do
+            hash_token_secrets using: 'does not exist'
+          end
+        }.to raise_error(NameError)
+      end
+    end
+
+    context 'when manually provided with invalid option' do
+      it 'raises an exception' do
+        expect do
+          Doorkeeper.configure do
+            hash_token_secrets using: 'Doorkeeper::SecretStoring::BCrypt'
+          end
+        end.to raise_error(ArgumentError,
+                           /can only be used for storing application secrets/)
+      end
+    end
+
+    context 'when provided with fallback' do
+      before do
+        Doorkeeper.configure do
+          hash_token_secrets fallback: :plain
+        end
+      end
+
+      it 'will enable hashing for applications' do
+        expect(subject.token_secret_strategy).to eq(Doorkeeper::SecretStoring::Sha256Hash)
+        expect(subject.token_secret_fallback_strategy).to eq(Doorkeeper::SecretStoring::Plain)
+      end
+    end
+
+
+    describe 'hash_token_secrets together with reuse_access_token' do
+      it 'will disable reuse_access_token' do
+        expect(Rails.logger).to receive(:warn).with(/reuse_access_token will be disabled/)
+
+        Doorkeeper.configure do
           reuse_access_token
+          hash_token_secrets
+        end
+
+        expect(subject.reuse_access_token).to eq(false)
+      end
+    end
+  end
+
+  describe 'application_secret_strategy' do
+    it 'is plain by default' do
+      expect(subject.application_secret_strategy).to eq(Doorkeeper::SecretStoring::Plain)
+      expect(subject.application_secret_fallback_strategy).to eq(nil)
+    end
+
+    context 'when provided' do
+      before do
+        Doorkeeper.configure do
           hash_application_secrets
         end
       end
 
       it 'will enable hashing for applications' do
-        expect(subject.reuse_access_token).to eq(true)
-        expect(subject.hash_application_secrets?).to eq(true)
-
-        expect(::Doorkeeper::Application.perform_secret_hashing?).to eq(true)
+        expect(subject.application_secret_strategy).to eq(Doorkeeper::SecretStoring::Sha256Hash)
+        expect(subject.application_secret_fallback_strategy).to eq(nil)
       end
     end
-  end
 
-  describe 'hash_token_secrets' do
-    it 'is disabled by default' do
-      expect(subject.hash_token_secrets?).to eq(false)
-      expect(::Doorkeeper::AccessToken.perform_secret_hashing?).to eq(false)
-      expect(::Doorkeeper::AccessGrant.perform_secret_hashing?).to eq(false)
-    end
-
-    context 'when provided' do
-      include_context 'with token hashing enabled'
-
-      it 'will enable hashing for AccessToken and AccessGrant' do
-        expect(subject.hash_token_secrets?).to eq(true)
-        expect(::Doorkeeper::AccessToken.perform_secret_hashing?).to eq(true)
-        expect(::Doorkeeper::AccessGrant.perform_secret_hashing?).to eq(true)
+    context 'when manually provided with invalid constant' do
+      it 'raises an exception' do
+        expect {
+          Doorkeeper.configure do
+            hash_application_secrets using: 'does not exist'
+          end
+        }.to raise_error(NameError)
       end
     end
-  end
 
-  describe 'fallback_to_plain_secrets' do
-    it 'is disabled by default' do
-      expect(subject.fallback_to_plain_secrets?).to eq(false)
-    end
-
-    context 'when provided' do
-      include_context 'with token hashing and fallback lookup enabled'
-
-      it 'will enable fallbacks' do
-        expect(subject.fallback_to_plain_secrets?).to eq(true)
-      end
-    end
-  end
-
-  describe 'hash_token_secrets together with reuse_access_token' do
-    it 'will disable reuse_access_token' do
-      expect(Rails.logger).to receive(:warn).with(/reuse_access_token will be disabled/)
-
-      Doorkeeper.configure do
-        reuse_access_token
-        hash_token_secrets
+    context 'when provided with fallback' do
+      before do
+        Doorkeeper.configure do
+          hash_application_secrets fallback: :plain
+        end
       end
 
-      expect(subject.reuse_access_token).to eq(false)
+      it 'will enable hashing for applications' do
+        expect(subject.application_secret_strategy).to eq(Doorkeeper::SecretStoring::Sha256Hash)
+        expect(subject.application_secret_fallback_strategy).to eq(Doorkeeper::SecretStoring::Plain)
+      end
     end
   end
 end

@@ -23,7 +23,7 @@ feature 'Authorization Code Flow' do
 
   context 'with grant hashing enabled' do
     background do
-      config_is_set(:hash_token_secrets) { true }
+      config_is_set(:token_secret_strategy, ::Doorkeeper::SecretStoring::Sha256Hash)
     end
 
     scenario 'Authorization Code Flow with hashing' do
@@ -37,7 +37,7 @@ feature 'Authorization Code Flow' do
       code = current_params['code']
       expect(code).not_to be_nil
 
-      hashed_code = Doorkeeper::AccessGrant.hashed_or_plain_token code
+      hashed_code = Doorkeeper::AccessGrant.secret_strategy.transform_secret code
       expect(hashed_code).to eq Doorkeeper::AccessGrant.first.token
 
       expect(code).not_to eq(hashed_code)

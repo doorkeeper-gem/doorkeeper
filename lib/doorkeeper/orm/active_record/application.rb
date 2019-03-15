@@ -45,13 +45,17 @@ module Doorkeeper
       AccessGrant.revoke_all_for(id, resource_owner)
     end
 
-    # We keep a volatile copy of the raw client_secret for initial communication
-    # The stored secret may be mapped and not available in cleartext.
+    # We keep a volatile copy of the raw secret for initial communication
+    # The stored refresh_token may be mapped and not available in cleartext.
+    #
+    # Some strategies allow restoring stored secrets (e.g. symmetric encryption)
+    # while hashing strategies do not, so you cannot rely on this value
+    # returning a present value for persisted tokens.
     def plaintext_secret
-      if perform_secret_hashing?
-        @raw_secret
+      if secret_strategy.allows_restoring_secrets?
+        secret_strategy.restore_secret(self, :secret)
       else
-        secret
+        @raw_secret
       end
     end
 
@@ -65,7 +69,7 @@ module Doorkeeper
       return unless secret.blank?
 
       @raw_secret = UniqueToken.generate
-      self.secret = hashed_or_plain_token(@raw_secret)
+      secret_strategy.store_secret(self, :secret, @raw_secret)
     end
 
     def scopes_match_configured

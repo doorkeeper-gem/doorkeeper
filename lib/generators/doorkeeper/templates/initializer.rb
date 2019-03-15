@@ -98,29 +98,39 @@ Doorkeeper.configure do
   # setting `fallback_to_plain_secrets` below.
   #
   # hash_token_secrets
+  # By default, token secrets will be hashed using the
+  # +Doorkeeper::Hashing::SHA256+ strategy.
+  #
+  # If you wish to use another hashing implementation, you can override
+  # this strategy as follows:
+  #
+  # hash_token_secrets using: '::Doorkeeper::Hashing::MyCustomHashImpl'
+  #
+  # Keep in mind that changing the hashing function will invalidate all existing
+  # secrets, if there are any.
 
   # Hash application secrets before persisting them.
   #
   # hash_application_secrets
+  #
+  # By default, applications will be hashed
+  # with the +Doorkeeper::SecretStoring::SHA256+ strategy.
+  #
+  # If you wish to use bcrypt for application secret hashing, uncomment
+  # this line instead:
+  #
+  # hash_application_secrets using: '::Doorkeeper::SecretStoring::BCrypt'
 
   # When the above option is enabled,
   # and a hashed token or secret is not found,
-  # look up the plain text token as a fallback.
+  # you can allow to fall back to another strategy.
+  # For users upgrading doorkeeper and wishing to enable hashing,
+  # you will probably want to enable the fallback to plain tokens.
   #
   # This will ensure that old access tokens and secrets
   # will remain valid even if the hashing above is enabled.
   #
   # fallback_to_plain_secrets
-
-  #
-  # Since old values will not be re-hashed, lookups to tokens and secrets
-  # will fall back to plain value comparison so any existing tokens will
-  # not be invalidated.
-  #
-  # For example, to use SHA256 digests on plain values, uncomment these lines:
-  # hash_secrets do |plain_value|
-  #   Digest::SHA256.hexdigest plain_value
-  # end
 
   # Issue access tokens with refresh token (disabled by default), you may also
   # pass a block which accepts `context` to customize when to give a refresh
