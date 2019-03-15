@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-gem "rails", "~> 5.1.0"
+gem "rails", "~> 5.1.0", ">= 5.1.6.2"
 gem "rspec-core", git: "https://github.com/rspec/rspec-core.git"
 gem "rspec-expectations", git: "https://github.com/rspec/rspec-expectations.git"
 gem "rspec-mocks", git: "https://github.com/rspec/rspec-mocks.git"
