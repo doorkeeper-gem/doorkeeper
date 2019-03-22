@@ -1,10 +1,10 @@
 AllCops:
-  # Till we drop support for 2.2
-  TargetRubyVersion: 2.2
+  TargetRubyVersion: 2.4
   Exclude:
     - "spec/dummy/db/*"
     - "spec/dummy/config/*"
     - "Dangerfile"
+    - "gemfiles/*.gemfile"
 
 Metrics/BlockLength:
   Exclude:

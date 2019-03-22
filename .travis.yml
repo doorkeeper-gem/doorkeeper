@@ -2,18 +2,14 @@ language: ruby
 cache: bundler
 
 rvm:
-  - 2.1
-  - 2.2
-  - 2.3
   - 2.4
   - 2.5
-  - 2.6.1
+  - 2.6
   - ruby-head
 
-before_install:
-  - "find /home/travis/.rvm/rubies -wholename '*default/bundler-*.gemspec' -delete"
-  - rvm @global do gem uninstall bundler -a -x -I || true
-  - gem install bundler -v '~> 1.10'
+#before_install:
+#  - gem update --system
+#  - gem install bundler
 
 gemfile:
   - gemfiles/rails_4_2.gemfile
@@ -31,26 +27,8 @@ matrix:
       gemfile: gemfiles/rails_5_2.gemfile
       script: bundle exec danger
   exclude:
-    - gemfile: gemfiles/rails_5_0.gemfile
-      rvm: 2.1
-    - gemfile: gemfiles/rails_5_1.gemfile
-      rvm: 2.1
-    - gemfile: gemfiles/rails_5_2.gemfile
-      rvm: 2.1
-    - gemfile: gemfiles/rails_6_0.gemfile
-      rvm: 2.1
-    - gemfile: gemfiles/rails_6_0.gemfile
-      rvm: 2.2
-    - gemfile: gemfiles/rails_6_0.gemfile
-      rvm: 2.3
     - gemfile: gemfiles/rails_6_0.gemfile
       rvm: 2.4
-    - gemfile: gemfiles/rails_master.gemfile
-      rvm: 2.1
-    - gemfile: gemfiles/rails_master.gemfile
-      rvm: 2.2
-    - gemfile: gemfiles/rails_master.gemfile
-      rvm: 2.3
     - gemfile: gemfiles/rails_master.gemfile
       rvm: 2.4
   allow_failures:
