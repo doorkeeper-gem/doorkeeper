@@ -7,6 +7,10 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#PR] Your description.
+
+## 5.1.0.rc2
+
 - [#1208] Unify hashing implementation into secret storing strategies
 
   **[IMPORTANT]**: If you have been using the master branch of doorkeeper with bcrypt in your Gemfile.lock,
