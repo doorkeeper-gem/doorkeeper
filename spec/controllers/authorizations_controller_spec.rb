@@ -5,22 +5,11 @@ require "spec_helper"
 describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
   include AuthorizationRequestHelper
 
-  if Rails::VERSION::MAJOR >= 5
-    class ActionDispatch::TestResponse
-      def query_params
-        @query_params ||= begin
-          fragment = URI.parse(location).fragment
-          Rack::Utils.parse_query(fragment)
-        end
-      end
-    end
-  else
-    class ActionController::TestResponse
-      def query_params
-        @query_params ||= begin
-          fragment = URI.parse(location).fragment
-          Rack::Utils.parse_query(fragment)
-        end
+  class ActionDispatch::TestResponse
+    def query_params
+      @query_params ||= begin
+        fragment = URI.parse(location).fragment
+        Rack::Utils.parse_query(fragment)
       end
     end
   end

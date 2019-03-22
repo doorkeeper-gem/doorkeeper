@@ -25,10 +25,3 @@ module ControllerHTTPMethodShim
     super(action, http_method, args[:params], args[:session], args[:flash])
   end
 end
-
-if ::Rails::VERSION::MAJOR < 5
-  RSpec.configure do |config|
-    config.include ControllerHTTPMethodShim, type: :controller
-    config.include RoutingHTTPMethodShim, type: :request
-  end
-end

@@ -6,12 +6,7 @@ module Doorkeeper
       extend ActiveSupport::Concern
 
       included do
-        belongs_to_options = { polymorphic: true }
-        if defined?(ActiveRecord::Base) && ActiveRecord::VERSION::MAJOR >= 5
-          belongs_to_options[:optional] = true
-        end
-
-        belongs_to :owner, belongs_to_options
+        belongs_to :owner, polymorphic: true, optional: true
         validates :owner, presence: true, if: :validate_owner?
       end
 
