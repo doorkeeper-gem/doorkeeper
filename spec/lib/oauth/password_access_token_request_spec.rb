@@ -18,6 +18,10 @@ module Doorkeeper::OAuth
     let(:client) { FactoryBot.create(:application) }
     let(:owner)  { double :owner, id: 99 }
 
+    before do
+      allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
+    end
+
     subject do
       PasswordAccessTokenRequest.new(server, client, owner)
     end
@@ -149,9 +153,19 @@ module Doorkeeper::OAuth
           access_token_expires_in: 2.hours,
           refresh_token_enabled?: false,
           custom_access_token_expires_in: lambda { |context|
-            context.scopes.exists?("public") ? 222 : nil
+            if context.scopes.exists?("public")
+              222
+            elsif context.scopes.exists?("magic")
+              Float::INFINITY
+            else
+              nil
+            end
           }
         )
+      end
+
+      before do
+        allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
       end
 
       it "checks scopes" do

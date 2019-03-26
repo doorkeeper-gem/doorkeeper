@@ -23,11 +23,14 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
   let(:access_token)  { FactoryBot.build :access_token, resource_owner_id: user.id, application_id: client.id }
 
   before do
+    Doorkeeper.configure do
+      custom_access_token_expires_in(lambda do |context|
+        context.grant_type == Doorkeeper::OAuth::IMPLICIT ? 1234 : nil
+      end)
+    end
+
     allow(Doorkeeper.configuration).to receive(:grant_flows).and_return(["implicit"])
     allow(controller).to receive(:current_resource_owner).and_return(user)
-    allow(Doorkeeper.configuration).to receive(:custom_access_token_expires_in).and_return(proc { |context|
-      context.grant_type == Doorkeeper::OAuth::IMPLICIT ? 1234 : nil
-    })
   end
 
   describe "POST #create" do

@@ -23,11 +23,14 @@ module Doorkeeper
             )
           end
 
-          def access_token_expires_in(server, context)
-            if (expiration = server.custom_access_token_expires_in.call(context))
-              expiration
+          def access_token_expires_in(configuration, context)
+            if configuration.option_defined?(:custom_access_token_expires_in)
+              expiration = configuration.custom_access_token_expires_in.call(context)
+              return nil if expiration == Float::INFINITY
+
+              expiration || configuration.access_token_expires_in
             else
-              server.access_token_expires_in
+              configuration.access_token_expires_in
             end
           end
 

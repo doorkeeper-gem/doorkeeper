@@ -4,15 +4,18 @@ require "spec_helper"
 
 class Doorkeeper::OAuth::ClientCredentialsRequest
   describe Issuer do
-    let(:creator) { double :acces_token_creator }
+    let(:creator) { double :access_token_creator }
     let(:server) do
       double(
         :server,
-        access_token_expires_in: 100,
-        custom_access_token_expires_in: ->(_context) { nil }
+        access_token_expires_in: 100
       )
     end
     let(:validation) { double :validation, valid?: true }
+
+    before do
+      allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(false)
+    end
 
     subject { Issuer.new(server, validation) }
 
@@ -78,6 +81,10 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
               end
             }
           )
+        end
+
+        before do
+          allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
         end
 
         it "respects grant based rules" do

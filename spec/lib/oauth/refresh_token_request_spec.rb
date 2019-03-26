@@ -4,14 +4,9 @@ require "spec_helper"
 
 module Doorkeeper::OAuth
   describe RefreshTokenRequest do
-    before do
-      allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
-    end
-
     let(:server) do
       double :server,
-             access_token_expires_in: 2.minutes,
-             custom_access_token_expires_in: ->(_context) { nil }
+             access_token_expires_in: 2.minutes
     end
 
     let(:refresh_token) do
@@ -20,6 +15,11 @@ module Doorkeeper::OAuth
 
     let(:client) { refresh_token.application }
     let(:credentials) { Client::Credentials.new(client.uid, client.secret) }
+
+    before do
+      allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
+      allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(false)
+    end
 
     subject { RefreshTokenRequest.new server, refresh_token, credentials }
 
@@ -36,6 +36,7 @@ module Doorkeeper::OAuth
                         context.grant_type == Doorkeeper::OAuth::REFRESH_TOKEN ? 1234 : nil
                       }
 
+      allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
       allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
 
       RefreshTokenRequest.new(server, refresh_token, credentials).authorize

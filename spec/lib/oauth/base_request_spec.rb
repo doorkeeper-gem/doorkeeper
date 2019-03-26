@@ -26,6 +26,10 @@ module Doorkeeper::OAuth
              refresh_token_enabled?: false
     end
 
+    before do
+      allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
+    end
+
     subject do
       BaseRequest.new
     end
@@ -113,6 +117,9 @@ module Doorkeeper::OAuth
                         access_token_expires_in: 100,
                         custom_access_token_expires_in: ->(context) { context.scopes == "public" ? 500 : nil },
                         refresh_token_enabled?: false)
+
+        allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
+
         result = subject.find_or_create_access_token(
           client,
           "1",
@@ -129,6 +136,9 @@ module Doorkeeper::OAuth
                         refresh_token_enabled?: lambda { |context|
                           context.scopes == "public"
                         })
+
+        allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
+
         result = subject.find_or_create_access_token(
           client,
           "1",

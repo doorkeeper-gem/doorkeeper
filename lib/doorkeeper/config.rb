@@ -405,6 +405,10 @@ module Doorkeeper
       @token_grant_types ||= calculate_token_grant_types.freeze
     end
 
+    def option_defined?(name)
+      !instance_variable_get("@#{name}").nil?
+    end
+
     private
 
     # Helper to read boolearized configuration option

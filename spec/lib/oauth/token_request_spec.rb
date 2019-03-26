@@ -48,20 +48,58 @@ module Doorkeeper::OAuth
       expect(subject.authorize).to be_a(ErrorResponse)
     end
 
-    context "with custom expirations" do
-      before do
-        Doorkeeper.configure do
-          orm DOORKEEPER_ORM
-          custom_access_token_expires_in do |context|
-            context.grant_type == Doorkeeper::OAuth::IMPLICIT ? 1234 : nil
+    describe "with custom expiration" do
+      context "when proper TTL returned" do
+        before do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            custom_access_token_expires_in do |context|
+              context.grant_type == Doorkeeper::OAuth::IMPLICIT ? 1234 : nil
+            end
           end
+        end
+
+        it "should use the custom ttl" do
+          subject.authorize
+          token = Doorkeeper::AccessToken.first
+          expect(token.expires_in).to eq(1234)
         end
       end
 
-      it "should use the custom ttl" do
-        subject.authorize
-        token = Doorkeeper::AccessToken.first
-        expect(token.expires_in).to eq(1234)
+      context "when nil TTL returned" do
+        before do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            access_token_expires_in 654
+            custom_access_token_expires_in do |_context|
+              nil
+            end
+          end
+        end
+
+        it "should fallback to access_token_expires_in" do
+          subject.authorize
+          token = Doorkeeper::AccessToken.first
+          expect(token.expires_in).to eq(654)
+        end
+      end
+
+      context "when infinite TTL returned" do
+        before do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            access_token_expires_in 654
+            custom_access_token_expires_in do |_context|
+              Float::INFINITY
+            end
+          end
+        end
+
+        it "should fallback to access_token_expires_in" do
+          subject.authorize
+          token = Doorkeeper::AccessToken.first
+          expect(token.expires_in).to be_nil
+        end
       end
     end
 
