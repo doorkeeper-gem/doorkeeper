@@ -1,17 +1,19 @@
-require 'spec_helper'
+# frozen_string_literal: true
+
+require "spec_helper"
 
 module Doorkeeper
   module OAuth
     describe CodeResponse do
-      describe '.redirect_uri' do
-        context 'when generating the redirect URI for an implicit grant' do
+      describe ".redirect_uri" do
+        context "when generating the redirect URI for an implicit grant" do
           let :pre_auth do
             double(
               :pre_auth,
               client: double(:application, id: 1),
-              redirect_uri: 'http://tst.com/cb',
+              redirect_uri: "http://tst.com/cb",
               state: nil,
-              scopes: Scopes.from_string('public')
+              scopes: Scopes.from_string("public")
             )
           end
 
@@ -24,8 +26,8 @@ module Doorkeeper
 
           subject { CodeResponse.new(pre_auth, auth, response_on_fragment: true).redirect_uri }
 
-          it 'includes the remaining TTL of the token relative to the time the token was generated' do
-            expect(subject).to include('expires_in=3600')
+          it "includes the remaining TTL of the token relative to the time the token was generated" do
+            expect(subject).to include("expires_in=3600")
           end
         end
       end

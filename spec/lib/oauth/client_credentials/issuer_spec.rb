@@ -1,4 +1,6 @@
-require 'spec_helper'
+# frozen_string_literal: true
+
+require "spec_helper"
 
 class Doorkeeper::OAuth::ClientCredentialsRequest
   describe Issuer do
@@ -15,17 +17,17 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
     subject { Issuer.new(server, validation) }
 
     describe :create do
-      let(:client) { double :client, id: 'some-id' }
-      let(:scopes) { 'some scope' }
+      let(:client) { double :client, id: "some-id" }
+      let(:scopes) { "some scope" }
 
-      it 'creates and sets the token' do
-        expect(creator).to receive(:call).and_return('token')
+      it "creates and sets the token" do
+        expect(creator).to receive(:call).and_return("token")
         subject.create client, scopes, creator
 
-        expect(subject.token).to eq('token')
+        expect(subject.token).to eq("token")
       end
 
-      it 'creates with correct token parameters' do
+      it "creates with correct token parameters" do
         expect(creator).to receive(:call).with(
           client,
           scopes,
@@ -36,34 +38,34 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
         subject.create client, scopes, creator
       end
 
-      it 'has error set to :server_error if creator fails' do
+      it "has error set to :server_error if creator fails" do
         expect(creator).to receive(:call).and_return(false)
         subject.create client, scopes, creator
 
         expect(subject.error).to eq(:server_error)
       end
 
-      context 'when validation fails' do
+      context "when validation fails" do
         before do
           allow(validation).to receive(:valid?).and_return(false)
           allow(validation).to receive(:error).and_return(:validation_error)
           expect(creator).not_to receive(:create)
         end
 
-        it 'has error set from validation' do
+        it "has error set from validation" do
           subject.create client, scopes, creator
           expect(subject.error).to eq(:validation_error)
         end
 
-        it 'returns false' do
+        it "returns false" do
           expect(subject.create(client, scopes, creator)).to be_falsey
         end
       end
 
-      context 'with custom expirations' do
+      context "with custom expirations" do
         let(:custom_ttl_grant) { 1234 }
         let(:custom_ttl_scope) { 1235 }
-        let(:custom_scope) { 'special' }
+        let(:custom_scope) { "special" }
         let(:server) do
           double(
             :server,
@@ -78,7 +80,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
           )
         end
 
-        it 'respects grant based rules' do
+        it "respects grant based rules" do
           expect(creator).to receive(:call).with(
             client,
             scopes,
@@ -88,7 +90,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
           subject.create client, scopes, creator
         end
 
-        it 'respects scope based rules' do
+        it "respects scope based rules" do
           expect(creator).to receive(:call).with(
             client,
             custom_scope,

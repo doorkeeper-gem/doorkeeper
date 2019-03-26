@@ -1,4 +1,6 @@
-require 'spec_helper'
+# frozen_string_literal: true
+
+require "spec_helper"
 
 module Doorkeeper::OAuth
   describe CodeRequest do
@@ -6,7 +8,7 @@ module Doorkeeper::OAuth
       double(
         :pre_auth,
         client: double(:application, id: 9990),
-        redirect_uri: 'http://tst.com/cb',
+        redirect_uri: "http://tst.com/cb",
         scopes: nil,
         state: nil,
         error: nil,
@@ -22,22 +24,22 @@ module Doorkeeper::OAuth
       CodeRequest.new(pre_auth, owner)
     end
 
-    it 'creates an access grant' do
+    it "creates an access grant" do
       expect do
         subject.authorize
       end.to change { Doorkeeper::AccessGrant.count }.by(1)
     end
 
-    it 'returns a code response' do
+    it "returns a code response" do
       expect(subject.authorize).to be_a(CodeResponse)
     end
 
-    it 'does not create grant when not authorizable' do
+    it "does not create grant when not authorizable" do
       allow(pre_auth).to receive(:authorizable?).and_return(false)
       expect { subject.authorize }.not_to(change { Doorkeeper::AccessGrant.count })
     end
 
-    it 'returns a error response' do
+    it "returns a error response" do
       allow(pre_auth).to receive(:authorizable?).and_return(false)
       expect(subject.authorize).to be_a(ErrorResponse)
     end

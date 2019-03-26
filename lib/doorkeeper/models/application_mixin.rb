@@ -28,6 +28,7 @@ module Doorkeeper
         return unless app
         return app if secret.blank? && !app.confidential?
         return unless app.secret_matches?(secret)
+
         app
       end
 

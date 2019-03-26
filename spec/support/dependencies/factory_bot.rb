@@ -1,2 +1,2 @@
-require 'factory_bot'
+require "factory_bot"
 FactoryBot.find_definitions

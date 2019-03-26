@@ -55,7 +55,7 @@ module Doorkeeper
         end
 
         def token_from_header(header, pattern)
-          header.gsub pattern, ''
+          header.gsub pattern, ""
         end
 
         def match?(header, pattern)

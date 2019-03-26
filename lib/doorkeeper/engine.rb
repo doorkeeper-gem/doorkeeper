@@ -18,7 +18,7 @@ module Doorkeeper
     end
 
     if defined?(Sprockets) && Sprockets::VERSION.chr.to_i >= 4
-      initializer 'doorkeeper.assets.precompile' do |app|
+      initializer "doorkeeper.assets.precompile" do |app|
         # Force users to use:
         #    //= link doorkeeper/admin/application.css
         # in Doorkeeper 5 for Sprockets 4 instead of precompile.

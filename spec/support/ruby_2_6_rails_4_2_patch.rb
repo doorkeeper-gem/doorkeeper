@@ -1,4 +1,4 @@
-if RUBY_VERSION >= '2.6.0'
+if RUBY_VERSION >= "2.6.0"
   if Rails::VERSION::MAJOR < 5
     class ActionController::TestResponse < ActionDispatch::TestResponse
       def recycle!

@@ -1,6 +1,5 @@
 module Doorkeeper
   module SecretStoring
-
     ##
     # Plain text secret storing, which is the default
     # but also provides fallback lookup if
@@ -49,7 +48,7 @@ module Doorkeeper
       ##
       # Test if we can require the BCrypt gem
       def self.bcrypt_present?
-        require 'bcrypt'
+        require "bcrypt"
         true
       rescue LoadError
         false

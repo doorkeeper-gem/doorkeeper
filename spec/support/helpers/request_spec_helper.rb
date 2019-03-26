@@ -48,7 +48,7 @@ module RequestSpecHelper
   end
 
   def with_access_token_header(token)
-    with_header 'Authorization', "Bearer #{token}"
+    with_header "Authorization", "Bearer #{token}"
   end
 
   def with_header(header, value)
@@ -72,8 +72,8 @@ module RequestSpecHelper
   end
 
   def sign_in
-    visit '/'
-    click_on 'Sign in'
+    visit "/"
+    click_on "Sign in"
   end
 
   def create_access_token(authorization_code, client, code_verifier = nil)

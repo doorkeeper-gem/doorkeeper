@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
-require 'active_support/lazy_load_hooks'
+require "active_support/lazy_load_hooks"
 
-require 'doorkeeper/orm/active_record/stale_records_cleaner'
+require "doorkeeper/orm/active_record/stale_records_cleaner"
 
 module Doorkeeper
   module Orm
     module ActiveRecord
       def self.initialize_models!
         lazy_load do
-          require 'doorkeeper/orm/active_record/access_grant'
-          require 'doorkeeper/orm/active_record/access_token'
-          require 'doorkeeper/orm/active_record/application'
+          require "doorkeeper/orm/active_record/access_grant"
+          require "doorkeeper/orm/active_record/access_token"
+          require "doorkeeper/orm/active_record/application"
 
           if Doorkeeper.configuration.active_record_options[:establish_connection]
             [Doorkeeper::AccessGrant, Doorkeeper::AccessToken, Doorkeeper::Application].each do |model|
@@ -24,7 +24,7 @@ module Doorkeeper
 
       def self.initialize_application_owner!
         lazy_load do
-          require 'doorkeeper/models/concerns/ownership'
+          require "doorkeeper/models/concerns/ownership"
 
           Doorkeeper::Application.send :include, Doorkeeper::Models::Ownership
         end

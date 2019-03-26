@@ -5,7 +5,7 @@ Doorkeeper.configure do
   # This block will be called to check whether the resource owner is authenticated or not.
   resource_owner_authenticator do
     # Put your resource owner authentication logic here.
-    User.where(id: session[:user_id]).first || redirect_to(root_url, alert: 'Needs sign in.')
+    User.where(id: session[:user_id]).first || redirect_to(root_url, alert: "Needs sign in.")
   end
 
   # If you didn't skip applications controller from Doorkeeper routes in your application routes.rb
@@ -66,7 +66,8 @@ Doorkeeper.configure do
   # Change the native redirect uri for client apps
   # When clients register with the following redirect uri, they won't be redirected to any server and
   # the authorization code will be displayed within the provider
-  # The value can be any string. Use nil to disable this feature. When disabled, clients must provide a valid URL
+  # The value can be any string. Use nil to disable this feature.
+  # When disabled, clients must provide a valid URL
   # (Similar behaviour: https://developers.google.com/accounts/docs/OAuth2InstalledApp#choosingredirecturi)
   #
   # native_redirect_uri 'urn:ietf:wg:oauth:2.0:oob'

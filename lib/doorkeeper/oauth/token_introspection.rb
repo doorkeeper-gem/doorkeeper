@@ -30,7 +30,7 @@ module Doorkeeper
         end
       end
 
-      def to_json
+      def to_json(*)
         active? ? success_response : failure_response
       end
 
@@ -109,7 +109,7 @@ module Doorkeeper
       #
       def failure_response
         {
-          active: false
+          active: false,
         }
       end
 

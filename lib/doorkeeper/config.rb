@@ -3,7 +3,7 @@ module Doorkeeper
     # Defines a MissingConfiguration error for a missing Doorkeeper
     # configuration
     def initialize
-      super('Configuration for doorkeeper missing. Do you have doorkeeper initializer?')
+      super("Configuration for doorkeeper missing. Do you have doorkeeper initializer?")
     end
   end
 
@@ -163,7 +163,7 @@ module Doorkeeper
       #   Provide a fallback secret storage implementation class for tokens
       #   or use :plain to fallback to plain tokens
       def hash_token_secrets(using: nil, fallback: nil)
-        default = '::Doorkeeper::SecretStoring::Sha256Hash'
+        default = "::Doorkeeper::SecretStoring::Sha256Hash"
         configure_secrets_for :token,
                               using: using || default,
                               fallback: fallback
@@ -178,7 +178,7 @@ module Doorkeeper
       #   Provide a fallback secret storage implementation for applications
       #   or use :plain to fallback to plain application secrets
       def hash_application_secrets(using: nil, fallback: nil)
-        default = '::Doorkeeper::SecretStoring::Sha256Hash'
+        default = "::Doorkeeper::SecretStoring::Sha256Hash"
         configure_secrets_for :application,
                               using: using || default,
                               fallback: fallback
@@ -188,9 +188,7 @@ module Doorkeeper
 
       # Configure the secret storing functionality
       def configure_secrets_for(type, using:, fallback:)
-        unless %i[application token].include?(type)
-          raise ArgumentError, "Invalid type #{type}"
-        end
+        raise ArgumentError, "Invalid type #{type}" if %i[application token].exclude?(type)
 
         @config.instance_variable_set(:"@#{type}_secret_strategy",
                                       using.constantize)
@@ -198,7 +196,7 @@ module Doorkeeper
         if fallback.nil?
           return
         elsif fallback.to_sym == :plain
-          fallback = '::Doorkeeper::SecretStoring::Plain'
+          fallback = "::Doorkeeper::SecretStoring::Plain"
         end
 
         @config.instance_variable_set(:"@#{type}_secret_fallback_strategy",
@@ -270,7 +268,7 @@ module Doorkeeper
            as: :authenticate_resource_owner,
            default: (lambda do |_routes|
              ::Rails.logger.warn(
-               I18n.t('doorkeeper.errors.messages.resource_owner_authenticator_not_configured')
+               I18n.t("doorkeeper.errors.messages.resource_owner_authenticator_not_configured")
              )
 
              nil
@@ -280,7 +278,7 @@ module Doorkeeper
            as: :authenticate_admin,
            default: (lambda do |_routes|
              ::Rails.logger.warn(
-               I18n.t('doorkeeper.errors.messages.admin_authenticator_not_configured')
+               I18n.t("doorkeeper.errors.messages.admin_authenticator_not_configured")
              )
 
              head :forbidden
@@ -289,7 +287,7 @@ module Doorkeeper
     option :resource_owner_from_credentials,
            default: (lambda do |_routes|
              ::Rails.logger.warn(
-               I18n.t('doorkeeper.errors.messages.credential_flow_not_configured')
+               I18n.t("doorkeeper.errors.messages.credential_flow_not_configured")
              )
 
              nil
@@ -309,7 +307,7 @@ module Doorkeeper
     option :custom_access_token_expires_in, default: ->(_context) { nil }
     option :authorization_code_expires_in,  default: 600
     option :orm,                            default: :active_record
-    option :native_redirect_uri,            default: 'urn:ietf:wg:oauth:2.0:oob'
+    option :native_redirect_uri,            default: "urn:ietf:wg:oauth:2.0:oob"
     option :active_record_options,          default: {}
     option :grant_flows,                    default: %w[authorization_code client_credentials]
     option :handle_auth_errors,             default: :render
@@ -325,7 +323,7 @@ module Doorkeeper
     #
     # @param realm [String] ("Doorkeeper") Authentication realm
     #
-    option :realm,                          default: 'Doorkeeper'
+    option :realm,                          default: "Doorkeeper"
 
     # Forces the usage of the HTTPS protocol in non-native redirect uris
     # (enabled by default in non-development environments). OAuth2
@@ -349,8 +347,7 @@ module Doorkeeper
     #   the name of the access token generator class
     #
     option :access_token_generator,
-           default: 'Doorkeeper::OAuth::Helpers::UniqueToken'
-
+           default: "Doorkeeper::OAuth::Helpers::UniqueToken"
 
     # Default access token generator is a SecureRandom class from Ruby stdlib.
     # This option defines which method will be used to generate a unique token value.
@@ -358,7 +355,7 @@ module Doorkeeper
     # @param access_token_generator [String]
     #   the name of the access token generator class
     #
-    option :default_generator_method,  default: :urlsafe_base64
+    option :default_generator_method, default: :urlsafe_base64
 
     # The controller Doorkeeper::ApplicationController inherits from.
     # Defaults to ActionController::Base.
@@ -366,7 +363,7 @@ module Doorkeeper
     #
     # @param base_controller [String] the name of the base controller
     option :base_controller,
-           default: 'ActionController::Base'
+           default: "ActionController::Base"
 
     attr_reader :api_only,
                 :enforce_content_type,
@@ -452,7 +449,11 @@ module Doorkeeper
     end
 
     def access_token_methods
-      @access_token_methods ||= %i[from_bearer_authorization from_access_token_param from_bearer_param]
+      @access_token_methods ||= %i[
+        from_bearer_authorization
+        from_access_token_param
+        from_bearer_param
+      ]
     end
 
     def authorization_response_types
@@ -476,8 +477,8 @@ module Doorkeeper
     #
     def calculate_authorization_response_types
       types = []
-      types << 'code'  if grant_flows.include? 'authorization_code'
-      types << 'token' if grant_flows.include? 'implicit'
+      types << "code"  if grant_flows.include? "authorization_code"
+      types << "token" if grant_flows.include? "implicit"
       types
     end
 
@@ -485,8 +486,8 @@ module Doorkeeper
     # request endpoint, and return them in array.
     #
     def calculate_token_grant_types
-      types = grant_flows - ['implicit']
-      types << 'refresh_token' if refresh_token_enabled?
+      types = grant_flows - ["implicit"]
+      types << "refresh_token" if refresh_token_enabled?
       types
     end
 
@@ -518,8 +519,8 @@ module Doorkeeper
                 (token_reuse_limit > 0 && token_reuse_limit <= 100)
 
       ::Rails.logger.warn(
-        'You have configured an invalid value for token_reuse_limit option. ' \
-        'It will be set to default 100'
+        "You have configured an invalid value for token_reuse_limit option. " \
+        "It will be set to default 100"
       )
       @token_reuse_limit = 100
     end

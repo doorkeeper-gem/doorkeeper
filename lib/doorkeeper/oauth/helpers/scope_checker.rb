@@ -38,7 +38,7 @@ module Doorkeeper
             return true unless @scopes_by_grant_type
 
             OAuth::Scopes.from_array(@scopes_by_grant_type)
-                         .has_scopes?(parsed_scopes)
+              .has_scopes?(parsed_scopes)
           end
         end
 

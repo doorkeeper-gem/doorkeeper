@@ -30,7 +30,7 @@ module Doorkeeper
           application_scopes = if @client.present?
                                  @client.application.scopes
                                else
-                                 ''
+                                 ""
                                end
 
           ScopeChecker.valid?(

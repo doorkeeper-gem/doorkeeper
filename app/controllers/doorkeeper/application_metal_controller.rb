@@ -8,7 +8,7 @@ module Doorkeeper
       ActionController::Rendering,
       ActionController::Renderers::All,
       AbstractController::Callbacks,
-      Helpers::Controller
+      Helpers::Controller,
     ].freeze
 
     MODULES.each do |mod|

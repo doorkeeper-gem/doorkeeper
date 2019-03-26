@@ -1,13 +1,15 @@
-require 'spec_helper'
+# frozen_string_literal: true
+
+require "spec_helper"
 
 module Doorkeeper::OAuth
   describe ClientCredentialsRequest do
     let(:server) { Doorkeeper.configuration }
 
-    context 'with a valid request' do
+    context "with a valid request" do
       let(:client) { FactoryBot.create :application }
 
-      it 'issues an access token' do
+      it "issues an access token" do
         request = ClientCredentialsRequest.new(server, client, {})
         expect do
           request.authorize
@@ -15,8 +17,8 @@ module Doorkeeper::OAuth
       end
     end
 
-    describe 'with an invalid request' do
-      it 'does not issue an access token' do
+    describe "with an invalid request" do
+      it "does not issue an access token" do
         request = ClientCredentialsRequest.new(server, nil, {})
         expect do
           request.authorize

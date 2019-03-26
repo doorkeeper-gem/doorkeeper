@@ -6,8 +6,8 @@ module Doorkeeper
     include ActiveModel::MassAssignmentSecurity if defined?(::ProtectedAttributes)
 
     belongs_to_options = {
-      class_name: 'Doorkeeper::Application',
-      inverse_of: :access_tokens
+      class_name: "Doorkeeper::Application",
+      inverse_of: :access_tokens,
     }
 
     if defined?(ActiveRecord::Base) && ActiveRecord::VERSION::MAJOR >= 5
@@ -41,7 +41,7 @@ module Doorkeeper
     end
 
     def self.refresh_token_revoked_on_use?
-      column_names.include?('previous_refresh_token')
+      column_names.include?("previous_refresh_token")
     end
   end
 end

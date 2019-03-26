@@ -1,13 +1,15 @@
-require 'spec_helper'
+# frozen_string_literal: true
+
+require "spec_helper"
 
 module Doorkeeper::OAuth
   describe ErrorResponse do
-    describe '#status' do
-      it 'should have a status of bad_request' do
+    describe "#status" do
+      it "should have a status of bad_request" do
         expect(subject.status).to eq(:bad_request)
       end
 
-      it 'should have a status of unauthorized for an invalid_client error' do
+      it "should have a status of unauthorized for an invalid_client error" do
         subject = described_class.new(name: :invalid_client)
 
         expect(subject.status).to eq(:unauthorized)
@@ -15,42 +17,42 @@ module Doorkeeper::OAuth
     end
 
     describe :from_request do
-      it 'has the error from request' do
+      it "has the error from request" do
         error = ErrorResponse.from_request double(error: :some_error)
         expect(error.name).to eq(:some_error)
       end
 
-      it 'ignores state if request does not respond to state' do
+      it "ignores state if request does not respond to state" do
         error = ErrorResponse.from_request double(error: :some_error)
         expect(error.state).to be_nil
       end
 
-      it 'has state if request responds to state' do
+      it "has state if request responds to state" do
         error = ErrorResponse.from_request double(error: :some_error, state: :hello)
         expect(error.state).to eq(:hello)
       end
     end
 
-    it 'ignores empty error values' do
+    it "ignores empty error values" do
       subject = ErrorResponse.new(error: :some_error, state: nil)
       expect(subject.body).not_to have_key(:state)
     end
 
-    describe '.body' do
+    describe ".body" do
       subject { ErrorResponse.new(name: :some_error, state: :some_state).body }
 
-      describe '#body' do
+      describe "#body" do
         it { expect(subject).to have_key(:error) }
         it { expect(subject).to have_key(:error_description) }
         it { expect(subject).to have_key(:state) }
       end
     end
 
-    describe '.headers' do
+    describe ".headers" do
       let(:error_response) { ErrorResponse.new(name: :some_error, state: :some_state) }
       subject { error_response.headers }
 
-      it { expect(subject).to include 'WWW-Authenticate' }
+      it { expect(subject).to include "WWW-Authenticate" }
 
       describe "WWW-Authenticate header" do
         subject { error_response.headers["WWW-Authenticate"] }

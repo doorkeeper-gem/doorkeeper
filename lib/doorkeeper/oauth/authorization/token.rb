@@ -64,7 +64,7 @@ module Doorkeeper
           {
             controller: controller,
             action: :show,
-            access_token: token.plaintext_token
+            access_token: token.plaintext_token,
           }
         end
 
@@ -77,7 +77,7 @@ module Doorkeeper
         def controller
           @controller ||= begin
             mapping = Doorkeeper::Rails::Routes.mapping[:token_info] || {}
-            mapping[:controllers] || 'doorkeeper/token_info'
+            mapping[:controllers] || "doorkeeper/token_info"
           end
         end
       end

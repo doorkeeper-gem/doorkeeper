@@ -43,7 +43,7 @@ module Doorkeeper
         {
           expired: Doorkeeper::Errors::TokenExpired,
           revoked: Doorkeeper::Errors::TokenRevoked,
-          unknown: Doorkeeper::Errors::TokenUnknown
+          unknown: Doorkeeper::Errors::TokenUnknown,
         }
       end
     end

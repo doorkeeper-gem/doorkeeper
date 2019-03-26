@@ -1,18 +1,18 @@
 # frozen_string_literal: true
 
-require 'rails/generators'
-require 'rails/generators/active_record'
+require "rails/generators"
+require "rails/generators/active_record"
 
 module Doorkeeper
   class MigrationGenerator < ::Rails::Generators::Base
     include ::Rails::Generators::Migration
-    source_root File.expand_path('templates', __dir__)
-    desc 'Installs Doorkeeper migration file.'
+    source_root File.expand_path("templates", __dir__)
+    desc "Installs Doorkeeper migration file."
 
     def install
       migration_template(
-        'migration.rb.erb',
-        'db/migrate/create_doorkeeper_tables.rb',
+        "migration.rb.erb",
+        "db/migrate/create_doorkeeper_tables.rb",
         migration_version: migration_version
       )
     end

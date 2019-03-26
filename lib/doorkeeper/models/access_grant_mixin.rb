@@ -86,10 +86,12 @@ module Doorkeeper
 
       # @param code_verifier [#to_s] a one time use value (any object that responds to `#to_s`)
       #
-      # @return [#to_s] An encoded code challenge based on the provided verifier suitable for PKCE validation
+      # @return [#to_s] An encoded code challenge based on the provided verifier
+      # suitable for PKCE validation
+      #
       def generate_code_challenge(code_verifier)
         padded_result = Base64.urlsafe_encode64(Digest::SHA256.digest(code_verifier))
-        padded_result.split('=')[0] # Remove any trailing '='
+        padded_result.split("=")[0] # Remove any trailing '='
       end
 
       def pkce_supported?

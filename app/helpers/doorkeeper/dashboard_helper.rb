@@ -6,7 +6,7 @@ module Doorkeeper
       return if object.errors[method].blank?
 
       output = object.errors[method].map do |msg|
-        content_tag(:span, class: 'form-text') do
+        content_tag(:span, class: "form-text") do
           msg.capitalize
         end
       end

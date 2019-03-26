@@ -1,4 +1,6 @@
-require 'spec_helper'
+# frozen_string_literal: true
+
+require "spec_helper"
 
 module Doorkeeper
   describe AccessToken do
@@ -7,9 +9,9 @@ module Doorkeeper
 
     it { expect(subject).to be_valid }
 
-    it_behaves_like 'an accessible token'
-    it_behaves_like 'a revocable token'
-    it_behaves_like 'a unique token' do
+    it_behaves_like "an accessible token"
+    it_behaves_like "a revocable token"
+    it_behaves_like "a unique token" do
       let(:factory_name) { :access_token }
     end
 
@@ -18,18 +20,18 @@ module Doorkeeper
     end
 
     describe :generate_token do
-      it 'generates a token using the default method' do
+      it "generates a token using the default method" do
         FactoryBot.create :access_token
 
         token = FactoryBot.create :access_token
         expect(token.token).to be_a(String)
       end
 
-      context 'with hashing enabled' do
+      context "with hashing enabled" do
         let(:token) { FactoryBot.create :access_token }
-        include_context 'with token hashing enabled'
+        include_context "with token hashing enabled"
 
-        it 'holds a volatile plaintext token when created' do
+        it "holds a volatile plaintext token when created" do
           expect(token.plaintext_token).to be_a(String)
           expect(token.token)
             .to eq(hashed_or_plain_token_func.call(token.plaintext_token))
@@ -41,12 +43,12 @@ module Doorkeeper
           expect(loaded.token).to eq(token.token)
         end
 
-        it 'does not find_by plain text tokens' do
+        it "does not find_by plain text tokens" do
           expect(clazz.find_by(token: token.plaintext_token)).to be_nil
         end
 
-        describe 'with having a plain text token' do
-          let(:plain_text_token) { 'plain text token' }
+        describe "with having a plain text token" do
+          let(:plain_text_token) { "plain text token" }
           let(:access_token) { FactoryBot.create :access_token }
 
           before do
@@ -54,8 +56,8 @@ module Doorkeeper
             access_token.update_column(:token, plain_text_token)
           end
 
-          context 'without fallback lookup' do
-            it 'does not provide lookups with either through by_token' do
+          context "without fallback lookup" do
+            it "does not provide lookups with either through by_token" do
               expect(clazz.by_token(plain_text_token)).to eq(nil)
               expect(clazz.by_token(access_token.token)).to eq(nil)
 
@@ -65,10 +67,10 @@ module Doorkeeper
             end
           end
 
-          context 'with fallback lookup' do
-            include_context 'with token hashing and fallback lookup enabled'
+          context "with fallback lookup" do
+            include_context "with token hashing and fallback lookup enabled"
 
-            it 'upgrades a plain token when falling back to it' do
+            it "upgrades a plain token when falling back to it" do
               # Side-effect: This will automatically upgrade the token
               expect(clazz).to receive(:upgrade_fallback_value).and_call_original
               expect(clazz.by_token(plain_text_token)).to eq(access_token)
@@ -86,7 +88,7 @@ module Doorkeeper
         end
       end
 
-      it 'generates a token using a custom object' do
+      it "generates a token using a custom object" do
         eigenclass = class << CustomGeneratorArgs; self; end
         eigenclass.class_eval do
           remove_method :generate
@@ -106,7 +108,7 @@ module Doorkeeper
         expect(token.token).to match(/custom_generator_token_\d+/)
       end
 
-      it 'allows the custom generator to access the application details' do
+      it "allows the custom generator to access the application details" do
         eigenclass = class << CustomGeneratorArgs; self; end
         eigenclass.class_eval do
           remove_method :generate
@@ -126,7 +128,7 @@ module Doorkeeper
         expect(token.token).to match(/custom_generator_token_Application \d+/)
       end
 
-      it 'allows the custom generator to access the scopes' do
+      it "allows the custom generator to access the scopes" do
         eigenclass = class << CustomGeneratorArgs; self; end
         eigenclass.class_eval do
           remove_method :generate
@@ -142,12 +144,12 @@ module Doorkeeper
           access_token_generator "Doorkeeper::CustomGeneratorArgs"
         end
 
-        token = FactoryBot.create :access_token, scopes: 'public write'
+        token = FactoryBot.create :access_token, scopes: "public write"
 
-        expect(token.token).to eq 'custom_generator_token_2_public write'
+        expect(token.token).to eq "custom_generator_token_2_public write"
       end
 
-      it 'allows the custom generator to access the expiry length' do
+      it "allows the custom generator to access the expiry length" do
         eigenclass = class << CustomGeneratorArgs; self; end
         eigenclass.class_eval do
           remove_method :generate
@@ -164,10 +166,10 @@ module Doorkeeper
         end
 
         token = FactoryBot.create :access_token
-        expect(token.token).to eq 'custom_generator_token_7200'
+        expect(token.token).to eq "custom_generator_token_7200"
       end
 
-      it 'allows the custom generator to access the created time' do
+      it "allows the custom generator to access the created time" do
         module CustomGeneratorArgs
           def self.generate(opts = {})
             "custom_generator_token_#{opts[:created_at].to_i}"
@@ -184,7 +186,7 @@ module Doorkeeper
         expect(token.token).to eq "custom_generator_token_#{created_at.to_i}"
       end
 
-      it 'raises an error if the custom object does not support generate' do
+      it "raises an error if the custom object does not support generate" do
         module NoGenerate
         end
 
@@ -198,7 +200,7 @@ module Doorkeeper
         )
       end
 
-      it 'raises original error if something went wrong in custom generator' do
+      it "raises original error if something went wrong in custom generator" do
         eigenclass = class << CustomGeneratorArgs; self; end
         eigenclass.class_eval do
           remove_method :generate
@@ -206,7 +208,7 @@ module Doorkeeper
 
         module CustomGeneratorArgs
           def self.generate(_opts = {})
-            raise LoadError, 'custom behaviour'
+            raise LoadError, "custom behaviour"
           end
         end
 
@@ -220,7 +222,7 @@ module Doorkeeper
         )
       end
 
-      it 'raises an error if the custom object does not exist' do
+      it "raises an error if the custom object does not exist" do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
           access_token_generator "Doorkeeper::NotReal"
@@ -233,24 +235,24 @@ module Doorkeeper
     end
 
     describe :refresh_token do
-      it 'has empty refresh token if it was not required' do
+      it "has empty refresh token if it was not required" do
         token = FactoryBot.create :access_token
         expect(token.refresh_token).to be_nil
       end
 
-      it 'generates a refresh token if it was requested' do
+      it "generates a refresh token if it was requested" do
         token = FactoryBot.create :access_token, use_refresh_token: true
         expect(token.refresh_token).not_to be_nil
       end
 
-      it 'is not valid if token exists' do
+      it "is not valid if token exists" do
         token1 = FactoryBot.create :access_token, use_refresh_token: true
         token2 = FactoryBot.create :access_token, use_refresh_token: true
         token2.refresh_token = token1.refresh_token
         expect(token2).not_to be_valid
       end
 
-      it 'expects database to raise an error if refresh tokens are the same' do
+      it "expects database to raise an error if refresh tokens are the same" do
         token1 = FactoryBot.create :access_token, use_refresh_token: true
         token2 = FactoryBot.create :access_token, use_refresh_token: true
         expect do
@@ -259,11 +261,11 @@ module Doorkeeper
         end.to raise_error(uniqueness_error)
       end
 
-      context 'with hashing enabled' do
-        include_context 'with token hashing enabled'
+      context "with hashing enabled" do
+        include_context "with token hashing enabled"
         let(:token) { FactoryBot.create :access_token, use_refresh_token: true }
 
-        it 'holds a volatile refresh token when created' do
+        it "holds a volatile refresh token when created" do
           expect(token.plaintext_refresh_token).to be_a(String)
           expect(token.refresh_token)
             .to eq(hashed_or_plain_token_func.call(token.plaintext_refresh_token))
@@ -275,12 +277,12 @@ module Doorkeeper
           expect(loaded.refresh_token).to eq(token.refresh_token)
         end
 
-        it 'does not find_by plain text refresh tokens' do
+        it "does not find_by plain text refresh tokens" do
           expect(clazz.find_by(refresh_token: token.plaintext_refresh_token)).to be_nil
         end
 
-        describe 'with having a plain text token' do
-          let(:plain_refresh_token) { 'plain refresh token' }
+        describe "with having a plain text token" do
+          let(:plain_refresh_token) { "plain refresh token" }
           let(:access_token) { FactoryBot.create :access_token }
 
           before do
@@ -288,8 +290,8 @@ module Doorkeeper
             access_token.update_column(:refresh_token, plain_refresh_token)
           end
 
-          context 'without fallback lookup' do
-            it 'does not provide lookups with either through by_token' do
+          context "without fallback lookup" do
+            it "does not provide lookups with either through by_token" do
               expect(clazz.by_refresh_token(plain_refresh_token)).to eq(nil)
               expect(clazz.by_refresh_token(access_token.refresh_token)).to eq(nil)
 
@@ -299,10 +301,10 @@ module Doorkeeper
             end
           end
 
-          context 'with fallback lookup' do
-            include_context 'with token hashing and fallback lookup enabled'
+          context "with fallback lookup" do
+            include_context "with token hashing and fallback lookup enabled"
 
-            it 'upgrades a plain token when falling back to it' do
+            it "upgrades a plain token when falling back to it" do
               # Side-effect: This will automatically upgrade the token
               expect(clazz).to receive(:upgrade_fallback_value).and_call_original
               expect(clazz.by_refresh_token(plain_refresh_token)).to eq(access_token)
@@ -321,22 +323,22 @@ module Doorkeeper
       end
     end
 
-    describe 'validations' do
-      it 'is valid without resource_owner_id' do
+    describe "validations" do
+      it "is valid without resource_owner_id" do
         # For client credentials flow
         subject.resource_owner_id = nil
         expect(subject).to be_valid
       end
 
-      it 'is valid without application_id' do
+      it "is valid without application_id" do
         # For resource owner credentials flow
         subject.application_id = nil
         expect(subject).to be_valid
       end
     end
 
-    describe '#same_credential?' do
-      context 'with default parameters' do
+    describe "#same_credential?" do
+      context "with default parameters" do
         let(:resource_owner_id) { 100 }
         let(:application) { FactoryBot.create :application }
         let(:default_attributes) do
@@ -344,14 +346,14 @@ module Doorkeeper
         end
         let(:access_token1) { FactoryBot.create :access_token, default_attributes }
 
-        context 'the second token has the same owner and same app' do
+        context "the second token has the same owner and same app" do
           let(:access_token2) { FactoryBot.create :access_token, default_attributes }
-          it 'success' do
+          it "success" do
             expect(access_token1.same_credential?(access_token2)).to be_truthy
           end
         end
 
-        context 'the second token has same owner and different app' do
+        context "the second token has same owner and different app" do
           let(:other_application) { FactoryBot.create :application }
           let(:access_token2) do
             FactoryBot.create :access_token,
@@ -359,72 +361,72 @@ module Doorkeeper
                               resource_owner_id: resource_owner_id
           end
 
-          it 'fail' do
+          it "fail" do
             expect(access_token1.same_credential?(access_token2)).to be_falsey
           end
         end
 
-        context 'the second token has different owner and different app' do
+        context "the second token has different owner and different app" do
           let(:other_application) { FactoryBot.create :application }
           let(:access_token2) do
             FactoryBot.create :access_token, application: other_application, resource_owner_id: 42
           end
 
-          it 'fail' do
+          it "fail" do
             expect(access_token1.same_credential?(access_token2)).to be_falsey
           end
         end
 
-        context 'the second token has different owner and same app' do
+        context "the second token has different owner and same app" do
           let(:access_token2) do
             FactoryBot.create :access_token, application: application, resource_owner_id: 42
           end
 
-          it 'fail' do
+          it "fail" do
             expect(access_token1.same_credential?(access_token2)).to be_falsey
           end
         end
       end
     end
 
-    describe '#acceptable?' do
-      context 'a token that is not accessible' do
+    describe "#acceptable?" do
+      context "a token that is not accessible" do
         let(:token) { FactoryBot.create(:access_token, created_at: 6.hours.ago) }
 
-        it 'should return false' do
+        it "should return false" do
           expect(token.acceptable?(nil)).to be false
         end
       end
 
-      context 'a token that has the incorrect scopes' do
+      context "a token that has the incorrect scopes" do
         let(:token) { FactoryBot.create(:access_token) }
 
-        it 'should return false' do
-          expect(token.acceptable?(['public'])).to be false
+        it "should return false" do
+          expect(token.acceptable?(["public"])).to be false
         end
       end
 
-      context 'a token is acceptable with the correct scopes' do
+      context "a token is acceptable with the correct scopes" do
         let(:token) do
           token = FactoryBot.create(:access_token)
-          token[:scopes] = 'public'
+          token[:scopes] = "public"
           token
         end
 
-        it 'should return true' do
-          expect(token.acceptable?(['public'])).to be true
+        it "should return true" do
+          expect(token.acceptable?(["public"])).to be true
         end
       end
     end
 
-    describe '.revoke_all_for' do
+    describe ".revoke_all_for" do
       let(:resource_owner) { double(id: 100) }
       let(:application)    { FactoryBot.create :application }
       let(:default_attributes) do
         { application: application, resource_owner_id: resource_owner.id }
       end
 
-      it 'revokes all tokens for given application and resource owner' do
+      it "revokes all tokens for given application and resource owner" do
         FactoryBot.create :access_token, default_attributes
         AccessToken.revoke_all_for application.id, resource_owner
         AccessToken.all.each do |token|
@@ -432,7 +434,7 @@ module Doorkeeper
         end
       end
 
-      it 'matches application' do
+      it "matches application" do
         access_token_for_different_app = FactoryBot.create(
           :access_token,
           default_attributes.merge(application: FactoryBot.create(:application))
@@ -443,7 +445,7 @@ module Doorkeeper
         expect(access_token_for_different_app.reload).not_to be_revoked
       end
 
-      it 'matches resource owner' do
+      it "matches resource owner" do
         access_token_for_different_owner = FactoryBot.create(
           :access_token,
           default_attributes.merge(resource_owner_id: 90)
@@ -455,15 +457,15 @@ module Doorkeeper
       end
     end
 
-    describe '.matching_token_for' do
+    describe ".matching_token_for" do
       let(:resource_owner_id) { 100 }
       let(:application)       { FactoryBot.create :application }
-      let(:scopes) { Doorkeeper::OAuth::Scopes.from_string('public write') }
+      let(:scopes) { Doorkeeper::OAuth::Scopes.from_string("public write") }
       let(:default_attributes) do
         {
           application: application,
           resource_owner_id: resource_owner_id,
-          scopes: scopes.to_s
+          scopes: scopes.to_s,
         }
       end
 
@@ -471,26 +473,26 @@ module Doorkeeper
         default_scopes_exist(*scopes.all)
       end
 
-      it 'returns only one token' do
+      it "returns only one token" do
         token = FactoryBot.create :access_token, default_attributes
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to eq(token)
       end
 
-      it 'accepts resource owner as object' do
+      it "accepts resource owner as object" do
         resource_owner = double(to_key: true, id: 100)
         token = FactoryBot.create :access_token, default_attributes
         last_token = AccessToken.matching_token_for(application, resource_owner, scopes)
         expect(last_token).to eq(token)
       end
 
-      it 'accepts nil as resource owner' do
+      it "accepts nil as resource owner" do
         token = FactoryBot.create :access_token, default_attributes.merge(resource_owner_id: nil)
         last_token = AccessToken.matching_token_for(application, nil, scopes)
         expect(last_token).to eq(token)
       end
 
-      it 'excludes revoked tokens' do
+      it "excludes revoked tokens" do
         FactoryBot.create :access_token, default_attributes.merge(revoked_at: 1.day.ago)
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
@@ -509,32 +511,32 @@ module Doorkeeper
       end
 
       it "excludes tokens with fewer scopes" do
-        FactoryBot.create :access_token, default_attributes.merge(scopes: 'public')
+        FactoryBot.create :access_token, default_attributes.merge(scopes: "public")
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
       end
 
-      it 'excludes tokens with different scopes' do
-        FactoryBot.create :access_token, default_attributes.merge(scopes: 'public email')
+      it "excludes tokens with different scopes" do
+        FactoryBot.create :access_token, default_attributes.merge(scopes: "public email")
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
       end
 
-      it 'excludes tokens with additional scopes' do
-        FactoryBot.create :access_token, default_attributes.merge(scopes: 'public write email')
+      it "excludes tokens with additional scopes" do
+        FactoryBot.create :access_token, default_attributes.merge(scopes: "public write email")
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
       end
 
-      it 'excludes tokens with scopes that are not present in server scopes' do
+      it "excludes tokens with scopes that are not present in server scopes" do
         FactoryBot.create :access_token, default_attributes.merge(
-          application: application, scopes: 'public read'
+          application: application, scopes: "public read"
         )
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
       end
 
-      it 'excludes tokens with scopes that are not present in application scopes' do
+      it "excludes tokens with scopes that are not present in application scopes" do
         application = FactoryBot.create :application, scopes: "private read"
         FactoryBot.create :access_token, default_attributes.merge(
           application: application
@@ -543,11 +545,11 @@ module Doorkeeper
         expect(last_token).to be_nil
       end
 
-      it 'does not match token if empty scope requested and token/app scopes present' do
+      it "does not match token if empty scope requested and token/app scopes present" do
         application = FactoryBot.create :application, scopes: "sample:scope"
         app_params = {
           application_id: application.id, scopes: "sample:scope",
-          resource_owner_id: 100
+          resource_owner_id: 100,
         }
         FactoryBot.create :access_token, app_params
         empty_scopes = Doorkeeper::OAuth::Scopes.from_string("")
@@ -555,17 +557,17 @@ module Doorkeeper
         expect(last_token).to be_nil
       end
 
-      it 'matches token if empty scope requested and no token scopes present' do
+      it "matches token if empty scope requested and no token scopes present" do
         empty_scopes = Doorkeeper::OAuth::Scopes.from_string("")
         token = FactoryBot.create :access_token, default_attributes.merge(scopes: empty_scopes)
         last_token = AccessToken.matching_token_for(application, 100, empty_scopes)
         expect(last_token).to eq(token)
       end
 
-      it 'returns the last matching token' do
+      it "returns the last matching token" do
         FactoryBot.create :access_token, default_attributes.merge(created_at: 1.day.ago)
         matching_token = FactoryBot.create :access_token, default_attributes
-        FactoryBot.create :access_token, default_attributes.merge(scopes: 'public')
+        FactoryBot.create :access_token, default_attributes.merge(scopes: "public")
 
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to eq(matching_token)
@@ -576,11 +578,11 @@ module Doorkeeper
       it "returns as_json hash" do
         token = FactoryBot.create :access_token
         token_hash = {
-          resource_owner_id:  token.resource_owner_id,
-          scope:              token.scopes,
-          expires_in:         token.expires_in_seconds,
-          application:        { uid: token.application.uid },
-          created_at:         token.created_at.to_i
+          resource_owner_id: token.resource_owner_id,
+          scope: token.scopes,
+          expires_in: token.expires_in_seconds,
+          application: { uid: token.application.uid },
+          created_at: token.created_at.to_i,
         }
         expect(token.as_json).to eq token_hash
       end

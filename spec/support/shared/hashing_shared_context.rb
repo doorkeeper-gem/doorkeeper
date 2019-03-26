@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-shared_context 'with token hashing enabled' do
+shared_context "with token hashing enabled" do
   let(:hashed_or_plain_token_func) do
     Doorkeeper::SecretStoring::Sha256Hash.method(:transform_secret)
   end
@@ -12,7 +12,7 @@ shared_context 'with token hashing enabled' do
   end
 end
 
-shared_context 'with token hashing and fallback lookup enabled' do
+shared_context "with token hashing and fallback lookup enabled" do
   let(:hashed_or_plain_token_func) do
     Doorkeeper::SecretStoring::Sha256Hash.method(:transform_secret)
   end
@@ -24,7 +24,7 @@ shared_context 'with token hashing and fallback lookup enabled' do
   end
 end
 
-shared_context 'with application hashing enabled' do
+shared_context "with application hashing enabled" do
   let(:hashed_or_plain_token_func) do
     Doorkeeper::SecretStoring::Sha256Hash.method(:transform_secret)
   end

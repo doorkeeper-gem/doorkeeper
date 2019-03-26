@@ -50,7 +50,7 @@ module Doorkeeper
           response_type: response_type,
           scope: scope,
           client_name: client.name,
-          status: I18n.t('doorkeeper.pre_authorization.status')
+          status: I18n.t("doorkeeper.pre_authorization.status"),
         }
       end
 
@@ -85,7 +85,7 @@ module Doorkeeper
       end
 
       def grant_type
-        response_type == 'code' ? AUTHORIZATION_CODE : IMPLICIT
+        response_type == "code" ? AUTHORIZATION_CODE : IMPLICIT
       end
 
       def validate_redirect_uri

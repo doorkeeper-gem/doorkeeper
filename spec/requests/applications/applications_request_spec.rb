@@ -1,25 +1,27 @@
-require 'spec_helper'
+# frozen_string_literal: true
 
-feature 'Adding applications' do
-  context 'in application form' do
+require "spec_helper"
+
+feature "Adding applications" do
+  context "in application form" do
     background do
       i_am_logged_in
-      visit '/oauth/applications/new'
+      visit "/oauth/applications/new"
     end
 
-    scenario 'adding a valid app' do
-      fill_in 'doorkeeper_application[name]', with: 'My Application'
-      fill_in 'doorkeeper_application[redirect_uri]',
-              with: 'https://example.com'
+    scenario "adding a valid app" do
+      fill_in "doorkeeper_application[name]", with: "My Application"
+      fill_in "doorkeeper_application[redirect_uri]",
+              with: "https://example.com"
 
-      click_button 'Submit'
-      i_should_see 'Application created'
-      i_should_see 'My Application'
+      click_button "Submit"
+      i_should_see "Application created"
+      i_should_see "My Application"
     end
 
-    scenario 'adding invalid app' do
-      click_button 'Submit'
-      i_should_see 'Whoops! Check your form for possible errors'
+    scenario "adding invalid app" do
+      click_button "Submit"
+      i_should_see "Whoops! Check your form for possible errors"
     end
 
     scenario "adding app ignoring bad scope" do
@@ -88,63 +90,63 @@ feature 'Adding applications' do
       click_button "Submit"
       i_should_see "Whoops! Check your form for possible errors"
       i_should_see Regexp.new(
-        I18n.t('activerecord.errors.models.doorkeeper/application.attributes.scopes.not_match_configured'),
+        I18n.t("activerecord.errors.models.doorkeeper/application.attributes.scopes.not_match_configured"),
         true
       )
     end
   end
 end
 
-feature 'Listing applications' do
+feature "Listing applications" do
   background do
     i_am_logged_in
 
-    FactoryBot.create :application, name: 'Oauth Dude'
-    FactoryBot.create :application, name: 'Awesome App'
+    FactoryBot.create :application, name: "Oauth Dude"
+    FactoryBot.create :application, name: "Awesome App"
   end
 
-  scenario 'application list' do
-    visit '/oauth/applications'
+  scenario "application list" do
+    visit "/oauth/applications"
 
-    i_should_see 'Awesome App'
-    i_should_see 'Oauth Dude'
-  end
-end
-
-feature 'Renders assets' do
-  scenario 'admin stylesheets' do
-    visit '/assets/doorkeeper/admin/application.css'
-
-    i_should_see 'Bootstrap'
-    i_should_see '.doorkeeper-admin'
-  end
-
-  scenario 'application stylesheets' do
-    visit '/assets/doorkeeper/application.css'
-
-    i_should_see 'Bootstrap'
-    i_should_see '#oauth-permissions'
-    i_should_see '#container'
+    i_should_see "Awesome App"
+    i_should_see "Oauth Dude"
   end
 end
 
-feature 'Show application' do
+feature "Renders assets" do
+  scenario "admin stylesheets" do
+    visit "/assets/doorkeeper/admin/application.css"
+
+    i_should_see "Bootstrap"
+    i_should_see ".doorkeeper-admin"
+  end
+
+  scenario "application stylesheets" do
+    visit "/assets/doorkeeper/application.css"
+
+    i_should_see "Bootstrap"
+    i_should_see "#oauth-permissions"
+    i_should_see "#container"
+  end
+end
+
+feature "Show application" do
   given :app do
     i_am_logged_in
 
-    FactoryBot.create :application, name: 'Just another oauth app'
+    FactoryBot.create :application, name: "Just another oauth app"
   end
 
-  scenario 'visiting application page' do
+  scenario "visiting application page" do
     visit "/oauth/applications/#{app.id}"
 
-    i_should_see 'Just another oauth app'
+    i_should_see "Just another oauth app"
   end
 end
 
-feature 'Edit application' do
+feature "Edit application" do
   let :app do
-    FactoryBot.create :application, name: 'OMG my app'
+    FactoryBot.create :application, name: "OMG my app"
   end
 
   background do
@@ -153,72 +155,72 @@ feature 'Edit application' do
     visit "/oauth/applications/#{app.id}/edit"
   end
 
-  scenario 'updating a valid app' do
-    fill_in 'doorkeeper_application[name]', with: 'Serious app'
-    click_button 'Submit'
+  scenario "updating a valid app" do
+    fill_in "doorkeeper_application[name]", with: "Serious app"
+    click_button "Submit"
 
-    i_should_see 'Application updated'
-    i_should_see 'Serious app'
-    i_should_not_see 'OMG my app'
+    i_should_see "Application updated"
+    i_should_see "Serious app"
+    i_should_not_see "OMG my app"
   end
 
-  scenario 'updating an invalid app' do
-    fill_in 'doorkeeper_application[name]', with: ''
-    click_button 'Submit'
+  scenario "updating an invalid app" do
+    fill_in "doorkeeper_application[name]", with: ""
+    click_button "Submit"
 
-    i_should_see 'Whoops! Check your form for possible errors'
+    i_should_see "Whoops! Check your form for possible errors"
   end
 end
 
-feature 'Remove application' do
+feature "Remove application" do
   background do
     i_am_logged_in
 
     @app = FactoryBot.create :application
   end
 
-  scenario 'deleting an application from list' do
-    visit '/oauth/applications'
+  scenario "deleting an application from list" do
+    visit "/oauth/applications"
 
     i_should_see @app.name
 
     within(:css, "tr#application_#{@app.id}") do
-      click_button 'Destroy'
+      click_button "Destroy"
     end
 
-    i_should_see 'Application deleted'
+    i_should_see "Application deleted"
     i_should_not_see @app.name
   end
 
-  scenario 'deleting an application from show' do
+  scenario "deleting an application from show" do
     visit "/oauth/applications/#{@app.id}"
-    click_button 'Destroy'
+    click_button "Destroy"
 
-    i_should_see 'Application deleted'
+    i_should_see "Application deleted"
   end
 end
 
-context 'when admin authenticator block is default' do
-  let(:app) { FactoryBot.create :application, name: 'app' }
+context "when admin authenticator block is default" do
+  let(:app) { FactoryBot.create :application, name: "app" }
 
-  feature 'application list' do
-    scenario 'fails with forbidden' do
-      visit '/oauth/applications'
-
-      should_have_status 403
-    end
-  end
-
-  feature 'adding an app' do
-    scenario 'fails with forbidden' do
-      visit '/oauth/applications/new'
+  feature "application list" do
+    scenario "fails with forbidden" do
+      visit "/oauth/applications"
 
       should_have_status 403
     end
   end
 
-  feature 'editing an app' do
-    scenario 'fails with forbidden' do
+  feature "adding an app" do
+    scenario "fails with forbidden" do
+      visit "/oauth/applications/new"
+
+      should_have_status 403
+    end
+  end
+
+  feature "editing an app" do
+    scenario "fails with forbidden" do
       visit "/oauth/applications/#{app.id}/edit"
 
       should_have_status 403

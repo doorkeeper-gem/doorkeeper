@@ -1,17 +1,50 @@
 AllCops:
+  # Till we drop support for 2.2
+  TargetRubyVersion: 2.2
   Exclude:
     - "spec/dummy/db/*"
+    - "spec/dummy/config/*"
+    - "Dangerfile"
 
 Metrics/BlockLength:
   Exclude:
     - spec/**/*
+    - lib/doorkeeper/rake/*
 
-LineLength:
+Metrics/LineLength:
+  Exclude:
+    - spec/**/*
+  Max: 100
+
+Metrics/MethodLength:
+  Exclude:
+    - spec/dummy/db/*
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
+
+Style/FrozenStringLiteralComment:
+  Enabled: true
+
+Style/TrailingCommaInHashLiteral:
+  EnforcedStyleForMultiline: consistent_comma
+Style/TrailingCommaInArrayLiteral:
+  EnforcedStyleForMultiline: consistent_comma
+
+Style/SymbolArray:
+  MinSize: 3
+Style/WordArray:
+  MinSize: 3
+
+Style/ClassAndModuleChildren:
   Exclude:
     - spec/**/*
 
-StringLiterals:
-  Enabled: false
-
-TrailingBlankLines:
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+Layout/TrailingBlankLines:
   Enabled: true
+Layout/DotPosition:
+  EnforcedStyle: leading

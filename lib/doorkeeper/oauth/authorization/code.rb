@@ -42,7 +42,7 @@ module Doorkeeper
 
           {
             code_challenge: pre_auth.code_challenge,
-            code_challenge_method: pre_auth.code_challenge_method
+            code_challenge_method: pre_auth.code_challenge_method,
           }
         end
 

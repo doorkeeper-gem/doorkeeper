@@ -1,6 +1,8 @@
-require 'spec_helper'
+# frozen_string_literal: true
 
-describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
+require "spec_helper"
+
+describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
   include AuthorizationRequestHelper
 
   if Rails::VERSION::MAJOR >= 5
@@ -28,7 +30,7 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
   end
 
   let(:client)        { FactoryBot.create :application }
-  let(:user)          { User.create!(name: 'Joe', password: 'sekret') }
+  let(:user)          { User.create!(name: "Joe", password: "sekret") }
   let(:access_token)  { FactoryBot.build :access_token, resource_owner_id: user.id, application_id: client.id }
 
   before do
@@ -39,36 +41,36 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     })
   end
 
-  describe 'POST #create' do
+  describe "POST #create" do
     before do
-      post :create, params: { client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri }
+      post :create, params: { client_id: client.uid, response_type: "token", redirect_uri: client.redirect_uri }
     end
 
-    it 'redirects after authorization' do
+    it "redirects after authorization" do
       expect(response).to be_redirect
     end
 
-    it 'redirects to client redirect uri' do
+    it "redirects to client redirect uri" do
       expect(response.location).to match(/^#{client.redirect_uri}/)
     end
 
-    it 'includes access token in fragment' do
-      expect(response.query_params['access_token']).to eq(Doorkeeper::AccessToken.first.token)
+    it "includes access token in fragment" do
+      expect(response.query_params["access_token"]).to eq(Doorkeeper::AccessToken.first.token)
     end
 
-    it 'includes token type in fragment' do
-      expect(response.query_params['token_type']).to eq('Bearer')
+    it "includes token type in fragment" do
+      expect(response.query_params["token_type"]).to eq("Bearer")
     end
 
-    it 'includes token expiration in fragment' do
-      expect(response.query_params['expires_in'].to_i).to eq(1234)
+    it "includes token expiration in fragment" do
+      expect(response.query_params["expires_in"].to_i).to eq(1234)
     end
 
-    it 'issues the token for the current client' do
+    it "issues the token for the current client" do
       expect(Doorkeeper::AccessToken.first.application_id).to eq(client.id)
     end
 
-    it 'issues the token for the current resource owner' do
+    it "issues the token for the current resource owner" do
       expect(Doorkeeper::AccessToken.first.resource_owner_id).to eq(user.id)
     end
   end
@@ -111,85 +113,85 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
   end
 
-  describe 'POST #create with errors' do
+  describe "POST #create with errors" do
     before do
       default_scopes_exist :public
 
       post :create, params: {
         client_id: client.uid,
-        response_type: 'token',
-        scope: 'invalid',
-        redirect_uri: client.redirect_uri
+        response_type: "token",
+        scope: "invalid",
+        redirect_uri: client.redirect_uri,
       }
     end
 
-    it 'redirects after authorization' do
+    it "redirects after authorization" do
       expect(response).to be_redirect
     end
 
-    it 'redirects to client redirect uri' do
+    it "redirects to client redirect uri" do
       expect(response.location).to match(/^#{client.redirect_uri}/)
     end
 
-    it 'does not include access token in fragment' do
-      expect(response.query_params['access_token']).to be_nil
+    it "does not include access token in fragment" do
+      expect(response.query_params["access_token"]).to be_nil
     end
 
-    it 'includes error in fragment' do
-      expect(response.query_params['error']).to eq('invalid_scope')
+    it "includes error in fragment" do
+      expect(response.query_params["error"]).to eq("invalid_scope")
     end
 
-    it 'includes error description in fragment' do
-      expect(response.query_params['error_description']).to eq(translated_error_message(:invalid_scope))
+    it "includes error description in fragment" do
+      expect(response.query_params["error_description"]).to eq(translated_error_message(:invalid_scope))
     end
 
-    it 'does not issue any access token' do
+    it "does not issue any access token" do
       expect(Doorkeeper::AccessToken.all).to be_empty
     end
   end
 
-  describe 'POST #create in API mode with errors' do
+  describe "POST #create in API mode with errors" do
     before do
       allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
       default_scopes_exist :public
 
       post :create, params: {
         client_id: client.uid,
-        response_type: 'token',
-        scope: 'invalid',
-        redirect_uri: client.redirect_uri
+        response_type: "token",
+        scope: "invalid",
+        redirect_uri: client.redirect_uri,
       }
     end
 
     let(:response_json_body) { JSON.parse(response.body) }
-    let(:redirect_uri) { response_json_body['redirect_uri'] }
+    let(:redirect_uri) { response_json_body["redirect_uri"] }
 
-    it 'renders 400 error' do
+    it "renders 400 error" do
       expect(response.status).to eq 400
     end
 
-    it 'includes correct redirect URI' do
+    it "includes correct redirect URI" do
       expect(redirect_uri).to match(/^#{client.redirect_uri}/)
     end
 
-    it 'does not include access token in fragment' do
+    it "does not include access token in fragment" do
       expect(redirect_uri.match(/access_token=([a-f0-9]+)&?/)).to be_nil
     end
 
-    it 'includes error in redirect uri' do
-      expect(redirect_uri.match(/error=([a-z_]+)&?/)[1]).to eq 'invalid_scope'
+    it "includes error in redirect uri" do
+      expect(redirect_uri.match(/error=([a-z_]+)&?/)[1]).to eq "invalid_scope"
     end
 
-    it 'includes error description in redirect uri' do
+    it "includes error description in redirect uri" do
       expect(redirect_uri.match(/error_description=(.+)&?/)[1]).to_not be_nil
     end
 
-    it 'does not issue any access token' do
+    it "does not issue any access token" do
       expect(Doorkeeper::AccessToken.all).to be_empty
     end
   end
 
-  describe 'POST #create with application already authorized' do
+  describe "POST #create with application already authorized" do
     before do
       allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
 
@@ -197,121 +199,121 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
 
       post :create, params: {
         client_id: client.uid,
-        response_type: 'token',
-        redirect_uri: client.redirect_uri
+        response_type: "token",
+        redirect_uri: client.redirect_uri,
       }
     end
 
-    it 'returns the existing access token in a fragment' do
-      expect(response.query_params['access_token']).to eq(access_token.token)
+    it "returns the existing access token in a fragment" do
+      expect(response.query_params["access_token"]).to eq(access_token.token)
     end
 
-    it 'does not creates a new access token' do
+    it "does not creates a new access token" do
       expect(Doorkeeper::AccessToken.count).to eq(1)
     end
   end
 
-  describe 'POST #create with callbacks' do
+  describe "POST #create with callbacks" do
     after do
-      client.update_attribute :redirect_uri, 'urn:ietf:wg:oauth:2.0:oob'
+      client.update_attribute :redirect_uri, "urn:ietf:wg:oauth:2.0:oob"
     end
 
-    describe 'when successful' do
+    describe "when successful" do
       after do
         post :create, params: {
           client_id: client.uid,
-          response_type: 'token',
-          redirect_uri: client.redirect_uri
+          response_type: "token",
+          redirect_uri: client.redirect_uri,
         }
       end
 
-      it 'should call :before_successful_authorization callback' do
+      it "should call :before_successful_authorization callback" do
         expect(Doorkeeper.configuration)
           .to receive_message_chain(:before_successful_authorization, :call).with(instance_of(described_class))
       end
 
-      it 'should call :after_successful_authorization callback' do
+      it "should call :after_successful_authorization callback" do
         expect(Doorkeeper.configuration)
           .to receive_message_chain(:after_successful_authorization, :call).with(instance_of(described_class))
       end
     end
 
-    describe 'with errors' do
+    describe "with errors" do
       after do
-        post :create, params: { client_id: client.uid, response_type: 'token', redirect_uri: 'bad_uri' }
+        post :create, params: { client_id: client.uid, response_type: "token", redirect_uri: "bad_uri" }
       end
 
-      it 'should not call :before_successful_authorization callback' do
+      it "should not call :before_successful_authorization callback" do
         expect(Doorkeeper.configuration).not_to receive(:before_successful_authorization)
       end
 
-      it 'should not call :after_successful_authorization callback' do
+      it "should not call :after_successful_authorization callback" do
         expect(Doorkeeper.configuration).not_to receive(:after_successful_authorization)
       end
     end
   end
 
-  describe 'GET #new token request with native url and skip_authorization true' do
+  describe "GET #new token request with native url and skip_authorization true" do
     before do
       allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
         true
       end)
 
-      client.update_attribute :redirect_uri, 'urn:ietf:wg:oauth:2.0:oob'
+      client.update_attribute :redirect_uri, "urn:ietf:wg:oauth:2.0:oob"
 
       get :new, params: {
         client_id: client.uid,
-        response_type: 'token',
-        redirect_uri: client.redirect_uri
+        response_type: "token",
+        redirect_uri: client.redirect_uri,
       }
     end
 
-    it 'should redirect immediately' do
+    it "should redirect immediately" do
       expect(response).to be_redirect
       expect(response.location).to match(%r{/oauth/token/info\?access_token=})
     end
 
-    it 'should not issue a grant' do
+    it "should not issue a grant" do
       expect(Doorkeeper::AccessGrant.count).to be 0
     end
 
-    it 'should issue a token' do
+    it "should issue a token" do
       expect(Doorkeeper::AccessToken.count).to be 1
     end
   end
 
-  describe 'GET #new code request with native url and skip_authorization true' do
+  describe "GET #new code request with native url and skip_authorization true" do
     before do
       allow(Doorkeeper.configuration).to receive(:grant_flows).and_return(%w[authorization_code])
       allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
         true
       end)
 
-      client.update_attribute :redirect_uri, 'urn:ietf:wg:oauth:2.0:oob'
+      client.update_attribute :redirect_uri, "urn:ietf:wg:oauth:2.0:oob"
 
       get :new, params: {
         client_id: client.uid,
-        response_type: 'code',
-        redirect_uri: client.redirect_uri
+        response_type: "code",
+        redirect_uri: client.redirect_uri,
       }
     end
 
-    it 'should redirect immediately' do
+    it "should redirect immediately" do
       expect(response).to be_redirect
       expect(response.location)
         .to match(%r{/oauth/authorize/native\?code=#{Doorkeeper::AccessGrant.first.token}})
     end
 
-    it 'should issue a grant' do
+    it "should issue a grant" do
       expect(Doorkeeper::AccessGrant.count).to be 1
     end
 
-    it 'should not issue a token' do
+    it "should not issue a token" do
       expect(Doorkeeper::AccessToken.count).to be 0
     end
   end
 
-  describe 'GET #new with skip_authorization true' do
+  describe "GET #new with skip_authorization true" do
     before do
       allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
         true
@@ -319,82 +321,82 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
 
       get :new, params: {
         client_id: client.uid,
-        response_type: 'token',
-        redirect_uri: client.redirect_uri
+        response_type: "token",
+        redirect_uri: client.redirect_uri,
       }
     end
 
-    it 'should redirect immediately' do
+    it "should redirect immediately" do
       expect(response).to be_redirect
       expect(response.location).to match(/^#{client.redirect_uri}/)
     end
 
-    it 'should issue a token' do
+    it "should issue a token" do
       expect(Doorkeeper::AccessToken.count).to be 1
     end
 
-    it 'includes token type in fragment' do
-      expect(response.query_params['token_type']).to eq('Bearer')
+    it "includes token type in fragment" do
+      expect(response.query_params["token_type"]).to eq("Bearer")
     end
 
-    it 'includes token expiration in fragment' do
-      expect(response.query_params['expires_in'].to_i).to eq(1234)
+    it "includes token expiration in fragment" do
+      expect(response.query_params["expires_in"].to_i).to eq(1234)
     end
 
-    it 'issues the token for the current client' do
+    it "issues the token for the current client" do
       expect(Doorkeeper::AccessToken.first.application_id).to eq(client.id)
     end
 
-    it 'issues the token for the current resource owner' do
+    it "issues the token for the current resource owner" do
       expect(Doorkeeper::AccessToken.first.resource_owner_id).to eq(user.id)
     end
   end
 
-  describe 'GET #new in API mode' do
+  describe "GET #new in API mode" do
     before do
       allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
 
       get :new, params: {
         client_id: client.uid,
-        response_type: 'token',
-        redirect_uri: client.redirect_uri
+        response_type: "token",
+        redirect_uri: client.redirect_uri,
       }
     end
 
-    it 'should render success' do
+    it "should render success" do
       expect(response).to be_successful
     end
 
     it "sets status to pre-authorization" do
-      expect(json_response["status"]).to eq(I18n.t('doorkeeper.pre_authorization.status'))
+      expect(json_response["status"]).to eq(I18n.t("doorkeeper.pre_authorization.status"))
     end
 
     it "sets correct values" do
-      expect(json_response['client_id']).to eq(client.uid)
-      expect(json_response['redirect_uri']).to eq(client.redirect_uri)
-      expect(json_response['state']).to be_nil
-      expect(json_response['response_type']).to eq('token')
-      expect(json_response['scope']).to eq('')
+      expect(json_response["client_id"]).to eq(client.uid)
+      expect(json_response["redirect_uri"]).to eq(client.redirect_uri)
+      expect(json_response["state"]).to be_nil
+      expect(json_response["response_type"]).to eq("token")
+      expect(json_response["scope"]).to eq("")
     end
   end
 
-  describe 'GET #new in API mode with skip_authorization true' do
+  describe "GET #new in API mode with skip_authorization true" do
     before do
       allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc { true })
       allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
 
       get :new, params: {
         client_id: client.uid,
-        response_type: 'token',
-        redirect_uri: client.redirect_uri
+        response_type: "token",
+        redirect_uri: client.redirect_uri,
       }
     end
 
-    it 'should render success' do
+    it "should render success" do
       expect(response).to be_successful
     end
 
-    it 'should issue a token' do
+    it "should issue a token" do
       expect(Doorkeeper::AccessToken.count).to be 1
     end
 
@@ -421,104 +423,104 @@ describe Doorkeeper::AuthorizationsController, 'implicit grant flow' do
     end
   end
 
-  describe 'GET #new with errors' do
+  describe "GET #new with errors" do
     before do
       default_scopes_exist :public
-      get :new, params: { an_invalid: 'request' }
+      get :new, params: { an_invalid: "request" }
     end
 
-    it 'does not redirect' do
+    it "does not redirect" do
       expect(response).to_not be_redirect
     end
 
-    it 'does not issue any token' do
+    it "does not issue any token" do
       expect(Doorkeeper::AccessGrant.count).to eq 0
       expect(Doorkeeper::AccessToken.count).to eq 0
     end
   end
 
-  describe 'GET #new in API mode with errors' do
+  describe "GET #new in API mode with errors" do
     let(:response_json_body) { JSON.parse(response.body) }
 
     before do
       default_scopes_exist :public
       allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
-      get :new, params: { an_invalid: 'request' }
+      get :new, params: { an_invalid: "request" }
     end
 
-    it 'should render bad request' do
+    it "should render bad request" do
       expect(response).to have_http_status(:bad_request)
     end
 
-    it 'includes error in body' do
-      expect(response_json_body['error']).to eq('unsupported_response_type')
+    it "includes error in body" do
+      expect(response_json_body["error"]).to eq("unsupported_response_type")
     end
 
-    it 'includes error description in body' do
-      expect(response_json_body['error_description'])
+    it "includes error description in body" do
+      expect(response_json_body["error_description"])
         .to eq(translated_error_message(:unsupported_response_type))
     end
 
-    it 'does not issue any token' do
+    it "does not issue any token" do
       expect(Doorkeeper::AccessGrant.count).to eq 0
       expect(Doorkeeper::AccessToken.count).to eq 0
     end
   end
 
-  describe 'GET #new with callbacks' do
+  describe "GET #new with callbacks" do
     after do
-      client.update_attribute :redirect_uri, 'urn:ietf:wg:oauth:2.0:oob'
-      get :new, params: { client_id: client.uid, response_type: 'token', redirect_uri: client.redirect_uri }
+      client.update_attribute :redirect_uri, "urn:ietf:wg:oauth:2.0:oob"
+      get :new, params: { client_id: client.uid, response_type: "token", redirect_uri: client.redirect_uri }
     end
 
-    describe 'when authorizing' do
+    describe "when authorizing" do
       before do
         allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc { true })
       end
 
-      it 'should call :before_successful_authorization callback' do
+      it "should call :before_successful_authorization callback" do
         expect(Doorkeeper.configuration)
           .to receive_message_chain(:before_successful_authorization, :call).with(instance_of(described_class))
       end
 
-      it 'should call :after_successful_authorization callback' do
+      it "should call :after_successful_authorization callback" do
         expect(Doorkeeper.configuration)
           .to receive_message_chain(:after_successful_authorization, :call).with(instance_of(described_class))
       end
     end
 
-    describe 'when not authorizing' do
+    describe "when not authorizing" do
       before do
         allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc { false })
       end
 
-      it 'should not call :before_successful_authorization callback' do
+      it "should not call :before_successful_authorization callback" do
         expect(Doorkeeper.configuration).not_to receive(:before_successful_authorization)
       end
 
-      it 'should not call :after_successful_authorization callback' do
+      it "should not call :after_successful_authorization callback" do
         expect(Doorkeeper.configuration).not_to receive(:after_successful_authorization)
       end
     end
 
-    describe 'when not authorizing in api mode' do
+    describe "when not authorizing in api mode" do
       before do
         allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc { false })
         allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
       end
 
-      it 'should not call :before_successful_authorization callback' do
+      it "should not call :before_successful_authorization callback" do
         expect(Doorkeeper.configuration).not_to receive(:before_successful_authorization)
       end
 
-      it 'should not call :after_successful_authorization callback' do
+      it "should not call :after_successful_authorization callback" do
         expect(Doorkeeper.configuration).not_to receive(:after_successful_authorization)
       end
     end
   end
 
-  describe 'authorize response memoization' do
-    it 'memoizes the result of the authorization' do
+  describe "authorize response memoization" do
+    it "memoizes the result of the authorization" do
       strategy = double(:strategy, authorize: true)
       expect(strategy).to receive(:authorize).once
       allow(controller).to receive(:strategy) { strategy }

@@ -5,7 +5,8 @@ module Doorkeeper
     module Helpers
       module UniqueToken
         def self.generate(options = {})
-          # Access Token value must be 1*VSCHAR or 1*( ALPHA / DIGIT / "-" / "." / "_" / "~" / "+" / "/" ) *"="
+          # Access Token value must be 1*VSCHAR or
+          # 1*( ALPHA / DIGIT / "-" / "." / "_" / "~" / "+" / "/" ) *"="
           #
           # @see https://tools.ietf.org/html/rfc6749#appendix-A.12
           # @see https://tools.ietf.org/html/rfc6750#section-2.1

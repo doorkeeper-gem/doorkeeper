@@ -58,7 +58,7 @@ module Doorkeeper
           resource_owner_id: refresh_token.resource_owner_id,
           scopes: scopes.to_s,
           expires_in: access_token_expires_in,
-          use_refresh_token: true
+          use_refresh_token: true,
         }.tap do |attributes|
           if refresh_token_revoked_on_use?
             attributes[:previous_refresh_token] = refresh_token.refresh_token

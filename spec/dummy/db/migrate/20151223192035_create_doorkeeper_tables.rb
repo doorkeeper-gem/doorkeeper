@@ -7,7 +7,7 @@ class CreateDoorkeeperTables < ActiveRecord::Migration[4.2]
       t.string  :uid,          null: false
       t.string  :secret,       null: false
       t.text    :redirect_uri, null: false
-      t.string  :scopes,       null: false, default: ''
+      t.string  :scopes,       null: false, default: ""
       t.timestamps             null: false
     end
 
