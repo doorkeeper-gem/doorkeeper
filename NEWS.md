@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#PR] Your description.
+- [#1223] Update Hound/Rubocop rules, correct Doorkeeper codebase to follow style-guides.
 
 ## 5.1.0.rc2
 
