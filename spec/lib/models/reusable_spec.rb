@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require 'spec_helper'
+require "spec_helper"
 
-describe 'Reusable' do
+describe "Reusable" do
   subject do
     Class.new do
       include Doorkeeper::Models::Reusable
@@ -10,13 +10,13 @@ describe 'Reusable' do
   end
 
   describe :reusable? do
-    it 'is reusable if its expires_in is nil' do
+    it "is reusable if its expires_in is nil" do
       allow(subject).to receive(:expired?).and_return(false)
       allow(subject).to receive(:expires_in).and_return(nil)
       expect(subject).to be_reusable
     end
 
-    it 'is reusable if its expiry has crossed reusable limit' do
+    it "is reusable if its expiry has crossed reusable limit" do
       allow(subject).to receive(:expired?).and_return(false)
       allow(Doorkeeper.configuration).to receive(:token_reuse_limit).and_return(90)
       allow(subject).to receive(:expires_in).and_return(100.seconds)
@@ -24,7 +24,7 @@ describe 'Reusable' do
       expect(subject).to be_reusable
     end
 
-    it 'is not reusable if its expiry has crossed reusable limit' do
+    it "is not reusable if its expiry has crossed reusable limit" do
       allow(subject).to receive(:expired?).and_return(false)
       allow(Doorkeeper.configuration).to receive(:token_reuse_limit).and_return(90)
       allow(subject).to receive(:expires_in).and_return(100.seconds)
@@ -32,7 +32,7 @@ describe 'Reusable' do
       expect(subject).not_to be_reusable
     end
 
-    it 'is not reusable if it is already expired' do
+    it "is not reusable if it is already expired" do
       allow(subject).to receive(:expired?).and_return(true)
       expect(subject).not_to be_reusable
     end

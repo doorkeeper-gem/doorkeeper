@@ -1,11 +1,13 @@
-require 'coveralls'
+# frozen_string_literal: true
 
-Coveralls.wear!('rails') do
-  add_filter('/spec/')
-  add_filter('/lib/generators/doorkeeper/templates/')
+require "coveralls"
+
+Coveralls.wear!("rails") do
+  add_filter("/spec/")
+  add_filter("/lib/generators/doorkeeper/templates/")
 end
 
-ENV['RAILS_ENV'] ||= 'test'
+ENV["RAILS_ENV"] ||= "test"
 
 $LOAD_PATH.unshift File.dirname(__FILE__)
 
@@ -13,15 +15,15 @@ require "#{File.dirname(__FILE__)}/support/doorkeeper_rspec.rb"
 
 DOORKEEPER_ORM = Doorkeeper::RSpec.detect_orm
 
-require 'dummy/config/environment'
-require 'rspec/rails'
-require 'capybara/rspec'
-require 'database_cleaner'
-require 'generator_spec/test_case'
+require "dummy/config/environment"
+require "rspec/rails"
+require "capybara/rspec"
+require "database_cleaner"
+require "generator_spec/test_case"
 
 # Load JRuby SQLite3 if in that platform
 if defined? JRUBY_VERSION
-  require 'jdbc/sqlite3'
+  require "jdbc/sqlite3"
   Jdbc::SQLite3.load_driver
 end
 
@@ -52,5 +54,5 @@ RSpec.configure do |config|
     DatabaseCleaner.clean
   end
 
-  config.order = 'random'
+  config.order = "random"
 end

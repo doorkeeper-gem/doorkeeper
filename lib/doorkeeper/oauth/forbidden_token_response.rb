@@ -18,7 +18,7 @@ module Doorkeeper
 
       def headers
         headers = super
-        headers.delete 'WWW-Authenticate'
+        headers.delete "WWW-Authenticate"
         headers
       end
 

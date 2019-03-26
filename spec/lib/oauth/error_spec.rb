@@ -1,4 +1,6 @@
-require 'spec_helper'
+# frozen_string_literal: true
+
+require "spec_helper"
 
 module Doorkeeper::OAuth
   describe Error do
@@ -8,7 +10,7 @@ module Doorkeeper::OAuth
     it { expect(subject).to respond_to(:state) }
 
     describe :description do
-      it 'is translated from translation messages' do
+      it "is translated from translation messages" do
         expect(I18n).to receive(:translate).with(
           :some_error,
           scope: %i[doorkeeper errors messages],

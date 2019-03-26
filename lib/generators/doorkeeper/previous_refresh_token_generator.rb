@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require 'rails/generators'
-require 'rails/generators/active_record'
+require "rails/generators"
+require "rails/generators/active_record"
 
 module Doorkeeper
   class PreviousRefreshTokenGenerator < ::Rails::Generators::Base
     include ::Rails::Generators::Migration
-    source_root File.expand_path('templates', __dir__)
-    desc 'Support revoke refresh token on access token use'
+    source_root File.expand_path("templates", __dir__)
+    desc "Support revoke refresh token on access token use"
 
     def self.next_migration_number(path)
       ActiveRecord::Generators::Base.next_migration_number(path)
@@ -16,8 +16,8 @@ module Doorkeeper
     def previous_refresh_token
       if no_previous_refresh_token_column?
         migration_template(
-          'add_previous_refresh_token_to_access_tokens.rb.erb',
-          'db/migrate/add_previous_refresh_token_to_access_tokens.rb'
+          "add_previous_refresh_token_to_access_tokens.rb.erb",
+          "db/migrate/add_previous_refresh_token_to_access_tokens.rb"
         )
       end
     end

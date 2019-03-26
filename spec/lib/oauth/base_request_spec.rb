@@ -1,19 +1,21 @@
-require 'spec_helper'
+# frozen_string_literal: true
+
+require "spec_helper"
 
 module Doorkeeper::OAuth
   describe BaseRequest do
     let(:access_token) do
       double :access_token,
-             plaintext_token:         "some-token",
-             expires_in:              "3600",
-             expires_in_seconds:      "300",
-             scopes_string:           "two scopes",
+             plaintext_token: "some-token",
+             expires_in: "3600",
+             expires_in_seconds: "300",
+             scopes_string: "two scopes",
              plaintext_refresh_token: "some-refresh-token",
-             token_type:              "bearer",
-             created_at:              0
+             token_type: "bearer",
+             created_at: 0
     end
 
-    let(:client) { double :client, id: '1' }
+    let(:client) { double :client, id: "1" }
 
     let(:scopes_array) { %w[public write] }
 

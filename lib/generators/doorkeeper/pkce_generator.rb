@@ -1,18 +1,18 @@
 # frozen_string_literal: true
 
-require 'rails/generators'
-require 'rails/generators/active_record'
+require "rails/generators"
+require "rails/generators/active_record"
 
 module Doorkeeper
   class PkceGenerator < ::Rails::Generators::Base
     include ::Rails::Generators::Migration
-    source_root File.expand_path('templates', __dir__)
-    desc 'Provide support for PKCE.'
+    source_root File.expand_path("templates", __dir__)
+    desc "Provide support for PKCE."
 
     def pkce
       migration_template(
-        'enable_pkce_migration.rb.erb',
-        'db/migrate/enable_pkce.rb',
+        "enable_pkce_migration.rb.erb",
+        "db/migrate/enable_pkce.rb",
         migration_version: migration_version
       )
     end

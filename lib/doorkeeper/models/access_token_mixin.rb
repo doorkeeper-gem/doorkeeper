@@ -131,10 +131,10 @@ module Doorkeeper
         end
 
         create!(
-          application_id:    application.try(:id),
+          application_id: application.try(:id),
           resource_owner_id: resource_owner_id,
-          scopes:            scopes.to_s,
-          expires_in:        expires_in,
+          scopes: scopes.to_s,
+          expires_in: expires_in,
           use_refresh_token: use_refresh_token
         )
       end
@@ -191,7 +191,7 @@ module Doorkeeper
     #   The OAuth 2.0 Authorization Framework: Bearer Token Usage
     #
     def token_type
-      'Bearer'
+      "Bearer"
     end
 
     def use_refresh_token?
@@ -204,11 +204,11 @@ module Doorkeeper
     # @return [Hash] hash with token data
     def as_json(_options = {})
       {
-        resource_owner_id:  resource_owner_id,
-        scope:              scopes,
-        expires_in:         expires_in_seconds,
-        application:        { uid: application.try(:uid) },
-        created_at:         created_at.to_i
+        resource_owner_id: resource_owner_id,
+        scope: scopes,
+        expires_in: expires_in_seconds,
+        application: { uid: application.try(:uid) },
+        created_at: created_at.to_i,
       }
     end
 

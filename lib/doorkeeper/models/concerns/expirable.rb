@@ -17,6 +17,7 @@ module Doorkeeper
       #   or nil if object never expires.
       def expires_in_seconds
         return nil if expires_in.nil?
+
         expires = expires_at - Time.now.utc
         expires_sec = expires.seconds.round(0)
         expires_sec > 0 ? expires_sec : 0

@@ -1,27 +1,27 @@
 appraise "rails-4-2" do
   gem "rails", "~> 4.2.0"
-  gem "grape", '~> 0.16', '< 0.19.2'
-  gem "sqlite3", "~> 1.3", "< 1.4", platform: [:ruby, :mswin, :mingw, :x64_mingw]
+  gem "grape", "~> 0.16", "< 0.19.2"
+  gem "sqlite3", "~> 1.3", "< 1.4", platform: %i[ruby mswin mingw x64_mingw]
 end
 
 appraise "rails-5-0" do
   gem "rails", "~> 5.0.0"
-  gem "sqlite3", "~> 1.3", "< 1.4", platform: [:ruby, :mswin, :mingw, :x64_mingw]
+  gem "sqlite3", "~> 1.3", "< 1.4", platform: %i[ruby mswin mingw x64_mingw]
 end
 
 appraise "rails-5-1" do
   gem "rails", "~> 5.1.0"
-  gem "sqlite3", "~> 1.3", "< 1.4", platform: [:ruby, :mswin, :mingw, :x64_mingw]
+  gem "sqlite3", "~> 1.3", "< 1.4", platform: %i[ruby mswin mingw x64_mingw]
 end
 
 appraise "rails-5-2" do
   gem "rails", "~> 5.2.0"
-  gem "sqlite3", "~> 1.3", "< 1.4", platform: [:ruby, :mswin, :mingw, :x64_mingw]
+  gem "sqlite3", "~> 1.3", "< 1.4", platform: %i[ruby mswin mingw x64_mingw]
 end
 
 appraise "rails-6-0" do
   gem "rails", "~> 6.0.0.beta2"
-  gem "sqlite3", "~> 1.4", platform: [:ruby, :mswin, :mingw, :x64_mingw]
+  gem "sqlite3", "~> 1.4", platform: %i[ruby mswin mingw x64_mingw]
 
   # TODO: Remove when rspec-rails 4.0 released
   gem "rspec-core", github: "rspec/rspec-core"
@@ -32,8 +32,8 @@ appraise "rails-6-0" do
 end
 
 appraise "rails-master" do
-  gem "rails", git: 'https://github.com/rails/rails'
-  gem "sqlite3", "~> 1.4", platform: [:ruby, :mswin, :mingw, :x64_mingw]
+  gem "rails", git: "https://github.com/rails/rails"
+  gem "sqlite3", "~> 1.4", platform: %i[ruby mswin mingw x64_mingw]
 
   # TODO: Remove when rspec-rails 4.0 released
   gem "rspec-core", github: "rspec/rspec-core"

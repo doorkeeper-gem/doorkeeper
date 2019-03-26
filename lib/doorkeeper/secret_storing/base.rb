@@ -1,6 +1,5 @@
 module Doorkeeper
   module SecretStoring
-
     ##
     # Base class for secret storing, including common helpers
     class Base
@@ -8,7 +7,7 @@ module Doorkeeper
       # Return the value to be stored by the database
       # used for looking up a database value.
       # @param plain_secret The plain secret input / generated
-      def self.transform_secret(plain_secret)
+      def self.transform_secret(_plain_secret)
         raise NotImplementedError
       end
 
@@ -19,8 +18,8 @@ module Doorkeeper
       # @param attribute The secret attribute
       # @param plain_secret The plain secret input / generated
       def self.store_secret(resource, attribute, plain_secret)
-        transformed_value = self.transform_secret plain_secret
-        resource.public_send :"#{attribute}=", transformed_value
+        transformed_value = transform_secret(plain_secret)
+        resource.public_send(:"#{attribute}=", transformed_value)
 
         transformed_value
       end
@@ -30,7 +29,7 @@ module Doorkeeper
       # @param resource The resource instance to act on
       # @param attribute The secret attribute to restore
       # as retrieved from the database.
-      def self.restore_secret(resource, attribute)
+      def self.restore_secret(_resource, _attribute)
         raise NotImplementedError
       end
 

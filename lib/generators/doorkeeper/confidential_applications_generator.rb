@@ -1,18 +1,18 @@
 # frozen_string_literal: true
 
-require 'rails/generators'
-require 'rails/generators/active_record'
+require "rails/generators"
+require "rails/generators/active_record"
 
 module Doorkeeper
   class ConfidentialApplicationsGenerator < ::Rails::Generators::Base
     include ::Rails::Generators::Migration
-    source_root File.expand_path('templates', __dir__)
-    desc 'Add confidential column to Doorkeeper applications'
+    source_root File.expand_path("templates", __dir__)
+    desc "Add confidential column to Doorkeeper applications"
 
     def pkce
       migration_template(
-        'add_confidential_to_applications.rb.erb',
-        'db/migrate/add_confidential_to_applications.rb',
+        "add_confidential_to_applications.rb.erb",
+        "db/migrate/add_confidential_to_applications.rb",
         migration_version: migration_version
       )
     end

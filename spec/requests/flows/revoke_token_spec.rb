@@ -1,13 +1,15 @@
-require 'spec_helper'
+# frozen_string_literal: true
 
-describe 'Revoke Token Flow' do
+require "spec_helper"
+
+describe "Revoke Token Flow" do
   before do
     Doorkeeper.configure { orm DOORKEEPER_ORM }
   end
 
-  context 'with default parameters' do
+  context "with default parameters" do
     let(:client_application) { FactoryBot.create :application }
-    let(:resource_owner) { User.create!(name: 'John', password: 'sekret') }
+    let(:resource_owner) { User.create!(name: "John", password: "sekret") }
     let(:access_token) do
       FactoryBot.create(:access_token,
                         application: client_application,
@@ -15,35 +17,35 @@ describe 'Revoke Token Flow' do
                         use_refresh_token: true)
     end
 
-    context 'with authenticated, confidential OAuth 2.0 client/application' do
+    context "with authenticated, confidential OAuth 2.0 client/application" do
       let(:headers) do
         client_id = client_application.uid
         client_secret = client_application.secret
         credentials = Base64.encode64("#{client_id}:#{client_secret}")
-        { 'HTTP_AUTHORIZATION' => "Basic #{credentials}" }
+        { "HTTP_AUTHORIZATION" => "Basic #{credentials}" }
       end
 
-      it 'should revoke the access token provided' do
+      it "should revoke the access token provided" do
         post revocation_token_endpoint_url, params: { token: access_token.token }, headers: headers
 
         expect(response).to be_successful
         expect(access_token.reload.revoked?).to be_truthy
       end
 
-      it 'should revoke the refresh token provided' do
+      it "should revoke the refresh token provided" do
         post revocation_token_endpoint_url, params: { token: access_token.refresh_token }, headers: headers
 
         expect(response).to be_successful
         expect(access_token.reload.revoked?).to be_truthy
       end
 
-      context 'with invalid token to revoke' do
-        it 'should not revoke any tokens and respond successfully' do
+      context "with invalid token to revoke" do
+        it "should not revoke any tokens and respond successfully" do
           expect do
             post revocation_token_endpoint_url,
-              params: { token: 'I_AM_AN_INVALID_TOKEN' },
-              headers: headers
-            end.not_to(change { Doorkeeper::AccessToken.where(revoked_at: nil).count })
+                 params: { token: "I_AM_AN_INVALID_TOKEN" },
+                 headers: headers
+          end.not_to(change { Doorkeeper::AccessToken.where(revoked_at: nil).count })
 
           # The authorization server responds with HTTP status code 200 even if
           # token is invalid
@@ -51,13 +53,13 @@ describe 'Revoke Token Flow' do
         end
       end
 
-      context 'with bad credentials and a valid token' do
+      context "with bad credentials and a valid token" do
         let(:headers) do
           client_id = client_application.uid
           credentials = Base64.encode64("#{client_id}:poop")
-          { 'HTTP_AUTHORIZATION' => "Basic #{credentials}" }
+          { "HTTP_AUTHORIZATION" => "Basic #{credentials}" }
         end
-        it 'should not revoke any tokens and respond successfully' do
+        it "should not revoke any tokens and respond successfully" do
           post revocation_token_endpoint_url, params: { token: access_token.token }, headers: headers
 
           expect(response).to be_successful
@@ -65,8 +67,8 @@ describe 'Revoke Token Flow' do
         end
       end
 
-      context 'with no credentials and a valid token' do
-        it 'should not revoke any tokens and respond successfully' do
+      context "with no credentials and a valid token" do
+        it "should not revoke any tokens and respond successfully" do
           post revocation_token_endpoint_url, params: { token: access_token.token }
 
           expect(response).to be_successful
@@ -74,16 +76,16 @@ describe 'Revoke Token Flow' do
         end
       end
 
-      context 'with valid token for another client application' do
+      context "with valid token for another client application" do
         let(:other_client_application) { FactoryBot.create :application }
         let(:headers) do
           client_id = other_client_application.uid
           client_secret = other_client_application.secret
           credentials = Base64.encode64("#{client_id}:#{client_secret}")
-          { 'HTTP_AUTHORIZATION' => "Basic #{credentials}" }
+          { "HTTP_AUTHORIZATION" => "Basic #{credentials}" }
         end
 
-        it 'should not revoke the token as its unauthorized' do
+        it "should not revoke the token as its unauthorized" do
           post revocation_token_endpoint_url, params: { token: access_token.token }, headers: headers
 
           expect(response).to be_successful
@@ -92,7 +94,7 @@ describe 'Revoke Token Flow' do
       end
     end
 
-    context 'with public OAuth 2.0 client/application' do
+    context "with public OAuth 2.0 client/application" do
       let(:access_token) do
         FactoryBot.create(:access_token,
                           application: nil,
@@ -100,21 +102,21 @@ describe 'Revoke Token Flow' do
                           use_refresh_token: true)
       end
 
-      it 'should revoke the access token provided' do
+      it "should revoke the access token provided" do
         post revocation_token_endpoint_url, params: { token: access_token.token }
 
         expect(response).to be_successful
         expect(access_token.reload.revoked?).to be_truthy
       end
 
-      it 'should revoke the refresh token provided' do
+      it "should revoke the refresh token provided" do
         post revocation_token_endpoint_url, params: { token: access_token.refresh_token }
 
         expect(response).to be_successful
         expect(access_token.reload.revoked?).to be_truthy
       end
 
-      context 'with a valid token issued for a confidential client' do
+      context "with a valid token issued for a confidential client" do
         let(:access_token) do
           FactoryBot.create(:access_token,
                             application: client_application,
@@ -122,14 +124,14 @@ describe 'Revoke Token Flow' do
                             use_refresh_token: true)
         end
 
-        it 'should not revoke the access token provided' do
+        it "should not revoke the access token provided" do
           post revocation_token_endpoint_url, params: { token: access_token.token }
 
           expect(response).to be_successful
           expect(access_token.reload.revoked?).to be_falsey
         end
 
-        it 'should not revoke the refresh token provided' do
+        it "should not revoke the refresh token provided" do
           post revocation_token_endpoint_url, params: { token: access_token.token }
 
           expect(response).to be_successful

@@ -1,12 +1,10 @@
 module Doorkeeper
   module SecretStoring
-
     ##
     # Plain text secret storing, which is the default
     # but also provides fallback lookup if
     # other secret storing mechanisms are enabled.
     class Plain < Base
-
       ##
       # Return the value to be stored by the database
       # @param plain_secret The plain secret input / generated
@@ -20,7 +18,7 @@ module Doorkeeper
       # @param attribute The secret attribute to restore
       # as retrieved from the database.
       def self.restore_secret(resource, attribute)
-        resource.public_send attribute
+        resource.public_send(attribute)
       end
 
       ##

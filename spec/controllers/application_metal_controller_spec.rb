@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'spec_helper_integration'
+require "spec_helper_integration"
 
 describe Doorkeeper::ApplicationMetalController do
   controller(Doorkeeper::ApplicationMetalController) do
@@ -20,42 +20,42 @@ describe Doorkeeper::ApplicationMetalController do
     expect(i).to eq 1
   end
 
-  describe 'enforce_content_type' do
+  describe "enforce_content_type" do
     before { allow(Doorkeeper.configuration).to receive(:enforce_content_type).and_return(flag) }
 
-    context 'enabled' do
+    context "enabled" do
       let(:flag) { true }
 
-      it 'returns a 200 for the requests without body' do
+      it "returns a 200 for the requests without body" do
         get :index, params: {}
         expect(response).to have_http_status 200
       end
 
-      it 'returns a 200 for the requests with body and correct media type' do
+      it "returns a 200 for the requests with body and correct media type" do
         post :create, params: {}, as: :url_encoded_form
         expect(response).to have_http_status 200
       end
 
-      it 'returns a 415 for the requests with body and incorrect media type' do
+      it "returns a 415 for the requests with body and incorrect media type" do
         post :create, params: {}, as: :json
         expect(response).to have_http_status 415
       end
     end
 
-    context 'disabled' do
+    context "disabled" do
       let(:flag) { false }
 
-      it 'returns a 200 for the correct media type' do
+      it "returns a 200 for the correct media type" do
         get :index, as: :url_encoded_form
         expect(response).to have_http_status 200
       end
 
-      it 'returns a 200 for an incorrect media type' do
+      it "returns a 200 for an incorrect media type" do
         get :index, as: :json
         expect(response).to have_http_status 200
       end
 
-      it 'returns a 200 for the requests with body and incorrect media type' do
+      it "returns a 200 for the requests with body and incorrect media type" do
         post :create, params: {}, as: :json
         expect(response).to have_http_status 200
       end

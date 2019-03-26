@@ -1,6 +1,5 @@
 module Doorkeeper
   module SecretStoring
-
     ##
     # Plain text secret storing, which is the default
     # but also provides fallback lookup if
