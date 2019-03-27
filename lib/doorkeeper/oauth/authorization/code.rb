@@ -20,7 +20,7 @@ module Doorkeeper
         end
 
         def native_redirect
-          if 'urn:ietf:wg:oauth:2.0:oob' == pre_auth.redirect_uri
+          if pre_auth.redirect_uri == 'urn:ietf:wg:oauth:2.0:oob'
             { action: :show, code: token.token }
           else
             "#{pre_auth.redirect_uri}?code=#{token.token}"
