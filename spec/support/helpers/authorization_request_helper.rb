@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module AuthorizationRequestHelper
   def resource_owner_is_authenticated(resource_owner = nil)
     resource_owner ||= User.create!(name: "Joe", password: "sekret")

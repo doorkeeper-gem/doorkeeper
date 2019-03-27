@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 shared_context "valid token", token: :valid do
   let(:token_string) { "1A2B3C4D" }
 

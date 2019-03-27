@@ -2,7 +2,7 @@
 
 module Doorkeeper
   class StaleRecordsCleaner
-    CLEANER_CLASS = "StaleRecordsCleaner".freeze
+    CLEANER_CLASS = "StaleRecordsCleaner"
 
     def self.for(base_scope)
       orm_adapter = "doorkeeper/orm/#{Doorkeeper.configuration.orm}".classify

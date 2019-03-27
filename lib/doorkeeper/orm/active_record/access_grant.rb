@@ -7,7 +7,7 @@ module Doorkeeper
     include AccessGrantMixin
 
     belongs_to :application, class_name: "Doorkeeper::Application",
-               optional: true, inverse_of: :access_grants
+                             optional: true, inverse_of: :access_grants
 
     validates :resource_owner_id,
               :application_id,

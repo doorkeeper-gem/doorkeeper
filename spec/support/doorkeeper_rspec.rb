@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   class RSpec
     # Print's useful information about env: Ruby / Rails versions,

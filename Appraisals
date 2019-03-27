@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 appraise "rails-5-0" do
   gem "rails", "~> 5.0.0"
   gem "sqlite3", "~> 1.3", "< 1.4", platform: %i[ruby mswin mingw x64_mingw]

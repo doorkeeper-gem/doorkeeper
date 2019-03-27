@@ -14,7 +14,7 @@ module Doorkeeper
       def doorkeeper_forbidden_render_options(**); end
 
       def valid_doorkeeper_token?
-        doorkeeper_token && doorkeeper_token.acceptable?(@_doorkeeper_scopes)
+        doorkeeper_token&.acceptable?(@_doorkeeper_scopes)
       end
 
       private

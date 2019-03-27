@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module RequestSpecHelper
   def i_am_logged_in
     allow(Doorkeeper.configuration).to receive(:authenticate_admin).and_return(->(*) {})

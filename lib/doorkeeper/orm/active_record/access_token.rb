@@ -7,7 +7,7 @@ module Doorkeeper
     include AccessTokenMixin
 
     belongs_to :application, class_name: "Doorkeeper::Application",
-               inverse_of: :access_tokens, optional: true
+                             inverse_of: :access_tokens, optional: true
 
     validates :token, presence: true, uniqueness: true
     validates :refresh_token, uniqueness: true, if: :use_refresh_token?

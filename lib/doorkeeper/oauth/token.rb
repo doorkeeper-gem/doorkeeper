@@ -59,7 +59,7 @@ module Doorkeeper
         end
 
         def match?(header, pattern)
-          header && header.match(pattern)
+          header&.match(pattern)
         end
       end
     end

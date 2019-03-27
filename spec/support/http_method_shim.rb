@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Rails 5 deprecates calling HTTP action methods with positional arguments
 # in favor of keyword arguments. However, the keyword argument form is only
 # supported in Rails 5+. Since we support back to 4, we need some sort of shim
