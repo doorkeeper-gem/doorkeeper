@@ -1,4 +1,3 @@
-ruby:
-  config_file: .rubocop.yml
 rubocop:
+  config_file: .rubocop.yml
   version: 0.64.0
