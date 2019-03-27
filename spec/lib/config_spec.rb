@@ -59,11 +59,11 @@ describe Doorkeeper, "configuration" do
     end
 
     it "does not change other exceptions" do
-      allow_any_instance_of(String).to receive(:classify) { raise NoMethodError }
+      allow(Doorkeeper).to receive(:setup_orm_adapter) { raise NoMethodError }
 
       expect do
         Doorkeeper.configure { orm "hibernate" }
-      end.to raise_error(NoMethodError, /ORM adapter not found \(hibernate\)/)
+      end.to raise_error(NoMethodError)
     end
   end
 

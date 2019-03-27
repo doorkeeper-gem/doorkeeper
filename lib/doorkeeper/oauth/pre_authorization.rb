@@ -98,7 +98,8 @@ module Doorkeeper
       end
 
       def validate_code_challenge_method
-        !code_challenge.present? || (code_challenge_method.present? && code_challenge_method =~ /^plain$|^S256$/)
+        code_challenge.blank? ||
+          (code_challenge_method.present? && code_challenge_method =~ /^plain$|^S256$/)
       end
     end
   end

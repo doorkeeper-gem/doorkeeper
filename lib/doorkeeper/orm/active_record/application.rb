@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   class Application < ActiveRecord::Base
     self.table_name = "#{table_name_prefix}oauth_applications#{table_name_suffix}".to_sym
