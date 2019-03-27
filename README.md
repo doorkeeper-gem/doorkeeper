@@ -6,6 +6,8 @@
 [![Coverage Status](https://coveralls.io/repos/github/doorkeeper-gem/doorkeeper/badge.svg?branch=master)](https://coveralls.io/github/doorkeeper-gem/doorkeeper?branch=master)
 [![Security](https://hakiri.io/github/doorkeeper-gem/doorkeeper/master.svg)](https://hakiri.io/github/doorkeeper-gem/doorkeeper/master)
 [![Reviewed by Hound](https://img.shields.io/badge/Reviewed_by-Hound-8E64B0.svg)](https://houndci.com)
+[![GuardRails badge](https://badges.production.guardrails.io/doorkeeper-gem/doorkeeper.svg?token=66768ce8f6995814df81f65a2cff40f739f688492704f973e62809e15599bb62)](https://dashboard.guardrails.io/default/gh/doorkeeper-gem/doorkeeper)
+[![Dependabot](https://img.shields.io/badge/dependabot-enabled-success.svg)](https://dependabot.com)
 
 Doorkeeper is a gem (Rails engine) that makes it easy to introduce OAuth 2 provider
 functionality to your Ruby on Rails or Grape application.
@@ -75,7 +77,7 @@ And run `bundle install`. After this, check out the guide related to the framewo
 
 ### Ruby on Rails
 
-Doorkeeper currently supports Ruby on Rails 5. See the guide [here](https://doorkeeper.gitbook.io/guides/ruby-on-rails/getting-started).
+Doorkeeper currently supports Ruby on Rails >= 4.2. See the guide [here](https://doorkeeper.gitbook.io/guides/ruby-on-rails/getting-started).
 
 ### Grape
 
@@ -125,6 +127,11 @@ See [list of tutorials](https://github.com/doorkeeper-gem/doorkeeper/wiki#how-to
 
 ## Sponsors
 
+[![OpenCollective](https://opencollective.com/doorkeeper-gem/backers/badge.svg)](#backers) 
+[![OpenCollective](https://opencollective.com/doorkeeper-gem/sponsors/badge.svg)](#sponsors)
+
+Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/doorkeeper-gem#sponsor)]
+
 <a href="https://oauth.io/?utm_source=doorkeeper-gem" target="_blank"><img src="https://oauth.io/img/logo_text.png"/></a>
 
 > If you prefer not to deal with the gory details of OAuth 2, need dedicated customer support & consulting, try the cloud-based SaaS version: [https://oauth.io](https://oauth.io/?utm_source=doorkeeper-gem)
@@ -160,6 +167,8 @@ page](https://github.com/doorkeeper-gem/doorkeeper/wiki/Contributing).
 
 Thanks to all our [awesome
 contributors](https://github.com/doorkeeper-gem/doorkeeper/graphs/contributors)!
+
+<a href="graphs/contributors"><img src="https://opencollective.com/doorkeeper-gem/contributors.svg?width=890&button=false" /></a>
 
 ## License
 
