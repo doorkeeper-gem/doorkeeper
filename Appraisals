@@ -16,7 +16,7 @@ appraise "rails-5-2" do
 end
 
 appraise "rails-6-0" do
-  gem "rails", "~> 6.0.0.beta2"
+  gem "rails", "~> 6.0.0.beta3"
   gem "sqlite3", "~> 1.4", platform: %i[ruby mswin mingw x64_mingw]
 
   # TODO: Remove when rspec-rails 4.0 released

@@ -77,7 +77,7 @@ And run `bundle install`. After this, check out the guide related to the framewo
 
 ### Ruby on Rails
 
-Doorkeeper currently supports Ruby on Rails >= 4.2. See the guide [here](https://doorkeeper.gitbook.io/guides/ruby-on-rails/getting-started).
+Doorkeeper currently supports Ruby on Rails >= 5.0. See the guide [here](https://doorkeeper.gitbook.io/guides/ruby-on-rails/getting-started).
 
 ### Grape
 
@@ -149,7 +149,7 @@ By default, it uses the latest Rails version with ActiveRecord. To run the
 tests with a specific ORM and Rails version:
 
 ```
-rails=4.2.0 orm=active_record bundle exec rake
+rails=5.2 orm=active_record bundle exec rake
 ```
 
 ## Contributing
