@@ -2,10 +2,9 @@
 
 module Doorkeeper
   class Application < ActiveRecord::Base
-    self.table_name = "#{table_name_prefix}oauth_applications#{table_name_suffix}".to_sym
+    self.table_name = "#{table_name_prefix}oauth_applications#{table_name_suffix}"
 
     include ApplicationMixin
-    include ActiveModel::MassAssignmentSecurity if defined?(::ProtectedAttributes)
 
     has_many :access_grants, dependent: :delete_all, class_name: "Doorkeeper::AccessGrant"
     has_many :access_tokens, dependent: :delete_all, class_name: "Doorkeeper::AccessToken"

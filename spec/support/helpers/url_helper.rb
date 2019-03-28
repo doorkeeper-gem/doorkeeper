@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module UrlHelper
   def token_endpoint_url(options = {})
     parameters = {

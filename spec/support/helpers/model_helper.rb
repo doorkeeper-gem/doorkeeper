@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ModelHelper
   def client_exists(client_attributes = {})
     @client = FactoryBot.create(:application, client_attributes)

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module AccessTokenRequestHelper
   def client_is_authorized(client, resource_owner, access_token_attributes = {})
     attributes = {

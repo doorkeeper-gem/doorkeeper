@@ -3,10 +3,9 @@
 module Doorkeeper
   class TokensController < Doorkeeper::ApplicationMetalController
     def create
-      response = authorize_response
-      headers.merge!(response.headers)
-      self.response_body = response.body.to_json
-      self.status = response.status
+      headers.merge!(authorize_response.headers)
+      render json: authorize_response.body,
+             status: authorize_response.status
     rescue Errors::DoorkeeperError => error
       handle_token_exception(error)
     end
@@ -34,7 +33,7 @@ module Doorkeeper
         render json: introspection.to_json, status: 200
       else
         error = introspection.error_response
-        response.headers.merge!(error.headers)
+        headers.merge!(error.headers)
         render json: error.body, status: error.status
       end
     end

@@ -25,9 +25,7 @@ module Doorkeeper
     private
 
     def migration_version
-      if ActiveRecord::VERSION::MAJOR >= 5
-        "[#{ActiveRecord::VERSION::MAJOR}.#{ActiveRecord::VERSION::MINOR}]"
-      end
+      "[#{ActiveRecord::VERSION::MAJOR}.#{ActiveRecord::VERSION::MINOR}]"
     end
 
     def no_previous_refresh_token_column?

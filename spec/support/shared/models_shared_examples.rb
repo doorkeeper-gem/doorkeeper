@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 shared_examples "an accessible token" do
   describe :accessible? do
     it "is accessible if token is not expired" do

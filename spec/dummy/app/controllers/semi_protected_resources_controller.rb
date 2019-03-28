@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class SemiProtectedResourcesController < ApplicationController
   before_action :doorkeeper_authorize!, only: :index
 

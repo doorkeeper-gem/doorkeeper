@@ -158,7 +158,7 @@ module Doorkeeper
 
       # Token can be valid only if it is not expired or revoked.
       def valid_token?
-        @token && @token.accessible?
+        @token&.accessible?
       end
 
       # RFC7662 Section 2.1

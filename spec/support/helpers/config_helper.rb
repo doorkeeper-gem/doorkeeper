@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ConfigHelper
   def config_is_set(setting, value = nil, &block)
     setting_ivar = "@#{setting}"

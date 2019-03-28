@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class MetalController < ActionController::Metal
   include AbstractController::Callbacks
   include ActionController::Head
