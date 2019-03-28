@@ -18,6 +18,10 @@ module Doorkeeper::OAuth
     let(:redirect_uri) { client.redirect_uri }
     let(:params) { { redirect_uri: redirect_uri } }
 
+    before do
+      allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
+    end
+
     subject do
       AuthorizationCodeRequest.new server, grant, client, params
     end

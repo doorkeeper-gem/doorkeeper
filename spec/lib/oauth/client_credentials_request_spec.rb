@@ -16,6 +16,10 @@ module Doorkeeper::OAuth
     let(:client)        { double :client, application: application }
     let(:token_creator) { double :issuer, create: true, token: double }
 
+    before do
+      allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
+    end
+
     subject { ClientCredentialsRequest.new(server, client) }
 
     before do

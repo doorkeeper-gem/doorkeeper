@@ -49,7 +49,12 @@ Doorkeeper.configure do
   # access_token_expires_in 2.hours
 
   # Assign custom TTL for access tokens. Will be used instead of access_token_expires_in
-  # option if defined. `context` has the following properties available
+  # option if defined. In case the block returns `nil` value Doorkeeper fallbacks to
+  # `access_token_expires_in` configuration option value. If you really need to issue a
+  # non-expiring access token (which is not recommended) then you need to return
+  # Float::INFINITY from this block.
+  #
+  # `context` has the following properties available:
   #
   # `client` - the OAuth client application (see Doorkeeper::OAuth::Client)
   # `grant_type` - the grant type of the request (see Doorkeeper::OAuth)
