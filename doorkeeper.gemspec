@@ -26,7 +26,7 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "coveralls"
   gem.add_development_dependency "danger", "~> 6.0"
   gem.add_development_dependency "database_cleaner", "~> 1.6"
-  gem.add_development_dependency "factory_bot", "~> 4.8"
+  gem.add_development_dependency "factory_bot", "~> 5.0"
   gem.add_development_dependency "generator_spec", "~> 0.9.3"
   gem.add_development_dependency "grape"
   gem.add_development_dependency "rake", ">= 11.3.0"
