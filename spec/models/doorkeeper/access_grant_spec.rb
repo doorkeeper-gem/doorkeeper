@@ -3,8 +3,10 @@
 require "spec_helper"
 
 describe Doorkeeper::AccessGrant do
+  let(:client) { FactoryBot.build_stubbed(:application) }
   let(:clazz) { Doorkeeper::AccessGrant }
-  subject { FactoryBot.build(:access_grant) }
+
+  subject { FactoryBot.build(:access_grant, application: client) }
 
   it { expect(subject).to be_valid }
 
