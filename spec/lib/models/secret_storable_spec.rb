@@ -64,35 +64,59 @@ describe "SecretStorable" do
     end
 
     context "if a fallback strategy is defined" do
-      let(:resource) { double("Token model") }
       before do
         allow(clazz).to receive(:fallback_secret_strategy).and_return(fallback)
       end
 
-      it "calls the strategy for lookup" do
-        expect(clazz)
-          .to receive(:find_by)
-          .with("attr" => "fallback")
-          .and_return(resource)
+      context "if a resource is defined" do
+        let(:resource) { double("Token model") }
 
-        expect(fallback)
-          .to receive(:transform_secret)
-          .with("input")
-          .and_return("fallback")
+        it "calls the strategy for lookup" do
+          expect(clazz)
+            .to receive(:find_by)
+            .with("attr" => "fallback")
+            .and_return(resource)
 
-        # store_secret will call the resource
-        expect(resource)
-          .to receive(:attr=)
-          .with("new value")
+          expect(fallback)
+            .to receive(:transform_secret)
+            .with("input")
+            .and_return("fallback")
 
-        # It will upgrade the secret automtically using the current strategy
-        expect(strategy)
-          .to receive(:transform_secret)
-          .with("input")
-          .and_return("new value")
+          # store_secret will call the resource
+          expect(resource)
+            .to receive(:attr=)
+            .with("new value")
 
-        expect(resource).to receive(:update).with("attr" => "new value")
-        expect(subject).to eq resource
+          # It will upgrade the secret automtically using the current strategy
+          expect(strategy)
+            .to receive(:transform_secret)
+            .with("input")
+            .and_return("new value")
+
+          expect(resource).to receive(:update).with("attr" => "new value")
+          expect(subject).to eq resource
+        end
+      end
+
+      context "if a resource is not defined" do
+        before do
+          allow(clazz).to receive(:fallback_secret_strategy).and_return(fallback)
+        end
+
+        it "returns nil" do
+          expect(clazz)
+            .to receive(:find_by)
+            .with("attr" => "fallback")
+            .and_return(nil)
+
+          expect(fallback)
+            .to receive(:transform_secret)
+            .with("input")
+            .and_return("fallback")
+
+          # It does not find a token even with the fallback method
+          expect(subject).to be_nil
+        end
       end
     end
   end

@@ -66,6 +66,8 @@ module Doorkeeper
           # Use the previous strategy to look up
           stored_token = fallback_secret_strategy.transform_secret(plain_secret)
           find_by(attr => stored_token).tap do |resource|
+            return nil unless resource
+
             upgrade_fallback_value resource, attr, plain_secret
           end
         end
