@@ -225,6 +225,22 @@ Doorkeeper.configure do
   #
   # forbid_redirect_uri { |uri| uri.scheme.to_s.downcase == 'javascript' }
 
+  # Allows to set blank redirect URIs for Applications in case Doorkeeper configured
+  # to use URI-less OAuth grant flows like Client Credentials or Resource Owner
+  # Password Credentials. The option is on by default and checks configured grant
+  # types, but you **need** to manually drop `NOT NULL` constraint from `redirect_uri`
+  # column for `oauth_applications` database table.
+  #
+  # You can completely disable this feature with:
+  #
+  # allow_blank_redirect_uri false
+  #
+  # Or you can define your custom check:
+  #
+  # allow_blank_redirect_uri do |grant_flows, client|
+  #   client.superapp?
+  # end
+
   # Specify how authorization errors should be handled.
   # By default, doorkeeper renders json errors when access token
   # is invalid, expired, revoked or has invalid scopes.

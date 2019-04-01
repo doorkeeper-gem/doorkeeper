@@ -110,6 +110,21 @@ module Doorkeeper
           expect(new_application).not_to be_valid
         end
       end
+
+      context "when blank URI option disabled" do
+        before do
+          Doorkeeper.configure do
+            grant_flows %w[password client_credentials]
+            allow_blank_redirect_uri false
+          end
+        end
+
+        it "is invalid without redirect_uri" do
+          new_application.save
+          new_application.redirect_uri = nil
+          expect(new_application).not_to be_valid
+        end
+      end
     end
 
     it "checks uniqueness of uid" do

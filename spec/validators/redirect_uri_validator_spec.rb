@@ -128,4 +128,31 @@ describe RedirectUriValidator do
       expect(subject).to be_invalid
     end
   end
+
+  context "blank redirect URI" do
+    it "forbids blank redirect uri by default" do
+      subject.redirect_uri = ""
+
+      expect(subject).to be_invalid
+      expect(subject.errors[:redirect_uri]).not_to be_blank
+    end
+
+    it "forbids blank redirect uri by custom condition" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        allow_blank_redirect_uri do |_grant_flows, application|
+          application.name == "admin app"
+        end
+      end
+
+      subject.name = "test app"
+      subject.redirect_uri = ""
+
+      expect(subject).to be_invalid
+      expect(subject.errors[:redirect_uri]).not_to be_blank
+
+      subject.name = "admin app"
+      expect(subject).to be_valid
+    end
+  end
 end

@@ -312,6 +312,15 @@ module Doorkeeper
     option :base_controller,
            default: "ActionController::Base"
 
+    # Allows to set blank redirect URIs for Applications in case
+    # server configured to use URI-less grant flows.
+    #
+    option :allow_blank_redirect_uri,
+           default: (lambda do |grant_flows, _application|
+             grant_flows.exclude?("authorization_code") &&
+               grant_flows.exclude?("implicit")
+           end)
+
     attr_reader :api_only,
                 :enforce_content_type,
                 :reuse_access_token,
@@ -405,13 +414,16 @@ module Doorkeeper
       @token_grant_types ||= calculate_token_grant_types.freeze
     end
 
-    def allow_blank_redirect_uri?
-      grant_flows.exclude?("authorization_code") &&
-        grant_flows.exclude?("implicit")
+    def allow_blank_redirect_uri?(application = nil)
+      if allow_blank_redirect_uri.respond_to?(:call)
+        allow_blank_redirect_uri.call(grant_flows, application)
+      else
+        allow_blank_redirect_uri
+      end
     end
 
     def option_defined?(name)
-      !instance_variable_get("@#{name}").nil?
+      instance_variable_defined?("@#{name}")
     end
 
     private
