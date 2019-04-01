@@ -157,8 +157,6 @@ module Doorkeeper::OAuth
               222
             elsif context.scopes.exists?("magic")
               Float::INFINITY
-            else
-              nil
             end
           }
         )

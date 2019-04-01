@@ -4,6 +4,9 @@ require "rails/generators"
 require "rails/generators/active_record"
 
 module Doorkeeper
+  # Generates migration with PKCE required database columns for
+  # Doorkeeper tables.
+  #
   class PkceGenerator < ::Rails::Generators::Base
     include ::Rails::Generators::Migration
     source_root File.expand_path("templates", __dir__)

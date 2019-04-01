@@ -2,6 +2,8 @@
 
 module Doorkeeper
   module Generators
+    # Generates doorkeeper views for Rails application
+    #
     class ViewsGenerator < ::Rails::Generators::Base
       source_root File.expand_path("../../../app/views", __dir__)
 

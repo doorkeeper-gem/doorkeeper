@@ -18,7 +18,7 @@ describe "Resource Owner Password Credentials Flow not set up" do
 end
 
 describe "Resource Owner Password Credentials Flow" do
-  let(:client_attributes) { {} }
+  let(:client_attributes) { { redirect_uri: nil } }
 
   before do
     config_is_set(:grant_flows, ["password"])

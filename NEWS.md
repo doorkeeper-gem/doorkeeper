@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1237] Allow to set blank redirect URI if Doorkeeper configured to use redirect URI-less grant flows.
 - [#1234] Fix `StaleRecordsCleaner` to properly work with big amount of records.
 - [#1228] Allow to explicitly set non-expiring tokens in `custom_access_token_expires_in` configuration
   option using `Float::INIFINITY` return value.

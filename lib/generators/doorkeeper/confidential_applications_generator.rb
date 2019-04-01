@@ -4,6 +4,9 @@ require "rails/generators"
 require "rails/generators/active_record"
 
 module Doorkeeper
+  # Generates migration to add confidential column to Doorkeeper
+  # applications table.
+  #
   class ConfidentialApplicationsGenerator < ::Rails::Generators::Base
     include ::Rails::Generators::Migration
     source_root File.expand_path("templates", __dir__)
