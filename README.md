@@ -168,7 +168,7 @@ page](https://github.com/doorkeeper-gem/doorkeeper/wiki/Contributing).
 Thanks to all our [awesome
 contributors](https://github.com/doorkeeper-gem/doorkeeper/graphs/contributors)!
 
-<a href="graphs/contributors"><img src="https://opencollective.com/doorkeeper-gem/contributors.svg?width=890&button=false" /></a>
+<a href="https://github.com/doorkeeper-gem/doorkeeper/graphs/contributors"><img src="https://opencollective.com/doorkeeper-gem/contributors.svg?width=890&button=false" /></a>
 
 ## License
 
