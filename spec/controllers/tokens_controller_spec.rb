@@ -213,14 +213,14 @@ describe Doorkeeper::TokensController do
     end
 
     context "authorized using invalid Bearer token" do
-      let(:token_for_introspection) do
+      let(:access_token) do
         FactoryBot.create(:access_token, application: client, revoked_at: 1.day.ago)
       end
 
       it "responds with invalid token error" do
-        request.headers["Authorization"] = "Bearer #{token_for_introspection.token}"
+        request.headers["Authorization"] = "Bearer #{access_token.token}"
 
-        post :introspect, params: { token: access_token.token }
+        post :introspect, params: { token: token_for_introspection.token }
 
         response_status_should_be 401
 
@@ -260,13 +260,26 @@ describe Doorkeeper::TokensController do
     end
 
     context "using wrong token value" do
-      it "responds with only active state" do
-        request.headers["Authorization"] = basic_auth_header_for_client(client)
+      context "authorized using client credentials" do
+        it "responds with only active state" do
+          request.headers["Authorization"] = basic_auth_header_for_client(client)
 
-        post :introspect, params: { token: SecureRandom.hex(16) }
+          post :introspect, params: { token: SecureRandom.hex(16) }
 
-        should_have_json "active", false
-        expect(json_response).not_to include("client_id", "token_type", "exp", "iat")
+          should_have_json "active", false
+          expect(json_response).not_to include("client_id", "token_type", "exp", "iat")
+        end
+      end
+
+      context "authorized using valid Bearer token" do
+        it "responds with only active state" do
+          request.headers["Authorization"] = "Bearer #{access_token.token}"
+
+          post :introspect, params: { token: SecureRandom.hex(16) }
+
+          should_have_json "active", false
+          expect(json_response).not_to include("client_id", "token_type", "exp", "iat")
+        end
       end
     end
 

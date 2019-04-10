@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1243]: Add nil check operator in token checking at token introspection.
 - [#1241] Explaining foreign key options for resource owner in a single place
 - [#1237] Allow to set blank redirect URI if Doorkeeper configured to use redirect URI-less grant flows.
 - [#1234] Fix `StaleRecordsCleaner` to properly work with big amount of records.
