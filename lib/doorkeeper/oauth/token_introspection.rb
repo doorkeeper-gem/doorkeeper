@@ -163,7 +163,7 @@ module Doorkeeper
 
       # RFC7662 Section 2.1
       def authorized_token_matches_introspected?
-        authorized_token.token == @token.token
+        authorized_token.token == @token&.token
       end
 
       # If token doesn't belong to some client, then it is public.
