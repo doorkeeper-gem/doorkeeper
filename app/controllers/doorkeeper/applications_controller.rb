@@ -4,6 +4,7 @@ module Doorkeeper
   class ApplicationsController < Doorkeeper::ApplicationController
     layout "doorkeeper/admin" unless Doorkeeper.configuration.api_only
 
+    add_flash_types :application_secret
     before_action :authenticate_admin!
     before_action :set_application, only: %i[show edit update destroy]
 
@@ -32,6 +33,7 @@ module Doorkeeper
 
       if @application.save
         flash[:notice] = I18n.t(:notice, scope: %i[doorkeeper flash applications create])
+        flash[:application_secret] = @application.plaintext_secret
 
         respond_to do |format|
           format.html { redirect_to oauth_application_url(@application) }

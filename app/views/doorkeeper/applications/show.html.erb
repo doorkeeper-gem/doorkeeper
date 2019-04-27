@@ -8,7 +8,7 @@
     <p><code class="bg-light" id="application_id"><%= @application.uid %></code></p>
 
     <h4><%= t('.secret') %>:</h4>
-    <p><code class="bg-light" id="secret"><%= @application.plaintext_secret %></code></p>
+    <p><code class="bg-light" id="secret"><%= flash[:application_secret].presence || @application.plaintext_secret %></code></p>
 
     <h4><%= t('.scopes') %>:</h4>
     <p><code class="bg-light" id="scopes"><%= @application.scopes.presence || raw('&nbsp;') %></code></p>

@@ -7,7 +7,9 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#PR] Add your PR description here.
 - [#1249]: Specify case sensitive uniqueness to remove Rails 6 deprecation message
+- [#1248] Display the Application Secret after creating a new application even when `hash_application_secrets` is used.
 
 ## 5.1.0
 
