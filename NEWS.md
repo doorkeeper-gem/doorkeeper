@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#PR] Add your PR description here.
+- [#1249]: Specify case sensitive uniqueness to remove Rails 6 deprecation message
 
 ## 5.1.0
 
