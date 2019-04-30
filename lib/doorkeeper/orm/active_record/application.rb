@@ -60,6 +60,12 @@ module Doorkeeper
       end
     end
 
+    def to_json(options)
+      serializable_hash(except: :secret)
+        .merge(secret: plaintext_secret)
+        .to_json(options)
+    end
+
     private
 
     def generate_uid

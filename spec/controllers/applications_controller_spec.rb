@@ -26,6 +26,10 @@ module Doorkeeper
 
         expect(json_response).to include("id", "name", "uid", "secret", "redirect_uri", "scopes")
 
+        application = Application.last
+        secret_from_response = json_response["secret"]
+        expect(application.secret_matches?(secret_from_response)).to be_truthy
+
         expect(json_response["name"]).to eq("Example")
         expect(json_response["redirect_uri"]).to eq("https://example.com")
       end
@@ -162,6 +166,28 @@ module Doorkeeper
 
           expect(response.body).to have_selector("code#application_id", text: application.uid)
           expect(response.body).to have_selector("code#secret", text: "")
+        end
+
+        it "returns the application details in a json response" do
+          expect do
+            post :create, params: {
+              doorkeeper_application: {
+                name: "Example",
+                redirect_uri: "https://example.com",
+              }, format: :json,
+            }
+          end.to(change { Doorkeeper::Application.count })
+
+          expect(response).to be_successful
+
+          expect(json_response).to include("id", "name", "uid", "secret", "redirect_uri", "scopes")
+
+          application = Application.last
+          secret_from_response = json_response["secret"]
+          expect(application.secret_matches?(secret_from_response)).to be_truthy
+
+          expect(json_response["name"]).to eq("Example")
+          expect(json_response["redirect_uri"]).to eq("https://example.com")
         end
       end
 
