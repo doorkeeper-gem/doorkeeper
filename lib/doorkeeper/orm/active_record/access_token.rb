@@ -9,8 +9,8 @@ module Doorkeeper
     belongs_to :application, class_name: "Doorkeeper::Application",
                              inverse_of: :access_tokens, optional: true
 
-    validates :token, presence: true, uniqueness: true
-    validates :refresh_token, uniqueness: true, if: :use_refresh_token?
+    validates :token, presence: true, uniqueness: { case_sensitive: true }
+    validates :refresh_token, uniqueness: { case_sensitive: true }, if: :use_refresh_token?
 
     # @attr_writer [Boolean, nil] use_refresh_token
     #   indicates the possibility of using refresh token

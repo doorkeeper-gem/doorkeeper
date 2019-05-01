@@ -10,7 +10,7 @@ module Doorkeeper
     has_many :access_tokens, dependent: :delete_all, class_name: "Doorkeeper::AccessToken"
 
     validates :name, :secret, :uid, presence: true
-    validates :uid, uniqueness: true
+    validates :uid, uniqueness: { case_sensitive: true }
     validates :redirect_uri, redirect_uri: true
     validates :confidential, inclusion: { in: [true, false] }
 

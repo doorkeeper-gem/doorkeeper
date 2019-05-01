@@ -16,7 +16,7 @@ module Doorkeeper
               :redirect_uri,
               presence: true
 
-    validates :token, uniqueness: true
+    validates :token, uniqueness: { case_sensitive: true }
 
     before_validation :generate_token, on: :create
 
