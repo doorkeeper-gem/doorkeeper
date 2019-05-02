@@ -26,6 +26,10 @@ module Doorkeeper
 
         expect(json_response).to include("id", "name", "uid", "secret", "redirect_uri", "scopes")
 
+        application = Application.last
+        secret_from_response = json_response["secret"]
+        expect(application.secret_matches?(secret_from_response)).to be_truthy
+
         expect(json_response["name"]).to eq("Example")
         expect(json_response["redirect_uri"]).to eq("https://example.com")
       end
@@ -121,6 +125,72 @@ module Doorkeeper
     end
 
     context "when admin is authenticated" do
+      context "when application secrets are hashed" do
+        before do
+          allow(Doorkeeper.configuration).to receive(:application_secret_strategy).and_return(Doorkeeper::SecretStoring::Sha256Hash)
+        end
+
+        it "shows the application secret after creating a new application" do
+          expect do
+            post :create, params: {
+              doorkeeper_application: {
+                name: "Example",
+                redirect_uri: "https://example.com",
+              },
+            }
+          end.to change { Doorkeeper::Application.count }.by(1)
+
+          application = Application.last
+
+          secret_from_flash = flash[:application_secret]
+          expect(secret_from_flash).not_to be_empty
+          expect(application.secret_matches?(secret_from_flash)).to be_truthy
+          expect(response).to redirect_to(controller.main_app.oauth_application_url(application.id))
+
+          get :show, params: { id: application.id, format: :html }
+
+          # We don't know the application secret here (because its hashed) so we can not assert its text on the page
+          # Instead, we read it from the page and then check if it matches the application secret
+          code_element = %r{<code.*id="secret".*>(.*)<\/code>}.match(response.body)
+          secret_from_page = code_element[1]
+
+          expect(response.body).to have_selector("code#application_id", text: application.uid)
+          expect(response.body).to have_selector("code#secret")
+          expect(secret_from_page).not_to be_empty
+          expect(application.secret_matches?(secret_from_page)).to be_truthy
+        end
+
+        it "does not show an application secret when application did already exist" do
+          application = FactoryBot.create(:application)
+          get :show, params: { id: application.id, format: :html }
+
+          expect(response.body).to have_selector("code#application_id", text: application.uid)
+          expect(response.body).to have_selector("code#secret", text: "")
+        end
+
+        it "returns the application details in a json response" do
+          expect do
+            post :create, params: {
+              doorkeeper_application: {
+                name: "Example",
+                redirect_uri: "https://example.com",
+              }, format: :json,
+            }
+          end.to(change { Doorkeeper::Application.count })
+
+          expect(response).to be_successful
+
+          expect(json_response).to include("id", "name", "uid", "secret", "redirect_uri", "scopes")
+
+          application = Application.last
+          secret_from_response = json_response["secret"]
+          expect(application.secret_matches?(secret_from_response)).to be_truthy
+
+          expect(json_response["name"]).to eq("Example")
+          expect(json_response["redirect_uri"]).to eq("https://example.com")
+        end
+      end
+
       render_views
 
       before do
@@ -149,6 +219,14 @@ module Doorkeeper
         end.to change { Doorkeeper::Application.count }.by(1)
 
         expect(response).to be_redirect
+      end
+
+      it "shows application details" do
+        application = FactoryBot.create(:application)
+        get :show, params: { id: application.id, format: :html }
+
+        expect(response.body).to have_selector("code#application_id", text: application.uid)
+        expect(response.body).to have_selector("code#secret", text: application.plaintext_secret)
       end
 
       it "does not allow mass assignment of uid or secret" do
