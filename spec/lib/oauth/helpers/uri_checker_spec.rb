@@ -40,13 +40,28 @@ module Doorkeeper::OAuth::Helpers
         expect(URIChecker.valid?(uri)).to be_falsey
       end
 
+      it "is invalid if localhost is resolved as as scheme (no scheme specified)" do
+        uri = "localhost:8080"
+        expect(URIChecker.valid?(uri)).to be_falsey
+      end
+
+      it "is invalid if scheme is missing #2" do
+        uri = "app.co:80"
+        expect(URIChecker.valid?(uri)).to be_falsey
+      end
+
       it "is invalid if is not an uri" do
         uri = "   "
         expect(URIChecker.valid?(uri)).to be_falsey
       end
 
-      it "is valid for native uris" do
-        uri = "urn:ietf:wg:oauth:2.0:oob"
+      it "is valid for custom schemes" do
+        uri = "com.example.app:/test"
+        expect(URIChecker.valid?(uri)).to be_truthy
+      end
+
+      it "is valid for custom schemes with authority marker (common misconfiguration)" do
+        uri = "com.example.app://test"
         expect(URIChecker.valid?(uri)).to be_truthy
       end
     end

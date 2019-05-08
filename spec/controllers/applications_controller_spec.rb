@@ -48,6 +48,21 @@ module Doorkeeper
         expect(json_response).to include("errors")
       end
 
+      it "returns validations on wrong create params (unspecified scheme)" do
+        expect do
+          post :create, params: {
+            doorkeeper_application: {
+              name: "Example",
+              redirect_uri: "app.com:80",
+            }, format: :json,
+          }
+        end.not_to(change { Doorkeeper::Application.count })
+
+        expect(response).to have_http_status(422)
+
+        expect(json_response).to include("errors")
+      end
+
       it "returns application info" do
         application = FactoryBot.create(:application, name: "Change me")
 

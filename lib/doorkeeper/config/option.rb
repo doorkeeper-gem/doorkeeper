@@ -38,14 +38,20 @@ module Doorkeeper
 
         Builder.instance_eval do
           remove_method name if method_defined?(name)
-          define_method name do |*args, &block|
-            value = if attribute_builder
-                      attribute_builder.new(&block).build
-                    else
-                      block || args.first
-                    end
+          if options[:deprecated]
+            define_method name do |*_, &_|
+              Kernel.warn "[DOORKEEPER] #{name} has been deprecated and will soon be removed"
+            end
+          else
+            define_method name do |*args, &block|
+              value = if attribute_builder
+                        attribute_builder.new(&block).build
+                      else
+                        block || args.first
+                      end
 
-            @config.instance_variable_set(:"@#{attribute}", value)
+              @config.instance_variable_set(:"@#{attribute}", value)
+            end
           end
         end
 

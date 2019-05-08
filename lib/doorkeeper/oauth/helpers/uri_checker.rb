@@ -25,10 +25,10 @@ module Doorkeeper
     module Helpers
       module URIChecker
         def self.valid?(url)
-          return true if native_uri?(url)
+          return true if oob_uri?(url)
 
           uri = as_uri(url)
-          uri.fragment.nil? && !uri.host.nil? && !uri.scheme.nil?
+          valid_scheme?(uri) && iff_host?(uri) && uri.fragment.nil? && uri.opaque.nil?
         rescue URI::InvalidURIError
           false
         end
@@ -78,8 +78,22 @@ module Doorkeeper
           client_query.split("&").sort == query.split("&").sort
         end
 
-        def self.native_uri?(url)
-          url == Doorkeeper.configuration.native_redirect_uri
+        def self.valid_scheme?(uri)
+          return false if uri.scheme.nil?
+
+          %w[localhost].include?(uri.scheme) == false
+        end
+
+        def self.hypertext_scheme?(uri)
+          %w[http https].include?(uri.scheme)
+        end
+
+        def self.iff_host?(uri)
+          !(hypertext_scheme?(uri) && uri.host.nil?)
+        end
+
+        def self.oob_uri?(uri)
+          NonStandard::IETF_WG_OAUTH2_OOB_METHODS.include?(uri)
         end
       end
     end

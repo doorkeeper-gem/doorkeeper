@@ -28,8 +28,8 @@ feature "Authorization Code Flow" do
       config_is_set(:token_secret_strategy, ::Doorkeeper::SecretStoring::Sha256Hash)
     end
 
-    scenario "Authorization Code Flow with hashing" do
-      @client.redirect_uri = Doorkeeper.configuration.native_redirect_uri
+    def authorize(redirect_url)
+      @client.redirect_uri = redirect_url
       @client.save!
       visit authorization_endpoint_url(client: @client)
       click_on "Authorize"
@@ -42,16 +42,28 @@ feature "Authorization Code Flow" do
       hashed_code = Doorkeeper::AccessGrant.secret_strategy.transform_secret code
       expect(hashed_code).to eq Doorkeeper::AccessGrant.first.token
 
-      expect(code).not_to eq(hashed_code)
+      [code, hashed_code]
+    end
 
+    scenario "using redirect_url urn:ietf:wg:oauth:2.0:oob" do
+      code, hashed_code = authorize("urn:ietf:wg:oauth:2.0:oob")
+      expect(code).not_to eq(hashed_code)
+      i_should_see "Authorization code:"
+      i_should_see code
+      i_should_not_see hashed_code
+    end
+
+    scenario "using redirect_url urn:ietf:wg:oauth:2.0:oob:auto" do
+      code, hashed_code = authorize("urn:ietf:wg:oauth:2.0:oob:auto")
+      expect(code).not_to eq(hashed_code)
       i_should_see "Authorization code:"
       i_should_see code
       i_should_not_see hashed_code
     end
   end
 
-  scenario "resource owner authorizes using test url" do
-    @client.redirect_uri = Doorkeeper.configuration.native_redirect_uri
+  scenario "resource owner authorizes using oob url" do
+    @client.redirect_uri = "urn:ietf:wg:oauth:2.0:oob"
     @client.save!
     visit authorization_endpoint_url(client: @client)
     click_on "Authorize"

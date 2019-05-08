@@ -18,8 +18,8 @@ module Doorkeeper
       end
 
       def redirect_uri
-        if URIChecker.native_uri? pre_auth.redirect_uri
-          auth.native_redirect
+        if URIChecker.oob_uri? pre_auth.redirect_uri
+          auth.oob_redirect
         elsif response_on_fragment
           Authorization::URIBuilder.uri_with_fragment(
             pre_auth.redirect_uri,
