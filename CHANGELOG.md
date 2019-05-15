@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#PR] Add your PR description here.
+- [#1252] Returning `unauthorized` when the revocation of the token should not be performed due to wrong permissions.
 - [#1249]: Specify case sensitive uniqueness to remove Rails 6 deprecation message
 - [#1248] Display the Application Secret in HTML after creating a new application even when `hash_application_secrets` is used.
 - [#1248] Return the unhashed Application Secret in the JSON response after creating new application even when `hash_application_secrets` is used.
@@ -55,7 +55,7 @@ User-visible changes worth mentioning.
   token value validations, or you are using database with case-insensitive WHERE clause like MySQL
   (you can face some collisions). Before this change access token value matched `[a-f0-9]` regex, and now
   it matches `[a-zA-Z0-9\-_]`. In case you have such restrictions and your don't use custom token generator
-  please change configuration option `default_generator_method ` to `:hex`.
+  please change configuration option `default_generator_method` to `:hex`.
 
 - [#1195] Allow to customize Token Introspection response (fixes #1194).
 - [#1189] Option to set `token_reuse_limit`.
@@ -124,9 +124,9 @@ User-visible changes worth mentioning.
   either public or private/confidential
 
   **[IMPORTANT]**: all the applications (clients) now are considered as private by default.
-    You need to manually change `confidential` column to `false` if you are using public clients,
-    in other case your mobile (or other) applications will not be able to authorize.
-    See [#1142](https://github.com/doorkeeper-gem/doorkeeper/issues/1142) for more details.
+  You need to manually change `confidential` column to `false` if you are using public clients,
+  in other case your mobile (or other) applications will not be able to authorize.
+  See [#1142](https://github.com/doorkeeper-gem/doorkeeper/issues/1142) for more details.
 
 - [#1010] Add configuration to enforce configured scopes (`default_scopes` and
   `optional_scopes`) for applications
@@ -150,7 +150,6 @@ User-visible changes worth mentioning.
 
 - [#1143] Adds a config option `opt_out_native_route_change` to opt out of the breaking api
   changed introduced in https://github.com/doorkeeper-gem/doorkeeper/pull/1003
-
 
 ## 4.4.2
 
@@ -231,7 +230,7 @@ User-visible changes worth mentioning.
 ## 4.2.0
 
 - Security fix: Address CVE-2016-6582, implement token revocation according to
-    spec (tokens might not be revoked if client follows the spec).
+  spec (tokens might not be revoked if client follows the spec).
 - [#873] Add hooks to Doorkeeper::ApplicationMetalController
 - [#871] Allow downstream users to better utilize doorkeeper spec factories by
   eliminating name conflict on `:user` factory.
@@ -265,6 +264,7 @@ User-visible changes worth mentioning.
   ```
   rails generate doorkeeper:previous_refresh_token
   ```
+
 - [#811] Toughen parameters filter with exact match
 - [#813] Applications admin bugfix
 - [#799] Fix Ruby Warnings
@@ -358,11 +358,10 @@ User-visible changes worth mentioning.
 - Removes `doorkeeper_for` deprecation notice.
 - Remove `applications.scopes` upgrade notice.
 
-
 ## 2.2.2
 
 - [#541] Fixed `undefined method attr_accessible` problem on Rails 4
-    (happens only when ProtectedAttributes gem is used) in #599
+  (happens only when ProtectedAttributes gem is used) in #599
 
 ## 2.2.1
 
@@ -381,7 +380,6 @@ User-visible changes worth mentioning.
 - [#627] i18n fallbacks to english
 - Moved CHANGELOG to NEWS.md
 
-
 ## 2.1.4 - 2015-03-27
 
 - [#595] HTTP spec: Add `scope` for refresh token scope param
@@ -389,11 +387,9 @@ User-visible changes worth mentioning.
 - [#567] Add Grape helpers for easier integration with Grape framework
 - [#606] Add custom access token expiration support for Client Credentials flow
 
-
 ## 2.1.3 - 2015-03-01
 
 - [#588] Fixes scopes_match? bug that skipped authorization form in some cases
-
 
 ## 2.1.2 - 2015-02-25
 
@@ -403,16 +399,14 @@ User-visible changes worth mentioning.
 - [#583] Database connection bugfix in certain scenarios.
 - Testing improvements
 
-
 ## 2.1.1 - 2015-02-06
 
 - Remove `wildcard_redirect_url` option
 - [#481] Customize token flow OAuth expirations with a config lambda
 - [#568] TokensController: Memoize strategy.authorize_response result to enable
-    subclasses to use the response object.
+  subclasses to use the response object.
 - [#571] Fix database initialization issues in some configurations.
 - Documentation improvements
-
 
 ## 2.1.0 - 2015-01-13
 
@@ -433,11 +427,9 @@ User-visible changes worth mentioning.
   Disables implicit and password grant flows by default.
 - [#510, #544, 722113f] Revoked refresh token response bugfix.
 
-
 ## 2.0.1 - 2014-12-17
 
 - [#525, #526, #527] Fix `ActiveRecord::NoDatabaseError` on gem load.
-
 
 ## 2.0.0 - 2014-12-16
 
@@ -572,7 +564,7 @@ User-visible changes worth mentioning.
     tokens for an application/owner instead of deleting them.
   - [#333] Rails 4.1 support
 - internals
-  - Removes jQuery dependency [fixes #300] [PR #312 is related]
+  - Removes jQuery dependency [fixes #300][pr #312 is related]
   - [#294] Client uid and secret will be generated only if not present.
   - [#316] Test warnings addressed.
   - [#338] Rspec 3 syntax.
@@ -690,7 +682,7 @@ Official support for rubinius was removed.
   - Add support for mongoid
   - [#78, #128, #137, #138] Application Ownership
   - [#92] Allow users to skip controllers
-  - [#99] Remove deprecated warnings for data-* attributes [@towerhe](https://github.com/towerhe)
+  - [#99] Remove deprecated warnings for data-\* attributes [@towerhe](https://github.com/towerhe)
   - [#101] Return existing access_token for PasswordAccessTokenRequest [@benoist](https://github.com/benoist)
   - [#104] Changed access token scopes example code to default_scopes and optional_scopes [@amkirwan](https://github.com/amkirwan)
   - [#107] Fix typos in initializer
@@ -752,7 +744,7 @@ Official support for rubinius was removed.
   - [#50] Fix typos [@tomekw](https://github.com/tomekw)
   - [#51] Updated the factory_girl_rails dependency, fix expires_in response which returned a float number instead of integer [@antekpiechnik](https://github.com/antekpiechnik)
   - [#62] Typos, .gitignore [@jaimeiniesta](https://github.com/jaimeiniesta)
-  - [#65] Change _path redirections to _url redirections [@jaimeiniesta](https://github.com/jaimeiniesta)
+  - [#65] Change \_path redirections to \_url redirections [@jaimeiniesta](https://github.com/jaimeiniesta)
   - [#75] Fix unknown method #authenticate_admin! [@mattgreen](https://github.com/mattgreen)
   - Remove application link in authorized app view
 
