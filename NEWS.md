@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#PR] Add your PR description here.
+- [#1253]: Use existing exception response in get_error_response_from_exception.
 - [#1249]: Specify case sensitive uniqueness to remove Rails 6 deprecation message
 - [#1248] Display the Application Secret in HTML after creating a new application even when `hash_application_secrets` is used.
 - [#1248] Return the unhashed Application Secret in the JSON response after creating new application even when `hash_application_secrets` is used.
