@@ -5,11 +5,13 @@ require "rails"
 %w[
   action_controller/railtie
   action_view/railtie
+  action_cable/engine
   sprockets/railtie
 ].each do |railtie|
   begin
     require railtie
-  rescue LoadError
+  rescue LoadError => e
+    puts "Error loading '#{railtie}' (#{e.message})"
   end
 end
 

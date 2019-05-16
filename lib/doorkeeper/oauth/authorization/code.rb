@@ -12,7 +12,7 @@ module Doorkeeper
         end
 
         def issue_token
-          @token ||= AccessGrant.create! access_grant_attributes
+          @token ||= AccessGrant.create!(access_grant_attributes)
         end
 
         def native_redirect
@@ -30,11 +30,13 @@ module Doorkeeper
         end
 
         def access_grant_attributes
-          pkce_attributes.merge application_id: pre_auth.client.id,
-                                resource_owner_id: resource_owner.id,
-                                expires_in: authorization_code_expires_in,
-                                redirect_uri: pre_auth.redirect_uri,
-                                scopes: pre_auth.scopes.to_s
+          pkce_attributes.merge(
+            application_id: pre_auth.client.id,
+            resource_owner_id: resource_owner.id,
+            expires_in: authorization_code_expires_in,
+            redirect_uri: pre_auth.redirect_uri,
+            scopes: pre_auth.scopes.to_s
+          )
         end
 
         def pkce_attributes
@@ -46,7 +48,7 @@ module Doorkeeper
           }
         end
 
-        # ensures firstly, if migration with additional pcke columns was
+        # Ensures firstly, if migration with additional PKCE columns was
         # generated and migrated
         def pkce_supported?
           Doorkeeper::AccessGrant.pkce_supported?

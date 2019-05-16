@@ -15,6 +15,7 @@ gem "rspec-rails", github: "rspec/rspec-rails", branch: "4-0-dev"
 gem "rspec-support", github: "rspec/rspec-support"
 
 gem "rubocop", "~> 0.66"
+gem "rubocop-performance"
 
 gem "bcrypt", "~> 3.1", require: false
 

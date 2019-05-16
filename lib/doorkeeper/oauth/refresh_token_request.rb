@@ -15,19 +15,19 @@ module Doorkeeper
                     :server
 
       def initialize(server, refresh_token, credentials, parameters = {})
-        @server          = server
-        @refresh_token   = refresh_token
-        @credentials     = credentials
+        @server = server
+        @refresh_token = refresh_token
+        @credentials = credentials
         @original_scopes = parameters[:scope] || parameters[:scopes]
         @refresh_token_parameter = parameters[:refresh_token]
-
-        if credentials
-          @client = Application.by_uid_and_secret credentials.uid,
-                                                  credentials.secret
-        end
+        @client = load_client(credentials) if credentials
       end
 
       private
+
+      def load_client(credentials)
+        Application.by_uid_and_secret(credentials.uid, credentials.secret)
+      end
 
       def before_successful_response
         refresh_token.transaction do

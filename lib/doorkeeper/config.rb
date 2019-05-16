@@ -25,8 +25,8 @@ module Doorkeeper
 
   def self.setup_orm_adapter
     @orm_adapter = "doorkeeper/orm/#{configuration.orm}".classify.constantize
-  rescue NameError => error
-    raise error, "ORM adapter not found (#{configuration.orm})", <<-ERROR_MSG.strip_heredoc
+  rescue NameError => e
+    raise e, "ORM adapter not found (#{configuration.orm})", <<-ERROR_MSG.strip_heredoc
       [doorkeeper] ORM adapter not found (#{configuration.orm}), or there was an error
       trying to load it.
 
