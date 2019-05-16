@@ -6,8 +6,8 @@ module Doorkeeper
       headers.merge!(authorize_response.headers)
       render json: authorize_response.body,
              status: authorize_response.status
-    rescue Errors::DoorkeeperError => error
-      handle_token_exception(error)
+    rescue Errors::DoorkeeperError => e
+      handle_token_exception(e)
     end
 
     # OAuth 2.0 Token Revocation - http://tools.ietf.org/html/rfc7009

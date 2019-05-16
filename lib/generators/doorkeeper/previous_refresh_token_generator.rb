@@ -17,12 +17,12 @@ module Doorkeeper
     end
 
     def previous_refresh_token
-      if no_previous_refresh_token_column?
-        migration_template(
-          "add_previous_refresh_token_to_access_tokens.rb.erb",
-          "db/migrate/add_previous_refresh_token_to_access_tokens.rb"
-        )
-      end
+      return unless no_previous_refresh_token_column?
+
+      migration_template(
+        "add_previous_refresh_token_to_access_tokens.rb.erb",
+        "db/migrate/add_previous_refresh_token_to_access_tokens.rb"
+      )
     end
 
     private
