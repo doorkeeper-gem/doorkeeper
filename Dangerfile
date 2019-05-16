@@ -1,4 +1,4 @@
-CHANGELOG_FILE = 'NEWS.md'
+CHANGELOG_FILE = 'CHANGELOG.md'
 GITHUB_REPO = 'https://github.com/doorkeeper-gem/doorkeeper'
 
 def changelog_changed?

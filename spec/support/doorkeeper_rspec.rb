@@ -16,7 +16,7 @@ module Doorkeeper
     # Tries to find ORM from the Gemfile used to run test suite
     def self.detect_orm
       orm = (ENV["BUNDLE_GEMFILE"] || "").match(/Gemfile\.(.+)\.rb/)
-      (orm && orm[1] || :active_record).to_sym
+      (orm && orm[1] || ENV["ORM"] || :active_record).to_sym
     end
   end
 end

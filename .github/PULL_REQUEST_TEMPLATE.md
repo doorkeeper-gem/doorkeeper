@@ -11,7 +11,7 @@ If there's anything else that's important and relevant to your pull
 request, mention that information here. This could include
 benchmarks, or other information.
 
-If you are updating NEWS.md file or are asked to update it by reviewers,
+If you are updating CHANGELOG.md file or are asked to update it by reviewers,
 please add the changelog entry at the top of the file.
 
 Thanks for contributing to Doorkeeper project!

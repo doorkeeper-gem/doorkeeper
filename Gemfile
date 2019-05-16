@@ -5,7 +5,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 gemspec
 
-gem "rails", "~> 6.0.0.beta3"
+gem "rails", "~> 6.0.0.rc1"
 
 # TODO: Remove when rspec-rails 4.0 released
 gem "rspec-core", github: "rspec/rspec-core"

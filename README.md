@@ -146,10 +146,10 @@ bundle exec rake doorkeeper:server
 ````
 
 By default, it uses the latest Rails version with ActiveRecord. To run the
-tests with a specific ORM and Rails version:
+tests with a specific Rails version:
 
 ```
-rails=5.2 orm=active_record bundle exec rake
+BUNDLE_GEMFILE=gemfiles/rails_6_0.gemfile bundle exec rake
 ```
 
 ## Contributing
