@@ -2,6 +2,9 @@
 
 require "uri"
 
+# ActiveModel validator for redirect URI validation in according
+# to OAuth standards and Doorkeeper configuration.
+#
 class RedirectUriValidator < ActiveModel::EachValidator
   def self.native_redirect_uri
     Doorkeeper.configuration.native_redirect_uri

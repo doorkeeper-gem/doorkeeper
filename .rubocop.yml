@@ -19,7 +19,7 @@ Metrics/LineLength:
 
 Metrics/MethodLength:
   Exclude:
-    - spec/dummy/db/*
+    - spec/dummy/db/**/*
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes
