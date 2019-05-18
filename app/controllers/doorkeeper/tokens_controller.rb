@@ -18,12 +18,13 @@ module Doorkeeper
       # Doorkeeper does not use the token_type_hint logic described in the
       # RFC 7009 due to the refresh token implementation that is a field in
       # the access token model.
-      revoke_token if authorized?
 
-      # The authorization server responds with HTTP status code 200 if the token
-      # has been revoked successfully or if the client submitted an invalid
-      # token
-      render json: {}, status: 200
+      if authorized?
+        revoke_token
+        render json: {}, status: 200
+      else
+        render json: { error: :unauthorized_client, error_description: error_description }, status: :forbidden
+      end
     end
 
     def introspect
@@ -71,7 +72,10 @@ module Doorkeeper
     end
 
     def revoke_token
-      token.revoke if token.accessible?
+      # The authorization server responds with HTTP status code 200 if the token
+      # has been revoked successfully or if the client submitted an invalid
+      # token
+      token.revoke if token&.accessible?
     end
 
     def token
@@ -85,6 +89,10 @@ module Doorkeeper
 
     def authorize_response
       @authorize_response ||= strategy.authorize
+    end
+
+    def error_description
+      I18n.t(:unauthorized, scope: %i[doorkeeper errors messages revoke])
     end
   end
 end

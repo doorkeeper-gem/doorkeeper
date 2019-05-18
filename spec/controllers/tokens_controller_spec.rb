@@ -102,10 +102,10 @@ describe Doorkeeper::TokensController do
         let(:some_other_client) { FactoryBot.create(:application, confidential: true) }
         let(:oauth_client) { Doorkeeper::OAuth::Client.new(some_other_client) }
 
-        it "returns 200" do
+        it "returns 403" do
           post :revoke, params: { token: access_token.token }
 
-          expect(response.status).to eq 200
+          expect(response.status).to eq 403
         end
 
         it "does not revoke the access token" do
