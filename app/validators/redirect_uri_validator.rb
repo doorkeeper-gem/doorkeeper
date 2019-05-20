@@ -6,10 +6,6 @@ require "uri"
 # to OAuth standards and Doorkeeper configuration.
 #
 class RedirectUriValidator < ActiveModel::EachValidator
-  def self.native_redirect_uri
-    Doorkeeper.configuration.native_redirect_uri
-  end
-
   def validate_each(record, attribute, value)
     if value.blank?
       return if Doorkeeper.configuration.allow_blank_redirect_uri?(record)
@@ -17,12 +13,13 @@ class RedirectUriValidator < ActiveModel::EachValidator
       record.errors.add(attribute, :blank)
     else
       value.split.each do |val|
-        uri = ::URI.parse(val)
-        next if native_redirect_uri?(uri)
+        next if oob_redirect_uri?(val)
 
+        uri = ::URI.parse(val)
         record.errors.add(attribute, :forbidden_uri) if forbidden_uri?(uri)
         record.errors.add(attribute, :fragment_present) unless uri.fragment.nil?
-        record.errors.add(attribute, :relative_uri) if uri.scheme.nil? || uri.host.nil?
+        record.errors.add(attribute, :unspecified_scheme) if unspecified_scheme?(uri)
+        record.errors.add(attribute, :relative_uri) if relative_uri?(uri)
         record.errors.add(attribute, :secured_uri) if invalid_ssl_uri?(uri)
       end
     end
@@ -32,12 +29,22 @@ class RedirectUriValidator < ActiveModel::EachValidator
 
   private
 
-  def native_redirect_uri?(uri)
-    self.class.native_redirect_uri.present? && uri.to_s == self.class.native_redirect_uri.to_s
+  def oob_redirect_uri?(uri)
+    Doorkeeper::OAuth::NonStandard::IETF_WG_OAUTH2_OOB_METHODS.include?(uri)
   end
 
   def forbidden_uri?(uri)
     Doorkeeper.configuration.forbid_redirect_uri.call(uri)
+  end
+
+  def unspecified_scheme?(uri)
+    return true if uri.opaque.present?
+
+    %w[localhost].include?(uri.try(:scheme))
+  end
+
+  def relative_uri?(uri)
+    uri.scheme.nil? && uri.host.nil?
   end
 
   def invalid_ssl_uri?(uri)

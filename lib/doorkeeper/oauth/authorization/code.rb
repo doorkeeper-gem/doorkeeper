@@ -15,7 +15,7 @@ module Doorkeeper
           @token ||= AccessGrant.create!(access_grant_attributes)
         end
 
-        def native_redirect
+        def oob_redirect
           { action: :show, code: token.plaintext_token }
         end
 

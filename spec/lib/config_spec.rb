@@ -694,4 +694,15 @@ describe Doorkeeper, "configuration" do
       end
     end
   end
+
+  describe "options deprecation" do
+    it "prints a warning message when an option is deprecated" do
+      expect(Kernel).to receive(:warn).with(
+        "[DOORKEEPER] native_redirect_uri has been deprecated and will soon be removed"
+      )
+      Doorkeeper.configure do
+        native_redirect_uri "urn:ietf:wg:oauth:2.0:oob"
+      end
+    end
+  end
 end

@@ -63,7 +63,7 @@ module Doorkeeper
           )
         end
 
-        def native_redirect
+        def oob_redirect
           {
             controller: controller,
             action: :show,
