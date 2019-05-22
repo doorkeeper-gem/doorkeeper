@@ -36,6 +36,9 @@ class CreateDoorkeeperTables < ActiveRecord::Migration<%= migration_version %>
 
     create_table :oauth_access_tokens do |t|
       t.references :resource_owner, index: true
+
+      # Remove `null: false` if you are planning to use Password
+      # Credentials Grant flow that doesn't require an application.
       t.references :application,    null: false
 
       # If you use a custom token generator you may need to change this column
