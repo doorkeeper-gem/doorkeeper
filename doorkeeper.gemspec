@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
   s.test_files    = `git ls-files -- spec/*`.split("\n")
   s.require_paths = ["lib"]
 
-  s.add_dependency "railties", ">= 4.2"
+  s.add_dependency "railties", ">= 4.1"
   s.required_ruby_version = ">= 2.1"
 
   s.add_development_dependency "capybara"
@@ -27,6 +27,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "generator_spec", "~> 0.9.3"
   s.add_development_dependency "rake", ">= 11.3.0"
   s.add_development_dependency "rspec-rails"
+  s.add_development_dependency "sqlite3", "1.4.0"
 
   s.post_install_message = Doorkeeper::CVE_2018_1000211_WARNING
 end
