@@ -4,6 +4,8 @@ require "doorkeeper/grape/authorization_decorator"
 
 module Doorkeeper
   module Grape
+    # Doorkeeper helpers for Grape applications.
+    # Provides helpers for endpoints authorization based on defined set of scopes.
     module Helpers
       # These helpers are for grape >= 0.10
       extend ::Grape::API::Helpers
@@ -11,7 +13,9 @@ module Doorkeeper
 
       # endpoint specific scopes > parameter scopes > default scopes
       def doorkeeper_authorize!(*scopes)
-        endpoint_scopes = endpoint.route_setting(:scopes) || endpoint.options[:route_options][:scopes]
+        endpoint_scopes = endpoint.route_setting(:scopes) ||
+                          endpoint.options[:route_options][:scopes]
+
         scopes = if endpoint_scopes
                    Doorkeeper::OAuth::Scopes.from_array(endpoint_scopes)
                  elsif scopes && !scopes.empty?

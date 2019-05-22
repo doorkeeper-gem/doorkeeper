@@ -23,7 +23,7 @@ module Doorkeeper
         revoke_token
         render json: {}, status: 200
       else
-        render json: { error: :unauthorized_client, error_description: error_description }, status: :forbidden
+        render json: revocation_error_response, status: :forbidden
       end
     end
 
@@ -91,8 +91,10 @@ module Doorkeeper
       @authorize_response ||= strategy.authorize
     end
 
-    def error_description
-      I18n.t(:unauthorized, scope: %i[doorkeeper errors messages revoke])
+    def revocation_error_response
+      error_description = I18n.t(:unauthorized, scope: %i[doorkeeper errors messages revoke])
+
+      { error: :unauthorized_client, error_description: error_description }
     end
   end
 end

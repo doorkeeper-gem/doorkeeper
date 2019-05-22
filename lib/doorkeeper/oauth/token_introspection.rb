@@ -150,9 +150,9 @@ module Doorkeeper
       #
       def active?
         if authorized_client
-          valid_token? && allow_token_introspection?
+          valid_token? && token_introspection_allowed?(authorized_client.application)
         else
-          valid_token?
+          valid_token? && token_introspection_allowed?(authorized_token&.application)
         end
       end
 
@@ -167,10 +167,10 @@ module Doorkeeper
       end
 
       # config constraints for introspection in Doorkeeper.configuration.allow_token_introspection
-      def allow_token_introspection?
+      def token_introspection_allowed?(client)
         !!Doorkeeper.configuration.allow_token_introspection.call(
           @token,
-          authorized_client.application
+          client
         )
       end
 
