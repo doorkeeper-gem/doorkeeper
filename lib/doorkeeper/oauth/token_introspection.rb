@@ -150,7 +150,7 @@ module Doorkeeper
       #
       def active?
         if authorized_client
-          valid_token? && authorized_for_client?
+          valid_token? && allow_token_introspection?
         else
           valid_token?
         end
@@ -166,14 +166,12 @@ module Doorkeeper
         authorized_token.token == @token&.token
       end
 
-      # If token doesn't belong to some client, then it is public.
-      # Otherwise in it required for token to be connected to the same client.
-      def authorized_for_client?
-        if @token.application
-          @token.application == authorized_client.application
-        else
-          true
-        end
+      # config constraints for introspection in Doorkeeper.configuration.allow_token_introspection
+      def allow_token_introspection?
+        !!Doorkeeper.configuration.allow_token_introspection.call(
+          @token,
+          authorized_client.application
+        )
       end
 
       # Allows to customize introspection response.

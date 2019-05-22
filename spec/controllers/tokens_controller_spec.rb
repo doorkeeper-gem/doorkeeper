@@ -147,7 +147,7 @@ describe Doorkeeper::TokensController do
       end
     end
 
-    context "authorized using valid Client Authentication" do
+    context "authorized using Client Credentials of the client that token is issued to" do
       it "responds with full token introspection" do
         request.headers["Authorization"] = basic_auth_header_for_client(client)
 
@@ -209,6 +209,26 @@ describe Doorkeeper::TokensController do
 
         should_have_json "active", false
         expect(json_response).not_to include("client_id", "token_type", "exp", "iat")
+      end
+    end
+
+    context "introspection request authorized by a client and allow_token_introspection is true" do
+      let(:different_client) { FactoryBot.create(:application) }
+
+      before do
+        allow(Doorkeeper.configuration).to receive(:allow_token_introspection).and_return(proc do
+          true
+        end)
+      end
+
+      it "responds with full token introspection" do
+        request.headers["Authorization"] = basic_auth_header_for_client(different_client)
+
+        post :introspect, params: { token: token_for_introspection.token }
+
+        should_have_json "active", true
+        expect(json_response).to include("client_id", "token_type", "exp", "iat")
+        should_have_json "client_id", client.uid
       end
     end
 

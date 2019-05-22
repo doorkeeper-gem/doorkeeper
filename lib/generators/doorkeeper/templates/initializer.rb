@@ -314,6 +314,33 @@ Doorkeeper.configure do
   #   client.superapp? or resource_owner.admin?
   # end
 
+  # Implement constraints in case you use Client Credentials to authenticate
+  # the introspection endpoint.
+  # By default allow introspection if the introspected token belongs to authorized client,
+  # OR token doesn't belong to any client (public token). Otherwise disallow.
+  #
+  # Params:
+  # `token` - the token to be introspected (see Doorkeeper::AccessToken)
+  # `client` - the client application authorized for the endpoint (see Doorkeeper::Application)
+  #
+  # You can completely ignore it:
+  # allow_token_introspection do |_token, _client|
+  #   false
+  # end
+  #
+  # Or you can define your custom check:
+  #   Adding `protected_resource` boolean column to applications table
+  #   to allow protected_resource client introspect the token of normal client.
+  #   In this case, protected_resource client must be confidential.
+  #
+  # allow_token_introspection do |token, client|
+  #   if token.application
+  #     token.application == client || client.protected_resource?
+  #   else
+  #     true
+  #   end
+  # end
+
   # WWW-Authenticate Realm (default "Doorkeeper").
   #
   # realm "Doorkeeper"

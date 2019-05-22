@@ -321,6 +321,20 @@ module Doorkeeper
                grant_flows.exclude?("implicit")
            end)
 
+    # When using client credentials to authenticate at introspection endpoint,
+    # Allow introspection if
+    #   the inspected token to be connected to the same client,
+    #   OR token doesn't belong to any client (public token).
+    #
+    option :allow_token_introspection,
+           default: (lambda do |token, client|
+             if token.application
+               token.application == client
+             else
+               true
+             end
+           end)
+
     attr_reader :api_only,
                 :enforce_content_type,
                 :reuse_access_token,
