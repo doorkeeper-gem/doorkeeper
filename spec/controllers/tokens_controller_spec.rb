@@ -159,6 +159,26 @@ describe Doorkeeper::TokensController do
       end
     end
 
+    context "configured token introspection disabled" do
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          allow_token_introspection do |_token, _context|
+            false
+          end
+        end
+      end
+
+      it "responds with just active: false response" do
+        request.headers["Authorization"] = "Bearer #{access_token.token}"
+
+        post :introspect, params: { token: token_for_introspection.token }
+
+        should_have_json "active", false
+        expect(json_response).not_to include("client_id", "token_type", "exp", "iat")
+      end
+    end
+
     context "using custom introspection response" do
       before do
         Doorkeeper.configure do

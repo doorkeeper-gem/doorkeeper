@@ -1,4 +1,4 @@
-# News
+# Changelog
 
 See https://github.com/doorkeeper-gem/doorkeeper/wiki/Migration-from-old-versions for
 upgrade guides.

@@ -314,32 +314,40 @@ Doorkeeper.configure do
   #   client.superapp? or resource_owner.admin?
   # end
 
-  # Implement constraints in case you use Client Credentials to authenticate
-  # the introspection endpoint.
-  # By default allow introspection if the introspected token belongs to authorized client,
-  # OR token doesn't belong to any client (public token). Otherwise disallow.
+  # Configure custom constraints for the Token Introspection request. By default
+  # this configuration option allows to introspect the token that belongs to authorized
+  # client (from Bearer token or from authenticated client) OR when token doesn't
+  # belong to any client (public token). Otherwise requester has no access to the
+  # introspection and it will return response as stated in the RFC.
   #
-  # Params:
-  # `token` - the token to be introspected (see Doorkeeper::AccessToken)
-  # `client` - the client application authorized for the endpoint (see Doorkeeper::Application)
-  #
-  # You can completely ignore it:
-  # allow_token_introspection do |_token, _client|
-  #   false
-  # end
-  #
-  # Or you can define your custom check:
-  #   Adding `protected_resource` boolean column to applications table
-  #   to allow protected_resource client introspect the token of normal client.
-  #   In this case, protected_resource client must be confidential.
+  # You can define your custom check:
   #
   # allow_token_introspection do |token, client|
   #   if token.application
-  #     token.application == client || client.protected_resource?
+  #     # (`protected_resource` is a new database boolean column, for example)
+  #     token.application == client || client.protected_resource? #
   #   else
   #     true
   #   end
   # end
+  #
+  # Params:
+  #   * `token` - the token to be introspected (see `Doorkeeper::AccessToken`)
+  #   * `client` - the client application authorized for the endpoint (see `Doorkeeper::Application`)
+  #
+  # Keep in mind, that in case the block returns `nil` or `false` introspection response
+  # doesn't have 401 status code and some descriptive body, you'll get 200 with
+  # { "active": false } body as stated in the RFC 7662 section 2.2. Introspection Response.
+  #
+  # You can completely disable any token introspection:
+  #
+  # allow_token_introspection do |_token, _client|
+  #   false
+  # end
+  #
+  # In such case every request for token introspection will get { "active": false } response.
+  # If you need to block the request at all, then configure your routes.rb or web-server
+  # like nginx to forbid the request.
 
   # WWW-Authenticate Realm (default "Doorkeeper").
   #

@@ -44,6 +44,8 @@ Style/ClassAndModuleChildren:
     - spec/**/*
 Style/NumericPredicate:
   Enabled: false
+Style/DoubleNegation:
+  Enabled: false
 
 Layout/MultilineMethodCallIndentation:
   EnforcedStyle: indented
