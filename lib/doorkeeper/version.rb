@@ -8,9 +8,9 @@ module Doorkeeper
   module VERSION
     # Semantic versioning
     MAJOR = 5
-    MINOR = 1
+    MINOR = 2
     TINY = 0
-    PRE = nil
+    PRE = "rc1"
 
     # Full version number
     STRING = [MAJOR, MINOR, TINY, PRE].compact.join(".")
