@@ -81,6 +81,8 @@ require "doorkeeper/stale_records_cleaner"
 
 require "doorkeeper/orm/active_record"
 
+# Main Doorkeeper namespace.
+#
 module Doorkeeper
   def self.authenticate(request, methods = Doorkeeper.configuration.access_token_methods)
     OAuth::Token.authenticate(request, *methods)

@@ -163,9 +163,7 @@ describe Doorkeeper::TokensController do
       before do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
-          allow_token_introspection do |_token, _context|
-            false
-          end
+          allow_token_introspection false
         end
       end
 
@@ -249,6 +247,36 @@ describe Doorkeeper::TokensController do
         should_have_json "active", true
         expect(json_response).to include("client_id", "token_type", "exp", "iat")
         should_have_json "client_id", client.uid
+      end
+    end
+
+    context "allow_token_introspection requires authorized token with special scope" do
+      let(:access_token) { FactoryBot.create(:access_token, scopes: "introspection") }
+
+      before do
+        allow(Doorkeeper.configuration).to receive(:allow_token_introspection).and_return(proc do |_token, _client, authorized_token|
+          authorized_token.scopes.include?("introspection")
+        end)
+      end
+
+      it "responds with full token introspection if authorized token has introspection scope" do
+        request.headers["Authorization"] = "Bearer #{access_token.token}"
+
+        post :introspect, params: { token: token_for_introspection.token }
+
+        should_have_json "active", true
+        expect(json_response).to include("client_id", "token_type", "exp", "iat")
+      end
+
+      it "responds with just active status if authorized token doesn't have introspection scope" do
+        access_token.update(scopes: "read write")
+
+        request.headers["Authorization"] = "Bearer #{access_token.token}"
+
+        post :introspect, params: { token: token_for_introspection.token }
+
+        should_have_json "active", false
+        expect(json_response).not_to include("client_id", "token_type", "exp", "iat")
       end
     end
 

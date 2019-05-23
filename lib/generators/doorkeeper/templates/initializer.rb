@@ -322,18 +322,26 @@ Doorkeeper.configure do
   #
   # You can define your custom check:
   #
-  # allow_token_introspection do |token, client|
+  # allow_token_introspection do |token, authorized_client, _authorized_token|
   #   if token.application
-  #     # (`protected_resource` is a new database boolean column, for example)
-  #     token.application == client || client.protected_resource? #
+  #     # `protected_resource` is a new database boolean column, for example
+  #     token.application == authorized_client || authorized_client.protected_resource?
   #   else
   #     true
   #   end
   # end
   #
-  # Params:
-  #   * `token` - the token to be introspected (see `Doorkeeper::AccessToken`)
-  #   * `client` - the client application authorized for the endpoint (see `Doorkeeper::Application`)
+  # Block arguments:
+  #
+  # @param token [Doorkeeper::AccessToken]
+  #   token to be introspected
+  #
+  # @param authorized_client [Doorkeeper::Application]
+  #   authorized client (if request is authorized using Basic auth with
+  #   Client Credentials for example)
+  #
+  # @param authorized_token [Doorkeeper::AccessToken]
+  #   Bearer token used to authorize the request
   #
   # Keep in mind, that in case the block returns `nil` or `false` introspection response
   # doesn't have 401 status code and some descriptive body, you'll get 200 with
@@ -341,9 +349,7 @@ Doorkeeper.configure do
   #
   # You can completely disable any token introspection:
   #
-  # allow_token_introspection do |_token, _client|
-  #   false
-  # end
+  # allow_token_introspection false
   #
   # In such case every request for token introspection will get { "active": false } response.
   # If you need to block the request at all, then configure your routes.rb or web-server

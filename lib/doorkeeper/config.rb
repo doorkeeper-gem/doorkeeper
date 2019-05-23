@@ -321,15 +321,28 @@ module Doorkeeper
                grant_flows.exclude?("implicit")
            end)
 
-    # When using client credentials to authenticate at introspection endpoint,
-    # Allow introspection if
-    #   the inspected token to be connected to the same client,
-    #   OR token doesn't belong to any client (public token).
+    # Configure protection of token introspection request.
+    # By default token introspection is allowed only for clients that
+    # introspected token belongs to or if access token been introspected
+    # is a public one (doesn't belong to any client).
+    #
+    # You can define any custom rule you need or just disable token
+    # introspection at all.
+    #
+    # @param token [Doorkeeper::AccessToken]
+    #   token to be introspected
+    #
+    # @param authorized_client [Doorkeeper::Application]
+    #   authorized client (if request is authorized using Basic auth with
+    #   Client Credentials for example)
+    #
+    # @param authorized_token [Doorkeeper::AccessToken]
+    #   Bearer token used to authorize the request
     #
     option :allow_token_introspection,
-           default: (lambda do |token, client|
+           default: (lambda do |token, authorized_client, _authorized_token|
              if token.application
-               token.application == client
+               token.application == authorized_client
              else
                true
              end
