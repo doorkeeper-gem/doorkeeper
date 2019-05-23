@@ -80,8 +80,7 @@ module Doorkeeper
 
       # Bearer Token Authentication
       def authorized_token
-        @authorized_token ||=
-          OAuth::Token.authenticate(server.context.request, :from_bearer_authorization)
+        @authorized_token ||= Doorkeeper.authenticate(server.context.request)
       end
 
       # 2.2. Introspection Response
@@ -168,9 +167,13 @@ module Doorkeeper
 
       # config constraints for introspection in Doorkeeper.configuration.allow_token_introspection
       def token_introspection_allowed?(client)
-        !!Doorkeeper.configuration.allow_token_introspection.call(
+        allow_introspection = Doorkeeper.configuration.allow_token_introspection
+        return allow_introspection unless allow_introspection.respond_to?(:call)
+
+        allow_introspection.call(
           @token,
-          client
+          client,
+          authorized_token
         )
       end
 

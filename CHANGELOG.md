@@ -7,17 +7,17 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#PR] Add your PR description here.
+- [#1260], [#1261] Improve Token Introspection configuration option (access to tokens, client).
 - [#1257] Add constraint configuration when using client authentication on introspection endpoint.
 - [#1252] Returning `unauthorized` when the revocation of the token should not be performed due to wrong permissions.
-- [#1249]: Specify case sensitive uniqueness to remove Rails 6 deprecation message
+- [#1249] Specify case sensitive uniqueness to remove Rails 6 deprecation message
 - [#1248] Display the Application Secret in HTML after creating a new application even when `hash_application_secrets` is used.
 - [#1248] Return the unhashed Application Secret in the JSON response after creating new application even when `hash_application_secrets` is used.
 - [#1238] Better support for native app with support for custom scheme and localhost redirection.
 
 ## 5.1.0
 
-- [#1243]: Add nil check operator in token checking at token introspection.
+- [#1243] Add nil check operator in token checking at token introspection.
 - [#1241] Explaining foreign key options for resource owner in a single place
 - [#1237] Allow to set blank redirect URI if Doorkeeper configured to use redirect URI-less grant flows.
 - [#1234] Fix `StaleRecordsCleaner` to properly work with big amount of records.
