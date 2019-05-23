@@ -7,6 +7,10 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#PR ID] Add your description here.
+
+## 5.2.0.rc1
+
 - [#1260], [#1261] Improve Token Introspection configuration option (access to tokens, client).
 - [#1257] Add constraint configuration when using client authentication on introspection endpoint.
 - [#1252] Returning `unauthorized` when the revocation of the token should not be performed due to wrong permissions.
