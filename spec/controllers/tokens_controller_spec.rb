@@ -167,13 +167,15 @@ describe Doorkeeper::TokensController do
         end
       end
 
-      it "responds with just active: false response" do
+      it "responds with invalid_token error" do
         request.headers["Authorization"] = "Bearer #{access_token.token}"
 
         post :introspect, params: { token: token_for_introspection.token }
 
-        should_have_json "active", false
-        expect(json_response).not_to include("client_id", "token_type", "exp", "iat")
+        response_status_should_be 401
+
+        should_not_have_json "active"
+        should_have_json "error", "invalid_token"
       end
     end
 
@@ -268,15 +270,17 @@ describe Doorkeeper::TokensController do
         expect(json_response).to include("client_id", "token_type", "exp", "iat")
       end
 
-      it "responds with just active status if authorized token doesn't have introspection scope" do
+      it "responds with invalid_token error if authorized token doesn't have introspection scope" do
         access_token.update(scopes: "read write")
 
         request.headers["Authorization"] = "Bearer #{access_token.token}"
 
         post :introspect, params: { token: token_for_introspection.token }
 
-        should_have_json "active", false
-        expect(json_response).not_to include("client_id", "token_type", "exp", "iat")
+        response_status_should_be 401
+
+        should_not_have_json "active"
+        should_have_json "error", "invalid_token"
       end
     end
 
@@ -285,7 +289,7 @@ describe Doorkeeper::TokensController do
         FactoryBot.create(:access_token, application: client, revoked_at: 1.day.ago)
       end
 
-      it "responds with invalid token error" do
+      it "responds with invalid_token error" do
         request.headers["Authorization"] = "Bearer #{access_token.token}"
 
         post :introspect, params: { token: token_for_introspection.token }
@@ -340,13 +344,15 @@ describe Doorkeeper::TokensController do
       end
 
       context "authorized using valid Bearer token" do
-        it "responds with only active state" do
+        it "responds with invalid_token error" do
           request.headers["Authorization"] = "Bearer #{access_token.token}"
 
           post :introspect, params: { token: SecureRandom.hex(16) }
 
-          should_have_json "active", false
-          expect(json_response).not_to include("client_id", "token_type", "exp", "iat")
+          response_status_should_be 401
+
+          should_not_have_json "active"
+          should_have_json "error", "invalid_token"
         end
       end
     end

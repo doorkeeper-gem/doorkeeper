@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#PR ID] Add your description here.
+- [#1263]: Response properly when introspection fails and fix configurations's user guide.
 
 ## 5.2.0.rc1
 
