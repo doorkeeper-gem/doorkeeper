@@ -67,7 +67,7 @@ module Doorkeeper
           #  HTTP 401 code as described in Section 3 of OAuth 2.0 Bearer Token
           #  Usage [RFC6750].
           #
-          @error = :invalid_token if authorized_token_matches_introspected? || !authorized_token.accessible?
+          @error = :invalid_token unless valid_authorized_token?
         else
           @error = :invalid_request
         end
@@ -149,9 +149,9 @@ module Doorkeeper
       #
       def active?
         if authorized_client
-          valid_token? && token_introspection_allowed?(authorized_client.application)
+          valid_token? && token_introspection_allowed?(auth_client: authorized_client.application)
         else
-          valid_token? && token_introspection_allowed?(authorized_token&.application)
+          valid_token?
         end
       end
 
@@ -160,20 +160,26 @@ module Doorkeeper
         @token&.accessible?
       end
 
+      def valid_authorized_token?
+        !authorized_token_matches_introspected? &&
+          authorized_token.accessible? &&
+          token_introspection_allowed?(auth_token: authorized_token)
+      end
+
       # RFC7662 Section 2.1
       def authorized_token_matches_introspected?
         authorized_token.token == @token&.token
       end
 
       # config constraints for introspection in Doorkeeper.configuration.allow_token_introspection
-      def token_introspection_allowed?(client)
+      def token_introspection_allowed?(auth_client: nil, auth_token: nil)
         allow_introspection = Doorkeeper.configuration.allow_token_introspection
         return allow_introspection unless allow_introspection.respond_to?(:call)
 
         allow_introspection.call(
           @token,
-          client,
-          authorized_token
+          auth_client,
+          auth_token
         )
       end
 

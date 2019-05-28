@@ -322,9 +322,10 @@ module Doorkeeper
            end)
 
     # Configure protection of token introspection request.
-    # By default token introspection is allowed only for clients that
-    # introspected token belongs to or if access token been introspected
-    # is a public one (doesn't belong to any client).
+    # By default this configuration allows to introspect a token by
+    # another token of the same application, or to introspect the token
+    # that belongs to authorized client, or access token has been introspected
+    # is a public one (doesn't belong to any client)
     #
     # You can define any custom rule you need or just disable token
     # introspection at all.
@@ -340,9 +341,11 @@ module Doorkeeper
     #   Bearer token used to authorize the request
     #
     option :allow_token_introspection,
-           default: (lambda do |token, authorized_client, _authorized_token|
-             if token.application
-               token.application == authorized_client
+           default: (lambda do |token, authorized_client, authorized_token|
+             if authorized_token
+               authorized_token.application == token&.application
+             elsif token.application
+               authorized_client == token.application
              else
                true
              end

@@ -314,22 +314,12 @@ Doorkeeper.configure do
   #   client.superapp? or resource_owner.admin?
   # end
 
-  # Configure custom constraints for the Token Introspection request. By default
-  # this configuration option allows to introspect the token that belongs to authorized
-  # client (from Bearer token or from authenticated client) OR when token doesn't
+  # Configure custom constraints for the Token Introspection request.
+  # By default this configuration option allows to introspect a token by another
+  # token of the same application, OR to introspect the token that belongs to
+  # authorized client (from authenticated client) OR when token doesn't
   # belong to any client (public token). Otherwise requester has no access to the
   # introspection and it will return response as stated in the RFC.
-  #
-  # You can define your custom check:
-  #
-  # allow_token_introspection do |token, authorized_client, _authorized_token|
-  #   if token.application
-  #     # `protected_resource` is a new database boolean column, for example
-  #     token.application == authorized_client || authorized_client.protected_resource?
-  #   else
-  #     true
-  #   end
-  # end
   #
   # Block arguments:
   #
@@ -343,15 +333,38 @@ Doorkeeper.configure do
   # @param authorized_token [Doorkeeper::AccessToken]
   #   Bearer token used to authorize the request
   #
-  # Keep in mind, that in case the block returns `nil` or `false` introspection response
-  # doesn't have 401 status code and some descriptive body, you'll get 200 with
-  # { "active": false } body as stated in the RFC 7662 section 2.2. Introspection Response.
+  # In case the block returns `nil` or `false` introspection responses with 401 status code
+  # when using authorized token to introspect, or you'll get 200 with { "active": false } body
+  # when using authorized client to introspect as stated in the
+  # RFC 7662 section 2.2. Introspection Response.
   #
-  # You can completely disable any token introspection:
+  # Using with caution:
+  # Keep in mind that these three parameters pass to block can be nil as following case:
+  #  `authorized_client` is nil if and only if `authorized_token` is present, and vice versa.
+  #  `token` will be nil if and only if `authorized_token` is present.
+  # So remember to use `&` or check if it is present before calling method on
+  # them to make sure you doesn't get NoMethodError exception.
+  #
+  # You can define your custom check:
+  #
+  # allow_token_introspection do |token, authorized_client, authorized_token|
+  #   if authorized_token
+  #     # customize: require `introspection` scope
+  #     authorized_token.application == token&.application ||
+  #       authorized_token.scopes.include?("introspection")
+  #   elsif token.application
+  #     # `protected_resource` is a new database boolean column, for example
+  #     authorized_client == token.application || authorized_client.protected_resource?
+  #   else
+  #     # public token (when token.application is nil, token doesn't belong to any application)
+  #     true
+  #   end
+  # end
+  #
+  # Or you can completely disable any token introspection:
   #
   # allow_token_introspection false
   #
-  # In such case every request for token introspection will get { "active": false } response.
   # If you need to block the request at all, then configure your routes.rb or web-server
   # like nginx to forbid the request.
 
