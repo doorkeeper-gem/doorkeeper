@@ -68,7 +68,12 @@ module Doorkeeper
     def pre_auth
       @pre_auth ||= OAuth::PreAuthorization.new(Doorkeeper.configuration,
                                                 server.client_via_uid,
-                                                params)
+                                                pre_auth_params)
+    end
+
+    def pre_auth_params
+      params.permit(:response_type, :redirect_uri, :scope, :state,
+                    :code_challenge, :code_challenge_method)
     end
 
     def authorization
