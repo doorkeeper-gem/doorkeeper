@@ -88,7 +88,20 @@ module Doorkeeper
     end
 
     def authorize_response
-      @authorize_response ||= strategy.authorize
+      @authorize_response ||= begin
+        before_successful_authorization
+        auth = strategy.authorize
+        after_successful_authorization unless auth.is_a?(Doorkeeper::OAuth::ErrorResponse)
+        auth
+      end
+    end
+
+    def after_successful_authorization
+      Doorkeeper.configuration.after_successful_authorization.call(self)
+    end
+
+    def before_successful_authorization
+      Doorkeeper.configuration.before_successful_authorization.call(self)
     end
 
     def revocation_error_response
