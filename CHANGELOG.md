@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#PR ID] Add your description here.
+- [#1266]: Use strong parameters within pre-authorization.
 - [#1264] Add :before_successful_authorization and :after_successful_authorization hooks in TokensController
 - [#1263]: Response properly when introspection fails and fix configurations's user guide.
 

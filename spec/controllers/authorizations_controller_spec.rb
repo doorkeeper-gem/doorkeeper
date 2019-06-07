@@ -524,4 +524,17 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
       post :create
     end
   end
+
+  describe "strong parameters" do
+    it "ignores non-scalar scope parameter" do
+      get :new, params: {
+        client_id: client.uid,
+        response_type: "token",
+        redirect_uri: client.redirect_uri,
+        scope: { "0" => "profile" },
+      }
+
+      expect(response).to be_successful
+    end
+  end
 end
