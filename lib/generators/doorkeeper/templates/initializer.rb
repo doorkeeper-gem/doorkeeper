@@ -65,7 +65,7 @@ Doorkeeper.configure do
   # end
 
   # Use a custom class for generating the access token.
-  # See https://github.com/doorkeeper-gem/doorkeeper#custom-access-token-generator
+  # See https://doorkeeper.gitbook.io/guides/configuration/other-configurations#custom-access-token-generator
   #
   # access_token_generator '::Doorkeeper::JWT'
 
@@ -160,7 +160,7 @@ Doorkeeper.configure do
 
   # Define access token scopes for your provider
   # For more information go to
-  # https://github.com/doorkeeper-gem/doorkeeper/wiki/Using-Scopes
+  # https://doorkeeper.gitbook.io/guides/ruby-on-rails/scopes
   #
   # default_scopes  :public
   # optional_scopes :write, :update
@@ -296,7 +296,7 @@ Doorkeeper.configure do
   # or add any other functionality.
   #
   # before_successful_authorization do |controller|
-  #   Rails.logger.info(params.inspect)
+  #   Rails.logger.info(controller.request.params.inspect)
   # end
   #
   # after_successful_authorization do |controller|
