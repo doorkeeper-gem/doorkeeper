@@ -7,6 +7,13 @@ Fork, then clone the repo:
 
     git clone git@github.com:your-username/doorkeeper.git
 
+### Docker Setup
+
+Build the container image with: `docker build --pull -t doorkeeper:test .`
+Run the tests with: `docker run -it --rm doorkeeper:test`
+
+### Local Setup
+
 Set up Ruby dependencies via Bundler
 
     bundle install
