@@ -7,12 +7,12 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#PR ID] Add your description here.
+- [#1270] Find matching tokens in batches for `reuse_access_token` option (fix #1193).
 - [#1271] Reintroduce existing token revocation for client credentials.
 - [#1269] Update initializer template documentation.
-- [#1266]: Use strong parameters within pre-authorization.
+- [#1266] Use strong parameters within pre-authorization.
 - [#1264] Add :before_successful_authorization and :after_successful_authorization hooks in TokensController
-- [#1263]: Response properly when introspection fails and fix configurations's user guide.
+- [#1263] Response properly when introspection fails and fix configurations's user guide.
 
 ## 5.2.0.rc1
 

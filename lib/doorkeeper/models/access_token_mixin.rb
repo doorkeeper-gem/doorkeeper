@@ -76,9 +76,50 @@ module Doorkeeper
                             end
 
         tokens = authorized_tokens_for(application.try(:id), resource_owner_id)
-        tokens.detect do |token|
-          scopes_match?(token.scopes, scopes, application.try(:scopes))
+        find_matching_token(tokens, application, scopes)
+      end
+
+      # Interface to enumerate access token records in batches in order not
+      # to bloat the memory. Could be overloaded in any ORM extension.
+      #
+      def find_access_token_in_batches(relation, *args, &block)
+        relation.find_in_batches(*args, &block)
+      end
+
+      # Enumerates AccessToken records in batches to find a matching token.
+      # Batching is required in order not to pollute the memory if Application
+      # has huge amount of associated records.
+      #
+      # ActiveRecord 5.x - 6.x ignores custom ordering so we can't perform a
+      # database sort by created_at, so we need to load all the matching records,
+      # sort them and find latest one. Probably it would be better to rewrite this
+      # query using Time math if possible, but we n eed to consider ORM and
+      # different databases support.
+      #
+      # @param relation [ActiveRecord::Relation]
+      #   Access tokens relation
+      # @param application [Doorkeeper::Application]
+      #   Application instance
+      # @param scopes [String, Doorkeeper::OAuth::Scopes]
+      #   set of scopes
+      #
+      # @return [Doorkeeper::AccessToken, nil] Access Token instance or
+      #   nil if matching record was not found
+      #
+      def find_matching_token(relation, application, scopes)
+        return nil unless relation
+
+        matching_tokens = []
+
+        find_access_token_in_batches(relation) do |batch|
+          tokens = batch.select do |token|
+            scopes_match?(token.scopes, scopes, application.try(:scopes))
+          end
+
+          matching_tokens.concat(tokens)
         end
+
+        matching_tokens.max_by(&:created_at)
       end
 
       # Checks whether the token scopes match the scopes from the parameters
