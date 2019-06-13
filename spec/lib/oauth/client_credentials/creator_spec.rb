@@ -55,6 +55,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
 
           expect(Doorkeeper::AccessToken.count).to eq(2)
           expect(result).not_to eq(existing_token)
+          expect(existing_token.reload).to be_revoked
         end
       end
 
@@ -69,6 +70,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
 
           expect(Doorkeeper::AccessToken.count).to eq(2)
           expect(result).not_to eq(existing_token)
+          expect(existing_token.reload).to be_revoked
         end
       end
     end
@@ -82,6 +84,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
 
         expect(Doorkeeper::AccessToken.count).to eq(2)
         expect(result).not_to eq(existing_token)
+        expect(existing_token.reload).to be_revoked
       end
     end
 
