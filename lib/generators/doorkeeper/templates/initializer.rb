@@ -170,7 +170,7 @@ Doorkeeper.configure do
   #
   # Keys to this hash should be the name of grant_type and
   # values should be the array of scopes for that grant type.
-  # Note: scopes should be from configured_scopes(i.e. deafult or optional)
+  # Note: scopes should be from configured_scopes(i.e. default or optional)
   #
   # scopes_by_grant_type password: [:write], client_credentials: [:update]
 
