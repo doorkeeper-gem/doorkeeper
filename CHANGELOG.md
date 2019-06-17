@@ -7,6 +7,10 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#PR ID] Add your description here
+
+## 5.2.0.rc2
+
 - [#1270] Find matching tokens in batches for `reuse_access_token` option (fix #1193).
 - [#1271] Reintroduce existing token revocation for client credentials.
 - [#1269] Update initializer template documentation.
@@ -40,7 +44,7 @@ User-visible changes worth mentioning.
 
 - [#1208] Unify hashing implementation into secret storing strategies
 
-  **[IMPORTANT]**: If you have been using the master branch of doorkeeper with bcrypt in your Gemfile.lock,
+  **[IMPORTANT]** If you have been using the master branch of doorkeeper with bcrypt in your Gemfile.lock,
   your application secrets have been hashed using BCrypt. To restore this behavior, use the initializer option
   `use_application_hashing using: 'Doorkeeper::SecretStoring::BCrypt`.
 
