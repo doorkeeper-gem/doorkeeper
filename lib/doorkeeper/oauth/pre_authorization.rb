@@ -39,7 +39,7 @@ module Doorkeeper
       end
 
       def scope
-        @scope.presence || build_scopes
+        @scope.presence || (server.default_scopes.presence && build_scopes)
       end
 
       def error_response
@@ -73,7 +73,7 @@ module Doorkeeper
       end
 
       def validate_scopes
-        return true if scope.blank?
+        return false if scope.blank?
 
         Helpers::ScopeChecker.valid?(
           scope_str: scope,

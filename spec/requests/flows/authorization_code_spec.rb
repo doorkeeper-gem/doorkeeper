@@ -4,6 +4,7 @@ require "spec_helper"
 
 feature "Authorization Code Flow" do
   background do
+    default_scopes_exist :default
     config_is_set(:authenticate_resource_owner) { User.first || redirect_to("/sign_in") }
     client_exists
     create_resource_owner
@@ -377,16 +378,15 @@ feature "Authorization Code Flow" do
 
   context "when application scopes are present and no scope is passed" do
     background do
-      @client.update(scopes: "public write read")
+      @client.update(scopes: "public write read default")
     end
 
-    scenario "access grant has no scope" do
+    scenario "scope is invalid because default scope is different from application scope" do
       default_scopes_exist :admin
       visit authorization_endpoint_url(client: @client)
-      click_on "Authorize"
-      access_grant_should_exist_for(@client, @resource_owner)
-      grant = Doorkeeper::AccessGrant.first
-      expect(grant.scopes).to be_empty
+      response_status_should_be 200
+      i_should_not_see "Authorize"
+      i_should_see I18n.t("doorkeeper.errors.messages.invalid_scope")
     end
 
     scenario "access grant have scopes which are common in application scopees and default scopes" do

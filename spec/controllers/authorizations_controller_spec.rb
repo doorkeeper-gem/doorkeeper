@@ -20,10 +20,12 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   let(:client)        { FactoryBot.create :application }
   let(:user)          { User.create!(name: "Joe", password: "sekret") }
-  let(:access_token)  { FactoryBot.build :access_token, resource_owner_id: user.id, application_id: client.id }
+  let(:access_token)  { FactoryBot.build :access_token, resource_owner_id: user.id, application_id: client.id, scopes: "default" }
 
   before do
     Doorkeeper.configure do
+      default_scopes :default
+
       custom_access_token_expires_in(lambda do |context|
         context.grant_type == Doorkeeper::OAuth::IMPLICIT ? 1234 : nil
       end)
@@ -368,7 +370,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
       expect(json_response["redirect_uri"]).to eq(client.redirect_uri)
       expect(json_response["state"]).to be_nil
       expect(json_response["response_type"]).to eq("token")
-      expect(json_response["scope"]).to eq("")
+      expect(json_response["scope"]).to eq("default")
     end
   end
 

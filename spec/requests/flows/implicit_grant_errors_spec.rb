@@ -4,6 +4,7 @@ require "spec_helper"
 
 feature "Implicit Grant Flow Errors" do
   background do
+    default_scopes_exist :default
     config_is_set(:authenticate_resource_owner) { User.first || redirect_to("/sign_in") }
     config_is_set(:grant_flows, ["implicit"])
     client_exists
