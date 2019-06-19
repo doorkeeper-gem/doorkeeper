@@ -20,7 +20,7 @@ User-visible changes worth mentioning.
 
 ## 5.2.0.rc1
 
-- [#1260], [#1261] Improve Token Introspection configuration option (access to tokens, client).
+- [#1260], [#1262] Improve Token Introspection configuration option (access to tokens, client).
 - [#1257] Add constraint configuration when using client authentication on introspection endpoint.
 - [#1252] Returning `unauthorized` when the revocation of the token should not be performed due to wrong permissions.
 - [#1249] Specify case sensitive uniqueness to remove Rails 6 deprecation message
