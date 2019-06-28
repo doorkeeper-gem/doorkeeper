@@ -386,7 +386,7 @@ feature "Authorization Code Flow" do
       visit authorization_endpoint_url(client: @client)
       response_status_should_be 200
       i_should_not_see "Authorize"
-      i_should_see I18n.t("doorkeeper.errors.messages.invalid_scope")
+      i_should_see_translated_error_message :invalid_scope
     end
 
     scenario "access grant have scopes which are common in application scopees and default scopes" do
