@@ -136,6 +136,12 @@ Support this project by becoming a sponsor. Your logo will show up here with a l
 
 > If you prefer not to deal with the gory details of OAuth 2, need dedicated customer support & consulting, try the cloud-based SaaS version: [https://oauth.io](https://oauth.io/?utm_source=doorkeeper-gem)
 
+<br>
+
+<a href="https://www.wealthsimple.com/?utm_source=doorkeeper-gem" target="_blank"><img src="https://wealthsimple.s3.amazonaws.com/branding/medium-black.svg"/></a>
+
+> Wealthsimple is a financial company on a mission to help everyone achieve financial freedom by providing products and advice that are accessible and affordable. Using smart technology, Wealthsimple takes financial services that are often confusing, opaque and expensive and makes them simple, transparent, and low-cost. See what Investing on Autopilot is all about: [https://www.wealthsimple.com](https://www.wealthsimple.com/?utm_source=doorkeeper-gem)
+
 ## Development
 
 To run the local engine server:
