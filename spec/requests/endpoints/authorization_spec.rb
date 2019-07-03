@@ -35,16 +35,31 @@ feature "Authorization endpoint" do
     end
   end
 
-  context "with a invalid request" do
+  context "with a invalid request's param" do
     background do
       create_resource_owner
       sign_in
     end
 
-    scenario "displays the related error" do
-      visit authorization_endpoint_url(client: @client, response_type: "")
-      i_should_not_see "Authorize"
-      i_should_see_translated_error_message :unsupported_response_type
+    context "when missing required param" do
+      scenario "displays invalid_request error when missing client" do
+        visit authorization_endpoint_url(client: nil, response_type: "code")
+        i_should_not_see "Authorize"
+        i_should_see_translated_error_message :invalid_request
+      end
+
+      scenario "displays invalid_request error when missing response_type param" do
+        visit authorization_endpoint_url(client: @client, response_type: "")
+        i_should_not_see "Authorize"
+        i_should_see_translated_error_message :invalid_request
+      end
+
+      scenario "displays invalid_request error when missing scope param and authorization server has no default scopes" do
+        config_is_set(:default_scopes, [])
+        visit authorization_endpoint_url(client: @client, response_type: "code", scope: "")
+        i_should_not_see "Authorize"
+        i_should_see_translated_error_message :invalid_request
+      end
     end
 
     scenario "displays unsupported_response_type error when using a disabled response type" do

@@ -117,6 +117,16 @@ feature "Authorization Code Flow" do
     url_should_not_have_param("code_challenge_method")
   end
 
+  scenario "resource owner requests an access token without authorization code" do
+    create_access_token "", @client
+
+    access_token_should_not_exist
+
+    expect(Doorkeeper::AccessToken.count).to be_zero
+
+    should_have_json "error", "invalid_request"
+  end
+
   scenario "resource owner requests an access token with authorization code" do
     visit authorization_endpoint_url(client: @client)
     click_on "Authorize"

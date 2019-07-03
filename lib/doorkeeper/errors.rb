@@ -38,6 +38,18 @@ module Doorkeeper
       end
     end
 
+    class MissingClientId < DoorkeeperError
+      def type
+        :invalid_request
+      end
+    end
+
+    class MissingAuthorizationCode < DoorkeeperError
+      def type
+        :invalid_request
+      end
+    end
+
     class BaseResponseError < DoorkeeperError
       attr_reader :response
 

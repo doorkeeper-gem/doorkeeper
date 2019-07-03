@@ -5,6 +5,7 @@ module Doorkeeper
     class PreAuthorization
       include Validations
 
+      validate :attributes, error: :invalid_request
       validate :response_type, error: :unsupported_response_type
       validate :client, error: :invalid_client
       validate :scopes, error: :invalid_scope
@@ -61,6 +62,10 @@ module Doorkeeper
         else
           (server.default_scopes & client_scopes).to_s
         end
+      end
+
+      def validate_attributes
+        response_type.present? && (@scope.present? || server.default_scopes.present?)
       end
 
       def validate_response_type

@@ -10,11 +10,14 @@ module Doorkeeper
       else
         render_error
       end
+    rescue Errors::DoorkeeperError => e
+      handle_token_exception(e)
     end
 
-    # TODO: Handle raise invalid authorization
     def create
       redirect_or_render authorize_response
+    rescue Errors::DoorkeeperError => e
+      handle_token_exception(e)
     end
 
     def destroy

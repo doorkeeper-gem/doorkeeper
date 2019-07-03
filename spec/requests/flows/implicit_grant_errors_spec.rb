@@ -16,20 +16,45 @@ feature "Implicit Grant Flow Errors" do
     access_token_should_not_exist
   end
 
-  [
-    %i[client_id invalid_client],
-    %i[redirect_uri invalid_redirect_uri],
-  ].each do |error|
-    scenario "displays #{error.last} error for invalid #{error.first}" do
-      visit authorization_endpoint_url(client: @client, error.first => "invalid", response_type: "token")
+  context "when validate client_id param" do
+    scenario "displays invalid_client error for invalid client_id" do
+      visit authorization_endpoint_url(client_id: "invalid", response_type: "token")
       i_should_not_see "Authorize"
-      i_should_see_translated_error_message error.last
+      i_should_see_translated_error_message :invalid_client
     end
 
-    scenario "displays #{error.last} error when #{error.first} is missing" do
-      visit authorization_endpoint_url(client: @client, error.first => "", response_type: "token")
+    scenario "displays invalid_request error when client_id is missing" do
+      visit authorization_endpoint_url(client_id: "", response_type: "token")
       i_should_not_see "Authorize"
-      i_should_see_translated_error_message error.last
+      i_should_see_translated_error_message :invalid_request
+    end
+  end
+
+  context "when validate redirect_uri param" do
+    scenario "displays invalid_redirect_uri error for invalid redirect_uri" do
+      visit authorization_endpoint_url(client: @client, redirect_uri: "invalid", response_type: "token")
+      i_should_not_see "Authorize"
+      i_should_see_translated_error_message :invalid_redirect_uri
+    end
+
+    scenario "displays invalid_redirect_uri error when redirect_uri is missing" do
+      visit authorization_endpoint_url(client: @client, redirect_uri: "", response_type: "token")
+      i_should_not_see "Authorize"
+      i_should_see_translated_error_message :invalid_redirect_uri
+    end
+  end
+
+  context "when validate redirect_uri param" do
+    scenario "displays invalid_redirect_uri error for invalid redirect_uri" do
+      visit authorization_endpoint_url(client: @client, redirect_uri: "invalid", response_type: "token")
+      i_should_not_see "Authorize"
+      i_should_see_translated_error_message :invalid_redirect_uri
+    end
+
+    scenario "displays invalid_redirect_uri error when redirect_uri is missing" do
+      visit authorization_endpoint_url(client: @client, redirect_uri: "", response_type: "token")
+      i_should_not_see "Authorize"
+      i_should_see_translated_error_message :invalid_redirect_uri
     end
   end
 end

@@ -447,12 +447,12 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     end
 
     it "includes error in body" do
-      expect(response_json_body["error"]).to eq("unsupported_response_type")
+      expect(response_json_body["error"]).to eq("invalid_request")
     end
 
     it "includes error description in body" do
       expect(response_json_body["error_description"])
-        .to eq(translated_error_message(:unsupported_response_type))
+        .to eq(translated_error_message(:invalid_request))
     end
 
     it "does not issue any token" do
@@ -515,6 +515,8 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   describe "authorize response memoization" do
     it "memoizes the result of the authorization" do
+      pre_auth = double(:pre_auth, authorizable?: true)
+      allow(controller).to receive(:pre_auth) { pre_auth }
       strategy = double(:strategy, authorize: true)
       expect(strategy).to receive(:authorize).once
       allow(controller).to receive(:strategy) { strategy }
