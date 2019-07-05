@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Doorkeeper
-  class ApplicationMetalController < ActionController::API
+  class ApplicationMetalController < Doorkeeper.configuration.base_metal_controller.constantize
     include Helpers::Controller
 
     before_action :enforce_content_type,

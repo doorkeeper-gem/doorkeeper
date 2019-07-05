@@ -288,7 +288,7 @@ module Doorkeeper
     option :force_ssl_in_redirect_uri,      default: !Rails.env.development?
 
     # Use a custom class for generating the access token.
-    # https://github.com/doorkeeper-gem/doorkeeper#custom-access-token-generator
+    # https://doorkeeper.gitbook.io/guides/configuration/other-configurations#custom-access-token-generator
     #
     # @param access_token_generator [String]
     #   the name of the access token generator class
@@ -306,11 +306,18 @@ module Doorkeeper
 
     # The controller Doorkeeper::ApplicationController inherits from.
     # Defaults to ActionController::Base.
-    # https://github.com/doorkeeper-gem/doorkeeper#custom-base-controller
+    # https://doorkeeper.gitbook.io/guides/configuration/other-configurations#custom-base-controller
     #
     # @param base_controller [String] the name of the base controller
     option :base_controller,
            default: "ActionController::Base"
+
+    # The controller Doorkeeper::ApplicationMetalController inherits from.
+    # Defaults to ActionController::API.
+    #
+    # @param base_metal_controller [String] the name of the base controller
+    option :base_metal_controller,
+           default: "ActionController::API"
 
     # Allows to set blank redirect URIs for Applications in case
     # server configured to use URI-less grant flows.

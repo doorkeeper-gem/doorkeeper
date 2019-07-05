@@ -7,7 +7,8 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#PR ID] Add your description here
+- [#1283] Allow to customize base class for `Doorkeeper::ApplicationMetalController` (new configuration
+  option called `base_metal_controller` (fix #1273).
 
 ## 5.2.0.rc2
 

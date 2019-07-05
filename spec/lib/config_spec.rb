@@ -517,6 +517,23 @@ describe Doorkeeper, "configuration" do
     end
   end
 
+  describe "base_metal_controller" do
+    context "default" do
+      it { expect(Doorkeeper.configuration.base_metal_controller).to eq("ActionController::API") }
+    end
+
+    context "custom" do
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          base_metal_controller "ApplicationController"
+        end
+      end
+
+      it { expect(Doorkeeper.configuration.base_metal_controller).to eq("ApplicationController") }
+    end
+  end
+
   if DOORKEEPER_ORM == :active_record
     describe "active_record_options" do
       let(:models) { [Doorkeeper::AccessGrant, Doorkeeper::AccessToken, Doorkeeper::Application] }
