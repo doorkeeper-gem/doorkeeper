@@ -10,12 +10,12 @@ module Doorkeeper
 
     def authorization_request(strategy)
       klass = Request.authorization_strategy strategy
-      klass.new self
+      klass.new(self)
     end
 
     def token_request(strategy)
       klass = Request.token_strategy strategy
-      klass.new self
+      klass.new(self)
     end
 
     # TODO: context should be the request

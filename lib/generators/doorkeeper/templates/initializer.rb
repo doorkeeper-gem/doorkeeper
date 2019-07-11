@@ -281,6 +281,37 @@ Doorkeeper.configure do
   #
   # grant_flows %w[authorization_code client_credentials]
 
+  # Allows to customize OAuth grant flows that +each+ application support.
+  # You can configure a custom block (or use a class respond to `#call`) that must
+  # return `true` in case Application instance supports requested OAuth grant flow
+  # during the authorization request to the server. This configuration +doesn't+
+  # set flows per application, it only allows to check if application supports
+  # specific grant flow.
+  #
+  # For example you can add an additional database column to `oauth_applications` table,
+  # say `t.array :grant_flows, default: []`, and store allowed grant flows that can
+  # be used with this application there. Then when authorization requested Doorkeeper
+  # will call this block to check if specific Application (passed with client_id and/or
+  # client_secret) is allowed to perform the request for the specific grant type
+  # (authorization, password, client_credentials, etc).
+  #
+  # Example of the block:
+  #
+  #   ->(flow, client) { client.grant_flows.include?(flow) }
+  #
+  # In case this option invocation result is `false`, Doorkeeper server returns
+  # :unauthorized_client error and stops the request.
+  #
+  # @param allow_grant_flow_for_client [Proc] Block or any object respond to #call
+  # @return [Boolean] `true` if allow or `false` if forbid the request
+  #
+  # allow_grant_flow_for_client do |grant_flow, client|
+  #   # `grant_flows` is an Array column with grant
+  #   # flows that application supports
+  #
+  #   client.grant_flows.include?(grant_flow)
+  # end
+
   # Hook into the strategies' request & response life-cycle in case your
   # application needs advanced customization or logging:
   #

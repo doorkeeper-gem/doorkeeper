@@ -50,10 +50,10 @@ module Doorkeeper
     TokenGeneratorNotFound = Class.new(DoorkeeperError)
     NoOrmCleaner = Class.new(DoorkeeperError)
 
-    InvalidToken = Class.new BaseResponseError
-    TokenExpired = Class.new InvalidToken
-    TokenRevoked = Class.new InvalidToken
-    TokenUnknown = Class.new InvalidToken
-    TokenForbidden = Class.new InvalidToken
+    InvalidToken = Class.new(BaseResponseError)
+    TokenExpired = Class.new(InvalidToken)
+    TokenRevoked = Class.new(InvalidToken)
+    TokenUnknown = Class.new(InvalidToken)
+    TokenForbidden = Class.new(InvalidToken)
   end
 end

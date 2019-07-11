@@ -14,9 +14,7 @@ module Doorkeeper
         if pre_auth.authorizable?
           auth = Authorization::Token.new(pre_auth, resource_owner)
           auth.issue_token
-          @response = CodeResponse.new pre_auth,
-                                       auth,
-                                       response_on_fragment: true
+          @response = CodeResponse.new(pre_auth, auth, response_on_fragment: true)
         else
           @response = error_response
         end
@@ -30,9 +28,11 @@ module Doorkeeper
       private
 
       def error_response
-        ErrorResponse.from_request pre_auth,
-                                   redirect_uri: pre_auth.redirect_uri,
-                                   response_on_fragment: true
+        ErrorResponse.from_request(
+          pre_auth,
+          redirect_uri: pre_auth.redirect_uri,
+          response_on_fragment: true
+        )
       end
     end
   end

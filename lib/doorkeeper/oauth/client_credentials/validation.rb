@@ -8,6 +8,7 @@ module Doorkeeper
         include OAuth::Helpers
 
         validate :client, error: :invalid_client
+        validate :client_supports_grant_flow, error: :unauthorized_client
         validate :scopes, error: :invalid_scope
 
         def initialize(server, request)
@@ -22,6 +23,13 @@ module Doorkeeper
 
         def validate_client
           @client.present?
+        end
+
+        def validate_client_supports_grant_flow
+          Doorkeeper.configuration.allow_grant_flow_for_client?(
+            Doorkeeper::OAuth::CLIENT_CREDENTIALS,
+            @client
+          )
         end
 
         def validate_scopes

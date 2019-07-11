@@ -259,6 +259,32 @@ module Doorkeeper
     option :grant_flows,                    default: %w[authorization_code client_credentials]
     option :handle_auth_errors,             default: :render
 
+    # Allows to customize OAuth grant flows that +each+ application support.
+    # You can configure a custom block (or use a class respond to `#call`) that must
+    # return `true` in case Application instance supports requested OAuth grant flow
+    # during the authorization request to the server. This configuration +doesn't+
+    # set flows per application, it only allows to check if application supports
+    # specific grant flow.
+    #
+    # For example you can add an additional database column to `oauth_applications` table,
+    # say `t.array :grant_flows, default: []`, and store allowed grant flows that can
+    # be used with this application there. Then when authorization requested Doorkeeper
+    # will call this block to check if specific Application (passed with client_id and/or
+    # client_secret) is allowed to perform the request for the specific grant type
+    # (authorization, password, client_credentials, etc).
+    #
+    # Example of the block:
+    #
+    #   ->(flow, client) { client.grant_flows.include?(flow) }
+    #
+    # In case this option invocation result is `false`, Doorkeeper server returns
+    # :unauthorized_client error and stops the request.
+    #
+    # @param allow_grant_flow_for_client [Proc] Block or any object respond to #call
+    # @return [Boolean] `true` if allow or `false` if forbid the request
+    #
+    option :allow_grant_flow_for_client,    default: ->(_grant_flow, _client) { true }
+
     # Allows to forbid specific Application redirect URI's by custom rules.
     # Doesn't forbid any URI by default.
     #
@@ -457,6 +483,12 @@ module Doorkeeper
       else
         allow_blank_redirect_uri
       end
+    end
+
+    def allow_grant_flow_for_client?(grant_flow, client)
+      return true unless option_defined?(:allow_grant_flow_for_client)
+
+      allow_grant_flow_for_client.call(grant_flow, client)
     end
 
     def option_defined?(name)

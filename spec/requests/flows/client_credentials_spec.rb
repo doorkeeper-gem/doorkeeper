@@ -66,6 +66,44 @@ describe "Client Credentials Request" do
     end
   end
 
+  context "when configured to check application supported grant flow" do
+    before do
+      Doorkeeper.configuration.instance_variable_set(
+        :@allow_grant_flow_for_client,
+        ->(_grant_flow, client) { client.name == "admin" }
+      )
+    end
+
+    scenario "forbids the request when doesn't satisfy condition" do
+      client.update(name: "sample app")
+
+      headers = authorization client.uid, client.secret
+      params  = { grant_type: "client_credentials" }
+
+      post "/oauth/token", params: params, headers: headers
+
+      should_have_json "error", "unauthorized_client"
+      should_have_json "error_description", translated_error_message(:unauthorized_client)
+    end
+
+    scenario "allows the request when satisfies condition" do
+      client.update(name: "admin")
+
+      headers = authorization client.uid, client.secret
+      params  = { grant_type: "client_credentials" }
+
+      post "/oauth/token", params: params, headers: headers
+
+      should_have_json "access_token", Doorkeeper::AccessToken.first.token
+      should_have_json_within "expires_in", Doorkeeper.configuration.access_token_expires_in, 1
+      should_not_have_json "scope"
+      should_not_have_json "refresh_token"
+
+      should_not_have_json "error"
+      should_not_have_json "error_description"
+    end
+  end
+
   context "when application scopes contain some of the default scopes and no scope is passed" do
     before do
       client.update(scopes: "read write public")

@@ -10,6 +10,7 @@ module Doorkeeper
       validate :scopes, error: :invalid_scope
       validate :redirect_uri, error: :invalid_redirect_uri
       validate :code_challenge_method, error: :invalid_code_challenge_method
+      validate :client_supports_grant_flow, error: :unauthorized_client
 
       attr_accessor :server, :client, :response_type, :redirect_uri, :state,
                     :code_challenge, :code_challenge_method
@@ -28,6 +29,10 @@ module Doorkeeper
 
       def authorizable?
         valid?
+      end
+
+      def validate_client_supports_grant_flow
+        Doorkeeper.configuration.allow_grant_flow_for_client?(grant_type, client.application)
       end
 
       def scopes
@@ -60,7 +65,7 @@ module Doorkeeper
       end
 
       def validate_response_type
-        server.authorization_response_types.include? response_type
+        server.authorization_response_types.include?(response_type)
       end
 
       def validate_client

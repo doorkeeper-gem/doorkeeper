@@ -45,7 +45,7 @@ module Doorkeeper
         if exception.respond_to?(:response)
           exception.response
         else
-          OAuth::ErrorResponse.new name: exception.type, state: params[:state]
+          OAuth::ErrorResponse.new(name: exception.type, state: params[:state])
         end
       end
 
