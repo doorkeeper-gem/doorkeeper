@@ -28,11 +28,11 @@ module Doorkeeper
       private
 
       def error_response
-        ErrorResponse.from_request(
-          pre_auth,
-          redirect_uri: pre_auth.redirect_uri,
-          response_on_fragment: true
-        )
+        if pre_auth.error == :invalid_request
+          OAuth::InvalidRequestResponse.from_request pre_auth, response_on_fragment: true
+        else
+          ErrorResponse.from_request pre_auth, response_on_fragment: true
+        end
       end
     end
   end

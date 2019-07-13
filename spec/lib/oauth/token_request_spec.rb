@@ -38,14 +38,26 @@ module Doorkeeper::OAuth
       expect(subject.authorize).to be_a(CodeResponse)
     end
 
-    it "does not create token when not authorizable" do
-      allow(pre_auth).to receive(:authorizable?).and_return(false)
-      expect { subject.authorize }.not_to(change { Doorkeeper::AccessToken.count })
-    end
+    context "when pre_auth is not authorizable" do
+      before { allow(pre_auth).to receive(:authorizable?).and_return(false) }
 
-    it "returns a error response" do
-      allow(pre_auth).to receive(:authorizable?).and_return(false)
-      expect(subject.authorize).to be_a(ErrorResponse)
+      context "with invalid_request error" do
+        before { allow(pre_auth).to receive(:error).and_return(:invalid_request) }
+
+        it "does not create token and returns InvalidRequestResponse" do
+          expect { subject.authorize }.not_to(change { Doorkeeper::AccessToken.count })
+          expect(subject.authorize).to be_an_instance_of(InvalidRequestResponse)
+        end
+      end
+
+      context "with error other than invalid_request" do
+        before { allow(pre_auth).to receive(:error).and_return(:some_error) }
+
+        it "does not create token and returns ErrorResponse" do
+          expect { subject.authorize }.not_to(change { Doorkeeper::AccessToken.count })
+          expect(subject.authorize).to be_an_instance_of(ErrorResponse)
+        end
+      end
     end
 
     describe "with custom expiration" do

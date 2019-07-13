@@ -7,7 +7,7 @@ module Doorkeeper
     # @see https://tools.ietf.org/html/rfc7662
     class TokenIntrospection
       attr_reader :server, :token
-      attr_reader :error
+      attr_reader :error, :invalid_request_reason
 
       def initialize(server, token)
         @server = server
@@ -25,6 +25,8 @@ module Doorkeeper
 
         if @error == :invalid_token
           OAuth::InvalidTokenResponse.from_access_token(authorized_token)
+        elsif @error == :invalid_request
+          OAuth::InvalidRequestResponse.new(name: @error, reason: @invalid_request_reason)
         else
           OAuth::ErrorResponse.new(name: @error)
         end
@@ -70,6 +72,7 @@ module Doorkeeper
           @error = :invalid_token unless valid_authorized_token?
         else
           @error = :invalid_request
+          @invalid_request_reason = :request_not_authorized
         end
       end
 

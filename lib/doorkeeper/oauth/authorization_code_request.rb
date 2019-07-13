@@ -3,7 +3,7 @@
 module Doorkeeper
   module OAuth
     class AuthorizationCodeRequest < BaseRequest
-      validate :attributes,   error: :invalid_request
+      validate :params,       error: :invalid_request
       validate :client,       error: :invalid_client
       validate :grant,        error: :invalid_grant
       # @see https://tools.ietf.org/html/rfc6749#section-5.2
@@ -12,6 +12,7 @@ module Doorkeeper
 
       attr_accessor :server, :grant, :client, :redirect_uri, :access_token,
                     :code_verifier
+      attr_reader :invalid_request_reason, :missing_param
 
       def initialize(server, grant, client, parameters = {})
         @server = server
@@ -42,11 +43,17 @@ module Doorkeeper
         super
       end
 
-      def validate_attributes
-        return false if grant&.uses_pkce? && code_verifier.blank?
-        return false if grant && !grant.pkce_supported? && !code_verifier.blank?
+      def validate_params
+        if grant && !grant.pkce_supported? && code_verifier.present?
+          @invalid_request_reason = :not_support_pkce
+          return false
+        elsif grant&.uses_pkce? && code_verifier.blank?
+          @missing_param = :code_verifier
+        elsif redirect_uri.blank?
+          @missing_param = :redirect_uri
+        end
 
-        redirect_uri.present?
+        @missing_param.nil?
       end
 
       def validate_client

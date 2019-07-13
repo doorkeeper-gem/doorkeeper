@@ -16,6 +16,8 @@ module Doorkeeper
           auth = Authorization::Code.new(pre_auth, resource_owner)
           auth.issue_token
           @response = CodeResponse.new(pre_auth, auth)
+        elsif pre_auth.error == :invalid_request
+          @response = InvalidRequestResponse.from_request(pre_auth)
         else
           @response = ErrorResponse.from_request(pre_auth)
         end

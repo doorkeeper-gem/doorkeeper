@@ -19,7 +19,7 @@ module Doorkeeper
       def initialize(attributes = {})
         super(attributes.merge(name: :invalid_request))
         @missing_param = attributes[:missing_param]
-        @reason = attributes[:reason]
+        @reason = @missing_param.nil? ? attributes[:reason] : :missing_param
       end
 
       def status
@@ -27,14 +27,16 @@ module Doorkeeper
       end
 
       def description
-        @reason = :missing_param unless @missing_param.nil?
-
         I18n.translate(
-          @reason,
+          reason,
           scope: %i[doorkeeper errors messages invalid_request],
-          default: :default_message,
+          default: :unknown,
           value: @missing_param
         )
+      end
+
+      def redirectable?
+        super && @missing_param != :client_id
       end
     end
   end

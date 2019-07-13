@@ -8,18 +8,6 @@ module Doorkeeper
       end
     end
 
-    class InvalidAuthorizationStrategy < DoorkeeperError
-      def type
-        :unsupported_response_type
-      end
-    end
-
-    class InvalidTokenReuse < DoorkeeperError
-      def type
-        :invalid_request
-      end
-    end
-
     class InvalidGrantReuse < DoorkeeperError
       def type
         :invalid_grant
@@ -32,19 +20,14 @@ module Doorkeeper
       end
     end
 
-    class MissingRequestStrategy < DoorkeeperError
-      def type
-        :invalid_request
-      end
-    end
+    class MissingRequiredParameter < DoorkeeperError
+      attr_reader :parameter
 
-    class MissingClientId < DoorkeeperError
-      def type
-        :invalid_request
+      def initialize(parameter)
+        super
+        @parameter = parameter
       end
-    end
 
-    class MissingAuthorizationCode < DoorkeeperError
       def type
         :invalid_request
       end

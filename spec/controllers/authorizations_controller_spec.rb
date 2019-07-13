@@ -14,10 +14,6 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     end
   end
 
-  def translated_error_message(key)
-    I18n.translate key, scope: %i[doorkeeper errors messages]
-  end
-
   let(:client)        { FactoryBot.create :application }
   let(:user)          { User.create!(name: "Joe", password: "sekret") }
   let(:access_token)  { FactoryBot.build :access_token, resource_owner_id: user.id, application_id: client.id, scopes: "default" }
@@ -452,7 +448,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
     it "includes error description in body" do
       expect(response_json_body["error_description"])
-        .to eq(translated_error_message(:invalid_request))
+        .to eq(translated_invalid_request_error_message(:missing_param, :client_id))
     end
 
     it "does not issue any token" do

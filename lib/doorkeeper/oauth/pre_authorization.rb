@@ -5,16 +5,16 @@ module Doorkeeper
     class PreAuthorization
       include Validations
 
-      validate :attributes, error: :invalid_request
-      validate :response_type, error: :unsupported_response_type
       validate :client, error: :invalid_client
-      validate :scopes, error: :invalid_scope
       validate :redirect_uri, error: :invalid_redirect_uri
+      validate :params, error: :invalid_request
+      validate :response_type, error: :unsupported_response_type
+      validate :scopes, error: :invalid_scope
       validate :code_challenge_method, error: :invalid_code_challenge_method
       validate :client_supports_grant_flow, error: :unauthorized_client
 
-      attr_reader :server, :client, :client_id, :response_type, :redirect_uri,
-                  :state, :code_challenge, :code_challenge_method
+      attr_reader :server, :client, :client_id, :response_type, :redirect_uri, :state,
+                  :code_challenge, :code_challenge_method, :missing_param
 
       def initialize(server, attrs = {})
         @server                = server
@@ -44,6 +44,8 @@ module Doorkeeper
       end
 
       def error_response
+        return OAuth::InvalidRequestResponse.from_request(self) if error == :invalid_request
+
         OAuth::ErrorResponse.from_request(self)
       end
 
@@ -64,8 +66,14 @@ module Doorkeeper
         end
       end
 
-      def validate_attributes
-        response_type.present? && (@scope.present? || server.default_scopes.present?)
+      def validate_params
+        @missing_param = if response_type.blank?
+                           :response_type
+                         elsif @scope.blank? && server.default_scopes.blank?
+                           :scope
+                         end
+
+        @missing_param.nil?
       end
 
       def validate_response_type
@@ -78,8 +86,6 @@ module Doorkeeper
       end
 
       def validate_scopes
-        return false if scope.blank?
-
         Helpers::ScopeChecker.valid?(
           scope_str: scope,
           server_scopes: server.scopes,

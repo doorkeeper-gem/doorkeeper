@@ -45,20 +45,20 @@ feature "Authorization endpoint" do
       scenario "displays invalid_request error when missing client" do
         visit authorization_endpoint_url(client: nil, response_type: "code")
         i_should_not_see "Authorize"
-        i_should_see_translated_error_message :invalid_request
+        i_should_see_translated_invalid_request_error_message :missing_param, :client_id
       end
 
       scenario "displays invalid_request error when missing response_type param" do
         visit authorization_endpoint_url(client: @client, response_type: "")
         i_should_not_see "Authorize"
-        i_should_see_translated_error_message :invalid_request
+        i_should_see_translated_invalid_request_error_message :missing_param, :response_type
       end
 
       scenario "displays invalid_request error when missing scope param and authorization server has no default scopes" do
         config_is_set(:default_scopes, [])
         visit authorization_endpoint_url(client: @client, response_type: "code", scope: "")
         i_should_not_see "Authorize"
-        i_should_see_translated_error_message :invalid_request
+        i_should_see_translated_invalid_request_error_message :missing_param, :scope
       end
     end
 

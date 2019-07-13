@@ -65,6 +65,7 @@ module Doorkeeper::OAuth
       subject.redirect_uri = nil
       subject.validate
       expect(subject.error).to eq(:invalid_request)
+      expect(subject.missing_param).to eq(:redirect_uri)
     end
 
     it "matches the redirect_uri with grant's one" do

@@ -63,6 +63,7 @@ module Doorkeeper::OAuth
       subject.refresh_token = nil
       subject.validate
       expect(subject.error).to eq(:invalid_request)
+      expect(subject.missing_param).to eq(:refresh_token)
     end
 
     it "requires credentials to be valid if provided" do

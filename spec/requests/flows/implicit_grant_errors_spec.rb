@@ -26,21 +26,7 @@ feature "Implicit Grant Flow Errors" do
     scenario "displays invalid_request error when client_id is missing" do
       visit authorization_endpoint_url(client_id: "", response_type: "token")
       i_should_not_see "Authorize"
-      i_should_see_translated_error_message :invalid_request
-    end
-  end
-
-  context "when validate redirect_uri param" do
-    scenario "displays invalid_redirect_uri error for invalid redirect_uri" do
-      visit authorization_endpoint_url(client: @client, redirect_uri: "invalid", response_type: "token")
-      i_should_not_see "Authorize"
-      i_should_see_translated_error_message :invalid_redirect_uri
-    end
-
-    scenario "displays invalid_redirect_uri error when redirect_uri is missing" do
-      visit authorization_endpoint_url(client: @client, redirect_uri: "", response_type: "token")
-      i_should_not_see "Authorize"
-      i_should_see_translated_error_message :invalid_redirect_uri
+      i_should_see_translated_invalid_request_error_message :missing_param, :client_id
     end
   end
 
