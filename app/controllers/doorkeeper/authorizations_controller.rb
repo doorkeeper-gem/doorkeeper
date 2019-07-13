@@ -8,16 +8,18 @@ module Doorkeeper
       if pre_auth.authorizable?
         render_success
       else
-        render_error
+        render_error pre_auth.error_response
       end
     rescue Errors::DoorkeeperError => e
-      handle_token_exception(e)
+      error_response = get_error_response_from_exception(e)
+      render_error error_response
     end
 
     def create
       redirect_or_render authorize_response
     rescue Errors::DoorkeeperError => e
-      handle_token_exception(e)
+      error_response = get_error_response_from_exception(e)
+      redirect_or_render error_response
     end
 
     def destroy
@@ -36,12 +38,12 @@ module Doorkeeper
       end
     end
 
-    def render_error
+    def render_error(error_response)
       if Doorkeeper.configuration.api_only
-        render json: pre_auth.error_response.body,
+        render json: error_response.body,
                status: :bad_request
       else
-        render :error
+        render :error, locals: { error_response: error_response }
       end
     end
 
