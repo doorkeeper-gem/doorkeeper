@@ -5,11 +5,11 @@ module Doorkeeper
     class PreAuthorization
       include Validations
 
-      validate :client, error: :invalid_client
-      validate :redirect_uri, error: :invalid_redirect_uri
-      validate :params, error: :invalid_request
-      validate :response_type, error: :unsupported_response_type
-      validate :scopes, error: :invalid_scope
+      validate :client,                error: :invalid_client
+      validate :redirect_uri,          error: :invalid_redirect_uri
+      validate :params,                error: :invalid_request
+      validate :response_type,         error: :unsupported_response_type
+      validate :scopes,                error: :invalid_scope
       validate :code_challenge_method, error: :invalid_code_challenge_method
       validate :client_supports_grant_flow, error: :unauthorized_client
 
