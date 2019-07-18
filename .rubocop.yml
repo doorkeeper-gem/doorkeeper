@@ -11,6 +11,7 @@ Metrics/BlockLength:
   Exclude:
     - spec/**/*
     - lib/doorkeeper/rake/*
+    - doorkeeper.gemspec
 
 Metrics/LineLength:
   Exclude:

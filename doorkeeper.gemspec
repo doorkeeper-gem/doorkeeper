@@ -18,6 +18,14 @@ Gem::Specification.new do |gem|
   gem.test_files    = `git ls-files -- spec/*`.split("\n")
   gem.require_paths = ["lib"]
 
+  gem.metadata = {
+    "homepage_uri" => "https://github.com/doorkeeper-gem/doorkeeper",
+    "changelog_uri" => "https://github.com/doorkeeper-gem/doorkeeper/blob/master/CHANGELOG.md",
+    "source_code_uri" => "https://github.com/doorkeeper-gem/doorkeeper",
+    "bug_tracker_uri" => "https://github.com/doorkeeper-gem/doorkeeper/issues",
+    "documentation_uri" => "https://doorkeeper.gitbook.io/guides/",
+  }
+
   gem.add_dependency "railties", ">= 5"
   gem.required_ruby_version = ">= 2.4"
 
