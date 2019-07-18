@@ -25,10 +25,6 @@ module Doorkeeper
 
       private
 
-      def client_by_uid(parameters)
-        Doorkeeper::Application.by_uid(parameters[:client_id])
-      end
-
       def before_successful_response
         grant.transaction do
           grant.lock!
