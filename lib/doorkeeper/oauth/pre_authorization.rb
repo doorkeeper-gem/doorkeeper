@@ -42,16 +42,10 @@ module Doorkeeper
         OAuth::ErrorResponse.from_request(self)
       end
 
-      def as_json(_options)
-        {
-          client_id: client.uid,
-          redirect_uri: redirect_uri,
-          state: state,
-          response_type: response_type,
-          scope: scope,
-          client_name: client.name,
-          status: I18n.t("doorkeeper.pre_authorization.status"),
-        }
+      def as_json(attributes = {})
+        return pre_auth_hash.merge(attributes.to_h) if attributes.respond_to?(:to_h)
+
+        pre_auth_hash
       end
 
       private
@@ -100,6 +94,18 @@ module Doorkeeper
       def validate_code_challenge_method
         code_challenge.blank? ||
           (code_challenge_method.present? && code_challenge_method =~ /^plain$|^S256$/)
+      end
+
+      def pre_auth_hash
+        {
+          client_id: client.uid,
+          redirect_uri: redirect_uri,
+          state: state,
+          response_type: response_type,
+          scope: scope,
+          client_name: client.name,
+          status: I18n.t("doorkeeper.pre_authorization.status"),
+        }
       end
     end
   end

@@ -182,18 +182,44 @@ module Doorkeeper::OAuth
         allow(client).to receive(:name).and_return client_name
       end
 
-      let(:json) { subject.as_json({}) }
-
       it { is_expected.to respond_to :as_json }
 
-      it "returns correct values" do
-        expect(json[:client_id]).to eq client_id
-        expect(json[:redirect_uri]).to eq subject.redirect_uri
-        expect(json[:state]).to eq subject.state
-        expect(json[:response_type]).to eq subject.response_type
-        expect(json[:scope]).to eq subject.scope
-        expect(json[:client_name]).to eq client_name
-        expect(json[:status]).to eq I18n.t("doorkeeper.pre_authorization.status")
+      shared_examples "returns the pre authorization" do
+        it "returns the pre authorization" do
+          expect(json[:client_id]).to eq client_id
+          expect(json[:redirect_uri]).to eq subject.redirect_uri
+          expect(json[:state]).to eq subject.state
+          expect(json[:response_type]).to eq subject.response_type
+          expect(json[:scope]).to eq subject.scope
+          expect(json[:client_name]).to eq client_name
+          expect(json[:status]).to eq I18n.t("doorkeeper.pre_authorization.status")
+        end
+      end
+
+      context "when attributes param is not passed" do
+        let(:json) { subject.as_json }
+
+        include_examples "returns the pre authorization"
+      end
+
+      context "when attributes param is passed" do
+        context "when attributes is a hash" do
+          let(:custom_attributes) { { custom_id: "1234", custom_name: "a pretty good name" } }
+          let(:json) { subject.as_json(custom_attributes) }
+
+          include_examples "returns the pre authorization"
+
+          it "merges the attributes in params" do
+            expect(json[:custom_id]).to eq custom_attributes[:custom_id]
+            expect(json[:custom_name]).to eq custom_attributes[:custom_name]
+          end
+        end
+
+        context "when attributes is not a hash" do
+          let(:json) { subject.as_json(nil) }
+
+          include_examples "returns the pre authorization"
+        end
       end
     end
   end

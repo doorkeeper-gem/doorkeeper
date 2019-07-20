@@ -7,6 +7,8 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1288] Allow to pass attributes to the `Doorkeeper::OAuth::PreAuthorization#as_json` method to customize
+  the PreAuthorization response.
 - [#1283] Allow to customize base class for `Doorkeeper::ApplicationMetalController` (new configuration
   option called `base_metal_controller` (fix #1273).
 
