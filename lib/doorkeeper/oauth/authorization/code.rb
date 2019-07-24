@@ -19,14 +19,10 @@ module Doorkeeper
           { action: :show, code: token.plaintext_token }
         end
 
-        def configuration
-          Doorkeeper.configuration
-        end
-
         private
 
         def authorization_code_expires_in
-          configuration.authorization_code_expires_in
+          Doorkeeper.configuration.authorization_code_expires_in
         end
 
         def access_grant_attributes

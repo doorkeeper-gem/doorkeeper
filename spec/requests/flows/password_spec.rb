@@ -31,6 +31,43 @@ describe "Resource Owner Password Credentials Flow" do
     context "with non-confidential/public client" do
       let(:client_attributes) { { confidential: false } }
 
+      context "when configured to check application supported grant flow" do
+        before do
+          Doorkeeper.configuration.instance_variable_set(
+            :@allow_grant_flow_for_client,
+            ->(_grant_flow, client) { client.name == "admin" }
+          )
+        end
+
+        scenario "forbids the request when doesn't satisfy condition" do
+          @client.update(name: "sample app")
+
+          expect do
+            post password_token_endpoint_url(
+              client_id: @client.uid,
+              client_secret: "foobar",
+              resource_owner: @resource_owner
+            )
+          end.not_to(change { Doorkeeper::AccessToken.count })
+
+          expect(response.status).to eq(401)
+          should_have_json "error", "invalid_client"
+        end
+
+        scenario "allows the request when satisfies condition" do
+          @client.update(name: "admin")
+
+          expect do
+            post password_token_endpoint_url(client_id: @client.uid, resource_owner: @resource_owner)
+          end.to change { Doorkeeper::AccessToken.count }.by(1)
+
+          token = Doorkeeper::AccessToken.first
+
+          expect(token.application_id).to eq @client.id
+          should_have_json "access_token", token.token
+        end
+      end
+
       context "when client_secret absent" do
         it "should issue new token" do
           expect do

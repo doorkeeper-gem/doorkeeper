@@ -23,7 +23,7 @@ module Doorkeeper::OAuth
     end
 
     subject do
-      AuthorizationCodeRequest.new server, grant, client, params
+      AuthorizationCodeRequest.new(server, grant, client, params)
     end
 
     it "issues a new token for the client" do

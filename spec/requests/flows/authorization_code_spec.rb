@@ -23,6 +23,39 @@ feature "Authorization Code Flow" do
     url_should_not_have_param("error")
   end
 
+  context "when configured to check application supported grant flow" do
+    before do
+      config_is_set(:allow_grant_flow_for_client, ->(_grant_flow, client) { client.name == "admin" })
+    end
+
+    scenario "forbids the request when doesn't satisfy condition" do
+      @client.update(name: "sample app")
+
+      visit authorization_endpoint_url(client: @client)
+
+      i_should_see_translated_error_message("unauthorized_client")
+    end
+
+    scenario "allows the request when satisfies condition" do
+      @client.update(name: "admin")
+
+      visit authorization_endpoint_url(client: @client)
+      i_should_not_see_translated_error_message("unauthorized_client")
+      click_on "Authorize"
+
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      create_access_token authorization_code, @client
+
+      access_token_should_exist_for(@client, @resource_owner)
+
+      should_not_have_json "error"
+
+      should_have_json "access_token", Doorkeeper::AccessToken.first.token
+      should_have_json "token_type", "Bearer"
+      should_have_json_within "expires_in", Doorkeeper::AccessToken.first.expires_in, 1
+    end
+  end
+
   context "with grant hashing enabled" do
     background do
       config_is_set(:token_secret_strategy, ::Doorkeeper::SecretStoring::Sha256Hash)

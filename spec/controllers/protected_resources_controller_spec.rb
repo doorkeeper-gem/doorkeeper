@@ -166,7 +166,7 @@ describe "doorkeeper authorize filter" do
       it "it renders a custom JSON response", token: :invalid do
         get :index, params: { access_token: token_string }
         expect(response.status).to eq 401
-        expect(response.content_type).to eq("application/json")
+        expect(response.content_type).to include("application/json")
         expect(response.header["WWW-Authenticate"]).to match(/^Bearer/)
 
         expect(json_response).not_to be_nil
@@ -196,7 +196,7 @@ describe "doorkeeper authorize filter" do
       it "it renders a custom text response", token: :invalid do
         get :index, params: { access_token: token_string }
         expect(response.status).to eq 401
-        expect(response.content_type).to eq("text/plain")
+        expect(response.content_type).to include("text/plain")
         expect(response.header["WWW-Authenticate"]).to match(/^Bearer/)
         expect(response.body).to eq("Unauthorized")
       end
@@ -246,7 +246,7 @@ describe "doorkeeper authorize filter" do
       it "renders a custom JSON response" do
         get :index, params: { access_token: token_string }
         expect(response.header).to_not include("WWW-Authenticate")
-        expect(response.content_type).to eq("application/json")
+        expect(response.content_type).to include("application/json")
         expect(response.status).to eq 403
 
         expect(json_response).not_to be_nil

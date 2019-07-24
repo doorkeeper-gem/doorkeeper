@@ -34,7 +34,7 @@ feature "Implicit Grant Flow (feature spec)" do
       expect(token.scopes).to be_empty
     end
 
-    scenario "access token has scopes which are common in application scopees and default scopes" do
+    scenario "access token has scopes which are common in application scopes and default scopes" do
       default_scopes_exist :public, :write
       visit authorization_endpoint_url(client: @client, response_type: "token")
       click_on "Authorize"

@@ -5,9 +5,10 @@ module Doorkeeper
     class PasswordAccessTokenRequest < BaseRequest
       include OAuth::Helpers
 
-      validate :client,         error: :invalid_client
+      validate :client, error: :invalid_client
+      validate :client_supports_grant_flow, error: :unauthorized_client
       validate :resource_owner, error: :invalid_grant
-      validate :scopes,         error: :invalid_scope
+      validate :scopes, error: :invalid_scope
 
       attr_accessor :server, :client, :resource_owner, :parameters,
                     :access_token
@@ -46,6 +47,10 @@ module Doorkeeper
 
       def validate_client
         !parameters[:client_id] || client.present?
+      end
+
+      def validate_client_supports_grant_flow
+        Doorkeeper.configuration.allow_grant_flow_for_client?(grant_type, client)
       end
     end
   end
