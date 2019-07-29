@@ -21,6 +21,10 @@ module Doorkeeper
       respond_to? :code_challenge
     end
 
+    def device_code_supported?
+      respond_to? :user_code
+    end
+
     module ClassMethods
       # Searches for Doorkeeper::AccessGrant record with the
       # specific token value.
@@ -96,6 +100,10 @@ module Doorkeeper
 
       def pkce_supported?
         new.pkce_supported?
+      end
+
+      def device_code_supported?
+        new.device_code_supported?
       end
 
       ##

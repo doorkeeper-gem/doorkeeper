@@ -13,6 +13,10 @@ module ModelHelper
     @authorization = FactoryBot.create(:access_grant, options)
   end
 
+  def device_code_exists(options = {})
+    @access_grant = FactoryBot.create(:access_grant, { user_code: "WDJB-MJHT" }.merge(options))
+  end
+
   def access_token_exists(options = {})
     @access_token = FactoryBot.create(:access_token, options)
   end

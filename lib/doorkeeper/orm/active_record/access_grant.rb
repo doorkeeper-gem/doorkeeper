@@ -9,12 +9,12 @@ module Doorkeeper
     belongs_to :application, class_name: "Doorkeeper::Application",
                              optional: true, inverse_of: :access_grants
 
-    validates :resource_owner_id,
-              :application_id,
+    validates :application_id,
               :token,
               :expires_in,
-              :redirect_uri,
               presence: true
+    validates :resource_owner_id,
+              presence: true, if: -> { !respond_to?(:user_code) || user_code.blank? }
 
     validates :token, uniqueness: { case_sensitive: true }
 

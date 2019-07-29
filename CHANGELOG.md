@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1299] Add device flow as specified in draft-ietf-oauth-device-flow-15 (issue #1290)
 - [#1300] Limiting access to attributes of pre_authorization.
 - [#1296] Adding client_id to strong parameters.
 - [#1293] Move ar specific redirect uri validator to ar orm directory.

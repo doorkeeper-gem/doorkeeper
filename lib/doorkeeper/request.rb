@@ -33,8 +33,16 @@ module Doorkeeper
       end
 
       def build_strategy_class(grant_or_request_type)
-        strategy_class_name = grant_or_request_type.to_s.tr(" ", "_").camelize
+        strategy_class_name = if grant_or_request_type.to_s.start_with?(extension_grant_start)
+                                "Extension::#{grant_or_request_type.to_s.split(":").last.camelize}"
+                              else
+                                grant_or_request_type.to_s.tr(" ", "_").camelize
+                              end
         "Doorkeeper::Request::#{strategy_class_name}".constantize
+      end
+
+      def extension_grant_start
+        "urn:ietf:params:oauth:grant-type"
       end
     end
   end

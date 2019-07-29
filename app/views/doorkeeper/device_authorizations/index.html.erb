@@ -1,0 +1,8 @@
+<div class="border-bottom mb-4">
+  <h1><%= t('.title') %></h1>
+</div>
+
+<%= label_tag :user_code, t('.user_code') %>
+<%= text_field_tag :user_code %>
+<%= link_to t('doorkeeper.device_authorizations.buttons.submit'), '#', onclick: 'event.preventDefault();window.location="/oauth/device/" + document.getElementById("user_code").value', class: 'btn' %>
+

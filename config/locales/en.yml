@@ -82,6 +82,16 @@ en:
         created_at: 'Created At'
         date_format: '%Y-%m-%d %H:%M:%S'
 
+    device_authorizations:
+      buttons:
+        deny: 'Deny'
+        submit: 'Submit'
+        verify: 'Authorize'
+      index:
+        title: 'Authorize your device'
+        device_code: 'Device Code'
+        user_code: 'User Code'
+
     pre_authorization:
       status: 'Pre-authorization'
 
@@ -106,14 +116,20 @@ en:
         unsupported_response_type: 'The authorization server does not support this response type.'
 
         # Access token errors
+        authorization_pending: 'Client has not been verified yet.'
         invalid_client: 'Client authentication failed due to unknown client, no client authentication included, or unsupported authentication method.'
         invalid_grant: 'The provided authorization grant is invalid, expired, revoked, does not match the redirection URI used in the authorization request, or was issued to another client.'
+        slow_down: 'Client is polling too frequently.'
         unsupported_grant_type: 'The authorization grant type is not supported by the authorization server.'
 
         invalid_token:
           revoked: "The access token was revoked"
           expired: "The access token expired"
           unknown: "The access token is invalid"
+        user_code:
+          expired: "This user code expired"
+          revoked: "This user code was revoked"
+          unknown: "This user code is invalid"
         revoke:
           unauthorized: "You are not authorized to revoke this token"
 
@@ -128,6 +144,13 @@ en:
       authorized_applications:
         destroy:
           notice: 'Application revoked.'
+      device_code:
+        update:
+          unknown_user_code: 'The user code is unknown or malformed.'
+          success: 'Device authorized.'
+        destroy:
+          success: 'Device denied.'
+
 
     layouts:
       admin:

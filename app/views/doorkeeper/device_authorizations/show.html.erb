@@ -1,0 +1,9 @@
+You authorize the device <%= @access_grant.application.name %> with your user code, to access your account.
+
+
+<%= form_tag oauth_device_path(@access_grant.token), method: :patch do %>
+  <%= hidden_field_tag :user_code, params[:id] %>
+  <%= submit_tag t('doorkeeper.device_authorizations.buttons.verify'), class: 'btn' %>
+<% end %>
+<%= button_to t('doorkeeper.device_authorizations.buttons.deny'), oauth_device_path(@access_grant.token),
+            method: :delete, class: 'btn' %>

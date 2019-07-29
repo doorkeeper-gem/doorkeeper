@@ -259,6 +259,10 @@ module Doorkeeper
     option :grant_flows,                    default: %w[authorization_code client_credentials]
     option :handle_auth_errors,             default: :render
 
+    option :device_code_polling_interval, default: 5
+    option :device_code_expires_in, default: 300
+    option :user_code_format, default: "4w-4w"
+
     # Allows to customize OAuth grant flows that +each+ application support.
     # You can configure a custom block (or use a class respond to `#call`) that must
     # return `true` in case Application instance supports requested OAuth grant flow
@@ -495,6 +499,22 @@ module Doorkeeper
       instance_variable_defined?("@#{name}")
     end
 
+    # The method device_code_supported? checks, if the migration to enable device code grant
+    # was generated. Normally you use Doorkeeper::AccessGrant.device_code_supported?, since that
+    # just checks the column existing on Database.
+    # This here is the fallback for cases, where database could not be loaded or migrated already
+    # - as in some cases on routes.
+    # Sorry - I don't know, how to check this on Grape. But since lib/doorkeeper/rails/routes.rb
+    # is for rails exclusively - we currently do not use this method outside of Rails.
+
+    def device_code_supported?
+      return false unless defined?(::Rails)
+
+      Dir.glob(::Rails.root.join("db/migrate/*.rb")).any? do |file|
+        file =~ /enable_device_code_grant/
+      end
+    end
+
     private
 
     # Helper to read boolearized configuration option
@@ -510,6 +530,9 @@ module Doorkeeper
       types = []
       types << "code"  if grant_flows.include? "authorization_code"
       types << "token" if grant_flows.include? "implicit"
+      if grant_flows.include? "urn:ietf:params:oauth:grant-type:device_code"
+        types << "urn:ietf:params:oauth:grant-type:device"
+      end
       types
     end
 

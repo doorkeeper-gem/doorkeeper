@@ -38,4 +38,24 @@ describe "Default routes" do
   it "GET /oauth/token/info route to authorized TokenInfo controller" do
     expect(get("/oauth/token/info")).to route_to("doorkeeper/token_info#show")
   end
+
+  it "POST /oauth/authorize_device routes to device authorizations controller" do
+    expect(post("/oauth/authorize_device")).to route_to("doorkeeper/device_codes#create")
+  end
+
+  it "GET /oauth/device routes to authorizations controller" do
+    expect(get("/oauth/device")).to route_to("doorkeeper/device_authorizations#index")
+  end
+
+  it "GET /oauth/device/:user_code routes to authorizations controller" do
+    expect(get("/oauth/device/123456")).to route_to("doorkeeper/device_authorizations#show", id: "123456")
+  end
+
+  it "PATCH /oauth/device routes to authorizations controller" do
+    expect(patch("/oauth/device/123456")).to route_to("doorkeeper/device_authorizations#update", id: "123456")
+  end
+
+  it "DELETE /oauth/device routes to authorizations controller" do
+    expect(delete("/oauth/device/123456")).to route_to("doorkeeper/device_authorizations#destroy", id: "123456")
+  end
 end

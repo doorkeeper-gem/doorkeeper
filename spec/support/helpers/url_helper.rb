@@ -2,16 +2,7 @@
 
 module UrlHelper
   def token_endpoint_url(options = {})
-    parameters = {
-      code: options[:code],
-      client_id: options[:client_id] || options[:client].try(:uid),
-      client_secret: options[:client_secret] || options[:client].try(:secret),
-      redirect_uri: options[:redirect_uri] || options[:client].try(:redirect_uri),
-      grant_type: options[:grant_type] || "authorization_code",
-      code_verifier: options[:code_verifier],
-      code_challenge_method: options[:code_challenge_method],
-    }.reject { |_, v| v.blank? }
-    "/oauth/token?#{build_query(parameters)}"
+    "/oauth/token?#{build_query token_url_parameters(options)}"
   end
 
   def password_token_endpoint_url(options = {})
@@ -40,6 +31,23 @@ module UrlHelper
     "/oauth/authorize?#{build_query(parameters)}"
   end
 
+  def device_code_endpoint_url(options = {})
+    parameters = {
+      client_id: options[:client_id] || options[:client].try(:uid),
+      client_secret: options[:client_secret] || options[:client].try(:secret),
+      scope: options[:scope],
+    }.reject { |_, v| v.blank? }
+    "/oauth/authorize_device?#{build_query(parameters)}"
+  end
+
+  def device_authorization_endpoint_url(options = {})
+    if options.empty?
+      "/device"
+    else
+      "/device?user_code=#{options[:user_code]}"
+    end
+  end
+
   def refresh_token_endpoint_url(options = {})
     parameters = {
       refresh_token: options[:refresh_token],
@@ -52,6 +60,19 @@ module UrlHelper
 
   def revocation_token_endpoint_url
     "/oauth/revoke"
+  end
+
+  def token_url_parameters(options = {})
+    {
+      code: options[:code],
+      client_id: options[:client_id] || options[:client].try(:uid),
+      client_secret: options[:client_secret] || options[:client].try(:secret),
+      device_code: options[:device_code],
+      redirect_uri: options[:redirect_uri] || options[:client].try(:redirect_uri),
+      grant_type: options[:grant_type] || "authorization_code",
+      code_verifier: options[:code_verifier],
+      code_challenge_method: options[:code_challenge_method],
+    }.reject { |_, v| v.blank? }
   end
 
   def build_query(hash)

@@ -40,10 +40,18 @@ module Doorkeeper
           map_route(:applications, :application_routes)
           map_route(:authorized_applications, :authorized_applications_routes)
           map_route(:token_info, :token_info_routes)
+          device_flow_routes
         end
       end
 
       private
+
+      def device_flow_routes
+        return unless Doorkeeper.configuration.device_code_supported?
+
+        map_route(:device_authorizations, :device_authorization_routes)
+        map_route(:device_code, :device_code_routes)
+      end
 
       def map_route(name, method)
         return if @mapping.skipped?(name)
@@ -66,6 +74,26 @@ module Doorkeeper
         end
       end
 
+      def device_authorization_routes(mapping)
+        routes.resources(
+          :device,
+          path: "device",
+          only: %i[index show update destroy],
+          as: mapping[:as],
+          controller: mapping[:controllers]
+        )
+      end
+
+      def device_code_routes(mapping)
+        routes.resource(
+          :device,
+          path: "authorize_device",
+          only: :create,
+          as: mapping[:as],
+          controller: mapping[:controllers]
+        )
+      end
+
       def token_routes(mapping)
         routes.resource(
           :token,
@@ -84,12 +112,10 @@ module Doorkeeper
       end
 
       def token_info_routes(mapping)
-        routes.resource(
-          :token_info,
-          path: "token/info",
-          only: [:show], as: mapping[:as],
-          controller: mapping[:controllers]
-        )
+        routes.resource :token_info,
+                        path: "token/info",
+                        only: [:show], as: mapping[:as],
+                        controller: mapping[:controllers]
       end
 
       def application_routes(mapping)

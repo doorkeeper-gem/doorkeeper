@@ -4,6 +4,7 @@ module Doorkeeper
   module OAuth
     GRANT_TYPES = [
       AUTHORIZATION_CODE = "authorization_code",
+      DEVICE_CODE = "device_code",
       IMPLICIT = "implicit",
       PASSWORD = "password",
       CLIENT_CREDENTIALS = "client_credentials",

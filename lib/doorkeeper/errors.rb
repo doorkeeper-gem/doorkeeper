@@ -26,6 +26,13 @@ module Doorkeeper
       end
     end
 
+    # in case client authorization is denied
+    class AccessDenied < DoorkeeperError
+      def type
+        :access_denied
+      end
+    end
+
     class InvalidTokenStrategy < DoorkeeperError
       def type
         :unsupported_grant_type
@@ -35,6 +42,20 @@ module Doorkeeper
     class MissingRequestStrategy < DoorkeeperError
       def type
         :invalid_request
+      end
+    end
+
+    # in case client is still not authorized
+    class AuthorizationPending < DoorkeeperError
+      def type
+        :authorization_pending
+      end
+    end
+
+    # in case client is polling too often
+    class SlowDown < DoorkeeperError
+      def type
+        :slow_down
       end
     end
 

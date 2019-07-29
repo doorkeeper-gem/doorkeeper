@@ -270,6 +270,7 @@ Doorkeeper.configure do
   # "implicit"           => Implicit Grant Flow
   # "password"           => Resource Owner Password Credentials Grant Flow
   # "client_credentials" => Client Credentials Grant Flow
+  # "urn:ietf:params:oauth:grant-type:device_code" => Device Grant Flow
   #
   # If not specified, Doorkeeper enables authorization_code and
   # client_credentials.
@@ -402,4 +403,19 @@ Doorkeeper.configure do
   # WWW-Authenticate Realm (default "Doorkeeper").
   #
   # realm "Doorkeeper"
+  #
+
+  # Configurations for device grant flow
+  #
+  # The polling interval configures how often the client should poll the access token from
+  # authorization server. The default value is 5 seconds
+  #
+  # device_code_polling_interval 5
+  #
+  # The user code can be composed of letters, digits and hyphens.
+  # For example: "4d-6w" means a user code format with 4 digits and 6 letters joined by a hyphen.
+  # In case you need both digits and letters for the user code and hyphen is not used to separate
+  # letters and digits, which mismatches the accepted format, the default "4w-4w" will be applied.
+  #
+  # user_code_format '4w-4w'
 end
