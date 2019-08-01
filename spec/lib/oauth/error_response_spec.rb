@@ -16,6 +16,13 @@ module Doorkeeper::OAuth
       end
     end
 
+    describe 'the redirect uri' do
+      it 'is not redirectable when redirect uri is nil' do
+        response = ErrorResponse.new(error: :some_error, state: nil)
+        expect(response.redirectable?).to eq(false)
+      end
+    end
+
     describe :from_request do
       it "has the error from request" do
         error = ErrorResponse.from_request double(error: :some_error)
