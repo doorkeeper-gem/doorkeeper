@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe RedirectUriValidator do
+describe Doorkeeper::RedirectUriValidator do
   subject do
     FactoryBot.create(:application)
   end
