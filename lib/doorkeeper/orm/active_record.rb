@@ -2,8 +2,6 @@
 
 require "active_support/lazy_load_hooks"
 
-require "doorkeeper/orm/active_record/stale_records_cleaner"
-
 module Doorkeeper
   module Orm
     # ActiveRecord ORM for Doorkeeper entity models.
@@ -17,6 +15,8 @@ module Doorkeeper
     module ActiveRecord
       def self.initialize_models!
         lazy_load do
+          require "doorkeeper/orm/active_record/stale_records_cleaner"
+          require "doorkeeper/orm/active_record/redirect_uri_validator"
           require "doorkeeper/orm/active_record/access_grant"
           require "doorkeeper/orm/active_record/access_token"
           require "doorkeeper/orm/active_record/application"

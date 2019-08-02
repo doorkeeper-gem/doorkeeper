@@ -11,7 +11,7 @@ module Doorkeeper
 
     validates :name, :secret, :uid, presence: true
     validates :uid, uniqueness: { case_sensitive: true }
-    validates :redirect_uri, redirect_uri: true
+    validates :redirect_uri, "doorkeeper/redirect_uri": true
     validates :confidential, inclusion: { in: [true, false] }
 
     validate :scopes_match_configured, if: :enforce_scopes?
