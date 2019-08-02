@@ -3,6 +3,7 @@
 module Doorkeeper
   module OAuth
     class AuthorizationCodeRequest < BaseRequest
+      validate :pkce_support, error: :invalid_request
       validate :params,       error: :invalid_request
       validate :client,       error: :invalid_client
       validate :grant,        error: :invalid_grant
@@ -39,15 +40,20 @@ module Doorkeeper
         super
       end
 
+      def validate_pkce_support
+        @invalid_request_reason = :not_support_pkce if grant &&
+                                                       !grant.pkce_supported? &&
+                                                       code_verifier.present?
+
+        @invalid_request_reason.nil?
+      end
+
       def validate_params
-        if grant && !grant.pkce_supported? && code_verifier.present?
-          @invalid_request_reason = :not_support_pkce
-          return false
-        elsif grant&.uses_pkce? && code_verifier.blank?
-          @missing_param = :code_verifier
-        elsif redirect_uri.blank?
-          @missing_param = :redirect_uri
-        end
+        @missing_param = if grant&.uses_pkce? && code_verifier.blank?
+                           :code_verifier
+                         elsif redirect_uri.blank?
+                           :redirect_uri
+                         end
 
         @missing_param.nil?
       end
