@@ -4,11 +4,7 @@ module Doorkeeper
   module Request
     class << self
       def authorization_strategy(response_type)
-        raise Errors::MissingRequiredParameter, :response_type if response_type.blank?
-
-        get_strategy(response_type, authorization_response_types)
-      rescue StandardError
-        build_strategy_class("error_response_type")
+        build_strategy_class(response_type)
       end
 
       def token_strategy(grant_type)
@@ -19,17 +15,13 @@ module Doorkeeper
         raise Errors::InvalidTokenStrategy
       end
 
-      def get_strategy(grant_or_request_type, available)
-        raise NameError unless available.include?(grant_or_request_type.to_s)
+      def get_strategy(grant_type, available)
+        raise NameError unless available.include?(grant_type.to_s)
 
-        build_strategy_class(grant_or_request_type)
+        build_strategy_class(grant_type)
       end
 
       private
-
-      def authorization_response_types
-        Doorkeeper.configuration.authorization_response_types
-      end
 
       def token_grant_types
         Doorkeeper.configuration.token_grant_types

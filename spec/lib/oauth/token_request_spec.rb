@@ -9,15 +9,18 @@ module Doorkeeper::OAuth
     end
 
     let :pre_auth do
-      double(
-        :pre_auth,
-        client: application,
-        redirect_uri: "http://tst.com/cb",
-        state: nil,
-        scopes: Scopes.from_string("public"),
-        error: nil,
-        authorizable?: true
-      )
+      server = Doorkeeper.configuration
+      allow(server).to receive(:default_scopes).and_return(Scopes.from_string("public"))
+      allow(server).to receive(:grant_flows).and_return(Scopes.from_string("implicit"))
+
+      client = Doorkeeper::OAuth::Client.new(application)
+
+      attributes = {
+        response_type: "token",
+        redirect_uri: "https://app.com/callback",
+      }
+
+      PreAuthorization.new(server, client, attributes)
     end
 
     let :owner do
@@ -38,25 +41,10 @@ module Doorkeeper::OAuth
       expect(subject.authorize).to be_a(CodeResponse)
     end
 
-    context "when pre_auth is not authorizable" do
-      before { allow(pre_auth).to receive(:authorizable?).and_return(false) }
-
-      context "with invalid_request error" do
-        before { allow(pre_auth).to receive(:error).and_return(:invalid_request) }
-
-        it "does not create token and returns InvalidRequestResponse" do
-          expect { subject.authorize }.not_to(change { Doorkeeper::AccessToken.count })
-          expect(subject.authorize).to be_an_instance_of(InvalidRequestResponse)
-        end
-      end
-
-      context "with error other than invalid_request" do
-        before { allow(pre_auth).to receive(:error).and_return(:some_error) }
-
-        it "does not create token and returns ErrorResponse" do
-          expect { subject.authorize }.not_to(change { Doorkeeper::AccessToken.count })
-          expect(subject.authorize).to be_an_instance_of(ErrorResponse)
-        end
+    context "when pre_auth is denied" do
+      it "does not create token and returns a error response" do
+        expect { subject.deny }.not_to(change { Doorkeeper::AccessToken.count })
+        expect(subject.deny).to be_a(ErrorResponse)
       end
     end
 

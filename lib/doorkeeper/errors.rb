@@ -21,11 +21,11 @@ module Doorkeeper
     end
 
     class MissingRequiredParameter < DoorkeeperError
-      attr_reader :parameter
+      attr_reader :missing_param
 
-      def initialize(parameter)
+      def initialize(missing_param)
         super
-        @parameter = parameter
+        @missing_param = missing_param
       end
 
       def type

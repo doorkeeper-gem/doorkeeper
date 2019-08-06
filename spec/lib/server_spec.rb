@@ -10,10 +10,6 @@ describe Doorkeeper::Server do
   end
 
   describe ".authorization_request" do
-    it "raises error when strategy does not exist" do
-      expect(subject.authorization_request(:duh)).to be_a(Doorkeeper::Request::ErrorResponseType)
-    end
-
     it "raises error when strategy does not match phase" do
       expect do
         subject.token_request(:code)
@@ -25,10 +21,6 @@ describe Doorkeeper::Server do
         allow(Doorkeeper.configuration)
           .to receive(:grant_flows)
           .and_return(["authorization_code"])
-      end
-
-      it "raises error when using the disabled Implicit strategy" do
-        expect(subject.authorization_request(:token)).to be_a(Doorkeeper::Request::ErrorResponseType)
       end
 
       it "raises error when using the disabled Client Credentials strategy" do

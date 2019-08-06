@@ -89,10 +89,11 @@ module Doorkeeper
 
     def authorize_response
       @authorize_response ||= begin
-        authorizable = pre_auth.authorizable?
-        before_successful_authorization if authorizable
+        return pre_auth.error_response unless pre_auth.authorizable?
+
+        before_successful_authorization
         auth = strategy.authorize
-        after_successful_authorization if authorizable
+        after_successful_authorization
         auth
       end
     end

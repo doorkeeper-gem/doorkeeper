@@ -44,9 +44,13 @@ module Doorkeeper
       end
 
       def error_response
-        return OAuth::InvalidRequestResponse.from_request(self) if error == :invalid_request
+        is_implicit_flow = response_type == "token"
 
-        OAuth::ErrorResponse.from_request(self)
+        if error == :invalid_request
+          OAuth::InvalidRequestResponse.from_request(self, response_on_fragment: is_implicit_flow)
+        else
+          OAuth::ErrorResponse.from_request(self, response_on_fragment: is_implicit_flow)
+        end
       end
 
       def as_json(attributes = {})

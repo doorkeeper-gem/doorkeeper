@@ -4,18 +4,20 @@ require "spec_helper"
 
 module Doorkeeper::OAuth
   describe CodeRequest do
-    let(:pre_auth) do
-      double(
-        :pre_auth,
-        client: double(:application, id: 9990),
-        redirect_uri: "http://tst.com/cb",
-        scopes: nil,
-        state: nil,
-        error: nil,
-        authorizable?: true,
-        code_challenge: nil,
-        code_challenge_method: nil
-      )
+    let :pre_auth do
+      server = Doorkeeper.configuration
+      allow(server).to receive(:default_scopes).and_return(Scopes.from_string("public"))
+      allow(server).to receive(:grant_flows).and_return(Scopes.from_string("authorization_code"))
+
+      application = FactoryBot.create(:application, scopes: "public")
+      client = Doorkeeper::OAuth::Client.new(application)
+
+      attributes = {
+        response_type: "code",
+        redirect_uri: "https://app.com/callback",
+      }
+
+      PreAuthorization.new(server, client, attributes)
     end
 
     let(:owner) { double :owner, id: 8900 }
@@ -24,32 +26,17 @@ module Doorkeeper::OAuth
       CodeRequest.new(pre_auth, owner)
     end
 
-    context "when pre_auth is authorizable" do
+    context "when pre_auth is authorized" do
       it "creates an access grant and returns a code response" do
         expect { subject.authorize }.to change { Doorkeeper::AccessGrant.count }.by(1)
         expect(subject.authorize).to be_a(CodeResponse)
       end
     end
 
-    context "when pre_auth is not authorizable" do
-      before { allow(pre_auth).to receive(:authorizable?).and_return(false) }
-
-      context "with invalid_request error" do
-        before { allow(pre_auth).to receive(:error).and_return(:invalid_request) }
-
-        it "does not create grant and returns InvalidRequestResponse" do
-          expect { subject.authorize }.not_to(change { Doorkeeper::AccessGrant.count })
-          expect(subject.authorize).to be_an_instance_of(InvalidRequestResponse)
-        end
-      end
-
-      context "with error other than invalid_request" do
-        before { allow(pre_auth).to receive(:error).and_return(:some_error) }
-
-        it "does not create grant and returns ErrorResponse" do
-          expect { subject.authorize }.not_to(change { Doorkeeper::AccessGrant.count })
-          expect(subject.authorize).to be_an_instance_of(ErrorResponse)
-        end
+    context "when pre_auth is denied" do
+      it "does not create access grant and returns a error response" do
+        expect { subject.deny }.not_to(change { Doorkeeper::AccessGrant.count })
+        expect(subject.deny).to be_a(ErrorResponse)
       end
     end
   end

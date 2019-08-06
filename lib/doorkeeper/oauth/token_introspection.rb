@@ -26,7 +26,7 @@ module Doorkeeper
         if @error == :invalid_token
           OAuth::InvalidTokenResponse.from_access_token(authorized_token)
         elsif @error == :invalid_request
-          OAuth::InvalidRequestResponse.new(name: @error, reason: @invalid_request_reason)
+          OAuth::InvalidRequestResponse.from_request(self)
         else
           OAuth::ErrorResponse.new(name: @error)
         end
