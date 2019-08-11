@@ -27,10 +27,6 @@ module Doorkeeper
       @client ||= OAuth::Client.authenticate(credentials)
     end
 
-    def client_via_uid
-      @client_via_uid ||= OAuth::Client.find(parameters[:client_id])
-    end
-
     def current_resource_owner
       context.send :current_resource_owner
     end

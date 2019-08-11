@@ -58,7 +58,7 @@ module Doorkeeper
 
       def skip_authorization?
         !!instance_exec(
-          [@server.current_resource_owner, @pre_auth.client],
+          [server.current_resource_owner, @pre_auth.client],
           &Doorkeeper.configuration.skip_authorization
         )
       end
