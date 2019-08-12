@@ -11,26 +11,20 @@ module Doorkeeper::OAuth
       server
     end
 
-    let(:application) do
-      application = double :application
-      allow(application).to receive(:scopes).and_return(Scopes.from_string(""))
-      application
-    end
-
-    let(:client) do
-      double :client, redirect_uri: "http://tst.com/auth", application: application
-    end
+    let(:application) { FactoryBot.create(:application, redirect_uri: "https://app.com/callback") }
+    let(:client) { Client.find(application.uid) }
 
     let :attributes do
       {
+        client_id: client.uid,
         response_type: "code",
-        redirect_uri: "http://tst.com/auth",
+        redirect_uri: "https://app.com/callback",
         state: "save-this",
       }
     end
 
     subject do
-      PreAuthorization.new(server, client, attributes)
+      PreAuthorization.new(server, attributes)
     end
 
     it "is authorizable when request is valid" do
@@ -109,9 +103,7 @@ module Doorkeeper::OAuth
 
     context "client application restricts valid scopes" do
       let(:application) do
-        application = double :application
-        allow(application).to receive(:scopes).and_return(Scopes.from_string("public nonsense"))
-        application
+        FactoryBot.create(:application, scopes: Scopes.from_string("public nonsense"))
       end
 
       it "accepts valid scopes" do
@@ -145,6 +137,7 @@ module Doorkeeper::OAuth
     it "uses default scopes when none is required" do
       allow(server).to receive(:default_scopes).and_return(Scopes.from_string("default"))
       subject.scope = nil
+      subject.client = client
       expect(subject.scope).to eq("default")
       expect(subject.scopes).to eq(Scopes.from_string("default"))
     end
@@ -164,7 +157,7 @@ module Doorkeeper::OAuth
     end
 
     it "requires an existing client" do
-      subject.client = nil
+      attributes[:client_id] = nil
       expect(subject).not_to be_authorizable
     end
 
@@ -174,24 +167,18 @@ module Doorkeeper::OAuth
     end
 
     describe "as_json" do
-      let(:client_id) { "client_uid_123" }
-      let(:client_name) { "Acme Co." }
-
-      before do
-        allow(client).to receive(:uid).and_return client_id
-        allow(client).to receive(:name).and_return client_name
-      end
+      before { subject.client = client }
 
       it { is_expected.to respond_to :as_json }
 
       shared_examples "returns the pre authorization" do
         it "returns the pre authorization" do
-          expect(json[:client_id]).to eq client_id
+          expect(json[:client_id]).to eq client.uid
           expect(json[:redirect_uri]).to eq subject.redirect_uri
           expect(json[:state]).to eq subject.state
           expect(json[:response_type]).to eq subject.response_type
           expect(json[:scope]).to eq subject.scope
-          expect(json[:client_name]).to eq client_name
+          expect(json[:client_name]).to eq client.name
           expect(json[:status]).to eq I18n.t("doorkeeper.pre_authorization.status")
         end
       end

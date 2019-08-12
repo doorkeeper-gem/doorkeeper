@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1296] Adding client_id to strong parameters.
 - [#1293] Move ar specific redirect uri validator to ar orm directory.
 - [#1288] Allow to pass attributes to the `Doorkeeper::OAuth::PreAuthorization#as_json` method to customize
   the PreAuthorization response.

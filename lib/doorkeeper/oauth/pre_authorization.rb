@@ -16,9 +16,9 @@ module Doorkeeper
                     :code_challenge, :code_challenge_method
       attr_writer   :scope
 
-      def initialize(server, client, attrs = {})
+      def initialize(server, attrs = {})
         @server                = server
-        @client                = client
+        @client_id             = attrs[:client_id]
         @response_type         = attrs[:response_type]
         @redirect_uri          = attrs[:redirect_uri]
         @scope                 = attrs[:scope]
@@ -56,7 +56,7 @@ module Doorkeeper
       private
 
       def build_scopes
-        client_scopes = client.application.scopes
+        client_scopes = client.scopes
         if client_scopes.blank?
           server.default_scopes.to_s
         else
@@ -69,7 +69,8 @@ module Doorkeeper
       end
 
       def validate_client
-        client.present?
+        @client = OAuth::Client.find(@client_id)
+        @client.present?
       end
 
       def validate_scopes
@@ -78,7 +79,7 @@ module Doorkeeper
         Helpers::ScopeChecker.valid?(
           scope_str: scope,
           server_scopes: server.scopes,
-          app_scopes: client.application.scopes,
+          app_scopes: client.scopes,
           grant_type: grant_type
         )
       end
