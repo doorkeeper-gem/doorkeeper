@@ -70,8 +70,8 @@ module Doorkeeper
     end
 
     def pre_auth_params
-      fields = [:client_id, :response_type, :redirect_uri, :scope, :state, 
-                :code_challenge, :code_challenge_method]
+      fields = %i(client_id response_type redirect_uri scope state 
+                  code_challenge code_challenge_method)
       params.slice(*fields).permit(*fields)
     end
 
