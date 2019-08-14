@@ -5,6 +5,7 @@ module Doorkeeper
     class PreAuthorization
       include Validations
 
+      validate :client_id,             error: :invalid_request
       validate :client,                error: :invalid_client
       validate :redirect_uri,          error: :invalid_redirect_uri
       validate :params,                error: :invalid_request
@@ -13,7 +14,7 @@ module Doorkeeper
       validate :code_challenge_method, error: :invalid_code_challenge_method
       validate :client_supports_grant_flow, error: :unauthorized_client
 
-      attr_reader :server, :client, :client_id, :response_type, :redirect_uri, :state,
+      attr_reader :server, :client_id, :client, :redirect_uri, :response_type, :state,
                   :code_challenge, :code_challenge_method, :missing_param
 
       def initialize(server, attrs = {})
@@ -70,6 +71,26 @@ module Doorkeeper
         end
       end
 
+      def validate_client_id
+        @missing_param = :client_id if client_id.blank?
+
+        @missing_param.nil?
+      end
+
+      def validate_client
+        @client = OAuth::Client.find(client_id)
+        @client.present?
+      end
+
+      def validate_redirect_uri
+        return false if redirect_uri.blank?
+
+        Helpers::URIChecker.valid_for_authorization?(
+          redirect_uri,
+          client.redirect_uri
+        )
+      end
+
       def validate_params
         @missing_param = if response_type.blank?
                            :response_type
@@ -84,11 +105,6 @@ module Doorkeeper
         server.authorization_response_types.include?(response_type)
       end
 
-      def validate_client
-        @client = OAuth::Client.find(client_id)
-        @client.present?
-      end
-
       def validate_scopes
         Helpers::ScopeChecker.valid?(
           scope_str: scope,
@@ -100,15 +116,6 @@ module Doorkeeper
 
       def grant_type
         response_type == "code" ? AUTHORIZATION_CODE : IMPLICIT
-      end
-
-      def validate_redirect_uri
-        return false if redirect_uri.blank?
-
-        Helpers::URIChecker.valid_for_authorization?(
-          redirect_uri,
-          client.redirect_uri
-        )
       end
 
       def validate_code_challenge_method
