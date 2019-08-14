@@ -10,7 +10,7 @@ User-visible changes worth mentioning.
 - [#1300] Limiting access to attributes of pre_authorization.
 - [#1296] Adding client_id to strong parameters.
 - [#1293] Move ar specific redirect uri validator to ar orm directory.
-- [#1288] Allow to pass attributes to the `Doohrkeeper::OAuth::PreAuthorization#as_json` method to customize
+- [#1288] Allow to pass attributes to the `Doorkeeper::OAuth::PreAuthorization#as_json` method to customize
   the PreAuthorization response.
 - [#1286] Add ability to customize grant flows per application (OAuth client) (#1245 , #1207)
 - [#1283] Allow to customize base class for `Doorkeeper::ApplicationMetalController` (new configuration

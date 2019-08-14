@@ -139,10 +139,10 @@ module Doorkeeper::OAuth
 
       context "when default scopes is provided" do
         it "uses default scopes" do
-          allow(server).to receive(:default_scopes).and_return(Scopes.from_string("default"))
+          allow(server).to receive(:default_scopes).and_return(Scopes.from_string("default_scope"))
           expect(subject).to be_authorizable
-          expect(subject.scope).to eq("default")
-          expect(subject.scopes).to eq(Scopes.from_string("default"))
+          expect(subject.scope).to eq("default_scope")
+          expect(subject.scopes).to eq(Scopes.from_string("default_scope"))
         end
       end
 

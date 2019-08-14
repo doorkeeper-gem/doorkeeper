@@ -16,11 +16,14 @@ module Doorkeeper::OAuth
       client = Doorkeeper::OAuth::Client.new(application)
 
       attributes = {
+        client_id: client.uid,
         response_type: "token",
         redirect_uri: "https://app.com/callback",
       }
 
-      PreAuthorization.new(server, client, attributes)
+      pre_auth = PreAuthorization.new(server, attributes)
+      pre_auth.authorizable?
+      pre_auth
     end
 
     let :owner do
