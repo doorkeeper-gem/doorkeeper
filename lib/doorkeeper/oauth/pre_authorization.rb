@@ -12,9 +12,8 @@ module Doorkeeper
       validate :code_challenge_method, error: :invalid_code_challenge_method
       validate :client_supports_grant_flow, error: :unauthorized_client
 
-      attr_accessor :server, :client, :response_type, :redirect_uri, :state,
-                    :code_challenge, :code_challenge_method
-      attr_writer   :scope
+      attr_reader :server, :client, :client_id, :response_type, :redirect_uri,
+                  :state, :code_challenge, :code_challenge_method
 
       def initialize(server, attrs = {})
         @server                = server
@@ -69,7 +68,7 @@ module Doorkeeper
       end
 
       def validate_client
-        @client = OAuth::Client.find(@client_id)
+        @client = OAuth::Client.find(client_id)
         @client.present?
       end
 
