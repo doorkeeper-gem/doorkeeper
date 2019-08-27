@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1298] Slice strong params so doesn't error with Rails forms
 - [#1300] Limiting access to attributes of pre_authorization.
 - [#1296] Adding client_id to strong parameters.
 - [#1293] Move ar specific redirect uri validator to ar orm directory.
