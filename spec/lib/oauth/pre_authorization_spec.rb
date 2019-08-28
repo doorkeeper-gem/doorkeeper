@@ -6,7 +6,8 @@ module Doorkeeper::OAuth
   describe PreAuthorization do
     let(:server) do
       server = Doorkeeper.configuration
-      allow(server).to receive(:default_scopes).and_return(Scopes.from_string("public profile"))
+      allow(server).to receive(:default_scopes).and_return(Scopes.from_string("default"))
+      allow(server).to receive(:optional_scopes).and_return(Scopes.from_string("public profile"))
       server
     end
 
@@ -133,12 +134,24 @@ module Doorkeeper::OAuth
       end
     end
 
-    it "uses default scopes when none is required" do
-      allow(server).to receive(:default_scopes).and_return(Scopes.from_string("default"))
-      attributes[:scope] = nil
-      expect(subject).to be_authorizable
-      expect(subject.scope).to eq("default")
-      expect(subject.scopes).to eq(Scopes.from_string("default"))
+    context "when scope is not provided to pre_authorization" do
+      before { attributes[:scope] = nil }
+
+      context "when default scopes is provided" do
+        it "uses default scopes" do
+          allow(server).to receive(:default_scopes).and_return(Scopes.from_string("default_scope"))
+          expect(subject).to be_authorizable
+          expect(subject.scope).to eq("default_scope")
+          expect(subject.scopes).to eq(Scopes.from_string("default_scope"))
+        end
+      end
+
+      context "when default scopes is none" do
+        it "not be authorizable when none default scope" do
+          allow(server).to receive(:default_scopes).and_return(Scopes.new)
+          expect(subject).not_to be_authorizable
+        end
+      end
     end
 
     it "matches the redirect uri against client's one" do

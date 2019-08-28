@@ -52,6 +52,7 @@ require "doorkeeper/oauth/token"
 require "doorkeeper/oauth/token_introspection"
 require "doorkeeper/oauth/invalid_token_response"
 require "doorkeeper/oauth/forbidden_token_response"
+require "doorkeeper/oauth/invalid_request_response"
 require "doorkeeper/oauth/nonstandard"
 
 require "doorkeeper/secret_storing/base"

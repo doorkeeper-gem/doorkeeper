@@ -66,27 +66,44 @@ module Doorkeeper::OAuth
       end
 
       context "invalid" do
-        before do
-          allow(subject).to receive(:valid?).and_return(false)
-          allow(subject).to receive(:error).and_return("server_error")
-          allow(subject).to receive(:state).and_return("hello")
+        context "with error other than invalid_request" do
+          before do
+            allow(subject).to receive(:valid?).and_return(false)
+            allow(subject).to receive(:error).and_return(:server_error)
+            allow(subject).to receive(:state).and_return("hello")
+          end
+
+          it "returns an ErrorResponse object" do
+            result = subject.authorize
+
+            expect(result).to be_an_instance_of(ErrorResponse)
+
+            expect(result.body).to eq(
+              error: :server_error,
+              error_description: translated_error_message(:server_error),
+              state: "hello"
+            )
+          end
         end
 
-        it "returns an ErrorResponse object" do
-          error_description = I18n.translate(
-            "server_error",
-            scope: %i[doorkeeper errors messages]
-          )
+        context "with invalid_request error" do
+          before do
+            allow(subject).to receive(:valid?).and_return(false)
+            allow(subject).to receive(:error).and_return(:invalid_request)
+            allow(subject).to receive(:state).and_return("hello")
+          end
 
-          result = subject.authorize
+          it "returns an InvalidRequestResponse object" do
+            result = subject.authorize
 
-          expect(result).to be_an_instance_of(ErrorResponse)
+            expect(result).to be_an_instance_of(InvalidRequestResponse)
 
-          expect(result.body).to eq(
-            error: "server_error",
-            error_description: error_description,
-            state: "hello"
-          )
+            expect(result.body).to eq(
+              error: :invalid_request,
+              error_description: translated_invalid_request_error_message(:unknown, :unknown),
+              state: "hello"
+            )
+          end
         end
       end
     end

@@ -16,6 +16,7 @@ User-visible changes worth mentioning.
 - [#1286] Add ability to customize grant flows per application (OAuth client) (#1245 , #1207)
 - [#1283] Allow to customize base class for `Doorkeeper::ApplicationMetalController` (new configuration
   option called `base_metal_controller` (fix #1273).
+- [#1277] Prevent requested scope be empty on authorization request, handle and add description for invalid request.
 
 ## 5.2.0.rc2
 

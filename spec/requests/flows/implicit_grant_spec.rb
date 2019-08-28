@@ -4,6 +4,7 @@ require "spec_helper"
 
 feature "Implicit Grant Flow (feature spec)" do
   background do
+    default_scopes_exist :default
     config_is_set(:authenticate_resource_owner) { User.first || redirect_to("/sign_in") }
     config_is_set(:grant_flows, ["implicit"])
     client_exists
@@ -25,13 +26,12 @@ feature "Implicit Grant Flow (feature spec)" do
       @client.update(scopes: "public write read")
     end
 
-    scenario "access token has no scopes" do
+    scenario "scope is invalid because default scope is different from application scope" do
       default_scopes_exist :admin
       visit authorization_endpoint_url(client: @client, response_type: "token")
-      click_on "Authorize"
-      access_token_should_exist_for @client, @resource_owner
-      token = Doorkeeper::AccessToken.first
-      expect(token.scopes).to be_empty
+      response_status_should_be 200
+      i_should_not_see "Authorize"
+      i_should_see_translated_error_message :invalid_scope
     end
 
     scenario "access token has scopes which are common in application scopes and default scopes" do
@@ -46,6 +46,7 @@ end
 
 describe "Implicit Grant Flow (request spec)" do
   before do
+    default_scopes_exist :default
     config_is_set(:authenticate_resource_owner) { User.first || redirect_to("/sign_in") }
     config_is_set(:grant_flows, ["implicit"])
     client_exists
@@ -56,7 +57,7 @@ describe "Implicit Grant Flow (request spec)" do
     it "should return a new token each request" do
       allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(false)
 
-      token = client_is_authorized(@client, @resource_owner)
+      token = client_is_authorized(@client, @resource_owner, scopes: "default")
 
       post "/oauth/authorize",
            params: {
@@ -73,7 +74,7 @@ describe "Implicit Grant Flow (request spec)" do
     it "should return the same token if it is still accessible" do
       allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
 
-      token = client_is_authorized(@client, @resource_owner)
+      token = client_is_authorized(@client, @resource_owner, scopes: "default")
 
       post "/oauth/authorize",
            params: {

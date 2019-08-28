@@ -14,16 +14,14 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     end
   end
 
-  def translated_error_message(key)
-    I18n.translate key, scope: %i[doorkeeper errors messages]
-  end
-
   let(:client)        { FactoryBot.create :application }
   let(:user)          { User.create!(name: "Joe", password: "sekret") }
-  let(:access_token)  { FactoryBot.build :access_token, resource_owner_id: user.id, application_id: client.id }
+  let(:access_token)  { FactoryBot.build :access_token, resource_owner_id: user.id, application_id: client.id, scopes: "default" }
 
   before do
     Doorkeeper.configure do
+      default_scopes :default
+
       custom_access_token_expires_in(lambda do |context|
         context.grant_type == Doorkeeper::OAuth::IMPLICIT ? 1234 : nil
       end)
@@ -106,80 +104,146 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
   end
 
   describe "POST #create with errors" do
-    before do
-      default_scopes_exist :public
+    context "when missing client_id" do
+      before do
+        post :create, params: {
+          client_id: "",
+          response_type: "token",
+          redirect_uri: client.redirect_uri,
+        }
+      end
 
-      post :create, params: {
-        client_id: client.uid,
-        response_type: "token",
-        scope: "invalid",
-        redirect_uri: client.redirect_uri,
-      }
+      let(:response_json_body) { JSON.parse(response.body) }
+
+      it "renders 400 error" do
+        expect(response.status).to eq 400
+      end
+
+      it "includes error name" do
+        expect(response_json_body["error"]).to eq("invalid_request")
+      end
+
+      it "includes error description" do
+        expect(response_json_body["error_description"]).to eq(
+          translated_invalid_request_error_message(:missing_param, :client_id)
+        )
+      end
+
+      it "does not issue any access token" do
+        expect(Doorkeeper::AccessToken.all).to be_empty
+      end
     end
 
-    it "redirects after authorization" do
-      expect(response).to be_redirect
-    end
+    context "when other error happens" do
+      before do
+        default_scopes_exist :public
 
-    it "redirects to client redirect uri" do
-      expect(response.location).to match(/^#{client.redirect_uri}/)
-    end
+        post :create, params: {
+          client_id: client.uid,
+          response_type: "token",
+          scope: "invalid",
+          redirect_uri: client.redirect_uri,
+        }
+      end
 
-    it "does not include access token in fragment" do
-      expect(response.query_params["access_token"]).to be_nil
-    end
+      it "redirects after authorization" do
+        expect(response).to be_redirect
+      end
 
-    it "includes error in fragment" do
-      expect(response.query_params["error"]).to eq("invalid_scope")
-    end
+      it "redirects to client redirect uri" do
+        expect(response.location).to match(/^#{client.redirect_uri}/)
+      end
 
-    it "includes error description in fragment" do
-      expect(response.query_params["error_description"]).to eq(translated_error_message(:invalid_scope))
-    end
+      it "does not include access token in fragment" do
+        expect(response.query_params["access_token"]).to be_nil
+      end
 
-    it "does not issue any access token" do
-      expect(Doorkeeper::AccessToken.all).to be_empty
+      it "includes error in fragment" do
+        expect(response.query_params["error"]).to eq("invalid_scope")
+      end
+
+      it "includes error description in fragment" do
+        expect(response.query_params["error_description"]).to eq(translated_error_message(:invalid_scope))
+      end
+
+      it "does not issue any access token" do
+        expect(Doorkeeper::AccessToken.all).to be_empty
+      end
     end
   end
 
   describe "POST #create in API mode with errors" do
-    before do
-      allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
-      default_scopes_exist :public
+    context "when missing client_id" do
+      before do
+        allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
 
-      post :create, params: {
-        client_id: client.uid,
-        response_type: "token",
-        scope: "invalid",
-        redirect_uri: client.redirect_uri,
-      }
+        post :create, params: {
+          client_id: "",
+          response_type: "token",
+          redirect_uri: client.redirect_uri,
+        }
+      end
+
+      let(:response_json_body) { JSON.parse(response.body) }
+
+      it "renders 400 error" do
+        expect(response.status).to eq 400
+      end
+
+      it "includes error name" do
+        expect(response_json_body["error"]).to eq("invalid_request")
+      end
+
+      it "includes error description" do
+        expect(response_json_body["error_description"]).to eq(
+          translated_invalid_request_error_message(:missing_param, :client_id)
+        )
+      end
+
+      it "does not issue any access token" do
+        expect(Doorkeeper::AccessToken.all).to be_empty
+      end
     end
 
-    let(:response_json_body) { JSON.parse(response.body) }
-    let(:redirect_uri) { response_json_body["redirect_uri"] }
+    context "when other error happens" do
+      before do
+        allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
+        default_scopes_exist :public
 
-    it "renders 400 error" do
-      expect(response.status).to eq 400
-    end
+        post :create, params: {
+          client_id: client.uid,
+          response_type: "token",
+          scope: "invalid",
+          redirect_uri: client.redirect_uri,
+        }
+      end
 
-    it "includes correct redirect URI" do
-      expect(redirect_uri).to match(/^#{client.redirect_uri}/)
-    end
+      let(:response_json_body) { JSON.parse(response.body) }
+      let(:redirect_uri) { response_json_body["redirect_uri"] }
 
-    it "does not include access token in fragment" do
-      expect(redirect_uri.match(/access_token=([a-f0-9]+)&?/)).to be_nil
-    end
+      it "renders 400 error" do
+        expect(response.status).to eq 400
+      end
 
-    it "includes error in redirect uri" do
-      expect(redirect_uri.match(/error=([a-z_]+)&?/)[1]).to eq "invalid_scope"
-    end
+      it "includes correct redirect URI" do
+        expect(redirect_uri).to match(/^#{client.redirect_uri}/)
+      end
 
-    it "includes error description in redirect uri" do
-      expect(redirect_uri.match(/error_description=(.+)&?/)[1]).to_not be_nil
-    end
+      it "does not include access token in fragment" do
+        expect(redirect_uri.match(/access_token=([a-f0-9]+)&?/)).to be_nil
+      end
 
-    it "does not issue any access token" do
-      expect(Doorkeeper::AccessToken.all).to be_empty
+      it "includes error in redirect uri" do
+        expect(redirect_uri.match(/error=([a-z_]+)&?/)[1]).to eq "invalid_scope"
+      end
+
+      it "includes error description in redirect uri" do
+        expect(redirect_uri.match(/error_description=(.+)&?/)[1]).to_not be_nil
+      end
+
+      it "does not issue any access token" do
+        expect(Doorkeeper::AccessToken.all).to be_empty
+      end
     end
   end
 
@@ -368,7 +432,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
       expect(json_response["redirect_uri"]).to eq(client.redirect_uri)
       expect(json_response["state"]).to be_nil
       expect(json_response["response_type"]).to eq("token")
-      expect(json_response["scope"]).to eq("")
+      expect(json_response["scope"]).to eq("default")
     end
   end
 
@@ -445,12 +509,12 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     end
 
     it "includes error in body" do
-      expect(response_json_body["error"]).to eq("unsupported_response_type")
+      expect(response_json_body["error"]).to eq("invalid_request")
     end
 
     it "includes error description in body" do
       expect(response_json_body["error_description"])
-        .to eq(translated_error_message(:unsupported_response_type))
+        .to eq(translated_invalid_request_error_message(:missing_param, :client_id))
     end
 
     it "does not issue any token" do
@@ -513,6 +577,8 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   describe "authorize response memoization" do
     it "memoizes the result of the authorization" do
+      pre_auth = double(:pre_auth, authorizable?: true)
+      allow(controller).to receive(:pre_auth) { pre_auth }
       strategy = double(:strategy, authorize: true)
       expect(strategy).to receive(:authorize).once
       allow(controller).to receive(:strategy) { strategy }

@@ -9,15 +9,21 @@ module Doorkeeper::OAuth
     end
 
     let :pre_auth do
-      double(
-        :pre_auth,
-        client: application,
-        redirect_uri: "http://tst.com/cb",
-        state: nil,
-        scopes: Scopes.from_string("public"),
-        error: nil,
-        authorizable?: true
-      )
+      server = Doorkeeper.configuration
+      allow(server).to receive(:default_scopes).and_return(Scopes.from_string("public"))
+      allow(server).to receive(:grant_flows).and_return(Scopes.from_string("implicit"))
+
+      client = Doorkeeper::OAuth::Client.new(application)
+
+      attributes = {
+        client_id: client.uid,
+        response_type: "token",
+        redirect_uri: "https://app.com/callback",
+      }
+
+      pre_auth = PreAuthorization.new(server, attributes)
+      pre_auth.authorizable?
+      pre_auth
     end
 
     let :owner do
@@ -38,14 +44,11 @@ module Doorkeeper::OAuth
       expect(subject.authorize).to be_a(CodeResponse)
     end
 
-    it "does not create token when not authorizable" do
-      allow(pre_auth).to receive(:authorizable?).and_return(false)
-      expect { subject.authorize }.not_to(change { Doorkeeper::AccessToken.count })
-    end
-
-    it "returns a error response" do
-      allow(pre_auth).to receive(:authorizable?).and_return(false)
-      expect(subject.authorize).to be_a(ErrorResponse)
+    context "when pre_auth is denied" do
+      it "does not create token and returns a error response" do
+        expect { subject.deny }.not_to(change { Doorkeeper::AccessToken.count })
+        expect(subject.deny).to be_a(ErrorResponse)
+      end
     end
 
     describe "with custom expiration" do

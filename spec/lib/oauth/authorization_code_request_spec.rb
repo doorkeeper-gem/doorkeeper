@@ -65,6 +65,16 @@ module Doorkeeper::OAuth
       subject.redirect_uri = nil
       subject.validate
       expect(subject.error).to eq(:invalid_request)
+      expect(subject.missing_param).to eq(:redirect_uri)
+    end
+
+    it "invalid code_verifier param because server does not support pkce" do
+      allow_any_instance_of(Doorkeeper::AccessGrant).to receive(:respond_to?).with(:code_challenge).and_return(false)
+
+      subject.code_verifier = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
+      subject.validate
+      expect(subject.error).to eq(:invalid_request)
+      expect(subject.invalid_request_reason).to eq(:not_support_pkce)
     end
 
     it "matches the redirect_uri with grant's one" do

@@ -5,6 +5,7 @@ require "spec_helper"
 feature "Authorization Code Flow Errors" do
   let(:client_params) { {} }
   background do
+    default_scopes_exist :default
     config_is_set(:authenticate_resource_owner) { User.first || redirect_to("/sign_in") }
     client_exists client_params
     create_resource_owner

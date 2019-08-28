@@ -172,7 +172,7 @@ describe "Refresh Token Flow" do
       post refresh_token_endpoint_url(client: @client, refresh_token: @token.refresh_token)
 
       should_not_have_json "refresh_token"
-      should_have_json "error", "invalid_request"
+      should_have_json "error", "invalid_grant"
     end
   end
 

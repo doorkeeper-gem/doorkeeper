@@ -44,6 +44,10 @@ module Doorkeeper
       def get_error_response_from_exception(exception)
         if exception.respond_to?(:response)
           exception.response
+        elsif exception.type == :invalid_request
+          OAuth::InvalidRequestResponse.new(name: exception.type,
+                                            state: params[:state],
+                                            missing_param: exception.missing_param)
         else
           OAuth::ErrorResponse.new(name: exception.type, state: params[:state])
         end

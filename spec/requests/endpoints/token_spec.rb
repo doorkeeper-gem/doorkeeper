@@ -70,6 +70,6 @@ describe "Token endpoint" do
 
     should_not_have_json "access_token"
     should_have_json "error", "invalid_request"
-    should_have_json "error_description", translated_error_message("invalid_request")
+    should_have_json "error_description", translated_invalid_request_error_message(:missing_param, :grant_type)
   end
 end

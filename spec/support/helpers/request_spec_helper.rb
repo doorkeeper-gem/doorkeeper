@@ -94,6 +94,14 @@ module RequestSpecHelper
     I18n.translate(key, scope: %i[doorkeeper errors messages])
   end
 
+  def i_should_see_translated_invalid_request_error_message(key, value)
+    i_should_see translated_invalid_request_error_message(key, value)
+  end
+
+  def translated_invalid_request_error_message(key, value)
+    I18n.translate key, scope: %i[doorkeeper errors messages invalid_request], value: value
+  end
+
   def response_status_should_be(status)
     expect(request_response.status.to_i).to eq(status)
   end
