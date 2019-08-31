@@ -502,7 +502,21 @@ describe Doorkeeper, "configuration" do
 
   describe "base_controller" do
     context "default" do
-      it { expect(Doorkeeper.configuration.base_controller).to eq("ActionController::Base") }
+      it { expect(Doorkeeper.configuration.base_controller).to be_an_instance_of(Proc) }
+
+      it "resolves to a ApplicationController::Base in default mode" do
+        expect(Doorkeeper.configuration.resolve_controller(:base))
+          .to eq(ActionController::Base)
+      end
+
+      it "resolves to a ApplicationController::API in api_only mode" do
+        Doorkeeper.configure do
+          api_only
+        end
+
+        expect(Doorkeeper.configuration.resolve_controller(:base))
+          .to eq(ActionController::API)
+      end
     end
 
     context "custom" do
@@ -526,11 +540,11 @@ describe Doorkeeper, "configuration" do
       before do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
-          base_metal_controller "ApplicationController"
+          base_metal_controller { "ApplicationController" }
         end
       end
 
-      it { expect(Doorkeeper.configuration.base_metal_controller).to eq("ApplicationController") }
+      it { expect(Doorkeeper.configuration.resolve_controller(:base_metal)).to eq(ApplicationController) }
     end
   end
 

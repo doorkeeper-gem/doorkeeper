@@ -7,7 +7,8 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#PR ID] Add your description here.
+- [#1305] Make `Doorkeeper::ApplicationController` to inherit from `ActionController::API` in cases
+  when `api_mode` enabled (fixes #1302).
 
 ## 5.2.0.rc3
 

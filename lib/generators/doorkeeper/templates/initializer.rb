@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 Doorkeeper.configure do
-  # Change the ORM that doorkeeper will use (needs plugins)
+  # Change the ORM that doorkeeper will use (requires ORM extensions installed).
+  # Check the list of supported ORMs here: https://github.com/doorkeeper-gem/doorkeeper#orms
   orm :active_record
 
   # This block will be called to check whether the resource owner is authenticated or not.
@@ -39,18 +40,18 @@ Doorkeeper.configure do
   #
   # enforce_content_type
 
-  # Authorization Code expiration time (default 10 minutes).
+  # Authorization Code expiration time (default: 10 minutes).
   #
   # authorization_code_expires_in 10.minutes
 
-  # Access token expiration time (default 2 hours).
-  # If you want to disable expiration, set this to nil.
+  # Access token expiration time (default: 2 hours).
+  # If you want to disable expiration, set this to `nil`.
   #
   # access_token_expires_in 2.hours
 
   # Assign custom TTL for access tokens. Will be used instead of access_token_expires_in
   # option if defined. In case the block returns `nil` value Doorkeeper fallbacks to
-  # `access_token_expires_in` configuration option value. If you really need to issue a
+  # +access_token_expires_in+ configuration option value. If you really need to issue a
   # non-expiring access token (which is not recommended) then you need to return
   # Float::INFINITY from this block.
   #
@@ -69,8 +70,9 @@ Doorkeeper.configure do
   #
   # access_token_generator '::Doorkeeper::JWT'
 
-  # The controller Doorkeeper::ApplicationController inherits from.
-  # Defaults to ActionController::Base.
+  # The controller +Doorkeeper::ApplicationController+ inherits from.
+  # Defaults to +ActionController::Base+ unless +api_only+ is set, which changes the default to
+  # +ActionController::API+. The return value of this option must be a stringified class name.
   # See https://doorkeeper.gitbook.io/guides/configuration/other-configurations#custom-base-controller
   #
   # base_controller 'ApplicationController'
@@ -128,11 +130,10 @@ Doorkeeper.configure do
   #
   # hash_application_secrets using: '::Doorkeeper::SecretStoring::BCrypt'
 
-  # When the above option is enabled,
-  # and a hashed token or secret is not found,
-  # you can allow to fall back to another strategy.
-  # For users upgrading doorkeeper and wishing to enable hashing,
-  # you will probably want to enable the fallback to plain tokens.
+  # When the above option is enabled, and a hashed token or secret is not found,
+  # you can allow to fall back to another strategy. For users upgrading
+  # doorkeeper and wishing to enable hashing, you will probably want to enable
+  # the fallback to plain tokens.
   #
   # This will ensure that old access tokens and secrets
   # will remain valid even if the hashing above is enabled.
@@ -141,8 +142,8 @@ Doorkeeper.configure do
 
   # Issue access tokens with refresh token (disabled by default), you may also
   # pass a block which accepts `context` to customize when to give a refresh
-  # token or not. Similar to `custom_access_token_expires_in`, `context` has
-  # the properties:
+  # token or not. Similar to +custom_access_token_expires_in+, `context` has
+  # the following properties:
   #
   # `client` - the OAuth client application (see Doorkeeper::OAuth::Client)
   # `grant_type` - the grant type of the request (see Doorkeeper::OAuth)
@@ -151,7 +152,7 @@ Doorkeeper.configure do
   # use_refresh_token
 
   # Provide support for an owner to be assigned to each registered application (disabled by default)
-  # Optional parameter confirmation: true (default false) if you want to enforce ownership of
+  # Optional parameter confirmation: true (default: false) if you want to enforce ownership of
   # a registered application
   # NOTE: you must also run the rails g doorkeeper:application_owner generator
   # to provide the necessary support
@@ -165,17 +166,17 @@ Doorkeeper.configure do
   # default_scopes  :public
   # optional_scopes :write, :update
 
-  # Define scopes_by_grant_type to restrict only certain scopes for grant_type
+  # Allows to restrict only certain scopes for grant_type.
   # By default, all the scopes will be available for all the grant types.
   #
   # Keys to this hash should be the name of grant_type and
   # values should be the array of scopes for that grant type.
-  # Note: scopes should be from configured_scopes(i.e. default or optional)
+  # Note: scopes should be from configured_scopes (i.e. default or optional)
   #
   # scopes_by_grant_type password: [:write], client_credentials: [:update]
 
   # Forbids creating/updating applications with arbitrary scopes that are
-  # not in configuration, i.e. `default_scopes` or `optional_scopes`.
+  # not in configuration, i.e. +default_scopes+ or +optional_scopes+.
   # (disabled by default)
   #
   # enforce_configured_scopes
@@ -237,7 +238,7 @@ Doorkeeper.configure do
   # is invalid, expired, revoked or has invalid scopes.
   #
   # If you want to render error response yourself (i.e. rescue exceptions),
-  # set  handle_auth_errors to `:raise` and rescue Doorkeeper::Errors::InvalidToken
+  # set +handle_auth_errors+ to `:raise` and rescue Doorkeeper::Errors::InvalidToken
   # or following specific errors:
   #
   #   Doorkeeper::Errors::TokenForbidden, Doorkeeper::Errors::TokenExpired,
@@ -399,7 +400,7 @@ Doorkeeper.configure do
   # If you need to block the request at all, then configure your routes.rb or web-server
   # like nginx to forbid the request.
 
-  # WWW-Authenticate Realm (default "Doorkeeper").
+  # WWW-Authenticate Realm (default: "Doorkeeper").
   #
   # realm "Doorkeeper"
 end

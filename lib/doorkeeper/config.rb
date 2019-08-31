@@ -336,7 +336,9 @@ module Doorkeeper
     #
     # @param base_controller [String] the name of the base controller
     option :base_controller,
-           default: "ActionController::Base"
+           default: (lambda do
+             api_only ? "ActionController::API" : "ActionController::Base"
+           end)
 
     # The controller Doorkeeper::ApplicationMetalController inherits from.
     # Defaults to ActionController::API.
@@ -415,6 +417,17 @@ module Doorkeeper
 
     def token_reuse_limit
       @token_reuse_limit ||= 100
+    end
+
+    def resolve_controller(name)
+      config_option = public_send(:"#{name}_controller")
+      controller_name = if config_option.respond_to?(:call)
+                          instance_exec(&config_option)
+                        else
+                          config_option
+                        end
+
+      controller_name.constantize
     end
 
     def enforce_configured_scopes?

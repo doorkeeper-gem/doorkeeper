@@ -2,7 +2,7 @@
 
 module Doorkeeper
   class ApplicationController <
-    Doorkeeper.configuration.base_controller.constantize
+    Doorkeeper.configuration.resolve_controller(:base)
     include Helpers::Controller
 
     unless Doorkeeper.configuration.api_only
