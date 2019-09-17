@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#PR ID] Your PR description here.
+- [#PR 1308] Fixes doorkeeper api mode
 
 ## 5.2.0
 
