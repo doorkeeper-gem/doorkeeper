@@ -7,6 +7,10 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#PD ID] Your PR short description.
+
+## 5.2.1
+
 - [#1308] Fix flash types for `api_only` mode (no flashes for `ActionController::API`).
 - [#1306] Fix interpolation of `missing_param` i18n.
 
