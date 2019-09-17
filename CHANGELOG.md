@@ -7,7 +7,8 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#PR 1308] Fixes doorkeeper api mode
+- [#1308] Fix flash types for `api_only` mode (no flashes for `ActionController::API`).
+- [#1306] Fix interpolation of `missing_param` i18n.
 
 ## 5.2.0
 
