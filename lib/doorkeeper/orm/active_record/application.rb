@@ -60,7 +60,7 @@ module Doorkeeper
       end
     end
 
-    def to_json(options)
+    def to_json(options = nil)
       serializable_hash(except: :secret)
         .merge(secret: plaintext_secret)
         .to_json(options)

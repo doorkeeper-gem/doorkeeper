@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#PD ID] Your PR short description.
+- [#1309] Allow Doorkeeper::Application#to_json to work without arguments
 
 ## 5.2.1
 
