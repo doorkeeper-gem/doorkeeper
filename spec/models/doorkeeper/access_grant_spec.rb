@@ -61,10 +61,29 @@ describe Doorkeeper::AccessGrant do
         it "upgrades a plain token when falling back to it" do
           # Side-effect: This will automatically upgrade the token
           expect(clazz).to receive(:upgrade_fallback_value).and_call_original
-          expect(clazz.by_token(plain_text_token)).to eq(grant)
+          expect(clazz.by_token(plain_text_token))
+            .to have_attributes(
+              resource_owner_id: grant.resource_owner_id,
+              application_id: grant.application_id,
+              redirect_uri: grant.redirect_uri,
+              expires_in: grant.expires_in,
+              scopes: grant.scopes,
+            )
 
           # Will find subsequently by hashing the token
-          expect(clazz.by_token(plain_text_token)).to eq(grant)
+          expect(clazz.by_token(plain_text_token))
+            .to have_attributes(
+              resource_owner_id: grant.resource_owner_id,
+              application_id: grant.application_id,
+              redirect_uri: grant.redirect_uri,
+              expires_in: grant.expires_in,
+              scopes: grant.scopes,
+            )
+
+          # Not all the ORM support :id PK
+          if grant.respond_to?(:id)
+            expect(clazz.by_token(plain_text_token).id).to eq(grant.id)
+          end
 
           # And it modifies the token value
           grant.reload

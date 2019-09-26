@@ -7,13 +7,13 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#PD ID] Your PR short description.
-- [#1309] Allow Doorkeeper::Application#to_json to work without arguments
+- [#PR ID] Your PR short description.
+- [#1309] Allow `Doorkeeper::Application#to_json` to work without arguments.
 
 ## 5.2.1
 
 - [#1308] Fix flash types for `api_only` mode (no flashes for `ActionController::API`).
-- [#1306] Fix interpolation of `missing_param` i18n.
+- [#1306] Fix interpolation of `missing_param` I18n.
 
 ## 5.2.0
 

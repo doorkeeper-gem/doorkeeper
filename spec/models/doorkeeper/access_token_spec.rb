@@ -73,10 +73,25 @@ module Doorkeeper
             it "upgrades a plain token when falling back to it" do
               # Side-effect: This will automatically upgrade the token
               expect(clazz).to receive(:upgrade_fallback_value).and_call_original
-              expect(clazz.by_token(plain_text_token)).to eq(access_token)
+              expect(clazz.by_token(plain_text_token))
+                .to have_attributes(
+                  resource_owner_id: access_token.resource_owner_id,
+                  application_id: access_token.application_id,
+                  scopes: access_token.scopes,
+                )
 
               # Will find subsequently by hashing the token
-              expect(clazz.by_token(plain_text_token)).to eq(access_token)
+              expect(clazz.by_token(plain_text_token))
+                .to have_attributes(
+                  resource_owner_id: access_token.resource_owner_id,
+                  application_id: access_token.application_id,
+                  scopes: access_token.scopes,
+                )
+
+              # Not all the ORM support :id PK
+              if access_token.respond_to?(:id)
+                expect(clazz.by_token(plain_text_token).id).to eq(access_token.id)
+              end
 
               # And it modifies the token value
               access_token.reload
@@ -113,6 +128,7 @@ module Doorkeeper
         eigenclass.class_eval do
           remove_method :generate
         end
+
         module CustomGeneratorArgs
           def self.generate(opts = {})
             "custom_generator_token_#{opts[:application].name}"
@@ -307,10 +323,25 @@ module Doorkeeper
             it "upgrades a plain token when falling back to it" do
               # Side-effect: This will automatically upgrade the token
               expect(clazz).to receive(:upgrade_fallback_value).and_call_original
-              expect(clazz.by_refresh_token(plain_refresh_token)).to eq(access_token)
+              expect(clazz.by_refresh_token(plain_refresh_token))
+                .to have_attributes(
+                  token: access_token.token,
+                  resource_owner_id: access_token.resource_owner_id,
+                  application_id: access_token.application_id,
+                )
 
               # Will find subsequently by hashing the token
-              expect(clazz.by_refresh_token(plain_refresh_token)).to eq(access_token)
+              expect(clazz.by_refresh_token(plain_refresh_token))
+                .to have_attributes(
+                  token: access_token.token,
+                  resource_owner_id: access_token.resource_owner_id,
+                  application_id: access_token.application_id,
+                )
+
+              # Not all the ORM support :id PK
+              if access_token.respond_to?(:id)
+                expect(clazz.by_refresh_token(plain_refresh_token).id).to eq(access_token.id)
+              end
 
               # And it modifies the token value
               access_token.reload
