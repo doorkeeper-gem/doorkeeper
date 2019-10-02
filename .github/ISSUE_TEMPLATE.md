@@ -20,6 +20,21 @@ remove any confidential data if it exists).
 
 **Doorkeeper initializer**:
 
-**Ruby version**:
+```ruby
+# config/initializers/doorkeeper.rb
+Doorkeeper.configure do
+  # ...
+end
+```
+
+**Ruby version**: ``
 
 **Gemfile.lock**:
+
+<details>
+  <summary>Gemfile.lock content</summary>
+  
+```
+Place your Gemfile.lock content here
+```
+</details>
