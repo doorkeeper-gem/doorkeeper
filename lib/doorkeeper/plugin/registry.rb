@@ -42,11 +42,9 @@ module Doorkeeper
           assert_finalized!
 
           namespace = namespace.to_s
+          assert_namespace!(namespace)
 
-          unless namespace.match?(NAMESPACE_REGEX)
-            raise ArgumentError, "namespace must contain only letters, digits and underscore"
-          end
-          if exist?(klass, namespace)
+          if registered?(klass, namespace)
             raise ArgumentError, "'#{klass}' already registered for #{namespace}"
           end
 
@@ -128,13 +126,13 @@ module Doorkeeper
           plugins[namespace.to_s] || []
         end
 
-        def exist?(klass, namespace)
+        def registered?(klass, namespace)
           !namespaced_plugins(namespace).detect { |plugin| plugin[:class] == klass }.nil?
         end
 
         def build(klass, options)
-          raise ArgumentError, "'#{klass}' must be a class!" unless klass.is_a?(Class)
-          raise ArgumentError, "#{klass} must respond to #run method!" unless klass.method_defined?(:run)
+          assert_plugin_class!(klass)
+          assert_plugin_runnable!(klass)
 
           internal_options = (options || {}).except(:options)
 
@@ -148,11 +146,14 @@ module Doorkeeper
           namespaced_plugins(namespace).insert(index, plugin)
         end
 
-        def register_with_order(klass, namespace, options)
-          after = options.delete(:after)
-          before = options.delete(:before)
+        def run_plugin(plugin, **context)
+          plugin[:class].new(plugin[:options]).run(**context)
+        rescue StandardError => e
+          raise e unless plugin.dig(:internal_options, :ignore_exceptions)
+        end
 
-          plugin_class = after || before
+        def register_with_order(klass, namespace, options)
+          plugin_class = extract_plugin_from_options(options)
 
           index = index_for(plugin_class, namespace)
           raise ArgumentError, "#{plugin_class} could not be found for #{namespace}" if index.nil?
@@ -170,14 +171,36 @@ module Doorkeeper
           namespaced_plugins(namespace).index { |plugin| plugin[:class] == klass }
         end
 
-        def run_plugin(plugin, **context)
-          plugin[:class].new(plugin[:options]).run(**context)
-        rescue StandardError => e
-          raise e unless plugin.dig(:internal_options, :shallow_exceptions)
+        def extract_plugin_from_options(options = {})
+          after = options.delete(:after)
+          before = options.delete(:before)
+
+          plugin_class = after || before
+          assert_plugin_class!(plugin_class)
+
+          plugin_class
+        end
+
+        def assert_namespace!(namespace)
+          return if namespace.match?(NAMESPACE_REGEX)
+
+          raise ArgumentError, "namespace must contain only letters, digits and underscore"
         end
 
         def assert_finalized!
           raise FrozenError, "plugins already finalized!" if plugins.frozen?
+        end
+
+        def assert_plugin_class!(plugin_class)
+          return if plugin_class.is_a?(Class)
+
+          raise ArgumentError, "'#{plugin_class}' must be a class!"
+        end
+
+        def assert_plugin_runnable!(plugin_class)
+          return if plugin_class.method_defined?(:run)
+
+          raise ArgumentError, "#{plugin_class} must respond to #run method!"
         end
       end
     end
