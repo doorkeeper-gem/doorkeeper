@@ -46,6 +46,18 @@ module Doorkeeper
       AccessGrant.revoke_all_for(id, resource_owner)
     end
 
+    # Generates (or regenerates) the secret for this application.
+    #
+    # @param allow_overwrite [Boolean]
+    #   whether to allow overwriting an existing secret
+    #
+    def generate_secret(allow_overwrite = false)
+      return unless secret.blank? || allow_overwrite
+
+      @raw_secret = UniqueToken.generate
+      secret_strategy.store_secret(self, :secret, @raw_secret)
+    end
+
     # We keep a volatile copy of the raw secret for initial communication
     # The stored refresh_token may be mapped and not available in cleartext.
     #
@@ -70,13 +82,6 @@ module Doorkeeper
 
     def generate_uid
       self.uid = UniqueToken.generate if uid.blank?
-    end
-
-    def generate_secret
-      return unless secret.blank?
-
-      @raw_secret = UniqueToken.generate
-      secret_strategy.store_secret(self, :secret, @raw_secret)
     end
 
     def scopes_match_configured
