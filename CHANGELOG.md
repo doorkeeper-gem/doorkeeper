@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#PR ID] Your PR short description.
+- [#1315] Allow generation of new secret with `Doorkeeper::Application#renew_secret`.
 - [#1309] Allow `Doorkeeper::Application#to_json` to work without arguments.
 
 ## 5.2.1
