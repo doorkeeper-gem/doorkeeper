@@ -46,14 +46,10 @@ module Doorkeeper
       AccessGrant.revoke_all_for(id, resource_owner)
     end
 
-    # Generates (or regenerates) the secret for this application.
+    # Generates a new secret for this application, intended to be used
+    # for rotating the secret or in case of compromise.
     #
-    # @param allow_overwrite [Boolean]
-    #   whether to allow overwriting an existing secret
-    #
-    def generate_secret(allow_overwrite = false)
-      return unless secret.blank? || allow_overwrite
-
+    def renew_secret
       @raw_secret = UniqueToken.generate
       secret_strategy.store_secret(self, :secret, @raw_secret)
     end
@@ -82,6 +78,11 @@ module Doorkeeper
 
     def generate_uid
       self.uid = UniqueToken.generate if uid.blank?
+    end
+
+    def generate_secret
+      return unless secret.blank?
+      renew_secret
     end
 
     def scopes_match_configured
