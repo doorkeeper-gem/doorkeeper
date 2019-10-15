@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#PR ID] Your PR short description.
+- [#1317] Fix `Doorkeeper::Application` references passed to ORM's.
 - [#1309] Allow `Doorkeeper::Application#to_json` to work without arguments.
 
 ## 5.2.1

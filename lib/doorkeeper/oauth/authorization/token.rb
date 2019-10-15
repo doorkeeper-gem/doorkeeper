@@ -55,7 +55,7 @@ module Doorkeeper
             pre_auth.scopes
           )
           @token ||= AccessToken.find_or_create_for(
-            pre_auth.client,
+            pre_auth.client.application,
             resource_owner.id,
             pre_auth.scopes,
             self.class.access_token_expires_in(configuration, context),

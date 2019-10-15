@@ -14,7 +14,10 @@ module Doorkeeper
           existing_token&.revoke
 
           AccessToken.find_or_create_for(
-            client, nil, scopes, attributes[:expires_in],
+            client.application,
+            nil,
+            scopes,
+            attributes[:expires_in],
             attributes[:use_refresh_token]
           )
         end
