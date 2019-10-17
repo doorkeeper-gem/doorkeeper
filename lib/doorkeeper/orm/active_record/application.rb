@@ -46,6 +46,14 @@ module Doorkeeper
       AccessGrant.revoke_all_for(id, resource_owner)
     end
 
+    # Generates a new secret for this application, intended to be used
+    # for rotating the secret or in case of compromise.
+    #
+    def renew_secret
+      @raw_secret = UniqueToken.generate
+      secret_strategy.store_secret(self, :secret, @raw_secret)
+    end
+
     # We keep a volatile copy of the raw secret for initial communication
     # The stored refresh_token may be mapped and not available in cleartext.
     #
@@ -74,9 +82,7 @@ module Doorkeeper
 
     def generate_secret
       return unless secret.blank?
-
-      @raw_secret = UniqueToken.generate
-      secret_strategy.store_secret(self, :secret, @raw_secret)
+      renew_secret
     end
 
     def scopes_match_configured
