@@ -12,6 +12,8 @@ User-visible changes worth mentioning.
 - [#1345] Allow to set custom classes for Doorkeeper models, extract reusable AR mixins.
 - [#1346] Refactor `Doorkeeper::Application#to_json` into convenient `#as_json` (fix #1344).
 - [#1349] Fix `Doorkeeper::Application` AR associations using an incorrect foreign key name when using a custom class.
+- [#1318] Optimize fetching of tokens for `reuse_access_token` and revocation of
+  old access tokens
 
 ## 5.2.3
 

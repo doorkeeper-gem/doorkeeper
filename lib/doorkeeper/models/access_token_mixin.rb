@@ -191,9 +191,22 @@ module Doorkeeper
       # @return [Doorkeeper::AccessToken] array of matching AccessToken objects
       #
       def authorized_tokens_for(application_id, resource_owner_id)
-        where(application_id: application_id,
-              resource_owner_id: resource_owner_id,
-              revoked_at: nil)
+        # In case of static token expiry times, we can optimize fetching tokens
+        # by already filtering out tokens whose TTL has expired.
+        # We can't do that if custom expirations times have been configured, though.
+        unless Doorkeeper.configuration.option_defined?(:custom_access_token_expires_in)
+          valid_from = Doorkeeper.configuration.access_token_expires_in.seconds.ago
+        end
+
+        tokens = where(application_id: application_id,
+                       resource_owner_id: resource_owner_id,
+                       revoked_at: nil)
+
+        if valid_from
+          tokens.created_since(valid_from)
+        else
+          tokens
+        end
       end
 
       # Convenience method for backwards-compatibility, return the last

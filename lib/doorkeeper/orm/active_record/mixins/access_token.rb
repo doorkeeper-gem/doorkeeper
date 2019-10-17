@@ -22,6 +22,8 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       before_validation :generate_token, on: :create
       before_validation :generate_refresh_token,
                         on: :create, if: :use_refresh_token?
+
+      scope :created_since, ->(time) { where("created_at > ?", time) }
     end
 
     class_methods do
