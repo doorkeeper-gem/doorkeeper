@@ -31,16 +31,30 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
       end
 
       context "when existing token has not crossed token_reuse_limit" do
-        it "returns the existing valid token" do
+        let!(:existing_token) { subject.call(client, scopes, expires_in: 1000) }
+
+        before do
           allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
           allow(Doorkeeper.configuration).to receive(:token_reuse_limit).and_return(50)
-          existing_token = subject.call(client, scopes, expires_in: 1000)
-
           allow_any_instance_of(Doorkeeper::AccessToken).to receive(:expires_in_seconds).and_return(600)
+        end
+
+        it "returns the existing valid token" do
           result = subject.call(client, scopes, expires_in: 1000)
 
           expect(Doorkeeper::AccessToken.count).to eq(1)
           expect(result).to eq(existing_token)
+        end
+
+        context "and when revoke_previous_client_credentials_token is true" do
+          before do
+            allow(Doorkeeper.configuration).to receive(:revoke_previous_client_credentials_token).and_return(false)
+          end
+
+          it "does not revoke the existing valid token" do
+            subject.call(client, scopes, expires_in: 1000)
+            expect(existing_token.reload).not_to be_revoked
+          end
         end
       end
 
@@ -55,7 +69,6 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
 
           expect(Doorkeeper::AccessToken.count).to eq(2)
           expect(result).not_to eq(existing_token)
-          expect(existing_token.reload).to be_revoked
         end
       end
 
@@ -70,7 +83,6 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
 
           expect(Doorkeeper::AccessToken.count).to eq(2)
           expect(result).not_to eq(existing_token)
-          expect(existing_token.reload).to be_revoked
         end
       end
     end
@@ -84,7 +96,32 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
 
         expect(Doorkeeper::AccessToken.count).to eq(2)
         expect(result).not_to eq(existing_token)
+      end
+    end
+
+    context "when revoke_previous_client_credentials_token is true" do
+      let!(:existing_token) { subject.call(client, scopes, expires_in: 1000) }
+
+      before do
+        allow(Doorkeeper.configuration).to receive(:revoke_previous_client_credentials_token).and_return(true)
+      end
+
+      it "revokes the existing token" do
+        subject.call(client, scopes, expires_in: 1000)
         expect(existing_token.reload).to be_revoked
+      end
+    end
+
+    context "when revoke_previous_client_credentials_token is false" do
+      let!(:existing_token) { subject.call(client, scopes, expires_in: 1000) }
+
+      before do
+        allow(Doorkeeper.configuration).to receive(:revoke_previous_client_credentials_token).and_return(false)
+      end
+
+      it "does not revoke the existing token" do
+        subject.call(client, scopes, expires_in: 1000)
+        expect(existing_token.reload).not_to be_revoked
       end
     end
 
