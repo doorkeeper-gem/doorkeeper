@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#PR ID] Your PR short description.
+- [#1320] Call configured authenticate_resource_owner method once per request.
 - [#1315] Allow generation of new secret with `Doorkeeper::Application#renew_secret`.
 - [#1309] Allow `Doorkeeper::Application#to_json` to work without arguments.
 

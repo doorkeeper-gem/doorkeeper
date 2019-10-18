@@ -28,7 +28,9 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     end
 
     allow(Doorkeeper.configuration).to receive(:grant_flows).and_return(["implicit"])
-    allow(controller).to receive(:current_resource_owner).and_return(user)
+    allow(Doorkeeper.configuration).to receive(:authenticate_resource_owner).and_return(->(_) { authenticator_method })
+    allow(controller).to receive(:authenticator_method).and_return(user)
+    expect(controller).to receive(:authenticator_method).at_most(:once)
   end
 
   describe "POST #create" do
