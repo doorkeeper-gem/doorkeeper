@@ -61,6 +61,11 @@ requested a new access token, reenable it with `revoke_previous_client_credentia
 
 - [#1270] Find matching tokens in batches for `reuse_access_token` option (fix #1193).
 - [#1271] Reintroduce existing token revocation for client credentials.
+
+**[IMPORTANT]** If you rely on being able to fetch multiple access tokens from the same
+client using client credentials flow, you should skip to version 5.3, where this behaviour
+is deactivated by default.
+
 - [#1269] Update initializer template documentation.
 - [#1266] Use strong parameters within pre-authorization.
 - [#1264] Add :before_successful_authorization and :after_successful_authorization hooks in TokensController
