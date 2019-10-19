@@ -16,7 +16,9 @@ module Doorkeeper
 
       # :doc:
       def current_resource_owner
-        instance_eval(&Doorkeeper.configuration.authenticate_resource_owner)
+        @current_resource_owner ||= begin
+          instance_eval(&Doorkeeper.configuration.authenticate_resource_owner)
+        end
       end
 
       def resource_owner_from_credentials
