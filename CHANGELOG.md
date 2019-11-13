@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#PR ID] Your PR short description.
+- [#1326] Move response_type check in pre_authorization to a method to be easily to override
 
 ## 5.2.2
 
