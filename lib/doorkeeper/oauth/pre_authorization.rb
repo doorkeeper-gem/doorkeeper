@@ -45,12 +45,11 @@ module Doorkeeper
       end
 
       def error_response
-        is_implicit_flow = response_type == "token"
-
         if error == :invalid_request
-          OAuth::InvalidRequestResponse.from_request(self, response_on_fragment: is_implicit_flow)
+          OAuth::InvalidRequestResponse.from_request(self,
+                                                     response_on_fragment: response_on_fragment?)
         else
-          OAuth::ErrorResponse.from_request(self, response_on_fragment: is_implicit_flow)
+          OAuth::ErrorResponse.from_request(self, response_on_fragment: response_on_fragment?)
         end
       end
 
@@ -121,6 +120,10 @@ module Doorkeeper
       def validate_code_challenge_method
         code_challenge.blank? ||
           (code_challenge_method.present? && code_challenge_method =~ /^plain$|^S256$/)
+      end
+
+      def response_on_fragment?
+        response_type == "token"
       end
 
       def pre_auth_hash
