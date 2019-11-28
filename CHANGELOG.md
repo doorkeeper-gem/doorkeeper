@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#PR ID] Your PR short description.
+- [#1334] Remove `application_secret` flash helper and `redirect_to` keyword
 - [#1331] Move redirect_uri_validator to where it is used
 - [#1326] Move response_type check in pre_authorization to a method to be easily to override
 

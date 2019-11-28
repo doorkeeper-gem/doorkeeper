@@ -4,7 +4,6 @@ module Doorkeeper
   class ApplicationsController < Doorkeeper::ApplicationController
     layout "doorkeeper/admin" unless Doorkeeper.configuration.api_only
 
-    add_flash_types :application_secret unless Doorkeeper.configuration.api_only
     before_action :authenticate_admin!
     before_action :set_application, only: %i[show edit update destroy]
 
