@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "doorkeeper/orm/active_record/redirect_uri_validator"
+
 module Doorkeeper
   class Application < ActiveRecord::Base
     self.table_name = "#{table_name_prefix}oauth_applications#{table_name_suffix}"
