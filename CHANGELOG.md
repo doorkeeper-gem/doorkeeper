@@ -10,6 +10,7 @@ User-visible changes worth mentioning.
 - [#PR ID] Your PR short description.
 - [#1331] Move redirect_uri_validator to where it is used
 - [#1326] Move response_type check in pre_authorization to a method to be easily to override
+- [#1329] Fix find_in_batches order warning.
 
 ## 5.2.2
 

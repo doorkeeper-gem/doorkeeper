@@ -191,10 +191,9 @@ module Doorkeeper
       # @return [Doorkeeper::AccessToken] array of matching AccessToken objects
       #
       def authorized_tokens_for(application_id, resource_owner_id)
-        ordered_by(:created_at, :desc)
-          .where(application_id: application_id,
-                 resource_owner_id: resource_owner_id,
-                 revoked_at: nil)
+        where(application_id: application_id,
+              resource_owner_id: resource_owner_id,
+              revoked_at: nil)
       end
 
       # Convenience method for backwards-compatibility, return the last
@@ -209,7 +208,8 @@ module Doorkeeper
       #   nil if nothing was found
       #
       def last_authorized_token_for(application_id, resource_owner_id)
-        authorized_tokens_for(application_id, resource_owner_id).first
+        authorized_tokens_for(application_id, resource_owner_id)
+          .ordered_by(:created_at, :desc).first
       end
 
       ##
