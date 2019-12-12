@@ -12,7 +12,7 @@ module Doorkeeper
         end
 
         def issue_token
-          @token ||= AccessGrant.create!(access_grant_attributes)
+          @token ||= Doorkeeper.config.access_grant_model.create!(access_grant_attributes)
         end
 
         def oob_redirect
@@ -47,7 +47,7 @@ module Doorkeeper
         # Ensures firstly, if migration with additional PKCE columns was
         # generated and migrated
         def pkce_supported?
-          Doorkeeper::AccessGrant.pkce_supported?
+          Doorkeeper.config.access_grant_model.pkce_supported?
         end
       end
     end

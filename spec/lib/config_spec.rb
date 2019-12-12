@@ -549,6 +549,8 @@ describe Doorkeeper, "configuration" do
   end
 
   if DOORKEEPER_ORM == :active_record
+    class FakeCustomModel; end
+
     describe "active_record_options" do
       let(:models) { [Doorkeeper::AccessGrant, Doorkeeper::AccessToken, Doorkeeper::Application] }
 
@@ -569,6 +571,57 @@ describe Doorkeeper, "configuration" do
             establish_connection: Rails.configuration.database_configuration[Rails.env]
           )
         end
+      end
+    end
+
+    describe "access_token_class" do
+      it "uses default doorkeeper value" do
+        expect(subject.access_token_class).to eq("Doorkeeper::AccessToken")
+        expect(subject.access_token_model).to be(Doorkeeper::AccessToken)
+      end
+
+      it "can change the value" do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_token_class "FakeCustomModel"
+        end
+
+        expect(subject.access_token_class).to eq("FakeCustomModel")
+        expect(subject.access_token_model).to be(FakeCustomModel)
+      end
+    end
+
+    describe "access_grant_class" do
+      it "uses default doorkeeper value" do
+        expect(subject.access_grant_class).to eq("Doorkeeper::AccessGrant")
+        expect(subject.access_grant_model).to be(Doorkeeper::AccessGrant)
+      end
+
+      it "can change the value" do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          access_grant_class "FakeCustomModel"
+        end
+
+        expect(subject.access_grant_class).to eq("FakeCustomModel")
+        expect(subject.access_grant_model).to be(FakeCustomModel)
+      end
+    end
+
+    describe "application_class" do
+      it "uses default doorkeeper value" do
+        expect(subject.application_class).to eq("Doorkeeper::Application")
+        expect(subject.application_model).to be(Doorkeeper::Application)
+      end
+
+      it "can change the value" do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          application_class "FakeCustomModel"
+        end
+
+        expect(subject.application_class).to eq("FakeCustomModel")
+        expect(subject.application_model).to be(FakeCustomModel)
       end
     end
   end

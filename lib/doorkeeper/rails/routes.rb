@@ -17,7 +17,7 @@ module Doorkeeper
       end
 
       def self.install!
-        ActionDispatch::Routing::Mapper.send :include, Doorkeeper::Rails::Routes::Helper
+        ActionDispatch::Routing::Mapper.include Doorkeeper::Rails::Routes::Helper
       end
 
       attr_reader :routes

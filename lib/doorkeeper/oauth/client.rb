@@ -11,13 +11,13 @@ module Doorkeeper
         @application = application
       end
 
-      def self.find(uid, method = Application.method(:by_uid))
+      def self.find(uid, method = Doorkeeper.config.application_model.method(:by_uid))
         if (application = method.call(uid))
           new(application)
         end
       end
 
-      def self.authenticate(credentials, method = Application.method(:by_uid_and_secret))
+      def self.authenticate(credentials, method = Doorkeeper.config.application_model.method(:by_uid_and_secret))
         return if credentials.blank?
 
         if (application = method.call(credentials.uid, credentials.secret))

@@ -36,7 +36,7 @@ module Doorkeeper
 
       def find_or_create_access_token(client, resource_owner_id, scopes, server)
         context = Authorization::Token.build_context(client, grant_type, scopes)
-        @access_token = AccessToken.find_or_create_for(
+        @access_token = Doorkeeper.config.access_token_model.find_or_create_for(
           client,
           resource_owner_id,
           scopes,

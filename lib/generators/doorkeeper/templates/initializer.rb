@@ -29,6 +29,35 @@ Doorkeeper.configure do
   #   end
   # end
 
+  # You can use your own model classes if you need to extend (or even override) default
+  # Doorkeeper models such as `Application`, `AccessToken` and `AccessGrant.
+  #
+  # Be default Doorkeeper ActiveRecord ORM uses it's own classes:
+  #
+  # access_token_class "Doorkeeper::AccessToken"
+  # access_grant_class "Doorkeeper::AccessGrant"
+  # application_class "Doorkeeper::Application"
+  #
+  # Don't forget to include Doorkeeper ORM mixins into your custom models:
+  #
+  #   *  ::Doorkeeper::Orm::ActiveRecord::Mixins::AccessToken - for access token
+  #   *  ::Doorkeeper::Orm::ActiveRecord::Mixins::AccessGrant - for access grant
+  #   *  ::Doorkeeper::Orm::ActiveRecord::Mixins::Application - for application (OAuth2 clients)
+  #
+  # For example:
+  #
+  # access_token_class "MyAccessToken"
+  #
+  # class MyAccessToken < ApplicationRecord
+  #   include ::Doorkeeper::Orm::ActiveRecord::Mixins::AccessToken
+  #
+  #   self.table_name = "hey_i_wanna_my_name"
+  #
+  #   def destroy_me!
+  #     destroy
+  #   end
+  # end
+
   # If you are planning to use Doorkeeper in Rails 5 API-only application, then you might
   # want to use API mode that will skip all the views management and change the way how
   # Doorkeeper responds to a requests.

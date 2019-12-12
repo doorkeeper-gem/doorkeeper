@@ -54,7 +54,7 @@ module Doorkeeper
             Doorkeeper::OAuth::IMPLICIT,
             pre_auth.scopes
           )
-          @token ||= AccessToken.find_or_create_for(
+          @token ||= Doorkeeper.config.access_token_model.find_or_create_for(
             pre_auth.client,
             resource_owner.id,
             pre_auth.scopes,

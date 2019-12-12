@@ -50,7 +50,7 @@ Style/DoubleNegation:
 
 Layout/MultilineMethodCallIndentation:
   EnforcedStyle: indented
-Layout/TrailingBlankLines:
+Layout/TrailingEmptyLines:
   Enabled: true
 Layout/DotPosition:
   EnforcedStyle: leading

@@ -40,11 +40,11 @@ module Doorkeeper
       #
       def old_refresh_token
         @old_refresh_token ||=
-          AccessToken.by_refresh_token(previous_refresh_token)
+          Doorkeeper.config.access_token_model.by_refresh_token(previous_refresh_token)
       end
 
       def refresh_token_revoked_on_use?
-        AccessToken.refresh_token_revoked_on_use?
+        Doorkeeper.config.access_token_model.refresh_token_revoked_on_use?
       end
     end
   end

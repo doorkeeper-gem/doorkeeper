@@ -6,7 +6,7 @@ module Doorkeeper
       delegate :credentials, :parameters, to: :server
 
       def refresh_token
-        AccessToken.by_refresh_token(parameters[:refresh_token])
+        Doorkeeper.config.access_token_model.by_refresh_token(parameters[:refresh_token])
       end
 
       def request
