@@ -82,7 +82,7 @@ User-visible changes worth mentioning.
 
   **[IMPORTANT]** If you have been using the master branch of doorkeeper with bcrypt in your Gemfile.lock,
   your application secrets have been hashed using BCrypt. To restore this behavior, use the initializer option
-  `use_application_hashing using: 'Doorkeeper::SecretStoring::BCrypt`.
+  `hash_application_secrets using: 'Doorkeeper::SecretStoring::BCrypt`.
 
 - [#1216] Add nil check to `expires_at` method.
 - [#1215] Fix deprecates for Rails 6.
