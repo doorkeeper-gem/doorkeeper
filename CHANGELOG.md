@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#PR ID] Your PR short description.
+- [#1339] Validate Resource Owner in `PasswordAccessTokenRequest` against `nil` and `false` values.
 
 ## 5.2.3
 
