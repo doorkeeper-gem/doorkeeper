@@ -274,6 +274,20 @@ describe "Resource Owner Password Credentials Flow" do
         post password_token_endpoint_url(client: @client)
       end.to_not(change { Doorkeeper::AccessToken.count })
     end
+
+    it "should not issue new token if resource_owner_from_credentials returned false or nil" do
+      config_is_set(:resource_owner_from_credentials) { false }
+
+      expect do
+        post password_token_endpoint_url(client: @client)
+      end.to_not(change { Doorkeeper::AccessToken.count })
+
+      config_is_set(:resource_owner_from_credentials) { nil }
+
+      expect do
+        post password_token_endpoint_url(client: @client)
+      end.to_not(change { Doorkeeper::AccessToken.count })
+    end
   end
 
   context "with invalid confidential client credentials" do

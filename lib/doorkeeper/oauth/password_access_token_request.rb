@@ -42,7 +42,7 @@ module Doorkeeper
       end
 
       def validate_resource_owner
-        !resource_owner.nil?
+        resource_owner.present?
       end
 
       def validate_client
