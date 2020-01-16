@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#1339] Validate Resource Owner in `PasswordAccessTokenRequest` against `nil` and `false` values.
+- [#1343] Fix ruby 2.7 kwargs warning in InvalidTokenResponse.
 
 ## 5.2.3
 
