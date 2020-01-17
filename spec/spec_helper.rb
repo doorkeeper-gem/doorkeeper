@@ -29,9 +29,6 @@ end
 
 Doorkeeper::RSpec.print_configuration_info
 
-# Remove after dropping support of Rails 4.2
-require "#{File.dirname(__FILE__)}/support/http_method_shim"
-
 require "support/orm/#{DOORKEEPER_ORM}"
 
 Dir["#{File.dirname(__FILE__)}/support/{dependencies,helpers,shared}/*.rb"].each { |file| require file }
