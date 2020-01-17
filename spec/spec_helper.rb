@@ -31,7 +31,7 @@ Doorkeeper::RSpec.print_configuration_info
 
 require "support/orm/#{DOORKEEPER_ORM}"
 
-Dir["#{File.dirname(__FILE__)}/support/{dependencies,helpers,shared}/*.rb"].each { |file| require file }
+Dir["#{File.dirname(__FILE__)}/support/{dependencies,helpers,shared}/*.rb"].sort.each { |file| require file }
 
 RSpec.configure do |config|
   config.infer_spec_type_from_file_location!

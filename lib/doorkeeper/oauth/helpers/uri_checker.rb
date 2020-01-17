@@ -18,7 +18,7 @@ module Doorkeeper
 
   # For backward compatibility with old rubies
   if Gem::Version.new(RUBY_VERSION) < Gem::Version.new("2.5.0")
-    IPAddr.send(:include, Doorkeeper::IPAddrLoopback)
+    IPAddr.include Doorkeeper::IPAddrLoopback
   end
 
   module OAuth

@@ -19,7 +19,7 @@ namespace :doorkeeper do
 
       desc "Removes expired (TTL passed) access tokens"
       task expired_tokens: "doorkeeper:setup" do
-        expirable_tokens = Doorkeeper::AccessToken.where(refresh_token: nil)
+        expirable_tokens = Doorkeeper.config.access_token_model.where(refresh_token: nil)
         cleaner = Doorkeeper::StaleRecordsCleaner.new(expirable_tokens)
         cleaner.clean_expired(Doorkeeper.configuration.access_token_expires_in)
       end

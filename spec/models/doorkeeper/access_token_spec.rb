@@ -77,7 +77,7 @@ module Doorkeeper
                 .to have_attributes(
                   resource_owner_id: access_token.resource_owner_id,
                   application_id: access_token.application_id,
-                  scopes: access_token.scopes,
+                  scopes: access_token.scopes
                 )
 
               # Will find subsequently by hashing the token
@@ -85,7 +85,7 @@ module Doorkeeper
                 .to have_attributes(
                   resource_owner_id: access_token.resource_owner_id,
                   application_id: access_token.application_id,
-                  scopes: access_token.scopes,
+                  scopes: access_token.scopes
                 )
 
               # Not all the ORM support :id PK
@@ -327,7 +327,7 @@ module Doorkeeper
                 .to have_attributes(
                   token: access_token.token,
                   resource_owner_id: access_token.resource_owner_id,
-                  application_id: access_token.application_id,
+                  application_id: access_token.application_id
                 )
 
               # Will find subsequently by hashing the token
@@ -335,7 +335,7 @@ module Doorkeeper
                 .to have_attributes(
                   token: access_token.token,
                   resource_owner_id: access_token.resource_owner_id,
-                  application_id: access_token.application_id,
+                  application_id: access_token.application_id
                 )
 
               # Not all the ORM support :id PK

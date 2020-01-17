@@ -82,7 +82,7 @@ module Doorkeeper
         return false unless grant.pkce_supported?
 
         if grant.code_challenge_method == "S256"
-          grant.code_challenge == AccessGrant.generate_code_challenge(code_verifier)
+          grant.code_challenge == Doorkeeper.config.access_grant_model.generate_code_challenge(code_verifier)
         elsif grant.code_challenge_method == "plain"
           grant.code_challenge == code_verifier
         else

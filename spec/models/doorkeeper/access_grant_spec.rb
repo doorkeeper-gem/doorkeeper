@@ -67,7 +67,7 @@ describe Doorkeeper::AccessGrant do
               application_id: grant.application_id,
               redirect_uri: grant.redirect_uri,
               expires_in: grant.expires_in,
-              scopes: grant.scopes,
+              scopes: grant.scopes
             )
 
           # Will find subsequently by hashing the token
@@ -77,13 +77,11 @@ describe Doorkeeper::AccessGrant do
               application_id: grant.application_id,
               redirect_uri: grant.redirect_uri,
               expires_in: grant.expires_in,
-              scopes: grant.scopes,
+              scopes: grant.scopes
             )
 
           # Not all the ORM support :id PK
-          if grant.respond_to?(:id)
-            expect(clazz.by_token(plain_text_token).id).to eq(grant.id)
-          end
+          expect(clazz.by_token(plain_text_token).id).to eq(grant.id) if grant.respond_to?(:id)
 
           # And it modifies the token value
           grant.reload

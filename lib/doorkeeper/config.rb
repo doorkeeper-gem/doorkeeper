@@ -11,36 +11,40 @@ module Doorkeeper
     end
   end
 
-  def self.configure(&block)
-    @config = Config::Builder.new(&block).build
-    setup_orm_adapter
-    setup_orm_models
-    setup_application_owner if @config.enable_application_owner?
-    @config
-  end
+  class << self
+    attr_reader :config
 
-  def self.configuration
-    @config || (raise MissingConfiguration)
-  end
+    def configure(&block)
+      @config = Config::Builder.new(&block).build
+      setup_orm_adapter
+      setup_orm_models
+      setup_application_owner if @config.enable_application_owner?
+      @config
+    end
 
-  def self.setup_orm_adapter
-    @orm_adapter = "doorkeeper/orm/#{configuration.orm}".classify.constantize
-  rescue NameError => e
-    raise e, "ORM adapter not found (#{configuration.orm})", <<-ERROR_MSG.strip_heredoc
-      [doorkeeper] ORM adapter not found (#{configuration.orm}), or there was an error
-      trying to load it.
+    def configuration
+      @config || (raise MissingConfiguration)
+    end
 
-      You probably need to add the related gem for this adapter to work with
-      doorkeeper.
-    ERROR_MSG
-  end
+    def setup_orm_adapter
+      @orm_adapter = "doorkeeper/orm/#{configuration.orm}".classify.constantize
+    rescue NameError => e
+      raise e, "ORM adapter not found (#{configuration.orm})", <<-ERROR_MSG.strip_heredoc
+        [doorkeeper] ORM adapter not found (#{configuration.orm}), or there was an error
+        trying to load it.
 
-  def self.setup_orm_models
-    @orm_adapter.initialize_models!
-  end
+        You probably need to add the related gem for this adapter to work with
+        doorkeeper.
+      ERROR_MSG
+    end
 
-  def self.setup_application_owner
-    @orm_adapter.initialize_application_owner!
+    def setup_orm_models
+      @orm_adapter.initialize_models!
+    end
+
+    def setup_application_owner
+      @orm_adapter.initialize_application_owner!
+    end
   end
 
   class Config
@@ -347,6 +351,15 @@ module Doorkeeper
     option :base_metal_controller,
            default: "ActionController::API"
 
+    option :access_token_class,
+           default: "Doorkeeper::AccessToken"
+
+    option :access_grant_class,
+           default: "Doorkeeper::AccessGrant"
+
+    option :application_class,
+           default: "Doorkeeper::Application"
+
     # Allows to set blank redirect URIs for Applications in case
     # server configured to use URI-less grant flows.
     #
@@ -397,6 +410,18 @@ module Doorkeeper
       validate_reuse_access_token_value
       validate_token_reuse_limit
       validate_secret_strategies
+    end
+
+    def access_token_model
+      @access_token_model ||= Doorkeeper.configuration.access_token_class.constantize
+    end
+
+    def access_grant_model
+      @access_grant_model ||= Doorkeeper.configuration.access_grant_class.constantize
+    end
+
+    def application_model
+      @application_model ||= Doorkeeper.configuration.application_class.constantize
     end
 
     def api_only
