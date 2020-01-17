@@ -37,6 +37,8 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       # Generates a new secret for this application, intended to be used
       # for rotating the secret or in case of compromise.
       #
+      # @return [String] new transformed secret value
+      #
       def renew_secret
         @raw_secret = Doorkeeper::OAuth::Helpers::UniqueToken.generate
         secret_strategy.store_secret(self, :secret, @raw_secret)
@@ -56,10 +58,15 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
         end
       end
 
-      def to_json(options = nil)
-        serializable_hash(except: :secret)
-          .merge(secret: plaintext_secret)
-          .to_json(options)
+      # This is the right way how we want to override ActiveRecord #to_json
+      #
+      # @return [String] entity attributes as JSON
+      #
+      def as_json(options = {})
+        hash = super
+
+        hash["secret"] = plaintext_secret if hash.key?("secret")
+        hash
       end
 
       private

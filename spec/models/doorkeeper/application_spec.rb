@@ -13,6 +13,78 @@ module Doorkeeper
     let(:uid) { SecureRandom.hex(8) }
     let(:secret) { SecureRandom.hex(8) }
 
+    it "is invalid without a name" do
+      new_application.name = nil
+      expect(new_application).not_to be_valid
+    end
+
+    it "is invalid without determining confidentiality" do
+      new_application.confidential = nil
+      expect(new_application).not_to be_valid
+    end
+
+    it "generates uid on create" do
+      expect(new_application.uid).to be_nil
+      new_application.save
+      expect(new_application.uid).not_to be_nil
+    end
+
+    it "generates uid on create if an empty string" do
+      new_application.uid = ""
+      new_application.save
+      expect(new_application.uid).not_to be_blank
+    end
+
+    it "generates uid on create unless one is set" do
+      new_application.uid = uid
+      new_application.save
+      expect(new_application.uid).to eq(uid)
+    end
+
+    it "is invalid without uid" do
+      new_application.save
+      new_application.uid = nil
+      expect(new_application).not_to be_valid
+    end
+
+    it "checks uniqueness of uid" do
+      app1 = FactoryBot.create(:application)
+      app2 = FactoryBot.create(:application)
+      app2.uid = app1.uid
+      expect(app2).not_to be_valid
+    end
+
+    it "expects database to throw an error when uids are the same" do
+      app1 = FactoryBot.create(:application)
+      app2 = FactoryBot.create(:application)
+      app2.uid = app1.uid
+      expect { app2.save!(validate: false) }.to raise_error(uniqueness_error)
+    end
+
+    it "generate secret on create" do
+      expect(new_application.secret).to be_nil
+      new_application.save
+      expect(new_application.secret).not_to be_nil
+    end
+
+    it "generate secret on create if is blank string" do
+      new_application.secret = ""
+      new_application.save
+      expect(new_application.secret).not_to be_blank
+    end
+
+    it "generate secret on create unless one is set" do
+      new_application.secret = secret
+      new_application.save
+      expect(new_application.secret).to eq(secret)
+    end
+
+    it "is invalid without secret" do
+      new_application.save
+      new_application.secret = nil
+      expect(new_application).not_to be_valid
+    end
+
     context "application_owner is enabled" do
       before do
         Doorkeeper.configure do
@@ -46,40 +118,6 @@ module Doorkeeper
           expect(new_application).to be_valid
         end
       end
-    end
-
-    it "is invalid without a name" do
-      new_application.name = nil
-      expect(new_application).not_to be_valid
-    end
-
-    it "is invalid without determining confidentiality" do
-      new_application.confidential = nil
-      expect(new_application).not_to be_valid
-    end
-
-    it "generates uid on create" do
-      expect(new_application.uid).to be_nil
-      new_application.save
-      expect(new_application.uid).not_to be_nil
-    end
-
-    it "generates uid on create if an empty string" do
-      new_application.uid = ""
-      new_application.save
-      expect(new_application.uid).not_to be_blank
-    end
-
-    it "generates uid on create unless one is set" do
-      new_application.uid = uid
-      new_application.save
-      expect(new_application.uid).to eq(uid)
-    end
-
-    it "is invalid without uid" do
-      new_application.save
-      new_application.uid = nil
-      expect(new_application).not_to be_valid
     end
 
     context "redirect URI" do
@@ -125,44 +163,6 @@ module Doorkeeper
           expect(new_application).not_to be_valid
         end
       end
-    end
-
-    it "checks uniqueness of uid" do
-      app1 = FactoryBot.create(:application)
-      app2 = FactoryBot.create(:application)
-      app2.uid = app1.uid
-      expect(app2).not_to be_valid
-    end
-
-    it "expects database to throw an error when uids are the same" do
-      app1 = FactoryBot.create(:application)
-      app2 = FactoryBot.create(:application)
-      app2.uid = app1.uid
-      expect { app2.save!(validate: false) }.to raise_error(uniqueness_error)
-    end
-
-    it "generate secret on create" do
-      expect(new_application.secret).to be_nil
-      new_application.save
-      expect(new_application.secret).not_to be_nil
-    end
-
-    it "generate secret on create if is blank string" do
-      new_application.secret = ""
-      new_application.save
-      expect(new_application.secret).not_to be_blank
-    end
-
-    it "generate secret on create unless one is set" do
-      new_application.secret = secret
-      new_application.save
-      expect(new_application.secret).to eq(secret)
-    end
-
-    it "is invalid without secret" do
-      new_application.save
-      new_application.secret = nil
-      expect(new_application).not_to be_valid
     end
 
     context "with hashing enabled" do
@@ -238,7 +238,7 @@ module Doorkeeper
       end
     end
 
-    describe :ordered_by do
+    describe "#ordered_by" do
       let(:applications) { FactoryBot.create_list(:application, 5) }
 
       context "when a direction is not specified" do
@@ -281,7 +281,7 @@ module Doorkeeper
       end
     end
 
-    describe :authorized_for do
+    describe "#authorized_for" do
       let(:resource_owner) { double(:resource_owner, id: 10) }
 
       it "is empty if the application is not authorized for anyone" do
@@ -313,7 +313,7 @@ module Doorkeeper
       end
     end
 
-    describe :revoke_tokens_and_grants_for do
+    describe "#revoke_tokens_and_grants_for" do
       it "revokes all access tokens and access grants" do
         application_id = 42
         resource_owner = double
@@ -326,7 +326,7 @@ module Doorkeeper
       end
     end
 
-    describe :by_uid_and_secret do
+    describe "#by_uid_and_secret" do
       context "when application is private/confidential" do
         it "finds the application via uid/secret" do
           app = FactoryBot.create :application
@@ -360,7 +360,7 @@ module Doorkeeper
       end
     end
 
-    describe :confidential? do
+    describe "#confidential?" do
       subject { FactoryBot.create(:application, confidential: confidential).confidential? }
 
       context "when application is private/confidential" do
@@ -371,6 +371,33 @@ module Doorkeeper
       context "when application is public/non-confidential" do
         let(:confidential) { false }
         it { expect(subject).to eq(false) }
+      end
+    end
+
+    describe "#as_json" do
+      let(:app) { FactoryBot.create :application, secret: "123123123" }
+
+      before do
+        allow(Doorkeeper.configuration)
+          .to receive(:application_secret_strategy).and_return(Doorkeeper::SecretStoring::Plain)
+      end
+
+      it "includes plaintext secret" do
+        expect(app.as_json).to include("secret" => "123123123")
+      end
+
+      it "respects custom options" do
+        expect(app.as_json(except: :secret)).not_to include("secret")
+        expect(app.as_json(only: :id)).to match("id" => app.id)
+      end
+
+      # AR specific
+      if DOORKEEPER_ORM == :active_record
+        it "correctly works with #to_json" do
+          ActiveRecord::Base.include_root_in_json = true
+          expect(app.to_json(include_root_in_json: true)).to match(/application.+?:\{/)
+          ActiveRecord::Base.include_root_in_json = false
+        end
       end
     end
   end

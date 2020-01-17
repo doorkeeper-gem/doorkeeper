@@ -10,6 +10,7 @@ User-visible changes worth mentioning.
 - [#1339] Validate Resource Owner in `PasswordAccessTokenRequest` against `nil` and `false` values.
 - [#1343] Fix ruby 2.7 kwargs warning in InvalidTokenResponse.
 - [#1345] Allow to set custom classes for Doorkeeper models, extract reusable AR mixins.
+- [#1346] Refactor `Doorkeeper::Application#to_json` into convenient `#as_json` (fix #1344).
 
 ## 5.2.3
 
