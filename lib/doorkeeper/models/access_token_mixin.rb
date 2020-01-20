@@ -51,7 +51,7 @@ module Doorkeeper
       def find_previous_refresh_token(previous_refresh_token)
         token = previous_refresh_token.to_s
 
-        find_by(:refresh_token => token) 
+        find_by(refresh_token: token)
       end
 
       # Revokes AccessToken records that have not been revoked and associated
