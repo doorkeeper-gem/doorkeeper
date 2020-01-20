@@ -39,8 +39,10 @@ module Doorkeeper
       #   Access Token record or nil if nothing found
       #
       def old_refresh_token
+        plaintext_previous_refresh_token = Doorkeeper.config.token_secret_strategy.restore_secret(self, :previous_refresh_token)
+
         @old_refresh_token ||=
-          Doorkeeper.config.access_token_model.by_refresh_token(previous_refresh_token)
+          Doorkeeper.config.access_token_model.by_refresh_token(plaintext_previous_refresh_token)
       end
 
       def refresh_token_revoked_on_use?
