@@ -10,10 +10,12 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       include ::Doorkeeper::ApplicationMixin
 
       has_many :access_grants,
+               foreign_key: :application_id,
                dependent: :delete_all,
                class_name: Doorkeeper.config.access_grant_class
 
       has_many :access_tokens,
+               foreign_key: :application_id,
                dependent: :delete_all,
                class_name: Doorkeeper.config.access_token_class
 
@@ -28,6 +30,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
 
       has_many :authorized_tokens,
                -> { where(revoked_at: nil) },
+               foreign_key: :application_id,
                class_name: Doorkeeper.config.access_token_class
 
       has_many :authorized_applications,
