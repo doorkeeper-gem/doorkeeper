@@ -11,6 +11,7 @@ User-visible changes worth mentioning.
 - [#1343] Fix ruby 2.7 kwargs warning in InvalidTokenResponse.
 - [#1345] Allow to set custom classes for Doorkeeper models, extract reusable AR mixins.
 - [#1346] Refactor `Doorkeeper::Application#to_json` into convenient `#as_json` (fix #1344).
+- [#1349] Fix `Doorkeeper::Application` AR associations using an incorrect foreign key name when using a custom class.
 
 ## 5.2.3
 
