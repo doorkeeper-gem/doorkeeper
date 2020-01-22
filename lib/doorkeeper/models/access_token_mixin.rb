@@ -40,20 +40,6 @@ module Doorkeeper
         find_by_plaintext_token(:refresh_token, refresh_token)
       end
 
-      # Returns an instance of the Doorkeeper::AccessToken
-      # with specific token value
-      #
-      # @param previous_refresh_token [#to_s]
-      #   previous refresh token value (any object that reponds to `#to_s`)
-      #
-      # @return [Doorkeeper::AccessToken, nil] AccessToken object or nil
-      #   if there is no record with such refresh token
-      def find_previous_refresh_token(previous_refresh_token)
-        token = previous_refresh_token.to_s
-
-        find_by(refresh_token: token)
-      end
-
       # Revokes AccessToken records that have not been revoked and associated
       # with the specific Application and Resource Owner.
       #
@@ -314,7 +300,27 @@ module Doorkeeper
       end
     end
 
+    # Revokes token with `:refresh_token` equal to `:previous_refresh_token`
+    # and clears `:previous_refresh_token` attribute.
+    #
+    def revoke_previous_refresh_token!
+      return unless self.class.refresh_token_revoked_on_use?
+
+      old_refresh_token&.revoke
+      update_attribute :previous_refresh_token, ""
+    end
+
     private
+
+    # Searches for Access Token record with `:refresh_token` equal to
+    # `:previous_refresh_token` value.
+    #
+    # @return [Doorkeeper::AccessToken, nil]
+    #   Access Token record or nil if nothing found
+    #
+    def old_refresh_token
+      @old_refresh_token ||= self.class.find_by(refresh_token: previous_refresh_token)
+    end
 
     # Generates refresh token with UniqueToken generator.
     #
