@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#1339] Validate Resource Owner in `PasswordAccessTokenRequest` against `nil` and `false` values.
+- [#1341] Fix `refresh_token_revoked_on_use` with `hash_token_secrets` enabled.
 - [#1343] Fix ruby 2.7 kwargs warning in InvalidTokenResponse.
 - [#1345] Allow to set custom classes for Doorkeeper models, extract reusable AR mixins.
 - [#1346] Refactor `Doorkeeper::Application#to_json` into convenient `#as_json` (fix #1344).
