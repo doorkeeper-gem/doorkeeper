@@ -72,7 +72,7 @@ module Doorkeeper
     # @param input [#to_s] Plain secret provided by user
     #        (any object that responds to `#to_s`)
     #
-    # @return [true] Whether the given secret matches the stored secret
+    # @return [Boolean] Whether the given secret matches the stored secret
     #                of this application.
     #
     def secret_matches?(input)
