@@ -143,6 +143,37 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
       end
     end
 
+    context "when user cannot access application" do
+      before do
+        allow(Doorkeeper.configuration).to receive(:authorize_resource_owner_for_client).and_return(->(*_) { false })
+        post :create, params: {
+          client_id: client.uid,
+          response_type: "token",
+          redirect_uri: client.redirect_uri,
+        }
+      end
+
+      let(:response_json_body) { JSON.parse(response.body) }
+
+      it "renders 400 error" do
+        expect(response.status).to eq 401
+      end
+
+      it "includes error name" do
+        expect(response_json_body["error"]).to eq("invalid_client")
+      end
+
+      it "includes error description" do
+        expect(response_json_body["error_description"]).to eq(
+          translated_error_message(:invalid_client),
+        )
+      end
+
+      it "does not issue any access token" do
+        expect(Doorkeeper::AccessToken.all).to be_empty
+      end
+    end
+
     context "when other error happens" do
       before do
         default_scopes_exist :public
@@ -206,6 +237,39 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
       it "includes error description" do
         expect(response_json_body["error_description"]).to eq(
           translated_invalid_request_error_message(:missing_param, :client_id),
+        )
+      end
+
+      it "does not issue any access token" do
+        expect(Doorkeeper::AccessToken.all).to be_empty
+      end
+    end
+
+    context "when user cannot access application" do
+      before do
+        allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
+        allow(Doorkeeper.configuration).to receive(:authorize_resource_owner_for_client).and_return(->(*_) { false })
+
+        post :create, params: {
+          client_id: client.uid,
+          response_type: "token",
+          redirect_uri: client.redirect_uri,
+        }
+      end
+
+      let(:response_json_body) { JSON.parse(response.body) }
+
+      it "renders 400 error" do
+        expect(response.status).to eq 401
+      end
+
+      it "includes error name" do
+        expect(response_json_body["error"]).to eq("invalid_client")
+      end
+
+      it "includes error description" do
+        expect(response_json_body["error_description"]).to eq(
+          translated_error_message(:invalid_client),
         )
       end
 
@@ -489,46 +553,106 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
   end
 
   describe "GET #new with errors" do
-    before do
-      default_scopes_exist :public
-      get :new, params: { an_invalid: "request" }
+    context "without valid params" do
+      before do
+        default_scopes_exist :public
+        get :new, params: { an_invalid: "request" }
+      end
+
+      it "does not redirect" do
+        expect(response).to_not be_redirect
+      end
+
+      it "does not issue any token" do
+        expect(Doorkeeper::AccessGrant.count).to eq 0
+        expect(Doorkeeper::AccessToken.count).to eq 0
+      end
     end
 
-    it "does not redirect" do
-      expect(response).to_not be_redirect
-    end
+    context "when user cannot access application" do
+      before do
+        allow(Doorkeeper.configuration).to receive(:authorize_resource_owner_for_client).and_return(->(*_) { false })
 
-    it "does not issue any token" do
-      expect(Doorkeeper::AccessGrant.count).to eq 0
-      expect(Doorkeeper::AccessToken.count).to eq 0
+        get :new, params: {
+          client_id: client.uid,
+          response_type: "token",
+          redirect_uri: client.redirect_uri,
+        }
+      end
+
+      it "does not redirect" do
+        expect(response).to_not be_redirect
+      end
+
+      it "does not issue any token" do
+        expect(Doorkeeper::AccessGrant.count).to eq 0
+        expect(Doorkeeper::AccessToken.count).to eq 0
+      end
     end
   end
 
   describe "GET #new in API mode with errors" do
-    let(:response_json_body) { JSON.parse(response.body) }
-
     before do
-      default_scopes_exist :public
       allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
-      get :new, params: { an_invalid: "request" }
+      default_scopes_exist :public
     end
 
-    it "should render bad request" do
-      expect(response).to have_http_status(:bad_request)
+    context "without valid params" do
+      before do
+        get :new, params: { an_invalid: "request" }
+      end
+
+      let(:response_json_body) { JSON.parse(response.body) }
+
+      it "should render bad request" do
+        expect(response).to have_http_status(:bad_request)
+      end
+
+      it "includes error in body" do
+        expect(response_json_body["error"]).to eq("invalid_request")
+      end
+
+      it "includes error description in body" do
+        expect(response_json_body["error_description"])
+          .to eq(translated_invalid_request_error_message(:missing_param, :client_id))
+      end
+
+      it "does not issue any token" do
+        expect(Doorkeeper::AccessGrant.count).to eq 0
+        expect(Doorkeeper::AccessToken.count).to eq 0
+      end
     end
 
-    it "includes error in body" do
-      expect(response_json_body["error"]).to eq("invalid_request")
-    end
+    context "when user cannot access application" do
+      before do
+        allow(Doorkeeper.configuration).to receive(:authorize_resource_owner_for_client).and_return(->(*_) { false })
 
-    it "includes error description in body" do
-      expect(response_json_body["error_description"])
-        .to eq(translated_invalid_request_error_message(:missing_param, :client_id))
-    end
+        get :new, params: {
+          client_id: client.uid,
+          response_type: "token",
+          redirect_uri: client.redirect_uri,
+        }
+      end
 
-    it "does not issue any token" do
-      expect(Doorkeeper::AccessGrant.count).to eq 0
-      expect(Doorkeeper::AccessToken.count).to eq 0
+      let(:response_json_body) { JSON.parse(response.body) }
+
+      it "should render bad request" do
+        expect(response).to have_http_status(:bad_request)
+      end
+
+      it "includes error in body" do
+        expect(response_json_body["error"]).to eq("invalid_client")
+      end
+
+      it "includes error description in body" do
+        expect(response_json_body["error_description"])
+          .to eq(translated_error_message(:invalid_client))
+      end
+
+      it "does not issue any token" do
+        expect(Doorkeeper::AccessGrant.count).to eq 0
+        expect(Doorkeeper::AccessToken.count).to eq 0
+      end
     end
   end
 
