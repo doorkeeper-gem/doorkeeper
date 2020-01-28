@@ -35,7 +35,7 @@ module Doorkeeper
           end
 
           def refresh_token_enabled?(server, context)
-            if server.refresh_token_enabled?.respond_to? :call
+            if server.refresh_token_enabled?.respond_to?(:call)
               server.refresh_token_enabled?.call(context)
             else
               !!server.refresh_token_enabled?
@@ -49,12 +49,15 @@ module Doorkeeper
         end
 
         def issue_token
+          return @token if defined?(@token)
+
           context = self.class.build_context(
             pre_auth.client,
             Doorkeeper::OAuth::IMPLICIT,
             pre_auth.scopes
           )
-          @token ||= Doorkeeper.config.access_token_model.find_or_create_for(
+
+          @token = Doorkeeper.config.access_token_model.find_or_create_for(
             pre_auth.client,
             resource_owner.id,
             pre_auth.scopes,

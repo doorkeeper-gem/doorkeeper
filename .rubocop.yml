@@ -26,7 +26,6 @@ Style/StringLiterals:
   EnforcedStyle: double_quotes
 Style/StringLiteralsInInterpolation:
   EnforcedStyle: double_quotes
-
 Style/FrozenStringLiteralComment:
   Enabled: true
 
@@ -41,8 +40,7 @@ Style/WordArray:
   MinSize: 3
 
 Style/ClassAndModuleChildren:
-  Exclude:
-    - spec/**/*
+  Enabled: false
 Style/NumericPredicate:
   Enabled: false
 Style/DoubleNegation:

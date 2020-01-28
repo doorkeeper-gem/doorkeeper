@@ -11,10 +11,10 @@ gem "rails", "~> 6.0.0"
 gem "rspec-core", github: "rspec/rspec-core"
 gem "rspec-expectations", github: "rspec/rspec-expectations"
 gem "rspec-mocks", github: "rspec/rspec-mocks"
-gem "rspec-rails", "4.0.0.beta4"
+gem "rspec-rails", "4.0.0.beta3"
 gem "rspec-support", github: "rspec/rspec-support"
 
-gem "rubocop", "~> 0.66"
+gem "rubocop", "~> 0.75"
 gem "rubocop-performance"
 
 gem "bcrypt", "~> 3.1", require: false

@@ -14,7 +14,7 @@ class Doorkeeper::OAuth::Client
       expect(Credentials.new("something", "something")).to be_present
     end
 
-    describe :from_request do
+    describe ".from_request" do
       let(:request) { double.as_null_object }
 
       let(:method) do
