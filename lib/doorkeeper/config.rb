@@ -409,15 +409,15 @@ module Doorkeeper
     end
 
     def access_token_model
-      @access_token_model ||= Doorkeeper.configuration.access_token_class.constantize
+      @access_token_model ||= access_token_class.constantize
     end
 
     def access_grant_model
-      @access_grant_model ||= Doorkeeper.configuration.access_grant_class.constantize
+      @access_grant_model ||= access_grant_class.constantize
     end
 
     def application_model
-      @application_model ||= Doorkeeper.configuration.application_class.constantize
+      @application_model ||= application_class.constantize
     end
 
     def api_only
