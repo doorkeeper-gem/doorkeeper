@@ -12,8 +12,6 @@ module Doorkeeper
   end
 
   class << self
-    attr_reader :config
-
     def configure(&block)
       @config = Config::Builder.new(&block).build
       setup_orm_adapter
@@ -25,6 +23,8 @@ module Doorkeeper
     def configuration
       @config || (raise MissingConfiguration)
     end
+
+    alias config configuration
 
     def setup_orm_adapter
       @orm_adapter = "doorkeeper/orm/#{configuration.orm}".classify.constantize
@@ -399,9 +399,7 @@ module Doorkeeper
              end
            end)
 
-    attr_reader :api_only,
-                :enforce_content_type,
-                :reuse_access_token,
+    attr_reader :reuse_access_token,
                 :token_secret_fallback_strategy,
                 :application_secret_fallback_strategy
 

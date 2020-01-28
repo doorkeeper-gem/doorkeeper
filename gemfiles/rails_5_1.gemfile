@@ -8,7 +8,7 @@ gem "rspec-expectations", git: "https://github.com/rspec/rspec-expectations.git"
 gem "rspec-mocks", git: "https://github.com/rspec/rspec-mocks.git"
 gem "rspec-rails", "4.0.0.beta3"
 gem "rspec-support", git: "https://github.com/rspec/rspec-support.git"
-gem "rubocop", "~> 0.66"
+gem "rubocop", "~> 0.75"
 gem "rubocop-performance"
 gem "bcrypt", "~> 3.1", require: false
 gem "activerecord-jdbcsqlite3-adapter", platform: :jruby
