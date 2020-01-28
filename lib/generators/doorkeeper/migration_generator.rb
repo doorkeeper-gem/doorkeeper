@@ -15,7 +15,7 @@ module Doorkeeper
       migration_template(
         "migration.rb.erb",
         "db/migrate/create_doorkeeper_tables.rb",
-        migration_version: migration_version
+        migration_version: migration_version,
       )
     end
 

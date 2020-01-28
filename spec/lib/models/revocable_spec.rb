@@ -40,15 +40,15 @@ describe "Revocable" do
       `previous_refresh_token` attribute" do
       previous_token = FactoryBot.create(
         :access_token,
-        refresh_token: "refresh_token"
+        refresh_token: "refresh_token",
       )
       current_token = FactoryBot.create(
         :access_token,
-        previous_refresh_token: previous_token.refresh_token
+        previous_refresh_token: previous_token.refresh_token,
       )
 
       expect_any_instance_of(
-        Doorkeeper::AccessToken
+        Doorkeeper::AccessToken,
       ).to receive(:revoke).and_call_original
       current_token.revoke_previous_refresh_token!
 

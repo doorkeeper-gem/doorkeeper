@@ -30,7 +30,7 @@ module Doorkeeper
       def doorkeeper_render_error_with(error)
         options = doorkeeper_render_options(error) || {}
         status = doorkeeper_status_for_error(
-          error, options.delete(:respond_not_found_when_forbidden)
+          error, options.delete(:respond_not_found_when_forbidden),
         )
         if options.blank?
           head status
@@ -72,7 +72,7 @@ module Doorkeeper
       def doorkeeper_token
         @doorkeeper_token ||= OAuth::Token.authenticate(
           request,
-          *Doorkeeper.configuration.access_token_methods
+          *Doorkeeper.configuration.access_token_methods,
         )
       end
     end

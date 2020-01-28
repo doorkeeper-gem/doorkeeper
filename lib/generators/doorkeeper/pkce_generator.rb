@@ -16,7 +16,7 @@ module Doorkeeper
       migration_template(
         "enable_pkce_migration.rb.erb",
         "db/migrate/enable_pkce.rb",
-        migration_version: migration_version
+        migration_version: migration_version,
       )
     end
 

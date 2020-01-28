@@ -37,7 +37,7 @@ module Doorkeeper
           scope_str: scopes.to_s,
           server_scopes: server.scopes,
           app_scopes: client_scopes,
-          grant_type: grant_type
+          grant_type: grant_type,
         )
       end
 

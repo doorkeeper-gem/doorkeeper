@@ -16,7 +16,7 @@ module Doorkeeper
       migration_template(
         "add_owner_to_application_migration.rb.erb",
         "db/migrate/add_owner_to_application.rb",
-        migration_version: migration_version
+        migration_version: migration_version,
       )
     end
 

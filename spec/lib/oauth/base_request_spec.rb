@@ -59,7 +59,7 @@ describe Doorkeeper::OAuth::BaseRequest do
 
         expect(result).to be_an_instance_of(Doorkeeper::OAuth::TokenResponse)
         expect(result.body).to eq(
-          Doorkeeper::OAuth::TokenResponse.new(access_token).body
+          Doorkeeper::OAuth::TokenResponse.new(access_token).body,
         )
       end
     end
@@ -80,7 +80,7 @@ describe Doorkeeper::OAuth::BaseRequest do
           expect(result.body).to eq(
             error: :server_error,
             error_description: translated_error_message(:server_error),
-            state: "hello"
+            state: "hello",
           )
         end
       end
@@ -100,7 +100,7 @@ describe Doorkeeper::OAuth::BaseRequest do
           expect(result.body).to eq(
             error: :invalid_request,
             error_description: translated_invalid_request_error_message(:unknown, :unknown),
-            state: "hello"
+            state: "hello",
           )
         end
       end
@@ -122,17 +122,19 @@ describe Doorkeeper::OAuth::BaseRequest do
         client,
         "1",
         "public",
-        server
+        server,
       )
 
       expect(result).to be_an_instance_of(Doorkeeper::AccessToken)
     end
 
     it "respects custom_access_token_expires_in" do
-      server = double(:server,
-                      access_token_expires_in: 100,
-                      custom_access_token_expires_in: ->(context) { context.scopes == "public" ? 500 : nil },
-                      refresh_token_enabled?: false)
+      server = double(
+        :server,
+        access_token_expires_in: 100,
+        custom_access_token_expires_in: ->(context) { context.scopes == "public" ? 500 : nil },
+        refresh_token_enabled?: false,
+      )
 
       allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
 
@@ -140,18 +142,20 @@ describe Doorkeeper::OAuth::BaseRequest do
         client,
         "1",
         "public",
-        server
+        server,
       )
       expect(result.expires_in).to eql(500)
     end
 
     it "respects use_refresh_token with a block" do
-      server = double(:server,
-                      access_token_expires_in: 100,
-                      custom_access_token_expires_in: ->(_context) { nil },
-                      refresh_token_enabled?: lambda { |context|
-                        context.scopes == "public"
-                      })
+      server = double(
+        :server,
+        access_token_expires_in: 100,
+        custom_access_token_expires_in: ->(_context) { nil },
+        refresh_token_enabled?: lambda { |context|
+          context.scopes == "public"
+        },
+      )
 
       allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
 
@@ -159,7 +163,7 @@ describe Doorkeeper::OAuth::BaseRequest do
         client,
         "1",
         "public",
-        server
+        server,
       )
       expect(result.refresh_token).to_not be_nil
 
@@ -167,7 +171,7 @@ describe Doorkeeper::OAuth::BaseRequest do
         client,
         "1",
         "private",
-        server
+        server,
       )
       expect(result.refresh_token).to be_nil
     end

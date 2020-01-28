@@ -11,7 +11,7 @@ describe Doorkeeper::OAuth::CodeResponse do
           client: double(:application, id: 1),
           redirect_uri: "http://tst.com/cb",
           state: nil,
-          scopes: Doorkeeper::OAuth::Scopes.from_string("public")
+          scopes: Doorkeeper::OAuth::Scopes.from_string("public"),
         )
       end
 

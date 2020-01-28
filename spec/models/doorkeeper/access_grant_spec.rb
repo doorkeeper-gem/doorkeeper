@@ -67,7 +67,7 @@ describe Doorkeeper::AccessGrant do
               application_id: grant.application_id,
               redirect_uri: grant.redirect_uri,
               expires_in: grant.expires_in,
-              scopes: grant.scopes
+              scopes: grant.scopes,
             )
 
           # Will find subsequently by hashing the token
@@ -77,7 +77,7 @@ describe Doorkeeper::AccessGrant do
               application_id: grant.application_id,
               redirect_uri: grant.redirect_uri,
               expires_in: grant.expires_in,
-              scopes: grant.scopes
+              scopes: grant.scopes,
             )
 
           # Not all the ORM support :id PK
@@ -139,7 +139,7 @@ describe Doorkeeper::AccessGrant do
     it "matches application" do
       access_grant_for_different_app = FactoryBot.create(
         :access_grant,
-        default_attributes.merge(application: FactoryBot.create(:application))
+        default_attributes.merge(application: FactoryBot.create(:application)),
       )
 
       described_class.revoke_all_for(application.id, resource_owner)
@@ -150,7 +150,7 @@ describe Doorkeeper::AccessGrant do
     it "matches resource owner" do
       access_grant_for_different_owner = FactoryBot.create(
         :access_grant,
-        default_attributes.merge(resource_owner_id: 90)
+        default_attributes.merge(resource_owner_id: 90),
       )
 
       described_class.revoke_all_for application.id, resource_owner

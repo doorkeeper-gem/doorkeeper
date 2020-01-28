@@ -43,10 +43,11 @@ module Doorkeeper
       #   instance of the Resource Owner model
       #
       def revoke_all_for(application_id, resource_owner, clock = Time)
-        where(application_id: application_id,
-              resource_owner_id: resource_owner.id,
-              revoked_at: nil)
-          .update_all(revoked_at: clock.now.utc)
+        where(
+          application_id: application_id,
+          resource_owner_id: resource_owner.id,
+          revoked_at: nil,
+        ).update_all(revoked_at: clock.now.utc)
       end
 
       # Implements PKCE code_challenge encoding without base64 padding as described in the spec.

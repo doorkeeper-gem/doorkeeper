@@ -13,7 +13,7 @@ describe Doorkeeper::OAuth::Error do
       expect(I18n).to receive(:translate).with(
         :some_error,
         scope: %i[doorkeeper errors messages],
-        default: :server_error
+        default: :server_error,
       )
       error.description
     end

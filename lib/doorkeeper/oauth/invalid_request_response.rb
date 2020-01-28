@@ -11,8 +11,8 @@ module Doorkeeper
             state: request.try(:state),
             redirect_uri: request.try(:redirect_uri),
             missing_param: request.try(:missing_param),
-            reason: request.try(:invalid_request_reason)
-          )
+            reason: request.try(:invalid_request_reason),
+          ),
         )
       end
 
@@ -31,7 +31,7 @@ module Doorkeeper
           reason,
           scope: %i[doorkeeper errors messages invalid_request],
           default: :unknown,
-          value: @missing_param
+          value: @missing_param,
         )
       end
 

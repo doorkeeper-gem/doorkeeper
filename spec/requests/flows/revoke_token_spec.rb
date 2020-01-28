@@ -11,10 +11,12 @@ describe "Revoke Token Flow" do
     let(:client_application) { FactoryBot.create :application }
     let(:resource_owner) { User.create!(name: "John", password: "sekret") }
     let(:access_token) do
-      FactoryBot.create(:access_token,
-                        application: client_application,
-                        resource_owner_id: resource_owner.id,
-                        use_refresh_token: true)
+      FactoryBot.create(
+        :access_token,
+        application: client_application,
+        resource_owner_id: resource_owner.id,
+        use_refresh_token: true,
+      )
     end
 
     context "with authenticated, confidential OAuth 2.0 client/application" do
@@ -100,10 +102,12 @@ describe "Revoke Token Flow" do
 
     context "with public OAuth 2.0 client/application" do
       let(:access_token) do
-        FactoryBot.create(:access_token,
-                          application: nil,
-                          resource_owner_id: resource_owner.id,
-                          use_refresh_token: true)
+        FactoryBot.create(
+          :access_token,
+          application: nil,
+          resource_owner_id: resource_owner.id,
+          use_refresh_token: true,
+        )
       end
 
       it "should revoke the access token provided" do
@@ -122,10 +126,12 @@ describe "Revoke Token Flow" do
 
       context "with a valid token issued for a confidential client" do
         let(:access_token) do
-          FactoryBot.create(:access_token,
-                            application: client_application,
-                            resource_owner_id: resource_owner.id,
-                            use_refresh_token: true)
+          FactoryBot.create(
+            :access_token,
+            application: client_application,
+            resource_owner_id: resource_owner.id,
+            use_refresh_token: true,
+          )
         end
 
         it "should not revoke the access token provided" do

@@ -124,7 +124,7 @@ module Doorkeeper
       def use_refresh_token(enabled = true, &block)
         @config.instance_variable_set(
           :@refresh_token_enabled,
-          block || enabled
+          block || enabled,
         )
       end
 
@@ -199,8 +199,7 @@ module Doorkeeper
       def configure_secrets_for(type, using:, fallback:)
         raise ArgumentError, "Invalid type #{type}" if %i[application token].exclude?(type)
 
-        @config.instance_variable_set(:"@#{type}_secret_strategy",
-                                      using.constantize)
+        @config.instance_variable_set(:"@#{type}_secret_strategy", using.constantize)
 
         if fallback.nil?
           return
@@ -208,8 +207,7 @@ module Doorkeeper
           fallback = "::Doorkeeper::SecretStoring::Plain"
         end
 
-        @config.instance_variable_set(:"@#{type}_secret_fallback_strategy",
-                                      fallback.constantize)
+        @config.instance_variable_set(:"@#{type}_secret_fallback_strategy", fallback.constantize)
       end
     end
 
@@ -219,7 +217,7 @@ module Doorkeeper
            as: :authenticate_resource_owner,
            default: (lambda do |_routes|
              ::Rails.logger.warn(
-               I18n.t("doorkeeper.errors.messages.resource_owner_authenticator_not_configured")
+               I18n.t("doorkeeper.errors.messages.resource_owner_authenticator_not_configured"),
              )
 
              nil
@@ -229,7 +227,7 @@ module Doorkeeper
            as: :authenticate_admin,
            default: (lambda do |_routes|
              ::Rails.logger.warn(
-               I18n.t("doorkeeper.errors.messages.admin_authenticator_not_configured")
+               I18n.t("doorkeeper.errors.messages.admin_authenticator_not_configured"),
              )
 
              head :forbidden
@@ -238,7 +236,7 @@ module Doorkeeper
     option :resource_owner_from_credentials,
            default: (lambda do |_routes|
              ::Rails.logger.warn(
-               I18n.t("doorkeeper.errors.messages.credential_flow_not_configured")
+               I18n.t("doorkeeper.errors.messages.credential_flow_not_configured"),
              )
 
              nil
@@ -569,7 +567,7 @@ module Doorkeeper
       ::Rails.logger.warn(
         "You have configured both reuse_access_token " \
         "AND strategy strategy '#{strategy}' that cannot restore tokens. " \
-        "This combination is unsupported. reuse_access_token will be disabled"
+        "This combination is unsupported. reuse_access_token will be disabled",
       )
       @reuse_access_token = false
     end
@@ -587,7 +585,7 @@ module Doorkeeper
 
       ::Rails.logger.warn(
         "You have configured an invalid value for token_reuse_limit option. " \
-        "It will be set to default 100"
+        "It will be set to default 100",
       )
       @token_reuse_limit = 100
     end

@@ -21,7 +21,7 @@ module Doorkeeper
 
       migration_template(
         "add_previous_refresh_token_to_access_tokens.rb.erb",
-        "db/migrate/add_previous_refresh_token_to_access_tokens.rb"
+        "db/migrate/add_previous_refresh_token_to_access_tokens.rb",
       )
     end
 
@@ -34,7 +34,7 @@ module Doorkeeper
     def no_previous_refresh_token_column?
       !ActiveRecord::Base.connection.column_exists?(
         :oauth_access_tokens,
-        :previous_refresh_token
+        :previous_refresh_token,
       )
     end
   end

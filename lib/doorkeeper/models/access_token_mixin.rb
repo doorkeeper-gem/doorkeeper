@@ -64,10 +64,11 @@ module Doorkeeper
       #   instance of the Resource Owner model
       #
       def revoke_all_for(application_id, resource_owner, clock = Time)
-        where(application_id: application_id,
-              resource_owner_id: resource_owner.id,
-              revoked_at: nil)
-          .update_all(revoked_at: clock.now.utc)
+        where(
+          application_id: application_id,
+          resource_owner_id: resource_owner.id,
+          revoked_at: nil,
+        ).update_all(revoked_at: clock.now.utc)
       end
 
       # Looking for not revoked Access Token with a matching set of scopes
@@ -158,7 +159,7 @@ module Doorkeeper
           Doorkeeper::OAuth::Helpers::ScopeChecker.valid?(
             scope_str: param_scopes.to_s,
             server_scopes: Doorkeeper.configuration.scopes,
-            app_scopes: app_scopes
+            app_scopes: app_scopes,
           )
       end
 
@@ -191,7 +192,7 @@ module Doorkeeper
           resource_owner_id: resource_owner_id,
           scopes: scopes.to_s,
           expires_in: expires_in,
-          use_refresh_token: use_refresh_token
+          use_refresh_token: use_refresh_token,
         )
       end
 
@@ -206,9 +207,11 @@ module Doorkeeper
       # @return [Doorkeeper::AccessToken] array of matching AccessToken objects
       #
       def authorized_tokens_for(application_id, resource_owner_id)
-        where(application_id: application_id,
-              resource_owner_id: resource_owner_id,
-              revoked_at: nil)
+        where(
+          application_id: application_id,
+          resource_owner_id: resource_owner_id,
+          revoked_at: nil,
+        )
       end
 
       # Convenience method for backwards-compatibility, return the last
@@ -364,7 +367,7 @@ module Doorkeeper
         scopes: scopes,
         application: application,
         expires_in: expires_in,
-        created_at: created_at
+        created_at: created_at,
       )
 
       secret_strategy.store_secret(self, :token, @raw_token)

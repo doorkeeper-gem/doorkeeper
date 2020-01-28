@@ -45,7 +45,7 @@ module Doorkeeper
       AccessToken.matching_token_for(
         pre_auth.client,
         current_resource_owner.id,
-        pre_auth.scopes
+        pre_auth.scopes,
       )
     end
 
@@ -54,7 +54,7 @@ module Doorkeeper
         if Doorkeeper.configuration.api_only
           render(
             json: { status: :redirect, redirect_uri: auth.redirect_uri },
-            status: auth.status
+            status: auth.status,
           )
         else
           redirect_to auth.redirect_uri

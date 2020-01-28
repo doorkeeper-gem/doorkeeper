@@ -44,15 +44,19 @@ module Doorkeeper::OAuth::Helpers
       end
 
       it "is valid if scope is included in the application scope list" do
-        expect(ScopeChecker.valid?(scope_str: "app123",
-                                   server_scopes: server_scopes,
-                                   app_scopes: application_scopes)).to be_truthy
+        expect(ScopeChecker.valid?(
+                 scope_str: "app123",
+                 server_scopes: server_scopes,
+                 app_scopes: application_scopes,
+               )).to be_truthy
       end
 
       it "is invalid if any scope is not included in the application" do
-        expect(ScopeChecker.valid?(scope_str: "svr",
-                                   server_scopes: server_scopes,
-                                   app_scopes: application_scopes)).to be_falsey
+        expect(ScopeChecker.valid?(
+                 scope_str: "svr",
+                 server_scopes: server_scopes,
+                 app_scopes: application_scopes,
+               )).to be_falsey
       end
     end
 
@@ -63,15 +67,19 @@ module Doorkeeper::OAuth::Helpers
 
       context "with scopes_by_grant_type not configured for grant_type" do
         it "is valid if the scope is in server scopes" do
-          expect(ScopeChecker.valid?(scope_str: "scope1",
-                                     server_scopes: server_scopes,
-                                     grant_type: Doorkeeper::OAuth::PASSWORD)).to be_truthy
+          expect(ScopeChecker.valid?(
+                   scope_str: "scope1",
+                   server_scopes: server_scopes,
+                   grant_type: Doorkeeper::OAuth::PASSWORD,
+                 )).to be_truthy
         end
 
         it "is invalid if the scope is not in server scopes" do
-          expect(ScopeChecker.valid?(scope_str: "unknown",
-                                     server_scopes: server_scopes,
-                                     grant_type: Doorkeeper::OAuth::PASSWORD)).to be_falsey
+          expect(ScopeChecker.valid?(
+                   scope_str: "unknown",
+                   server_scopes: server_scopes,
+                   grant_type: Doorkeeper::OAuth::PASSWORD,
+                 )).to be_falsey
         end
       end
 
@@ -82,15 +90,19 @@ module Doorkeeper::OAuth::Helpers
         end
 
         it "is valid if the scope is permitted for grant_type" do
-          expect(ScopeChecker.valid?(scope_str: "scope1",
-                                     server_scopes: server_scopes,
-                                     grant_type: Doorkeeper::OAuth::PASSWORD)).to be_truthy
+          expect(ScopeChecker.valid?(
+                   scope_str: "scope1",
+                   server_scopes: server_scopes,
+                   grant_type: Doorkeeper::OAuth::PASSWORD,
+                 )).to be_truthy
         end
 
         it "is invalid if the scope is permitted for grant_type" do
-          expect(ScopeChecker.valid?(scope_str: "scope2",
-                                     server_scopes: server_scopes,
-                                     grant_type: Doorkeeper::OAuth::PASSWORD)).to be_falsey
+          expect(ScopeChecker.valid?(
+                   scope_str: "scope2",
+                   server_scopes: server_scopes,
+                   grant_type: Doorkeeper::OAuth::PASSWORD,
+                 )).to be_falsey
         end
       end
     end

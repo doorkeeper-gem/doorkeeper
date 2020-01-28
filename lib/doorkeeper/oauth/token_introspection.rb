@@ -94,7 +94,7 @@ module Doorkeeper
           client_id: @token.try(:application).try(:uid),
           token_type: @token.token_type,
           exp: @token.expires_at.to_i,
-          iat: @token.created_at.to_i
+          iat: @token.created_at.to_i,
         )
       end
 
@@ -182,7 +182,7 @@ module Doorkeeper
         allow_introspection.call(
           @token,
           auth_client,
-          auth_token
+          auth_token,
         )
       end
 
@@ -195,7 +195,7 @@ module Doorkeeper
       def customize_response(response)
         customized_response = Doorkeeper.configuration.custom_introspection_response.call(
           token,
-          server.context
+          server.context,
         )
         return response if customized_response.blank?
 

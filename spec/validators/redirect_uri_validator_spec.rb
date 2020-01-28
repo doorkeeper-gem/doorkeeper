@@ -100,7 +100,7 @@ describe Doorkeeper::RedirectUriValidator do
     it "accepts a non secured protocol when disabled" do
       subject.redirect_uri = "http://example.com/callback"
       allow(Doorkeeper.configuration).to receive(
-        :force_ssl_in_redirect_uri
+        :force_ssl_in_redirect_uri,
       ).and_return(false)
       expect(subject).to be_valid
     end

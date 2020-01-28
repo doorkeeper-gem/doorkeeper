@@ -28,7 +28,7 @@ module Doorkeeper
         def validate_client_supports_grant_flow
           Doorkeeper.configuration.allow_grant_flow_for_client?(
             Doorkeeper::OAuth::CLIENT_CREDENTIALS,
-            @client
+            @client,
           )
         end
 
@@ -45,7 +45,7 @@ module Doorkeeper
             scope_str: @request.scopes.to_s,
             server_scopes: @server.scopes,
             app_scopes: application_scopes,
-            grant_type: Doorkeeper::OAuth::CLIENT_CREDENTIALS
+            grant_type: Doorkeeper::OAuth::CLIENT_CREDENTIALS,
           )
         end
       end

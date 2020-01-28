@@ -16,7 +16,7 @@ describe "Doorkeeper::InstallGenerator" do
       FileUtils.mkdir(::File.expand_path("db", Pathname(destination_root)))
       FileUtils.copy_file(
         ::File.expand_path("../templates/routes.rb", __FILE__),
-        ::File.expand_path("config/routes.rb", Pathname.new(destination_root))
+        ::File.expand_path("config/routes.rb", Pathname.new(destination_root)),
       )
       run_generator
     end

@@ -28,7 +28,7 @@ module Doorkeeper
           context = Authorization::Token.build_context(
             client,
             Doorkeeper::OAuth::CLIENT_CREDENTIALS,
-            scopes
+            scopes,
           )
           ttl = Authorization::Token.access_token_expires_in(@server, context)
 
@@ -36,7 +36,7 @@ module Doorkeeper
             client,
             scopes,
             use_refresh_token: false,
-            expires_in: ttl
+            expires_in: ttl,
           )
         end
       end

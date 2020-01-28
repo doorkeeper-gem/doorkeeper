@@ -30,7 +30,7 @@ module Doorkeeper
         @description ||=
           I18n.translate(
             @reason,
-            scope: %i[doorkeeper errors messages invalid_token]
+            scope: %i[doorkeeper errors messages invalid_token],
           )
       end
 

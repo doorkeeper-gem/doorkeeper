@@ -70,7 +70,7 @@ describe "Client Credentials Request" do
     before do
       Doorkeeper.configuration.instance_variable_set(
         :@allow_grant_flow_for_client,
-        ->(_grant_flow, client) { client.name == "admin" }
+        ->(_grant_flow, client) { client.name == "admin" },
       )
     end
 

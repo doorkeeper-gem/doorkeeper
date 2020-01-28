@@ -13,7 +13,7 @@ module Doorkeeper
         @request ||= OAuth::RefreshTokenRequest.new(
           Doorkeeper.configuration,
           refresh_token, credentials,
-          parameters
+          parameters,
         )
       end
     end

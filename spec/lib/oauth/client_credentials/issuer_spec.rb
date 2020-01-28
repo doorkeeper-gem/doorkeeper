@@ -8,7 +8,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
     let(:server) do
       double(
         :server,
-        access_token_expires_in: 100
+        access_token_expires_in: 100,
       )
     end
     let(:validation) { double :validation, valid?: true }
@@ -35,7 +35,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
           client,
           scopes,
           expires_in: 100,
-          use_refresh_token: false
+          use_refresh_token: false,
         )
 
         subject.create client, scopes, creator
@@ -79,7 +79,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
               elsif context.grant_type == Doorkeeper::OAuth::CLIENT_CREDENTIALS
                 custom_ttl_grant
               end
-            }
+            },
           )
         end
 
@@ -92,7 +92,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
             client,
             scopes,
             expires_in: custom_ttl_grant,
-            use_refresh_token: false
+            use_refresh_token: false,
           )
           subject.create client, scopes, creator
         end
@@ -102,7 +102,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
             client,
             custom_scope,
             expires_in: custom_ttl_scope,
-            use_refresh_token: false
+            use_refresh_token: false,
           )
           subject.create client, custom_scope, creator
         end

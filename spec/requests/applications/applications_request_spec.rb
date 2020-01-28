@@ -91,7 +91,7 @@ feature "Adding applications" do
       i_should_see "Whoops! Check your form for possible errors"
       i_should_see Regexp.new(
         I18n.t("activerecord.errors.models.doorkeeper/application.attributes.scopes.not_match_configured"),
-        true
+        true,
       )
     end
 

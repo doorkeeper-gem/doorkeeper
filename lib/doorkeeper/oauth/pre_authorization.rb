@@ -46,8 +46,10 @@ module Doorkeeper
 
       def error_response
         if error == :invalid_request
-          OAuth::InvalidRequestResponse.from_request(self,
-                                                     response_on_fragment: response_on_fragment?)
+          OAuth::InvalidRequestResponse.from_request(
+            self,
+            response_on_fragment: response_on_fragment?,
+          )
         else
           OAuth::ErrorResponse.from_request(self, response_on_fragment: response_on_fragment?)
         end
@@ -86,7 +88,7 @@ module Doorkeeper
 
         Helpers::URIChecker.valid_for_authorization?(
           redirect_uri,
-          client.redirect_uri
+          client.redirect_uri,
         )
       end
 
@@ -109,7 +111,7 @@ module Doorkeeper
           scope_str: scope,
           server_scopes: server.scopes,
           app_scopes: client.scopes,
-          grant_type: grant_type
+          grant_type: grant_type,
         )
       end
 

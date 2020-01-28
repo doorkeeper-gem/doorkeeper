@@ -59,7 +59,7 @@ module Doorkeeper
           path: "authorize",
           only: %i[create destroy],
           as: mapping[:as],
-          controller: mapping[:controllers]
+          controller: mapping[:controllers],
         ) do
           routes.get "/native", action: :show, on: :member
           routes.get "/", action: :new, on: :member
@@ -71,7 +71,7 @@ module Doorkeeper
           :token,
           path: "token",
           only: [:create], as: mapping[:as],
-          controller: mapping[:controllers]
+          controller: mapping[:controllers],
         )
       end
 
@@ -88,7 +88,7 @@ module Doorkeeper
           :token_info,
           path: "token/info",
           only: [:show], as: mapping[:as],
-          controller: mapping[:controllers]
+          controller: mapping[:controllers],
         )
       end
 

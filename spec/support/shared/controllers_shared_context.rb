@@ -4,14 +4,16 @@ shared_context "valid token", token: :valid do
   let(:token_string) { "1A2B3C4D" }
 
   let :token do
-    double(Doorkeeper::AccessToken,
-           accessible?: true, includes_scope?: true, acceptable?: true,
-           previous_refresh_token: "", revoke_previous_refresh_token!: true)
+    double(
+      Doorkeeper::AccessToken,
+      accessible?: true, includes_scope?: true, acceptable?: true,
+      previous_refresh_token: "", revoke_previous_refresh_token!: true,
+    )
   end
 
   before :each do
     allow(
-      Doorkeeper::AccessToken
+      Doorkeeper::AccessToken,
     ).to receive(:by_token).with(token_string).and_return(token)
   end
 end
@@ -20,15 +22,17 @@ shared_context "invalid token", token: :invalid do
   let(:token_string) { "1A2B3C4D" }
 
   let :token do
-    double(Doorkeeper::AccessToken,
-           accessible?: false, revoked?: false, expired?: false,
-           includes_scope?: false, acceptable?: false,
-           previous_refresh_token: "", revoke_previous_refresh_token!: true)
+    double(
+      Doorkeeper::AccessToken,
+      accessible?: false, revoked?: false, expired?: false,
+      includes_scope?: false, acceptable?: false,
+      previous_refresh_token: "", revoke_previous_refresh_token!: true,
+    )
   end
 
   before :each do
     allow(
-      Doorkeeper::AccessToken
+      Doorkeeper::AccessToken,
     ).to receive(:by_token).with(token_string).and_return(token)
   end
 end
@@ -72,15 +76,17 @@ shared_context "expired token", token: :expired do
   end
 
   let :token do
-    double(Doorkeeper::AccessToken,
-           accessible?: false, revoked?: false, expired?: true,
-           includes_scope?: false, acceptable?: false,
-           previous_refresh_token: "", revoke_previous_refresh_token!: true)
+    double(
+      Doorkeeper::AccessToken,
+      accessible?: false, revoked?: false, expired?: true,
+      includes_scope?: false, acceptable?: false,
+      previous_refresh_token: "", revoke_previous_refresh_token!: true,
+    )
   end
 
   before :each do
     allow(
-      Doorkeeper::AccessToken
+      Doorkeeper::AccessToken,
     ).to receive(:by_token).with(token_string).and_return(token)
   end
 end
@@ -91,15 +97,17 @@ shared_context "revoked token", token: :revoked do
   end
 
   let :token do
-    double(Doorkeeper::AccessToken,
-           accessible?: false, revoked?: true, expired?: false,
-           includes_scope?: false, acceptable?: false,
-           previous_refresh_token: "", revoke_previous_refresh_token!: true)
+    double(
+      Doorkeeper::AccessToken,
+      accessible?: false, revoked?: true, expired?: false,
+      includes_scope?: false, acceptable?: false,
+      previous_refresh_token: "", revoke_previous_refresh_token!: true,
+    )
   end
 
   before :each do
     allow(
-      Doorkeeper::AccessToken
+      Doorkeeper::AccessToken,
     ).to receive(:by_token).with(token_string).and_return(token)
   end
 end
@@ -110,14 +118,16 @@ shared_context "forbidden token", token: :forbidden do
   end
 
   let :token do
-    double(Doorkeeper::AccessToken,
-           accessible?: true, includes_scope?: true, acceptable?: false,
-           previous_refresh_token: "", revoke_previous_refresh_token!: true)
+    double(
+      Doorkeeper::AccessToken,
+      accessible?: true, includes_scope?: true, acceptable?: false,
+      previous_refresh_token: "", revoke_previous_refresh_token!: true,
+    )
   end
 
   before :each do
     allow(
-      Doorkeeper::AccessToken
+      Doorkeeper::AccessToken,
     ).to receive(:by_token).with(token_string).and_return(token)
   end
 end

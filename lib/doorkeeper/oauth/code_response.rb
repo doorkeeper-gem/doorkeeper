@@ -26,13 +26,13 @@ module Doorkeeper
             access_token: auth.token.plaintext_token,
             token_type: auth.token.token_type,
             expires_in: auth.token.expires_in_seconds,
-            state: pre_auth.state
+            state: pre_auth.state,
           )
         else
           Authorization::URIBuilder.uri_with_query(
             pre_auth.redirect_uri,
             code: auth.token.plaintext_token,
-            state: pre_auth.state
+            state: pre_auth.state,
           )
         end
       end

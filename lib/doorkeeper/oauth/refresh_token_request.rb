@@ -71,7 +71,7 @@ module Doorkeeper
         context = Authorization::Token.build_context(
           client,
           Doorkeeper::OAuth::REFRESH_TOKEN,
-          scopes
+          scopes,
         )
         Authorization::Token.access_token_expires_in(server, context)
       end
@@ -104,7 +104,7 @@ module Doorkeeper
         if @original_scopes.present?
           ScopeChecker.valid?(
             scope_str: @original_scopes,
-            server_scopes: refresh_token.scopes
+            server_scopes: refresh_token.scopes,
           )
         else
           true

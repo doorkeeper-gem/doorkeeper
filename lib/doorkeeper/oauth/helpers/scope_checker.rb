@@ -43,10 +43,12 @@ module Doorkeeper
         end
 
         def self.valid?(scope_str:, server_scopes:, app_scopes: nil, grant_type: nil)
-          Validator.new(scope_str,
-                        server_scopes,
-                        app_scopes,
-                        grant_type).valid?
+          Validator.new(
+            scope_str,
+            server_scopes,
+            app_scopes,
+            grant_type,
+          ).valid?
         end
       end
     end

@@ -10,7 +10,7 @@ module Doorkeeper
           Doorkeeper.configuration,
           grant,
           client,
-          parameters
+          parameters,
         )
       end
 

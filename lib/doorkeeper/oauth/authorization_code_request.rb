@@ -32,10 +32,13 @@ module Doorkeeper
           raise Errors::InvalidGrantReuse if grant.revoked?
 
           grant.revoke
-          find_or_create_access_token(grant.application,
-                                      grant.resource_owner_id,
-                                      grant.scopes,
-                                      server)
+
+          find_or_create_access_token(
+            grant.application,
+            grant.resource_owner_id,
+            grant.scopes,
+            server,
+          )
         end
         super
       end
@@ -71,7 +74,7 @@ module Doorkeeper
       def validate_redirect_uri
         Helpers::URIChecker.valid_for_authorization?(
           redirect_uri,
-          grant.redirect_uri
+          grant.redirect_uri,
         )
       end
 

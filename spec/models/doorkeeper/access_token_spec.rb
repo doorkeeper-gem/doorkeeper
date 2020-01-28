@@ -77,7 +77,7 @@ module Doorkeeper
                 .to have_attributes(
                   resource_owner_id: access_token.resource_owner_id,
                   application_id: access_token.application_id,
-                  scopes: access_token.scopes
+                  scopes: access_token.scopes,
                 )
 
               # Will find subsequently by hashing the token
@@ -85,7 +85,7 @@ module Doorkeeper
                 .to have_attributes(
                   resource_owner_id: access_token.resource_owner_id,
                   application_id: access_token.application_id,
-                  scopes: access_token.scopes
+                  scopes: access_token.scopes,
                 )
 
               # Not all the ORM support :id PK
@@ -212,7 +212,7 @@ module Doorkeeper
         end
 
         expect { FactoryBot.create :access_token }.to(
-          raise_error(Doorkeeper::Errors::UnableToGenerateToken)
+          raise_error(Doorkeeper::Errors::UnableToGenerateToken),
         )
       end
 
@@ -234,7 +234,7 @@ module Doorkeeper
         end
 
         expect { FactoryBot.create :access_token }.to(
-          raise_error(LoadError)
+          raise_error(LoadError),
         )
       end
 
@@ -245,7 +245,7 @@ module Doorkeeper
         end
 
         expect { FactoryBot.create :access_token }.to(
-          raise_error(Doorkeeper::Errors::TokenGeneratorNotFound, /NotReal/)
+          raise_error(Doorkeeper::Errors::TokenGeneratorNotFound, /NotReal/),
         )
       end
     end
@@ -327,7 +327,7 @@ module Doorkeeper
                 .to have_attributes(
                   token: access_token.token,
                   resource_owner_id: access_token.resource_owner_id,
-                  application_id: access_token.application_id
+                  application_id: access_token.application_id,
                 )
 
               # Will find subsequently by hashing the token
@@ -335,7 +335,7 @@ module Doorkeeper
                 .to have_attributes(
                   token: access_token.token,
                   resource_owner_id: access_token.resource_owner_id,
-                  application_id: access_token.application_id
+                  application_id: access_token.application_id,
                 )
 
               # Not all the ORM support :id PK
@@ -468,7 +468,7 @@ module Doorkeeper
       it "matches application" do
         access_token_for_different_app = FactoryBot.create(
           :access_token,
-          default_attributes.merge(application: FactoryBot.create(:application))
+          default_attributes.merge(application: FactoryBot.create(:application)),
         )
 
         AccessToken.revoke_all_for application.id, resource_owner
@@ -479,7 +479,7 @@ module Doorkeeper
       it "matches resource owner" do
         access_token_for_different_owner = FactoryBot.create(
           :access_token,
-          default_attributes.merge(resource_owner_id: 90)
+          default_attributes.merge(resource_owner_id: 90),
         )
 
         AccessToken.revoke_all_for application.id, resource_owner
@@ -561,7 +561,7 @@ module Doorkeeper
 
       it "excludes tokens with scopes that are not present in server scopes" do
         FactoryBot.create :access_token, default_attributes.merge(
-          application: application, scopes: "public read"
+          application: application, scopes: "public read",
         )
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil
@@ -570,7 +570,7 @@ module Doorkeeper
       it "excludes tokens with scopes that are not present in application scopes" do
         application = FactoryBot.create :application, scopes: "private read"
         FactoryBot.create :access_token, default_attributes.merge(
-          application: application
+          application: application,
         )
         last_token = AccessToken.matching_token_for(application, resource_owner_id, scopes)
         expect(last_token).to be_nil

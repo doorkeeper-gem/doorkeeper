@@ -101,7 +101,7 @@ describe Doorkeeper::OAuth::Token do
         it "does not revoke previous refresh_token if token was found" do
           token = ->(_r) { "token" }
           expect(
-            Doorkeeper::AccessToken
+            Doorkeeper::AccessToken,
           ).to receive(:by_token).with("token").and_return(token)
           expect(token).not_to receive(:revoke_previous_refresh_token!)
           described_class.authenticate double, token
@@ -123,7 +123,7 @@ describe Doorkeeper::OAuth::Token do
 
       it "searches with the hashed token" do
         expect(
-          Doorkeeper::AccessToken
+          Doorkeeper::AccessToken,
         ).to receive(:find_by).with(token: hashed_token).and_return(token)
         described_class.authenticate double, token
       end
@@ -140,7 +140,7 @@ describe Doorkeeper::OAuth::Token do
       it "revokes previous refresh_token if token was found" do
         token = ->(_r) { "token" }
         expect(
-          Doorkeeper::AccessToken
+          Doorkeeper::AccessToken,
         ).to receive(:by_token).with("token").and_return(token)
         expect(token).to receive(:revoke_previous_refresh_token!)
         described_class.authenticate double, token

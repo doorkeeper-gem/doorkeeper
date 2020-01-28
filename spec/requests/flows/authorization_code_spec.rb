@@ -149,8 +149,10 @@ feature "Authorization Code Flow" do
     click_on "Authorize"
 
     authorization_code = Doorkeeper::AccessGrant.first.token
-    page.driver.post token_endpoint_url(code: authorization_code, client_id: @client.uid,
-                                        redirect_uri: @client.redirect_uri)
+    page.driver.post token_endpoint_url(
+      code: authorization_code, client_id: @client.uid,
+      redirect_uri: @client.redirect_uri,
+    )
 
     expect(Doorkeeper::AccessToken.count).to be_zero
 
@@ -163,8 +165,10 @@ feature "Authorization Code Flow" do
     click_on "Authorize"
 
     authorization_code = Doorkeeper::AccessGrant.first.token
-    page.driver.post token_endpoint_url(code: authorization_code, client_secret: @client.secret,
-                                        redirect_uri: @client.redirect_uri)
+    page.driver.post token_endpoint_url(
+      code: authorization_code, client_secret: @client.secret,
+      redirect_uri: @client.redirect_uri,
+    )
 
     expect(Doorkeeper::AccessToken.count).to be_zero
 
@@ -195,7 +199,7 @@ feature "Authorization Code Flow" do
         visit authorization_endpoint_url(
           client: @client,
           code_challenge: code_challenge,
-          code_challenge_method: "plain"
+          code_challenge_method: "plain",
         )
         click_on "Authorize"
 
@@ -219,7 +223,7 @@ feature "Authorization Code Flow" do
         visit authorization_endpoint_url(
           client: @client,
           code_challenge: code_challenge,
-          code_challenge_method: "plain"
+          code_challenge_method: "plain",
         )
         click_on "Authorize"
 
@@ -236,9 +240,11 @@ feature "Authorization Code Flow" do
       end
 
       scenario "mobile app requests an access token with authorization code but without code_verifier" do
-        visit authorization_endpoint_url(client: @client,
-                                         code_challenge: code_challenge,
-                                         code_challenge_method: "plain")
+        visit authorization_endpoint_url(
+          client: @client,
+          code_challenge: code_challenge,
+          code_challenge_method: "plain",
+        )
         click_on "Authorize"
 
         authorization_code = current_params["code"]
@@ -250,9 +256,11 @@ feature "Authorization Code Flow" do
       end
 
       scenario "mobile app requests an access token with authorization code with wrong code_verifier" do
-        visit authorization_endpoint_url(client: @client,
-                                         code_challenge: code_challenge,
-                                         code_challenge_method: "plain")
+        visit authorization_endpoint_url(
+          client: @client,
+          code_challenge: code_challenge,
+          code_challenge_method: "plain",
+        )
         click_on "Authorize"
 
         authorization_code = current_params["code"]
@@ -272,7 +280,7 @@ feature "Authorization Code Flow" do
         visit authorization_endpoint_url(
           client: @client,
           code_challenge: code_challenge,
-          code_challenge_method: "S256"
+          code_challenge_method: "S256",
         )
         click_on "Authorize"
 
@@ -285,7 +293,7 @@ feature "Authorization Code Flow" do
         visit authorization_endpoint_url(
           client: @client,
           code_challenge: code_challenge,
-          code_challenge_method: "S256"
+          code_challenge_method: "S256",
         )
         click_on "Authorize"
 
@@ -305,13 +313,17 @@ feature "Authorization Code Flow" do
         visit authorization_endpoint_url(
           client: @client,
           code_challenge: code_challenge,
-          code_challenge_method: "S256"
+          code_challenge_method: "S256",
         )
         click_on "Authorize"
 
         authorization_code = current_params["code"]
-        page.driver.post token_endpoint_url(code: authorization_code, client_id: @client.uid,
-                                            redirect_uri: @client.redirect_uri, code_verifier: code_verifier)
+        page.driver.post token_endpoint_url(
+          code: authorization_code,
+          client_id: @client.uid,
+          redirect_uri: @client.redirect_uri,
+          code_verifier: code_verifier,
+        )
         should_not_have_json "access_token"
         should_have_json "error", "invalid_client"
         should_have_json "error_description", translated_error_message(:invalid_client)
@@ -327,7 +339,7 @@ feature "Authorization Code Flow" do
           code: authorization_code,
           client_id: @client.uid,
           redirect_uri: @client.redirect_uri,
-          code_verifier: code_verifier
+          code_verifier: code_verifier,
         )
         should_not_have_json "error"
 
@@ -340,7 +352,7 @@ feature "Authorization Code Flow" do
         visit authorization_endpoint_url(
           client: @client,
           code_challenge: code_challenge,
-          code_challenge_method: "S256"
+          code_challenge_method: "S256",
         )
         click_on "Authorize"
 
@@ -356,7 +368,7 @@ feature "Authorization Code Flow" do
         visit authorization_endpoint_url(
           client: @client,
           code_challenge: code_challenge,
-          code_challenge_method: "S256"
+          code_challenge_method: "S256",
         )
         click_on "Authorize"
 
@@ -372,7 +384,7 @@ feature "Authorization Code Flow" do
         visit authorization_endpoint_url(
           client: @client,
           code_challenge: code_challenge,
-          code_challenge_method: "S256"
+          code_challenge_method: "S256",
         )
         click_on "Authorize"
 
@@ -381,7 +393,7 @@ feature "Authorization Code Flow" do
           code: authorization_code,
           client: @client,
           code_verifier: code_challenge,
-          code_challenge_method: "plain"
+          code_challenge_method: "plain",
         )
 
         should_not_have_json "access_token"

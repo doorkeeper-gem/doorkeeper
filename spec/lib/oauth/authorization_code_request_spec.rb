@@ -99,8 +99,10 @@ describe Doorkeeper::OAuth::AuthorizationCodeRequest do
       default_scopes(*scopes)
     end
 
-    FactoryBot.create(:access_token, application_id: client.id,
-                                     resource_owner_id: grant.resource_owner_id, scopes: grant.scopes.to_s)
+    FactoryBot.create(
+      :access_token, application_id: client.id,
+                     resource_owner_id: grant.resource_owner_id, scopes: grant.scopes.to_s,
+    )
 
     expect { subject.authorize }.to_not(change { Doorkeeper::AccessToken.count })
   end
@@ -114,8 +116,10 @@ describe Doorkeeper::OAuth::AuthorizationCodeRequest do
       default_scopes(*scopes)
     end
 
-    FactoryBot.create(:access_token, application_id: client.id,
-                                     resource_owner_id: grant.resource_owner_id, scopes: grant.scopes.to_s)
+    FactoryBot.create(
+      :access_token, application_id: client.id,
+                     resource_owner_id: grant.resource_owner_id, scopes: grant.scopes.to_s,
+    )
 
     allow_any_instance_of(Doorkeeper::AccessToken).to receive(:reusable?).and_return(false)
 

@@ -39,7 +39,7 @@ module Doorkeeper
       def doorkeeper_token
         @doorkeeper_token ||= OAuth::Token.authenticate(
           decorated_request,
-          *Doorkeeper.configuration.access_token_methods
+          *Doorkeeper.configuration.access_token_methods,
         )
       end
 

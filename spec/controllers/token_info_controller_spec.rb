@@ -42,7 +42,7 @@ describe Doorkeeper::TokenInfoController do
         get :show
 
         expect(response.body).to eq(
-          Doorkeeper::OAuth::InvalidTokenResponse.new.body.to_json
+          Doorkeeper::OAuth::InvalidTokenResponse.new.body.to_json,
         )
       end
     end

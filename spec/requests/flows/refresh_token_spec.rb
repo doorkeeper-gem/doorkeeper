@@ -44,17 +44,17 @@ describe "Refresh Token Flow" do
         :access_token,
         application: @client,
         resource_owner_id: 1,
-        use_refresh_token: true
+        use_refresh_token: true,
       )
     end
 
     context "refresh_token revoked on use" do
       it "client request a token with refresh token" do
         post refresh_token_endpoint_url(
-          client: @client, refresh_token: @token.refresh_token
+          client: @client, refresh_token: @token.refresh_token,
         )
         should_have_json(
-          "refresh_token", Doorkeeper::AccessToken.last.refresh_token
+          "refresh_token", Doorkeeper::AccessToken.last.refresh_token,
         )
         expect(@token.reload).not_to be_revoked
       end
@@ -62,10 +62,10 @@ describe "Refresh Token Flow" do
       it "client request a token with expired access token" do
         @token.update_attribute :expires_in, -100
         post refresh_token_endpoint_url(
-          client: @client, refresh_token: @token.refresh_token
+          client: @client, refresh_token: @token.refresh_token,
         )
         should_have_json(
-          "refresh_token", Doorkeeper::AccessToken.last.refresh_token
+          "refresh_token", Doorkeeper::AccessToken.last.refresh_token,
         )
         expect(@token.reload).not_to be_revoked
       end
@@ -78,10 +78,10 @@ describe "Refresh Token Flow" do
 
       it "client request a token with refresh token" do
         post refresh_token_endpoint_url(
-          client: @client, refresh_token: @token.refresh_token
+          client: @client, refresh_token: @token.refresh_token,
         )
         should_have_json(
-          "refresh_token", Doorkeeper::AccessToken.last.refresh_token
+          "refresh_token", Doorkeeper::AccessToken.last.refresh_token,
         )
         expect(@token.reload).to be_revoked
       end
@@ -89,10 +89,10 @@ describe "Refresh Token Flow" do
       it "client request a token with expired access token" do
         @token.update_attribute :expires_in, -100
         post refresh_token_endpoint_url(
-          client: @client, refresh_token: @token.refresh_token
+          client: @client, refresh_token: @token.refresh_token,
         )
         should_have_json(
-          "refresh_token", Doorkeeper::AccessToken.last.refresh_token
+          "refresh_token", Doorkeeper::AccessToken.last.refresh_token,
         )
         expect(@token.reload).to be_revoked
       end
@@ -102,7 +102,7 @@ describe "Refresh Token Flow" do
       let(:public_client) do
         FactoryBot.create(
           :application,
-          confidential: false
+          confidential: false,
         )
       end
 
@@ -111,7 +111,7 @@ describe "Refresh Token Flow" do
           :access_token,
           application: @client,
           resource_owner_id: 1,
-          use_refresh_token: true
+          use_refresh_token: true,
         )
       end
 
@@ -120,14 +120,14 @@ describe "Refresh Token Flow" do
           :access_token,
           application: public_client,
           resource_owner_id: 1,
-          use_refresh_token: true
+          use_refresh_token: true,
         )
       end
 
       it "issues a new token without client_secret when refresh token was issued to a public client" do
         post refresh_token_endpoint_url(
           client_id: public_client.uid,
-          refresh_token: token_for_public_client.refresh_token
+          refresh_token: token_for_public_client.refresh_token,
         )
 
         new_token = Doorkeeper::AccessToken.last
@@ -146,7 +146,7 @@ describe "Refresh Token Flow" do
         post refresh_token_endpoint_url(
           client_id: "1",
           client_secret: "1",
-          refresh_token: token_for_private_client.refresh_token
+          refresh_token: token_for_private_client.refresh_token,
         )
 
         should_not_have_json "refresh_token"
@@ -185,7 +185,7 @@ describe "Refresh Token Flow" do
       end
       create_resource_owner
       _another_token = post password_token_endpoint_url(
-        client: @client, resource_owner: @resource_owner
+        client: @client, resource_owner: @resource_owner,
       )
       last_token.update_attribute :created_at, 5.seconds.ago
 
@@ -193,7 +193,7 @@ describe "Refresh Token Flow" do
         :access_token,
         application: @client,
         resource_owner_id: @resource_owner.id,
-        use_refresh_token: true
+        use_refresh_token: true,
       )
       @token.update_attribute :expires_in, -100
     end
@@ -201,7 +201,7 @@ describe "Refresh Token Flow" do
     context "refresh_token revoked on use" do
       it "client request a token after creating another token with the same user" do
         post refresh_token_endpoint_url(
-          client: @client, refresh_token: @token.refresh_token
+          client: @client, refresh_token: @token.refresh_token,
         )
 
         should_have_json "refresh_token", last_token.refresh_token
@@ -216,7 +216,7 @@ describe "Refresh Token Flow" do
 
       it "client request a token after creating another token with the same user" do
         post refresh_token_endpoint_url(
-          client: @client, refresh_token: @token.refresh_token
+          client: @client, refresh_token: @token.refresh_token,
         )
 
         should_have_json "refresh_token", last_token.refresh_token
@@ -226,7 +226,7 @@ describe "Refresh Token Flow" do
 
     def last_token
       Doorkeeper::AccessToken.last_authorized_token_for(
-        @client.id, @resource_owner.id
+        @client.id, @resource_owner.id,
       )
     end
   end

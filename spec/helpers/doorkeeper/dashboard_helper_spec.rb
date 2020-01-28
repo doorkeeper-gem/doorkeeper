@@ -11,7 +11,7 @@ describe Doorkeeper::DashboardHelper do
       it "returns error messages" do
         messages.each do |message|
           expect(helper.doorkeeper_errors_for(object, :method)).to include(
-            message.capitalize
+            message.capitalize,
           )
         end
       end

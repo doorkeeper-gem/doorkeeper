@@ -22,7 +22,7 @@ describe Doorkeeper, "configuration" do
       end
 
       expect(Rails.logger).to receive(:warn).with(
-        I18n.t("doorkeeper.errors.messages.resource_owner_authenticator_not_configured")
+        I18n.t("doorkeeper.errors.messages.resource_owner_authenticator_not_configured"),
       )
       subject.authenticate_resource_owner.call(nil)
     end
@@ -45,7 +45,7 @@ describe Doorkeeper, "configuration" do
       end
 
       expect(Rails.logger).to receive(:warn).with(
-        I18n.t("doorkeeper.errors.messages.credential_flow_not_configured")
+        I18n.t("doorkeeper.errors.messages.credential_flow_not_configured"),
       )
       subject.resource_owner_from_credentials.call(nil)
     end
@@ -471,7 +471,7 @@ describe Doorkeeper, "configuration" do
   describe "access_token_generator" do
     it "is 'Doorkeeper::OAuth::Helpers::UniqueToken' by default" do
       expect(Doorkeeper.configuration.access_token_generator).to(
-        eq("Doorkeeper::OAuth::Helpers::UniqueToken")
+        eq("Doorkeeper::OAuth::Helpers::UniqueToken"),
       )
     end
 
@@ -568,7 +568,7 @@ describe Doorkeeper, "configuration" do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
           active_record_options(
-            establish_connection: Rails.configuration.database_configuration[Rails.env]
+            establish_connection: Rails.configuration.database_configuration[Rails.env],
           )
         end
       end
@@ -704,8 +704,10 @@ describe Doorkeeper, "configuration" do
           Doorkeeper.configure do
             hash_token_secrets using: "Doorkeeper::SecretStoring::BCrypt"
           end
-        end.to raise_error(ArgumentError,
-                           /can only be used for storing application secrets/)
+        end.to raise_error(
+          ArgumentError,
+          /can only be used for storing application secrets/,
+        )
       end
     end
 
@@ -782,7 +784,7 @@ describe Doorkeeper, "configuration" do
   describe "options deprecation" do
     it "prints a warning message when an option is deprecated" do
       expect(Kernel).to receive(:warn).with(
-        "[DOORKEEPER] native_redirect_uri has been deprecated and will soon be removed"
+        "[DOORKEEPER] native_redirect_uri has been deprecated and will soon be removed",
       )
       Doorkeeper.configure do
         native_redirect_uri "urn:ietf:wg:oauth:2.0:oob"

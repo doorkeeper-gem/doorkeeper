@@ -35,7 +35,7 @@ describe "Resource Owner Password Credentials Flow" do
         before do
           Doorkeeper.configuration.instance_variable_set(
             :@allow_grant_flow_for_client,
-            ->(_grant_flow, client) { client.name == "admin" }
+            ->(_grant_flow, client) { client.name == "admin" },
           )
         end
 
@@ -46,7 +46,7 @@ describe "Resource Owner Password Credentials Flow" do
             post password_token_endpoint_url(
               client_id: @client.uid,
               client_secret: "foobar",
-              resource_owner: @resource_owner
+              resource_owner: @resource_owner,
             )
           end.not_to(change { Doorkeeper::AccessToken.count })
 
@@ -99,7 +99,7 @@ describe "Resource Owner Password Credentials Flow" do
               post password_token_endpoint_url(
                 client_id: @client.uid,
                 client_secret: "foobar",
-                resource_owner: @resource_owner
+                resource_owner: @resource_owner,
               )
             end.not_to(change { Doorkeeper::AccessToken.count })
 
@@ -241,9 +241,11 @@ describe "Resource Owner Password Credentials Flow" do
 
   context "with invalid scopes" do
     subject do
-      post password_token_endpoint_url(client: @client,
-                                       resource_owner: @resource_owner,
-                                       scope: "random")
+      post password_token_endpoint_url(
+        client: @client,
+        resource_owner: @resource_owner,
+        scope: "random",
+      )
     end
 
     it "should not issue new token" do
@@ -263,9 +265,11 @@ describe "Resource Owner Password Credentials Flow" do
   context "with invalid user credentials" do
     it "should not issue new token with bad password" do
       expect do
-        post password_token_endpoint_url(client: @client,
-                                         resource_owner_username: @resource_owner.name,
-                                         resource_owner_password: "wrongpassword")
+        post password_token_endpoint_url(
+          client: @client,
+          resource_owner_username: @resource_owner.name,
+          resource_owner_password: "wrongpassword",
+        )
       end.to_not(change { Doorkeeper::AccessToken.count })
     end
 
@@ -293,9 +297,11 @@ describe "Resource Owner Password Credentials Flow" do
   context "with invalid confidential client credentials" do
     it "should not issue new token with bad client credentials" do
       expect do
-        post password_token_endpoint_url(client_id: @client.uid,
-                                         client_secret: "bad_secret",
-                                         resource_owner: @resource_owner)
+        post password_token_endpoint_url(
+          client_id: @client.uid,
+          client_secret: "bad_secret",
+          resource_owner: @resource_owner,
+        )
       end.to_not(change { Doorkeeper::AccessToken.count })
     end
   end

@@ -19,7 +19,7 @@ describe Doorkeeper::OAuth::InvalidRequestResponse do
 
       it "sets a description" do
         expect(response.description).to eq(
-          I18n.t(:missing_param, scope: %i[doorkeeper errors messages invalid_request], value: "some_param")
+          I18n.t(:missing_param, scope: %i[doorkeeper errors messages invalid_request], value: "some_param"),
         )
       end
 
@@ -33,7 +33,7 @@ describe Doorkeeper::OAuth::InvalidRequestResponse do
 
       it "sets a description" do
         expect(response.description).to eq(
-          I18n.t(:not_support_pkce, scope: %i[doorkeeper errors messages invalid_request])
+          I18n.t(:not_support_pkce, scope: %i[doorkeeper errors messages invalid_request]),
         )
       end
 
@@ -47,7 +47,7 @@ describe Doorkeeper::OAuth::InvalidRequestResponse do
 
       it "sets a description" do
         expect(response.description).to eq(
-          I18n.t(:request_not_authorized, scope: %i[doorkeeper errors messages invalid_request])
+          I18n.t(:request_not_authorized, scope: %i[doorkeeper errors messages invalid_request]),
         )
       end
 
@@ -61,7 +61,7 @@ describe Doorkeeper::OAuth::InvalidRequestResponse do
 
       it "sets a description" do
         expect(response.description).to eq(
-          I18n.t(:unknown, scope: %i[doorkeeper errors messages invalid_request])
+          I18n.t(:unknown, scope: %i[doorkeeper errors messages invalid_request]),
         )
       end
 

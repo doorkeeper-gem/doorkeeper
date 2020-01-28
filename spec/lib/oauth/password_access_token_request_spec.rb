@@ -11,7 +11,7 @@ describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
       refresh_token_enabled?: false,
       custom_access_token_expires_in: lambda { |context|
         context.grant_type == Doorkeeper::OAuth::PASSWORD ? 1234 : nil
-      }
+      },
     )
   end
   let(:client) { FactoryBot.create(:application) }
@@ -157,7 +157,7 @@ describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
           elsif context.scopes.exists?("magic")
             Float::INFINITY
           end
-        }
+        },
       )
     end
 

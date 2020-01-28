@@ -7,7 +7,7 @@ describe Doorkeeper::OAuth::ClientCredentialsRequest do
     double(
       default_scopes: nil,
       access_token_expires_in: 2.hours,
-      custom_access_token_expires_in: ->(_context) { nil }
+      custom_access_token_expires_in: ->(_context) { nil },
     )
   end
 

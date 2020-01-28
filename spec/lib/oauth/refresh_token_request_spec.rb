@@ -116,7 +116,7 @@ describe Doorkeeper::OAuth::RefreshTokenRequest do
       subject.authorize
       expect(
         # #sort_by used for MongoDB ORM extensions for valid ordering
-        client.access_tokens.max_by(&:created_at).previous_refresh_token
+        client.access_tokens.max_by(&:created_at).previous_refresh_token,
       ).to eq(refresh_token.refresh_token)
     end
   end

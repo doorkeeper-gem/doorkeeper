@@ -19,7 +19,7 @@ module Doorkeeper
             Doorkeeper::OAuth::Authorization::Context.new(
               oauth_client,
               grant_type,
-              scopes
+              scopes,
             )
           end
 
@@ -54,7 +54,7 @@ module Doorkeeper
           context = self.class.build_context(
             pre_auth.client,
             Doorkeeper::OAuth::IMPLICIT,
-            pre_auth.scopes
+            pre_auth.scopes,
           )
 
           @token = Doorkeeper.config.access_token_model.find_or_create_for(
@@ -62,7 +62,7 @@ module Doorkeeper
             resource_owner.id,
             pre_auth.scopes,
             self.class.access_token_expires_in(configuration, context),
-            false
+            false,
           )
         end
 

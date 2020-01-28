@@ -7,7 +7,7 @@ class AddConfidentialToApplications < ActiveRecord::Migration[5.1]
       :confidential,
       :boolean,
       null: false,
-      default: true # maintaining backwards compatibility: require secrets
+      default: true, # maintaining backwards compatibility: require secrets
     )
   end
 end

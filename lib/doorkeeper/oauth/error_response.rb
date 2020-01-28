@@ -10,8 +10,8 @@ module Doorkeeper
           attributes.merge(
             name: request.error,
             state: request.try(:state),
-            redirect_uri: request.try(:redirect_uri)
-          )
+            redirect_uri: request.try(:redirect_uri),
+          ),
         )
       end
 

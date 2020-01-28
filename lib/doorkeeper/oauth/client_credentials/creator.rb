@@ -15,7 +15,7 @@ module Doorkeeper
 
           Doorkeeper.config.access_token_model.find_or_create_for(
             client, nil, scopes, attributes[:expires_in],
-            attributes[:use_refresh_token]
+            attributes[:use_refresh_token],
           )
         end
 

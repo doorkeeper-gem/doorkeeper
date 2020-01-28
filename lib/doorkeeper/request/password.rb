@@ -10,7 +10,7 @@ module Doorkeeper
           Doorkeeper.configuration,
           client,
           resource_owner,
-          parameters
+          parameters,
         )
       end
     end

@@ -13,11 +13,6 @@ Metrics/BlockLength:
     - lib/doorkeeper/rake/*
     - doorkeeper.gemspec
 
-Metrics/LineLength:
-  Exclude:
-    - spec/**/*
-  Max: 100
-
 Metrics/MethodLength:
   Exclude:
     - spec/dummy/db/**/*
@@ -32,6 +27,8 @@ Style/FrozenStringLiteralComment:
 Style/TrailingCommaInHashLiteral:
   EnforcedStyleForMultiline: consistent_comma
 Style/TrailingCommaInArrayLiteral:
+  EnforcedStyleForMultiline: consistent_comma
+Style/TrailingCommaInArguments:
   EnforcedStyleForMultiline: consistent_comma
 
 Style/SymbolArray:
@@ -52,3 +49,7 @@ Layout/TrailingEmptyLines:
   Enabled: true
 Layout/DotPosition:
   EnforcedStyle: leading
+Layout/LineLength:
+  Exclude:
+    - spec/**/*
+  Max: 100

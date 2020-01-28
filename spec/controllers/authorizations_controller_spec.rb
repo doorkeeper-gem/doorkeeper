@@ -127,7 +127,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
       it "includes error description" do
         expect(response_json_body["error_description"]).to eq(
-          translated_invalid_request_error_message(:missing_param, :client_id)
+          translated_invalid_request_error_message(:missing_param, :client_id),
         )
       end
 
@@ -198,7 +198,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
       it "includes error description" do
         expect(response_json_body["error_description"]).to eq(
-          translated_invalid_request_error_message(:missing_param, :client_id)
+          translated_invalid_request_error_message(:missing_param, :client_id),
         )
       end
 
@@ -468,7 +468,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
       expect(redirect_uri.match(/token_type=(\w+)&?/)[1]).to eq "Bearer"
       expect(redirect_uri.match(/expires_in=(\d+)&?/)[1].to_i).to eq 1234
       expect(
-        redirect_uri.match(/access_token=([a-zA-Z0-9\-_]+)&?/)[1]
+        redirect_uri.match(/access_token=([a-zA-Z0-9\-_]+)&?/)[1],
       ).to eq Doorkeeper::AccessToken.first.token
     end
 

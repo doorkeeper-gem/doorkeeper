@@ -16,7 +16,7 @@ module Doorkeeper
       migration_template(
         "add_confidential_to_applications.rb.erb",
         "db/migrate/add_confidential_to_applications.rb",
-        migration_version: migration_version
+        migration_version: migration_version,
       )
     end
 
