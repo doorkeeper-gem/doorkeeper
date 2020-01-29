@@ -27,7 +27,7 @@ module Doorkeeper
       private
 
       def load_client(credentials)
-        Doorkeeper.config.application_model.by_uid_and_secret(credentials.uid, credentials.secret)
+        server_config.application_model.by_uid_and_secret(credentials.uid, credentials.secret)
       end
 
       def before_successful_response
@@ -42,7 +42,7 @@ module Doorkeeper
       end
 
       def refresh_token_revoked_on_use?
-        Doorkeeper.config.access_token_model.refresh_token_revoked_on_use?
+        server_config.access_token_model.refresh_token_revoked_on_use?
       end
 
       def default_scopes
@@ -50,7 +50,7 @@ module Doorkeeper
       end
 
       def create_access_token
-        @access_token = Doorkeeper.config.access_token_model.create!(access_token_attributes)
+        @access_token = server_config.access_token_model.create!(access_token_attributes)
       end
 
       def access_token_attributes

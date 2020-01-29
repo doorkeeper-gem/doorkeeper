@@ -127,6 +127,16 @@ Doorkeeper.configure do
   #
   # token_reuse_limit 100
 
+  # Only allow one valid access token obtained via client credentials
+  # per client. If a new access token is obtained before the old one
+  # expired, the old one gets revoked (disabled by default)
+  #
+  # When enabling this option, make sure that you do not expect multiple processes
+  # using the same credentials at the same time (e.g. web servers spanning
+  # multiple machines and/or processes).
+  #
+  # revoke_previous_client_credentials_token
+
   # Hash access and refresh tokens before persisting them.
   # This will disable the possibility to use +reuse_access_token+
   # since plain values can no longer be retrieved.

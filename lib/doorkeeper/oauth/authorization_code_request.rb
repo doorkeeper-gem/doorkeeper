@@ -94,7 +94,7 @@ module Doorkeeper
       end
 
       def generate_code_challenge(code_verifier)
-        Doorkeeper.config.access_grant_model.generate_code_challenge(code_verifier)
+        server_config.access_grant_model.generate_code_challenge(code_verifier)
       end
     end
   end

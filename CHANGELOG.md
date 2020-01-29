@@ -13,6 +13,13 @@ User-visible changes worth mentioning.
 - [#1345] Allow to set custom classes for Doorkeeper models, extract reusable AR mixins.
 - [#1346] Refactor `Doorkeeper::Application#to_json` into convenient `#as_json` (fix #1344).
 - [#1349] Fix `Doorkeeper::Application` AR associations using an incorrect foreign key name when using a custom class.
+- [#1318] Make existing token revocation for client credentials optional and disable it by default.
+
+  **[IMPORTANT]** This is a change compared to the behaviour of version 5.2.
+  If you were relying on access tokens being revoked once the same client
+  requested a new access token, reenable it with `revoke_previous_client_credentials_token`.
+
+- [#1318] 
 
 ## 5.2.3
 
@@ -54,6 +61,11 @@ User-visible changes worth mentioning.
 
 - [#1270] Find matching tokens in batches for `reuse_access_token` option (fix #1193).
 - [#1271] Reintroduce existing token revocation for client credentials.
+
+  **[IMPORTANT]** If you rely on being able to fetch multiple access tokens from the same
+  client using client credentials flow, you should skip to version 5.3, where this behaviour
+  is deactivated by default.
+
 - [#1269] Update initializer template documentation.
 - [#1266] Use strong parameters within pre-authorization.
 - [#1264] Add :before_successful_authorization and :after_successful_authorization hooks in TokensController
