@@ -11,13 +11,13 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
         access_token_expires_in: 100,
       )
     end
-    let(:validation) { double :validation, valid?: true }
+    let(:validator) { double :validator, valid?: true }
 
     before do
       allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(false)
     end
 
-    subject { Issuer.new(server, validation) }
+    subject { Issuer.new(server, validator) }
 
     describe :create do
       let(:client) { double :client, id: "some-id" }
@@ -48,14 +48,14 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
         expect(subject.error).to eq(:server_error)
       end
 
-      context "when validation fails" do
+      context "when validator fails" do
         before do
-          allow(validation).to receive(:valid?).and_return(false)
-          allow(validation).to receive(:error).and_return(:validation_error)
+          allow(validator).to receive(:valid?).and_return(false)
+          allow(validator).to receive(:error).and_return(:validation_error)
           expect(creator).not_to receive(:create)
         end
 
-        it "has error set from validation" do
+        it "has error set from validator" do
           subject.create client, scopes, creator
           expect(subject.error).to eq(:validation_error)
         end
@@ -65,7 +65,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
         end
       end
 
-      context "with custom expirations" do
+      context "with custom expiration" do
         let(:custom_ttl_grant) { 1234 }
         let(:custom_ttl_scope) { 1235 }
         let(:custom_scope) { "special" }

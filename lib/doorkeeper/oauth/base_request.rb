@@ -36,7 +36,7 @@ module Doorkeeper
 
       def find_or_create_access_token(client, resource_owner_id, scopes, server)
         context = Authorization::Token.build_context(client, grant_type, scopes)
-        @access_token = Doorkeeper.config.access_token_model.find_or_create_for(
+        @access_token = server_config.access_token_model.find_or_create_for(
           client,
           resource_owner_id,
           scopes,
@@ -46,11 +46,15 @@ module Doorkeeper
       end
 
       def before_successful_response
-        Doorkeeper.config.before_successful_strategy_response.call(self)
+        server_config.before_successful_strategy_response.call(self)
       end
 
       def after_successful_response
-        Doorkeeper.config.after_successful_strategy_response.call(self, @response)
+        server_config.after_successful_strategy_response.call(self, @response)
+      end
+
+      def server_config
+        Doorkeeper.config
       end
 
       private

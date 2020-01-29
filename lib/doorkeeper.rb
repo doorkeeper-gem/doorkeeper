@@ -38,10 +38,9 @@ require "doorkeeper/oauth/authorization_code_request"
 require "doorkeeper/oauth/refresh_token_request"
 require "doorkeeper/oauth/password_access_token_request"
 
-require "doorkeeper/oauth/client_credentials/validation"
+require "doorkeeper/oauth/client_credentials/validator"
 require "doorkeeper/oauth/client_credentials/creator"
 require "doorkeeper/oauth/client_credentials/issuer"
-require "doorkeeper/oauth/client_credentials/validation"
 require "doorkeeper/oauth/client/credentials"
 
 require "doorkeeper/oauth/client_credentials_request"

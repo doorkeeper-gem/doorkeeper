@@ -3,13 +3,13 @@
 require "spec_helper"
 
 class Doorkeeper::OAuth::ClientCredentialsRequest
-  describe Validation do
+  describe Validator do
     let(:server)      { double :server, scopes: nil }
     let(:application) { double scopes: nil }
     let(:client)      { double application: application }
     let(:request)     { double :request, client: client, scopes: nil }
 
-    subject { Validation.new(server, request) }
+    subject { described_class.new(server, request) }
 
     it "is valid with valid request" do
       expect(subject).to be_valid

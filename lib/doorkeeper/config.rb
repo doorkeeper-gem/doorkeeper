@@ -144,6 +144,14 @@ module Doorkeeper
         @config.instance_variable_set(:@token_reuse_limit, percentage)
       end
 
+      # TODO: maybe make it more generic for other flows too?
+      # Only allow one valid access token obtained via client credentials
+      # per client. If a new access token is obtained before the old one
+      # expired, the old one gets revoked (disabled by default)
+      def revoke_previous_client_credentials_token
+        @config.instance_variable_set(:@revoke_previous_client_credentials_token, true)
+      end
+
       # Use an API mode for applications generated with --api argument
       # It will skip applications controller, disable forgery protection
       def api_only
@@ -438,6 +446,10 @@ module Doorkeeper
 
     def token_reuse_limit
       @token_reuse_limit ||= 100
+    end
+
+    def revoke_previous_client_credentials_token
+      @revoke_previous_client_credentials_token || false
     end
 
     def resolve_controller(name)

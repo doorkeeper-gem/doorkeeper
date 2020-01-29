@@ -12,7 +12,7 @@ module Doorkeeper
       delegate :error, to: :issuer
 
       def issuer
-        @issuer ||= Issuer.new(server, Validation.new(server, self))
+        @issuer ||= Issuer.new(server, Validator.new(server, self))
       end
 
       def initialize(server, client, parameters = {})
