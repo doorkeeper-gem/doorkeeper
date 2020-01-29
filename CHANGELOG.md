@@ -7,6 +7,10 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#PR ID] Your PR short description here.
+
+## 5.3.0
+
 - [#1339] Validate Resource Owner in `PasswordAccessTokenRequest` against `nil` and `false` values.
 - [#1341] Fix `refresh_token_revoked_on_use` with `hash_token_secrets` enabled.
 - [#1343] Fix ruby 2.7 kwargs warning in InvalidTokenResponse.
@@ -17,9 +21,8 @@ User-visible changes worth mentioning.
 
   **[IMPORTANT]** This is a change compared to the behaviour of version 5.2.
   If you were relying on access tokens being revoked once the same client
-  requested a new access token, reenable it with `revoke_previous_client_credentials_token`.
-
-- [#1318] 
+  requested a new access token, reenable it with `revoke_previous_client_credentials_token` in Doorkeeper
+  initialization file.
 
 ## 5.2.3
 
