@@ -24,7 +24,7 @@ module Doorkeeper
       private
 
       def token_grant_types
-        Doorkeeper.configuration.token_grant_types
+        Doorkeeper.config.token_grant_types
       end
 
       def build_strategy_class(grant_or_request_type)

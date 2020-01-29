@@ -7,7 +7,7 @@ module Doorkeeper
 
       def request
         @request ||= OAuth::PasswordAccessTokenRequest.new(
-          Doorkeeper.configuration,
+          Doorkeeper.config,
           client,
           resource_owner,
           parameters,

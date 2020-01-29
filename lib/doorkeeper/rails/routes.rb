@@ -26,9 +26,7 @@ module Doorkeeper
         @routes = routes
         @mapping = Mapper.new.map(&block)
 
-        if Doorkeeper.configuration.api_only
-          @mapping.skips.push(:applications, :authorized_applications)
-        end
+        @mapping.skips.push(:applications, :authorized_applications) if Doorkeeper.config.api_only
       end
 
       def generate_routes!(options)

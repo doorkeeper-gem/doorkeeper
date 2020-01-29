@@ -7,9 +7,7 @@ module Doorkeeper
         def call(client, scopes, attributes = {})
           existing_token = existing_token_for(client, scopes)
 
-          if Doorkeeper.configuration.reuse_access_token && existing_token&.reusable?
-            return existing_token
-          end
+          return existing_token if Doorkeeper.config.reuse_access_token && existing_token&.reusable?
 
           existing_token&.revoke
 
@@ -22,7 +20,7 @@ module Doorkeeper
         private
 
         def existing_token_for(client, scopes)
-          Doorkeeper.config.access_token_model.matching_token_for client, nil, scopes
+          Doorkeeper.config.access_token_model.matching_token_for(client, nil, scopes)
         end
       end
     end

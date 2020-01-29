@@ -85,7 +85,7 @@ require "doorkeeper/orm/active_record"
 # Main Doorkeeper namespace.
 #
 module Doorkeeper
-  def self.authenticate(request, methods = Doorkeeper.configuration.access_token_methods)
+  def self.authenticate(request, methods = Doorkeeper.config.access_token_methods)
     OAuth::Token.authenticate(request, *methods)
   end
 end

@@ -87,7 +87,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       def scopes_match_configured
         if scopes.present? && !Doorkeeper::OAuth::Helpers::ScopeChecker.valid?(
           scope_str: scopes.to_s,
-          server_scopes: Doorkeeper.configuration.scopes,
+          server_scopes: Doorkeeper.config.scopes,
         )
           errors.add(:scopes, :not_match_configured)
         end

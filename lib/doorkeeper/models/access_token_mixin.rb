@@ -158,7 +158,7 @@ module Doorkeeper
         (token_scopes.sort == param_scopes.sort) &&
           Doorkeeper::OAuth::Helpers::ScopeChecker.valid?(
             scope_str: param_scopes.to_s,
-            server_scopes: Doorkeeper.configuration.scopes,
+            server_scopes: Doorkeeper.config.scopes,
             app_scopes: app_scopes,
           )
       end
@@ -181,7 +181,7 @@ module Doorkeeper
       # @return [Doorkeeper::AccessToken] existing record or a new one
       #
       def find_or_create_for(application, resource_owner_id, scopes, expires_in, use_refresh_token)
-        if Doorkeeper.configuration.reuse_access_token
+        if Doorkeeper.config.reuse_access_token
           access_token = matching_token_for(application, resource_owner_id, scopes)
 
           return access_token if access_token&.reusable?
@@ -234,14 +234,14 @@ module Doorkeeper
       # Determines the secret storing transformer
       # Unless configured otherwise, uses the plain secret strategy
       def secret_strategy
-        ::Doorkeeper.configuration.token_secret_strategy
+        ::Doorkeeper.config.token_secret_strategy
       end
 
       ##
       # Determine the fallback storing strategy
       # Unless configured, there will be no fallback
       def fallback_secret_strategy
-        ::Doorkeeper.configuration.token_secret_fallback_strategy
+        ::Doorkeeper.config.token_secret_fallback_strategy
       end
     end
 
@@ -350,7 +350,7 @@ module Doorkeeper
     end
 
     # Generates and sets the token value with the
-    # configured Generator class (see Doorkeeper.configuration).
+    # configured Generator class (see Doorkeeper.config).
     #
     # @return [String] generated token value
     #
@@ -375,7 +375,7 @@ module Doorkeeper
     end
 
     def token_generator
-      generator_name = Doorkeeper.configuration.access_token_generator
+      generator_name = Doorkeeper.config.access_token_generator
       generator = generator_name.constantize
 
       return generator if generator.respond_to?(:generate)

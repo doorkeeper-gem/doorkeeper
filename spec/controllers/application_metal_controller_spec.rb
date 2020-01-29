@@ -21,7 +21,7 @@ describe Doorkeeper::ApplicationMetalController do
   end
 
   describe "enforce_content_type" do
-    before { allow(Doorkeeper.configuration).to receive(:enforce_content_type).and_return(flag) }
+    before { allow(Doorkeeper.config).to receive(:enforce_content_type).and_return(flag) }
 
     context "enabled" do
       let(:flag) { true }

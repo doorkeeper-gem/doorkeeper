@@ -14,7 +14,7 @@ module Doorkeeper
     end
 
     def self.configured_orm
-      Doorkeeper.configuration.orm
+      Doorkeeper.config.orm
     end
 
     def self.new(base_scope)

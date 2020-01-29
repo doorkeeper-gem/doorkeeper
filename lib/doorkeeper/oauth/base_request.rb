@@ -46,11 +46,11 @@ module Doorkeeper
       end
 
       def before_successful_response
-        Doorkeeper.configuration.before_successful_strategy_response.call(self)
+        Doorkeeper.config.before_successful_strategy_response.call(self)
       end
 
       def after_successful_response
-        Doorkeeper.configuration.after_successful_strategy_response.call(self, @response)
+        Doorkeeper.config.after_successful_strategy_response.call(self, @response)
       end
 
       private

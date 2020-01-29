@@ -174,9 +174,9 @@ module Doorkeeper
         authorized_token.token == @token&.token
       end
 
-      # config constraints for introspection in Doorkeeper.configuration.allow_token_introspection
+      # Config constraints for introspection in Doorkeeper.config.allow_token_introspection
       def token_introspection_allowed?(auth_client: nil, auth_token: nil)
-        allow_introspection = Doorkeeper.configuration.allow_token_introspection
+        allow_introspection = Doorkeeper.config.allow_token_introspection
         return allow_introspection unless allow_introspection.respond_to?(:call)
 
         allow_introspection.call(
@@ -193,7 +193,7 @@ module Doorkeeper
       # @see https://tools.ietf.org/html/rfc7662#section-2.2
       #
       def customize_response(response)
-        customized_response = Doorkeeper.configuration.custom_introspection_response.call(
+        customized_response = Doorkeeper.config.custom_introspection_response.call(
           token,
           server.context,
         )

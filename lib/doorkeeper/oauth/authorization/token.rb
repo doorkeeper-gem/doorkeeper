@@ -57,7 +57,7 @@ module Doorkeeper
             pre_auth.scopes,
           )
 
-          @token = Doorkeeper.config.access_token_model.find_or_create_for(
+          @token = configuration.access_token_model.find_or_create_for(
             pre_auth.client,
             resource_owner.id,
             pre_auth.scopes,
@@ -77,7 +77,7 @@ module Doorkeeper
         private
 
         def configuration
-          Doorkeeper.configuration
+          Doorkeeper.config
         end
 
         def controller

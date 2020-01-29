@@ -2,10 +2,10 @@
 
 module Doorkeeper
   class ApplicationController <
-    Doorkeeper.configuration.resolve_controller(:base)
+    Doorkeeper.config.resolve_controller(:base)
     include Helpers::Controller
 
-    unless Doorkeeper.configuration.api_only
+    unless Doorkeeper.config.api_only
       protect_from_forgery with: :exception
       helper "doorkeeper/dashboard"
     end

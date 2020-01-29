@@ -20,9 +20,9 @@ module Doorkeeper
           require "doorkeeper/orm/active_record/access_token"
           require "doorkeeper/orm/active_record/application"
 
-          if Doorkeeper.configuration.active_record_options[:establish_connection]
+          if Doorkeeper.config.active_record_options[:establish_connection]
             Doorkeeper::Orm::ActiveRecord.models.each do |model|
-              options = Doorkeeper.configuration.active_record_options[:establish_connection]
+              options = Doorkeeper.config.active_record_options[:establish_connection]
               model.establish_connection(options)
             end
           end

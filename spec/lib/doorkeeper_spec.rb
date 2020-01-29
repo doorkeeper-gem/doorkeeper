@@ -7,7 +7,7 @@ describe Doorkeeper do
     let(:request) { double }
 
     it "calls OAuth::Token#authenticate" do
-      token_strategies = Doorkeeper.configuration.access_token_methods
+      token_strategies = Doorkeeper.config.access_token_methods
 
       expect(Doorkeeper::OAuth::Token).to receive(:authenticate)
         .with(request, *token_strategies)

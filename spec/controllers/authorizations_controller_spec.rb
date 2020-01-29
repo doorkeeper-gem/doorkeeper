@@ -27,8 +27,8 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
       end)
     end
 
-    allow(Doorkeeper.configuration).to receive(:grant_flows).and_return(["implicit"])
-    allow(Doorkeeper.configuration).to receive(:authenticate_resource_owner).and_return(->(_) { authenticator_method })
+    allow(Doorkeeper.config).to receive(:grant_flows).and_return(["implicit"])
+    allow(Doorkeeper.config).to receive(:authenticate_resource_owner).and_return(->(_) { authenticator_method })
     allow(controller).to receive(:authenticator_method).and_return(user)
     expect(controller).to receive(:authenticator_method).at_most(:once)
   end
@@ -69,7 +69,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   describe "POST #create in API mode" do
     before do
-      allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
+      allow(Doorkeeper.config).to receive(:api_only).and_return(true)
       post :create, params: { client_id: client.uid, response_type: "token", redirect_uri: client.redirect_uri }
     end
 
@@ -177,7 +177,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
   describe "POST #create in API mode with errors" do
     context "when missing client_id" do
       before do
-        allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
+        allow(Doorkeeper.config).to receive(:api_only).and_return(true)
 
         post :create, params: {
           client_id: "",
@@ -209,7 +209,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
     context "when other error happens" do
       before do
-        allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
+        allow(Doorkeeper.config).to receive(:api_only).and_return(true)
         default_scopes_exist :public
 
         post :create, params: {
@@ -251,7 +251,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   describe "POST #create with application already authorized" do
     before do
-      allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
+      allow(Doorkeeper.config).to receive(:reuse_access_token).and_return(true)
 
       access_token.save!
 
@@ -286,12 +286,12 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
       end
 
       it "should call :before_successful_authorization callback" do
-        expect(Doorkeeper.configuration)
+        expect(Doorkeeper.config)
           .to receive_message_chain(:before_successful_authorization, :call).with(instance_of(described_class))
       end
 
       it "should call :after_successful_authorization callback" do
-        expect(Doorkeeper.configuration)
+        expect(Doorkeeper.config)
           .to receive_message_chain(:after_successful_authorization, :call).with(instance_of(described_class))
       end
     end
@@ -302,18 +302,18 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
       end
 
       it "should not call :before_successful_authorization callback" do
-        expect(Doorkeeper.configuration).not_to receive(:before_successful_authorization)
+        expect(Doorkeeper.config).not_to receive(:before_successful_authorization)
       end
 
       it "should not call :after_successful_authorization callback" do
-        expect(Doorkeeper.configuration).not_to receive(:after_successful_authorization)
+        expect(Doorkeeper.config).not_to receive(:after_successful_authorization)
       end
     end
   end
 
   describe "GET #new token request with native url and skip_authorization true" do
     before do
-      allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
+      allow(Doorkeeper.config).to receive(:skip_authorization).and_return(proc do
         true
       end)
 
@@ -342,8 +342,8 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   describe "GET #new code request with native url and skip_authorization true" do
     before do
-      allow(Doorkeeper.configuration).to receive(:grant_flows).and_return(%w[authorization_code])
-      allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
+      allow(Doorkeeper.config).to receive(:grant_flows).and_return(%w[authorization_code])
+      allow(Doorkeeper.config).to receive(:skip_authorization).and_return(proc do
         true
       end)
 
@@ -373,7 +373,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   describe "GET #new with skip_authorization true" do
     before do
-      allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc do
+      allow(Doorkeeper.config).to receive(:skip_authorization).and_return(proc do
         true
       end)
 
@@ -412,7 +412,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   describe "GET #new in API mode" do
     before do
-      allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
+      allow(Doorkeeper.config).to receive(:api_only).and_return(true)
 
       get :new, params: {
         client_id: client.uid,

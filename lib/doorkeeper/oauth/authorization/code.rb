@@ -22,7 +22,7 @@ module Doorkeeper
         private
 
         def authorization_code_expires_in
-          Doorkeeper.configuration.authorization_code_expires_in
+          Doorkeeper.config.authorization_code_expires_in
         end
 
         def access_grant_attributes

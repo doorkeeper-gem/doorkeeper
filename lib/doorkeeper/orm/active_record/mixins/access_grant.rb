@@ -9,8 +9,9 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
 
       include ::Doorkeeper::AccessGrantMixin
 
-      belongs_to :application, class_name: Doorkeeper.configuration.application_class,
-                               optional: true, inverse_of: :access_grants
+      belongs_to :application, class_name: Doorkeeper.config.application_class,
+                               optional: true,
+                               inverse_of: :access_grants
 
       validates :resource_owner_id,
                 :application_id,

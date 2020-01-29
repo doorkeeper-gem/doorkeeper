@@ -13,7 +13,7 @@ module Doorkeeper
             @valid_scopes = valid_scopes(server_scopes, app_scopes)
 
             if grant_type
-              @scopes_by_grant_type = Doorkeeper.configuration.scopes_by_grant_type[grant_type.to_sym]
+              @scopes_by_grant_type = Doorkeeper.config.scopes_by_grant_type[grant_type.to_sym]
             end
           end
 

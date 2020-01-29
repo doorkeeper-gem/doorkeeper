@@ -21,7 +21,7 @@ namespace :doorkeeper do
       task expired_tokens: "doorkeeper:setup" do
         expirable_tokens = Doorkeeper.config.access_token_model.where(refresh_token: nil)
         cleaner = Doorkeeper::StaleRecordsCleaner.new(expirable_tokens)
-        cleaner.clean_expired(Doorkeeper.configuration.access_token_expires_in)
+        cleaner.clean_expired(Doorkeeper.config.access_token_expires_in)
       end
 
       desc "Removes stale access grants"
@@ -33,7 +33,7 @@ namespace :doorkeeper do
       desc "Removes expired (TTL passed) access grants"
       task expired_grants: "doorkeeper:setup" do
         cleaner = Doorkeeper::StaleRecordsCleaner.new(Doorkeeper::AccessGrant)
-        cleaner.clean_expired(Doorkeeper.configuration.authorization_code_expires_in)
+        cleaner.clean_expired(Doorkeeper.config.authorization_code_expires_in)
       end
     end
   end

@@ -117,7 +117,7 @@ module Doorkeeper
 
     context "when admin is not authenticated" do
       before do
-        allow(Doorkeeper.configuration).to receive(:authenticate_admin).and_return(proc do
+        allow(Doorkeeper.config).to receive(:authenticate_admin).and_return(proc do
           redirect_to main_app.root_url
         end)
       end
@@ -142,7 +142,8 @@ module Doorkeeper
     context "when admin is authenticated" do
       context "when application secrets are hashed" do
         before do
-          allow(Doorkeeper.configuration).to receive(:application_secret_strategy).and_return(Doorkeeper::SecretStoring::Sha256Hash)
+          allow(Doorkeeper.configuration)
+            .to receive(:application_secret_strategy).and_return(Doorkeeper::SecretStoring::Sha256Hash)
         end
 
         it "shows the application secret after creating a new application" do

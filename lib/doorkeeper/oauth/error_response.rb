@@ -46,9 +46,9 @@ module Doorkeeper
 
       def redirect_uri
         if @response_on_fragment
-          Authorization::URIBuilder.uri_with_fragment @redirect_uri, body
+          Authorization::URIBuilder.uri_with_fragment(@redirect_uri, body)
         else
-          Authorization::URIBuilder.uri_with_query @redirect_uri, body
+          Authorization::URIBuilder.uri_with_query(@redirect_uri, body)
         end
       end
 
@@ -70,7 +70,7 @@ module Doorkeeper
       delegate :realm, to: :configuration
 
       def configuration
-        Doorkeeper.configuration
+        Doorkeeper.config
       end
 
       def exception_class

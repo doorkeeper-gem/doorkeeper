@@ -4,7 +4,7 @@ module Doorkeeper
   module Rails
     module Helpers
       def doorkeeper_authorize!(*scopes)
-        @_doorkeeper_scopes = scopes.presence || Doorkeeper.configuration.default_scopes
+        @_doorkeeper_scopes = scopes.presence || Doorkeeper.config.default_scopes
 
         doorkeeper_render_error unless valid_doorkeeper_token?
       end
@@ -21,7 +21,7 @@ module Doorkeeper
 
       def doorkeeper_render_error
         error = doorkeeper_error
-        error.raise_exception! if Doorkeeper.configuration.raise_on_errors?
+        error.raise_exception! if Doorkeeper.config.raise_on_errors?
 
         headers.merge!(error.headers.reject { |k| k == "Content-Type" })
         doorkeeper_render_error_with(error)
@@ -72,7 +72,7 @@ module Doorkeeper
       def doorkeeper_token
         @doorkeeper_token ||= OAuth::Token.authenticate(
           request,
-          *Doorkeeper.configuration.access_token_methods,
+          *Doorkeeper.config.access_token_methods,
         )
       end
     end

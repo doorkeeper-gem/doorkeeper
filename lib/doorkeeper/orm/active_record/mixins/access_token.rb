@@ -9,8 +9,9 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
 
       include ::Doorkeeper::AccessTokenMixin
 
-      belongs_to :application, class_name: Doorkeeper.configuration.application_class,
-                               inverse_of: :access_tokens, optional: true
+      belongs_to :application, class_name: Doorkeeper.config.application_class,
+                               inverse_of: :access_tokens,
+                               optional: true
 
       validates :token, presence: true, uniqueness: { case_sensitive: true }
       validates :refresh_token, uniqueness: { case_sensitive: true }, if: :use_refresh_token?
