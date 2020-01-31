@@ -4,8 +4,8 @@ module Doorkeeper
   module Rails
     class Routes # :nodoc:
       class Mapper
-        def initialize
-          @mapping = Mapping.new
+        def initialize(mapping = Mapping.new)
+          @mapping = mapping
         end
 
         def map(&block)

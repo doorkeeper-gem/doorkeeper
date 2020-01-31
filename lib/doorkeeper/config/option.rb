@@ -37,7 +37,11 @@ module Doorkeeper
         attribute_builder = options[:builder_class]
 
         Builder.instance_eval do
-          remove_method name if method_defined?(name)
+          if method_defined?(name)
+            Kernel.warn "[DOORKEEPER] Option #{name} already defined and will be overridden"
+            remove_method name
+          end
+
           if options[:deprecated]
             define_method name do |*_, &_|
               Kernel.warn "[DOORKEEPER] #{name} has been deprecated and will soon be removed"

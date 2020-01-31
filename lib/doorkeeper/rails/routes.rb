@@ -22,9 +22,9 @@ module Doorkeeper
 
       attr_reader :routes
 
-      def initialize(routes, &block)
+      def initialize(routes, mapper = Mapper.new, &block)
         @routes = routes
-        @mapping = Mapper.new.map(&block)
+        @mapping = mapper.map(&block)
 
         @mapping.skips.push(:applications, :authorized_applications) if Doorkeeper.config.api_only
       end
