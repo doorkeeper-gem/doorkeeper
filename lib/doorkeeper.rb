@@ -66,6 +66,7 @@ require "doorkeeper/models/concerns/reusable"
 require "doorkeeper/models/concerns/revocable"
 require "doorkeeper/models/concerns/accessible"
 require "doorkeeper/models/concerns/secret_storable"
+require "doorkeeper/models/concerns/resource_ownerable"
 
 require "doorkeeper/models/access_grant_mixin"
 require "doorkeeper/models/access_token_mixin"

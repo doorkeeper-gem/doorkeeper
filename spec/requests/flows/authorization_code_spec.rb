@@ -182,6 +182,7 @@ feature "Authorization Code Flow" do
     access_token_exists application: @client,
                         expires_in: -100, # even expired token
                         resource_owner_id: @resource_owner.id,
+                        resource_owner_type: @resource_owner.class.name,
                         scopes: "public write"
 
     visit authorization_endpoint_url(client: @client, scope: "public write")
@@ -506,8 +507,12 @@ describe "Authorization Code Flow" do
   end
 
   context "issuing a refresh token" do
+    let(:resource_owner) { FactoryBot.create(:resource_owner) }
+
     before do
-      authorization_code_exists application: @client
+      authorization_code_exists application: @client,
+                                resource_owner_id: resource_owner.id,
+                                resource_owner_type: resource_owner.class.name
     end
 
     it "second of simultaneous client requests get an error for revoked acccess token" do

@@ -50,7 +50,10 @@ end
 describe "Authorization Code Flow Errors", "after authorization" do
   before do
     client_exists
-    authorization_code_exists application: @client
+    create_resource_owner
+    authorization_code_exists application: @client,
+                              resource_owner_id: @resource_owner.id,
+                              resource_owner_type: @resource_owner.class.name
   end
 
   it "returns :invalid_grant error when posting an already revoked grant code" do

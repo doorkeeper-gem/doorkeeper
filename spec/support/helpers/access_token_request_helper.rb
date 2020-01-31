@@ -5,6 +5,7 @@ module AccessTokenRequestHelper
     attributes = {
       application: client,
       resource_owner_id: resource_owner.id,
+      resource_owner_type: resource_owner.class.name,
     }.merge(access_token_attributes)
     FactoryBot.create(:access_token, attributes)
   end

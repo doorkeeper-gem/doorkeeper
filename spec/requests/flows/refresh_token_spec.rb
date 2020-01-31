@@ -12,9 +12,13 @@ describe "Refresh Token Flow" do
     client_exists
   end
 
+  let(:resource_owner) { FactoryBot.create(:resource_owner) }
+
   context "issuing a refresh token" do
     before do
-      authorization_code_exists application: @client
+      authorization_code_exists application: @client,
+                                resource_owner_id: resource_owner.id,
+                                resource_owner_type: resource_owner.class.name
     end
 
     it "client gets the refresh token and refreshes it" do
@@ -43,7 +47,8 @@ describe "Refresh Token Flow" do
       @token = FactoryBot.create(
         :access_token,
         application: @client,
-        resource_owner_id: 1,
+        resource_owner_id: resource_owner.id,
+        resource_owner_type: resource_owner.class.name,
         use_refresh_token: true,
       )
     end
@@ -110,7 +115,8 @@ describe "Refresh Token Flow" do
         FactoryBot.create(
           :access_token,
           application: @client,
-          resource_owner_id: 1,
+          resource_owner_id: resource_owner.id,
+          resource_owner_type: resource_owner.class.name,
           use_refresh_token: true,
         )
       end
@@ -119,7 +125,8 @@ describe "Refresh Token Flow" do
         FactoryBot.create(
           :access_token,
           application: public_client,
-          resource_owner_id: 1,
+          resource_owner_id: resource_owner.id,
+          resource_owner_type: resource_owner.class.name,
           use_refresh_token: true,
         )
       end
@@ -185,14 +192,15 @@ describe "Refresh Token Flow" do
       end
       create_resource_owner
       _another_token = post password_token_endpoint_url(
-        client: @client, resource_owner: @resource_owner,
+        client: @client, resource_owner: resource_owner,
       )
-      last_token.update_attribute :created_at, 5.seconds.ago
+      last_token.update(created_at: 5.seconds.ago)
 
       @token = FactoryBot.create(
         :access_token,
         application: @client,
-        resource_owner_id: @resource_owner.id,
+        resource_owner_id: resource_owner.id,
+        resource_owner_type: resource_owner.class.name,
         use_refresh_token: true,
       )
       @token.update_attribute :expires_in, -100
@@ -226,7 +234,7 @@ describe "Refresh Token Flow" do
 
     def last_token
       Doorkeeper::AccessToken.last_authorized_token_for(
-        @client.id, @resource_owner.id,
+        @client.id, resource_owner,
       )
     end
   end

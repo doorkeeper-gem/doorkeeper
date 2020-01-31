@@ -3,10 +3,18 @@
 require "spec_helper"
 
 describe Doorkeeper::AccessGrant do
+  let(:resource_owner) { FactoryBot.create(:resource_owner) }
   let(:client) { FactoryBot.build_stubbed(:application) }
   let(:clazz) { Doorkeeper::AccessGrant }
 
-  subject { FactoryBot.build(:access_grant, application: client) }
+  subject do
+    FactoryBot.build(
+      :access_grant,
+      application: client,
+      resource_owner_id: resource_owner.id,
+      resource_owner_type: resource_owner.class.name,
+    )
+  end
 
   it { expect(subject).to be_valid }
 
@@ -17,7 +25,12 @@ describe Doorkeeper::AccessGrant do
   end
 
   context "with hashing enabled" do
-    let(:grant) { FactoryBot.create :access_grant }
+    let(:resource_owner) { FactoryBot.create(:resource_owner) }
+    let(:grant) do
+      FactoryBot.create :access_grant,
+                        resource_owner_id: resource_owner.id,
+                        resource_owner_type: resource_owner.class.name
+    end
     include_context "with token hashing enabled"
 
     it "holds a volatile plaintext token when created" do
@@ -117,12 +130,12 @@ describe Doorkeeper::AccessGrant do
   end
 
   describe ".revoke_all_for" do
-    let(:resource_owner) { double(id: 100) }
     let(:application) { FactoryBot.create :application }
     let(:default_attributes) do
       {
         application: application,
         resource_owner_id: resource_owner.id,
+        resource_owner_type: resource_owner.class.name,
       }
     end
 
@@ -148,9 +161,10 @@ describe Doorkeeper::AccessGrant do
     end
 
     it "matches resource owner" do
+      other_resource_owner = FactoryBot.create(:resource_owner)
       access_grant_for_different_owner = FactoryBot.create(
         :access_grant,
-        default_attributes.merge(resource_owner_id: 90),
+        default_attributes.merge(resource_owner_id: other_resource_owner.id),
       )
 
       described_class.revoke_all_for application.id, resource_owner

@@ -12,6 +12,7 @@ module Doorkeeper
     include Models::Orderable
     include Models::SecretStorable
     include Models::Scopes
+    include Models::ResourceOwnerable
 
     module ClassMethods
       # Returns an instance of the Doorkeeper::AccessToken with
@@ -64,11 +65,12 @@ module Doorkeeper
       #   instance of the Resource Owner model
       #
       def revoke_all_for(application_id, resource_owner, clock = Time)
-        where(
-          application_id: application_id,
-          resource_owner_id: resource_owner.id,
-          revoked_at: nil,
-        ).update_all(revoked_at: clock.now.utc)
+        by_resource_owner(resource_owner)
+          .where(
+            application_id: application_id,
+            revoked_at: nil,
+          )
+          .update_all(revoked_at: clock.now.utc)
       end
 
       # Looking for not revoked Access Token with a matching set of scopes
@@ -76,7 +78,7 @@ module Doorkeeper
       #
       # @param application [Doorkeeper::Application]
       #   Application instance
-      # @param resource_owner_or_id [ActiveRecord::Base, Integer]
+      # @param resource_owner [ActiveRecord::Base, Integer]
       #   Resource Owner model instance or it's ID
       # @param scopes [String, Doorkeeper::OAuth::Scopes]
       #   set of scopes
@@ -84,14 +86,8 @@ module Doorkeeper
       # @return [Doorkeeper::AccessToken, nil] Access Token instance or
       #   nil if matching record was not found
       #
-      def matching_token_for(application, resource_owner_or_id, scopes)
-        resource_owner_id = if resource_owner_or_id.respond_to?(:to_key)
-                              resource_owner_or_id.id
-                            else
-                              resource_owner_or_id
-                            end
-
-        tokens = authorized_tokens_for(application.try(:id), resource_owner_id)
+      def matching_token_for(application, resource_owner, scopes)
+        tokens = authorized_tokens_for(application&.id, resource_owner)
         find_matching_token(tokens, application, scopes)
       end
 
@@ -169,7 +165,7 @@ module Doorkeeper
       #
       # @param application [Doorkeeper::Application]
       #   Application instance
-      # @param resource_owner_id [ActiveRecord::Base, Integer]
+      # @param resource_owner [ActiveRecord::Base, Integer]
       #   Resource Owner model instance or it's ID
       # @param scopes [#to_s]
       #   set of scopes (any object that responds to `#to_s`)
@@ -180,20 +176,27 @@ module Doorkeeper
       #
       # @return [Doorkeeper::AccessToken] existing record or a new one
       #
-      def find_or_create_for(application, resource_owner_id, scopes, expires_in, use_refresh_token)
+      def find_or_create_for(application, resource_owner, scopes, expires_in, use_refresh_token)
         if Doorkeeper.config.reuse_access_token
-          access_token = matching_token_for(application, resource_owner_id, scopes)
+          access_token = matching_token_for(application, resource_owner, scopes)
 
           return access_token if access_token&.reusable?
         end
 
-        create!(
-          application_id: application.try(:id),
-          resource_owner_id: resource_owner_id,
+        attributes = {
+          application_id: application&.id,
           scopes: scopes.to_s,
           expires_in: expires_in,
           use_refresh_token: use_refresh_token,
-        )
+        }
+
+        if Doorkeeper.config.polymorphic_resource_owner?
+          attributes[:resource_owner] = resource_owner
+        else
+          attributes[:resource_owner_id] = resource_owner_id_for(resource_owner)
+        end
+
+        create!(attributes)
       end
 
       # Looking for not revoked Access Token records that belongs to specific
@@ -201,15 +204,14 @@ module Doorkeeper
       #
       # @param application_id [Integer]
       #   ID of the Application model instance
-      # @param resource_owner_id [Integer]
+      # @param resource_owner [Integer]
       #   ID of the Resource Owner model instance
       #
       # @return [Doorkeeper::AccessToken] array of matching AccessToken objects
       #
-      def authorized_tokens_for(application_id, resource_owner_id)
-        where(
+      def authorized_tokens_for(application_id, resource_owner)
+        by_resource_owner(resource_owner).where(
           application_id: application_id,
-          resource_owner_id: resource_owner_id,
           revoked_at: nil,
         )
       end
@@ -219,15 +221,16 @@ module Doorkeeper
       #
       # @param application_id [Integer]
       #   ID of the Application model instance
-      # @param resource_owner_id [Integer]
+      # @param resource_owner [ActiveRecord::Base, Integer]
       #   ID of the Resource Owner model instance
       #
       # @return [Doorkeeper::AccessToken, nil] matching AccessToken object or
       #   nil if nothing was found
       #
-      def last_authorized_token_for(application_id, resource_owner_id)
-        authorized_tokens_for(application_id, resource_owner_id)
-          .ordered_by(:created_at, :desc).first
+      def last_authorized_token_for(application_id, resource_owner)
+        authorized_tokens_for(application_id, resource_owner)
+          .ordered_by(:created_at, :desc)
+          .first
       end
 
       ##
@@ -268,7 +271,11 @@ module Doorkeeper
         expires_in: expires_in_seconds,
         application: { uid: application.try(:uid) },
         created_at: created_at.to_i,
-      }
+      }.tap do |json|
+        if Doorkeeper.configuration.polymorphic_resource_owner?
+          json[:resource_owner_type] = resource_owner_type
+        end
+      end
     end
 
     # Indicates whether the token instance have the same credential
@@ -280,7 +287,22 @@ module Doorkeeper
     #
     def same_credential?(access_token)
       application_id == access_token.application_id &&
+        same_resource_owner?(access_token)
+    end
+
+    # Indicates whether the token instance have the same credential
+    # as the other Access Token.
+    #
+    # @param access_token [Doorkeeper::AccessToken] other token
+    #
+    # @return [Boolean] true if credentials are same of false in other cases
+    #
+    def same_resource_owner?(access_token)
+      if Doorkeeper.configuration.polymorphic_resource_owner?
+        resource_owner == access_token.resource_owner
+      else
         resource_owner_id == access_token.resource_owner_id
+      end
     end
 
     # Indicates if token is acceptable for specific scopes.
@@ -362,16 +384,28 @@ module Doorkeeper
     def generate_token
       self.created_at ||= Time.now.utc
 
-      @raw_token = token_generator.generate(
+      @raw_token = token_generator.generate(attributes_for_token_generator)
+      secret_strategy.store_secret(self, :token, @raw_token)
+      @raw_token
+    end
+
+    # Set of attributes that would be passed to token generator to
+    # generate unique token based on them.
+    #
+    #  @return [Hash] set of attributes
+    #
+    def attributes_for_token_generator
+      {
         resource_owner_id: resource_owner_id,
         scopes: scopes,
         application: application,
         expires_in: expires_in,
         created_at: created_at,
-      )
-
-      secret_strategy.store_secret(self, :token, @raw_token)
-      @raw_token
+      }.tap do |attributes|
+        if Doorkeeper.config.polymorphic_resource_owner?
+          attributes[:resource_owner] = resource_owner
+        end
+      end
     end
 
     def token_generator

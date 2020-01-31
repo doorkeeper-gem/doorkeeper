@@ -13,6 +13,10 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
                                inverse_of: :access_tokens,
                                optional: true
 
+      if Doorkeeper.config.polymorphic_resource_owner?
+        belongs_to :resource_owner, polymorphic: true, optional: true
+      end
+
       validates :token, presence: true, uniqueness: { case_sensitive: true }
       validates :refresh_token, uniqueness: { case_sensitive: true }, if: :use_refresh_token?
 
@@ -36,7 +40,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       #   active Access Tokens for Resource Owner
       #
       def active_for(resource_owner)
-        where(resource_owner_id: resource_owner.id, revoked_at: nil)
+        by_resource_owner(resource_owner).where(revoked_at: nil)
       end
 
       def refresh_token_revoked_on_use?

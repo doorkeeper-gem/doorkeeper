@@ -8,7 +8,7 @@ describe Doorkeeper::OAuth::TokenRequest do
   end
 
   let :pre_auth do
-    server = Doorkeeper.configuration
+    server = Doorkeeper.config
     allow(server).to receive(:default_scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("public"))
     allow(server).to receive(:grant_flows).and_return(Doorkeeper::OAuth::Scopes.from_string("implicit"))
 
@@ -26,7 +26,7 @@ describe Doorkeeper::OAuth::TokenRequest do
   end
 
   let :owner do
-    double :owner, id: 7866
+    FactoryBot.create(:doorkeeper_testing_user)
   end
 
   subject do
@@ -116,9 +116,13 @@ describe Doorkeeper::OAuth::TokenRequest do
     it "creates a new token if scopes do not match" do
       allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
       FactoryBot.create(
-        :access_token, application_id: pre_auth.client.id,
-                       resource_owner_id: owner.id, scopes: "",
+        :access_token,
+        application_id: pre_auth.client.id,
+        resource_owner_id: owner.id,
+        resource_owner_type: owner.class.name,
+        scopes: "",
       )
+
       expect do
         subject.authorize
       end.to change { Doorkeeper::AccessToken.count }.by(1)
@@ -131,7 +135,7 @@ describe Doorkeeper::OAuth::TokenRequest do
 
       FactoryBot.create(
         :access_token, application_id: pre_auth.client.id,
-                       resource_owner_id: owner.id, scopes: "public",
+                       resource_owner_id: owner.id, resource_owner_type: owner.class.name, scopes: "public",
       )
 
       expect { subject.authorize }.not_to(change { Doorkeeper::AccessToken.count })
@@ -143,8 +147,11 @@ describe Doorkeeper::OAuth::TokenRequest do
       allow(application.scopes).to receive(:all?).and_return(true)
 
       FactoryBot.create(
-        :access_token, application_id: pre_auth.client.id,
-                       resource_owner_id: owner.id, scopes: "public",
+        :access_token,
+        application_id: pre_auth.client.id,
+        resource_owner_id: owner.id,
+        resource_owner_type: owner.class.name,
+        scopes: "public",
       )
 
       allow_any_instance_of(Doorkeeper::AccessToken).to receive(:reusable?).and_return(false)

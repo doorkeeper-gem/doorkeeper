@@ -10,6 +10,7 @@ describe Doorkeeper::StaleRecordsCleaner do
       access_grant: Doorkeeper::AccessGrant,
     }
   end
+  let(:resource_owner) { FactoryBot.create(:resource_owner) }
 
   context "when ORM has no cleaner class" do
     it "raises an error" do
@@ -30,7 +31,10 @@ describe Doorkeeper::StaleRecordsCleaner do
 
         context "with revoked record" do
           before do
-            FactoryBot.create model_name, revoked_at: Time.current - 1.minute
+            FactoryBot.create model_name,
+                              revoked_at: Time.current - 1.minute,
+                              resource_owner_id: resource_owner.id,
+                              resource_owner_type: resource_owner.class.name
           end
 
           it "removes the record" do
@@ -40,7 +44,9 @@ describe Doorkeeper::StaleRecordsCleaner do
 
         context "with record revoked in the future" do
           before do
-            FactoryBot.create model_name, revoked_at: Time.current + 1.minute
+            FactoryBot.create model_name, revoked_at: Time.current + 1.minute,
+                                          resource_owner_id: resource_owner.id,
+                                          resource_owner_type: resource_owner.class.name
           end
 
           it "keeps the record" do
@@ -50,7 +56,9 @@ describe Doorkeeper::StaleRecordsCleaner do
 
         context "with unrevoked record" do
           before do
-            FactoryBot.create model_name, revoked_at: nil
+            FactoryBot.create model_name, revoked_at: nil,
+                                          resource_owner_id: resource_owner.id,
+                                          resource_owner_type: resource_owner.class.name
           end
 
           it "keeps the record" do
@@ -66,7 +74,10 @@ describe Doorkeeper::StaleRecordsCleaner do
 
         context "with record that is expired" do
           before do
-            FactoryBot.create model_name, created_at: expiry_border - 1.minute
+            FactoryBot.create model_name,
+                              created_at: expiry_border - 1.minute,
+                              resource_owner_id: resource_owner.id,
+                              resource_owner_type: resource_owner.class.name
           end
 
           it "removes the record" do
@@ -76,7 +87,9 @@ describe Doorkeeper::StaleRecordsCleaner do
 
         context "with record that is not expired" do
           before do
-            FactoryBot.create model_name, created_at: expiry_border + 1.minute
+            FactoryBot.create model_name, created_at: expiry_border + 1.minute,
+                                          resource_owner_id: resource_owner.id,
+                                          resource_owner_type: resource_owner.class.name
           end
 
           it "keeps the record" do
