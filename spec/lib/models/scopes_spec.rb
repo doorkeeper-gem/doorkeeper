@@ -33,6 +33,14 @@ describe "Doorkeeper::Models::Scopes" do
       subject.scopes = %w[private admin]
       expect(subject.scopes_string).to eq("private admin")
     end
+
+    it "ignores duplicated scopes" do
+      subject.scopes = %w[private admin admin]
+      expect(subject.scopes_string).to eq("private admin")
+
+      subject.scopes = "private admin admin"
+      expect(subject.scopes_string).to eq("private admin")
+    end
   end
 
   describe :scopes_string do

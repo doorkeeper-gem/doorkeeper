@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#PR ID] Your PR short description here.
+- [#1356] Invalidate duplicated scopes for Access Tokens and Grants in database.
 
 ## 5.3.0
 

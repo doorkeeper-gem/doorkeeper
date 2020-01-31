@@ -8,7 +8,11 @@ module Doorkeeper
       end
 
       def scopes=(value)
-        super Array(value).join(" ")
+        if value.is_a?(Array)
+          super(Doorkeeper::OAuth::Scopes.from_array(value).to_s)
+        else
+          super(Doorkeeper::OAuth::Scopes.from_string(value.to_s).to_s)
+        end
       end
 
       def scopes_string
