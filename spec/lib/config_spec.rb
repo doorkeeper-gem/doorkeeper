@@ -565,6 +565,10 @@ describe Doorkeeper, "configuration" do
           expect(model).to receive(:establish_connection)
         end
 
+        expect(Kernel).to receive(:warn).with(
+          /\[DOORKEEPER\] active_record_options has been deprecated and will soon be removed/,
+        )
+
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
           active_record_options(

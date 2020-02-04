@@ -10,6 +10,7 @@ User-visible changes worth mentioning.
 - [#1356] Invalidate duplicated scopes for Access Tokens and Grants in database.
 - [#1357] Fix `Doorkeeper::OAuth::PreAuthorization#as_json` method causing 
   `Stack level too deep` error with AMS (fix #1312).
+- [#1358] Deprecate `active_record_options` configuration option.
 - [#1359] Refactor Doorkeeper configuration options DSL to make it easy to reuse it
   in external extensions.
 
