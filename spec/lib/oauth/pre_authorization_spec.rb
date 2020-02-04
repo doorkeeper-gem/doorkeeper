@@ -194,30 +194,16 @@ describe Doorkeeper::OAuth::PreAuthorization do
       end
     end
 
-    context "when attributes param is not passed" do
+    context "when called without params" do
       let(:json) { subject.as_json }
 
       include_examples "returns the pre authorization"
     end
 
-    context "when attributes param is passed" do
-      context "when attributes is a hash" do
-        let(:custom_attributes) { { custom_id: "1234", custom_name: "a pretty good name" } }
-        let(:json) { subject.as_json(custom_attributes) }
+    context "when called with params" do
+      let(:json) { subject.as_json(foo: "bar") }
 
-        include_examples "returns the pre authorization"
-
-        it "merges the attributes in params" do
-          expect(json[:custom_id]).to eq custom_attributes[:custom_id]
-          expect(json[:custom_name]).to eq custom_attributes[:custom_name]
-        end
-      end
-
-      context "when attributes is not a hash" do
-        let(:json) { subject.as_json(nil) }
-
-        include_examples "returns the pre authorization"
-      end
+      include_examples "returns the pre authorization"
     end
   end
 end

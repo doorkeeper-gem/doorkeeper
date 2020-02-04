@@ -55,9 +55,7 @@ module Doorkeeper
         end
       end
 
-      def as_json(attributes = {})
-        return pre_auth_hash.merge(attributes.to_h) if attributes.respond_to?(:to_h)
-
+      def as_json(_options = nil)
         pre_auth_hash
       end
 
