@@ -8,7 +8,10 @@ User-visible changes worth mentioning.
 ## master
 
 - [#1356] Invalidate duplicated scopes for Access Tokens and Grants in database.
-- [#1357] Fix `Doorkeeper::OAuth::PreAuthorization#as_json` method causing `Stack level too deep` error with AMS (fix #1312).
+- [#1357] Fix `Doorkeeper::OAuth::PreAuthorization#as_json` method causing 
+  `Stack level too deep` error with AMS (fix #1312).
+- [#1359] Refactor Doorkeeper configuration options DSL to make it easy to reuse it
+  in external extensions.
 
 ## 5.3.0
 

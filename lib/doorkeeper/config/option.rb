@@ -36,7 +36,7 @@ module Doorkeeper
         attribute = options[:as] || name
         attribute_builder = options[:builder_class]
 
-        Builder.instance_eval do
+        builder_class.instance_eval do
           if method_defined?(name)
             Kernel.warn "[DOORKEEPER] Option #{name} already defined and will be overridden"
             remove_method name
@@ -68,6 +68,13 @@ module Doorkeeper
         end
 
         public attribute
+      end
+
+      def self.extended(base)
+        return if base.respond_to?(:builder_class)
+
+        raise Doorkeeper::MissingConfigurationBuilderClass, "Define `self.builder_class` method " \
+                          "for #{base} that returns your custom Builder class to use options DSL!"
       end
     end
   end

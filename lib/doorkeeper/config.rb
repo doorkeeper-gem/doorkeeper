@@ -1,15 +1,23 @@
 # frozen_string_literal: true
 
 require "doorkeeper/config/option"
+require "doorkeeper/config/abstract_builder"
 
 module Doorkeeper
+  # Defines a MissingConfiguration error for a missing Doorkeeper configuration
+  #
   class MissingConfiguration < StandardError
-    # Defines a MissingConfiguration error for a missing Doorkeeper
-    # configuration
     def initialize
       super("Configuration for doorkeeper missing. Do you have doorkeeper initializer?")
     end
   end
+
+  # Doorkeeper option DSL could be reused in extensions to build their own
+  # configurations. To use the Option DSL gems need to define `builder_class` method
+  # that returns configuration Builder class. This exception raises when they don't
+  # define it.
+  #
+  class MissingConfigurationBuilderClass < StandardError; end
 
   class << self
     def configure(&block)
@@ -30,7 +38,7 @@ module Doorkeeper
       @orm_adapter = "doorkeeper/orm/#{configuration.orm}".classify.constantize
     rescue NameError => e
       raise e, "ORM adapter not found (#{configuration.orm})", <<-ERROR_MSG.strip_heredoc
-        [doorkeeper] ORM adapter not found (#{configuration.orm}), or there was an error
+        [DOORKEEPER] ORM adapter not found (#{configuration.orm}), or there was an error
         trying to load it.
 
         You probably need to add the related gem for this adapter to work with
@@ -48,17 +56,8 @@ module Doorkeeper
   end
 
   class Config
-    class Builder
-      def initialize(&block)
-        @config = Config.new
-        instance_eval(&block)
-      end
-
-      def build
-        @config.validate
-        @config
-      end
-
+    # Default Doorkeeper configuration builder
+    class Builder < AbstractBuilder
       # Provide support for an owner to be assigned to each registered
       # application (disabled by default)
       # Optional parameter confirmation: true (default false) if you want
@@ -218,6 +217,9 @@ module Doorkeeper
         @config.instance_variable_set(:"@#{type}_secret_fallback_strategy", fallback.constantize)
       end
     end
+
+    # Replace with `default: Builder` when we drop support of Rails < 5.2
+    mattr_reader(:builder_class) { Builder }
 
     extend Option
 
