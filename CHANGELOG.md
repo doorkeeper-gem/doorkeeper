@@ -7,9 +7,14 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#1355] Allow to enable polymorphic Resource Owner association for Access Tokens/Grants
-  (`polymorphic_resource_owner` configuration option).
-- [#1356] Invalidate duplicated scopes for Access Tokens and Grants in database.
+- [#1355] Allow to enable polymorphic Resource Owner association for Access Token & Grant
+  models (`use_polymorphic_resource_owner` configuration option).
+  
+  **[IMPORTANT]** Review your custom patches or extensions for Doorkeeper internals if you
+  have such - since now Doorkeeper passes Resource Owner instance to every objects and not
+  just it's ID. More info could be found in GitHub PR description.
+  
+- [#1356] Remove duplicated scopes from Access Tokens and Grants on attribute assignment.
 - [#1357] Fix `Doorkeeper::OAuth::PreAuthorization#as_json` method causing 
   `Stack level too deep` error with AMS (fix #1312).
 - [#1358] Deprecate `active_record_options` configuration option.
