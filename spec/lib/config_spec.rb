@@ -3,7 +3,7 @@
 require "spec_helper"
 
 describe Doorkeeper, "configuration" do
-  subject { Doorkeeper.configuration }
+  subject { Doorkeeper.config }
 
   describe "resource_owner_authenticator" do
     it "sets the block that is accessible via authenticate_resource_owner" do
@@ -328,7 +328,7 @@ describe Doorkeeper, "configuration" do
 
   describe "enable_application_owner" do
     it "is disabled by default" do
-      expect(Doorkeeper.configuration.enable_application_owner?).not_to eq(true)
+      expect(Doorkeeper.config.enable_application_owner?).not_to eq(true)
     end
 
     context "when enabled without confirmation" do
@@ -344,7 +344,7 @@ describe Doorkeeper, "configuration" do
       end
 
       it "Doorkeeper.configuration.confirm_application_owner? returns false" do
-        expect(Doorkeeper.configuration.confirm_application_owner?).not_to eq(true)
+        expect(Doorkeeper.config.confirm_application_owner?).not_to eq(true)
       end
     end
 
@@ -361,14 +361,14 @@ describe Doorkeeper, "configuration" do
       end
 
       it "Doorkeeper.configuration.confirm_application_owner? returns true" do
-        expect(Doorkeeper.configuration.confirm_application_owner?).to eq(true)
+        expect(Doorkeeper.config.confirm_application_owner?).to eq(true)
       end
     end
   end
 
   describe "realm" do
     it "is 'Doorkeeper' by default" do
-      expect(Doorkeeper.configuration.realm).to eq("Doorkeeper")
+      expect(Doorkeeper.config.realm).to eq("Doorkeeper")
     end
 
     it "can change the value" do
@@ -383,7 +383,7 @@ describe Doorkeeper, "configuration" do
 
   describe "grant_flows" do
     it "is set to all grant flows by default" do
-      expect(Doorkeeper.configuration.grant_flows)
+      expect(Doorkeeper.config.grant_flows)
         .to eq(%w[authorization_code client_credentials])
     end
 
@@ -454,13 +454,13 @@ describe Doorkeeper, "configuration" do
   end
 
   it "raises an exception when configuration is not set" do
-    old_config = Doorkeeper.configuration
+    old_config = Doorkeeper.config
     Doorkeeper.module_eval do
       @config = nil
     end
 
     expect do
-      Doorkeeper.configuration
+      Doorkeeper.config
     end.to raise_error Doorkeeper::MissingConfiguration
 
     Doorkeeper.module_eval do
@@ -527,13 +527,13 @@ describe Doorkeeper, "configuration" do
         end
       end
 
-      it { expect(Doorkeeper.configuration.base_controller).to eq("ApplicationController") }
+      it { expect(Doorkeeper.config.base_controller).to eq("ApplicationController") }
     end
   end
 
   describe "base_metal_controller" do
     context "default" do
-      it { expect(Doorkeeper.configuration.base_metal_controller).to eq("ActionController::API") }
+      it { expect(Doorkeeper.config.base_metal_controller).to eq("ActionController::API") }
     end
 
     context "custom" do
@@ -662,7 +662,7 @@ describe Doorkeeper, "configuration" do
 
   describe "handle_auth_errors" do
     it "is set to render by default" do
-      expect(Doorkeeper.configuration.handle_auth_errors).to eq(:render)
+      expect(Doorkeeper.config.handle_auth_errors).to eq(:render)
     end
     it "can change the value" do
       Doorkeeper.configure do

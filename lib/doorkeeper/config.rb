@@ -157,6 +157,12 @@ module Doorkeeper
         @config.instance_variable_set(:@api_only, true)
       end
 
+      # Enables polymorphic Resource Owner association for Access Grant and
+      # Access Token models. Requires additional database columns to be setup.
+      def use_polymorphic_resource_owner
+        @config.instance_variable_set(:@polymorphic_resource_owner, true)
+      end
+
       # Forbids creating/updating applications with arbitrary scopes that are
       # not in configuration, i.e. `default_scopes` or `optional_scopes`.
       # (disabled by default)
@@ -474,6 +480,10 @@ module Doorkeeper
 
     def enable_application_owner?
       option_set? :enable_application_owner
+    end
+
+    def polymorphic_resource_owner?
+      option_set? :polymorphic_resource_owner
     end
 
     def confirm_application_owner?

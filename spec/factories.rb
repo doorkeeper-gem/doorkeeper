@@ -26,5 +26,5 @@ FactoryBot.define do
 
   # do not name this factory :user, otherwise it will conflict with factories
   # from applications that use doorkeeper factories in their own tests
-  factory :doorkeeper_testing_user, class: :user
+  factory :doorkeeper_testing_user, class: :user, aliases: [:resource_owner]
 end

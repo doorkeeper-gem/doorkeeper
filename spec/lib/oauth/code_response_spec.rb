@@ -15,8 +15,12 @@ describe Doorkeeper::OAuth::CodeResponse do
         )
       end
 
+      let :owner do
+        FactoryBot.create(:resource_owner)
+      end
+
       let :auth do
-        Doorkeeper::OAuth::Authorization::Token.new(pre_auth, double(id: 1)).tap do |c|
+        Doorkeeper::OAuth::Authorization::Token.new(pre_auth, owner).tap do |c|
           c.issue_token
           allow(c.token).to receive(:expires_in_seconds).and_return(3600)
         end

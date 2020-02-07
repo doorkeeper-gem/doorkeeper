@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class EnablePkce < ActiveRecord::Migration<%= migration_version %>
   def change
     add_column :oauth_access_grants, :code_challenge, :string, null: true

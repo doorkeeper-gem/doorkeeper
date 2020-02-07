@@ -20,7 +20,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
     context "when reuse_access_token is true" do
       context "when expiration is disabled" do
         it "returns the existing valid token" do
-          allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
+          allow(Doorkeeper.config).to receive(:reuse_access_token).and_return(true)
           existing_token = subject.call(client, scopes)
 
           result = subject.call(client, scopes)
@@ -34,8 +34,8 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
         let!(:existing_token) { subject.call(client, scopes, expires_in: 1000) }
 
         before do
-          allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
-          allow(Doorkeeper.configuration).to receive(:token_reuse_limit).and_return(50)
+          allow(Doorkeeper.config).to receive(:reuse_access_token).and_return(true)
+          allow(Doorkeeper.config).to receive(:token_reuse_limit).and_return(50)
           allow_any_instance_of(Doorkeeper::AccessToken).to receive(:expires_in_seconds).and_return(600)
         end
 
@@ -48,7 +48,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
 
         context "and when revoke_previous_client_credentials_token is true" do
           before do
-            allow(Doorkeeper.configuration).to receive(:revoke_previous_client_credentials_token).and_return(false)
+            allow(Doorkeeper.config).to receive(:revoke_previous_client_credentials_token).and_return(false)
           end
 
           it "does not revoke the existing valid token" do
@@ -60,8 +60,8 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
 
       context "when existing token has crossed token_reuse_limit" do
         it "returns a new token" do
-          allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
-          allow(Doorkeeper.configuration).to receive(:token_reuse_limit).and_return(50)
+          allow(Doorkeeper.config).to receive(:reuse_access_token).and_return(true)
+          allow(Doorkeeper.config).to receive(:token_reuse_limit).and_return(50)
           existing_token = subject.call(client, scopes, expires_in: 1000)
 
           allow_any_instance_of(Doorkeeper::AccessToken).to receive(:expires_in_seconds).and_return(400)

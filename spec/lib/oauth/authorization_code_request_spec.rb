@@ -12,7 +12,12 @@ describe Doorkeeper::OAuth::AuthorizationCodeRequest do
            }
   end
 
-  let(:grant)  { FactoryBot.create :access_grant }
+  let(:resource_owner) { FactoryBot.create :resource_owner }
+  let(:grant) do
+    FactoryBot.create :access_grant,
+                      resource_owner_id: resource_owner.id,
+                      resource_owner_type: resource_owner.class.name
+  end
   let(:client) { grant.application }
   let(:redirect_uri) { client.redirect_uri }
   let(:params) { { redirect_uri: redirect_uri } }
@@ -100,8 +105,11 @@ describe Doorkeeper::OAuth::AuthorizationCodeRequest do
     end
 
     FactoryBot.create(
-      :access_token, application_id: client.id,
-                     resource_owner_id: grant.resource_owner_id, scopes: grant.scopes.to_s,
+      :access_token,
+      application_id: client.id,
+      resource_owner_id: grant.resource_owner_id,
+      resource_owner_type: grant.resource_owner_type,
+      scopes: grant.scopes.to_s,
     )
 
     expect { subject.authorize }.to_not(change { Doorkeeper::AccessToken.count })
@@ -117,8 +125,11 @@ describe Doorkeeper::OAuth::AuthorizationCodeRequest do
     end
 
     FactoryBot.create(
-      :access_token, application_id: client.id,
-                     resource_owner_id: grant.resource_owner_id, scopes: grant.scopes.to_s,
+      :access_token,
+      application_id: client.id,
+      resource_owner_id: grant.resource_owner_id,
+      resource_owner_type: grant.resource_owner_type,
+      scopes: grant.scopes.to_s,
     )
 
     allow_any_instance_of(Doorkeeper::AccessToken).to receive(:reusable?).and_return(false)

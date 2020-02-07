@@ -58,6 +58,23 @@ Doorkeeper.configure do
   #   end
   # end
 
+  # Enables polymorphic Resource Owner association for Access Tokens and Access Grants.
+  # By default this option is disabled.
+  #
+  # Make sure you properly setup you database and have all the required columns (run
+  # `bundle exec rails generate doorkeeper:enable_polymorphic_resource_owner` and execute Rails
+  # migrations).
+  #
+  # If this option enabled, Doorkeeper will store not only Resource Owner primary key
+  # value, but also it's type (class name). See "Polymorphic Associations" section of
+  # Rails guides: https://guides.rubyonrails.org/association_basics.html#polymorphic-associations
+  #
+  # [NOTE] If you apply this option on already existing project don't forget to manually
+  # update `resource_owner_type` column in the database and fix migration template as it will
+  # set NOT NULL constraint for Access Grants table.
+  #
+  # use_polymorphic_resource_owner
+
   # If you are planning to use Doorkeeper in Rails 5 API-only application, then you might
   # want to use API mode that will skip all the views management and change the way how
   # Doorkeeper responds to a requests.

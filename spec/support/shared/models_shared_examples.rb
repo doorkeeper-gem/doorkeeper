@@ -31,20 +31,22 @@ end
 
 shared_examples "a unique token" do
   describe :token do
+    let(:owner) { FactoryBot.create(:resource_owner) }
+
     it "is generated before validation" do
       expect { subject.valid? }.to change { subject.token }.from(nil)
     end
 
     it "is not valid if token exists" do
-      token1 = FactoryBot.create factory_name
-      token2 = FactoryBot.create factory_name
+      token1 = FactoryBot.create factory_name, resource_owner_id: owner.id, resource_owner_type: owner.class.name
+      token2 = FactoryBot.create factory_name, resource_owner_id: owner.id, resource_owner_type: owner.class.name
       token2.token = token1.token
       expect(token2).not_to be_valid
     end
 
     it "expects database to throw an error when tokens are the same" do
-      token1 = FactoryBot.create factory_name
-      token2 = FactoryBot.create factory_name
+      token1 = FactoryBot.create factory_name, resource_owner_id: owner.id, resource_owner_type: owner.class.name
+      token2 = FactoryBot.create factory_name, resource_owner_id: owner.id, resource_owner_type: owner.class.name
       token2.token = token1.token
       expect do
         token2.save!(validate: false)

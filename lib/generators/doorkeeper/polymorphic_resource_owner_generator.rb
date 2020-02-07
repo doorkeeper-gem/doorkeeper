@@ -4,18 +4,19 @@ require "rails/generators"
 require "rails/generators/active_record"
 
 module Doorkeeper
-  # Generates migration to add confidential column to Doorkeeper
-  # applications table.
+  # Generates migration with polymorphic resource owner required
+  # database columns for Doorkeeper Access Token and Access Grant
+  # models.
   #
-  class ConfidentialApplicationsGenerator < ::Rails::Generators::Base
+  class PolymorphicResourceOwnerGenerator < ::Rails::Generators::Base
     include ::Rails::Generators::Migration
     source_root File.expand_path("templates", __dir__)
-    desc "Add confidential column to Doorkeeper applications"
+    desc "Provide support for polymorphic Resource Owner."
 
-    def confidential_applications
+    def polymorphic_resource_owner
       migration_template(
-        "add_confidential_to_applications.rb.erb",
-        "db/migrate/add_confidential_to_applications.rb",
+        "enable_polymorphic_resource_owner_migration.rb.erb",
+        "db/migrate/enable_polymorphic_resource_owner.rb",
         migration_version: migration_version,
       )
     end

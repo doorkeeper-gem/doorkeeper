@@ -26,13 +26,20 @@ module Doorkeeper
         end
 
         def access_grant_attributes
-          pkce_attributes.merge(
+          attributes = {
             application_id: pre_auth.client.id,
-            resource_owner_id: resource_owner.id,
             expires_in: authorization_code_expires_in,
             redirect_uri: pre_auth.redirect_uri,
             scopes: pre_auth.scopes.to_s,
-          )
+          }
+
+          if Doorkeeper.config.polymorphic_resource_owner?
+            attributes[:resource_owner] = resource_owner
+          else
+            attributes[:resource_owner_id] = resource_owner.id
+          end
+
+          pkce_attributes.merge(attributes)
         end
 
         def pkce_attributes

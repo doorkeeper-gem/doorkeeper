@@ -5,7 +5,11 @@ require "spec_helper"
 describe "Token endpoint" do
   before do
     client_exists
-    authorization_code_exists application: @client, scopes: "public"
+    create_resource_owner
+    authorization_code_exists application: @client,
+                              scopes: "public",
+                              resource_owner_id: @resource_owner.id,
+                              resource_owner_type: @resource_owner.class.name
   end
 
   it "respond with correct headers" do

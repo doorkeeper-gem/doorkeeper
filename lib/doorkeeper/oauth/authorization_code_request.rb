@@ -33,13 +33,20 @@ module Doorkeeper
 
           grant.revoke
 
+          resource_owner = if Doorkeeper.config.polymorphic_resource_owner?
+                             grant.resource_owner
+                           else
+                             grant.resource_owner_id
+                           end
+
           find_or_create_access_token(
             grant.application,
-            grant.resource_owner_id,
+            resource_owner,
             grant.scopes,
             server,
           )
         end
+
         super
       end
 

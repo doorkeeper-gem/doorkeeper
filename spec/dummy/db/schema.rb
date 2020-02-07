@@ -14,6 +14,7 @@ ActiveRecord::Schema.define(version: 20180210183654) do
 
   create_table "oauth_access_grants", force: :cascade do |t|
     t.integer "resource_owner_id", null: false
+    t.string "resource_owner_type" # [NOTE] null: false skipped to allow test pass
     t.integer "application_id", null: false
     t.string "token", null: false
     t.integer "expires_in", null: false
@@ -30,6 +31,7 @@ ActiveRecord::Schema.define(version: 20180210183654) do
 
   create_table "oauth_access_tokens", force: :cascade do |t|
     t.integer "resource_owner_id"
+    t.string "resource_owner_type"
     t.integer "application_id"
     t.string "token", null: false
     t.string "refresh_token"

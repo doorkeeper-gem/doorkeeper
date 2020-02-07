@@ -40,13 +40,13 @@ end
 shared_context "authenticated resource owner" do
   before do
     user = double(:resource, id: 1)
-    allow(Doorkeeper.configuration).to receive(:authenticate_resource_owner) { proc { user } }
+    allow(Doorkeeper.config).to receive(:authenticate_resource_owner) { proc { user } }
   end
 end
 
 shared_context "not authenticated resource owner" do
   before do
-    allow(Doorkeeper.configuration).to receive(:authenticate_resource_owner) { proc { redirect_to "/" } }
+    allow(Doorkeeper.config).to receive(:authenticate_resource_owner) { proc { redirect_to "/" } }
   end
 end
 
