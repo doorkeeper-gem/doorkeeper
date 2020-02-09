@@ -19,6 +19,7 @@ describe Doorkeeper::OAuth::PreAuthorization do
       response_type: "code",
       redirect_uri: "https://app.com/callback",
       state: "save-this",
+      current_resource_owner: Object.new,
     }
   end
 
@@ -175,6 +176,14 @@ describe Doorkeeper::OAuth::PreAuthorization do
   it "requires a redirect uri" do
     attributes[:redirect_uri] = nil
     expect(subject).not_to be_authorizable
+  end
+
+  context "when resource_owner cannot access client application" do
+    before { allow(Doorkeeper.configuration).to receive(:authorize_resource_owner_for_client).and_return(->(*_) { false }) }
+
+    it "is not authorizable" do
+      expect(subject).not_to be_authorizable
+    end
   end
 
   describe "as_json" do

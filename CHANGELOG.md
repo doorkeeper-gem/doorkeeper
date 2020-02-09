@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1354] Add option to authorize the calling user to access an application.
 - [#1355] Allow to enable polymorphic Resource Owner association for Access Token & Grant
   models (`use_polymorphic_resource_owner` configuration option).
   
