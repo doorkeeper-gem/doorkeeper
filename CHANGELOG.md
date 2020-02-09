@@ -23,6 +23,10 @@ User-visible changes worth mentioning.
   in external extensions.
 - [#1360] Increase `matching_token_for` lookup size to 10 000 and make it configurable.
 
+## 5.3.1
+
+- [#1360] Backport: Increase `matching_token_for` batch lookup size to 10 000 and make it configurable.
+
 ## 5.3.0
 
 - [#1339] Validate Resource Owner in `PasswordAccessTokenRequest` against `nil` and `false` values.
@@ -37,6 +41,10 @@ User-visible changes worth mentioning.
   If you were relying on access tokens being revoked once the same client
   requested a new access token, reenable it with `revoke_previous_client_credentials_token` in Doorkeeper
   initialization file.
+  
+## 5.2.4
+  
+- [#1360] Backport: Increase `matching_token_for` batch lookup size to 10 000 and make it configurable.
 
 ## 5.2.3
 
