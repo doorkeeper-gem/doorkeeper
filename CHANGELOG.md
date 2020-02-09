@@ -21,6 +21,7 @@ User-visible changes worth mentioning.
 - [#1358] Deprecate `active_record_options` configuration option.
 - [#1359] Refactor Doorkeeper configuration options DSL to make it easy to reuse it
   in external extensions.
+- [#1360] Increase `matching_token_for` lookup size to 10 000 and make it configurable.
 
 ## 5.3.0
 

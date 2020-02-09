@@ -525,7 +525,7 @@ RSpec.describe Doorkeeper::AccessToken do
 
     it "returns only one token" do
       token = FactoryBot.create :access_token, default_attributes
-      last_token = described_class.matching_token_for(application, resource_owner_id, scopes)
+      last_token = described_class.matching_token_for(application, resource_owner, scopes)
       expect(last_token).to eq(token)
     end
 
