@@ -268,6 +268,7 @@ module Doorkeeper
     option :active_record_options,          default: {}
     option :grant_flows,                    default: %w[authorization_code client_credentials]
     option :handle_auth_errors,             default: :render
+    option :token_lookup_batch_size,        default: 10_000
 
     # Allows to customize OAuth grant flows that +each+ application support.
     # You can configure a custom block (or use a class respond to `#call`) that must
