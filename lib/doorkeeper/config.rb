@@ -275,6 +275,7 @@ module Doorkeeper
     option :native_redirect_uri,            default: "urn:ietf:wg:oauth:2.0:oob", deprecated: true
     option :grant_flows,                    default: %w[authorization_code client_credentials]
     option :handle_auth_errors,             default: :render
+    option :token_lookup_batch_size,        default: 10_000
 
     option :active_record_options,
            default: {},

@@ -134,6 +134,14 @@ Doorkeeper.configure do
   #
   # reuse_access_token
 
+  # In case you enabled `reuse_access_token` option Doorkeeper will try to find matching
+  # token using `matching_token_for` Access Token API that searches for valid records
+  # in batches in order not to pollute the memory with all the database records. By default
+  # Doorkeeper uses batch size of 10 000 records. You can increase or decrease this value
+  # depending on your needs and server capabilities.
+  #
+  # token_lookup_batch_size 10_000
+
   # Set a limit for token_reuse if using reuse_access_token option
   #
   # This option limits token_reusability to some extent.
