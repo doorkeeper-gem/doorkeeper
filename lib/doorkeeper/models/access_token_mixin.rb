@@ -110,8 +110,9 @@ module Doorkeeper
         return nil unless relation
 
         matching_tokens = []
+        batch_size = Doorkeeper.configuration.token_lookup_batch_size
 
-        find_access_token_in_batches(relation) do |batch|
+        find_access_token_in_batches(relation, batch_size: batch_size) do |batch|
           tokens = batch.select do |token|
             scopes_match?(token.scopes, scopes, application.try(:scopes))
           end

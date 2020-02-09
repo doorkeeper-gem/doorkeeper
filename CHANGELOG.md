@@ -5,9 +5,9 @@ upgrade guides.
 
 User-visible changes worth mentioning.
 
-## master
+## 5.2.4
 
-- [#PR ID] Your PR short description.
+- [#1360] Increase `matching_token_for` batch lookup size to 10 000 and make it configurable.
 
 ## 5.2.3
 
@@ -49,6 +49,11 @@ User-visible changes worth mentioning.
 
 - [#1270] Find matching tokens in batches for `reuse_access_token` option (fix #1193).
 - [#1271] Reintroduce existing token revocation for client credentials.
+
+  **[IMPORTANT]** If you rely on being able to fetch multiple access tokens from the same
+  client using client credentials flow, you should skip to version 5.3, where this behaviour
+  is deactivated by default.
+
 - [#1269] Update initializer template documentation.
 - [#1266] Use strong parameters within pre-authorization.
 - [#1264] Add :before_successful_authorization and :after_successful_authorization hooks in TokensController
