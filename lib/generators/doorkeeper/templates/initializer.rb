@@ -369,6 +369,17 @@ Doorkeeper.configure do
   #   client.grant_flows.include?(grant_flow)
   # end
 
+  # If you need arbitrary Resource Owner-Client authorization you can enable this option
+  # and implement the check your need. Config option must respond to #call and return
+  # true in case resource owner authorized for the specific application or false in other
+  # cases.
+  #
+  # Be default all Resource Owners are authorized to any Client (application).
+  #
+  # authorize_resource_owner_for_client do |client, resource_owner|
+  #   resource_owner.admin? || client.owners_whitelist.include?(resource_owner)
+  # end
+
   # Hook into the strategies' request & response life-cycle in case your
   # application needs advanced customization or logging:
   #

@@ -5,14 +5,13 @@ module Doorkeeper
     class PreAuthorization
       include Validations
 
-      validate :client_id,             error: :invalid_request
-      validate :client,                error: :invalid_client
-      # The authorize_resource_owner_for_client config option is used for this validation
-      validate :access_to_client,      error: :invalid_client
-      validate :redirect_uri,          error: :invalid_redirect_uri
-      validate :params,                error: :invalid_request
-      validate :response_type,         error: :unsupported_response_type
-      validate :scopes,                error: :invalid_scope
+      validate :client_id, error: :invalid_request
+      validate :client, error: :invalid_client
+      validate :resource_owner_authorize_for_client, error: :invalid_client
+      validate :redirect_uri, error: :invalid_redirect_uri
+      validate :params, error: :invalid_request
+      validate :response_type, error: :unsupported_response_type
+      validate :scopes, error: :invalid_scope
       validate :code_challenge_method, error: :invalid_code_challenge_method
       validate :client_supports_grant_flow, error: :unauthorized_client
 
@@ -141,7 +140,8 @@ module Doorkeeper
         }
       end
 
-      def validate_access_to_client
+      def validate_resource_owner_authorize_for_client
+        # The `authorize_resource_owner_for_client` config option is used for this validation
         client.application.authorized_for_resource_owner?(@resource_owner)
       end
     end
