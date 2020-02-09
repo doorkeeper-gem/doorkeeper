@@ -5,9 +5,9 @@ upgrade guides.
 
 User-visible changes worth mentioning.
 
-## master
+## 5.3.1
 
-- [#PR ID] Your PR short description here.
+- [#1360] Backport: Increase `matching_token_for` batch lookup size to 10 000 and make it configurable.
 
 ## 5.3.0
 
@@ -26,7 +26,7 @@ User-visible changes worth mentioning.
   
 ## 5.2.4
   
-- [#1360] Increase `matching_token_for` batch lookup size to 10 000 and make it configurable.
+- [#1360] Backport: Increase `matching_token_for` batch lookup size to 10 000 and make it configurable.
 
 ## 5.2.3
 
