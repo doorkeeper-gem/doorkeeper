@@ -1,60 +1,95 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   module ApplicationMixin
     extend ActiveSupport::Concern
 
     include OAuth::Helpers
+    include Models::Orderable
+    include Models::SecretStorable
     include Models::Scopes
 
-    included do
-      has_many :access_grants, dependent: :destroy, class_name: 'Doorkeeper::AccessGrant'
-      has_many :access_tokens, dependent: :destroy, class_name: 'Doorkeeper::AccessToken'
-
-      validates :name, :secret, :uid, presence: true
-      validates :uid, uniqueness: true
-      validates :redirect_uri, redirect_uri: true
-
-      before_validation :generate_uid, :generate_secret, on: :create
-
-      if ::Rails.version.to_i < 4 || defined?(::ProtectedAttributes)
-        attr_accessible :name, :redirect_uri
-      end
-    end
-
+    # :nodoc
     module ClassMethods
+      # Returns an instance of the Doorkeeper::Application with
+      # specific UID and secret.
+      #
+      # Public/Non-confidential applications will only find by uid if secret is
+      # blank.
+      #
+      # @param uid [#to_s] UID (any object that responds to `#to_s`)
+      # @param secret [#to_s] secret (any object that responds to `#to_s`)
+      #
+      # @return [Doorkeeper::Application, nil] Application instance or nil
+      #   if there is no record with such credentials
+      #
       def by_uid_and_secret(uid, secret)
-        where(uid: uid, secret: secret).limit(1).to_a.first
+        app = by_uid(uid)
+        return unless app
+        return app if secret.blank? && !app.confidential?
+        return unless app.secret_matches?(secret)
+
+        app
       end
 
+      # Returns an instance of the Doorkeeper::Application with specific UID.
+      #
+      # @param uid [#to_s] UID (any object that responds to `#to_s`)
+      #
+      # @return [Doorkeeper::Application, nil] Application instance or nil
+      #   if there is no record with such UID
+      #
       def by_uid(uid)
-        where(uid: uid).limit(1).to_a.first
+        find_by(uid: uid.to_s)
+      end
+
+      ##
+      # Determines the secret storing transformer
+      # Unless configured otherwise, uses the plain secret strategy
+      def secret_strategy
+        ::Doorkeeper.config.application_secret_strategy
+      end
+
+      ##
+      # Determine the fallback storing strategy
+      # Unless configured, there will be no fallback
+      def fallback_secret_strategy
+        ::Doorkeeper.config.application_secret_fallback_strategy
       end
     end
 
-    alias_method :original_scopes, :scopes
-    def scopes
-      if has_scopes?
-        original_scopes
+    # Set an application's valid redirect URIs.
+    #
+    # @param uris [String, Array] Newline-separated string or array the URI(s)
+    #
+    # @return [String] The redirect URI(s) seperated by newlines.
+    def redirect_uri=(uris)
+      super(uris.is_a?(Array) ? uris.join("\n") : uris)
+    end
+
+    # Check whether the given plain text secret matches our stored secret
+    #
+    # @param input [#to_s] Plain secret provided by user
+    #        (any object that responds to `#to_s`)
+    #
+    # @return [Boolean] Whether the given secret matches the stored secret
+    #                of this application.
+    #
+    def secret_matches?(input)
+      # return false if either is nil, since secure_compare depends on strings
+      # but Application secrets MAY be nil depending on confidentiality.
+      return false if input.nil? || secret.nil?
+
+      # When matching the secret by comparer function, all is well.
+      return true if secret_strategy.secret_matches?(input, secret)
+
+      # When fallback lookup is enabled, ensure applications
+      # with plain secrets can still be found
+      if fallback_secret_strategy
+        fallback_secret_strategy.secret_matches?(input, secret)
       else
-        fail NameError, "Missing column: `applications.scopes`.", <<-MSG.squish
-If you are using ActiveRecord run `rails generate doorkeeper:application_scopes
-&& rake db:migrate` to add it.
-        MSG
+        false
       end
-    end
-
-    private
-
-    def has_scopes?
-      Doorkeeper.configuration.orm != :active_record ||
-        Application.new.attributes.include?("scopes")
-    end
-
-    def generate_uid
-      self.uid ||= UniqueToken.generate
-    end
-
-    def generate_secret
-      self.secret ||= UniqueToken.generate
     end
   end
 end

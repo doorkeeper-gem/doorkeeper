@@ -1,29 +1,28 @@
-require 'doorkeeper/oauth/client/methods'
-require 'doorkeeper/oauth/client/credentials'
+# frozen_string_literal: true
 
 module Doorkeeper
   module OAuth
     class Client
-      def self.find(uid, method = Application.method(:by_uid))
-        if application = method.call(uid)
-          new(application)
-        end
-      end
+      attr_accessor :application
 
-      def self.authenticate(credentials, method = Application.method(:by_uid_and_secret))
-        return false if credentials.blank?
-        if application = method.call(credentials.uid, credentials.secret)
-          new(application)
-        end
-      end
-
-      delegate :id, :name, :uid, :redirect_uri, to: :@application
+      delegate :id, :name, :uid, :redirect_uri, :scopes, to: :@application
 
       def initialize(application)
         @application = application
       end
 
-      attr_accessor :application
+      def self.find(uid, method = Doorkeeper.config.application_model.method(:by_uid))
+        return unless (application = method.call(uid))
+
+        new(application)
+      end
+
+      def self.authenticate(credentials, method = Doorkeeper.config.application_model.method(:by_uid_and_secret))
+        return if credentials.blank?
+        return unless (application = method.call(credentials.uid, credentials.secret))
+
+        new(application)
+      end
     end
   end
 end

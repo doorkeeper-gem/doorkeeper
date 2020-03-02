@@ -1,22 +1,17 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   module Request
-    class Password
-      def self.build(server)
-        new(server.credentials, server.resource_owner, server)
-      end
-
-      attr_accessor :credentials, :resource_owner, :server
-
-      def initialize(credentials, resource_owner, server)
-        @credentials, @resource_owner, @server = credentials, resource_owner, server
-      end
+    class Password < Strategy
+      delegate :credentials, :resource_owner, :parameters, :client, to: :server
 
       def request
-        @request ||= OAuth::PasswordAccessTokenRequest.new(Doorkeeper.configuration, credentials, resource_owner, server.parameters)
-      end
-
-      def authorize
-        request.authorize
+        @request ||= OAuth::PasswordAccessTokenRequest.new(
+          Doorkeeper.config,
+          client,
+          resource_owner,
+          parameters,
+        )
       end
     end
   end

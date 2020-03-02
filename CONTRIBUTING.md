@@ -1,10 +1,18 @@
 # Contributing
 
-We love pull requests. Here's a quick guide.
+We love pull requests from everyone. By participating in this project, you agree
+to abide by the [code of conduct](CODE_OF_CONDUCT.md).
 
 Fork, then clone the repo:
 
     git clone git@github.com:your-username/doorkeeper.git
+
+### Docker Setup
+
+Build the container image with: `docker build --pull -t doorkeeper:test .`
+Run the tests with: `docker run -it --rm doorkeeper:test`
+
+### Local Setup
 
 Set up Ruby dependencies via Bundler
 
@@ -14,22 +22,28 @@ Make sure the tests pass:
 
     rake
 
-Make your change. Add tests for your change. Make the tests pass:
+Make your change.
+Write tests.
+Follow our [style guide](.rubocop.yml).
+Make the tests pass:
 
     rake
 
-Push to your fork and submit a pull request.
+Add notes on your change to the `CHANGELOG.md` file.
 
-At this point you're waiting on us. We like to at least comment on pull requests
-within three business days (and, typically, one business day). We may suggest
-some changes or improvements or alternatives.
+Write a [good commit message][commit].
+Push to your fork.
+[Submit a pull request][pr].
 
-Some things that will increase the chance that your pull request is accepted:
-
-* Write tests.
-* Follow our [style guide][style]. Address Hound CI comments unless you have a
-  good reason not to.
-* Write a [good commit message][commit].
-
-[style]: https://github.com/thoughtbot/guides/tree/master/style
 [commit]: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
+[pr]: https://github.com/doorkeeper-gem/doorkeeper/compare/
+
+If [Hound] catches style violations, fix them.
+
+[hound]: https://houndci.com
+
+Wait for us.
+We try to at least comment on pull requests within one business day.
+We may suggest changes.
+
+Thank you for your contribution!

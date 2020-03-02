@@ -1,16 +1,13 @@
-module Doorkeeper
-  class ApplicationMetalController < ActionController::Metal
-    MODULES = [
-      ActionController::RackDelegation,
-      ActionController::Instrumentation,
-      AbstractController::Rendering,
-      ActionController::Rendering,
-      ActionController::Renderers::All,
-      Helpers::Controller
-    ]
+# frozen_string_literal: true
 
-    MODULES.each do |mod|
-      include mod
-    end
+module Doorkeeper
+  class ApplicationMetalController <
+    Doorkeeper.config.resolve_controller(:base_metal)
+    include Helpers::Controller
+
+    before_action :enforce_content_type,
+                  if: -> { Doorkeeper.config.enforce_content_type }
+
+    ActiveSupport.run_load_hooks(:doorkeeper_metal_controller, self)
   end
 end

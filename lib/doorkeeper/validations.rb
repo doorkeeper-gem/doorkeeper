@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   module Validations
     extend ActiveSupport::Concern
@@ -6,9 +8,10 @@ module Doorkeeper
 
     def validate
       @error = nil
+
       self.class.validations.each do |validation|
+        @error = validation[:options][:error] unless send("validate_#{validation[:attribute]}")
         break if @error
-        @error = validation.last unless send("validate_#{validation.first}")
       end
     end
 
@@ -19,7 +22,7 @@ module Doorkeeper
 
     module ClassMethods
       def validate(attribute, options = {})
-        validations << [attribute, options[:error]]
+        validations << { attribute: attribute, options: options }
       end
 
       def validations

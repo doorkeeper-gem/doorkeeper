@@ -1,30 +1,36 @@
-require 'doorkeeper/request/authorization_code'
-require 'doorkeeper/request/client_credentials'
-require 'doorkeeper/request/code'
-require 'doorkeeper/request/password'
-require 'doorkeeper/request/refresh_token'
-require 'doorkeeper/request/token'
+# frozen_string_literal: true
 
 module Doorkeeper
   module Request
-    module_function
+    class << self
+      def authorization_strategy(response_type)
+        build_strategy_class(response_type)
+      end
 
-    def authorization_strategy(strategy)
-      get_strategy strategy, Doorkeeper.configuration.authorization_response_types
-    rescue NameError
-      raise Errors::InvalidAuthorizationStrategy
-    end
+      def token_strategy(grant_type)
+        raise Errors::MissingRequiredParameter, :grant_type if grant_type.blank?
 
-    def token_strategy(strategy)
-      get_strategy strategy, Doorkeeper.configuration.token_grant_types
-    rescue NameError
-      raise Errors::InvalidTokenStrategy
-    end
+        get_strategy(grant_type, token_grant_types)
+      rescue NameError
+        raise Errors::InvalidTokenStrategy
+      end
 
-    def get_strategy(strategy, available)
-      fail Errors::MissingRequestStrategy unless strategy.present?
-      fail NameError unless available.include?(strategy.to_s)
-      "Doorkeeper::Request::#{strategy.to_s.camelize}".constantize
+      def get_strategy(grant_type, available)
+        raise NameError unless available.include?(grant_type.to_s)
+
+        build_strategy_class(grant_type)
+      end
+
+      private
+
+      def token_grant_types
+        Doorkeeper.config.token_grant_types
+      end
+
+      def build_strategy_class(grant_or_request_type)
+        strategy_class_name = grant_or_request_type.to_s.tr(" ", "_").camelize
+        "Doorkeeper::Request::#{strategy_class_name}".constantize
+      end
     end
   end
 end

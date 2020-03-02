@@ -1,22 +1,25 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   module Request
-    class AuthorizationCode
-      def self.build(server)
-        new(server.grant, server.client, server)
-      end
-
-      attr_accessor :grant, :client, :server
-
-      def initialize(grant, client, server)
-        @grant, @client, @server = grant, client, server
-      end
+    class AuthorizationCode < Strategy
+      delegate :client, :parameters, to: :server
 
       def request
-        @request ||= OAuth::AuthorizationCodeRequest.new(Doorkeeper.configuration, grant, client, server.parameters)
+        @request ||= OAuth::AuthorizationCodeRequest.new(
+          Doorkeeper.config,
+          grant,
+          client,
+          parameters,
+        )
       end
 
-      def authorize
-        request.authorize
+      private
+
+      def grant
+        raise Errors::MissingRequiredParameter, :code if parameters[:code].blank?
+
+        Doorkeeper.config.access_grant_model.by_token(parameters[:code])
       end
     end
   end

@@ -1,12 +1,18 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   module OAuth
-    class ErrorResponse
-      include OAuth::Authorization::URIBuilder
+    class ErrorResponse < BaseResponse
       include OAuth::Helpers
 
       def self.from_request(request, attributes = {})
-        state = request.state if request.respond_to?(:state)
-        new(attributes.merge(name: request.error, state: state))
+        new(
+          attributes.merge(
+            name: request.error,
+            state: request.try(:state),
+            redirect_uri: request.try(:redirect_uri),
+          ),
+        )
       end
 
       delegate :name, :description, :state, to: :@error
@@ -21,36 +27,42 @@ module Doorkeeper
         {
           error: name,
           error_description: description,
-          state: state
+          state: state,
         }.reject { |_, v| v.blank? }
       end
 
       def status
-        :unauthorized
+        if name == :invalid_client
+          :unauthorized
+        else
+          :bad_request
+        end
       end
 
       def redirectable?
         name != :invalid_redirect_uri && name != :invalid_client &&
-          !URIChecker.native_uri?(@redirect_uri)
+          !URIChecker.oob_uri?(@redirect_uri)
       end
 
       def redirect_uri
         if @response_on_fragment
-          uri_with_fragment @redirect_uri, body
+          Authorization::URIBuilder.uri_with_fragment(@redirect_uri, body)
         else
-          uri_with_query @redirect_uri, body
+          Authorization::URIBuilder.uri_with_query(@redirect_uri, body)
         end
       end
 
-      def authenticate_info
-        %(Bearer realm="#{realm}", error="#{name}", error_description="#{description}")
+      def headers
+        {
+          "Cache-Control" => "no-store",
+          "Pragma" => "no-cache",
+          "Content-Type" => "application/json; charset=utf-8",
+          "WWW-Authenticate" => authenticate_info,
+        }
       end
 
-      def headers
-        { 'Cache-Control' => 'no-store',
-          'Pragma' => 'no-cache',
-          'Content-Type' => 'application/json; charset=utf-8',
-          'WWW-Authenticate' => authenticate_info }
+      def raise_exception!
+        raise exception_class.new(self), description
       end
 
       protected
@@ -58,7 +70,17 @@ module Doorkeeper
       delegate :realm, to: :configuration
 
       def configuration
-        Doorkeeper.configuration
+        Doorkeeper.config
+      end
+
+      def exception_class
+        raise NotImplementedError, "error response must define #exception_class"
+      end
+
+      private
+
+      def authenticate_info
+        %(Bearer realm="#{realm}", error="#{name}", error_description="#{description}")
       end
     end
   end

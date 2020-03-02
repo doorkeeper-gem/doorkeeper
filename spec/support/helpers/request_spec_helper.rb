@@ -1,4 +1,10 @@
+# frozen_string_literal: true
+
 module RequestSpecHelper
+  def i_am_logged_in
+    allow(Doorkeeper.configuration).to receive(:authenticate_admin).and_return(->(*) {})
+  end
+
   def i_should_see(content)
     expect(page).to have_content(content)
   end
@@ -27,16 +33,28 @@ module RequestSpecHelper
     URI.parse(page.current_url)
   end
 
+  def request_response
+    respond_to?(:response) ? response : page.driver.response
+  end
+
+  def json_response
+    JSON.parse(request_response.body)
+  end
+
   def should_have_header(header, value)
     expect(headers[header]).to eq(value)
   end
 
+  def should_have_status(status)
+    expect(page.driver.response.status).to eq(status)
+  end
+
   def with_access_token_header(token)
-    with_header 'Authorization', "Bearer #{token}"
+    with_header "Authorization", "Bearer #{token}"
   end
 
   def with_header(header, value)
-    page.driver.header header, value
+    page.driver.header(header, value)
   end
 
   def basic_auth_header_for_client(client)
@@ -44,33 +62,49 @@ module RequestSpecHelper
   end
 
   def should_have_json(key, value)
-    expect(JSON.parse(response.body).fetch(key)).to eq(value)
+    expect(json_response.fetch(key)).to eq(value)
   end
 
   def should_have_json_within(key, value, range)
-    expect(JSON.parse(response.body).fetch(key)).to be_within(range).of(value)
+    expect(json_response.fetch(key)).to be_within(range).of(value)
   end
 
   def should_not_have_json(key)
-    expect(JSON.parse(response.body)).not_to have_key(key)
+    expect(json_response).not_to have_key(key)
   end
 
   def sign_in
-    visit '/'
-    click_on 'Sign in'
+    visit "/"
+    click_on "Sign in"
+  end
+
+  def create_access_token(authorization_code, client, code_verifier = nil)
+    page.driver.post token_endpoint_url(code: authorization_code, client: client, code_verifier: code_verifier)
   end
 
   def i_should_see_translated_error_message(key)
     i_should_see translated_error_message(key)
   end
 
+  def i_should_not_see_translated_error_message(key)
+    i_should_not_see translated_error_message(key)
+  end
+
   def translated_error_message(key)
-    I18n.translate key, scope: [:doorkeeper, :errors, :messages]
+    I18n.translate(key, scope: %i[doorkeeper errors messages])
+  end
+
+  def i_should_see_translated_invalid_request_error_message(key, value)
+    i_should_see translated_invalid_request_error_message(key, value)
+  end
+
+  def translated_invalid_request_error_message(key, value)
+    I18n.translate key, scope: %i[doorkeeper errors messages invalid_request], value: value
   end
 
   def response_status_should_be(status)
-    expect(page.driver.response.status.to_i).to eq(status)
+    expect(request_response.status.to_i).to eq(status)
   end
 end
 
-RSpec.configuration.send :include, RequestSpecHelper, type: :request
+RSpec.configuration.send :include, RequestSpecHelper

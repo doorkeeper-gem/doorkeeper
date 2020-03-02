@@ -1,26 +1,24 @@
-require 'doorkeeper/oauth/client_credentials/creator'
-require 'doorkeeper/oauth/client_credentials/issuer'
-require 'doorkeeper/oauth/client_credentials/validation'
+# frozen_string_literal: true
 
 module Doorkeeper
   module OAuth
-    class ClientCredentialsRequest
-      include Validations
-      include OAuth::RequestConcern
-
-      attr_accessor :issuer, :server, :client, :original_scopes
+    class ClientCredentialsRequest < BaseRequest
+      attr_accessor :server, :client, :original_scopes
       attr_reader :response
-      alias :error_response :response
+      attr_writer :issuer
+
+      alias error_response response
 
       delegate :error, to: :issuer
 
       def issuer
-        @issuer ||= Issuer.new(server, Validation.new(server, self))
+        @issuer ||= Issuer.new(server, Validator.new(server, self))
       end
 
       def initialize(server, client, parameters = {})
-        @client, @server = client, server
-        @response        = nil
+        @client = client
+        @server = server
+        @response = nil
         @original_scopes = parameters[:scope]
       end
 

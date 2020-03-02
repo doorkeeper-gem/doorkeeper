@@ -1,8 +1,14 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   module OAuth
-    class Error < Struct.new(:name, :state)
+    Error = Struct.new(:name, :state) do
       def description
-        I18n.translate name, scope: [:doorkeeper, :errors, :messages]
+        I18n.translate(
+          name,
+          scope: %i[doorkeeper errors messages],
+          default: :server_error,
+        )
       end
     end
   end

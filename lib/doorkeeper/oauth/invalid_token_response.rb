@@ -1,11 +1,14 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   module OAuth
     class InvalidTokenResponse < ErrorResponse
+      attr_reader :reason
+
       def self.from_access_token(access_token, attributes = {})
-        reason = case
-                 when access_token.try(:revoked?)
+        reason = if access_token.try(:revoked?)
                    :revoked
-                 when access_token.try(:expired?)
+                 elsif access_token.try(:expired?)
                    :expired
                  else
                    :unknown
@@ -19,9 +22,32 @@ module Doorkeeper
         @reason = attributes[:reason] || :unknown
       end
 
+      def status
+        :unauthorized
+      end
+
       def description
-        scope = { scope: [:doorkeeper, :errors, :messages, :invalid_token] }
-        @description ||= I18n.translate @reason, scope
+        @description ||=
+          I18n.translate(
+            @reason,
+            scope: %i[doorkeeper errors messages invalid_token],
+          )
+      end
+
+      protected
+
+      def exception_class
+        errors_mapping.fetch(reason)
+      end
+
+      private
+
+      def errors_mapping
+        {
+          expired: Doorkeeper::Errors::TokenExpired,
+          revoked: Doorkeeper::Errors::TokenRevoked,
+          unknown: Doorkeeper::Errors::TokenUnknown,
+        }
       end
     end
   end

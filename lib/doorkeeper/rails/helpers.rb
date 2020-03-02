@@ -1,62 +1,79 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   module Rails
     module Helpers
-      extend ActiveSupport::Concern
-
-      module ClassMethods
-        def doorkeeper_for(*args, &block)
-          fail Errors::DoorkeeperError, "`doorkeeper_for` no longer available", <<-eos
-\nStarting in version 2.0.0 of doorkeeper gem, `doorkeeper_for` is no longer
-available. Please change `doorkeeper_for` calls in your application with:
-
-  before_action :doorkeeper_authorize!
-
-For more information check the README:
-https://github.com/doorkeeper-gem/doorkeeper#protecting-resources-with-oauth-aka-your-api-endpoint\n
-          eos
-        end
-      end
-
-      def doorkeeper_token
-        @_doorkeeper_token ||= OAuth::Token.authenticate request, *Doorkeeper.configuration.access_token_methods
-      end
-
-      def valid_doorkeeper_token?(*scopes)
-        doorkeeper_token && doorkeeper_token.acceptable?(scopes)
-      end
-
       def doorkeeper_authorize!(*scopes)
-        scopes ||= Doorkeeper.configuration.default_scopes
+        @_doorkeeper_scopes = scopes.presence || Doorkeeper.config.default_scopes
 
-        unless valid_doorkeeper_token?(*scopes)
-          if !doorkeeper_token || !doorkeeper_token.accessible?
-            error = OAuth::InvalidTokenResponse.from_access_token(doorkeeper_token)
-            options = doorkeeper_unauthorized_render_options
-          else
-            error = OAuth::ForbiddenTokenResponse.from_scopes(scopes)
-            options = doorkeeper_forbidden_render_options
-          end
-          headers.merge!(error.headers.reject { |k| ['Content-Type'].include? k })
-          doorkeeper_error_renderer(error, options)
-        end
+        doorkeeper_render_error unless valid_doorkeeper_token?
       end
 
-      def doorkeeper_unauthorized_render_options
-        nil
+      def doorkeeper_unauthorized_render_options(**); end
+
+      def doorkeeper_forbidden_render_options(**); end
+
+      def valid_doorkeeper_token?
+        doorkeeper_token&.acceptable?(@_doorkeeper_scopes)
       end
 
-      def doorkeeper_forbidden_render_options
-        nil
+      private
+
+      def doorkeeper_render_error
+        error = doorkeeper_error
+        error.raise_exception! if Doorkeeper.config.raise_on_errors?
+
+        headers.merge!(error.headers.reject { |k| k == "Content-Type" })
+        doorkeeper_render_error_with(error)
       end
 
-      def doorkeeper_error_renderer(error, options = {})
+      def doorkeeper_render_error_with(error)
+        options = doorkeeper_render_options(error) || {}
+        status = doorkeeper_status_for_error(
+          error, options.delete(:respond_not_found_when_forbidden),
+        )
         if options.blank?
-          head error.status
+          head status
         else
-          options[:status] = error.status
+          options[:status] = status
           options[:layout] = false if options[:layout].nil?
           render options
         end
+      end
+
+      def doorkeeper_error
+        if doorkeeper_invalid_token_response?
+          OAuth::InvalidTokenResponse.from_access_token(doorkeeper_token)
+        else
+          OAuth::ForbiddenTokenResponse.from_scopes(@_doorkeeper_scopes)
+        end
+      end
+
+      def doorkeeper_render_options(error)
+        if doorkeeper_invalid_token_response?
+          doorkeeper_unauthorized_render_options(error: error)
+        else
+          doorkeeper_forbidden_render_options(error: error)
+        end
+      end
+
+      def doorkeeper_status_for_error(error, respond_not_found_when_forbidden)
+        if respond_not_found_when_forbidden && error.status == :forbidden
+          :not_found
+        else
+          error.status
+        end
+      end
+
+      def doorkeeper_invalid_token_response?
+        !doorkeeper_token || !doorkeeper_token.accessible?
+      end
+
+      def doorkeeper_token
+        @doorkeeper_token ||= OAuth::Token.authenticate(
+          request,
+          *Doorkeeper.config.access_token_methods,
+        )
       end
     end
   end

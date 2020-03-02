@@ -1,7 +1,9 @@
-module Doorkeeper
-  class AccessGrant < ActiveRecord::Base
-    include AccessGrantMixin
+# frozen_string_literal: true
 
-    self.table_name = "#{table_name_prefix}oauth_access_grants#{table_name_suffix}".to_sym
+require "doorkeeper/orm/active_record/mixins/access_grant"
+
+module Doorkeeper
+  class AccessGrant < ::ActiveRecord::Base
+    include Doorkeeper::Orm::ActiveRecord::Mixins::AccessGrant
   end
 end

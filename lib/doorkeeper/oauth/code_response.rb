@@ -1,13 +1,15 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   module OAuth
-    class CodeResponse
-      include OAuth::Authorization::URIBuilder
+    class CodeResponse < BaseResponse
       include OAuth::Helpers
 
       attr_accessor :pre_auth, :auth, :response_on_fragment
 
       def initialize(pre_auth, auth, options = {})
-        @pre_auth, @auth      = pre_auth, auth
+        @pre_auth = pre_auth
+        @auth = auth
         @response_on_fragment = options[:response_on_fragment]
       end
 
@@ -16,22 +18,22 @@ module Doorkeeper
       end
 
       def redirect_uri
-        if URIChecker.native_uri? pre_auth.redirect_uri
-          auth.native_redirect
+        if URIChecker.oob_uri? pre_auth.redirect_uri
+          auth.oob_redirect
+        elsif response_on_fragment
+          Authorization::URIBuilder.uri_with_fragment(
+            pre_auth.redirect_uri,
+            access_token: auth.token.plaintext_token,
+            token_type: auth.token.token_type,
+            expires_in: auth.token.expires_in_seconds,
+            state: pre_auth.state,
+          )
         else
-          if response_on_fragment
-            uri_with_fragment(
-              pre_auth.redirect_uri,
-              access_token: auth.token.token,
-              token_type: auth.token.token_type,
-              expires_in: auth.token.expires_in,
-              state: pre_auth.state
-            )
-          else
-            uri_with_query pre_auth.redirect_uri,
-                           code: auth.token.token,
-                           state: pre_auth.state
-          end
+          Authorization::URIBuilder.uri_with_query(
+            pre_auth.redirect_uri,
+            code: auth.token.plaintext_token,
+            state: pre_auth.state,
+          )
         end
       end
     end

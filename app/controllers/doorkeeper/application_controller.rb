@@ -1,13 +1,13 @@
+# frozen_string_literal: true
+
 module Doorkeeper
-  class ApplicationController < ActionController::Base
+  class ApplicationController <
+    Doorkeeper.config.resolve_controller(:base)
     include Helpers::Controller
 
-    if ::Rails.version.to_i < 4
-      protect_from_forgery
-    else
+    unless Doorkeeper.config.api_only
       protect_from_forgery with: :exception
+      helper "doorkeeper/dashboard"
     end
-
-    helper 'doorkeeper/dashboard'
   end
 end

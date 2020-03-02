@@ -1,13 +1,15 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   module Rails
-    class Routes
+    class Routes # :nodoc:
       class Mapper
         def initialize(mapping = Mapping.new)
           @mapping = mapping
         end
 
         def map(&block)
-          self.instance_eval(&block) if block
+          instance_eval(&block) if block
           @mapping
         end
 

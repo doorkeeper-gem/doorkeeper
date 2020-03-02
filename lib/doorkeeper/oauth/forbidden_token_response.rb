@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Doorkeeper
   module OAuth
     class ForbiddenTokenResponse < ErrorResponse
@@ -16,13 +18,18 @@ module Doorkeeper
 
       def headers
         headers = super
-        headers.delete 'WWW-Authenticate'
+        headers.delete "WWW-Authenticate"
         headers
       end
 
       def description
-        scope = { scope: [:doorkeeper, :scopes] }
-        @description ||= @scopes.map { |r| I18n.translate r, scope }.join('\n')
+        @description ||= @scopes.map { |s| I18n.t(s, scope: %i[doorkeeper scopes]) }.join("\n")
+      end
+
+      protected
+
+      def exception_class
+        Doorkeeper::Errors::TokenForbidden
       end
     end
   end
