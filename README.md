@@ -168,8 +168,7 @@ create [example
 apps](https://github.com/doorkeeper-gem/doorkeeper/wiki/Example-Applications),
 integrate the gem with your app and let us know!
 
-Also, check out our [contributing guidelines
-page](https://github.com/doorkeeper-gem/doorkeeper/wiki/Contributing).
+Also, check out our [contributing guidelines page](CONTRIBUTING.md).
 
 ## Contributors
 
