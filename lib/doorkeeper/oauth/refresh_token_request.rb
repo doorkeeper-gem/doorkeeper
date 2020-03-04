@@ -57,7 +57,7 @@ module Doorkeeper
         attrs = {
           application_id: refresh_token.application_id,
           scopes: scopes.to_s,
-          expires_in: access_token_expires_in,
+          expires_in: refresh_token.expires_in,
           use_refresh_token: true,
         }
 
@@ -72,15 +72,6 @@ module Doorkeeper
             attributes[:previous_refresh_token] = refresh_token.refresh_token
           end
         end
-      end
-
-      def access_token_expires_in
-        context = Authorization::Token.build_context(
-          client,
-          Doorkeeper::OAuth::REFRESH_TOKEN,
-          scopes,
-        )
-        Authorization::Token.access_token_expires_in(server, context)
       end
 
       def validate_token_presence

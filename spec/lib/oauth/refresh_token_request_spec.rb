@@ -25,23 +25,17 @@ describe Doorkeeper::OAuth::RefreshTokenRequest do
   it "issues a new token for the client" do
     expect { subject.authorize }.to change { client.reload.access_tokens.count }.by(1)
     # #sort_by used for MongoDB ORM extensions for valid ordering
-    expect(client.reload.access_tokens.max_by(&:created_at).expires_in).to eq(120)
+    expect(client.reload.access_tokens.max_by(&:created_at).expires_in).to eq(refresh_token.expires_in)
   end
 
-  it "issues a new token for the client with custom expires_in" do
-    server = double :server,
-                    access_token_expires_in: 2.minutes,
-                    custom_access_token_expires_in: lambda { |context|
-                      context.grant_type == Doorkeeper::OAuth::REFRESH_TOKEN ? 1234 : nil
-                    }
-
+  it "issues a new token for the client with the same expiry as of original token" do
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
     allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
 
     described_class.new(server, refresh_token, credentials).authorize
 
     # #sort_by used for MongoDB ORM extensions for valid ordering
-    expect(client.reload.access_tokens.max_by(&:created_at).expires_in).to eq(1234)
+    expect(client.reload.access_tokens.max_by(&:created_at).expires_in).to eq(refresh_token.expires_in)
   end
 
   it "revokes the previous token" do
@@ -91,14 +85,6 @@ describe Doorkeeper::OAuth::RefreshTokenRequest do
   end
 
   context "refresh tokens expire on access token use" do
-    let(:server) do
-      double :server,
-             access_token_expires_in: 2.minutes,
-             custom_access_token_expires_in: lambda { |context|
-               context.grant_type == Doorkeeper::OAuth::REFRESH_TOKEN ? 1234 : nil
-             }
-    end
-
     before do
       allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(true)
     end
