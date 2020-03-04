@@ -91,13 +91,13 @@ module Doorkeeper
       @authorize_response ||= begin
         before_successful_authorization
         auth = strategy.authorize
-        after_successful_authorization unless auth.is_a?(Doorkeeper::OAuth::ErrorResponse)
+        after_successful_authorization(auth) unless auth.is_a?(Doorkeeper::OAuth::ErrorResponse)
         auth
       end
     end
 
-    def after_successful_authorization
-      Doorkeeper.configuration.after_successful_authorization.call(self)
+    def after_successful_authorization(auth)
+      Doorkeeper.configuration.after_successful_authorization.call(self, auth)
     end
 
     def before_successful_authorization

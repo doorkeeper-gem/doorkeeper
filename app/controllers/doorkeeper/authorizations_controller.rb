@@ -95,13 +95,13 @@ module Doorkeeper
 
         before_successful_authorization
         auth = strategy.authorize
-        after_successful_authorization
+        after_successful_authorization(auth)
         auth
       end
     end
 
-    def after_successful_authorization
-      Doorkeeper.configuration.after_successful_authorization.call(self)
+    def after_successful_authorization(auth)
+      Doorkeeper.configuration.after_successful_authorization.call(self, auth)
     end
 
     def before_successful_authorization

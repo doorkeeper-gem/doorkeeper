@@ -260,14 +260,14 @@ module Doorkeeper
 
     # Hooks for authorization
     option :before_successful_authorization,      default: ->(_context) {}
-    option :after_successful_authorization,       default: ->(_context) {}
+    option :after_successful_authorization,       default: ->(_context, _auth) {}
     # Hooks for strategies responses
     option :before_successful_strategy_response,  default: ->(_request) {}
     option :after_successful_strategy_response,   default: ->(_request, _response) {}
     # Allows to customize Token Introspection response
     option :custom_introspection_response,        default: ->(_token, _context) { {} }
 
-    option :skip_authorization,             default: ->(_routes) {}
+    option :skip_authorization,             default: ->(_context) {}
     option :access_token_expires_in,        default: 7200
     option :custom_access_token_expires_in, default: ->(_context) { nil }
     option :authorization_code_expires_in,  default: 600

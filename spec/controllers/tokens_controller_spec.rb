@@ -111,7 +111,7 @@ describe Doorkeeper::TokensController do
 
       it "should call :after_successful_authorization callback" do
         expect(Doorkeeper.configuration)
-          .to receive_message_chain(:after_successful_authorization, :call).with(instance_of(described_class))
+          .to receive_message_chain(:after_successful_authorization, :call).with(instance_of(described_class), instance_of(Doorkeeper::OAuth::TokenResponse))
       end
     end
 
