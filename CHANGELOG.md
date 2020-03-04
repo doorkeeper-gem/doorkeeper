@@ -10,18 +10,19 @@ User-visible changes worth mentioning.
 - [#1354] Add option to authorize the calling user to access an application.
 - [#1355] Allow to enable polymorphic Resource Owner association for Access Token & Grant
   models (`use_polymorphic_resource_owner` configuration option).
-  
+
   **[IMPORTANT]** Review your custom patches or extensions for Doorkeeper internals if you
   have such - since now Doorkeeper passes Resource Owner instance to every objects and not
   just it's ID. More info could be found in GitHub PR description.
-  
+
 - [#1356] Remove duplicated scopes from Access Tokens and Grants on attribute assignment.
-- [#1357] Fix `Doorkeeper::OAuth::PreAuthorization#as_json` method causing 
+- [#1357] Fix `Doorkeeper::OAuth::PreAuthorization#as_json` method causing
   `Stack level too deep` error with AMS (fix #1312).
 - [#1358] Deprecate `active_record_options` configuration option.
 - [#1359] Refactor Doorkeeper configuration options DSL to make it easy to reuse it
   in external extensions.
 - [#1360] Increase `matching_token_for` lookup size to 10 000 and make it configurable.
+- [#1368] Pass auth on after_successful_authorization.
 
 ## 5.3.1
 
@@ -41,9 +42,9 @@ User-visible changes worth mentioning.
   If you were relying on access tokens being revoked once the same client
   requested a new access token, reenable it with `revoke_previous_client_credentials_token` in Doorkeeper
   initialization file.
-  
+
 ## 5.2.4
-  
+
 - [#1360] Backport: Increase `matching_token_for` batch lookup size to 10 000 and make it configurable.
 
 ## 5.2.3
