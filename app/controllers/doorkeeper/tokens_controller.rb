@@ -13,14 +13,16 @@ module Doorkeeper
     # OAuth 2.0 Token Revocation - http://tools.ietf.org/html/rfc7009
     def revoke
       # The authorization server, if applicable, first authenticates the client
-      # and checks its ownership of the provided token.
-      #
-      # Doorkeeper does not use the token_type_hint logic described in the
-      # RFC 7009 due to the refresh token implementation that is a field in
-      # the access token model.
+      # and checks its ownership of the provided token. Check #authorized? for
+      # more details.
 
       if authorized?
         revoke_token
+        # @see 2.2.  Revocation Response
+        #
+        # The authorization server responds with HTTP status code 200 if the token
+        # has been revoked successfully or if the client submitted an invalid
+        # token.
         render json: {}, status: 200
       else
         render json: revocation_error_response, status: :forbidden
@@ -78,6 +80,9 @@ module Doorkeeper
       token.revoke if token&.accessible?
     end
 
+    # Doorkeeper does not use the token_type_hint logic described in the
+    # RFC 7009 due to the refresh token implementation that is a field in
+    # the access token model.
     def token
       @token ||= AccessToken.by_token(params["token"]) ||
                  AccessToken.by_refresh_token(params["token"])
