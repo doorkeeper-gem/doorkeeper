@@ -5,7 +5,7 @@ module Doorkeeper
     before_action :authenticate_resource_owner!
 
     def index
-      @applications = Application.authorized_for(current_resource_owner)
+      @applications = Doorkeeper.config.application_model.authorized_for(current_resource_owner)
 
       respond_to do |format|
         format.html
@@ -14,7 +14,7 @@ module Doorkeeper
     end
 
     def destroy
-      Application.revoke_tokens_and_grants_for(
+      Doorkeeper.config.application_model.revoke_tokens_and_grants_for(
         params[:id],
         current_resource_owner,
       )

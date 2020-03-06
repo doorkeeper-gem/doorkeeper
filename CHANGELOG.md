@@ -22,6 +22,7 @@ User-visible changes worth mentioning.
 - [#1359] Refactor Doorkeeper configuration options DSL to make it easy to reuse it
   in external extensions.
 - [#1360] Increase `matching_token_for` lookup size to 10 000 and make it configurable.
+- [#1371] Fix controllers to use valid classes in case Doorkeeper has custom models configured.
 
 ## 5.3.1
 

@@ -42,7 +42,7 @@ module Doorkeeper
     end
 
     def matching_token?
-      AccessToken.matching_token_for(
+      Doorkeeper.config.access_token_model.matching_token_for(
         pre_auth.client,
         current_resource_owner,
         pre_auth.scopes,
@@ -101,11 +101,11 @@ module Doorkeeper
     end
 
     def after_successful_authorization
-      Doorkeeper.configuration.after_successful_authorization.call(self)
+      Doorkeeper.config.after_successful_authorization.call(self)
     end
 
     def before_successful_authorization
-      Doorkeeper.configuration.before_successful_authorization.call(self)
+      Doorkeeper.config.before_successful_authorization.call(self)
     end
   end
 end

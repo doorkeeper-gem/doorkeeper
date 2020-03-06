@@ -84,8 +84,8 @@ module Doorkeeper
     # RFC 7009 due to the refresh token implementation that is a field in
     # the access token model.
     def token
-      @token ||= AccessToken.by_token(params["token"]) ||
-                 AccessToken.by_refresh_token(params["token"])
+      @token ||= Doorkeeper.config.access_token_model.by_token(params["token"]) ||
+                 Doorkeeper.config.access_token_model.by_refresh_token(params["token"])
     end
 
     def strategy
