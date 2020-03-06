@@ -174,13 +174,13 @@ describe Doorkeeper::TokensController do
       let(:client) { FactoryBot.create(:application, confidential: false) }
 
       it "returns 200" do
-        post :revoke, params: { token: access_token.token }
+        post :revoke, params: { client_id: client.uid, token: access_token.token }
 
         expect(response.status).to eq 200
       end
 
       it "revokes the access token" do
-        post :revoke, params: { token: access_token.token }
+        post :revoke, params: { client_id: client.uid, token: access_token.token }
 
         expect(access_token.reload).to have_attributes(revoked?: true)
       end
