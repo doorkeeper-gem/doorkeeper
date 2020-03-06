@@ -12,17 +12,42 @@ module Doorkeeper
 
     # OAuth 2.0 Token Revocation - http://tools.ietf.org/html/rfc7009
     def revoke
-      # The authorization server, if applicable, first authenticates the client
-      # and checks its ownership of the provided token. Check #authorized? for
-      # more details.
-
-      if authorized?
-        revoke_token
-        # @see 2.2.  Revocation Response
+      # @see 2.1.  Revocation Request
+      #
+      #  The client constructs the request by including the following
+      #  parameters using the "application/x-www-form-urlencoded" format in
+      #  the HTTP request entity-body:
+      #     token   REQUIRED.
+      #     token_type_hint  OPTIONAL.
+      #
+      #  The client also includes its authentication credentials as described
+      #  in Section 2.3. of [RFC6749].
+      #
+      #  The authorization server first validates the client credentials (in
+      #  case of a confidential client) and then verifies whether the token
+      #  was issued to the client making the revocation request.
+      unless server.client
+        # If this validation [client credentials / token ownership] fails, the request is
+        # refused and the  client is informed of the error by the authorization server as
+        # described below.
         #
-        # The authorization server responds with HTTP status code 200 if the token
-        # has been revoked successfully or if the client submitted an invalid
-        # token.
+        # @see 2.2.1.  Error Response
+        #
+        # The error presentation conforms to the definition in Section 5.2 of [RFC6749].
+        render json: revocation_error_response, status: :forbidden
+        return
+      end
+
+      # The authorization server responds with HTTP status code 200 if the client
+      # submitted an invalid token or the token has been revoked successfully.
+      if token.blank?
+        render json: {}, status: 200
+      # The authorization server validates [...] and whether the token
+      # was issued to the client making the revocation request. If this
+      # validation fails, the request is refused and the client is informed
+      # of the error by the authorization server as described below.
+      elsif authorized?
+        revoke_token
         render json: {}, status: 200
       else
         render json: revocation_error_response, status: :forbidden
@@ -44,8 +69,12 @@ module Doorkeeper
     private
 
     # OAuth 2.0 Section 2.1 defines two client types, "public" & "confidential".
-    # Public clients (as per RFC 7009) do not require authentication whereas
-    # confidential clients must be authenticated for their token revocation.
+    # A malicious client may attempt to guess valid tokens on this endpoint
+    # by making revocation requests against potential token strings.
+    # According to this specification, a client's request must contain a
+    # valid client_id, in the case of a public client, or valid client
+    # credentials, in the case of a confidential client. The token being
+    # revoked must also belong to the requesting client.
     #
     # Once a confidential client is authenticated, it must be authorized to
     # revoke the provided access or refresh token. This ensures one client
@@ -60,15 +89,13 @@ module Doorkeeper
     # https://tools.ietf.org/html/rfc6749#section-2.1
     # https://tools.ietf.org/html/rfc7009
     def authorized?
-      return unless token.present?
-
-      # Client is confidential, therefore client authentication & authorization
-      # is required
+      # Token belongs to specific client, so we need to check if
+      # authenticated client could access it.
       if token.application_id? && token.application.confidential?
         # We authorize client by checking token's application
         server.client && server.client.application == token.application
       else
-        # Client is public, authentication unnecessary
+        # Token was issued without client, authorization unnecessary
         true
       end
     end
@@ -102,11 +129,11 @@ module Doorkeeper
     end
 
     def after_successful_authorization
-      Doorkeeper.configuration.after_successful_authorization.call(self)
+      Doorkeeper.config.after_successful_authorization.call(self)
     end
 
     def before_successful_authorization
-      Doorkeeper.configuration.before_successful_authorization.call(self)
+      Doorkeeper.config.before_successful_authorization.call(self)
     end
 
     def revocation_error_response

@@ -83,7 +83,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       end
 
       def generate_secret
-        return unless secret.blank?
+        return if secret.present?
 
         renew_secret
       end

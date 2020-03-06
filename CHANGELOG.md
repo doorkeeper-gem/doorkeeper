@@ -23,6 +23,11 @@ User-visible changes worth mentioning.
   in external extensions.
 - [#1360] Increase `matching_token_for` lookup size to 10 000 and make it configurable.
 - [#1371] Fix controllers to use valid classes in case Doorkeeper has custom models configured.
+- [#1370] Fix revocation response for invalid token and unauthorized requests to conform with RFC 7009 (fixes #1362).
+
+  **[IMPORTANT]** now fully according to RFC 7009 nobody can do a revocation request without `client_id`
+  (for public clients) and `client_secret` (for private clients). Please update your apps to include that
+  info in the revocation request payload.
 
 ## 5.3.1
 
