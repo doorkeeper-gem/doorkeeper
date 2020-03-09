@@ -12,5 +12,19 @@ require "doorkeeper"
 # require "pry"
 # Pry.start
 
+# Default Doorkeeper config
+Doorkeeper.configure do
+  orm :active_record
+end
+
+# Generate in-memory database for testing
+ActiveRecord::Base.establish_connection(
+  adapter: "sqlite3",
+  database: ":memory:",
+)
+
+# Load database schema
+load File.expand_path("../spec/dummy/db/schema.rb", __dir__)
+
 require "irb"
 IRB.start(__FILE__)
