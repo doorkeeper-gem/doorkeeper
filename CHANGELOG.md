@@ -29,6 +29,8 @@ User-visible changes worth mentioning.
   (for public clients) and `client_secret` (for private clients). Please update your apps to include that
   info in the revocation request payload.
 
+- [#1374] Revoke and issue client credentials token in a transaction with a row lock.
+
 ## 5.3.1
 
 - [#1360] Backport: Increase `matching_token_for` batch lookup size to 10 000 and make it configurable.
