@@ -2,29 +2,33 @@
 
 require "doorkeeper/rails/routes/mapping"
 require "doorkeeper/rails/routes/mapper"
+require "doorkeeper/rails/routes/abstract_router"
+require "doorkeeper/rails/routes/registry"
 
 module Doorkeeper
   module Rails
     class Routes # :nodoc:
-      mattr_reader :mapping do
-        {}
-      end
-
       module Helper
         def use_doorkeeper(options = {}, &block)
           Doorkeeper::Rails::Routes.new(self, &block).generate_routes!(options)
         end
       end
 
-      def self.install!
-        ActionDispatch::Routing::Mapper.include Doorkeeper::Rails::Routes::Helper
+      include AbstractRouter
+      extend Registry
+
+      mattr_reader :mapping do
+        {}
       end
 
-      attr_reader :routes
+      def self.install!
+        ActionDispatch::Routing::Mapper.include Doorkeeper::Rails::Routes::Helper
+
+        registered_routes.each(&:install!)
+      end
 
       def initialize(routes, mapper = Mapper.new, &block)
-        @routes = routes
-        @mapping = mapper.map(&block)
+        super
 
         @mapping.skips.push(:applications, :authorized_applications) if Doorkeeper.config.api_only
       end
@@ -42,14 +46,6 @@ module Doorkeeper
       end
 
       private
-
-      def map_route(name, method)
-        return if @mapping.skipped?(name)
-
-        send(method, @mapping[name])
-
-        mapping[name] = @mapping[name]
-      end
 
       def authorization_routes(mapping)
         routes.resource(

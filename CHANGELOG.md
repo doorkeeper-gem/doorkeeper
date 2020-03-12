@@ -28,6 +28,8 @@ User-visible changes worth mentioning.
   **[IMPORTANT]** now fully according to RFC 7009 nobody can do a revocation request without `client_id`
   (for public clients) and `client_secret` (for private clients). Please update your apps to include that
   info in the revocation request payload.
+  
+- [#1373] Make Doorkeeper routes mapper reusable in extensions.
 
 ## 5.3.1
 
