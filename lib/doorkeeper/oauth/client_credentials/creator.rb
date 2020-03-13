@@ -5,20 +5,36 @@ module Doorkeeper
     class ClientCredentialsRequest < BaseRequest
       class Creator
         def call(client, scopes, attributes = {})
+          existing_token = nil
+
           if lookup_existing_token?
             existing_token = find_existing_token_for(client, scopes)
             return existing_token if server_config.reuse_access_token && existing_token&.reusable?
-
-            existing_token&.revoke if server_config.revoke_previous_client_credentials_token
           end
 
-          server_config.access_token_model.find_or_create_for(
-            client, nil, scopes, attributes[:expires_in],
-            attributes[:use_refresh_token],
-          )
+          with_revocation(existing_token: existing_token) do
+            server_config.access_token_model.find_or_create_for(
+              client, nil, scopes, attributes[:expires_in],
+              attributes[:use_refresh_token],
+            )
+          end
         end
 
         private
+
+        def with_revocation(existing_token:)
+          if existing_token && server_config.revoke_previous_client_credentials_token
+            existing_token.with_lock do
+              raise Errors::DoorkeeperError, :invalid_token_reuse if existing_token.revoked?
+
+              existing_token.revoke
+
+              yield
+            end
+          else
+            yield
+          end
+        end
 
         def lookup_existing_token?
           server_config.reuse_access_token || server_config.revoke_previous_client_credentials_token

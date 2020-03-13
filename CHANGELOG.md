@@ -31,6 +31,8 @@ User-visible changes worth mentioning.
   
 - [#1373] Make Doorkeeper routes mapper reusable in extensions.
 
+- [#1374] Revoke and issue client credentials token in a transaction with a row lock.
+
 ## 5.3.1
 
 - [#1360] Backport: Increase `matching_token_for` batch lookup size to 10 000 and make it configurable.
