@@ -22,7 +22,7 @@ ActiveRecord::Schema.define(version: 20180210183654) do
     t.datetime "created_at", null: false
     t.datetime "revoked_at"
     t.string "scopes"
-    unless ENV['WITHOUT_PKCE']
+    unless ENV["WITHOUT_PKCE"]
       t.string   "code_challenge"
       t.string   "code_challenge_method"
     end

@@ -1,14 +1,14 @@
-CHANGELOG_FILE = 'CHANGELOG.md'
-GITHUB_REPO = 'https://github.com/doorkeeper-gem/doorkeeper'
+CHANGELOG_FILE = "CHANGELOG.md"
+GITHUB_REPO = "https://github.com/doorkeeper-gem/doorkeeper"
 
 def changelog_changed?
   git.modified_files.include?(CHANGELOG_FILE) || git.added_files.include?(CHANGELOG_FILE)
 end
 
 def changelog_entry_example
-  pr_number = github.pr_json['number']
+  pr_number = github.pr_json["number"]
   pr_title = github.pr_title
-                   .sub(/[?.!,;]?$/, '')
+                   .sub(/[?.!,;]?$/, "")
                    .capitalize
 
   "- [##{pr_number}] #{pr_title}."
@@ -31,7 +31,7 @@ end
 # You've made changes to specs, but no library code has changed?
 # --------------------------------------------------------------------------------------------------------------------
 if !has_app_changes && has_spec_changes
-  message('We really appreciate pull requests that demonstrate issues, even without a fix. That said, the next step is to try and fix the failing tests!', sticky: false)
+  message("We really appreciate pull requests that demonstrate issues, even without a fix. That said, the next step is to try and fix the failing tests!", sticky: false)
 end
 
 # Mainly to encourage writing up some reasoning about the PR, rather than
@@ -59,9 +59,9 @@ Here's an example of a #{CHANGELOG_FILE} entry:
 end
 
 if git.commits.any? { |commit| commit.message =~ /^Merge branch '#{github.branch_for_base}'/ }
-  warn('Please rebase to get rid of the merge commits in this PR')
+  warn("Please rebase to get rid of the merge commits in this PR")
 end
 
 if git.commits.length > 1
-  warn('Please squash all your commits to a single one')
+  warn("Please squash all your commits to a single one")
 end
