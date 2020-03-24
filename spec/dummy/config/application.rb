@@ -1,4 +1,4 @@
-require File.expand_path('boot', __dir__)
+require File.expand_path("boot", __dir__)
 
 require "rails"
 
@@ -17,7 +17,7 @@ end
 
 Bundler.require(*Rails.groups)
 
-require 'yaml'
+require "yaml"
 
 orm = if DOORKEEPER_ORM =~ /mongoid/
         Mongoid.load!(File.join(File.dirname(File.expand_path(__FILE__)), "#{DOORKEEPER_ORM}.yml"))
@@ -29,7 +29,7 @@ require "#{orm}/railtie"
 
 module Dummy
   class Application < Rails::Application
-    if Rails.gem_version < Gem::Version.new('5.1')
+    if Rails.gem_version < Gem::Version.new("5.1")
       config.action_controller.per_form_csrf_tokens = true
       config.action_controller.forgery_protection_origin_check = true
 
