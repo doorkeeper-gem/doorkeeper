@@ -73,9 +73,7 @@ describe Doorkeeper::OAuth::AuthorizationCodeRequest do
   end
 
   it "invalid code_verifier param because server does not support pkce" do
-    # Some other ORMs work relies on #respond_to? so it's not a good idea to stub it :\
-    allow_any_instance_of(Doorkeeper::AccessGrant).to receive(:respond_to?).with(anything).and_call_original
-    allow_any_instance_of(Doorkeeper::AccessGrant).to receive(:respond_to?).with(:code_challenge).and_return(false)
+    allow_any_instance_of(Doorkeeper::AccessGrant).to receive(:pkce_supported?).and_return(false)
 
     subject.code_verifier = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
     subject.validate
