@@ -35,7 +35,9 @@ module Dummy
 
       ActiveSupport.to_time_preserves_timezone = true
 
-      config.active_record.belongs_to_required_by_default = true
+      if DOORKEEPER_ORM =~ /active_record/
+        config.active_record.belongs_to_required_by_default = true
+      end
 
       config.ssl_options = { hsts: { subdomains: true } }
     else
