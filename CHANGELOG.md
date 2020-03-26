@@ -32,6 +32,7 @@ User-visible changes worth mentioning.
 - [#1373] Make Doorkeeper routes mapper reusable in extensions.
 
 - [#1374] Revoke and issue client credentials token in a transaction with a row lock.
+- [#1382] Add token_creation_wrapper around token creation.
 
 ## 5.3.1
 

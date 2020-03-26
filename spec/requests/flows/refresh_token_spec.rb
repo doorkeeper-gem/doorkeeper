@@ -181,6 +181,36 @@ describe "Refresh Token Flow" do
       should_not_have_json "refresh_token"
       should_have_json "error", "invalid_grant"
     end
+
+    context 'with a token_creation_wrapper' do
+      it 'wraps token creation' do
+        # Creating the wrapper here so we have access to wrapper_count
+        wrapper_count = 0
+        wrapper = ->(&block) do
+          wrapper_count += 1
+          block.call(repeat_find: false)
+        end
+        config_is_set(:token_creation_wrapper, wrapper)
+
+        post refresh_token_endpoint_url(
+          client: @client, refresh_token: @token.refresh_token,
+        )
+        should_have_json(
+          "refresh_token", Doorkeeper::AccessToken.last.refresh_token,
+        )
+        expect(@token.reload).not_to be_revoked
+        expect(wrapper_count).to eq 1
+
+        post refresh_token_endpoint_url(
+          client: @client, refresh_token: @token.refresh_token,
+        )
+        should_have_json(
+          "refresh_token", Doorkeeper::AccessToken.last.refresh_token,
+        )
+        expect(@token.reload).not_to be_revoked
+        expect(wrapper_count).to eq 2
+      end
+    end
   end
 
   context "refreshing the token with multiple sessions (devices)" do

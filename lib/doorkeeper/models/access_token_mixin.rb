@@ -177,27 +177,46 @@ module Doorkeeper
       #
       # @return [Doorkeeper::AccessToken] existing record or a new one
       #
-      def find_or_create_for(application, resource_owner, scopes, expires_in, use_refresh_token)
-        if Doorkeeper.config.reuse_access_token
-          access_token = matching_token_for(application, resource_owner, scopes)
+      def find_or_create_for(application, resource_owner, scopes, expires_in, use_refresh_token, token_attributes = {})
+        access_token = find_for_create(
+          application: application,
+          resource_owner: resource_owner,
+          scopes: scopes,
+        )
+        return access_token unless access_token.nil?
 
-          return access_token if access_token&.reusable?
-        end
-
-        attributes = {
+        token_attributes.merge!(
           application_id: application&.id,
           scopes: scopes.to_s,
           expires_in: expires_in,
           use_refresh_token: use_refresh_token,
-        }
+        )
 
         if Doorkeeper.config.polymorphic_resource_owner?
-          attributes[:resource_owner] = resource_owner
+          token_attributes[:resource_owner] = resource_owner
         else
-          attributes[:resource_owner_id] = resource_owner_id_for(resource_owner)
+          token_attributes[:resource_owner_id] = resource_owner_id_for(resource_owner)
         end
 
-        create!(attributes)
+        Doorkeeper.config.token_creation_wrapper.call do |repeat_find: false|
+          if repeat_find
+            access_token = find_for_create(
+              application: application,
+              resource_owner: resource_owner,
+              scopes: scopes,
+            )
+            return access_token unless access_token.nil?
+          end
+
+          create!(token_attributes)
+        end
+      end
+
+      def find_for_create(application:, resource_owner:, scopes:)
+        return unless Doorkeeper.config.reuse_access_token
+
+        access_token = matching_token_for(application, resource_owner, scopes)
+        return access_token if access_token&.reusable?
       end
 
       # Looking for not revoked Access Token records that belongs to specific

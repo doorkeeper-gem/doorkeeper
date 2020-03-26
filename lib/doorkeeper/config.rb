@@ -266,6 +266,8 @@ module Doorkeeper
     option :after_successful_strategy_response,   default: ->(_request, _response) {}
     # Allows to customize Token Introspection response
     option :custom_introspection_response,        default: ->(_token, _context) { {} }
+    # Wrapper around token creation; useful for distributed locking
+    option :token_creation_wrapper,               default: ->(&block) { block.call }
 
     option :skip_authorization,             default: ->(_routes) {}
     option :access_token_expires_in,        default: 7200

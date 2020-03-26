@@ -64,6 +64,36 @@ describe "Client Credentials Request" do
         end
       end
     end
+
+    context 'with a token_creation_wrapper' do
+      it 'wraps token creation' do
+        # Creating the wrapper here so we have access to wrapper_count
+        wrapper_count = 0
+        wrapper = ->(&block) do
+          wrapper_count += 1
+          block.call(repeat_find: false)
+        end
+        config_is_set(:token_creation_wrapper, wrapper)
+
+        headers = authorization client.uid, client.secret
+        params  = { grant_type: "client_credentials" }
+
+        post "/oauth/token", params: params, headers: headers
+
+        should_have_json "access_token", Doorkeeper::AccessToken.first.token
+        should_have_json_within "expires_in", Doorkeeper.configuration.access_token_expires_in, 1
+        expect(wrapper_count).to eq 1
+
+        headers = authorization client.uid, client.secret
+        params  = { grant_type: "client_credentials" }
+
+        post "/oauth/token", params: params, headers: headers
+
+        should_have_json "access_token", Doorkeeper::AccessToken.last.token
+        should_have_json_within "expires_in", Doorkeeper.configuration.access_token_expires_in, 1
+        expect(wrapper_count).to eq 2
+      end
+    end
   end
 
   context "when configured to check application supported grant flow" do

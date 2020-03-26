@@ -183,6 +183,28 @@ describe "Resource Owner Password Credentials Flow" do
         should_have_json "scope", "public"
       end
     end
+
+    context 'with a token_creation_wrapper' do
+      it 'wraps token creation' do
+        # Creating the wrapper here so we have access to wrapper_count
+        wrapper_count = 0
+        wrapper = ->(&block) do
+          wrapper_count += 1
+          block.call(repeat_find: false)
+        end
+        config_is_set(:token_creation_wrapper, wrapper)
+
+        post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
+        token = Doorkeeper::AccessToken.first
+        should_have_json "access_token", token.token
+        expect(wrapper_count).to eq 1
+
+        post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
+        token = Doorkeeper::AccessToken.last
+        should_have_json "access_token", token.token
+        expect(wrapper_count).to eq 2
+      end
+    end
   end
 
   context "when application scopes are present and differs from configured default scopes and no scope is passed" do
