@@ -13,7 +13,7 @@ describe "Revocable" do
     it "updates :revoked_at attribute with current time" do
       utc = double utc: double
       clock = double now: utc
-      expect(subject).to receive(:update_attribute).with(:revoked_at, clock.now.utc)
+      expect(subject).to receive(:update_column).with(:revoked_at, clock.now.utc)
       subject.revoke(clock)
     end
   end
@@ -36,8 +36,7 @@ describe "Revocable" do
   end
 
   describe :revoke_previous_refresh_token! do
-    it "revokes the previous token if existing, and resets the
-      `previous_refresh_token` attribute" do
+    it "revokes the previous token if exists and resets the `previous_refresh_token` attribute" do
       previous_token = FactoryBot.create(
         :access_token,
         refresh_token: "refresh_token",

@@ -259,8 +259,8 @@ module Doorkeeper
            end)
 
     # Hooks for authorization
-    option :before_successful_authorization,      default: ->(_context) {}
-    option :after_successful_authorization,       default: ->(_context) {}
+    option :before_successful_authorization,      default: ->(_controller, _context = nil) {}
+    option :after_successful_authorization,       default: ->(_controller, _context = nil) {}
     # Hooks for strategies responses
     option :before_successful_strategy_response,  default: ->(_request) {}
     option :after_successful_strategy_response,   default: ->(_request, _response) {}

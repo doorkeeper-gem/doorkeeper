@@ -123,17 +123,22 @@ module Doorkeeper
       @authorize_response ||= begin
         before_successful_authorization
         auth = strategy.authorize
-        after_successful_authorization unless auth.is_a?(Doorkeeper::OAuth::ErrorResponse)
+        context = build_context(auth: auth)
+        after_successful_authorization(context) unless auth.is_a?(Doorkeeper::OAuth::ErrorResponse)
         auth
       end
     end
 
-    def after_successful_authorization
-      Doorkeeper.config.after_successful_authorization.call(self)
+    def build_context(**attributes)
+      Doorkeeper::OAuth::Hooks::Context.new(**attributes)
     end
 
-    def before_successful_authorization
-      Doorkeeper.config.before_successful_authorization.call(self)
+    def before_successful_authorization(context = nil)
+      Doorkeeper.config.before_successful_authorization.call(self, context)
+    end
+
+    def after_successful_authorization(context)
+      Doorkeeper.config.after_successful_authorization.call(self, context)
     end
 
     def revocation_error_response

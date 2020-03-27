@@ -30,8 +30,8 @@ User-visible changes worth mentioning.
   info in the revocation request payload.
   
 - [#1373] Make Doorkeeper routes mapper reusable in extensions.
-
 - [#1374] Revoke and issue client credentials token in a transaction with a row lock.
+- [#1384] Add context object with auth/pre_auth for authorization hooks.
 
 ## 5.3.1
 

@@ -11,8 +11,7 @@ module Doorkeeper
       validate :redirect_uri, error: :invalid_grant
       validate :code_verifier, error: :invalid_grant
 
-      attr_accessor :server, :grant, :client, :redirect_uri, :access_token,
-                    :code_verifier
+      attr_accessor :grant, :client, :redirect_uri, :access_token, :code_verifier
       attr_reader :invalid_request_reason, :missing_param
 
       def initialize(server, grant, client, parameters = {})

@@ -116,8 +116,8 @@ describe "Revoke Token Flow" do
 
     it "should revoke the access token provided" do
       post revocation_token_endpoint_url,
-        params: { client_id: public_client_application.uid, token: access_token.token },
-        headers: headers
+           params: { client_id: public_client_application.uid, token: access_token.token },
+           headers: headers
 
       expect(response).to be_successful
       expect(access_token.reload.revoked?).to be_truthy
@@ -125,8 +125,8 @@ describe "Revoke Token Flow" do
 
     it "should revoke the refresh token provided" do
       post revocation_token_endpoint_url,
-        params: { client_id: public_client_application.uid, token: access_token.refresh_token },
-        headers: headers
+           params: { client_id: public_client_application.uid, token: access_token.refresh_token },
+           headers: headers
 
       expect(response).to be_successful
       expect(access_token.reload.revoked?).to be_truthy
@@ -134,8 +134,8 @@ describe "Revoke Token Flow" do
 
     it "should response with success even for invalid token" do
       post revocation_token_endpoint_url,
-        params: { client_id: public_client_application.uid, token: "dont_exist" },
-        headers: headers
+           params: { client_id: public_client_application.uid, token: "dont_exist" },
+           headers: headers
 
       expect(response).to be_successful
     end
@@ -153,7 +153,7 @@ describe "Revoke Token Flow" do
 
       it "should not revoke the access token provided" do
         post revocation_token_endpoint_url,
-          params: { client_id: public_client_application.uid, token: access_token.token }
+             params: { client_id: public_client_application.uid, token: access_token.token }
 
         expect(response).to be_forbidden
         expect(response.body).to include("unauthorized_client")
@@ -163,7 +163,7 @@ describe "Revoke Token Flow" do
 
       it "should not revoke the refresh token provided" do
         post revocation_token_endpoint_url,
-          params: { client_id: public_client_application.uid, token: access_token.token }
+             params: { client_id: public_client_application.uid, token: access_token.token }
 
         expect(response).to be_forbidden
         expect(response.body).to include("unauthorized_client")
@@ -186,8 +186,8 @@ describe "Revoke Token Flow" do
 
     it "shouldn't remove the token and must response with an error" do
       post revocation_token_endpoint_url,
-        params: { token: access_token.token },
-        headers: headers
+           params: { token: access_token.token },
+           headers: headers
 
       expect(response).not_to be_successful
       expect(access_token.reload.revoked?).to be_falsey

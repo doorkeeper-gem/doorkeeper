@@ -3,7 +3,7 @@
 module Doorkeeper
   module OAuth
     class ClientCredentialsRequest < BaseRequest
-      attr_accessor :server, :client, :original_scopes
+      attr_accessor :client, :original_scopes
       attr_reader :response
       attr_writer :issuer
 

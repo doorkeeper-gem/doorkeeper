@@ -77,8 +77,14 @@ module Doorkeeper
     end
 
     def pre_auth_param_fields
-      %i[client_id response_type redirect_uri scope state code_challenge
-         code_challenge_method]
+      %i[
+        client_id
+        code_challenge
+        code_challenge_method
+        response_type
+        redirect_uri
+        scope state
+      ]
     end
 
     def authorization
@@ -93,19 +99,28 @@ module Doorkeeper
       @authorize_response ||= begin
         return pre_auth.error_response unless pre_auth.authorizable?
 
-        before_successful_authorization
+        context = build_context(pre_auth: pre_auth)
+        before_successful_authorization(context)
+
         auth = strategy.authorize
-        after_successful_authorization
+
+        context = build_context(auth: auth)
+        after_successful_authorization(context)
+
         auth
       end
     end
 
-    def after_successful_authorization
-      Doorkeeper.config.after_successful_authorization.call(self)
+    def build_context(**attributes)
+      Doorkeeper::OAuth::Hooks::Context.new(**attributes)
     end
 
-    def before_successful_authorization
-      Doorkeeper.config.before_successful_authorization.call(self)
+    def before_successful_authorization(context = nil)
+      Doorkeeper.config.before_successful_authorization.call(self, context)
+    end
+
+    def after_successful_authorization(context)
+      Doorkeeper.config.after_successful_authorization.call(self, context)
     end
   end
 end

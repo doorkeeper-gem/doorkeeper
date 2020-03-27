@@ -18,7 +18,7 @@ module Doorkeeper
 
         scopes = if endpoint_scopes
                    Doorkeeper::OAuth::Scopes.from_array(endpoint_scopes)
-                 elsif scopes && !scopes.empty?
+                 elsif scopes.present?
                    Doorkeeper::OAuth::Scopes.from_array(scopes)
                  end
 

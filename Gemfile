@@ -13,8 +13,9 @@ gem "rspec-mocks"
 gem "rspec-rails", "~> 4.0"
 gem "rspec-support"
 
-gem "rubocop", "~> 0.75"
-gem "rubocop-performance"
+gem "rubocop", "~> 0.80"
+gem "rubocop-performance", require: false
+gem "rubocop-rails", require: false
 
 gem "bcrypt", "~> 3.1", require: false
 

@@ -126,7 +126,7 @@ module Doorkeeper
 
         find_access_token_in_batches(relation, batch_size: batch_size) do |batch|
           tokens = batch.select do |token|
-            scopes_match?(token.scopes, scopes, application.try(:scopes))
+            scopes_match?(token.scopes, scopes, application&.scopes)
           end
 
           matching_tokens.concat(tokens)
@@ -348,7 +348,7 @@ module Doorkeeper
       return unless self.class.refresh_token_revoked_on_use?
 
       old_refresh_token&.revoke
-      update_attribute :previous_refresh_token, ""
+      update_column(:previous_refresh_token, "")
     end
 
     private

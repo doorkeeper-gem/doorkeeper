@@ -5,7 +5,9 @@ module Doorkeeper
     class BaseRequest
       include Validations
 
-      attr_reader :grant_type
+      attr_reader :grant_type, :server
+
+      delegate :default_scopes, to: :server
 
       def authorize
         validate
@@ -24,10 +26,6 @@ module Doorkeeper
 
       def scopes
         @scopes ||= build_scopes
-      end
-
-      def default_scopes
-        server.default_scopes
       end
 
       def valid?
@@ -63,10 +61,10 @@ module Doorkeeper
         if @original_scopes.present?
           OAuth::Scopes.from_string(@original_scopes)
         else
-          client_scopes = @client.try(:scopes)
+          client_scopes = @client&.scopes
           return default_scopes if client_scopes.blank?
 
-          default_scopes & @client.scopes
+          default_scopes & client_scopes
         end
       end
     end
