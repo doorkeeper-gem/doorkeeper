@@ -548,7 +548,7 @@ describe "Authorization Code Flow" do
         authorization_code_exists(
           application: @client,
           resource_owner_id: resource_owner.id,
-          resource_owner_type: resource_owner.class.name
+          resource_owner_type: resource_owner.class.name,
         )
 
         authorization_code = Doorkeeper::AccessGrant.last.token
