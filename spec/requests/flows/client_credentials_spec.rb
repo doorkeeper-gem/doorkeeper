@@ -65,8 +65,8 @@ describe "Client Credentials Request" do
       end
     end
 
-    context 'with a token_creation_wrapper' do
-      it 'wraps token creation' do
+    context "with a token_creation_wrapper" do
+      it "wraps token creation" do
         # Creating the wrapper here so we have access to wrapper_count
         wrapper_count = 0
         wrapper = ->(&block) do

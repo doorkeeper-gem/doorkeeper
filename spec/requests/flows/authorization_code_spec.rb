@@ -527,8 +527,8 @@ describe "Authorization Code Flow" do
       should_have_json "error_description", translated_error_message(:invalid_grant)
     end
 
-    context 'with a token_creation_wrapper' do
-      it 'wraps token creation' do
+    context "with a token_creation_wrapper" do
+      it "wraps token creation" do
         # Creating the wrapper here so we have access to wrapper_count
         wrapper_count = 0
         wrapper = ->(&block) do
@@ -545,9 +545,11 @@ describe "Authorization Code Flow" do
         should_have_json_within "expires_in", Doorkeeper::AccessToken.first.expires_in, 1
         expect(wrapper_count).to eq 1
 
-        authorization_code_exists application: @client,
+        authorization_code_exists(
+          application: @client,
           resource_owner_id: resource_owner.id,
           resource_owner_type: resource_owner.class.name
+        )
 
         authorization_code = Doorkeeper::AccessGrant.last.token
         post token_endpoint_url(code: authorization_code, client: @client)
