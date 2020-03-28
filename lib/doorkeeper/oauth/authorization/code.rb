@@ -12,7 +12,9 @@ module Doorkeeper
         end
 
         def issue_token
-          @token ||= Doorkeeper.config.access_grant_model.create!(access_grant_attributes)
+          return @token if defined?(@token)
+
+          @token = Doorkeeper.config.access_grant_model.create!(access_grant_attributes)
         end
 
         def oob_redirect

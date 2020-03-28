@@ -358,12 +358,14 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
       it "should call :before_successful_authorization callback" do
         expect(Doorkeeper.config)
-          .to receive_message_chain(:before_successful_authorization, :call).with(instance_of(described_class))
+          .to receive_message_chain(:before_successful_authorization, :call)
+          .with(instance_of(described_class), instance_of(Doorkeeper::OAuth::Hooks::Context))
       end
 
       it "should call :after_successful_authorization callback" do
         expect(Doorkeeper.config)
-          .to receive_message_chain(:after_successful_authorization, :call).with(instance_of(described_class))
+          .to receive_message_chain(:after_successful_authorization, :call)
+          .with(instance_of(described_class), instance_of(Doorkeeper::OAuth::Hooks::Context))
       end
     end
 
@@ -669,12 +671,14 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
       it "should call :before_successful_authorization callback" do
         expect(Doorkeeper.configuration)
-          .to receive_message_chain(:before_successful_authorization, :call).with(instance_of(described_class))
+          .to receive_message_chain(:before_successful_authorization, :call)
+          .with(instance_of(described_class), instance_of(Doorkeeper::OAuth::Hooks::Context))
       end
 
       it "should call :after_successful_authorization callback" do
         expect(Doorkeeper.configuration)
-          .to receive_message_chain(:after_successful_authorization, :call).with(instance_of(described_class))
+          .to receive_message_chain(:after_successful_authorization, :call)
+          .with(instance_of(described_class), instance_of(Doorkeeper::OAuth::Hooks::Context))
       end
     end
 

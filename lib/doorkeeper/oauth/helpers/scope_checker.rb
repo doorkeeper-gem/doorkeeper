@@ -27,11 +27,7 @@ module Doorkeeper
           private
 
           def valid_scopes(server_scopes, app_scopes)
-            if app_scopes.present?
-              app_scopes
-            else
-              server_scopes
-            end
+            app_scopes.presence || server_scopes
           end
 
           def permitted_to_grant_type?

@@ -1,5 +1,7 @@
 inherit_from: .rubocop_todo.yml
-require: rubocop-performance
+require:
+  - rubocop-performance
+  - rubocop-rails
 AllCops:
   TargetRubyVersion: 2.4
   Exclude:
@@ -54,3 +56,11 @@ Layout/LineLength:
   Exclude:
     - spec/**/*
   Max: 100
+
+Rails/HttpStatus:
+  Enabled: false
+Rails/RakeEnvironment:
+  Exclude:
+    - Rakefile
+Rails/SkipsModelValidations:
+  Enabled: false
