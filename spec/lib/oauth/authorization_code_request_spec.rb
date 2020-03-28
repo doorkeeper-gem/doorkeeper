@@ -54,41 +54,42 @@ describe Doorkeeper::OAuth::AuthorizationCodeRequest do
   end
 
   it "requires the grant" do
-    subject.grant = nil
+    subject = described_class.new(server, nil, client, params)
     subject.validate
     expect(subject.error).to eq(:invalid_grant)
   end
 
   it "requires the client" do
-    subject.client = nil
+    subject = described_class.new(server, grant, nil, params)
     subject.validate
     expect(subject.error).to eq(:invalid_client)
   end
 
   it "requires the redirect_uri" do
-    subject.redirect_uri = nil
+    subject = described_class.new(server, grant, nil, params.except(:redirect_uri))
     subject.validate
     expect(subject.error).to eq(:invalid_request)
     expect(subject.missing_param).to eq(:redirect_uri)
   end
 
   it "invalid code_verifier param because server does not support pkce" do
-    allow_any_instance_of(Doorkeeper::AccessGrant).to receive(:pkce_supported?).and_return(false)
-
-    subject.code_verifier = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
+    allow(Doorkeeper::AccessGrant).to receive(:pkce_supported?).and_return(false)
+    code_verifier = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
+    subject = described_class.new(server, grant, client, params.merge(code_verifier: code_verifier))
     subject.validate
     expect(subject.error).to eq(:invalid_request)
     expect(subject.invalid_request_reason).to eq(:not_support_pkce)
   end
 
   it "matches the redirect_uri with grant's one" do
-    subject.redirect_uri = "http://other.com"
+    subject = described_class.new(server, grant, client, params.merge(redirect_uri: "http://other.com"))
     subject.validate
     expect(subject.error).to eq(:invalid_grant)
   end
 
   it "matches the client with grant's one" do
-    subject.client = FactoryBot.create :application
+    other_client = FactoryBot.create :application
+    subject = described_class.new(server, grant, other_client, params)
     subject.validate
     expect(subject.error).to eq(:invalid_grant)
   end

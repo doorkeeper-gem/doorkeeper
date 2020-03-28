@@ -34,16 +34,17 @@ describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
   end
 
   it "issues a new token without a client" do
+    subject = described_class.new(server, nil, owner)
+    expect(subject).to be_valid
+
     expect do
-      subject.client = nil
       subject.authorize
     end.to change { Doorkeeper::AccessToken.count }.by(1)
   end
 
   it "does not issue a new token with an invalid client" do
+    subject = described_class.new(server, nil, owner, { client_id: "bad_id" })
     expect do
-      subject.client = nil
-      subject.parameters = { client_id: "bad_id" }
       subject.authorize
     end.not_to(change { Doorkeeper::AccessToken.count })
 
@@ -51,14 +52,9 @@ describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
   end
 
   it "requires the owner" do
-    subject.resource_owner = nil
+    subject = described_class.new(server, client, nil)
     subject.validate
     expect(subject.error).to eq(:invalid_grant)
-  end
-
-  it "optionally accepts the client" do
-    subject.client = nil
-    expect(subject).to be_valid
   end
 
   it "creates token even when there is already one (default)" do

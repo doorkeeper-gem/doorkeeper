@@ -10,7 +10,7 @@ module Doorkeeper
       validate :resource_owner, error: :invalid_grant
       validate :scopes, error: :invalid_scope
 
-      attr_accessor :client, :resource_owner, :parameters, :access_token
+      attr_reader :client, :resource_owner, :parameters, :access_token
 
       def initialize(server, client, resource_owner, parameters = {})
         @server          = server

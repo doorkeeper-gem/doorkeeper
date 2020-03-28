@@ -15,11 +15,7 @@ module Doorkeeper
 
     # never uses pkce, if pkce migrations were not generated
     def uses_pkce?
-      pkce_supported? && code_challenge.present?
-    end
-
-    def pkce_supported?
-      respond_to? :code_challenge
+      self.class.pkce_supported? && code_challenge.present?
     end
 
     module ClassMethods
@@ -98,7 +94,7 @@ module Doorkeeper
       end
 
       def pkce_supported?
-        new.pkce_supported?
+        column_names.include?("code_challenge")
       end
 
       ##

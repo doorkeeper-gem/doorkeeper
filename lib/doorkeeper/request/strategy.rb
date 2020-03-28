@@ -3,12 +3,12 @@
 module Doorkeeper
   module Request
     class Strategy
-      attr_accessor :server
+      attr_reader :server
 
       delegate :authorize, to: :request
 
       def initialize(server)
-        self.server = server
+        @server = server
       end
 
       def request

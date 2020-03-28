@@ -3,7 +3,7 @@
 module Doorkeeper
   module OAuth
     class Client
-      attr_accessor :application
+      attr_reader :application
 
       delegate :id, :name, :uid, :redirect_uri, :scopes, to: :@application
 

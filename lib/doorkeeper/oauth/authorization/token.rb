@@ -4,7 +4,7 @@ module Doorkeeper
   module OAuth
     module Authorization
       class Token
-        attr_accessor :pre_auth, :resource_owner, :token
+        attr_reader :pre_auth, :resource_owner, :token
 
         class << self
           def build_context(pre_auth_or_oauth_client, grant_type, scopes)
@@ -57,11 +57,11 @@ module Doorkeeper
             pre_auth.scopes,
           )
 
-          @token = configuration.access_token_model.find_or_create_for(
+          @token = Doorkeeper.config.access_token_model.find_or_create_for(
             pre_auth.client,
             resource_owner,
             pre_auth.scopes,
-            self.class.access_token_expires_in(configuration, context),
+            self.class.access_token_expires_in(Doorkeeper.config, context),
             false,
           )
         end
@@ -75,10 +75,6 @@ module Doorkeeper
         end
 
         private
-
-        def configuration
-          Doorkeeper.config
-        end
 
         def controller
           @controller ||= begin
