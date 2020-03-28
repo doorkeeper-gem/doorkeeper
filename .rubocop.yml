@@ -57,6 +57,9 @@ Layout/LineLength:
     - spec/**/*
   Max: 100
 
+Rails/HttpPositionalArguments:
+  Exclude:
+    - spec/grape/*
 Rails/HttpStatus:
   Enabled: false
 Rails/RakeEnvironment:

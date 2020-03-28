@@ -3,7 +3,7 @@
 module Doorkeeper
   module OAuth
     class TokenResponse
-      attr_accessor :token
+      attr_reader :token
 
       def initialize(token)
         @token = token

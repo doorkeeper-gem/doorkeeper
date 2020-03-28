@@ -11,8 +11,8 @@ module Doorkeeper
       validate :redirect_uri, error: :invalid_grant
       validate :code_verifier, error: :invalid_grant
 
-      attr_accessor :grant, :client, :redirect_uri, :access_token, :code_verifier
-      attr_reader :invalid_request_reason, :missing_param
+      attr_reader :grant, :client, :redirect_uri, :access_token, :code_verifier,
+                  :invalid_request_reason, :missing_param
 
       def initialize(server, grant, client, parameters = {})
         @server = server
@@ -49,9 +49,13 @@ module Doorkeeper
         super
       end
 
+      def pkce_supported?
+        Doorkeeper.config.access_grant_model.pkce_supported?
+      end
+
       def validate_pkce_support
         @invalid_request_reason = :not_support_pkce if grant &&
-                                                       !grant.pkce_supported? &&
+                                                       !pkce_supported? &&
                                                        code_verifier.present?
 
         @invalid_request_reason.nil?
@@ -88,7 +92,7 @@ module Doorkeeper
       # against the DB - if pkce is supported
       def validate_code_verifier
         return true unless grant.uses_pkce? || code_verifier
-        return false unless grant.pkce_supported?
+        return false unless pkce_supported?
 
         if grant.code_challenge_method == "S256"
           grant.code_challenge == generate_code_challenge(code_verifier)

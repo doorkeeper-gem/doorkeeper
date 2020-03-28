@@ -2,7 +2,7 @@
 
 module Doorkeeper
   class Server
-    attr_accessor :context
+    attr_reader :context
 
     def initialize(context = nil)
       @context = context

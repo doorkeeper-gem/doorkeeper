@@ -4,7 +4,7 @@ module Doorkeeper
   module OAuth
     module Authorization
       class Code
-        attr_accessor :pre_auth, :resource_owner, :token
+        attr_reader :pre_auth, :resource_owner, :token
 
         def initialize(pre_auth, resource_owner)
           @pre_auth = pre_auth

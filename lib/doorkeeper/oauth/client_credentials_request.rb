@@ -3,17 +3,11 @@
 module Doorkeeper
   module OAuth
     class ClientCredentialsRequest < BaseRequest
-      attr_accessor :client, :original_scopes
-      attr_reader :response
-      attr_writer :issuer
+      attr_reader :client, :original_scopes, :response
 
       alias error_response response
 
       delegate :error, to: :issuer
-
-      def issuer
-        @issuer ||= Issuer.new(server, Validator.new(server, self))
-      end
 
       def initialize(server, client, parameters = {})
         @client = client
@@ -24,6 +18,10 @@ module Doorkeeper
 
       def access_token
         issuer.token
+      end
+
+      def issuer
+        @issuer ||= Issuer.new(server, Validator.new(server, self))
       end
 
       private

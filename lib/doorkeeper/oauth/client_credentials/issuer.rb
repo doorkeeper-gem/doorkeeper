@@ -4,7 +4,7 @@ module Doorkeeper
   module OAuth
     class ClientCredentialsRequest < BaseRequest
       class Issuer
-        attr_accessor :token, :validator, :error
+        attr_reader :token, :validator, :error
 
         def initialize(server, validator)
           @server = server
@@ -19,6 +19,7 @@ module Doorkeeper
             @token = false
             @error = validator.error
           end
+
           @token
         end
 

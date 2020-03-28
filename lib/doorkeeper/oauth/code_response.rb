@@ -5,7 +5,7 @@ module Doorkeeper
     class CodeResponse < BaseResponse
       include OAuth::Helpers
 
-      attr_accessor :pre_auth, :auth, :response_on_fragment
+      attr_reader :pre_auth, :auth, :response_on_fragment
 
       def initialize(pre_auth, auth, options = {})
         @pre_auth = pre_auth

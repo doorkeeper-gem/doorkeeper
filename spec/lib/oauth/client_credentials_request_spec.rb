@@ -22,7 +22,7 @@ describe Doorkeeper::OAuth::ClientCredentialsRequest do
   subject { Doorkeeper::OAuth::ClientCredentialsRequest.new(server, client) }
 
   before do
-    subject.issuer = token_creator
+    allow(subject).to receive(:issuer).and_return(token_creator)
   end
 
   it "issues an access token for the current client" do
@@ -37,7 +37,8 @@ describe Doorkeeper::OAuth::ClientCredentialsRequest do
 
   context "if issue was not created" do
     before do
-      subject.issuer = double create: false, error: :invalid
+      issuer = double create: false, error: :invalid
+      allow(subject).to receive(:issuer).and_return(issuer)
     end
 
     it "has an error response" do
@@ -65,7 +66,7 @@ describe Doorkeeper::OAuth::ClientCredentialsRequest do
 
     it "issues an access token with requested scopes" do
       subject = Doorkeeper::OAuth::ClientCredentialsRequest.new(server, client, scope: "email")
-      subject.issuer = token_creator
+      allow(subject).to receive(:issuer).and_return(token_creator)
       expect(token_creator).to receive(:create).with(client, Doorkeeper::OAuth::Scopes.from_string("email"))
       subject.authorize
     end

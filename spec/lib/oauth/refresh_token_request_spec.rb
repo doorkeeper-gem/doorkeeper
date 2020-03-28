@@ -4,8 +4,7 @@ require "spec_helper"
 
 describe Doorkeeper::OAuth::RefreshTokenRequest do
   let(:server) do
-    double :server,
-           access_token_expires_in: 2.minutes
+    double :server, access_token_expires_in: 2.minutes
   end
 
   let(:refresh_token) do
@@ -20,7 +19,7 @@ describe Doorkeeper::OAuth::RefreshTokenRequest do
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(false)
   end
 
-  subject { described_class.new server, refresh_token, credentials }
+  subject { described_class.new(server, refresh_token, credentials) }
 
   it "issues a new token for the client" do
     expect { subject.authorize }.to change { client.reload.access_tokens.count }.by(1)
@@ -53,22 +52,26 @@ describe Doorkeeper::OAuth::RefreshTokenRequest do
   end
 
   it "requires the refresh token" do
-    subject.refresh_token = nil
-    subject.validate
-    expect(subject.error).to eq(:invalid_request)
-    expect(subject.missing_param).to eq(:refresh_token)
+    request = described_class.new(server, nil, credentials)
+    request.validate
+    expect(request.error).to eq(:invalid_request)
+    expect(request.missing_param).to eq(:refresh_token)
   end
 
   it "requires credentials to be valid if provided" do
-    subject.client = nil
-    subject.validate
-    expect(subject.error).to eq(:invalid_client)
+    credentials = Doorkeeper::OAuth::Client::Credentials.new("invalid", "invalid")
+    request = described_class.new(server, refresh_token, credentials)
+    request.validate
+    expect(request.error).to eq(:invalid_client)
   end
 
   it "requires the token's client and current client to match" do
-    subject.client = FactoryBot.create(:application)
-    subject.validate
-    expect(subject.error).to eq(:invalid_grant)
+    other_app = FactoryBot.create(:application)
+    credentials = Doorkeeper::OAuth::Client::Credentials.new(other_app.uid, other_app.secret)
+
+    request = described_class.new(server, refresh_token, credentials)
+    request.validate
+    expect(request.error).to eq(:invalid_grant)
   end
 
   it "rejects revoked tokens" do
