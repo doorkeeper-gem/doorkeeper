@@ -49,28 +49,27 @@ module Doorkeeper
       end
 
       def create_access_token
-        @access_token = server_config.access_token_model.create!(access_token_attributes)
-      end
+        attributes = {}
 
-      def access_token_attributes
-        attrs = {
-          application_id: refresh_token.application_id,
-          scopes: scopes.to_s,
+        resource_owner =
+          if Doorkeeper.config.polymorphic_resource_owner?
+            refresh_token.resource_owner
+          else
+            refresh_token.resource_owner_id
+          end
+
+        if refresh_token_revoked_on_use?
+          attributes[:previous_refresh_token] = refresh_token.refresh_token
+        end
+
+        @access_token = server_config.access_token_model.create_for(
+          application: refresh_token.application,
+          resource_owner: resource_owner,
+          scopes: scopes,
           expires_in: refresh_token.expires_in,
           use_refresh_token: true,
-        }
-
-        if Doorkeeper.config.polymorphic_resource_owner?
-          attrs[:resource_owner] = refresh_token.resource_owner
-        else
-          attrs[:resource_owner_id] = refresh_token.resource_owner_id
-        end
-
-        attrs.tap do |attributes|
-          if refresh_token_revoked_on_use?
-            attributes[:previous_refresh_token] = refresh_token.refresh_token
-          end
-        end
+          **attributes,
+        )
       end
 
       def validate_token_presence

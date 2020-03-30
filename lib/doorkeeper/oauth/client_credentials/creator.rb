@@ -14,8 +14,10 @@ module Doorkeeper
 
           with_revocation(existing_token: existing_token) do
             server_config.access_token_model.find_or_create_for(
-              client, nil, scopes, attributes[:expires_in],
-              attributes[:use_refresh_token],
+              application: client,
+              resource_owner: nil,
+              scopes: scopes,
+              **attributes,
             )
           end
         end
