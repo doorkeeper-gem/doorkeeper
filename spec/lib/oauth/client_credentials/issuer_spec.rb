@@ -8,7 +8,7 @@ class Doorkeeper::OAuth::ClientCredentialsRequest
     let(:server) do
       double(
         :server,
-        access_token_expires_in: ->(resource_owner_id = nil) { 100 },
+        access_token_expires_in: ->(_resource_owner_id = nil) { 100 },
       )
     end
     let(:validator) { double :validator, valid?: true }
