@@ -3,13 +3,11 @@
 require "spec_helper"
 
 describe Doorkeeper::OAuth::RefreshTokenRequest do
-
   let(:server) do
-    double :server, 
-            access_token_expires_in: ->(resource_owner_id = nil) { 2.hours },
-            custom_access_token_expires_in: ->(_context) { nil }
+    double :server,
+      access_token_expires_in: ->(_resource_owner_id = nil) { 2.hours },
+      custom_access_token_expires_in: ->(_context) { nil }
   end
-
 
   let(:refresh_token) do
     FactoryBot.create(:access_token, use_refresh_token: true)

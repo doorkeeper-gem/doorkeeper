@@ -160,7 +160,7 @@ describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
       double(
         :server,
         default_scopes: Doorkeeper::OAuth::Scopes.new,
-        access_token_expires_in: ->(resource_owner_id = nil) { 2.hours },
+        access_token_expires_in: ->(_resource_owner_id = nil) { 2.hours },
         refresh_token_enabled?: false,
         custom_access_token_expires_in: lambda { |context|
           if context.scopes.exists?("public")

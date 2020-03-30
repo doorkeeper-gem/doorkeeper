@@ -268,7 +268,7 @@ module Doorkeeper
     option :custom_introspection_response,        default: ->(_token, _context) { {} }
 
     option :skip_authorization,             default: ->(_routes) {}
-    option :access_token_expires_in,        default: ->(resource_owner_id = nil){ 7200 }
+    option :access_token_expires_in,        default: ->(_resource_owner_id = nil){ 7200 }
     option :custom_access_token_expires_in, default: ->(_context) { nil }
     option :authorization_code_expires_in,  default: 600
     option :orm,                            default: :active_record

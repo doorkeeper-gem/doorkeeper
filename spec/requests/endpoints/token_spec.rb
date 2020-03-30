@@ -38,14 +38,14 @@ describe "Token endpoint" do
   end
 
   it "returns null for expires_in when a permanent token is set" do
-    config_is_set(:access_token_expires_in, ->(resource_owner_id = nil) { nil })
+    config_is_set(:access_token_expires_in, ->(_resource_owner_id = nil) { nil })
     post token_endpoint_url(code: @authorization.token, client: @client)
     should_have_json "access_token", Doorkeeper::AccessToken.first.token
     should_not_have_json "expires_in"
   end
 
   it "returns a resource owner specific token timing" do
-    config_is_set(:access_token_expires_in, ->(resource_owner_id = Doorkeeper::AccessToken.first.resource_owner_id) { 3600 })
+    config_is_set(:access_token_expires_in, ->(_resource_owner_id = Doorkeeper::AccessToken.first.resource_owner_id) { 3600 })
     post token_endpoint_url(code: @authorization.token, client: @client)
     should_have_json "access_token", Doorkeeper::AccessToken.first.token
     should_have_json "expires_in", 3600

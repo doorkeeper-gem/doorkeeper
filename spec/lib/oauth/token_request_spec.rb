@@ -72,7 +72,7 @@ describe Doorkeeper::OAuth::TokenRequest do
       before do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
-          access_token_expires_in ->(resource_owner_id = nil) { 654 }
+          access_token_expires_in ->(_resource_owner_id = nil) { 654 }
           custom_access_token_expires_in do |_context|
             nil
           end

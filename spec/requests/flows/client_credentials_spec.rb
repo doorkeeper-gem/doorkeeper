@@ -63,7 +63,6 @@ describe "Client Credentials Request" do
           expect(response.status).to eq(400)
         end
       end
-
     end
   end
 
