@@ -40,7 +40,7 @@ describe Doorkeeper::TokensController do
     end
 
     it "includes token expiration in response" do
-      expect(subject["expires_in"].to_i).to eq(Doorkeeper.configuration.access_token_expires_in)
+      expect(subject["expires_in"].to_i).to eq(Doorkeeper.configuration.access_token_expires_in.call)
     end
 
     it "issues the token for the current client" do

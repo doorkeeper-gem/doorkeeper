@@ -23,14 +23,14 @@ module Doorkeeper
             )
           end
 
-          def access_token_expires_in(configuration, context)
+          def access_token_expires_in(configuration, context, resource_owner_id = nil)
             if configuration.option_defined?(:custom_access_token_expires_in)
               expiration = configuration.custom_access_token_expires_in.call(context)
               return nil if expiration == Float::INFINITY
 
-              expiration || configuration.access_token_expires_in
+              expiration || configuration.access_token_expires_in[resource_owner_id]
             else
-              configuration.access_token_expires_in
+              configuration.access_token_expires_in[resource_owner_id]
             end
           end
 
@@ -61,7 +61,7 @@ module Doorkeeper
             pre_auth.client,
             resource_owner,
             pre_auth.scopes,
-            self.class.access_token_expires_in(Doorkeeper.config, context),
+            self.class.access_token_expires_in(Doorkeeper.config, context, resource_owner.try(:id)),
             false,
           )
         end

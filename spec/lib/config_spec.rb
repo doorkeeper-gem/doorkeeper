@@ -92,7 +92,7 @@ describe Doorkeeper, "configuration" do
 
   describe "access_token_expires_in" do
     it "has 2 hours by default" do
-      expect(subject.access_token_expires_in).to eq(2.hours)
+      expect(subject.access_token_expires_in.call).to eq(2.hours)
     end
 
     it "can change the value" do

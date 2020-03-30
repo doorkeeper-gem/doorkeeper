@@ -6,7 +6,7 @@ describe Doorkeeper::OAuth::ClientCredentialsRequest do
   let(:server) do
     double(
       default_scopes: nil,
-      access_token_expires_in: 2.hours,
+      access_token_expires_in: ->(resource_owner_id = nil) { 2.hours },
       custom_access_token_expires_in: ->(_context) { nil },
     )
   end
@@ -86,7 +86,7 @@ describe Doorkeeper::OAuth::ClientCredentialsRequest do
     before do
       allow(server).to receive(:default_scopes).and_return(default_scopes)
       allow(server).to receive(:scopes).and_return(server_scopes)
-      allow(server).to receive(:access_token_expires_in).and_return(100)
+      allow(server).to receive(:access_token_expires_in).and_return(->(resource_owner_id = nil) { 100 })
       allow(application).to receive(:scopes).and_return(client_scopes)
       allow(client).to receive(:id).and_return(nil)
     end
