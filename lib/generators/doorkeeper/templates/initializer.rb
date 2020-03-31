@@ -403,7 +403,7 @@ Doorkeeper.configure do
   # or add any other functionality. Inside the block you have an access
   # to `controller` (authorizations controller instance) and `context`
   # (Doorkeeper::OAuth::Hooks::Context instance) which provides pre auth
-  # or auth objects based on hook type (before or after).
+  # or auth objects with issued token based on hook type (before or after).
   #
   # before_successful_authorization do |controller, context|
   #   Rails.logger.info(controller.request.params.inspect)
@@ -417,7 +417,8 @@ Doorkeeper.configure do
   #       .find_by(controller.request.params.slice(:redirect_uri))
   #       .logout_uri
   #
-  #    Rails.logger.info(context.auth.inspect)
+  #   Rails.logger.info(context.auth.inspect)
+  #   Rails.logger.info(context.issued_token)
   # end
 
   # Under some circumstances you might want to have applications auto-approved,

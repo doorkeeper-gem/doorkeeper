@@ -9,12 +9,12 @@ module Doorkeeper
     end
 
     def authorization_request(strategy)
-      klass = Request.authorization_strategy strategy
+      klass = Request.authorization_strategy(strategy)
       klass.new(self)
     end
 
     def token_request(strategy)
-      klass = Request.token_strategy strategy
+      klass = Request.token_strategy(strategy)
       klass.new(self)
     end
 

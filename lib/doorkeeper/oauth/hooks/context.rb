@@ -11,6 +11,10 @@ module Doorkeeper
             instance_variable_set(:"@#{name}", value) if respond_to?(name)
           end
         end
+
+        def issued_token
+          auth&.issued_token
+        end
       end
     end
   end
