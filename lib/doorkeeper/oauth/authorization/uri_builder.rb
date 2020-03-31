@@ -8,9 +8,9 @@ module Doorkeeper
       class URIBuilder
         class << self
           def uri_with_query(url, parameters = {})
-            uri            = URI.parse(url)
+            uri = URI.parse(url)
             original_query = Rack::Utils.parse_query(uri.query)
-            uri.query      = build_query(original_query.merge(parameters))
+            uri.query = build_query(original_query.merge(parameters))
             uri.to_s
           end
 
@@ -23,8 +23,8 @@ module Doorkeeper
           private
 
           def build_query(parameters = {})
-            parameters = parameters.reject { |_, v| v.blank? }
-            Rack::Utils.build_query parameters
+            parameters = parameters.reject { |_, value| value.blank? }
+            Rack::Utils.build_query(parameters)
           end
         end
       end

@@ -17,8 +17,12 @@ module Doorkeeper
         true
       end
 
+      def issued_token
+        auth.token
+      end
+
       def redirect_uri
-        if URIChecker.oob_uri? pre_auth.redirect_uri
+        if URIChecker.oob_uri?(pre_auth.redirect_uri)
           auth.oob_redirect
         elsif response_on_fragment
           Authorization::URIBuilder.uri_with_fragment(
