@@ -1,0 +1,56 @@
+name: Check ORM changes
+on:
+  push:
+    branches:
+      - master
+jobs:
+  check_orm_changes_and_notify:
+    name: Notify ORM extensions about required code updates
+    runs-on: ubuntu-latest
+    env:
+      ISSUE_TITLE: "ORM requires update due to latest Doorkeeper changes"
+      ISSUE_BODY: |
+        Doorkeeper has ORM changes merged to `master` branch.
+
+        See https://github.com/doorkeeper-gem/doorkeeper/commit/${{ github.sha }} for the details.
+      ISSUE_LABELS: ORM
+    steps:
+    - name: List & cache git modified files
+      id: changed_files
+      uses: lots0logs/gh-action-get-changed-files@2.0.6
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Check if ORM files were changed
+      id: check_orm_files
+      run: |
+        changed_files=$(cat ${HOME}/files.json)
+
+        if [[ $changed_files == *"lib/doorkeeper/orm/active_record"* ]] || \
+           [[ $changed_files == *"lib/doorkeeper/models/"* ]];
+        then
+          echo "ORM files changes detected!"
+          echo "::set-env name=ORM_CHANGES::yes"
+        else
+          echo "No changes in ORM files, exiting"
+        fi
+    - name: Create an issue for Mongo extension
+      id: create_mongodb_issue
+      if: env.ORM_CHANGES == 'yes'
+      uses: maxkomarychev/oction-create-issue@v0.7.1
+      with:
+        token: ${{ secrets.DOORKEEPER_ACTIONS_TOKEN }}
+        title: ${{ env.ISSUE_TITLE }}
+        body: ${{ env.ISSUE_BODY }}
+        repo: doorkeeper-mongodb
+        labels: ${{ env.ISSUE_LABELS}}
+    - name: Create an issue for Sequel extension
+      id: create_sequel_issue
+      if: env.ORM_CHANGES == 'yes'
+      uses: maxkomarychev/oction-create-issue@v0.7.1
+      with:
+        token: ${{ secrets.DOORKEEPER_ACTIONS_TOKEN }}
+        title: ${{ env.ISSUE_TITLE }}
+        body: ${{ env.ISSUE_BODY }}
+        owner: nbulaj
+        repo: doorkeeper-sequel
+        labels: ${{ env.ISSUE_LABELS}}
