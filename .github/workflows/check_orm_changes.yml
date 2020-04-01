@@ -1,4 +1,4 @@
-name: Chech ORM changes
+name: Check ORM changes
 on:
   push:
     branches:
