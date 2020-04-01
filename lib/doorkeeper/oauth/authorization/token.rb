@@ -58,11 +58,11 @@ module Doorkeeper
           )
 
           @token = Doorkeeper.config.access_token_model.find_or_create_for(
-            pre_auth.client,
-            resource_owner,
-            pre_auth.scopes,
-            self.class.access_token_expires_in(Doorkeeper.config, context),
-            false,
+            application: pre_auth.client,
+            resource_owner: resource_owner,
+            scopes: pre_auth.scopes,
+            expires_in: self.class.access_token_expires_in(Doorkeeper.config, context),
+            use_refresh_token: false,
           )
         end
 
