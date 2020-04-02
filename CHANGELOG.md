@@ -10,6 +10,7 @@ User-visible changes worth mentioning.
 - [#1354] Add `authorize_resource_owner_for_client` option to authorize the calling user to access an application.
 - [#1355] Allow to enable polymorphic Resource Owner association for Access Token & Grant
   models (`use_polymorphic_resource_owner` configuration option).
+- [#1392] Fix/enable_polymorphic_resource_owner generator.
   
   **[IMPORTANT]** Review your custom patches or extensions for Doorkeeper internals if you
   have such - since now Doorkeeper passes Resource Owner instance to every objects and not
