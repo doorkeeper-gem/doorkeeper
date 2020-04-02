@@ -5,7 +5,7 @@ class EnablePolymorphicResourceOwner < ActiveRecord::Migration<%= migration_vers
     add_column :oauth_access_tokens, :resource_owner_type, :string
     add_column :oauth_access_grants, :resource_owner_type, :string, null: false
 
-    add_index :oauth_access_tokens, [:resource_owner_id, :resource_owner_type]
-    add_index :oauth_access_grants, [:resource_owner_id, :resource_owner_type]
+    add_index :oauth_access_tokens, [:resource_owner_id, :resource_owner_type], name: 'polymorphic_owner_oauth_access_tokens'
+    add_index :oauth_access_grants, [:resource_owner_id, :resource_owner_type], name: 'polymorphic_owner_oauth_access_grants'
   end
 end
