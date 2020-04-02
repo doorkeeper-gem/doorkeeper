@@ -8,7 +8,7 @@ module Doorkeeper
   # database columns for Doorkeeper Access Token and Access Grant
   # models.
   #
-  class PolymorphicResourceOwnerGenerator < ::Rails::Generators::Base
+  class EnablePolymorphicResourceOwnerGenerator < ::Rails::Generators::Base
     include ::Rails::Generators::Migration
     source_root File.expand_path("templates", __dir__)
     desc "Provide support for polymorphic Resource Owner."

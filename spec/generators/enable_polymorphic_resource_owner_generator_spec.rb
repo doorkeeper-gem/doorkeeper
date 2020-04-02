@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "generators/doorkeeper/polymorphic_resource_owner_generator"
+require "generators/doorkeeper/enable_polymorphic_resource_owner_generator"
 
-describe "Doorkeeper::PolymorphicResourceOwnerGenerator" do
+describe "Doorkeeper::EnablePolymorphicResourceOwnerGenerator" do
   include GeneratorSpec::TestCase
 
-  tests Doorkeeper::PolymorphicResourceOwnerGenerator
+  tests Doorkeeper::EnablePolymorphicResourceOwnerGenerator
   destination ::File.expand_path("../tmp/dummy", __FILE__)
 
   describe "after running the generator" do
