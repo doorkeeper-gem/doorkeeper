@@ -19,7 +19,7 @@ describe "Doorkeeper::EnablePolymorphicResourceOwnerGenerator" do
       )
     end
 
-    it "creates a migration with a version specifier" do
+    it "creates a migration with a version specifier and changes the initializer" do
       stub_const("ActiveRecord::VERSION::MAJOR", 5)
       stub_const("ActiveRecord::VERSION::MINOR", 0)
 
