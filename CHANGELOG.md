@@ -85,6 +85,9 @@ User-visible changes worth mentioning.
 - [#1298] Slice strong params so doesn't error with Rails forms.
 - [#1300] Limiting access to attributes of pre_authorization.
 - [#1296] Adding client_id to strong parameters.
+
+  **[IMPORTANT]** `Doorkeeper::Server#client_via_uid` was removed.
+
 - [#1293] Move ar specific redirect uri validator to ar orm directory.
 - [#1288] Allow to pass attributes to the `Doorkeeper::OAuth::PreAuthorization#as_json` method to customize
   the PreAuthorization response.
