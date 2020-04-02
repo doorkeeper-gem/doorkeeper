@@ -56,7 +56,7 @@ describe Doorkeeper::OAuth::ErrorResponse do
     describe "WWW-Authenticate header" do
       subject { error_response.headers["WWW-Authenticate"] }
 
-      it { expect(subject).to include("realm=\"#{error_response.realm}\"") }
+      it { expect(subject).to include("realm=\"#{error_response.send(:realm)}\"") }
       it { expect(subject).to include("error=\"#{error_response.name}\"") }
       it { expect(subject).to include("error_description=\"#{error_response.description}\"") }
     end

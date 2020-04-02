@@ -7,9 +7,9 @@ module Doorkeeper
         attr_reader :client, :grant_type, :scopes
 
         def initialize(client, grant_type, scopes)
-          @client     = client
+          @client = client
           @grant_type = grant_type
-          @scopes     = scopes
+          @scopes = scopes
         end
       end
     end

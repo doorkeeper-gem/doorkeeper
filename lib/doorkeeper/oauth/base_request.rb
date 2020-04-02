@@ -10,8 +10,6 @@ module Doorkeeper
       delegate :default_scopes, to: :server
 
       def authorize
-        validate
-
         if valid?
           before_successful_response
           @response = TokenResponse.new(access_token)
@@ -26,10 +24,6 @@ module Doorkeeper
 
       def scopes
         @scopes ||= build_scopes
-      end
-
-      def valid?
-        error.nil?
       end
 
       def find_or_create_access_token(client, resource_owner, scopes, server)

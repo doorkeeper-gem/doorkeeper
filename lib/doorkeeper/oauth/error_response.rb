@@ -67,10 +67,8 @@ module Doorkeeper
 
       protected
 
-      delegate :realm, to: :configuration
-
-      def configuration
-        Doorkeeper.config
+      def realm
+        Doorkeeper.config.realm
       end
 
       def exception_class

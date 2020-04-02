@@ -88,8 +88,8 @@ module Doorkeeper
         )
       end
 
-      # if either side (server or client) request pkce, check the verifier
-      # against the DB - if pkce is supported
+      # if either side (server or client) request PKCE, check the verifier
+      # against the DB - if PKCE is supported
       def validate_code_verifier
         return true unless grant.uses_pkce? || code_verifier
         return false unless pkce_supported?

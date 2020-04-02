@@ -207,20 +207,4 @@ describe Doorkeeper::OAuth::BaseRequest do
       end
     end
   end
-
-  describe "#valid?" do
-    context "error is nil" do
-      it "returns true" do
-        allow(subject).to receive(:error).and_return(nil).once
-        expect(subject.valid?).to eq(true)
-      end
-    end
-
-    context "error is not nil" do
-      it "returns false" do
-        allow(subject).to receive(:error).and_return(Object.new).once
-        expect(subject.valid?).to eq(false)
-      end
-    end
-  end
 end

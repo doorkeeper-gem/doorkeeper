@@ -6,7 +6,7 @@ module Doorkeeper
       attr_reader :pre_auth, :resource_owner
 
       def initialize(pre_auth, resource_owner)
-        @pre_auth       = pre_auth
+        @pre_auth = pre_auth
         @resource_owner = resource_owner
       end
 
