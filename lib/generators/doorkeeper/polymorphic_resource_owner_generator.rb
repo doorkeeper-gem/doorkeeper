@@ -13,11 +13,16 @@ module Doorkeeper
     source_root File.expand_path("templates", __dir__)
     desc "Provide support for polymorphic Resource Owner."
 
-    def polymorphic_resource_owner
+    def enable_polymorphic_resource_owner
       migration_template(
         "enable_polymorphic_resource_owner_migration.rb.erb",
         "db/migrate/enable_polymorphic_resource_owner.rb",
         migration_version: migration_version,
+      )
+      gsub_file(
+        "config/initializers/doorkeeper.rb",
+        "# use_polymorphic_resource_owner",
+        "use_polymorphic_resource_owner",
       )
     end
 

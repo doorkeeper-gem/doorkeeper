@@ -12,6 +12,11 @@ describe "Doorkeeper::PolymorphicResourceOwnerGenerator" do
   describe "after running the generator" do
     before :each do
       prepare_destination
+      FileUtils.mkdir_p(::File.expand_path("config/initializers", Pathname(destination_root)))
+      FileUtils.copy_file(
+        ::File.expand_path("../../lib/generators/doorkeeper/templates/initializer.rb", __dir__),
+        ::File.expand_path("config/initializers/doorkeeper.rb", Pathname.new(destination_root)),
+      )
     end
 
     it "creates a migration with a version specifier" do
@@ -23,6 +28,20 @@ describe "Doorkeeper::PolymorphicResourceOwnerGenerator" do
       assert_migration "db/migrate/enable_polymorphic_resource_owner.rb" do |migration|
         assert migration.include?("ActiveRecord::Migration[5.0]\n")
       end
+
+      # generator_spec gem requires such block definition :(
+      #
+      # rubocop:disable Style/BlockDelimiters
+      expect(destination_root).to(have_structure {
+        directory "config" do
+          directory "initializers" do
+            file "doorkeeper.rb" do
+              contains "  use_polymorphic_resource_owner"
+            end
+          end
+        end
+      })
+      # rubocop:enable Style/BlockDelimiters
     end
   end
 end
