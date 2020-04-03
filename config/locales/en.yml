@@ -51,12 +51,14 @@ en:
         title: 'New Application'
       show:
         title: 'Application: %{name}'
-        application_id: 'Application UID'
+        application_id: 'UID'
         secret: 'Secret'
+        secret_hashed: 'Secret hashed'
         scopes: 'Scopes'
         confidential: 'Confidential'
         callback_urls: 'Callback urls'
         actions: 'Actions'
+        not_defined: 'Not defined'
 
     authorizations:
       buttons:

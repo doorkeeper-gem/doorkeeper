@@ -34,6 +34,7 @@ User-visible changes worth mentioning.
 - [#1374] Revoke and issue client credentials token in a transaction with a row lock.
 - [#1384] Add context object with auth/pre_auth and issued_token for authorization hooks.
 - [#1387] Add `AccessToken#create_for` and use in `RefreshTokenRequest`.
+- [#1393] Improve Applications #show page with more informative data on client secret and scopes.
 
 ## 5.3.1
 
