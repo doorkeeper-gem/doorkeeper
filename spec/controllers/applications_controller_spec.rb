@@ -167,8 +167,8 @@ module Doorkeeper
 
           # We don't know the application secret here (because its hashed) so we can not assert its text on the page
           # Instead, we read it from the page and then check if it matches the application secret
-          code_element = %r{<code.*id="secret".*>(.*)<\/code>}.match(response.body)
-          secret_from_page = code_element[1]
+          code_element = /code.*id="secret">\s*\K([^<]*)/m.match(response.body)
+          secret_from_page = code_element[1].strip
 
           expect(response.body).to have_selector("code#application_id", text: application.uid)
           expect(response.body).to have_selector("code#secret")

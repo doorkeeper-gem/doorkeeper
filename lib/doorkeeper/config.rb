@@ -499,6 +499,10 @@ module Doorkeeper
       handle_auth_errors == :raise
     end
 
+    def application_secret_hashed?
+      instance_variable_defined?(:"@application_secret_strategy")
+    end
+
     def token_secret_strategy
       @token_secret_strategy ||= ::Doorkeeper::SecretStoring::Plain
     end
