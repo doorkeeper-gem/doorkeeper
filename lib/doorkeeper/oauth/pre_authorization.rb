@@ -18,15 +18,15 @@ module Doorkeeper
       attr_reader :server, :client_id, :client, :redirect_uri, :response_type, :state,
                   :code_challenge, :code_challenge_method, :missing_param, :resource_owner
 
-      def initialize(server, attrs = {}, resource_owner = nil)
+      def initialize(server, parameters = {}, resource_owner = nil)
         @server                = server
-        @client_id             = attrs[:client_id]
-        @response_type         = attrs[:response_type]
-        @redirect_uri          = attrs[:redirect_uri]
-        @scope                 = attrs[:scope]
-        @state                 = attrs[:state]
-        @code_challenge        = attrs[:code_challenge]
-        @code_challenge_method = attrs[:code_challenge_method]
+        @client_id             = parameters[:client_id]
+        @response_type         = parameters[:response_type]
+        @redirect_uri          = parameters[:redirect_uri]
+        @scope                 = parameters[:scope]
+        @state                 = parameters[:state]
+        @code_challenge        = parameters[:code_challenge]
+        @code_challenge_method = parameters[:code_challenge_method]
         @resource_owner        = resource_owner
       end
 
@@ -34,12 +34,8 @@ module Doorkeeper
         valid?
       end
 
-      def validate_client_supports_grant_flow
-        Doorkeeper.config.allow_grant_flow_for_client?(grant_type, client.application)
-      end
-
       def scopes
-        Scopes.from_string scope
+        Scopes.from_string(scope)
       end
 
       def scope
@@ -83,6 +79,10 @@ module Doorkeeper
         @client.present?
       end
 
+      def validate_client_supports_grant_flow
+        Doorkeeper.config.allow_grant_flow_for_client?(grant_type, client.application)
+      end
+
       def validate_redirect_uri
         return false if redirect_uri.blank?
 
@@ -115,17 +115,22 @@ module Doorkeeper
         )
       end
 
-      def grant_type
-        response_type == "code" ? AUTHORIZATION_CODE : IMPLICIT
-      end
-
       def validate_code_challenge_method
         code_challenge.blank? ||
           (code_challenge_method.present? && code_challenge_method =~ /^plain$|^S256$/)
       end
 
+      def validate_resource_owner_authorize_for_client
+        # The `authorize_resource_owner_for_client` config option is used for this validation
+        client.application.authorized_for_resource_owner?(@resource_owner)
+      end
+
       def response_on_fragment?
         response_type == "token"
+      end
+
+      def grant_type
+        response_type == "code" ? AUTHORIZATION_CODE : IMPLICIT
       end
 
       def pre_auth_hash
@@ -138,11 +143,6 @@ module Doorkeeper
           client_name: client.name,
           status: I18n.t("doorkeeper.pre_authorization.status"),
         }
-      end
-
-      def validate_resource_owner_authorize_for_client
-        # The `authorize_resource_owner_for_client` config option is used for this validation
-        client.application.authorized_for_resource_owner?(@resource_owner)
       end
     end
   end

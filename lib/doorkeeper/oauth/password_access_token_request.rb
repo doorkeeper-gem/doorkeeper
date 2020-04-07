@@ -29,13 +29,12 @@ module Doorkeeper
       end
 
       def validate_scopes
-        client_scopes = client.try(:scopes)
         return true if scopes.blank?
 
         ScopeChecker.valid?(
           scope_str: scopes.to_s,
           server_scopes: server.scopes,
-          app_scopes: client_scopes,
+          app_scopes: client.try(:scopes),
           grant_type: grant_type,
         )
       end
