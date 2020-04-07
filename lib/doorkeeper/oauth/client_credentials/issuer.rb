@@ -2,7 +2,7 @@
 
 module Doorkeeper
   module OAuth
-    class ClientCredentialsRequest < BaseRequest
+    module ClientCredentials
       class Issuer
         attr_reader :token, :validator, :error
 

@@ -21,7 +21,10 @@ module Doorkeeper
       end
 
       def issuer
-        @issuer ||= Issuer.new(server, Validator.new(server, self))
+        @issuer ||= ClientCredentials::Issuer.new(
+          server,
+          ClientCredentials::Validator.new(server, self),
+        )
       end
 
       private

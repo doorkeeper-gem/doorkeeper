@@ -5,6 +5,7 @@ require:
 AllCops:
   TargetRubyVersion: 2.4
   Exclude:
+    - "spec/generators/tmp/**/*"
     - "spec/dummy/db/*"
     - "spec/dummy/config/*"
     - "Dangerfile"
@@ -45,6 +46,12 @@ Style/NumericPredicate:
   Enabled: false
 Style/DoubleNegation:
   Enabled: false
+Style/HashEachMethods:
+  Enabled: true
+Style/HashTransformKeys:
+  Enabled: true
+Style/HashTransformValues:
+  Enabled: true
 
 Layout/MultilineMethodCallIndentation:
   EnforcedStyle: indented
@@ -65,5 +72,10 @@ Rails/HttpStatus:
 Rails/RakeEnvironment:
   Exclude:
     - Rakefile
+Rails/ReflectionClassName:
+  Exclude:
+    - 'lib/doorkeeper/orm/active_record/mixins/access_grant.rb'
+    - 'lib/doorkeeper/orm/active_record/mixins/access_token.rb'
+    - 'lib/doorkeeper/orm/active_record/mixins/application.rb'
 Rails/SkipsModelValidations:
   Enabled: false

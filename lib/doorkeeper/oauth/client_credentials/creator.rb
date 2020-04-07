@@ -2,7 +2,7 @@
 
 module Doorkeeper
   module OAuth
-    class ClientCredentialsRequest < BaseRequest
+    module ClientCredentials
       class Creator
         def call(client, scopes, attributes = {})
           existing_token = nil
