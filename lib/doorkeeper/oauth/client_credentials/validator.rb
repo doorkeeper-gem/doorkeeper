@@ -2,7 +2,7 @@
 
 module Doorkeeper
   module OAuth
-    class ClientCredentialsRequest < BaseRequest
+    module ClientCredentials
       class Validator
         include Validations
         include OAuth::Helpers

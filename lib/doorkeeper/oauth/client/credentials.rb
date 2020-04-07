@@ -27,9 +27,7 @@ module Doorkeeper
 
         # Public clients may have their secret blank, but "credentials" are
         # still present
-        def blank?
-          uid.blank?
-        end
+        delegate :blank?, to: :uid
       end
     end
   end

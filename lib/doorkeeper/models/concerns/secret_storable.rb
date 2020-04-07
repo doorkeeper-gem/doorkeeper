@@ -25,9 +25,7 @@ module Doorkeeper
         # @return [Boolean]
         #   Whether input matches secret as per the secret strategy
         #
-        def secret_matches?(input, secret)
-          secret_strategy.secret_matches?(input, secret)
-        end
+        delegate :secret_matches?, to: :secret_strategy
 
         # Returns an instance of the Doorkeeper::AccessToken with
         # specific token value.
