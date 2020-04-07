@@ -7,6 +7,7 @@ jobs:
   check_orm_changes_and_notify:
     name: Notify ORM extensions about required code updates
     runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'ci skip')"
     env:
       ISSUE_TITLE: "ORM requires update due to latest Doorkeeper changes"
       ISSUE_BODY: |

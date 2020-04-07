@@ -102,7 +102,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       end
     end
 
-    class_methods do
+    module ClassMethods
       # Returns Applications associated with active (not revoked) Access Tokens
       # that are owned by the specific Resource Owner.
       #

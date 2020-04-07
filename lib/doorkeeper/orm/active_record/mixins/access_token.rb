@@ -29,7 +29,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
                         on: :create, if: :use_refresh_token?
     end
 
-    class_methods do
+    module ClassMethods
       # Searches for not revoked Access Tokens associated with the
       # specific Resource Owner.
       #
