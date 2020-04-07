@@ -10,7 +10,6 @@ User-visible changes worth mentioning.
 - [#1354] Add `authorize_resource_owner_for_client` option to authorize the calling user to access an application.
 - [#1355] Allow to enable polymorphic Resource Owner association for Access Token & Grant
   models (`use_polymorphic_resource_owner` configuration option).
-- [#1392] Fix `enable_polymorphic_resource_owner` migration template to have proper index name.
   
   **[IMPORTANT]** Review your custom patches or extensions for Doorkeeper internals if you
   have such - since now Doorkeeper passes Resource Owner instance to every objects and not
@@ -34,6 +33,7 @@ User-visible changes worth mentioning.
 - [#1374] Revoke and issue client credentials token in a transaction with a row lock.
 - [#1384] Add context object with auth/pre_auth and issued_token for authorization hooks.
 - [#1387] Add `AccessToken#create_for` and use in `RefreshTokenRequest`.
+- [#1392] Fix `enable_polymorphic_resource_owner` migration template to have proper index name.
 - [#1393] Improve Applications #show page with more informative data on client secret and scopes.
 - [#1394] Use Ruby `autoload` feature to load Doorkeeper files.
 
