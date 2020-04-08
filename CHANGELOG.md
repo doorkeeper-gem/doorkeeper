@@ -6,6 +6,10 @@ upgrade guides.
 User-visible changes worth mentioning.
 
 ## master
+
+- [#PR number] Your changes description.
+
+## 5.4.0.rc1
 - [#1366] Sets expiry of token generated using `refresh_token` to that of original token. (Fixes #1364) 
 - [#1354] Add `authorize_resource_owner_for_client` option to authorize the calling user to access an application.
 - [#1355] Allow to enable polymorphic Resource Owner association for Access Token & Grant
