@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
-- [#PR number] Your changes description.
+- [#1395] Fix `NameError: uninitialized constant Doorkeeper::AccessToken` for Rake tasks.
 
 ## 5.4.0.rc1
 - [#1366] Sets expiry of token generated using `refresh_token` to that of original token. (Fixes #1364) 

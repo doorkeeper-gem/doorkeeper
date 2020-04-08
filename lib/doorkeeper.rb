@@ -6,8 +6,8 @@ require "doorkeeper/engine"
 # Main Doorkeeper namespace.
 #
 module Doorkeeper
-  autoload :OAuth, "doorkeeper/oauth"
   autoload :Errors, "doorkeeper/errors"
+  autoload :OAuth, "doorkeeper/oauth"
   autoload :Rake, "doorkeeper/rake"
   autoload :Request, "doorkeeper/request"
   autoload :Server, "doorkeeper/server"
