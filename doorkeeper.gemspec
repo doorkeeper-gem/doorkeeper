@@ -14,8 +14,12 @@ Gem::Specification.new do |gem|
   gem.description = "Doorkeeper is an OAuth 2 provider for Rails and Grape."
   gem.license     = "MIT"
 
-  gem.files         = `git ls-files`.split("\n").reject { |file| file.start_with?(".") }
-  gem.test_files    = `git ls-files -- spec/*`.split("\n")
+  gem.files = Dir[
+    "{app,config,lib,vendor}/**/*",
+    "CHANGELOG.md",
+    "MIT-LICENSE",
+    "README.md",
+  ]
   gem.require_paths = ["lib"]
 
   gem.metadata = {
