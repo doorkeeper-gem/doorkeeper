@@ -20,7 +20,7 @@ module Doorkeeper
       # @return [Doorkeeper::Config] config instance
       #
       def build
-        @config.validate if @config.respond_to?(:validate)
+        @config.validate! if @config.respond_to?(:validate!)
         @config
       end
     end

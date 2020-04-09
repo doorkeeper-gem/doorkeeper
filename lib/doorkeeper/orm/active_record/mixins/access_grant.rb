@@ -9,7 +9,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
 
       include ::Doorkeeper::AccessGrantMixin
 
-      belongs_to :application, class_name: Doorkeeper.config.application_class,
+      belongs_to :application, class_name: Doorkeeper.config.application_class.to_s,
                                optional: true,
                                inverse_of: :access_grants
 

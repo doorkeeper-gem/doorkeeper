@@ -13,7 +13,7 @@ module Doorkeeper
     include Models::Scopes
     include Models::ResourceOwnerable
 
-    # never uses pkce, if pkce migrations were not generated
+    # Never uses PKCE if PKCE migrations were not generated
     def uses_pkce?
       self.class.pkce_supported? && code_challenge.present?
     end
@@ -24,8 +24,8 @@ module Doorkeeper
       #
       # @param token [#to_s] token value (any object that responds to `#to_s`)
       #
-      # @return [Doorkeeper::AccessGrant, nil] AccessGrant object or nil
-      #   if there is no record with such token
+      # @return [Doorkeeper::AccessGrant, nil]
+      #   AccessGrant object or nil if there is no record with such token
       #
       def by_token(token)
         find_by_plaintext_token(:token, token)
@@ -36,8 +36,8 @@ module Doorkeeper
       #
       # @param application_id [Integer]
       #   ID of the Application
-      # @param resource_owner [ActiveRecord::Base]
-      #   instance of the Resource Owner model
+      # @param resource_owner [ActiveRecord::Base, Integer]
+      #   instance of the Resource Owner model or it's ID
       #
       def revoke_all_for(application_id, resource_owner, clock = Time)
         by_resource_owner(resource_owner)
@@ -100,6 +100,9 @@ module Doorkeeper
       ##
       # Determines the secret storing transformer
       # Unless configured otherwise, uses the plain secret strategy
+      #
+      # @return [Doorkeeper::SecretStoring::Base]
+      #
       def secret_strategy
         ::Doorkeeper.config.token_secret_strategy
       end
@@ -107,6 +110,9 @@ module Doorkeeper
       ##
       # Determine the fallback storing strategy
       # Unless configured, there will be no fallback
+      #
+      # @return [Doorkeeper::SecretStoring::Base]
+      #
       def fallback_secret_strategy
         ::Doorkeeper.config.token_secret_fallback_strategy
       end

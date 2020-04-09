@@ -105,7 +105,7 @@ describe Doorkeeper::OAuth::ClientCredentials::Creator do
     let!(:existing_token) { subject.call(client, scopes, expires_in: 1000) }
 
     before do
-      allow(Doorkeeper.configuration).to receive(:revoke_previous_client_credentials_token).and_return(true)
+      allow(Doorkeeper.configuration).to receive(:revoke_previous_client_credentials_token?).and_return(true)
     end
 
     it "revokes the existing token" do
@@ -118,7 +118,7 @@ describe Doorkeeper::OAuth::ClientCredentials::Creator do
     let!(:existing_token) { subject.call(client, scopes, expires_in: 1000) }
 
     before do
-      allow(Doorkeeper.configuration).to receive(:revoke_previous_client_credentials_token).and_return(false)
+      allow(Doorkeeper.configuration).to receive(:revoke_previous_client_credentials_token?).and_return(false)
     end
 
     it "does not revoke the existing token" do

@@ -12,6 +12,8 @@ require "doorkeeper"
 # require "pry"
 # Pry.start
 
+Rails.logger = Logger.new(STDOUT)
+
 # Default Doorkeeper config
 Doorkeeper.configure do
   orm :active_record

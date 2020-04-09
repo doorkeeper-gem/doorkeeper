@@ -36,7 +36,7 @@ module Doorkeeper
 
       # :doc:
       def doorkeeper_token
-        @doorkeeper_token ||= OAuth::Token.authenticate request, *config_methods
+        @doorkeeper_token ||= OAuth::Token.authenticate(request, *config_methods)
       end
 
       def config_methods
@@ -58,10 +58,10 @@ module Doorkeeper
       end
 
       def handle_token_exception(exception)
-        error = get_error_response_from_exception exception
-        headers.merge! error.headers
+        error = get_error_response_from_exception(exception)
+        headers.merge!(error.headers)
         self.response_body = error.body.to_json
-        self.status        = error.status
+        self.status = error.status
       end
 
       def skip_authorization?

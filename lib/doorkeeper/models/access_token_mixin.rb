@@ -61,8 +61,8 @@ module Doorkeeper
       #
       # @param application_id [Integer]
       #   ID of the Application
-      # @param resource_owner [ActiveRecord::Base]
-      #   instance of the Resource Owner model
+      # @param resource_owner [ActiveRecord::Base, Integer]
+      #   instance of the Resource Owner model or it's ID
       #
       def revoke_all_for(application_id, resource_owner, clock = Time)
         by_resource_owner(resource_owner)
@@ -230,10 +230,11 @@ module Doorkeeper
       #
       # @param application_id [Integer]
       #   ID of the Application model instance
-      # @param resource_owner [Integer]
-      #   ID of the Resource Owner model instance
+      # @param resource_owner [ActiveRecord::Base, Integer]
+      #   Resource Owner model instance or it's ID
       #
-      # @return [Doorkeeper::AccessToken] array of matching AccessToken objects
+      # @return [ActiveRecord::Relation]
+      #   collection of matching AccessToken objects
       #
       def authorized_tokens_for(application_id, resource_owner)
         by_resource_owner(resource_owner).where(
@@ -262,6 +263,9 @@ module Doorkeeper
       ##
       # Determines the secret storing transformer
       # Unless configured otherwise, uses the plain secret strategy
+      #
+      # @return [Doorkeeper::SecretStoring::Base]
+      #
       def secret_strategy
         ::Doorkeeper.config.token_secret_strategy
       end

@@ -12,12 +12,12 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       has_many :access_grants,
                foreign_key: :application_id,
                dependent: :delete_all,
-               class_name: Doorkeeper.config.access_grant_class
+               class_name: Doorkeeper.config.access_grant_class.to_s
 
       has_many :access_tokens,
                foreign_key: :application_id,
                dependent: :delete_all,
-               class_name: Doorkeeper.config.access_token_class
+               class_name: Doorkeeper.config.access_token_class.to_s
 
       validates :name, :secret, :uid, presence: true
       validates :uid, uniqueness: { case_sensitive: true }
@@ -31,7 +31,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       has_many :authorized_tokens,
                -> { where(revoked_at: nil) },
                foreign_key: :application_id,
-               class_name: Doorkeeper.config.access_token_class
+               class_name: Doorkeeper.config.access_token_class.to_s
 
       has_many :authorized_applications,
                through: :authorized_tokens,

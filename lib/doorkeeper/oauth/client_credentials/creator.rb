@@ -25,7 +25,7 @@ module Doorkeeper
         private
 
         def with_revocation(existing_token:)
-          if existing_token && server_config.revoke_previous_client_credentials_token
+          if existing_token && server_config.revoke_previous_client_credentials_token?
             existing_token.with_lock do
               raise Errors::DoorkeeperError, :invalid_token_reuse if existing_token.revoked?
 
@@ -39,7 +39,7 @@ module Doorkeeper
         end
 
         def lookup_existing_token?
-          server_config.reuse_access_token || server_config.revoke_previous_client_credentials_token
+          server_config.reuse_access_token || server_config.revoke_previous_client_credentials_token?
         end
 
         def find_existing_token_for(client, scopes)

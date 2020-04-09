@@ -134,15 +134,6 @@ module Doorkeeper
         @config.instance_variable_set(:@reuse_access_token, true)
       end
 
-      # Sets the token_reuse_limit
-      # It will be used only when reuse_access_token option in enabled
-      # By default it will be 100
-      # It will be used for token reusablity to some threshold percentage
-      # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/1189
-      def token_reuse_limit(percentage)
-        @config.instance_variable_set(:@token_reuse_limit, percentage)
-      end
-
       # TODO: maybe make it more generic for other flows too?
       # Only allow one valid access token obtained via client credentials
       # per client. If a new access token is obtained before the old one
@@ -276,6 +267,13 @@ module Doorkeeper
     option :grant_flows,                    default: %w[authorization_code client_credentials]
     option :handle_auth_errors,             default: :render
     option :token_lookup_batch_size,        default: 10_000
+
+    # Sets the token_reuse_limit
+    # It will be used only when reuse_access_token option in enabled
+    # By default it will be 100
+    # It will be used for token reusablity to some threshold percentage
+    # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/1189
+    option :token_reuse_limit,              default: 100
 
     option :active_record_options,
            default: {},
@@ -426,20 +424,32 @@ module Doorkeeper
                 :application_secret_fallback_strategy
 
     # Return the valid subset of this configuration
-    def validate
+    def validate!
       validate_reuse_access_token_value
       validate_token_reuse_limit
       validate_secret_strategies
     end
 
+    # Doorkeeper Access Token model class.
+    #
+    # @return [ActiveRecord::Base, Mongoid::Document, Sequel::Model]
+    #
     def access_token_model
       @access_token_model ||= access_token_class.constantize
     end
 
+    # Doorkeeper Access Grant model class.
+    #
+    # @return [ActiveRecord::Base, Mongoid::Document, Sequel::Model]
+    #
     def access_grant_model
       @access_grant_model ||= access_grant_class.constantize
     end
 
+    # Doorkeeper Application model class.
+    #
+    # @return [ActiveRecord::Base, Mongoid::Document, Sequel::Model]
+    #
     def application_model
       @application_model ||= application_class.constantize
     end
@@ -460,14 +470,6 @@ module Doorkeeper
       end
     end
 
-    def token_reuse_limit
-      @token_reuse_limit ||= 100
-    end
-
-    def revoke_previous_client_credentials_token
-      @revoke_previous_client_credentials_token || false
-    end
-
     def resolve_controller(name)
       config_option = public_send(:"#{name}_controller")
       controller_name = if config_option.respond_to?(:call)
@@ -477,6 +479,10 @@ module Doorkeeper
                         end
 
       controller_name.constantize
+    end
+
+    def revoke_previous_client_credentials_token?
+      option_set? :revoke_previous_client_credentials_token
     end
 
     def enforce_configured_scopes?
