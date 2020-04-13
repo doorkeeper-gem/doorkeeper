@@ -28,6 +28,21 @@ describe "Resource Owner Password Credentials Flow" do
   end
 
   context "with valid user credentials" do
+    context "with confidential client authorized using Basic auth" do
+      it "should issue a new token" do
+        expect do
+          post password_token_endpoint_url(
+            resource_owner: @resource_owner,
+          ), headers: { "HTTP_AUTHORIZATION" => basic_auth_header_for_client(@client) }
+        end.to(change { Doorkeeper::AccessToken.count })
+
+        token = Doorkeeper::AccessToken.first
+
+        expect(token.application_id).to eq @client.id
+        should_have_json "access_token", token.token
+      end
+    end
+
     context "with non-confidential/public client" do
       let(:client_attributes) { { confidential: false } }
 

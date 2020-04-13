@@ -23,7 +23,7 @@ module UrlHelper
       password: options[:resource_owner_password] || options[:resource_owner].try(:password),
       scope: options[:scope],
       grant_type: "password",
-    }
+    }.reject { |_, v| v.blank? }
     "/oauth/token?#{build_query(parameters)}"
   end
 
@@ -46,7 +46,7 @@ module UrlHelper
       client_id: options[:client_id] || options[:client].try(:uid),
       client_secret: options[:client_secret] || options[:client].try(:secret),
       grant_type: options[:grant_type] || "refresh_token",
-    }
+    }.reject { |_, v| v.blank? }
     "/oauth/token?#{build_query(parameters)}"
   end
 
