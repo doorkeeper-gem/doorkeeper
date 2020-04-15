@@ -8,6 +8,8 @@ User-visible changes worth mentioning.
 ## master
 
 - [#1395] Fix `NameError: uninitialized constant Doorkeeper::AccessToken` for Rake tasks.
+- [#1397] Add `as: :doorkeeper_application` on Doorkeeper application form in order to support
+  custom configured application model.
 
 ## 5.4.0.rc1
 - [#1366] Sets expiry of token generated using `refresh_token` to that of original token. (Fixes #1364) 
