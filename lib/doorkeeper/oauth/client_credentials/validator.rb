@@ -26,9 +26,11 @@ module Doorkeeper
         end
 
         def validate_client_supports_grant_flow
+          return if @client.blank?
+
           Doorkeeper.config.allow_grant_flow_for_client?(
             Doorkeeper::OAuth::CLIENT_CREDENTIALS,
-            @client,
+            @client.application,
           )
         end
 

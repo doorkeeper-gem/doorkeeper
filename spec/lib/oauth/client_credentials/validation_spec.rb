@@ -19,6 +19,33 @@ describe Doorkeeper::OAuth::ClientCredentials::Validator do
     expect(subject).not_to be_valid
   end
 
+  context "when a grant flow check is configured" do
+    let(:callback) { double("callback") }
+
+    before do
+      allow(Doorkeeper.config).to receive(:option_defined?).with(:allow_grant_flow_for_client).and_return(true)
+      allow(Doorkeeper.config).to receive(:allow_grant_flow_for_client).and_return(callback)
+
+      expect(callback).to receive(:call).twice.with(Doorkeeper::OAuth::CLIENT_CREDENTIALS, application).and_return(callback_response)
+    end
+
+    context "when the callback rejects the grant flow" do
+      let(:callback_response) { false }
+
+      it "is invalid" do
+        expect(subject).not_to be_valid
+      end
+    end
+
+    context "when the callback allows the grant flow" do
+      let(:callback_response) { true }
+
+      it "is invalid" do
+        expect(subject).to be_valid
+      end
+    end
+  end
+
   context "with scopes" do
     it "is invalid when scopes are not included in the server" do
       server_scopes = Doorkeeper::OAuth::Scopes.from_string "email"
