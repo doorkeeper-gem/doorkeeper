@@ -15,8 +15,8 @@ module Doorkeeper
       validate :code_challenge_method, error: :invalid_code_challenge_method
       validate :client_supports_grant_flow, error: :unauthorized_client
 
-      attr_reader :server, :client_id, :client, :redirect_uri, :response_type, :state,
-                  :code_challenge, :code_challenge_method, :missing_param, :resource_owner
+      attr_reader :client, :code_challenge, :code_challenge_method, :missing_param,
+                  :redirect_uri, :resource_owner, :response_type, :state
 
       def initialize(server, parameters = {}, resource_owner = nil)
         @server                = server
@@ -59,6 +59,8 @@ module Doorkeeper
 
       private
 
+      attr_reader :client_id, :server
+
       def build_scopes
         client_scopes = client.scopes
         if client_scopes.blank?
@@ -70,7 +72,6 @@ module Doorkeeper
 
       def validate_client_id
         @missing_param = :client_id if client_id.blank?
-
         @missing_param.nil?
       end
 

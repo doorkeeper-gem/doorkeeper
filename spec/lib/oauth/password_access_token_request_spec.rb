@@ -14,8 +14,9 @@ describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
       },
     )
   end
-  let(:client) { FactoryBot.create(:application) }
-  let(:owner)  { FactoryBot.create(:resource_owner) }
+  let(:client) { Doorkeeper::OAuth::Client.new(FactoryBot.create(:application)) }
+  let(:application) { client.application }
+  let(:owner) { FactoryBot.build_stubbed(:resource_owner) }
 
   before do
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
@@ -28,9 +29,9 @@ describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
   it "issues a new token for the client" do
     expect do
       subject.authorize
-    end.to change { client.reload.access_tokens.count }.by(1)
+    end.to change { application.reload.access_tokens.count }.by(1)
 
-    expect(client.reload.access_tokens.max_by(&:created_at).expires_in).to eq(1234)
+    expect(application.reload.access_tokens.max_by(&:created_at).expires_in).to eq(1234)
   end
 
   it "issues a new token without a client" do
