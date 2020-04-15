@@ -6,7 +6,7 @@ describe Doorkeeper::OAuth::ClientCredentialsRequest do
   let(:server) { Doorkeeper.configuration }
 
   context "with a valid request" do
-    let(:client) { FactoryBot.create :application }
+    let(:client) { Doorkeeper::OAuth::Client.new(FactoryBot.build_stubbed(:application)) }
 
     it "issues an access token" do
       request = Doorkeeper::OAuth::ClientCredentialsRequest.new(server, client, {})
