@@ -77,6 +77,18 @@ describe Doorkeeper::OAuth::PreAuthorization do
     end
   end
 
+  context "when grant flow is client credentials & redirect_uri is nil" do
+    before do
+      allow(server).to receive(:grant_flows).and_return(["client_credentials"])
+      allow(Doorkeeper.configuration).to receive(:allow_grant_flow_for_client?).and_return(false)
+      application.update_column :redirect_uri, nil
+    end
+
+    it "is not authorizable" do
+      expect(subject).not_to be_authorizable
+    end
+  end
+
   context "client application does not restrict valid scopes" do
     it "accepts valid scopes" do
       attributes[:scope] = "public"
