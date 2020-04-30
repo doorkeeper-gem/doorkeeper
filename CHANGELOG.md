@@ -12,6 +12,7 @@ User-visible changes worth mentioning.
   custom configured application model.
 - [#1400] Correctly yield the application instance to `allow_grant_flow_for_client?` config
   option (fixes #1398).
+- [#1402] Handle trying authorization with client credentials.
 
 ## 5.4.0.rc1
 - [#1366] Sets expiry of token generated using `refresh_token` to that of original token. (Fixes #1364) 
