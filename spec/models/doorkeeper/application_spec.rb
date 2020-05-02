@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "bcrypt"
 
 describe Doorkeeper::Application do
   let(:require_owner) { Doorkeeper.configuration.instance_variable_set("@confirm_application_owner", true) }
@@ -119,101 +118,10 @@ describe Doorkeeper::Application do
   end
 
   context "redirect URI" do
-    context "when grant flows allow blank redirect URI" do
-      before do
-        Doorkeeper.configure do
-          grant_flows %w[password client_credentials]
-        end
-      end
-
-      it "is valid without redirect_uri" do
-        new_application.save
-        new_application.redirect_uri = nil
-        expect(new_application).to be_valid
-      end
-    end
-
-    context "when grant flows require redirect URI" do
-      before do
-        Doorkeeper.configure do
-          grant_flows %w[password client_credentials authorization_code]
-        end
-      end
-
-      it "is invalid without redirect_uri" do
-        new_application.save
-        new_application.redirect_uri = nil
-        expect(new_application).not_to be_valid
-      end
-    end
-
-    context "when blank URI option disabled" do
-      before do
-        Doorkeeper.configure do
-          grant_flows %w[password client_credentials]
-          allow_blank_redirect_uri false
-        end
-      end
-
-      it "is invalid without redirect_uri" do
-        new_application.save
-        new_application.redirect_uri = nil
-        expect(new_application).not_to be_valid
-      end
-    end
-  end
-
-  context "with hashing enabled" do
-    include_context "with application hashing enabled"
-    let(:app) { FactoryBot.create :application }
-    let(:default_strategy) { Doorkeeper::SecretStoring::Sha256Hash }
-
-    it "uses SHA256 to avoid additional dependencies" do
-      # Ensure token was generated
-      app.validate
-      expect(app.secret).to eq(default_strategy.transform_secret(app.plaintext_secret))
-    end
-
-    context "when bcrypt strategy is configured" do
-      # In this text context, we have bcrypt loaded so `bcrypt_present?`
-      # will always be true
-      before do
-        Doorkeeper.configure do
-          hash_application_secrets using: "Doorkeeper::SecretStoring::BCrypt"
-        end
-      end
-
-      it "holds a volatile plaintext and BCrypt secret" do
-        expect(app.secret_strategy).to eq Doorkeeper::SecretStoring::BCrypt
-        expect(app.plaintext_secret).to be_a(String)
-        expect(app.secret).not_to eq(app.plaintext_secret)
-        expect { ::BCrypt::Password.create(app.secret) }.not_to raise_error
-      end
-    end
-
-    it "does not fallback to plain lookup by default" do
-      lookup = described_class.by_uid_and_secret(app.uid, app.secret)
-      expect(lookup).to eq(nil)
-
-      lookup = described_class.by_uid_and_secret(app.uid, app.plaintext_secret)
-      expect(lookup).to eq(app)
-    end
-
-    context "with fallback enabled" do
-      include_context "with token hashing and fallback lookup enabled"
-
-      it "provides plain and hashed lookup" do
-        lookup = described_class.by_uid_and_secret(app.uid, app.secret)
-        expect(lookup).to eq(app)
-
-        lookup = described_class.by_uid_and_secret(app.uid, app.plaintext_secret)
-        expect(lookup).to eq(app)
-      end
-    end
-
-    it "does not provide access to secret after loading" do
-      lookup = described_class.by_uid_and_secret(app.uid, app.plaintext_secret)
-      expect(lookup.plaintext_secret).to be_nil
+    it "is invalid without redirect_uri" do
+      new_application.save
+      new_application.redirect_uri = nil
+      expect(new_application).not_to be_valid
     end
   end
 
@@ -398,11 +306,6 @@ describe Doorkeeper::Application do
   describe "#as_json" do
     let(:app) { FactoryBot.create :application, secret: "123123123" }
 
-    before do
-      allow(Doorkeeper.configuration)
-        .to receive(:application_secret_strategy).and_return(Doorkeeper::SecretStoring::Plain)
-    end
-
     # AR specific feature
     if DOORKEEPER_ORM == :active_record
       it "correctly works with #to_json" do
@@ -417,7 +320,7 @@ describe Doorkeeper::Application do
         expect(app.as_json).to match(
           "id" => app.id,
           "name" => app.name,
-          "created_at" => an_instance_of(String),
+          "created_at" => anything,
         )
       end
 
@@ -427,7 +330,7 @@ describe Doorkeeper::Application do
         expect(app.as_json).to match(
           "id" => app.id,
           "name" => app.name,
-          "created_at" => an_instance_of(String),
+          "created_at" => anything,
           "uid" => app.uid,
         )
       end
@@ -437,7 +340,7 @@ describe Doorkeeper::Application do
         expect(app.as_json(only: %i[name created_at secret]))
           .to match(
             "name" => app.name,
-            "created_at" => an_instance_of(String),
+            "created_at" => anything,
           )
       end
     end
