@@ -9,7 +9,7 @@ module Doorkeeper
 
       respond_to do |format|
         format.html
-        format.json { render json: @applications }
+        format.json { render json: @applications, current_resource_owner: current_resource_owner }
       end
     end
 
