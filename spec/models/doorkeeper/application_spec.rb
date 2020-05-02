@@ -222,14 +222,13 @@ describe Doorkeeper::Application do
       new_application.save
     end
 
-    let(:resource_owner) { FactoryBot.create(:resource_owner) }
+    let(:resource_owner) { FactoryBot.create(:doorkeeper_testing_user) }
 
     it "should destroy its access grants" do
       FactoryBot.create(
         :access_grant,
         application: new_application,
         resource_owner_id: resource_owner.id,
-        resource_owner_type: resource_owner.class.name,
       )
 
       expect { new_application.destroy }.to change { Doorkeeper::AccessGrant.count }.by(-1)
@@ -288,8 +287,8 @@ describe Doorkeeper::Application do
   end
 
   describe "#authorized_for" do
-    let(:resource_owner) { FactoryBot.create(:resource_owner) }
-    let(:other_resource_owner) { FactoryBot.create(:resource_owner) }
+    let(:resource_owner) { FactoryBot.create(:doorkeeper_testing_user) }
+    let(:other_resource_owner) { FactoryBot.create(:doorkeeper_testing_user) }
 
     it "is empty if the application is not authorized for anyone" do
       expect(described_class.authorized_for(resource_owner)).to be_empty
@@ -299,12 +298,10 @@ describe Doorkeeper::Application do
       FactoryBot.create(
         :access_token,
         resource_owner_id: other_resource_owner.id,
-        resource_owner_type: other_resource_owner.class.name,
       )
       token = FactoryBot.create(
         :access_token,
         resource_owner_id: resource_owner.id,
-        resource_owner_type: resource_owner.class.name,
       )
       expect(described_class.authorized_for(resource_owner)).to eq([token.application])
     end
@@ -313,7 +310,6 @@ describe Doorkeeper::Application do
       FactoryBot.create(
         :access_token,
         resource_owner_id: resource_owner.id,
-        resource_owner_type: resource_owner.class.name,
         revoked_at: 2.days.ago,
       )
       expect(described_class.authorized_for(resource_owner)).to be_empty
@@ -323,12 +319,10 @@ describe Doorkeeper::Application do
       token1 = FactoryBot.create(
         :access_token,
         resource_owner_id: resource_owner.id,
-        resource_owner_type: resource_owner.class.name,
       )
       token2 = FactoryBot.create(
         :access_token,
         resource_owner_id: resource_owner.id,
-        resource_owner_type: resource_owner.class.name,
       )
       expect(described_class.authorized_for(resource_owner))
         .to eq([token1.application, token2.application])
@@ -339,13 +333,11 @@ describe Doorkeeper::Application do
       FactoryBot.create(
         :access_token,
         resource_owner_id: resource_owner.id,
-        resource_owner_type: resource_owner.class.name,
         application: application,
       )
       FactoryBot.create(
         :access_token,
         resource_owner_id: resource_owner.id,
-        resource_owner_type: resource_owner.class.name,
         application: application,
       )
       expect(described_class.authorized_for(resource_owner)).to eq([application])
