@@ -102,7 +102,7 @@ describe Doorkeeper::Application do
     end
 
     context "application owner is required" do
-      before(:each) do
+      before do
         require_owner
         @owner = FactoryBot.build_stubbed(:doorkeeper_testing_user)
       end
@@ -421,21 +421,69 @@ describe Doorkeeper::Application do
         .to receive(:application_secret_strategy).and_return(Doorkeeper::SecretStoring::Plain)
     end
 
-    it "includes plaintext secret" do
-      expect(app.as_json).to include("secret" => "123123123")
-    end
-
-    it "respects custom options" do
-      expect(app.as_json(except: :secret)).not_to include("secret")
-      expect(app.as_json(only: :id)).to match("id" => app.id)
-    end
-
-    # AR specific
+    # AR specific feature
     if DOORKEEPER_ORM == :active_record
       it "correctly works with #to_json" do
         ActiveRecord::Base.include_root_in_json = true
         expect(app.to_json(include_root_in_json: true)).to match(/application.+?:\{/)
         ActiveRecord::Base.include_root_in_json = false
+      end
+    end
+
+    context "when called without authorized resource owner" do
+      it "includes minimal set of attributes" do
+        expect(app.as_json).to match(
+          "id" => app.id,
+          "name" => app.name,
+          "created_at" => an_instance_of(String),
+        )
+      end
+
+      it "includes application UID if it's public" do
+        app = FactoryBot.create :application, secret: "123123123", confidential: false
+
+        expect(app.as_json).to match(
+          "id" => app.id,
+          "name" => app.name,
+          "created_at" => an_instance_of(String),
+          "uid" => app.uid,
+        )
+      end
+
+      it "respects custom options" do
+        expect(app.as_json(except: :id)).not_to include("id")
+        expect(app.as_json(only: %i[name created_at secret]))
+          .to match(
+            "name" => app.name,
+            "created_at" => an_instance_of(String),
+          )
+      end
+    end
+
+    context "when called with authorized resource owner" do
+      let(:owner) { FactoryBot.create(:doorkeeper_testing_user) }
+      let(:other_owner) { FactoryBot.create(:doorkeeper_testing_user) }
+      let(:app) { FactoryBot.create(:application, secret: "123123123", owner: owner) }
+
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          enable_application_owner confirmation: false
+        end
+      end
+
+      it "includes all the attributes" do
+        expect(app.as_json(current_resource_owner: owner))
+          .to include(
+            "secret" => "123123123",
+            "redirect_uri" => app.redirect_uri,
+            "uid" => app.uid,
+          )
+      end
+
+      it "doesn't include unsafe attributes if current owner isn't the same as owner" do
+        expect(app.as_json(current_resource_owner: other_owner))
+          .not_to include("redirect_uri")
       end
     end
   end

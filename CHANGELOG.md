@@ -7,6 +7,14 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1371] Add `#as_json` method and attributes serialization restriction for Application model.
+  Fixes information disclosure vulnerability (CVE-2020-10187).
+  
+  **[IMPORTANT]** you need to re-implement `#as_json` method for Doorkeeper Application model
+  if you previously used `#to_json` serialization with custom options or attributes or rely on
+  JSON response from /oauth/applications.json or /oauth/authorized_applications.json. This change
+  is a breaking change which restricts serialized attributes to a very small set of columns.
+
 - [#1395] Fix `NameError: uninitialized constant Doorkeeper::AccessToken` for Rake tasks.
 - [#1397] Add `as: :doorkeeper_application` on Doorkeeper application form in order to support
   custom configured application model.
