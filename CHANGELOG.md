@@ -7,6 +7,10 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#PR ID] Your PR description.
+
+## 5.4.0.rc2
+
 - [#1371] Add `#as_json` method and attributes serialization restriction for Application model.
   Fixes information disclosure vulnerability (CVE-2020-10187).
   
@@ -54,6 +58,11 @@ User-visible changes worth mentioning.
 - [#1393] Improve Applications #show page with more informative data on client secret and scopes.
 - [#1394] Use Ruby `autoload` feature to load Doorkeeper files.
 
+## 5.3.2
+
+- [#1371] Backport: add `#as_json` method and attributes serialization restriction for Application model.
+  Fixes information disclosure vulnerability (CVE-2020-10187).
+
 ## 5.3.1
 
 - [#1360] Backport: Increase `matching_token_for` batch lookup size to 10 000 and make it configurable.
@@ -72,6 +81,11 @@ User-visible changes worth mentioning.
   If you were relying on access tokens being revoked once the same client
   requested a new access token, reenable it with `revoke_previous_client_credentials_token` in Doorkeeper
   initialization file.
+
+## 5.2.5
+
+- [#1371] Backport: add `#as_json` method and attributes serialization restriction for Application model.
+  Fixes information disclosure vulnerability (CVE-2020-10187).
   
 ## 5.2.4
   
