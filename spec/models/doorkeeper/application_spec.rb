@@ -435,7 +435,7 @@ describe Doorkeeper::Application do
         expect(app.as_json).to match(
           "id" => app.id,
           "name" => app.name,
-          "created_at" => an_instance_of(String),
+          "created_at" => anything,
         )
       end
 
@@ -445,7 +445,7 @@ describe Doorkeeper::Application do
         expect(app.as_json).to match(
           "id" => app.id,
           "name" => app.name,
-          "created_at" => an_instance_of(String),
+          "created_at" => anything,
           "uid" => app.uid,
         )
       end
@@ -455,7 +455,7 @@ describe Doorkeeper::Application do
         expect(app.as_json(only: %i[name created_at secret]))
           .to match(
             "name" => app.name,
-            "created_at" => an_instance_of(String),
+            "created_at" => anything,
           )
       end
     end

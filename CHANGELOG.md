@@ -154,6 +154,11 @@ User-visible changes worth mentioning.
 - [#1248] Return the unhashed Application Secret in the JSON response after creating new application even when `hash_application_secrets` is used.
 - [#1238] Better support for native app with support for custom scheme and localhost redirection.
 
+## 5.1.1
+
+- [#1371] Backport: add `#as_json` method and attributes serialization restriction for Application model.
+  Fixes information disclosure vulnerability (CVE-2020-10187).
+
 ## 5.1.0
 
 - [#1243] Add nil check operator in token checking at token introspection.
@@ -214,6 +219,11 @@ User-visible changes worth mentioning.
 - [#1168] Allow optional hashing of tokens and secrets.
 - [#1164] Fix error when `root_path` is not defined.
 - [#1162] Fix `enforce_content_type` for requests without body.
+
+## 5.0.3
+
+- [#1371] Backport: add `#as_json` method and attributes serialization restriction for Application model.
+  Fixes information disclosure vulnerability (CVE-2020-10187).
 
 ## 5.0.2
 
