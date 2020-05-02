@@ -19,7 +19,7 @@ module Doorkeeper
     def show
       respond_to do |format|
         format.html
-        format.json { render json: @application }
+        format.json { render json: @application, as_owner: true }
       end
     end
 
@@ -35,7 +35,7 @@ module Doorkeeper
 
         respond_to do |format|
           format.html { redirect_to oauth_application_url(@application) }
-          format.json { render json: @application }
+          format.json { render json: @application, as_owner: true }
         end
       else
         respond_to do |format|
@@ -53,7 +53,7 @@ module Doorkeeper
 
         respond_to do |format|
           format.html { redirect_to oauth_application_url(@application) }
-          format.json { render json: @application }
+          format.json { render json: @application, as_owner: true }
         end
       else
         respond_to do |format|
