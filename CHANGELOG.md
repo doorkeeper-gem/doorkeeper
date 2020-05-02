@@ -5,6 +5,16 @@ upgrade guides.
 
 User-visible changes worth mentioning.
 
+## 5.2.5
+
+- [#1371] Backport: add `#as_json` method and attributes serialization restriction for Application model.
+  Fixes information disclosure vulnerability (CVE-2020-10187).
+  
+  **[IMPORTANT]** you need to re-implement `#as_json` method for Doorkeeper Application model
+  if you previously used `#to_json` serialization with custom options or attributes or rely on
+  JSON response from /oauth/applications.json or /oauth/authorized_applications.json. This change
+  is a breaking change which restricts serialized attributes to a very small set of columns.
+
 ## 5.2.4
 
 - [#1360] Increase `matching_token_for` batch lookup size to 10 000 and make it configurable.
