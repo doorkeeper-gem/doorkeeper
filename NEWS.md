@@ -5,9 +5,10 @@ upgrade guides.
 
 User-visible changes worth mentioning.
 
-## master
+## 5.1.1
 
-- [#PR] Add your PR description here.
+[#1371] Backport: add #as_json method and attributes serialization restriction for Application model.
+        Fixes information disclosure vulnerability (CVE-2020-10187).
 
 ## 5.1.0
 

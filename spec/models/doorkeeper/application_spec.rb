@@ -276,16 +276,6 @@ describe Doorkeeper::Application do
     end
   end
 
-  describe "#renew_secret" do
-    let(:app) { FactoryBot.create :application }
-
-    it "should generate a new secret" do
-      old_secret = app.secret
-      app.renew_secret
-      expect(old_secret).not_to eq(app.secret)
-    end
-  end
-
   describe "#authorized_for" do
     let(:resource_owner) { FactoryBot.create(:doorkeeper_testing_user) }
     let(:other_resource_owner) { FactoryBot.create(:doorkeeper_testing_user) }
