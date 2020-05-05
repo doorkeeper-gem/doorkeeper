@@ -216,6 +216,7 @@ describe Doorkeeper, "configuration" do
 
     it "can change the value" do
       Doorkeeper.configure do
+        orm DOORKEEPER_ORM
         token_reuse_limit 90
       end
 
@@ -226,6 +227,7 @@ describe Doorkeeper, "configuration" do
       expect(Rails.logger).to receive(:warn).with(/will be set to default 100/)
 
       Doorkeeper.configure do
+        orm DOORKEEPER_ORM
         reuse_access_token
         token_reuse_limit 110
       end
@@ -511,6 +513,7 @@ describe Doorkeeper, "configuration" do
 
       it "resolves to a ApplicationController::API in api_only mode" do
         Doorkeeper.configure do
+          orm DOORKEEPER_ORM
           api_only
         end
 
@@ -697,6 +700,7 @@ describe Doorkeeper, "configuration" do
     context "when provided" do
       before do
         Doorkeeper.configure do
+          orm DOORKEEPER_ORM
           hash_token_secrets
         end
       end
@@ -711,6 +715,7 @@ describe Doorkeeper, "configuration" do
       it "raises an exception" do
         expect do
           Doorkeeper.configure do
+            orm DOORKEEPER_ORM
             hash_token_secrets using: "does not exist"
           end
         end.to raise_error(NameError)
@@ -721,6 +726,7 @@ describe Doorkeeper, "configuration" do
       it "raises an exception" do
         expect do
           Doorkeeper.configure do
+            orm DOORKEEPER_ORM
             hash_token_secrets using: "Doorkeeper::SecretStoring::BCrypt"
           end
         end.to raise_error(
@@ -733,6 +739,7 @@ describe Doorkeeper, "configuration" do
     context "when provided with fallback" do
       before do
         Doorkeeper.configure do
+          orm DOORKEEPER_ORM
           hash_token_secrets fallback: :plain
         end
       end
@@ -748,6 +755,7 @@ describe Doorkeeper, "configuration" do
         expect(Rails.logger).to receive(:warn).with(/reuse_access_token will be disabled/)
 
         Doorkeeper.configure do
+          orm DOORKEEPER_ORM
           reuse_access_token
           hash_token_secrets
         end
@@ -766,6 +774,7 @@ describe Doorkeeper, "configuration" do
     context "when provided" do
       before do
         Doorkeeper.configure do
+          orm DOORKEEPER_ORM
           hash_application_secrets
         end
       end
@@ -780,6 +789,7 @@ describe Doorkeeper, "configuration" do
       it "raises an exception" do
         expect do
           Doorkeeper.configure do
+            orm DOORKEEPER_ORM
             hash_application_secrets using: "does not exist"
           end
         end.to raise_error(NameError)
@@ -789,6 +799,7 @@ describe Doorkeeper, "configuration" do
     context "when provided with fallback" do
       before do
         Doorkeeper.configure do
+          orm DOORKEEPER_ORM
           hash_application_secrets fallback: :plain
         end
       end
@@ -806,6 +817,7 @@ describe Doorkeeper, "configuration" do
         "[DOORKEEPER] native_redirect_uri has been deprecated and will soon be removed",
       )
       Doorkeeper.configure do
+        orm DOORKEEPER_ORM
         native_redirect_uri "urn:ietf:wg:oauth:2.0:oob"
       end
     end

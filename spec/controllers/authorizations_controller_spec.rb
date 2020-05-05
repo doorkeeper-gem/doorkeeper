@@ -27,6 +27,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
   before do
     Doorkeeper.configure do
+      orm DOORKEEPER_ORM
       default_scopes :default
 
       custom_access_token_expires_in(lambda do |context|

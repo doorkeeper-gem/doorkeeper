@@ -122,6 +122,7 @@ describe Doorkeeper::Application do
     context "when grant flows allow blank redirect URI" do
       before do
         Doorkeeper.configure do
+          orm DOORKEEPER_ORM
           grant_flows %w[password client_credentials]
         end
       end
@@ -136,6 +137,7 @@ describe Doorkeeper::Application do
     context "when grant flows require redirect URI" do
       before do
         Doorkeeper.configure do
+          orm DOORKEEPER_ORM
           grant_flows %w[password client_credentials authorization_code]
         end
       end
@@ -150,6 +152,7 @@ describe Doorkeeper::Application do
     context "when blank URI option disabled" do
       before do
         Doorkeeper.configure do
+          orm DOORKEEPER_ORM
           grant_flows %w[password client_credentials]
           allow_blank_redirect_uri false
         end
@@ -179,6 +182,7 @@ describe Doorkeeper::Application do
       # will always be true
       before do
         Doorkeeper.configure do
+          orm DOORKEEPER_ORM
           hash_application_secrets using: "Doorkeeper::SecretStoring::BCrypt"
         end
       end

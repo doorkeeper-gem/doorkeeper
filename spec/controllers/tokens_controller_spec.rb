@@ -8,6 +8,7 @@ describe Doorkeeper::TokensController do
 
   before do
     Doorkeeper.configure do
+      orm DOORKEEPER_ORM
       resource_owner_from_credentials do
         User.first
       end
