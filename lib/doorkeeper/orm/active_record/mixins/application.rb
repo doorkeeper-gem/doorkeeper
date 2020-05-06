@@ -12,12 +12,12 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       has_many :access_grants,
                foreign_key: :application_id,
                dependent: :delete_all,
-               class_name: Doorkeeper.config.access_grant_class
+               class_name: Doorkeeper.config.access_grant_class.to_s
 
       has_many :access_tokens,
                foreign_key: :application_id,
                dependent: :delete_all,
-               class_name: Doorkeeper.config.access_token_class
+               class_name: Doorkeeper.config.access_token_class.to_s
 
       validates :name, :secret, :uid, presence: true
       validates :uid, uniqueness: { case_sensitive: true }
@@ -31,7 +31,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       has_many :authorized_tokens,
                -> { where(revoked_at: nil) },
                foreign_key: :application_id,
-               class_name: Doorkeeper.config.access_token_class
+               class_name: Doorkeeper.config.access_token_class.to_s
 
       has_many :authorized_applications,
                through: :authorized_tokens,
@@ -84,6 +84,21 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
         end
       end
 
+      def authorized_for_resource_owner?(resource_owner)
+        Doorkeeper.configuration.authorize_resource_owner_for_client.call(self, resource_owner)
+      end
+
+      # We need to hook into this method to allow serializing plan-text secrets
+      # when secrets hashing enabled.
+      #
+      # @param key [String] attribute name
+      #
+      def read_attribute_for_serialization(key)
+        return super unless key.to_s == "secret"
+
+        plaintext_secret || secret
+      end
+
       private
 
       def generate_uid
@@ -91,7 +106,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       end
 
       def generate_secret
-        return unless secret.blank?
+        return if secret.present?
 
         renew_secret
       end
@@ -131,17 +146,6 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
         only.uniq
       end
 
-      # We need to hook into this method to allow serializing plan-text secrets
-      # when secrets hashing enabled.
-      #
-      # @param key [String] attribute name
-      #
-      def read_attribute_for_serialization(key)
-        return super unless key.to_s == "secret"
-
-        plaintext_secret || secret
-      end
-
       # Collection of attributes that could be serialized for public.
       # Override this method if you need additional attributes to be serialized.
       #
@@ -153,7 +157,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       end
     end
 
-    class_methods do
+    module ClassMethods
       # Returns Applications associated with active (not revoked) Access Tokens
       # that are owned by the specific Resource Owner.
       #
