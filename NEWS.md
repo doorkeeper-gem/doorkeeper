@@ -5,6 +5,10 @@ upgrade guides.
 
 User-visible changes worth mentioning.
 
+## 5.2.2
+
+- [#1404] Backport: Make `Doorkeeper::Application#read_attribute_for_serialization` public.
+
 ## 5.1.1
 
 [#1371] Backport: add #as_json method and attributes serialization restriction for Application model.

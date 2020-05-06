@@ -83,6 +83,17 @@ module Doorkeeper
       end
     end
 
+    # We need to hook into this method to allow serializing plan-text secrets
+    # when secrets hashing enabled.
+    #
+    # @param key [String] attribute name
+    #
+    def read_attribute_for_serialization(key)
+      return super unless key.to_s == "secret"
+
+      plaintext_secret || secret
+    end
+
     private
 
     def generate_uid
@@ -128,17 +139,6 @@ module Doorkeeper
 
       only -= Array.wrap(opts[:except]).map(&:to_s) if opts.key?(:except)
       only.uniq
-    end
-
-    # We need to hook into this method to allow serializing plan-text secrets
-    # when secrets hashing enabled.
-    #
-    # @param key [String] attribute name
-    #
-    def read_attribute_for_serialization(key)
-      return super unless key.to_s == "secret"
-
-      plaintext_secret || secret
     end
 
     # Collection of attributes that could be serialized for public.
