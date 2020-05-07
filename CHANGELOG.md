@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#PR ID] Your PR description.
+- [#1404] Make `Doorkeeper::Application#read_attribute_for_serialization` public
 
 ## 5.4.0.rc2
 
