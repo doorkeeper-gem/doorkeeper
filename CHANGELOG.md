@@ -8,7 +8,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#PR ID] Your PR description.
-- [#1404] Make `Doorkeeper::Application#read_attribute_for_serialization` public
+- [#1404] Make `Doorkeeper::Application#read_attribute_for_serialization` public.
 
 ## 5.4.0.rc2
 
@@ -59,6 +59,10 @@ User-visible changes worth mentioning.
 - [#1393] Improve Applications #show page with more informative data on client secret and scopes.
 - [#1394] Use Ruby `autoload` feature to load Doorkeeper files.
 
+## 5.3.3
+
+- [#1404] Backport: Make `Doorkeeper::Application#read_attribute_for_serialization` public.
+
 ## 5.3.2
 
 - [#1371] Backport: add `#as_json` method and attributes serialization restriction for Application model.
@@ -82,6 +86,10 @@ User-visible changes worth mentioning.
   If you were relying on access tokens being revoked once the same client
   requested a new access token, reenable it with `revoke_previous_client_credentials_token` in Doorkeeper
   initialization file.
+
+## 5.2.6
+
+- [#1404] Backport: Make `Doorkeeper::Application#read_attribute_for_serialization` public.
 
 ## 5.2.5
 
@@ -154,6 +162,10 @@ User-visible changes worth mentioning.
 - [#1248] Display the Application Secret in HTML after creating a new application even when `hash_application_secrets` is used.
 - [#1248] Return the unhashed Application Secret in the JSON response after creating new application even when `hash_application_secrets` is used.
 - [#1238] Better support for native app with support for custom scheme and localhost redirection.
+
+## 5.1.2
+
+- [#1404] Backport: Make `Doorkeeper::Application#read_attribute_for_serialization` public.
 
 ## 5.1.1
 
