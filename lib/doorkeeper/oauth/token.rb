@@ -32,13 +32,13 @@ module Doorkeeper
 
         def from_bearer_authorization(request)
           pattern = /^Bearer /i
-          header  = request.authorization
+          header = request.authorization
           token_from_header(header, pattern) if match?(header, pattern)
         end
 
         def from_basic_authorization(request)
           pattern = /^Basic /i
-          header  = request.authorization
+          header = request.authorization
           token_from_basic_header(header, pattern) if match?(header, pattern)
         end
 
@@ -54,7 +54,7 @@ module Doorkeeper
         end
 
         def token_from_header(header, pattern)
-          header.gsub pattern, ""
+          header.gsub(pattern, "")
         end
 
         def match?(header, pattern)

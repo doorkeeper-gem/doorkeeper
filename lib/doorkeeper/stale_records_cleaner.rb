@@ -13,12 +13,12 @@ module Doorkeeper
       raise Doorkeeper::Errors::NoOrmCleaner, "'#{configured_orm}' ORM has no cleaner!"
     end
 
-    def self.configured_orm
-      Doorkeeper.config.orm
-    end
-
     def self.new(base_scope)
       self.for(base_scope)
+    end
+
+    def self.configured_orm
+      Doorkeeper.config.orm
     end
   end
 end

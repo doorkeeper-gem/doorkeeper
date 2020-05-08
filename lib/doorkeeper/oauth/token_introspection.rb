@@ -179,11 +179,7 @@ module Doorkeeper
         allow_introspection = Doorkeeper.config.allow_token_introspection
         return allow_introspection unless allow_introspection.respond_to?(:call)
 
-        allow_introspection.call(
-          @token,
-          auth_client,
-          auth_token,
-        )
+        allow_introspection.call(@token, auth_client, auth_token)
       end
 
       # Allows to customize introspection response.

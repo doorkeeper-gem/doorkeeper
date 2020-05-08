@@ -12,7 +12,7 @@ module Doorkeeper
 
       def authorize
         auth = Authorization::Token.new(pre_auth, resource_owner)
-        auth.issue_token
+        auth.issue_token!
         CodeResponse.new(pre_auth, auth, response_on_fragment: true)
       end
 

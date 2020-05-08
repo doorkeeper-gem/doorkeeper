@@ -4,7 +4,7 @@ module Doorkeeper
   class Engine < Rails::Engine
     initializer "doorkeeper.params.filter" do |app|
       parameters = %w[client_secret code authentication_token access_token refresh_token]
-      app.config.filter_parameters << /^(#{Regexp.union parameters})$/
+      app.config.filter_parameters << /^(#{Regexp.union(parameters)})$/
     end
 
     initializer "doorkeeper.routes" do

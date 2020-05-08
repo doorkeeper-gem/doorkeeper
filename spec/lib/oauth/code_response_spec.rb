@@ -21,7 +21,7 @@ describe Doorkeeper::OAuth::CodeResponse do
 
       let :auth do
         Doorkeeper::OAuth::Authorization::Token.new(pre_auth, owner).tap do |c|
-          c.issue_token
+          c.issue_token!
           allow(c.token).to receive(:expires_in_seconds).and_return(3600)
         end
       end

@@ -4,9 +4,10 @@ require "spec_helper"
 
 describe Doorkeeper::Server do
   let(:fake_class) { double :fake_class }
+  let(:context) { double :context }
 
   subject do
-    described_class.new
+    described_class.new(context)
   end
 
   describe ".authorization_request" do

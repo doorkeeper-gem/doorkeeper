@@ -11,7 +11,7 @@ module Doorkeeper
           @resource_owner = resource_owner
         end
 
-        def issue_token
+        def issue_token!
           return @token if defined?(@token)
 
           @token = Doorkeeper.config.access_grant_model.create!(access_grant_attributes)
