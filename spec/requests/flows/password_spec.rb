@@ -29,7 +29,7 @@ describe "Resource Owner Password Credentials Flow" do
 
   context "with valid user credentials" do
     context "with confidential client authorized using Basic auth" do
-      it "should issue a new token" do
+      it "issues a new token" do
         expect do
           post password_token_endpoint_url(
             resource_owner: @resource_owner,
@@ -37,11 +37,13 @@ describe "Resource Owner Password Credentials Flow" do
         end.to(change { Doorkeeper::AccessToken.count })
 
         token = Doorkeeper::AccessToken.first
+        expect(token.application_id).to eq(@client.id)
 
-        expect(token.application_id).to eq @client.id
-        should_have_json "access_token", token.token
-        expect(json_response).to include(
-          "access_token", "expires_in", "token_type", "created_at",
+        expect(json_response).to match(
+          "access_token" => token.token,
+          "expires_in" => an_instance_of(Integer),
+          "token_type" => "Bearer",
+          "created_at" => an_instance_of(Integer),
         )
       end
     end
@@ -69,7 +71,10 @@ describe "Resource Owner Password Credentials Flow" do
           end.not_to(change { Doorkeeper::AccessToken.count })
 
           expect(response.status).to eq(401)
-          should_have_json "error", "invalid_client"
+          expect(json_response).to match(
+            "error" => "invalid_client",
+            "error_description" => an_instance_of(String),
+          )
         end
 
         scenario "allows the request when satisfies condition" do
@@ -80,39 +85,39 @@ describe "Resource Owner Password Credentials Flow" do
           end.to change { Doorkeeper::AccessToken.count }.by(1)
 
           token = Doorkeeper::AccessToken.first
+          expect(token.application_id).to eq(@client.id)
 
-          expect(token.application_id).to eq @client.id
-          should_have_json "access_token", token.token
+          expect(json_response).to include("access_token" => token.token)
         end
       end
 
       context "when client_secret absent" do
-        it "should issue new token" do
+        it "issues a new token" do
           expect do
             post password_token_endpoint_url(client_id: @client.uid, resource_owner: @resource_owner)
           end.to change { Doorkeeper::AccessToken.count }.by(1)
 
           token = Doorkeeper::AccessToken.first
 
-          expect(token.application_id).to eq @client.id
-          should_have_json "access_token", token.token
+          expect(token.application_id).to eq(@client.id)
+          expect(json_response).to include("access_token" => token.token)
         end
       end
 
       context "when client_secret present" do
-        it "should issue new token" do
+        it "issues a new token" do
           expect do
             post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
           end.to change { Doorkeeper::AccessToken.count }.by(1)
 
           token = Doorkeeper::AccessToken.first
 
-          expect(token.application_id).to eq @client.id
-          should_have_json "access_token", token.token
+          expect(token.application_id).to eq(@client.id)
+          expect(json_response).to include("access_token" => token.token)
         end
 
         context "when client_secret incorrect" do
-          it "should not issue new token" do
+          it "doesn't issue new token" do
             expect do
               post password_token_endpoint_url(
                 client_id: @client.uid,
@@ -122,37 +127,43 @@ describe "Resource Owner Password Credentials Flow" do
             end.not_to(change { Doorkeeper::AccessToken.count })
 
             expect(response.status).to eq(401)
-            should_have_json "error", "invalid_client"
+            expect(json_response).to include(
+              "error" => "invalid_client",
+              "error_description" => an_instance_of(String),
+            )
           end
         end
       end
     end
 
     context "with confidential/private client" do
-      it "should issue new token" do
+      it "issues a new token" do
         expect do
           post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
         end.to change { Doorkeeper::AccessToken.count }.by(1)
 
         token = Doorkeeper::AccessToken.first
 
-        expect(token.application_id).to eq @client.id
-        should_have_json "access_token", token.token
+        expect(token.application_id).to eq(@client.id)
+        expect(json_response).to include("access_token" => token.token)
       end
 
       context "when client_secret absent" do
-        it "should not issue new token" do
+        it "doesn't issue new token" do
           expect do
             post password_token_endpoint_url(client_id: @client.uid, resource_owner: @resource_owner)
           end.not_to(change { Doorkeeper::AccessToken.count })
 
           expect(response.status).to eq(401)
-          should_have_json "error", "invalid_client"
+          expect(json_response).to match(
+            "error" => "invalid_client",
+            "error_description" => an_instance_of(String),
+          )
         end
       end
     end
 
-    it "should issue new token without client credentials" do
+    it "issues new token without client credentials" do
       expect do
         post password_token_endpoint_url(resource_owner: @resource_owner)
       end.to(change { Doorkeeper::AccessToken.count }.by(1))
@@ -160,20 +171,19 @@ describe "Resource Owner Password Credentials Flow" do
       token = Doorkeeper::AccessToken.first
 
       expect(token.application_id).to be_nil
-      should_have_json "access_token", token.token
+      expect(json_response).to include("access_token" => token.token)
     end
 
-    it "should issue a refresh token if enabled" do
+    it "issues a refresh token if enabled" do
       config_is_set(:refresh_token_enabled, true)
 
       post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
 
       token = Doorkeeper::AccessToken.first
-
-      should_have_json "refresh_token", token.refresh_token
+      expect(json_response).to include("refresh_token" => token.refresh_token)
     end
 
-    it "should return the same token if it is still accessible" do
+    it "returns the same token if it is still accessible" do
       allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
 
       client_is_authorized(@client, @resource_owner)
@@ -181,7 +191,7 @@ describe "Resource Owner Password Credentials Flow" do
       post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
 
       expect(Doorkeeper::AccessToken.count).to be(1)
-      should_have_json "access_token", Doorkeeper::AccessToken.first.token
+      expect(json_response).to include("access_token" => Doorkeeper::AccessToken.first.token)
     end
 
     context "with valid, default scope" do
@@ -189,16 +199,18 @@ describe "Resource Owner Password Credentials Flow" do
         default_scopes_exist :public
       end
 
-      it "should issue new token" do
+      it "issues new token" do
         expect do
           post password_token_endpoint_url(client: @client, resource_owner: @resource_owner, scope: "public")
         end.to change { Doorkeeper::AccessToken.count }.by(1)
 
         token = Doorkeeper::AccessToken.first
 
-        expect(token.application_id).to eq @client.id
-        should_have_json "access_token", token.token
-        should_have_json "scope", "public"
+        expect(token.application_id).to eq(@client.id)
+        expect(json_response).to include(
+          "access_token" => token.token,
+          "scope" => "public",
+        )
       end
     end
   end
@@ -216,10 +228,10 @@ describe "Resource Owner Password Credentials Flow" do
 
       token = Doorkeeper::AccessToken.first
 
-      expect(token.application_id).to eq @client.id
+      expect(token.application_id).to eq(@client.id)
       expect(token.scopes).to be_empty
-      should_have_json "access_token", token.token
-      should_not_have_json "scope"
+      expect(json_response).to include("access_token" => token.token)
+      expect(json_response).not_to include("scope")
     end
   end
 
@@ -237,9 +249,11 @@ describe "Resource Owner Password Credentials Flow" do
 
       token = Doorkeeper::AccessToken.first
 
-      expect(token.application_id).to eq @client.id
-      should_have_json "access_token", token.token
-      should_have_json "scope", "public"
+      expect(token.application_id).to eq(@client.id)
+      expect(json_response).to include(
+        "access_token" => token.token,
+        "scope" => "public",
+      )
     end
 
     it "issues new token with multiple default scopes that are present in application scopes" do
@@ -251,9 +265,11 @@ describe "Resource Owner Password Credentials Flow" do
 
       token = Doorkeeper::AccessToken.first
 
-      expect(token.application_id).to eq @client.id
-      should_have_json "access_token", token.token
-      should_have_json "scope", "public read"
+      expect(token.application_id).to eq(@client.id)
+      expect(json_response).to include(
+        "access_token" => token.token,
+        "scope" => "public read",
+      )
     end
   end
 
@@ -266,22 +282,26 @@ describe "Resource Owner Password Credentials Flow" do
       )
     end
 
-    it "should not issue new token" do
+    it "doesn't issue new token" do
       expect { subject }.to_not(change { Doorkeeper::AccessToken.count })
     end
 
-    it "should return invalid_scope error" do
+    it "returns invalid_scope error" do
       subject
-      should_have_json "error", "invalid_scope"
-      should_have_json "error_description", translated_error_message(:invalid_scope)
-      should_not_have_json "access_token"
+
+      expect(json_response).to include(
+        "error" => "invalid_scope",
+        "error_description" => translated_error_message(:invalid_scope),
+      )
+
+      expect(json_response).not_to include("access_token")
 
       expect(response.status).to eq(400)
     end
   end
 
   context "with invalid user credentials" do
-    it "should not issue new token with bad password" do
+    it "doesn't issue new token with bad password" do
       expect do
         post password_token_endpoint_url(
           client: @client,
@@ -291,13 +311,13 @@ describe "Resource Owner Password Credentials Flow" do
       end.to_not(change { Doorkeeper::AccessToken.count })
     end
 
-    it "should not issue new token without credentials" do
+    it "doesn't issue new token without credentials" do
       expect do
         post password_token_endpoint_url(client: @client)
       end.to_not(change { Doorkeeper::AccessToken.count })
     end
 
-    it "should not issue new token if resource_owner_from_credentials returned false or nil" do
+    it "doesn't issue new token if resource_owner_from_credentials returned false or nil" do
       config_is_set(:resource_owner_from_credentials) { false }
 
       expect do
@@ -313,7 +333,7 @@ describe "Resource Owner Password Credentials Flow" do
   end
 
   context "with invalid confidential client credentials" do
-    it "should not issue new token with bad client credentials" do
+    it "doesn't issue new token with bad client credentials" do
       expect do
         post password_token_endpoint_url(
           client_id: @client.uid,
@@ -325,7 +345,7 @@ describe "Resource Owner Password Credentials Flow" do
   end
 
   context "with invalid public client id" do
-    it "should not issue new token with bad client id" do
+    it "doesn't issue new token with bad client id" do
       expect do
         post password_token_endpoint_url(client_id: "bad_id", resource_owner: @resource_owner)
       end.to_not(change { Doorkeeper::AccessToken.count })

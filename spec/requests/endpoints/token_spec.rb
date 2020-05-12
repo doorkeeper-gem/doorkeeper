@@ -34,46 +34,52 @@ describe "Token endpoint" do
          },
          headers: { "HTTP_AUTHORIZATION" => basic_auth_header_for_client(@client) }
 
-    should_have_json "access_token", Doorkeeper::AccessToken.first.token
+    expect(json_response).to include("access_token" => Doorkeeper::AccessToken.first.token)
   end
 
   it "returns null for expires_in when a permanent token is set" do
     config_is_set(:access_token_expires_in, nil)
+
     post token_endpoint_url(code: @authorization.token, client: @client)
-    should_have_json "access_token", Doorkeeper::AccessToken.first.token
-    should_not_have_json "expires_in"
+
+    expect(json_response).to include("access_token" => Doorkeeper::AccessToken.first.token)
+    expect(json_response).not_to include("expires_in")
   end
 
   it "returns unsupported_grant_type for invalid grant_type param" do
     post token_endpoint_url(code: @authorization.token, client: @client, grant_type: "nothing")
 
-    should_not_have_json "access_token"
-    should_have_json "error", "unsupported_grant_type"
-    should_have_json "error_description", translated_error_message("unsupported_grant_type")
+    expect(json_response).to match(
+      "error" => "unsupported_grant_type",
+      "error_description" => translated_error_message("unsupported_grant_type"),
+    )
   end
 
   it "returns unsupported_grant_type for disabled grant flows" do
     config_is_set(:grant_flows, ["implicit"])
     post token_endpoint_url(code: @authorization.token, client: @client, grant_type: "authorization_code")
 
-    should_not_have_json "access_token"
-    should_have_json "error", "unsupported_grant_type"
-    should_have_json "error_description", translated_error_message("unsupported_grant_type")
+    expect(json_response).to match(
+      "error" => "unsupported_grant_type",
+      "error_description" => translated_error_message("unsupported_grant_type"),
+    )
   end
 
   it "returns unsupported_grant_type when refresh_token is not in use" do
     post token_endpoint_url(code: @authorization.token, client: @client, grant_type: "refresh_token")
 
-    should_not_have_json "access_token"
-    should_have_json "error", "unsupported_grant_type"
-    should_have_json "error_description", translated_error_message("unsupported_grant_type")
+    expect(json_response).to match(
+      "error" => "unsupported_grant_type",
+      "error_description" => translated_error_message("unsupported_grant_type"),
+    )
   end
 
   it "returns invalid_request if grant_type is missing" do
     post token_endpoint_url(code: @authorization.token, client: @client, grant_type: "")
 
-    should_not_have_json "access_token"
-    should_have_json "error", "invalid_request"
-    should_have_json "error_description", translated_invalid_request_error_message(:missing_param, :grant_type)
+    expect(json_response).to match(
+      "error" => "invalid_request",
+      "error_description" => translated_invalid_request_error_message(:missing_param, :grant_type),
+    )
   end
 end

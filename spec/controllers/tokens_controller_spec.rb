@@ -105,12 +105,12 @@ describe Doorkeeper::TokensController do
         }
       end
 
-      it "should call :before_successful_authorization callback" do
+      it "calls :before_successful_authorization callback" do
         expect(Doorkeeper.configuration)
           .to receive_message_chain(:before_successful_authorization, :call).with(instance_of(described_class), nil)
       end
 
-      it "should call :after_successful_authorization callback" do
+      it "calls :after_successful_authorization callback" do
         expect(Doorkeeper.configuration)
           .to receive_message_chain(:after_successful_authorization, :call)
           .with(instance_of(described_class), instance_of(Doorkeeper::OAuth::Hooks::Context))
@@ -126,7 +126,7 @@ describe Doorkeeper::TokensController do
         }
       end
 
-      it "should call :before_successful_authorization callback" do
+      it "calls :before_successful_authorization callback" do
         expect(Doorkeeper.configuration)
           .to receive_message_chain(:before_successful_authorization, :call).with(instance_of(described_class), nil)
       end
@@ -238,7 +238,7 @@ describe Doorkeeper::TokensController do
 
         post :introspect, params: { token: token_for_introspection.token }
 
-        should_have_json "active", true
+        expect(json_response).to include("active" => true)
         expect(json_response).to include("client_id", "token_type", "exp", "iat")
       end
     end
@@ -249,9 +249,14 @@ describe Doorkeeper::TokensController do
 
         post :introspect, params: { token: token_for_introspection.token }
 
-        should_have_json "active", true
-        expect(json_response).to include("client_id", "token_type", "exp", "iat")
-        should_have_json "client_id", client.uid
+        expect(json_response).to match(
+          "active" => true,
+          "client_id" => client.uid,
+          "token_type" => "Bearer",
+          "scope" => nil,
+          "exp" => an_instance_of(Integer),
+          "iat" => an_instance_of(Integer),
+        )
       end
     end
 
@@ -270,8 +275,8 @@ describe Doorkeeper::TokensController do
 
         response_status_should_be 401
 
-        should_not_have_json "active"
-        should_have_json "error", "invalid_token"
+        expect(json_response).not_to include("active")
+        expect(json_response).to include("error" => "invalid_token")
       end
     end
 
@@ -293,9 +298,16 @@ describe Doorkeeper::TokensController do
 
         post :introspect, params: { token: token_for_introspection.token }
 
-        expect(json_response).to include("client_id", "token_type", "exp", "iat", "sub", "aud")
-        should_have_json "sub", "Z5O3upPC88QrAjx00dis"
-        should_have_json "aud", "https://protected.example.net/resource"
+        expect(json_response).to match(
+          "active" => true,
+          "client_id" => client.uid,
+          "token_type" => "Bearer",
+          "scope" => nil,
+          "exp" => an_instance_of(Integer),
+          "iat" => an_instance_of(Integer),
+          "aud" => "https://protected.example.net/resource",
+          "sub" => "Z5O3upPC88QrAjx00dis",
+        )
       end
     end
 
@@ -307,9 +319,14 @@ describe Doorkeeper::TokensController do
 
         post :introspect, params: { token: token_for_introspection.token }
 
-        should_have_json "active", true
-        expect(json_response).to include("client_id", "token_type", "exp", "iat")
-        should_have_json "client_id", nil
+        expect(json_response).to match(
+          "active" => true,
+          "client_id" => nil,
+          "token_type" => "Bearer",
+          "scope" => nil,
+          "exp" => an_instance_of(Integer),
+          "iat" => an_instance_of(Integer),
+        )
       end
     end
 
@@ -323,8 +340,7 @@ describe Doorkeeper::TokensController do
 
         expect(response).to be_successful
 
-        should_have_json "active", false
-        expect(json_response).not_to include("client_id", "token_type", "exp", "iat")
+        expect(json_response).to match("active" => false)
       end
     end
 
@@ -342,9 +358,14 @@ describe Doorkeeper::TokensController do
 
         post :introspect, params: { token: token_for_introspection.token }
 
-        should_have_json "active", true
-        expect(json_response).to include("client_id", "token_type", "exp", "iat")
-        should_have_json "client_id", client.uid
+        expect(json_response).to match(
+          "active" => true,
+          "client_id" => client.uid,
+          "token_type" => "Bearer",
+          "scope" => nil,
+          "exp" => an_instance_of(Integer),
+          "iat" => an_instance_of(Integer),
+        )
       end
     end
 
@@ -362,8 +383,14 @@ describe Doorkeeper::TokensController do
 
         post :introspect, params: { token: token_for_introspection.token }
 
-        should_have_json "active", true
-        expect(json_response).to include("client_id", "token_type", "exp", "iat")
+        expect(json_response).to match(
+          "active" => true,
+          "client_id" => client.uid,
+          "token_type" => "Bearer",
+          "scope" => nil,
+          "exp" => an_instance_of(Integer),
+          "iat" => an_instance_of(Integer),
+        )
       end
 
       it "responds with invalid_token error if authorized token doesn't have introspection scope" do
@@ -375,8 +402,11 @@ describe Doorkeeper::TokensController do
 
         response_status_should_be 401
 
-        should_not_have_json "active"
-        should_have_json "error", "invalid_token"
+        expect(json_response).to match(
+          "error" => "invalid_token",
+          "error_description" => an_instance_of(String),
+          "state" => "unauthorized",
+        )
       end
     end
 
@@ -392,8 +422,11 @@ describe Doorkeeper::TokensController do
 
         response_status_should_be 401
 
-        should_not_have_json "active"
-        should_have_json "error", "invalid_token"
+        expect(json_response).to match(
+          "error" => "invalid_token",
+          "error_description" => an_instance_of(String),
+          "state" => "unauthorized",
+        )
       end
     end
 
@@ -405,8 +438,11 @@ describe Doorkeeper::TokensController do
 
         response_status_should_be 401
 
-        should_not_have_json "active"
-        should_have_json "error", "invalid_token"
+        expect(json_response).to match(
+          "error" => "invalid_token",
+          "error_description" => an_instance_of(String),
+          "state" => "unauthorized",
+        )
       end
     end
 
@@ -422,8 +458,10 @@ describe Doorkeeper::TokensController do
         expect(response).not_to be_successful
         response_status_should_be 401
 
-        should_not_have_json "active"
-        should_have_json "error", "invalid_client"
+        expect(json_response).to match(
+          "error" => "invalid_client",
+          "error_description" => an_instance_of(String),
+        )
       end
     end
 
@@ -434,8 +472,7 @@ describe Doorkeeper::TokensController do
 
           post :introspect, params: { token: SecureRandom.hex(16) }
 
-          should_have_json "active", false
-          expect(json_response).not_to include("client_id", "token_type", "exp", "iat")
+          expect(json_response).to match("active" => false)
         end
       end
 
@@ -447,8 +484,11 @@ describe Doorkeeper::TokensController do
 
           response_status_should_be 401
 
-          should_not_have_json "active"
-          should_have_json "error", "invalid_token"
+          expect(json_response).to match(
+            "error" => "invalid_token",
+            "error_description" => an_instance_of(String),
+            "state" => "unauthorized",
+          )
         end
       end
     end
@@ -463,8 +503,7 @@ describe Doorkeeper::TokensController do
 
         post :introspect, params: { token: token_for_introspection.token }
 
-        should_have_json "active", false
-        expect(json_response).not_to include("client_id", "token_type", "exp", "iat")
+        expect(json_response).to match("active" => false)
       end
     end
 
@@ -478,8 +517,7 @@ describe Doorkeeper::TokensController do
 
         post :introspect, params: { token: token_for_introspection.token }
 
-        should_have_json "active", false
-        expect(json_response).not_to include("client_id", "token_type", "exp", "iat")
+        expect(json_response).to match("active" => false)
       end
     end
 
@@ -492,8 +530,10 @@ describe Doorkeeper::TokensController do
         expect(response).not_to be_successful
         response_status_should_be 400
 
-        should_not_have_json "active"
-        should_have_json "error", "invalid_request"
+        expect(json_response).to match(
+          "error" => "invalid_request",
+          "error_description" => an_instance_of(String),
+        )
       end
     end
   end

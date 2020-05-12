@@ -26,18 +26,22 @@ describe "Refresh Token Flow" do
 
       token = Doorkeeper::AccessToken.first
 
-      should_have_json "access_token",  token.token
-      should_have_json "refresh_token", token.refresh_token
+      expect(json_response).to include(
+        "access_token" => token.token,
+        "refresh_token" => token.refresh_token,
+      )
 
       expect(@authorization.reload).to be_revoked
 
       post refresh_token_endpoint_url(client: @client, refresh_token: token.refresh_token)
 
       new_token = Doorkeeper::AccessToken.last
-      should_have_json "access_token",  new_token.token
-      should_have_json "refresh_token", new_token.refresh_token
+      expect(json_response).to include(
+        "access_token" => new_token.token,
+        "refresh_token" => new_token.refresh_token,
+      )
 
-      expect(token.token).not_to         eq(new_token.token)
+      expect(token.token).not_to eq(new_token.token)
       expect(token.refresh_token).not_to eq(new_token.refresh_token)
     end
   end
@@ -58,8 +62,8 @@ describe "Refresh Token Flow" do
         post refresh_token_endpoint_url(
           client: @client, refresh_token: @token.refresh_token,
         )
-        should_have_json(
-          "refresh_token", Doorkeeper::AccessToken.last.refresh_token,
+        expect(json_response).to include(
+          "refresh_token" => Doorkeeper::AccessToken.last.refresh_token,
         )
         expect(@token.reload).not_to be_revoked
       end
@@ -69,8 +73,8 @@ describe "Refresh Token Flow" do
         post refresh_token_endpoint_url(
           client: @client, refresh_token: @token.refresh_token,
         )
-        should_have_json(
-          "refresh_token", Doorkeeper::AccessToken.last.refresh_token,
+        expect(json_response).to include(
+          "refresh_token" => Doorkeeper::AccessToken.last.refresh_token,
         )
         expect(@token.reload).not_to be_revoked
       end
@@ -85,8 +89,8 @@ describe "Refresh Token Flow" do
         post refresh_token_endpoint_url(
           client: @client, refresh_token: @token.refresh_token,
         )
-        should_have_json(
-          "refresh_token", Doorkeeper::AccessToken.last.refresh_token,
+        expect(json_response).to include(
+          "refresh_token" => Doorkeeper::AccessToken.last.refresh_token,
         )
         expect(@token.reload).to be_revoked
       end
@@ -96,8 +100,8 @@ describe "Refresh Token Flow" do
         post refresh_token_endpoint_url(
           client: @client, refresh_token: @token.refresh_token,
         )
-        should_have_json(
-          "refresh_token", Doorkeeper::AccessToken.last.refresh_token,
+        expect(json_response).to include(
+          "refresh_token" => Doorkeeper::AccessToken.last.refresh_token,
         )
         expect(@token.reload).to be_revoked
       end
@@ -138,15 +142,16 @@ describe "Refresh Token Flow" do
         )
 
         new_token = Doorkeeper::AccessToken.last
-        should_have_json "access_token",  new_token.token
-        should_have_json "refresh_token", new_token.refresh_token
+        expect(json_response).to include(
+          "access_token" => new_token.token,
+          "refresh_token" => new_token.refresh_token,
+        )
       end
 
       it "returns an error without credentials" do
         post refresh_token_endpoint_url(refresh_token: token_for_private_client.refresh_token)
 
-        should_not_have_json "refresh_token"
-        should_have_json "error", "invalid_grant"
+        expect(json_response).to include("error" => "invalid_grant")
       end
 
       it "returns an error with wrong credentials" do
@@ -155,31 +160,40 @@ describe "Refresh Token Flow" do
           client_secret: "1",
           refresh_token: token_for_private_client.refresh_token,
         )
-
-        should_not_have_json "refresh_token"
-        should_have_json "error", "invalid_client"
+        expect(json_response).to match(
+          "error" => "invalid_client",
+          "error_description" => an_instance_of(String),
+        )
       end
     end
 
     it "client gets an error for invalid refresh token" do
       post refresh_token_endpoint_url(client: @client, refresh_token: "invalid")
-      should_not_have_json "refresh_token"
-      should_have_json "error", "invalid_grant"
+
+      expect(json_response).to match(
+        "error" => "invalid_grant",
+        "error_description" => an_instance_of(String),
+      )
     end
 
     it "client gets an error for revoked access token" do
       @token.revoke
       post refresh_token_endpoint_url(client: @client, refresh_token: @token.refresh_token)
-      should_not_have_json "refresh_token"
-      should_have_json "error", "invalid_grant"
+
+      expect(json_response).to match(
+        "error" => "invalid_grant",
+        "error_description" => an_instance_of(String),
+      )
     end
 
     it "second of simultaneous client requests get an error for revoked access token" do
       allow_any_instance_of(Doorkeeper::AccessToken).to receive(:revoked?).and_return(false, true)
       post refresh_token_endpoint_url(client: @client, refresh_token: @token.refresh_token)
 
-      should_not_have_json "refresh_token"
-      should_have_json "error", "invalid_grant"
+      expect(json_response).to match(
+        "error" => "invalid_grant",
+        "error_description" => an_instance_of(String),
+      )
     end
   end
 
@@ -212,7 +226,7 @@ describe "Refresh Token Flow" do
           client: @client, refresh_token: @token.refresh_token,
         )
 
-        should_have_json "refresh_token", last_token.refresh_token
+        expect(json_response).to include("refresh_token" => last_token.refresh_token)
         expect(@token.reload).not_to be_revoked
       end
     end
@@ -227,7 +241,7 @@ describe "Refresh Token Flow" do
           client: @client, refresh_token: @token.refresh_token,
         )
 
-        should_have_json "refresh_token", last_token.refresh_token
+        expect(json_response).to include("refresh_token" => last_token.refresh_token)
         expect(@token.reload).to be_revoked
       end
     end
