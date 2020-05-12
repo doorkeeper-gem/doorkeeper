@@ -61,8 +61,8 @@ describe "Client Credentials Request" do
 
           expect(response.status).to eq(400)
           expect(json_response).to match(
-           "error" => "invalid_scope",
-           "error_description" => translated_error_message(:invalid_scope),
+            "error" => "invalid_scope",
+            "error_description" => translated_error_message(:invalid_scope),
           )
         end
       end
@@ -86,8 +86,8 @@ describe "Client Credentials Request" do
       post "/oauth/token", params: params, headers: headers
 
       expect(json_response).to match(
-       "error" => "unauthorized_client",
-       "error_description" => translated_error_message(:unauthorized_client),
+        "error" => "unauthorized_client",
+        "error_description" => translated_error_message(:unauthorized_client),
       )
     end
 
@@ -103,7 +103,7 @@ describe "Client Credentials Request" do
         "access_token" => Doorkeeper::AccessToken.first.token,
         "token_type" => "Bearer",
         "expires_in" => 7200,
-        "created_at"=> an_instance_of(Integer),
+        "created_at" => an_instance_of(Integer),
       )
     end
   end
@@ -162,8 +162,8 @@ describe "Client Credentials Request" do
       expect(response.status).to eq(401)
 
       expect(json_response).to match(
-       "error" => "invalid_client",
-       "error_description" => translated_error_message(:invalid_client),
+        "error" => "invalid_client",
+        "error_description" => translated_error_message(:invalid_client),
       )
     end
   end
@@ -205,8 +205,8 @@ describe "Client Credentials Request" do
         post "/oauth/token", params: params, headers: headers
 
         expect(json_response).to match(
-         "error" => "invalid_token_reuse",
-         "error_description" => translated_error_message(:server_error),
+          "error" => "invalid_token_reuse",
+          "error_description" => translated_error_message(:server_error),
         )
       end
     end
