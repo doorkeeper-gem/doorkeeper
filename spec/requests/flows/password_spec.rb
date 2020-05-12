@@ -40,6 +40,9 @@ describe "Resource Owner Password Credentials Flow" do
 
         expect(token.application_id).to eq @client.id
         should_have_json "access_token", token.token
+        expect(json_response).to include(
+          "access_token", "expires_in", "token_type", "created_at",
+        )
       end
     end
 
