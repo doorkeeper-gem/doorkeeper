@@ -14,7 +14,7 @@ module RequestSpecHelper
   end
 
   def i_should_be_on(path)
-    expect(current_path).to eq(path)
+    expect(page).to have_current_path(path, ignore_query: true)
   end
 
   def url_should_have_param(param, value)

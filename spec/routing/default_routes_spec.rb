@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe "Default routes" do
+RSpec.describe "Default routes" do
   it "GET /oauth/authorize routes to authorizations controller" do
     expect(get("/oauth/authorize")).to route_to("doorkeeper/authorizations#new")
   end

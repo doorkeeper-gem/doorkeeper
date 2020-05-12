@@ -2,7 +2,11 @@
 
 require "spec_helper"
 
-describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
+RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
+  subject do
+    described_class.new(server, client, owner)
+  end
+
   let(:server) do
     double(
       :server,
@@ -20,10 +24,6 @@ describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
 
   before do
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
-  end
-
-  subject do
-    described_class.new(server, client, owner)
   end
 
   it "issues a new token for the client" do

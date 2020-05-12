@@ -3,14 +3,14 @@
 require "spec_helper"
 require "generators/doorkeeper/enable_polymorphic_resource_owner_generator"
 
-describe "Doorkeeper::EnablePolymorphicResourceOwnerGenerator" do
+RSpec.describe Doorkeeper::EnablePolymorphicResourceOwnerGenerator do
   include GeneratorSpec::TestCase
 
-  tests Doorkeeper::EnablePolymorphicResourceOwnerGenerator
+  tests described_class
   destination ::File.expand_path("../tmp/dummy", __FILE__)
 
   describe "after running the generator" do
-    before :each do
+    before do
       prepare_destination
       FileUtils.mkdir_p(::File.expand_path("config/initializers", Pathname(destination_root)))
       FileUtils.copy_file(

@@ -3,14 +3,14 @@
 require "spec_helper"
 require "generators/doorkeeper/pkce_generator"
 
-describe "Doorkeeper::PkceGenerator" do
+RSpec.describe Doorkeeper::PkceGenerator do
   include GeneratorSpec::TestCase
 
-  tests Doorkeeper::PkceGenerator
+  tests described_class
   destination ::File.expand_path("../tmp/dummy", __FILE__)
 
   describe "after running the generator" do
-    before :each do
+    before do
       prepare_destination
     end
 

@@ -60,7 +60,7 @@ module GrapeApp
   end
 end
 
-describe "Grape integration" do
+RSpec.describe "Grape integration" do
   include Rack::Test::Methods
 
   def app

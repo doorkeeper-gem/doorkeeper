@@ -2,7 +2,11 @@
 
 require "spec_helper"
 
-describe Doorkeeper::OAuth::BaseRequest do
+RSpec.describe Doorkeeper::OAuth::BaseRequest do
+  subject do
+    described_class.new
+  end
+
   let(:access_token) do
     double :access_token,
            plaintext_token: "some-token",
@@ -29,10 +33,6 @@ describe Doorkeeper::OAuth::BaseRequest do
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
   end
 
-  subject do
-    described_class.new
-  end
-
   describe "#authorize" do
     before do
       allow(subject).to receive(:access_token).and_return(access_token)
@@ -43,7 +43,7 @@ describe Doorkeeper::OAuth::BaseRequest do
       subject.authorize
     end
 
-    context "valid" do
+    context "when valid" do
       before do
         allow(subject).to receive(:valid?).and_return(true)
       end
@@ -64,7 +64,7 @@ describe Doorkeeper::OAuth::BaseRequest do
       end
     end
 
-    context "invalid" do
+    context "when invalid" do
       context "with error other than invalid_request" do
         before do
           allow(subject).to receive(:valid?).and_return(false)
@@ -146,7 +146,7 @@ describe Doorkeeper::OAuth::BaseRequest do
         "public",
         server,
       )
-      expect(result.expires_in).to eql(500)
+      expect(result.expires_in).to be(500)
     end
 
     it "respects use_refresh_token with a block" do
@@ -167,7 +167,7 @@ describe Doorkeeper::OAuth::BaseRequest do
         "public",
         server,
       )
-      expect(result.refresh_token).to_not be_nil
+      expect(result.refresh_token).not_to be_nil
 
       result = subject.find_or_create_access_token(
         client,
@@ -180,7 +180,7 @@ describe Doorkeeper::OAuth::BaseRequest do
   end
 
   describe "#scopes" do
-    context "@original_scopes is present" do
+    context "when @original_scopes is present" do
       before do
         subject.instance_variable_set(:@original_scopes, "public write")
       end
@@ -192,7 +192,7 @@ describe Doorkeeper::OAuth::BaseRequest do
       end
     end
 
-    context "@original_scopes is not present" do
+    context "when @original_scopes is blank" do
       before do
         subject.instance_variable_set(:@original_scopes, "")
       end

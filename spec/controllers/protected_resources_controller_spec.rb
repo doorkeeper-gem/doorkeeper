@@ -16,8 +16,8 @@ module ControllerActions
   def doorkeeper_forbidden_render_options(*); end
 end
 
-describe "doorkeeper authorize filter" do
-  context "accepts token code specified as" do
+RSpec.describe "doorkeeper authorize filter" do
+  context "when accepts token code specified as" do
     controller do
       before_action :doorkeeper_authorize!
 
@@ -58,7 +58,7 @@ describe "doorkeeper authorize filter" do
     end
 
     it "does not change Authorization header value" do
-      expect(Doorkeeper::AccessToken).to receive(:by_token).exactly(2).times.and_return(token)
+      expect(Doorkeeper::AccessToken).to receive(:by_token).twice.and_return(token)
       request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
       get :index
       controller.send(:remove_instance_variable, :@doorkeeper_token)
@@ -66,7 +66,7 @@ describe "doorkeeper authorize filter" do
     end
   end
 
-  context "defined for all actions" do
+  context "when defined for all actions" do
     controller do
       before_action :doorkeeper_authorize!
 
@@ -100,7 +100,7 @@ describe "doorkeeper authorize filter" do
     end
   end
 
-  context "defined with scopes" do
+  context "when defined with scopes" do
     controller do
       before_action -> { doorkeeper_authorize! :write }
 
@@ -139,7 +139,7 @@ describe "doorkeeper authorize filter" do
 
       get :index, params: { access_token: token_string }
       expect(response.status).to eq 403
-      expect(response.header).to_not include("WWW-Authenticate")
+      expect(response.header).not_to include("WWW-Authenticate")
     end
   end
 
@@ -169,7 +169,7 @@ describe "doorkeeper authorize filter" do
         end
       end
 
-      it "it renders a custom JSON response", token: :invalid do
+      it "renders a custom JSON response", token: :invalid do
         get :index, params: { access_token: token_string }
         expect(response.status).to eq 401
         expect(response.content_type).to include("application/json")
@@ -199,7 +199,7 @@ describe "doorkeeper authorize filter" do
         end
       end
 
-      it "it renders a custom text response", token: :invalid do
+      it "renders a custom text response", token: :invalid do
         get :index, params: { access_token: token_string }
         expect(response.status).to eq 401
         expect(response.content_type).to include("text/plain")
@@ -253,7 +253,7 @@ describe "doorkeeper authorize filter" do
 
       it "renders a custom JSON response" do
         get :index, params: { access_token: token_string }
-        expect(response.header).to_not include("WWW-Authenticate")
+        expect(response.header).not_to include("WWW-Authenticate")
         expect(response.content_type).to include("application/json")
         expect(response.status).to eq 403
 
@@ -292,7 +292,7 @@ describe "doorkeeper authorize filter" do
 
       it "renders a custom status code and text response" do
         get :index, params: { access_token: token_string }
-        expect(response.header).to_not include("WWW-Authenticate")
+        expect(response.header).not_to include("WWW-Authenticate")
         expect(response.status).to eq 403
         expect(response.body).to eq("Forbidden")
       end

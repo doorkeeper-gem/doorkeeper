@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe "Token endpoint" do
+RSpec.describe "Token endpoint" do
   before do
     client_exists
     create_resource_owner

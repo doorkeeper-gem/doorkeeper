@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe Doorkeeper::OAuth::ForbiddenTokenResponse do
+RSpec.describe Doorkeeper::OAuth::ForbiddenTokenResponse do
   describe "#name" do
     it { expect(subject.name).to eq(:invalid_scope) }
   end

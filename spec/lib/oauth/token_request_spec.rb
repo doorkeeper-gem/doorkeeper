@@ -2,7 +2,11 @@
 
 require "spec_helper"
 
-describe Doorkeeper::OAuth::TokenRequest do
+RSpec.describe Doorkeeper::OAuth::TokenRequest do
+  subject do
+    described_class.new(pre_auth, owner)
+  end
+
   let :application do
     FactoryBot.create(:application, scopes: "public")
   end
@@ -27,10 +31,6 @@ describe Doorkeeper::OAuth::TokenRequest do
 
   let :owner do
     FactoryBot.create(:doorkeeper_testing_user)
-  end
-
-  subject do
-    described_class.new(pre_auth, owner)
   end
 
   it "creates an access token" do
@@ -61,7 +61,7 @@ describe Doorkeeper::OAuth::TokenRequest do
         end
       end
 
-      it "should use the custom ttl" do
+      it "uses the custom ttl" do
         subject.authorize
         token = Doorkeeper::AccessToken.first
         expect(token.expires_in).to eq(1234)
@@ -79,7 +79,7 @@ describe Doorkeeper::OAuth::TokenRequest do
         end
       end
 
-      it "should fallback to access_token_expires_in" do
+      it "fallbacks to access_token_expires_in" do
         subject.authorize
         token = Doorkeeper::AccessToken.first
         expect(token.expires_in).to eq(654)
@@ -97,7 +97,7 @@ describe Doorkeeper::OAuth::TokenRequest do
         end
       end
 
-      it "should fallback to access_token_expires_in" do
+      it "fallbacks to access_token_expires_in" do
         subject.authorize
         token = Doorkeeper::AccessToken.first
         expect(token.expires_in).to be_nil
@@ -105,7 +105,7 @@ describe Doorkeeper::OAuth::TokenRequest do
     end
   end
 
-  context "token reuse" do
+  context "when reuse_access_token enabled" do
     it "creates a new token if there are no matching tokens" do
       allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
       expect do

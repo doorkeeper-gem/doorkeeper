@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe Doorkeeper::StaleRecordsCleaner do
+RSpec.describe Doorkeeper::StaleRecordsCleaner do
   let(:cleaner) { described_class.new(model) }
   let(:models_by_name) do
     {
@@ -38,7 +38,7 @@ describe Doorkeeper::StaleRecordsCleaner do
           end
 
           it "removes the record" do
-            expect { subject }.to change { model.count }.to(0)
+            expect { subject }.to change(model, :count).to(0)
           end
         end
 
@@ -50,7 +50,7 @@ describe Doorkeeper::StaleRecordsCleaner do
           end
 
           it "keeps the record" do
-            expect { subject }.not_to(change { model.count })
+            expect { subject }.not_to(change(model, :count))
           end
         end
 
@@ -62,13 +62,14 @@ describe Doorkeeper::StaleRecordsCleaner do
           end
 
           it "keeps the record" do
-            expect { subject }.not_to(change { model.count })
+            expect { subject }.not_to(change(model, :count))
           end
         end
       end
 
       describe "#clean_expired" do
         subject { cleaner.clean_expired(ttl) }
+
         let(:ttl) { 500 }
         let(:expiry_border) { ttl.seconds.ago }
 
@@ -81,7 +82,7 @@ describe Doorkeeper::StaleRecordsCleaner do
           end
 
           it "removes the record" do
-            expect { subject }.to change { model.count }.to(0)
+            expect { subject }.to change(model, :count).to(0)
           end
         end
 
@@ -93,7 +94,7 @@ describe Doorkeeper::StaleRecordsCleaner do
           end
 
           it "keeps the record" do
-            expect { subject }.not_to(change { model.count })
+            expect { subject }.not_to(change(model, :count))
           end
         end
       end

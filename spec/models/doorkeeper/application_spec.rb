@@ -3,7 +3,7 @@
 require "spec_helper"
 require "bcrypt"
 
-describe Doorkeeper::Application do
+RSpec.describe Doorkeeper::Application do
   let(:require_owner) { Doorkeeper.config.instance_variable_set("@confirm_application_owner", true) }
   let(:unset_require_owner) { Doorkeeper.config.instance_variable_set("@confirm_application_owner", false) }
   let(:new_application) { FactoryBot.build(:application) }
@@ -83,7 +83,7 @@ describe Doorkeeper::Application do
     expect(new_application).not_to be_valid
   end
 
-  context "application_owner is enabled" do
+  context "when application_owner is enabled" do
     before do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
@@ -91,8 +91,8 @@ describe Doorkeeper::Application do
       end
     end
 
-    context "application owner is not required" do
-      before(:each) do
+    context "when application owner is not required" do
+      before do
         unset_require_owner
       end
 
@@ -101,7 +101,7 @@ describe Doorkeeper::Application do
       end
     end
 
-    context "application owner is required" do
+    context "when application owner is required" do
       before do
         require_owner
         @owner = FactoryBot.build_stubbed(:doorkeeper_testing_user)
@@ -118,7 +118,7 @@ describe Doorkeeper::Application do
     end
   end
 
-  context "redirect URI" do
+  describe "redirect URI" do
     context "when grant flows allow blank redirect URI" do
       before do
         Doorkeeper.configure do
@@ -222,13 +222,13 @@ describe Doorkeeper::Application do
   end
 
   describe "destroy related models on cascade" do
-    before(:each) do
+    before do
       new_application.save
     end
 
     let(:resource_owner) { FactoryBot.create(:resource_owner) }
 
-    it "should destroy its access grants" do
+    it "destroys its access grants" do
       FactoryBot.create(
         :access_grant,
         application: new_application,
@@ -239,7 +239,7 @@ describe Doorkeeper::Application do
       expect { new_application.destroy }.to change { Doorkeeper::AccessGrant.count }.by(-1)
     end
 
-    it "should destroy its access tokens" do
+    it "destroys its access tokens" do
       FactoryBot.create(:access_token, application: new_application)
       FactoryBot.create(:access_token, application: new_application, revoked_at: Time.now.utc)
       expect do
@@ -268,13 +268,14 @@ describe Doorkeeper::Application do
 
   describe "#redirect_uri=" do
     context "when array of valid redirect_uris" do
-      it "should join by newline" do
+      it "joins by newline" do
         new_application.redirect_uri = ["http://localhost/callback1", "http://localhost/callback2"]
         expect(new_application.redirect_uri).to eq("http://localhost/callback1\nhttp://localhost/callback2")
       end
     end
+
     context "when string of valid redirect_uris" do
-      it "should store as-is" do
+      it "stores as-is" do
         new_application.redirect_uri = "http://localhost/callback1\nhttp://localhost/callback2"
         expect(new_application.redirect_uri).to eq("http://localhost/callback1\nhttp://localhost/callback2")
       end
@@ -284,7 +285,7 @@ describe Doorkeeper::Application do
   describe "#renew_secret" do
     let(:app) { FactoryBot.create :application }
 
-    it "should generate a new secret" do
+    it "generates a new secret" do
       old_secret = app.secret
       app.renew_secret
       expect(old_secret).not_to eq(app.secret)
@@ -376,8 +377,9 @@ describe Doorkeeper::Application do
         authenticated = described_class.by_uid_and_secret(app.uid, app.secret)
         expect(authenticated).to eq(app)
       end
+
       context "when secret is wrong" do
-        it "should not find the application" do
+        it "does not find the application" do
           app = FactoryBot.create :application
           authenticated = described_class.by_uid_and_secret(app.uid, "bad")
           expect(authenticated).to eq(nil)
@@ -387,14 +389,15 @@ describe Doorkeeper::Application do
 
     context "when application is public/non-confidential" do
       context "when secret is blank" do
-        it "should find the application" do
+        it "finds the application" do
           app = FactoryBot.create :application, confidential: false
           authenticated = described_class.by_uid_and_secret(app.uid, nil)
           expect(authenticated).to eq(app)
         end
       end
+
       context "when secret is wrong" do
-        it "should not find the application" do
+        it "does not find the application" do
           app = FactoryBot.create :application, confidential: false
           authenticated = described_class.by_uid_and_secret(app.uid, "bad")
           expect(authenticated).to eq(nil)
@@ -408,11 +411,13 @@ describe Doorkeeper::Application do
 
     context "when application is private/confidential" do
       let(:confidential) { true }
+
       it { expect(subject).to eq(true) }
     end
 
     context "when application is public/non-confidential" do
       let(:confidential) { false }
+
       it { expect(subject).to eq(false) }
     end
   end

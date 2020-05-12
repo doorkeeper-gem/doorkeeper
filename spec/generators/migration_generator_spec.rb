@@ -3,14 +3,14 @@
 require "spec_helper"
 require "generators/doorkeeper/migration_generator"
 
-describe "Doorkeeper::MigrationGenerator" do
+RSpec.describe Doorkeeper::MigrationGenerator do
   include GeneratorSpec::TestCase
 
-  tests Doorkeeper::MigrationGenerator
+  tests described_class
   destination ::File.expand_path("../tmp/dummy", __FILE__)
 
   describe "after running the generator" do
-    before :each do
+    before do
       prepare_destination
     end
 

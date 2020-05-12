@@ -2,7 +2,11 @@
 
 require "spec_helper"
 
-describe Doorkeeper::OAuth::PreAuthorization do
+RSpec.describe Doorkeeper::OAuth::PreAuthorization do
+  subject do
+    described_class.new(server, attributes)
+  end
+
   let(:server) do
     server = Doorkeeper.configuration
     allow(server).to receive(:default_scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("default"))
@@ -21,10 +25,6 @@ describe Doorkeeper::OAuth::PreAuthorization do
       state: "save-this",
       current_resource_owner: Object.new,
     }
-  end
-
-  subject do
-    described_class.new(server, attributes)
   end
 
   it "is authorizable when request is valid" do
@@ -89,7 +89,7 @@ describe Doorkeeper::OAuth::PreAuthorization do
     end
   end
 
-  context "client application does not restrict valid scopes" do
+  context "when client application does not restrict valid scopes" do
     it "accepts valid scopes" do
       attributes[:scope] = "public"
       expect(subject).to be_authorizable
@@ -113,7 +113,7 @@ describe Doorkeeper::OAuth::PreAuthorization do
     end
   end
 
-  context "client application restricts valid scopes" do
+  context "when client application restricts valid scopes" do
     let(:application) do
       FactoryBot.create(:application, scopes: Doorkeeper::OAuth::Scopes.from_string("public nonsense"))
     end
@@ -130,7 +130,7 @@ describe Doorkeeper::OAuth::PreAuthorization do
 
     it "rejects (application level) non-valid scopes" do
       attributes[:scope] = "profile"
-      expect(subject).to_not be_authorizable
+      expect(subject).not_to be_authorizable
     end
 
     it "accepts scopes which are permitted for grant_type" do

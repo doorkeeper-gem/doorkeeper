@@ -3,8 +3,9 @@
 require "spec_helper"
 require "bcrypt"
 
-describe ::Doorkeeper::SecretStoring::BCrypt do
+RSpec.describe ::Doorkeeper::SecretStoring::BCrypt do
   subject { described_class }
+
   let(:instance) { double("instance", token: "foo") }
 
   describe "#transform_secret" do

@@ -2,7 +2,9 @@
 
 require "spec_helper"
 
-describe Doorkeeper::OAuth::ClientCredentials::Issuer do
+RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
+  subject { described_class.new(server, validator) }
+
   let(:creator) { double :access_token_creator }
   let(:server) do
     double(
@@ -15,8 +17,6 @@ describe Doorkeeper::OAuth::ClientCredentials::Issuer do
   before do
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(false)
   end
-
-  subject { described_class.new(server, validator) }
 
   describe "#create" do
     let(:client) { double :client, id: "some-id" }
@@ -51,10 +51,10 @@ describe Doorkeeper::OAuth::ClientCredentials::Issuer do
       before do
         allow(validator).to receive(:valid?).and_return(false)
         allow(validator).to receive(:error).and_return(:validation_error)
-        expect(creator).not_to receive(:create)
       end
 
       it "has error set from validator" do
+        expect(creator).not_to receive(:create)
         subject.create client, scopes, creator
         expect(subject.error).to eq(:validation_error)
       end

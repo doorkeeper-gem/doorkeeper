@@ -2,7 +2,9 @@
 
 require "spec_helper"
 
-describe Doorkeeper::OAuth::ClientCredentialsRequest do
+RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
+  subject { described_class.new(server, client) }
+
   let(:server) do
     double(
       default_scopes: nil,
@@ -17,11 +19,6 @@ describe Doorkeeper::OAuth::ClientCredentialsRequest do
 
   before do
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
-  end
-
-  subject { Doorkeeper::OAuth::ClientCredentialsRequest.new(server, client) }
-
-  before do
     allow(subject).to receive(:issuer).and_return(token_creator)
   end
 
@@ -35,7 +32,7 @@ describe Doorkeeper::OAuth::ClientCredentialsRequest do
     expect(subject.response).to be_a(Doorkeeper::OAuth::TokenResponse)
   end
 
-  context "if issue was not created" do
+  context "when issue was not created" do
     before do
       issuer = double create: false, error: :invalid
       allow(subject).to receive(:issuer).and_return(issuer)
@@ -65,7 +62,7 @@ describe Doorkeeper::OAuth::ClientCredentialsRequest do
     end
 
     it "issues an access token with requested scopes" do
-      subject = Doorkeeper::OAuth::ClientCredentialsRequest.new(server, client, scope: "email")
+      subject = described_class.new(server, client, scope: "email")
       allow(subject).to receive(:issuer).and_return(token_creator)
       expect(token_creator).to receive(:create).with(client, Doorkeeper::OAuth::Scopes.from_string("email"))
       subject.authorize
@@ -92,14 +89,14 @@ describe Doorkeeper::OAuth::ClientCredentialsRequest do
     end
 
     it "delegates the error to issuer if no scope was requested" do
-      subject = Doorkeeper::OAuth::ClientCredentialsRequest.new(server, client)
+      subject = described_class.new(server, client)
       subject.authorize
       expect(subject.response).to be_a(Doorkeeper::OAuth::ErrorResponse)
       expect(subject.error).to eq(:invalid_scope)
     end
 
     it "issues an access token with requested scopes" do
-      subject = Doorkeeper::OAuth::ClientCredentialsRequest.new(server, client, scope: "phone")
+      subject = described_class.new(server, client, scope: "phone")
       subject.authorize
       expect(subject.response).to be_a(Doorkeeper::OAuth::TokenResponse)
       expect(subject.response.token.scopes_string).to eq("phone")

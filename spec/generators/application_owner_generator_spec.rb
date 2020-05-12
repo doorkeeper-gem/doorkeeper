@@ -3,14 +3,14 @@
 require "spec_helper"
 require "generators/doorkeeper/application_owner_generator"
 
-describe "Doorkeeper::ApplicationOwnerGenerator" do
+RSpec.describe Doorkeeper::ApplicationOwnerGenerator do
   include GeneratorSpec::TestCase
 
-  tests Doorkeeper::ApplicationOwnerGenerator
+  tests described_class
   destination ::File.expand_path("../tmp/dummy", __FILE__)
 
   describe "after running the generator" do
-    before :each do
+    before do
       prepare_destination
     end
 

@@ -11,7 +11,7 @@ shared_context "valid token", token: :valid do
     )
   end
 
-  before :each do
+  before do
     allow(
       Doorkeeper::AccessToken,
     ).to receive(:by_token).with(token_string).and_return(token)
@@ -30,43 +30,10 @@ shared_context "invalid token", token: :invalid do
     )
   end
 
-  before :each do
+  before do
     allow(
       Doorkeeper::AccessToken,
     ).to receive(:by_token).with(token_string).and_return(token)
-  end
-end
-
-shared_context "authenticated resource owner" do
-  before do
-    user = double(:resource, id: 1)
-    allow(Doorkeeper.config).to receive(:authenticate_resource_owner) { proc { user } }
-  end
-end
-
-shared_context "not authenticated resource owner" do
-  before do
-    allow(Doorkeeper.config).to receive(:authenticate_resource_owner) { proc { redirect_to "/" } }
-  end
-end
-
-shared_context "valid authorization request" do
-  let :authorization do
-    double(:authorization, valid?: true, authorize: true, success_redirect_uri: "http://something.com/cb?code=token")
-  end
-
-  before do
-    allow(controller).to receive(:authorization) { authorization }
-  end
-end
-
-shared_context "invalid authorization request" do
-  let :authorization do
-    double(:authorization, valid?: false, authorize: false, redirect_on_error?: false)
-  end
-
-  before do
-    allow(controller).to receive(:authorization) { authorization }
   end
 end
 
@@ -84,7 +51,7 @@ shared_context "expired token", token: :expired do
     )
   end
 
-  before :each do
+  before do
     allow(
       Doorkeeper::AccessToken,
     ).to receive(:by_token).with(token_string).and_return(token)
@@ -105,7 +72,7 @@ shared_context "revoked token", token: :revoked do
     )
   end
 
-  before :each do
+  before do
     allow(
       Doorkeeper::AccessToken,
     ).to receive(:by_token).with(token_string).and_return(token)
@@ -125,7 +92,7 @@ shared_context "forbidden token", token: :forbidden do
     )
   end
 
-  before :each do
+  before do
     allow(
       Doorkeeper::AccessToken,
     ).to receive(:by_token).with(token_string).and_return(token)

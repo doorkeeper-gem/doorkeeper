@@ -2,13 +2,13 @@
 
 require "spec_helper"
 
-describe Doorkeeper::OAuth::ClientCredentials::Validator do
+RSpec.describe Doorkeeper::OAuth::ClientCredentials::Validator do
+  subject { described_class.new(server, request) }
+
   let(:server)      { double :server, scopes: nil }
   let(:application) { double scopes: nil }
   let(:client)      { double application: application }
   let(:request)     { double :request, client: client, scopes: nil }
-
-  subject { described_class.new(server, request) }
 
   it "is valid with valid request" do
     expect(subject).to be_valid
@@ -25,14 +25,17 @@ describe Doorkeeper::OAuth::ClientCredentials::Validator do
     before do
       allow(Doorkeeper.config).to receive(:option_defined?).with(:allow_grant_flow_for_client).and_return(true)
       allow(Doorkeeper.config).to receive(:allow_grant_flow_for_client).and_return(callback)
-
-      expect(callback).to receive(:call).twice.with(Doorkeeper::OAuth::CLIENT_CREDENTIALS, application).and_return(callback_response)
     end
 
     context "when the callback rejects the grant flow" do
       let(:callback_response) { false }
 
       it "is invalid" do
+        expect(callback).to receive(:call).twice.with(
+          Doorkeeper::OAuth::CLIENT_CREDENTIALS,
+          application,
+        ).and_return(callback_response)
+
         expect(subject).not_to be_valid
       end
     end
@@ -41,6 +44,11 @@ describe Doorkeeper::OAuth::ClientCredentials::Validator do
       let(:callback_response) { true }
 
       it "is invalid" do
+        expect(callback).to receive(:call).twice.with(
+          Doorkeeper::OAuth::CLIENT_CREDENTIALS,
+          application,
+        ).and_return(callback_response)
+
         expect(subject).to be_valid
       end
     end

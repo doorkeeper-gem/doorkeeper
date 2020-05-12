@@ -16,6 +16,7 @@ gem "rspec-support"
 gem "rubocop", "~> 0.80"
 gem "rubocop-performance", require: false
 gem "rubocop-rails", require: false
+gem "rubocop-rspec", require: false
 
 gem "bcrypt", "~> 3.1", require: false
 

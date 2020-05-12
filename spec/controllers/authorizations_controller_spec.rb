@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
+RSpec.describe Doorkeeper::AuthorizationsController do
   include AuthorizationRequestHelper
 
   class ActionDispatch::TestResponse
@@ -14,8 +14,8 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     end
   end
 
-  let(:client)        { FactoryBot.create :application }
-  let(:user)          { User.create!(name: "Joe", password: "sekret") }
+  let(:client) { FactoryBot.create :application }
+  let(:user) { User.create!(name: "Joe", password: "sekret") }
 
   let(:access_token) do
     FactoryBot.build :access_token,
@@ -38,7 +38,6 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
     allow(Doorkeeper.config).to receive(:grant_flows).and_return(["implicit"])
     allow(Doorkeeper.config).to receive(:authenticate_resource_owner).and_return(->(_) { authenticator_method })
     allow(controller).to receive(:authenticator_method).and_return(user)
-    expect(controller).to receive(:authenticator_method).at_most(:once)
   end
 
   describe "POST #create" do
@@ -48,6 +47,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
     it "redirects after authorization" do
       expect(response).to be_redirect
+      expect(controller).to receive(:authenticator_method).at_most(:once)
     end
 
     it "redirects to client redirect uri" do
@@ -312,7 +312,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
       end
 
       it "includes error description in redirect uri" do
-        expect(redirect_uri.match(/error_description=(.+)&?/)[1]).to_not be_nil
+        expect(redirect_uri.match(/error_description=(.+)&?/)[1]).not_to be_nil
       end
 
       it "does not issue any access token" do
@@ -375,11 +375,11 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
         post :create, params: { client_id: client.uid, response_type: "token", redirect_uri: "bad_uri" }
       end
 
-      it "should not call :before_successful_authorization callback" do
+      it "does not call :before_successful_authorization callback" do
         expect(Doorkeeper.config).not_to receive(:before_successful_authorization)
       end
 
-      it "should not call :after_successful_authorization callback" do
+      it "does not call :after_successful_authorization callback" do
         expect(Doorkeeper.config).not_to receive(:after_successful_authorization)
       end
     end
@@ -400,16 +400,16 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
       }
     end
 
-    it "should redirect immediately" do
+    it "redirects immediately" do
       expect(response).to be_redirect
       expect(response.location).to match(%r{/oauth/token/info\?access_token=})
     end
 
-    it "should not issue a grant" do
+    it "does not issue a grant" do
       expect(Doorkeeper::AccessGrant.count).to be 0
     end
 
-    it "should issue a token" do
+    it "issues a token" do
       expect(Doorkeeper::AccessToken.count).to be 1
     end
   end
@@ -430,17 +430,17 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
       }
     end
 
-    it "should redirect immediately" do
+    it "redirects immediately" do
       expect(response).to be_redirect
       expect(response.location)
         .to match(%r{/oauth/authorize/native\?code=#{Doorkeeper::AccessGrant.first.token}})
     end
 
-    it "should issue a grant" do
+    it "issues a grant" do
       expect(Doorkeeper::AccessGrant.count).to be 1
     end
 
-    it "should not issue a token" do
+    it "does not issue a token" do
       expect(Doorkeeper::AccessToken.count).to be 0
     end
   end
@@ -458,12 +458,12 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
       }
     end
 
-    it "should redirect immediately" do
+    it "redirects immediately" do
       expect(response).to be_redirect
       expect(response.location).to match(/^#{client.redirect_uri}/)
     end
 
-    it "should issue a token" do
+    it "issues a token" do
       expect(Doorkeeper::AccessToken.count).to be 1
     end
 
@@ -495,7 +495,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
       }
     end
 
-    it "should render success" do
+    it "renders success" do
       expect(response).to be_successful
     end
 
@@ -524,11 +524,11 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
       }
     end
 
-    it "should render success" do
+    it "renders success" do
       expect(response).to be_successful
     end
 
-    it "should issue a token" do
+    it "issues a token" do
       expect(Doorkeeper::AccessToken.count).to be 1
     end
 
@@ -538,7 +538,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
     it "sets redirect_uri to correct value" do
       redirect_uri = JSON.parse(response.body)["redirect_uri"]
-      expect(redirect_uri).to_not be_nil
+      expect(redirect_uri).not_to be_nil
       expect(redirect_uri.match(/token_type=(\w+)&?/)[1]).to eq "Bearer"
       expect(redirect_uri.match(/expires_in=(\d+)&?/)[1].to_i).to eq 1234
       expect(
@@ -563,7 +563,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
       end
 
       it "does not redirect" do
-        expect(response).to_not be_redirect
+        expect(response).not_to be_redirect
       end
 
       it "does not issue any token" do
@@ -584,7 +584,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
       end
 
       it "does not redirect" do
-        expect(response).to_not be_redirect
+        expect(response).not_to be_redirect
       end
 
       it "does not issue any token" do
@@ -607,7 +607,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
       let(:response_json_body) { JSON.parse(response.body) }
 
-      it "should render bad request" do
+      it "renders bad request" do
         expect(response).to have_http_status(:bad_request)
       end
 
@@ -639,7 +639,7 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
 
       let(:response_json_body) { JSON.parse(response.body) }
 
-      it "should render bad request" do
+      it "renders bad request" do
         expect(response).to have_http_status(:bad_request)
       end
 
@@ -688,11 +688,11 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
         allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc { false })
       end
 
-      it "should not call :before_successful_authorization callback" do
+      it "does not call :before_successful_authorization callback" do
         expect(Doorkeeper.configuration).not_to receive(:before_successful_authorization)
       end
 
-      it "should not call :after_successful_authorization callback" do
+      it "does not call :after_successful_authorization callback" do
         expect(Doorkeeper.configuration).not_to receive(:after_successful_authorization)
       end
     end
@@ -703,11 +703,11 @@ describe Doorkeeper::AuthorizationsController, "implicit grant flow" do
         allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
       end
 
-      it "should not call :before_successful_authorization callback" do
+      it "does not call :before_successful_authorization callback" do
         expect(Doorkeeper.configuration).not_to receive(:before_successful_authorization)
       end
 
-      it "should not call :after_successful_authorization callback" do
+      it "does not call :after_successful_authorization callback" do
         expect(Doorkeeper.configuration).not_to receive(:after_successful_authorization)
       end
     end

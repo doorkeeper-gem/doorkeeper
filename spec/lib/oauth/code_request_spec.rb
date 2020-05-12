@@ -2,7 +2,11 @@
 
 require "spec_helper"
 
-describe Doorkeeper::OAuth::CodeRequest do
+RSpec.describe Doorkeeper::OAuth::CodeRequest do
+  subject do
+    described_class.new(pre_auth, owner)
+  end
+
   let(:pre_auth) do
     server = Doorkeeper.configuration
     allow(server)
@@ -25,10 +29,6 @@ describe Doorkeeper::OAuth::CodeRequest do
   end
 
   let(:owner) { FactoryBot.create(:resource_owner) }
-
-  subject do
-    described_class.new(pre_auth, owner)
-  end
 
   context "when pre_auth is authorized" do
     it "creates an access grant and returns a code response" do

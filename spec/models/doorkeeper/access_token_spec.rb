@@ -27,6 +27,7 @@ RSpec.describe Doorkeeper::AccessToken do
 
     context "with hashing enabled" do
       let(:token) { FactoryBot.create :access_token }
+
       include_context "with token hashing enabled"
 
       it "holds a volatile plaintext token when created" do
@@ -385,14 +386,15 @@ RSpec.describe Doorkeeper::AccessToken do
       end
       let(:access_token1) { FactoryBot.create :access_token, default_attributes }
 
-      context "the second token has the same owner and same app" do
+      context "when the second token has the same owner and same app" do
         let(:access_token2) { FactoryBot.create :access_token, default_attributes }
+
         it "success" do
-          expect(access_token1.same_credential?(access_token2)).to be_truthy
+          expect(access_token1).to be_same_credential(access_token2)
         end
       end
 
-      context "the second token has same owner and different app" do
+      context "when the second token has same owner and different app" do
         let(:other_application) { FactoryBot.create :application }
         let(:access_token2) do
           FactoryBot.create :access_token,
@@ -401,12 +403,12 @@ RSpec.describe Doorkeeper::AccessToken do
                             resource_owner_type: resource_owner.class.name
         end
 
-        it "fail" do
-          expect(access_token1.same_credential?(access_token2)).to be_falsey
+        it "fails" do
+          expect(access_token1).not_to be_same_credential(access_token2)
         end
       end
 
-      context "the second token has different owner and different app" do
+      context "when the second token has different owner and different app" do
         let(:other_application) { FactoryBot.create :application }
         let(:access_token2) do
           FactoryBot.create :access_token,
@@ -414,50 +416,50 @@ RSpec.describe Doorkeeper::AccessToken do
                             resource_owner_id: resource_owner.id + 1
         end
 
-        it "fail" do
-          expect(access_token1.same_credential?(access_token2)).to be_falsey
+        it "fails" do
+          expect(access_token1).not_to be_same_credential(access_token2)
         end
       end
 
-      context "the second token has different owner and same app" do
+      context "when the second token has different owner and same app" do
         let(:access_token2) do
           FactoryBot.create :access_token,
                             application: application,
                             resource_owner_id: resource_owner.id + 1
         end
 
-        it "fail" do
-          expect(access_token1.same_credential?(access_token2)).to be_falsey
+        it "fails" do
+          expect(access_token1).not_to be_same_credential(access_token2)
         end
       end
     end
   end
 
   describe "#acceptable?" do
-    context "a token that is not accessible" do
+    context "when token is not accessible" do
       let(:token) { FactoryBot.create(:access_token, created_at: 6.hours.ago) }
 
-      it "should return false" do
+      it "returns false" do
         expect(token.acceptable?(nil)).to be false
       end
     end
 
-    context "a token that has the incorrect scopes" do
+    context "when token has the incorrect scopes" do
       let(:token) { FactoryBot.create(:access_token) }
 
-      it "should return false" do
+      it "returns false" do
         expect(token.acceptable?(["public"])).to be false
       end
     end
 
-    context "a token is acceptable with the correct scopes" do
+    context "when token is acceptable with the correct scopes" do
       let(:token) do
         token = FactoryBot.create(:access_token)
         token[:scopes] = "public"
         token
       end
 
-      it "should return true" do
+      it "returns true" do
         expect(token.acceptable?(["public"])).to be true
       end
     end
@@ -477,9 +479,7 @@ RSpec.describe Doorkeeper::AccessToken do
     it "revokes all tokens for given application and resource owner" do
       FactoryBot.create :access_token, default_attributes
       described_class.revoke_all_for application.id, resource_owner
-      described_class.all.each do |token|
-        expect(token).to be_revoked
-      end
+      expect(described_class.all).to all(be_revoked)
     end
 
     it "matches application" do
@@ -524,12 +524,6 @@ RSpec.describe Doorkeeper::AccessToken do
     end
 
     it "returns only one token" do
-      token = FactoryBot.create :access_token, default_attributes
-      last_token = described_class.matching_token_for(application, resource_owner, scopes)
-      expect(last_token).to eq(token)
-    end
-
-    it "accepts resource owner as object" do
       token = FactoryBot.create :access_token, default_attributes
       last_token = described_class.matching_token_for(application, resource_owner, scopes)
       expect(last_token).to eq(token)

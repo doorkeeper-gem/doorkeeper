@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe Doorkeeper::OAuth::Scopes do
+RSpec.describe Doorkeeper::OAuth::Scopes do
   describe "#add" do
     it "allows you to add scopes with symbols" do
       subject.add :public
@@ -27,28 +27,28 @@ describe Doorkeeper::OAuth::Scopes do
     end
 
     it "returns true if scope with given name is present" do
-      expect(subject.exists?("public")).to be_truthy
+      expect(subject).to exist("public")
     end
 
     it "returns false if scope with given name does not exist" do
-      expect(subject.exists?("other")).to be_falsey
+      expect(subject).not_to exist("other")
     end
 
     it "handles symbols" do
-      expect(subject.exists?(:public)).to be_truthy
-      expect(subject.exists?(:other)).to be_falsey
+      expect(subject).to exist(:public)
+      expect(subject).not_to exist(:other)
     end
   end
 
   describe ".from_string" do
-    let(:string) { "public write" }
-
     subject { described_class.from_string(string) }
+
+    let(:string) { "public write" }
 
     it { expect(subject).to be_a(described_class) }
 
     describe "#all" do
-      it "should be an array of the expected scopes" do
+      it "is an array of the expected scopes" do
         scopes_array = subject.all
         expect(scopes_array.size).to eq(2)
         expect(scopes_array).to include("public")
@@ -120,27 +120,27 @@ describe Doorkeeper::OAuth::Scopes do
     subject { described_class.from_string("public admin") }
 
     it "returns true when at least one scope is included" do
-      expect(subject.has_scopes?(described_class.from_string("public"))).to be_truthy
+      expect(subject).to have_scopes(described_class.from_string("public"))
     end
 
     it "returns true when all scopes are included" do
-      expect(subject.has_scopes?(described_class.from_string("public admin"))).to be_truthy
+      expect(subject).to have_scopes(described_class.from_string("public admin"))
     end
 
     it "is true if all scopes are included in any order" do
-      expect(subject.has_scopes?(described_class.from_string("admin public"))).to be_truthy
+      expect(subject).to have_scopes(described_class.from_string("admin public"))
     end
 
     it "is false if no scopes are included" do
-      expect(subject.has_scopes?(described_class.from_string("notexistent"))).to be_falsey
+      expect(subject).not_to have_scopes(described_class.from_string("notexistent"))
     end
 
     it "returns false when any scope is not included" do
-      expect(subject.has_scopes?(described_class.from_string("public nope"))).to be_falsey
+      expect(subject).not_to have_scopes(described_class.from_string("public nope"))
     end
 
     it "is false if no scopes are included even for existing ones" do
-      expect(subject.has_scopes?(described_class.from_string("public admin notexistent"))).to be_falsey
+      expect(subject).not_to have_scopes(described_class.from_string("public admin notexistent"))
     end
   end
 end

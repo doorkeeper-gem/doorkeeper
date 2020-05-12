@@ -3,14 +3,14 @@
 require "spec_helper"
 require "generators/doorkeeper/install_generator"
 
-describe "Doorkeeper::InstallGenerator" do
+RSpec.describe Doorkeeper::InstallGenerator do
   include GeneratorSpec::TestCase
 
-  tests Doorkeeper::InstallGenerator
+  tests described_class
   destination ::File.expand_path("../tmp/dummy", __FILE__)
 
   describe "after running the generator" do
-    before :each do
+    before do
       prepare_destination
       FileUtils.mkdir(::File.expand_path("config", Pathname(destination_root)))
       FileUtils.mkdir(::File.expand_path("db", Pathname(destination_root)))

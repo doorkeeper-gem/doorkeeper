@@ -3,13 +3,13 @@
 require "spec_helper"
 require "generators/doorkeeper/views_generator"
 
-describe Doorkeeper::Generators::ViewsGenerator do
+RSpec.describe Doorkeeper::Generators::ViewsGenerator do
   include GeneratorSpec::TestCase
 
-  tests Doorkeeper::Generators::ViewsGenerator
+  tests described_class
   destination File.expand_path("tmp/dummy", __dir__)
 
-  before :each do
+  before do
     prepare_destination
   end
 

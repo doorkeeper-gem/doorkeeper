@@ -2,7 +2,11 @@
 
 require "spec_helper"
 
-describe Doorkeeper::OAuth::AuthorizationCodeRequest do
+RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
+  subject do
+    described_class.new(server, grant, client, params)
+  end
+
   let(:server) do
     double :server,
            access_token_expires_in: 2.days,
@@ -24,10 +28,6 @@ describe Doorkeeper::OAuth::AuthorizationCodeRequest do
 
   before do
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
-  end
-
-  subject do
-    described_class.new(server, grant, client, params)
   end
 
   it "issues a new token for the client" do
@@ -111,7 +111,7 @@ describe Doorkeeper::OAuth::AuthorizationCodeRequest do
       scopes: grant.scopes.to_s,
     )
 
-    expect { subject.authorize }.to_not(change { Doorkeeper::AccessToken.count })
+    expect { subject.authorize }.not_to(change { Doorkeeper::AccessToken.count })
   end
 
   it "creates token if there is a matching one but non reusable" do

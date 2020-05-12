@@ -4,6 +4,7 @@ require "spec_helper"
 
 feature "Authorization Code Flow Errors" do
   let(:client_params) { {} }
+
   background do
     default_scopes_exist :default
     config_is_set(:authenticate_resource_owner) { User.first || redirect_to("/sign_in") }
@@ -19,6 +20,7 @@ feature "Authorization Code Flow Errors" do
   context "with a client trying to xss resource owner" do
     let(:client_name) { "<div id='xss'>XSS</div>" }
     let(:client_params) { { name: client_name } }
+
     scenario "resource owner visit authorization endpoint" do
       visit authorization_endpoint_url(client: @client)
       expect(page).not_to have_css("#xss")
@@ -47,7 +49,7 @@ feature "Authorization Code Flow Errors" do
   end
 end
 
-describe "Authorization Code Flow Errors", "after authorization" do
+RSpec.describe "Authorization Code Flow Errors after authorization" do
   before do
     client_exists
     create_resource_owner
@@ -63,7 +65,7 @@ describe "Authorization Code Flow Errors", "after authorization" do
     # Second attempt with same token
     expect do
       post token_endpoint_url(code: @authorization.token, client: @client)
-    end.to_not(change { Doorkeeper::AccessToken.count })
+    end.not_to(change { Doorkeeper::AccessToken.count })
 
     expect(json_response).to match(
       "error" => "invalid_grant",

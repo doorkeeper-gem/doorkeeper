@@ -2,9 +2,9 @@
 
 require "spec_helper"
 
-describe Doorkeeper::OAuth::BaseResponse do
+RSpec.describe Doorkeeper::OAuth::BaseResponse do
   subject do
-    Doorkeeper::OAuth::BaseResponse.new
+    described_class.new
   end
 
   describe "#body" do

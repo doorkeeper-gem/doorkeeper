@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe Doorkeeper::DashboardHelper do
+RSpec.describe Doorkeeper::DashboardHelper do
   describe "#doorkeeper_errors_for" do
     let(:object) { double errors: { method: messages } }
     let(:messages) { ["first message", "second message"] }

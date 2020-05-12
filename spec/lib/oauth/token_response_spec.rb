@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe Doorkeeper::OAuth::TokenResponse do
+RSpec.describe Doorkeeper::OAuth::TokenResponse do
   subject { described_class.new(double.as_null_object) }
 
   it "includes access token response headers" do
@@ -16,6 +16,8 @@ describe Doorkeeper::OAuth::TokenResponse do
   end
 
   describe ".body" do
+    subject { described_class.new(access_token).body }
+
     let(:access_token) do
       double :access_token,
              plaintext_token: "some-token",
@@ -26,8 +28,6 @@ describe Doorkeeper::OAuth::TokenResponse do
              token_type: "bearer",
              created_at: 0
     end
-
-    subject { described_class.new(access_token).body }
 
     it "includes :access_token" do
       expect(subject["access_token"]).to eq("some-token")
@@ -57,6 +57,8 @@ describe Doorkeeper::OAuth::TokenResponse do
   end
 
   describe ".body filters out empty values" do
+    subject { described_class.new(access_token).body }
+
     let(:access_token) do
       double :access_token,
              plaintext_token: "some-token",
@@ -66,8 +68,6 @@ describe Doorkeeper::OAuth::TokenResponse do
              token_type: "bearer",
              created_at: 0
     end
-
-    subject { described_class.new(access_token).body }
 
     it "includes :expires_in" do
       expect(subject["expires_in"]).to be_nil

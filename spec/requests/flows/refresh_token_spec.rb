@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe "Refresh Token Flow" do
+RSpec.describe "Refresh Token Flow" do
   before do
     Doorkeeper.configure do
       orm DOORKEEPER_ORM
@@ -14,7 +14,7 @@ describe "Refresh Token Flow" do
 
   let(:resource_owner) { FactoryBot.create(:resource_owner) }
 
-  context "issuing a refresh token" do
+  describe "issuing a refresh token" do
     before do
       authorization_code_exists application: @client,
                                 resource_owner_id: resource_owner.id,
@@ -46,7 +46,7 @@ describe "Refresh Token Flow" do
     end
   end
 
-  context "refreshing the token" do
+  describe "refreshing the token" do
     before do
       @token = FactoryBot.create(
         :access_token,
@@ -57,8 +57,8 @@ describe "Refresh Token Flow" do
       )
     end
 
-    context "refresh_token revoked on use" do
-      it "client request a token with refresh token" do
+    context "when refresh_token revoked on use" do
+      it "client requests a token with refresh token" do
         post refresh_token_endpoint_url(
           client: @client, refresh_token: @token.refresh_token,
         )
@@ -68,7 +68,7 @@ describe "Refresh Token Flow" do
         expect(@token.reload).not_to be_revoked
       end
 
-      it "client request a token with expired access token" do
+      it "client requests a token with expired access token" do
         @token.update_attribute :expires_in, -100
         post refresh_token_endpoint_url(
           client: @client, refresh_token: @token.refresh_token,
@@ -80,7 +80,7 @@ describe "Refresh Token Flow" do
       end
     end
 
-    context "refresh_token revoked on refresh_token request" do
+    context "when refresh_token revoked on refresh_token request" do
       before do
         allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
       end
@@ -107,7 +107,7 @@ describe "Refresh Token Flow" do
       end
     end
 
-    context "public & private clients" do
+    context "with public & private clients" do
       let(:public_client) do
         FactoryBot.create(
           :application,
@@ -197,7 +197,7 @@ describe "Refresh Token Flow" do
     end
   end
 
-  context "refreshing the token with multiple sessions (devices)" do
+  context "when refreshing the token with multiple sessions (devices)" do
     before do
       # enable password auth to simulate other devices
       config_is_set(:grant_flows, ["password"])
@@ -220,7 +220,7 @@ describe "Refresh Token Flow" do
       @token.update_attribute :expires_in, -100
     end
 
-    context "refresh_token revoked on use" do
+    context "when refresh_token revoked on use" do
       it "client request a token after creating another token with the same user" do
         post refresh_token_endpoint_url(
           client: @client, refresh_token: @token.refresh_token,
@@ -231,7 +231,7 @@ describe "Refresh Token Flow" do
       end
     end
 
-    context "refresh_token revoked on refresh_token request" do
+    context "when refresh_token revoked on refresh_token request" do
       before do
         allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
       end

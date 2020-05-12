@@ -2,13 +2,13 @@
 
 require "spec_helper"
 
-describe Doorkeeper::OAuth::ErrorResponse do
+RSpec.describe Doorkeeper::OAuth::ErrorResponse do
   describe "#status" do
-    it "should have a status of bad_request" do
+    it "has a status of bad_request" do
       expect(subject.status).to eq(:bad_request)
     end
 
-    it "should have a status of unauthorized for an invalid_client error" do
+    it "has a status of unauthorized for an invalid_client error" do
       subject = described_class.new(name: :invalid_client)
 
       expect(subject.status).to eq(:unauthorized)
@@ -48,8 +48,9 @@ describe Doorkeeper::OAuth::ErrorResponse do
   end
 
   describe ".headers" do
-    let(:error_response) { described_class.new(name: :some_error, state: :some_state) }
     subject { error_response.headers }
+
+    let(:error_response) { described_class.new(name: :some_error, state: :some_state) }
 
     it { expect(subject).to include "WWW-Authenticate" }
 
