@@ -12,13 +12,12 @@ describe "Client Credentials Request" do
 
       post "/oauth/token", params: params, headers: headers
 
-      should_have_json "access_token", Doorkeeper::AccessToken.first.token
-      should_have_json_within "expires_in", Doorkeeper.configuration.access_token_expires_in, 1
-      should_not_have_json "scope"
-      should_not_have_json "refresh_token"
-
-      should_not_have_json "error"
-      should_not_have_json "error_description"
+      expect(json_response).to match(
+        "access_token" => Doorkeeper::AccessToken.first.token,
+        "token_type" => "Bearer",
+        "expires_in" => Doorkeeper.configuration.access_token_expires_in,
+        "created_at" => an_instance_of(Integer),
+      )
     end
 
     context "with scopes" do
@@ -33,8 +32,10 @@ describe "Client Credentials Request" do
 
         post "/oauth/token", params: params, headers: headers
 
-        should_have_json "access_token", Doorkeeper::AccessToken.first.token
-        should_have_json "scope", "write"
+        expect(json_response).to include(
+          "access_token" => Doorkeeper::AccessToken.first.token,
+          "scope" => "write",
+        )
       end
 
       context "that are default" do
@@ -44,8 +45,10 @@ describe "Client Credentials Request" do
 
           post "/oauth/token", params: params, headers: headers
 
-          should_have_json "access_token", Doorkeeper::AccessToken.first.token
-          should_have_json "scope", "public"
+          expect(json_response).to include(
+            "access_token" => Doorkeeper::AccessToken.first.token,
+            "scope" => "public",
+          )
         end
       end
 
@@ -56,11 +59,11 @@ describe "Client Credentials Request" do
 
           post "/oauth/token", params: params, headers: headers
 
-          should_have_json "error", "invalid_scope"
-          should_have_json "error_description", translated_error_message(:invalid_scope)
-          should_not_have_json "access_token"
-
           expect(response.status).to eq(400)
+          expect(json_response).to match(
+           "error" => "invalid_scope",
+           "error_description" => translated_error_message(:invalid_scope),
+          )
         end
       end
     end
@@ -82,8 +85,10 @@ describe "Client Credentials Request" do
 
       post "/oauth/token", params: params, headers: headers
 
-      should_have_json "error", "unauthorized_client"
-      should_have_json "error_description", translated_error_message(:unauthorized_client)
+      expect(json_response).to match(
+       "error" => "unauthorized_client",
+       "error_description" => translated_error_message(:unauthorized_client),
+      )
     end
 
     scenario "allows the request when satisfies condition" do
@@ -94,13 +99,12 @@ describe "Client Credentials Request" do
 
       post "/oauth/token", params: params, headers: headers
 
-      should_have_json "access_token", Doorkeeper::AccessToken.first.token
-      should_have_json_within "expires_in", Doorkeeper.configuration.access_token_expires_in, 1
-      should_not_have_json "scope"
-      should_not_have_json "refresh_token"
-
-      should_not_have_json "error"
-      should_not_have_json "error_description"
+      expect(json_response).to match(
+        "access_token" => Doorkeeper::AccessToken.first.token,
+        "token_type" => "Bearer",
+        "expires_in" => 7200,
+        "created_at"=> an_instance_of(Integer),
+      )
     end
   end
 
@@ -122,8 +126,10 @@ describe "Client Credentials Request" do
       token = Doorkeeper::AccessToken.first
 
       expect(token.application_id).to eq client.id
-      should_have_json "access_token", token.token
-      should_have_json "scope", "public"
+      expect(json_response).to include(
+        "access_token" => token.token,
+        "scope" => "public",
+      )
     end
 
     it "issues new token with multiple default scopes that are present in application scopes" do
@@ -139,8 +145,10 @@ describe "Client Credentials Request" do
       token = Doorkeeper::AccessToken.first
 
       expect(token.application_id).to eq client.id
-      should_have_json "access_token", token.token
-      should_have_json "scope", "public read"
+      expect(json_response).to include(
+        "access_token" => token.token,
+        "scope" => "public read",
+      )
     end
   end
 
@@ -151,11 +159,12 @@ describe "Client Credentials Request" do
 
       post "/oauth/token", params: params, headers: headers
 
-      should_have_json "error", "invalid_client"
-      should_have_json "error_description", translated_error_message(:invalid_client)
-      should_not_have_json "access_token"
-
       expect(response.status).to eq(401)
+
+      expect(json_response).to match(
+       "error" => "invalid_client",
+       "error_description" => translated_error_message(:invalid_client),
+      )
     end
   end
 
@@ -170,12 +179,12 @@ describe "Client Credentials Request" do
       params  = { grant_type: "client_credentials" }
 
       post "/oauth/token", params: params, headers: headers
-      should_have_json "access_token", Doorkeeper::AccessToken.first.token
+      expect(json_response).to include("access_token" => Doorkeeper::AccessToken.first.token)
 
       token = Doorkeeper::AccessToken.first
 
       post "/oauth/token", params: params, headers: headers
-      should_have_json "access_token", Doorkeeper::AccessToken.last.token
+      expect(json_response).to include("access_token" => Doorkeeper::AccessToken.last.token)
 
       expect(token.reload.revoked?).to be_truthy
       expect(Doorkeeper::AccessToken.last.revoked?).to be_falsey
@@ -194,8 +203,11 @@ describe "Client Credentials Request" do
         params  = { grant_type: "client_credentials" }
 
         post "/oauth/token", params: params, headers: headers
-        should_not_have_json "access_token"
-        should_have_json "error", "invalid_token_reuse"
+
+        expect(json_response).to match(
+         "error" => "invalid_token_reuse",
+         "error_description" => translated_error_message(:server_error),
+        )
       end
     end
   end

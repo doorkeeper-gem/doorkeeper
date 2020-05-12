@@ -61,18 +61,6 @@ module RequestSpecHelper
     ActionController::HttpAuthentication::Basic.encode_credentials client.uid, client.secret
   end
 
-  def should_have_json(key, value)
-    expect(json_response.fetch(key)).to eq(value)
-  end
-
-  def should_have_json_within(key, value, range)
-    expect(json_response.fetch(key)).to be_within(range).of(value)
-  end
-
-  def should_not_have_json(key)
-    expect(json_response).not_to have_key(key)
-  end
-
   def sign_in
     visit "/"
     click_on "Sign in"

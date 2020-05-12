@@ -12,7 +12,7 @@ describe Doorkeeper::OAuth::ForbiddenTokenResponse do
   end
 
   describe ".from_scopes" do
-    it "should have a list of acceptable scopes" do
+    it "have a list of acceptable scopes" do
       response = described_class.from_scopes(["public"])
       expect(response.description).to include("public")
     end

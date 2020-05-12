@@ -65,9 +65,10 @@ describe "Authorization Code Flow Errors", "after authorization" do
       post token_endpoint_url(code: @authorization.token, client: @client)
     end.to_not(change { Doorkeeper::AccessToken.count })
 
-    should_not_have_json "access_token"
-    should_have_json "error", "invalid_grant"
-    should_have_json "error_description", translated_error_message("invalid_grant")
+    expect(json_response).to match(
+      "error" => "invalid_grant",
+      "error_description" => translated_error_message("invalid_grant"),
+    )
   end
 
   it "returns :invalid_grant error for invalid grant code" do
@@ -75,8 +76,9 @@ describe "Authorization Code Flow Errors", "after authorization" do
 
     access_token_should_not_exist
 
-    should_not_have_json "access_token"
-    should_have_json "error", "invalid_grant"
-    should_have_json "error_description", translated_error_message("invalid_grant")
+    expect(json_response).to match(
+      "error" => "invalid_grant",
+      "error_description" => translated_error_message("invalid_grant"),
+    )
   end
 end
