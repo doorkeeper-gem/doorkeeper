@@ -2,9 +2,10 @@
 
 require "spec_helper"
 
-describe ::Doorkeeper::SecretStoring::Base do
-  let(:instance) { double("instance", token: "foo") }
+RSpec.describe ::Doorkeeper::SecretStoring::Base do
   subject { described_class }
+
+  let(:instance) { double("instance", token: "foo") }
 
   describe "#transform_secret" do
     it "raises" do

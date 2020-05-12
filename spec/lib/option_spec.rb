@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe Doorkeeper, "configuration option DSL" do
+RSpec.describe Doorkeeper::Config::Option do
   class Extension
     def self.configure(&block)
       @config = Config::Builder.new(Config.new, &block).build

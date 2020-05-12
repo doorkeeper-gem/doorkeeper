@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe Doorkeeper::OAuth::InvalidTokenResponse do
+RSpec.describe Doorkeeper::OAuth::InvalidTokenResponse do
   describe "#name" do
     it { expect(subject.name).to eq(:invalid_token) }
   end
@@ -14,7 +14,7 @@ describe Doorkeeper::OAuth::InvalidTokenResponse do
   describe ".from_access_token" do
     let(:response) { described_class.from_access_token(access_token) }
 
-    context "revoked" do
+    context "when token revoked" do
       let(:access_token) { double(revoked?: true, expired?: true) }
 
       it "sets a description" do
@@ -26,7 +26,7 @@ describe Doorkeeper::OAuth::InvalidTokenResponse do
       end
     end
 
-    context "expired" do
+    context "when token expired" do
       let(:access_token) { double(revoked?: false, expired?: true) }
 
       it "sets a description" do
@@ -38,7 +38,7 @@ describe Doorkeeper::OAuth::InvalidTokenResponse do
       end
     end
 
-    context "unknown" do
+    context "when unknown" do
       let(:access_token) { double(revoked?: false, expired?: false) }
 
       it "sets a description" do

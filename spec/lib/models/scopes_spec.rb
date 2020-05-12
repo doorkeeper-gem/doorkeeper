@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe "Doorkeeper::Models::Scopes" do
+RSpec.describe Doorkeeper::Models::Scopes do
   subject do
     Class.new(Struct.new(:scopes)) do
       include Doorkeeper::Models::Scopes
@@ -13,7 +13,7 @@ describe "Doorkeeper::Models::Scopes" do
     subject[:scopes] = "public admin"
   end
 
-  describe :scopes do
+  describe "#scopes" do
     it "is a `Scopes` class" do
       expect(subject.scopes).to be_a(Doorkeeper::OAuth::Scopes)
     end
@@ -23,7 +23,7 @@ describe "Doorkeeper::Models::Scopes" do
     end
   end
 
-  describe :scopes= do
+  describe "#scopes=" do
     it "accepts String" do
       subject.scopes = "private admin"
       expect(subject.scopes_string).to eq("private admin")
@@ -43,18 +43,18 @@ describe "Doorkeeper::Models::Scopes" do
     end
   end
 
-  describe :scopes_string do
+  describe "#scopes_string" do
     it "is a `Scopes` class" do
       expect(subject.scopes_string).to eq("public admin")
     end
   end
 
-  describe :includes_scope? do
-    it "should return true if at least one scope is included" do
+  describe "#includes_scope?" do
+    it "returns true if at least one scope is included" do
       expect(subject.includes_scope?("public", "private")).to be true
     end
 
-    it "should return false if no scopes are included" do
+    it "returns false if no scopes are included" do
       expect(subject.includes_scope?("teacher", "student")).to be false
     end
   end

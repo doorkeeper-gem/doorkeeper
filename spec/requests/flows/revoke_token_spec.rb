@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe "Revoke Token Flow" do
+RSpec.describe "Revoke Token Flow" do
   before do
     Doorkeeper.configure { orm DOORKEEPER_ORM }
   end
@@ -29,22 +29,22 @@ describe "Revoke Token Flow" do
       { "HTTP_AUTHORIZATION" => "Basic #{credentials}" }
     end
 
-    it "should revoke the access token provided" do
+    it "revokes the access token provided" do
       post revocation_token_endpoint_url, params: { token: access_token.token }, headers: headers
 
       expect(response).to be_successful
-      expect(access_token.reload.revoked?).to be_truthy
+      expect(access_token.reload).to be_revoked
     end
 
-    it "should revoke the refresh token provided" do
+    it "revokes the refresh token provided" do
       post revocation_token_endpoint_url, params: { token: access_token.refresh_token }, headers: headers
 
       expect(response).to be_successful
-      expect(access_token.reload.revoked?).to be_truthy
+      expect(access_token.reload).to be_revoked
     end
 
     context "with invalid token to revoke" do
-      it "should not revoke any tokens and must respond with success" do
+      it "does not revoke any tokens and must respond with success" do
         expect do
           post revocation_token_endpoint_url,
                params: { token: "I_AM_AN_INVALID_TOKEN" },
@@ -62,24 +62,24 @@ describe "Revoke Token Flow" do
         { "HTTP_AUTHORIZATION" => "Basic #{credentials}" }
       end
 
-      it "should not revoke any tokens and respond with forbidden" do
+      it "does not revoke any tokens and respond with forbidden" do
         post revocation_token_endpoint_url, params: { token: access_token.token }, headers: headers
 
         expect(response).to be_forbidden
         expect(response.body).to include("unauthorized_client")
         expect(response.body).to include(I18n.t("doorkeeper.errors.messages.revoke.unauthorized"))
-        expect(access_token.reload.revoked?).to be_falsey
+        expect(access_token.reload).not_to be_revoked
       end
     end
 
     context "with no credentials and a valid token" do
-      it "should not revoke any tokens and respond with forbidden" do
+      it "does not revoke any tokens and respond with forbidden" do
         post revocation_token_endpoint_url, params: { token: access_token.token }
 
         expect(response).to be_forbidden
         expect(response.body).to include("unauthorized_client")
         expect(response.body).to include(I18n.t("doorkeeper.errors.messages.revoke.unauthorized"))
-        expect(access_token.reload.revoked?).to be_falsey
+        expect(access_token.reload).not_to be_revoked
       end
     end
 
@@ -92,13 +92,13 @@ describe "Revoke Token Flow" do
         { "HTTP_AUTHORIZATION" => "Basic #{credentials}" }
       end
 
-      it "should not revoke the token as it's unauthorized" do
+      it "does not revoke the token as it's unauthorized" do
         post revocation_token_endpoint_url, params: { token: access_token.token }, headers: headers
 
         expect(response).to be_forbidden
         expect(response.body).to include("unauthorized_client")
         expect(response.body).to include(I18n.t("doorkeeper.errors.messages.revoke.unauthorized"))
-        expect(access_token.reload.revoked?).to be_falsey
+        expect(access_token.reload).not_to be_revoked
       end
     end
   end
@@ -114,25 +114,25 @@ describe "Revoke Token Flow" do
       )
     end
 
-    it "should revoke the access token provided" do
+    it "revokes the access token provided" do
       post revocation_token_endpoint_url,
            params: { client_id: public_client_application.uid, token: access_token.token },
            headers: headers
 
       expect(response).to be_successful
-      expect(access_token.reload.revoked?).to be_truthy
+      expect(access_token.reload).to be_revoked
     end
 
-    it "should revoke the refresh token provided" do
+    it "revokes the refresh token provided" do
       post revocation_token_endpoint_url,
            params: { client_id: public_client_application.uid, token: access_token.refresh_token },
            headers: headers
 
       expect(response).to be_successful
-      expect(access_token.reload.revoked?).to be_truthy
+      expect(access_token.reload).to be_revoked
     end
 
-    it "should response with success even for invalid token" do
+    it "responses with success even for invalid token" do
       post revocation_token_endpoint_url,
            params: { client_id: public_client_application.uid, token: "dont_exist" },
            headers: headers
@@ -151,24 +151,24 @@ describe "Revoke Token Flow" do
         )
       end
 
-      it "should not revoke the access token provided" do
+      it "does not revoke the access token provided" do
         post revocation_token_endpoint_url,
              params: { client_id: public_client_application.uid, token: access_token.token }
 
         expect(response).to be_forbidden
         expect(response.body).to include("unauthorized_client")
         expect(response.body).to include(I18n.t("doorkeeper.errors.messages.revoke.unauthorized"))
-        expect(access_token.reload.revoked?).to be_falsey
+        expect(access_token.reload).not_to be_revoked
       end
 
-      it "should not revoke the refresh token provided" do
+      it "does not revoke the refresh token provided" do
         post revocation_token_endpoint_url,
-             params: { client_id: public_client_application.uid, token: access_token.token }
+             params: { client_id: public_client_application.uid, token: access_token.refresh_token }
 
         expect(response).to be_forbidden
         expect(response.body).to include("unauthorized_client")
         expect(response.body).to include(I18n.t("doorkeeper.errors.messages.revoke.unauthorized"))
-        expect(access_token.reload.revoked?).to be_falsey
+        expect(access_token.reload).not_to be_revoked
       end
     end
   end
@@ -184,13 +184,13 @@ describe "Revoke Token Flow" do
       )
     end
 
-    it "shouldn't remove the token and must response with an error" do
+    it "does not remove the token and responses with an error" do
       post revocation_token_endpoint_url,
            params: { token: access_token.token },
            headers: headers
 
       expect(response).not_to be_successful
-      expect(access_token.reload.revoked?).to be_falsey
+      expect(access_token.reload).not_to be_revoked
     end
   end
 end

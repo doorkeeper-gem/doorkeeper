@@ -44,7 +44,7 @@ feature "Implicit Grant Flow (feature spec)" do
   end
 end
 
-describe "Implicit Grant Flow (request spec)" do
+RSpec.describe "Implicit Grant Flow (request spec)" do
   before do
     default_scopes_exist :default
     config_is_set(:authenticate_resource_owner) { User.first || redirect_to("/sign_in") }
@@ -53,8 +53,8 @@ describe "Implicit Grant Flow (request spec)" do
     create_resource_owner
   end
 
-  context "token reuse" do
-    it "should return a new token each request" do
+  context "when reuse_access_token enabled" do
+    it "returns a new token each request" do
       allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(false)
 
       token = client_is_authorized(@client, @resource_owner, scopes: "default")
@@ -71,7 +71,7 @@ describe "Implicit Grant Flow (request spec)" do
       expect(response.location).not_to include(token.token)
     end
 
-    it "should return the same token if it is still accessible" do
+    it "returns the same token if it is still accessible" do
       allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
 
       token = client_is_authorized(@client, @resource_owner, scopes: "default")

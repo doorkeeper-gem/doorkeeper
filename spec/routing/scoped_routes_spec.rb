@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe "Scoped routes" do
+RSpec.describe "Scoped routes" do
   before :all do
     Rails.application.routes.disable_clear_and_finalize = true
 

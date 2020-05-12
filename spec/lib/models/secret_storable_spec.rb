@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe "SecretStorable" do
+RSpec.describe Doorkeeper::Models::SecretStorable do
   let(:clazz) do
     Class.new do
       include Doorkeeper::Models::SecretStorable
@@ -22,7 +22,7 @@ describe "SecretStorable" do
   end
   let(:strategy) { clazz.secret_strategy }
 
-  describe :find_by_plaintext_token do
+  describe ".find_by_plaintext_token" do
     subject { clazz.send(:find_by_plaintext_token, "attr", "input") }
 
     it "forwards to the secret_strategy" do
@@ -54,8 +54,9 @@ describe "SecretStorable" do
     end
   end
 
-  describe :find_by_fallback_token do
+  describe ".find_by_fallback_token" do
     subject { clazz.send(:find_by_fallback_token, "attr", "input") }
+
     let(:fallback) { double(::Doorkeeper::SecretStoring::Plain) }
 
     it "returns nil if none defined" do
@@ -63,12 +64,12 @@ describe "SecretStorable" do
       expect(subject).to eq nil
     end
 
-    context "if a fallback strategy is defined" do
+    context "when a fallback strategy is defined" do
       before do
         allow(clazz).to receive(:fallback_secret_strategy).and_return(fallback)
       end
 
-      context "if a resource is defined" do
+      context "when resource is defined" do
         let(:resource) { double("Token model") }
 
         it "calls the strategy for lookup" do
@@ -98,7 +99,7 @@ describe "SecretStorable" do
         end
       end
 
-      context "if a resource is not defined" do
+      context "when resource is not defined" do
         before do
           allow(clazz).to receive(:fallback_secret_strategy).and_return(fallback)
         end
@@ -121,13 +122,13 @@ describe "SecretStorable" do
     end
   end
 
-  describe :secret_strategy do
+  describe ".secret_strategy" do
     it "defaults to plain strategy" do
       expect(strategy).to eq Doorkeeper::SecretStoring::Plain
     end
   end
 
-  describe :fallback_secret_strategy do
+  describe ".fallback_secret_strategy" do
     it "defaults to nil" do
       expect(clazz.fallback_secret_strategy).to eq nil
     end

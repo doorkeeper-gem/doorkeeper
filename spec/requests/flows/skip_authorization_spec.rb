@@ -10,7 +10,7 @@ feature "Skip authorization form" do
     optional_scopes_exist :write
   end
 
-  context "for previously authorized clients" do
+  context "with previously authorized clients" do
     background do
       create_resource_owner
       sign_in

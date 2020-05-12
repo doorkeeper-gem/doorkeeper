@@ -3,17 +3,17 @@
 require "spec_helper"
 require "generators/doorkeeper/previous_refresh_token_generator"
 
-describe "Doorkeeper::PreviousRefreshTokenGenerator" do
+RSpec.describe Doorkeeper::PreviousRefreshTokenGenerator do
   include GeneratorSpec::TestCase
 
-  tests Doorkeeper::PreviousRefreshTokenGenerator
+  tests described_class
   destination ::File.expand_path("../tmp/dummy", __FILE__)
 
   describe "after running the generator" do
-    before :each do
+    before do
       prepare_destination
 
-      allow_any_instance_of(Doorkeeper::PreviousRefreshTokenGenerator).to(
+      allow_any_instance_of(described_class).to(
         receive(:no_previous_refresh_token_column?).and_return(true),
       )
     end
@@ -29,9 +29,9 @@ describe "Doorkeeper::PreviousRefreshTokenGenerator" do
       end
     end
 
-    context "already exist" do
+    context "when file already exist" do
       it "does not create a migration" do
-        allow_any_instance_of(Doorkeeper::PreviousRefreshTokenGenerator).to(
+        allow_any_instance_of(described_class).to(
           receive(:no_previous_refresh_token_column?).and_call_original,
         )
 

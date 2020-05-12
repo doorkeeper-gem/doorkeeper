@@ -9,7 +9,7 @@ module Doorkeeper
   end
 end
 
-describe Doorkeeper::OAuth::Token do
+RSpec.describe Doorkeeper::OAuth::Token do
   describe ".from_request" do
     let(:request) { double.as_null_object }
 
@@ -96,8 +96,8 @@ describe Doorkeeper::OAuth::Token do
   end
 
   describe ".authenticate" do
-    context "refresh tokens are disabled (default)" do
-      context "refresh tokens are enabled" do
+    context "when refresh tokens are disabled (default)" do
+      context "when refresh tokens are enabled" do
         it "does not revoke previous refresh_token if token was found" do
           token = ->(_r) { "token" }
           expect(
@@ -115,7 +115,7 @@ describe Doorkeeper::OAuth::Token do
       end
     end
 
-    context "token hashing is enabled" do
+    context "when token hashing is enabled" do
       include_context "with token hashing enabled"
 
       let(:hashed_token) { hashed_or_plain_token_func.call("token") }
@@ -129,7 +129,7 @@ describe Doorkeeper::OAuth::Token do
       end
     end
 
-    context "refresh tokens are enabled" do
+    context "when refresh tokens are enabled" do
       before do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM

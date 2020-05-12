@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe "ActionController::Metal API" do
+RSpec.describe "ActionController::Metal API" do
   before do
     @client   = FactoryBot.create(:application)
     @resource = User.create!(name: "Joe", password: "sekret")

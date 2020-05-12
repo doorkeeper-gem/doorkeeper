@@ -2,13 +2,13 @@
 
 require "spec_helper"
 
-describe Doorkeeper::Server do
-  let(:fake_class) { double :fake_class }
-  let(:context) { double :context }
-
+RSpec.describe Doorkeeper::Server do
   subject do
     described_class.new(context)
   end
+
+  let(:fake_class) { double :fake_class }
+  let(:context) { double :context }
 
   describe ".authorization_request" do
     it "raises error when strategy does not match phase" do

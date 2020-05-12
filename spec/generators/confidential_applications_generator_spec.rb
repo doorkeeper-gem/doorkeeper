@@ -3,14 +3,14 @@
 require "spec_helper"
 require "generators/doorkeeper/confidential_applications_generator"
 
-describe "Doorkeeper::ConfidentialApplicationsGenerator" do
+RSpec.describe Doorkeeper::ConfidentialApplicationsGenerator do
   include GeneratorSpec::TestCase
 
-  tests Doorkeeper::ConfidentialApplicationsGenerator
+  tests described_class
   destination ::File.expand_path("../tmp/dummy", __FILE__)
 
   describe "after running the generator" do
-    before :each do
+    before do
       prepare_destination
     end
 

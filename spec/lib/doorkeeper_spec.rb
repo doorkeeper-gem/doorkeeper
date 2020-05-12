@@ -2,17 +2,17 @@
 
 require "spec_helper"
 
-describe Doorkeeper do
+RSpec.describe Doorkeeper do
   describe "#authenticate" do
     let(:request) { double }
 
     it "calls OAuth::Token#authenticate" do
-      token_strategies = Doorkeeper.config.access_token_methods
+      token_strategies = described_class.config.access_token_methods
 
       expect(Doorkeeper::OAuth::Token).to receive(:authenticate)
         .with(request, *token_strategies)
 
-      Doorkeeper.authenticate(request)
+      described_class.authenticate(request)
     end
 
     it "accepts custom token strategies" do
@@ -21,7 +21,7 @@ describe Doorkeeper do
       expect(Doorkeeper::OAuth::Token).to receive(:authenticate)
         .with(request, *token_strategies)
 
-      Doorkeeper.authenticate(request, token_strategies)
+      described_class.authenticate(request, token_strategies)
     end
   end
 end

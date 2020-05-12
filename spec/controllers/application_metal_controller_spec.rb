@@ -2,8 +2,8 @@
 
 require "spec_helper_integration"
 
-describe Doorkeeper::ApplicationMetalController do
-  controller(Doorkeeper::ApplicationMetalController) do
+RSpec.describe Doorkeeper::ApplicationMetalController do
+  controller(described_class) do
     def index
       render json: {}, status: 200
     end
@@ -23,7 +23,7 @@ describe Doorkeeper::ApplicationMetalController do
   describe "enforce_content_type" do
     before { allow(Doorkeeper.config).to receive(:enforce_content_type).and_return(flag) }
 
-    context "enabled" do
+    context "when enabled" do
       let(:flag) { true }
 
       it "returns a 200 for the requests without body" do
@@ -42,7 +42,7 @@ describe Doorkeeper::ApplicationMetalController do
       end
     end
 
-    context "disabled" do
+    context "when disabled" do
       let(:flag) { false }
 
       it "returns a 200 for the correct media type" do

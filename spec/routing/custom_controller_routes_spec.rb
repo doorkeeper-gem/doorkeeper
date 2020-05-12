@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe "Custom controller for routes" do
+RSpec.describe "Custom controller for routes" do
   before :all do
     Doorkeeper.configure do
       orm DOORKEEPER_ORM

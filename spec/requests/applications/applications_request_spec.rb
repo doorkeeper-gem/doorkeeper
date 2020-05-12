@@ -2,127 +2,125 @@
 
 require "spec_helper"
 
-feature "Adding applications" do
-  context "in application form" do
-    background do
-      i_am_logged_in
+feature "Adding applications in application form" do
+  background do
+    i_am_logged_in
+    visit "/oauth/applications/new"
+  end
+
+  scenario "adding a valid app" do
+    fill_in "doorkeeper_application[name]", with: "My Application"
+    fill_in "doorkeeper_application[redirect_uri]",
+            with: "https://example.com"
+
+    click_button "Submit"
+    i_should_see "Application created"
+    i_should_see "My Application"
+  end
+
+  scenario "adding invalid app" do
+    click_button "Submit"
+    i_should_see "Whoops! Check your form for possible errors"
+  end
+
+  scenario "adding app ignoring bad scope" do
+    config_is_set("enforce_configured_scopes", false)
+
+    fill_in "doorkeeper_application[name]", with: "My Application"
+    fill_in "doorkeeper_application[redirect_uri]",
+            with: "https://example.com"
+    fill_in "doorkeeper_application[scopes]", with: "blahblah"
+
+    click_button "Submit"
+    i_should_see "Application created"
+    i_should_see "My Application"
+  end
+
+  scenario "adding app validating bad scope" do
+    config_is_set("enforce_configured_scopes", true)
+
+    fill_in "doorkeeper_application[name]", with: "My Application"
+    fill_in "doorkeeper_application[redirect_uri]",
+            with: "https://example.com"
+    fill_in "doorkeeper_application[scopes]", with: "blahblah"
+
+    click_button "Submit"
+    i_should_see "Whoops! Check your form for possible errors"
+  end
+
+  scenario "adding app validating scope, blank scope is accepted" do
+    config_is_set("enforce_configured_scopes", true)
+
+    fill_in "doorkeeper_application[name]", with: "My Application"
+    fill_in "doorkeeper_application[redirect_uri]",
+            with: "https://example.com"
+    fill_in "doorkeeper_application[scopes]", with: ""
+
+    click_button "Submit"
+    i_should_see "Application created"
+    i_should_see "My Application"
+  end
+
+  scenario "adding app validating scope, multiple scopes configured" do
+    config_is_set("enforce_configured_scopes", true)
+    scopes = Doorkeeper::OAuth::Scopes.from_array(%w[read write admin])
+    config_is_set("optional_scopes", scopes)
+
+    fill_in "doorkeeper_application[name]", with: "My Application"
+    fill_in "doorkeeper_application[redirect_uri]",
+            with: "https://example.com"
+    fill_in "doorkeeper_application[scopes]", with: "read write"
+
+    click_button "Submit"
+    i_should_see "Application created"
+    i_should_see "My Application"
+  end
+
+  scenario "adding app validating scope, bad scope with multiple scopes configured" do
+    config_is_set("enforce_configured_scopes", true)
+    scopes = Doorkeeper::OAuth::Scopes.from_array(%w[read write admin])
+    config_is_set("optional_scopes", scopes)
+
+    fill_in "doorkeeper_application[name]", with: "My Application"
+    fill_in "doorkeeper_application[redirect_uri]",
+            with: "https://example.com"
+    fill_in "doorkeeper_application[scopes]", with: "read blah"
+
+    click_button "Submit"
+    i_should_see "Whoops! Check your form for possible errors"
+    i_should_see Regexp.new(
+      I18n.t("activerecord.errors.models.doorkeeper/application.attributes.scopes.not_match_configured"),
+      true,
+    )
+  end
+
+  context "with blank redirect URI" do
+    scenario "adding app with blank redirect URI when configured flows requires redirect uri" do
+      config_is_set("grant_flows", %w[authorization_code implicit client_credentials])
+
+      fill_in "doorkeeper_application[name]", with: "My Application"
+      fill_in "doorkeeper_application[redirect_uri]",
+              with: ""
+
+      click_button "Submit"
+      i_should_see "Whoops! Check your form for possible errors"
+    end
+
+    scenario "adding app with blank redirect URI when configured flows without redirect uri" do
+      config_is_set("grant_flows", %w[client_credentials password])
+
+      # Visit it once again to consider grant flows
       visit "/oauth/applications/new"
-    end
 
-    scenario "adding a valid app" do
+      i_should_see I18n.t("doorkeeper.applications.help.blank_redirect_uri")
+
       fill_in "doorkeeper_application[name]", with: "My Application"
       fill_in "doorkeeper_application[redirect_uri]",
-              with: "https://example.com"
+              with: ""
 
       click_button "Submit"
       i_should_see "Application created"
       i_should_see "My Application"
-    end
-
-    scenario "adding invalid app" do
-      click_button "Submit"
-      i_should_see "Whoops! Check your form for possible errors"
-    end
-
-    scenario "adding app ignoring bad scope" do
-      config_is_set("enforce_configured_scopes", false)
-
-      fill_in "doorkeeper_application[name]", with: "My Application"
-      fill_in "doorkeeper_application[redirect_uri]",
-              with: "https://example.com"
-      fill_in "doorkeeper_application[scopes]", with: "blahblah"
-
-      click_button "Submit"
-      i_should_see "Application created"
-      i_should_see "My Application"
-    end
-
-    scenario "adding app validating bad scope" do
-      config_is_set("enforce_configured_scopes", true)
-
-      fill_in "doorkeeper_application[name]", with: "My Application"
-      fill_in "doorkeeper_application[redirect_uri]",
-              with: "https://example.com"
-      fill_in "doorkeeper_application[scopes]", with: "blahblah"
-
-      click_button "Submit"
-      i_should_see "Whoops! Check your form for possible errors"
-    end
-
-    scenario "adding app validating scope, blank scope is accepted" do
-      config_is_set("enforce_configured_scopes", true)
-
-      fill_in "doorkeeper_application[name]", with: "My Application"
-      fill_in "doorkeeper_application[redirect_uri]",
-              with: "https://example.com"
-      fill_in "doorkeeper_application[scopes]", with: ""
-
-      click_button "Submit"
-      i_should_see "Application created"
-      i_should_see "My Application"
-    end
-
-    scenario "adding app validating scope, multiple scopes configured" do
-      config_is_set("enforce_configured_scopes", true)
-      scopes = Doorkeeper::OAuth::Scopes.from_array(%w[read write admin])
-      config_is_set("optional_scopes", scopes)
-
-      fill_in "doorkeeper_application[name]", with: "My Application"
-      fill_in "doorkeeper_application[redirect_uri]",
-              with: "https://example.com"
-      fill_in "doorkeeper_application[scopes]", with: "read write"
-
-      click_button "Submit"
-      i_should_see "Application created"
-      i_should_see "My Application"
-    end
-
-    scenario "adding app validating scope, bad scope with multiple scopes configured" do
-      config_is_set("enforce_configured_scopes", true)
-      scopes = Doorkeeper::OAuth::Scopes.from_array(%w[read write admin])
-      config_is_set("optional_scopes", scopes)
-
-      fill_in "doorkeeper_application[name]", with: "My Application"
-      fill_in "doorkeeper_application[redirect_uri]",
-              with: "https://example.com"
-      fill_in "doorkeeper_application[scopes]", with: "read blah"
-
-      click_button "Submit"
-      i_should_see "Whoops! Check your form for possible errors"
-      i_should_see Regexp.new(
-        I18n.t("activerecord.errors.models.doorkeeper/application.attributes.scopes.not_match_configured"),
-        true,
-      )
-    end
-
-    context "redirect URI" do
-      scenario "adding app with blank redirect URI when configured flows requires redirect uri" do
-        config_is_set("grant_flows", %w[authorization_code implicit client_credentials])
-
-        fill_in "doorkeeper_application[name]", with: "My Application"
-        fill_in "doorkeeper_application[redirect_uri]",
-                with: ""
-
-        click_button "Submit"
-        i_should_see "Whoops! Check your form for possible errors"
-      end
-
-      scenario "adding app with blank redirect URI when configured flows without redirect uri" do
-        config_is_set("grant_flows", %w[client_credentials password])
-
-        # Visit it once again to consider grant flows
-        visit "/oauth/applications/new"
-
-        i_should_see I18n.t("doorkeeper.applications.help.blank_redirect_uri")
-
-        fill_in "doorkeeper_application[name]", with: "My Application"
-        fill_in "doorkeeper_application[redirect_uri]",
-                with: ""
-
-        click_button "Submit"
-        i_should_see "Application created"
-        i_should_see "My Application"
-      end
     end
   end
 end

@@ -2,14 +2,14 @@
 
 require "spec_helper"
 
-describe "Reusable" do
+RSpec.describe Doorkeeper::Models::Reusable do
   subject do
     Class.new do
       include Doorkeeper::Models::Reusable
     end.new
   end
 
-  describe :reusable? do
+  describe "#reusable?" do
     it "is reusable if its expires_in is nil" do
       allow(subject).to receive(:expired?).and_return(false)
       allow(subject).to receive(:expires_in).and_return(nil)

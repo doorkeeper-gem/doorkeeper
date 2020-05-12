@@ -83,7 +83,8 @@ module Doorkeeper
         code_challenge_method
         response_type
         redirect_uri
-        scope state
+        scope
+        state
       ]
     end
 

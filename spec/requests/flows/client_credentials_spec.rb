@@ -2,10 +2,10 @@
 
 require "spec_helper"
 
-describe "Client Credentials Request" do
+RSpec.describe "Client Credentials Request" do
   let(:client) { FactoryBot.create :application }
 
-  context "a valid request" do
+  context "with a valid request" do
     it "authorizes the client and returns the token response" do
       headers = authorization client.uid, client.secret
       params  = { grant_type: "client_credentials" }
@@ -38,7 +38,7 @@ describe "Client Credentials Request" do
         )
       end
 
-      context "that are default" do
+      context "when scopes are default" do
         it "adds the scope to the token an returns in the response" do
           headers = authorization client.uid, client.secret
           params  = { grant_type: "client_credentials", scope: "public" }
@@ -52,7 +52,7 @@ describe "Client Credentials Request" do
         end
       end
 
-      context "that are invalid" do
+      context "when scopes are invalid" do
         it "does not authorize the client and returns the error" do
           headers = authorization client.uid, client.secret
           params  = { grant_type: "client_credentials", scope: "random" }
@@ -152,7 +152,7 @@ describe "Client Credentials Request" do
     end
   end
 
-  context "an invalid request" do
+  context "when request is invalid" do
     it "does not authorize the client and returns the error" do
       headers = {}
       params  = { grant_type: "client_credentials" }
@@ -170,8 +170,8 @@ describe "Client Credentials Request" do
 
   context "when revoke_previous_client_credentials_token is true" do
     before do
-      allow(Doorkeeper.config).to receive(:reuse_access_token) { false }
-      allow(Doorkeeper.config).to receive(:revoke_previous_client_credentials_token?) { true }
+      allow(Doorkeeper.config).to receive(:reuse_access_token).and_return(false)
+      allow(Doorkeeper.config).to receive(:revoke_previous_client_credentials_token?).and_return(true)
     end
 
     it "revokes the previous token" do
@@ -186,8 +186,8 @@ describe "Client Credentials Request" do
       post "/oauth/token", params: params, headers: headers
       expect(json_response).to include("access_token" => Doorkeeper::AccessToken.last.token)
 
-      expect(token.reload.revoked?).to be_truthy
-      expect(Doorkeeper::AccessToken.last.revoked?).to be_falsey
+      expect(token.reload).to be_revoked
+      expect(Doorkeeper::AccessToken.last).not_to be_revoked
     end
 
     context "with a simultaneous request" do

@@ -2,8 +2,9 @@
 
 require "spec_helper"
 
-describe ::Doorkeeper::SecretStoring::Sha256Hash do
+RSpec.describe ::Doorkeeper::SecretStoring::Sha256Hash do
   subject { described_class }
+
   let(:instance) { double("instance") }
 
   let(:hash_function) do

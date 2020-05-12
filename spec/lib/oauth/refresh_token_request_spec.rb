@@ -2,7 +2,9 @@
 
 require "spec_helper"
 
-describe Doorkeeper::OAuth::RefreshTokenRequest do
+RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
+  subject { described_class.new(server, refresh_token, credentials) }
+
   let(:server) do
     double :server, access_token_expires_in: 2.minutes
   end
@@ -18,8 +20,6 @@ describe Doorkeeper::OAuth::RefreshTokenRequest do
     allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(false)
   end
-
-  subject { described_class.new(server, refresh_token, credentials) }
 
   it "issues a new token for the client" do
     expect { subject.authorize }.to change { client.reload.access_tokens.count }.by(1)
@@ -38,7 +38,7 @@ describe Doorkeeper::OAuth::RefreshTokenRequest do
   end
 
   it "revokes the previous token" do
-    expect { subject.authorize }.to change { refresh_token.revoked? }.from(false).to(true)
+    expect { subject.authorize }.to change(refresh_token, :revoked?).from(false).to(true)
   end
 
   it "calls configured request callback methods" do
@@ -87,7 +87,7 @@ describe Doorkeeper::OAuth::RefreshTokenRequest do
     expect(subject).to be_valid
   end
 
-  context "refresh tokens expire on access token use" do
+  context "when refresh tokens expire on access token use" do
     before do
       allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(true)
     end
@@ -110,10 +110,10 @@ describe Doorkeeper::OAuth::RefreshTokenRequest do
     end
   end
 
-  context "clientless access tokens" do
-    let!(:refresh_token) { FactoryBot.create(:clientless_access_token, use_refresh_token: true) }
-
+  context "with clientless access tokens" do
     subject { described_class.new server, refresh_token, nil }
+
+    let!(:refresh_token) { FactoryBot.create(:clientless_access_token, use_refresh_token: true) }
 
     it "issues a new token without a client" do
       expect { subject.authorize }.to change { Doorkeeper::AccessToken.count }.by(1)
@@ -121,14 +121,14 @@ describe Doorkeeper::OAuth::RefreshTokenRequest do
   end
 
   context "with scopes" do
+    subject { described_class.new server, refresh_token, credentials, parameters }
+
     let(:refresh_token) do
       FactoryBot.create :access_token,
                         use_refresh_token: true,
                         scopes: "public write"
     end
     let(:parameters) { {} }
-
-    subject { described_class.new server, refresh_token, credentials, parameters }
 
     it "transfers scopes from the old token to the new token" do
       subject.authorize

@@ -70,7 +70,7 @@ feature "Authorization endpoint" do
     end
   end
 
-  context "forgery protection enabled" do
+  context "when forgery protection enabled" do
     background do
       create_resource_owner
       sign_in

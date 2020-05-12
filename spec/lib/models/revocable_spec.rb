@@ -2,14 +2,14 @@
 
 require "spec_helper"
 
-describe "Revocable" do
+RSpec.describe Doorkeeper::Models::Revocable do
   subject do
     Class.new do
       include Doorkeeper::Models::Revocable
     end.new
   end
 
-  describe :revoke do
+  describe "#revoke" do
     it "updates :revoked_at attribute with current time" do
       utc = double utc: double
       clock = double now: utc
@@ -18,7 +18,7 @@ describe "Revocable" do
     end
   end
 
-  describe :revoked? do
+  describe "#revoked?" do
     it "is revoked if :revoked_at has passed" do
       allow(subject).to receive(:revoked_at).and_return(Time.now.utc - 1000)
       expect(subject).to be_revoked
@@ -35,7 +35,7 @@ describe "Revocable" do
     end
   end
 
-  describe :revoke_previous_refresh_token! do
+  describe "#revoke_previous_refresh_token!" do
     it "revokes the previous token if exists and resets the `previous_refresh_token` attribute" do
       previous_token = FactoryBot.create(
         :access_token,

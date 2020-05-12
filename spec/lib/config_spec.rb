@@ -2,8 +2,8 @@
 
 require "spec_helper"
 
-describe Doorkeeper, "configuration" do
-  subject { Doorkeeper.config }
+RSpec.describe Doorkeeper::Config do
+  subject(:config) { Doorkeeper.config }
 
   describe "resource_owner_authenticator" do
     it "sets the block that is accessible via authenticate_resource_owner" do
@@ -70,7 +70,7 @@ describe Doorkeeper, "configuration" do
   describe "admin_authenticator" do
     it "sets the block that is accessible via authenticate_admin" do
       default_behaviour = "default behaviour"
-      allow(Doorkeeper::Config).to receive(:head).and_return(default_behaviour)
+      allow(described_class).to receive(:head).and_return(default_behaviour)
 
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
@@ -79,7 +79,7 @@ describe Doorkeeper, "configuration" do
       expect(subject.authenticate_admin.call({})).to eq(default_behaviour)
     end
 
-    it "sets the block that is accessible via authenticate_admin" do
+    it "could be customized with a block" do
       block = proc {}
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
@@ -195,7 +195,7 @@ describe Doorkeeper, "configuration" do
       expect(subject.token_grant_types).not_to include "refresh_token"
     end
 
-    context "is enabled" do
+    context "when enabled" do
       before do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
@@ -503,7 +503,7 @@ describe Doorkeeper, "configuration" do
   end
 
   describe "base_controller" do
-    context "default" do
+    context "when default value set" do
       it { expect(Doorkeeper.configuration.base_controller).to be_an_instance_of(Proc) }
 
       it "resolves to a ApplicationController::Base in default mode" do
@@ -522,7 +522,7 @@ describe Doorkeeper, "configuration" do
       end
     end
 
-    context "custom" do
+    context "when custom value set" do
       before do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
@@ -535,11 +535,11 @@ describe Doorkeeper, "configuration" do
   end
 
   describe "base_metal_controller" do
-    context "default" do
+    context "when default value set" do
       it { expect(Doorkeeper.config.base_metal_controller).to eq("ActionController::API") }
     end
 
-    context "custom" do
+    context "when custom value set" do
       before do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
@@ -564,9 +564,7 @@ describe Doorkeeper, "configuration" do
       end
 
       it "establishes connection for Doorkeeper models based on options" do
-        models.each do |model|
-          expect(model).to receive(:establish_connection)
-        end
+        expect(models).to all(receive(:establish_connection))
 
         expect(Kernel).to receive(:warn).with(
           /\[DOORKEEPER\] active_record_options has been deprecated and will soon be removed/,
@@ -682,6 +680,7 @@ describe Doorkeeper, "configuration" do
     it "is set to render by default" do
       expect(Doorkeeper.config.handle_auth_errors).to eq(:render)
     end
+
     it "can change the value" do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM

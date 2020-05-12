@@ -1,21 +1,21 @@
 # frozen_string_literal: true
 
 shared_examples "an accessible token" do
-  describe :accessible? do
+  describe "#accessible?" do
     it "is accessible if token is not expired" do
       allow(subject).to receive(:expired?).and_return(false)
-      should be_accessible
+      expect(subject).to be_accessible
     end
 
     it "is not accessible if token is expired" do
       allow(subject).to receive(:expired?).and_return(true)
-      should_not be_accessible
+      expect(subject).not_to be_accessible
     end
   end
 end
 
 shared_examples "a revocable token" do
-  describe :accessible? do
+  describe "#accessible?" do
     before { subject.save! }
 
     it "is accessible if token is not revoked" do
@@ -30,11 +30,11 @@ shared_examples "a revocable token" do
 end
 
 shared_examples "a unique token" do
-  describe :token do
+  describe "#token" do
     let(:owner) { FactoryBot.create(:resource_owner) }
 
     it "is generated before validation" do
-      expect { subject.valid? }.to change { subject.token }.from(nil)
+      expect { subject.valid? }.to change(subject, :token).from(nil)
     end
 
     it "is not valid if token exists" do

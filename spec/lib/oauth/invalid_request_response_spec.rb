@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe Doorkeeper::OAuth::InvalidRequestResponse do
+RSpec.describe Doorkeeper::OAuth::InvalidRequestResponse do
   describe "#name" do
     it { expect(subject.name).to eq(:invalid_request) }
   end
@@ -14,7 +14,7 @@ describe Doorkeeper::OAuth::InvalidRequestResponse do
   describe ".from_request" do
     let(:response) { described_class.from_request(request) }
 
-    context "missing param" do
+    context "when param missed" do
       let(:request) { double(missing_param: "some_param") }
 
       it "sets a description" do
@@ -28,7 +28,7 @@ describe Doorkeeper::OAuth::InvalidRequestResponse do
       end
     end
 
-    context "server doesn't support_pkce" do
+    context "when server doesn't support PKCE" do
       let(:request) { double(invalid_request_reason: :not_support_pkce) }
 
       it "sets a description" do
@@ -42,7 +42,7 @@ describe Doorkeeper::OAuth::InvalidRequestResponse do
       end
     end
 
-    context "request is not authorized" do
+    context "when request is not authorized" do
       let(:request) { double(invalid_request_reason: :request_not_authorized) }
 
       it "sets a description" do
@@ -56,7 +56,7 @@ describe Doorkeeper::OAuth::InvalidRequestResponse do
       end
     end
 
-    context "unknown reason" do
+    context "when unknown reason" do
       let(:request) { double(invalid_request_reason: :unknown_reason) }
 
       it "sets a description" do
@@ -65,7 +65,7 @@ describe Doorkeeper::OAuth::InvalidRequestResponse do
         )
       end
 
-      it "unknown reason" do
+      it "sets the reason to unknown" do
         expect(response.reason).to eq(:unknown_reason)
       end
     end

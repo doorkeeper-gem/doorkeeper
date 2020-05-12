@@ -202,7 +202,7 @@ feature "Authorization Code Flow" do
   end
 
   context "with PKCE" do
-    context "plain" do
+    context "when plain" do
       let(:code_challenge) { "a45a9fea-0676-477e-95b1-a40f72ac3cfb" }
       let(:code_verifier) { "a45a9fea-0676-477e-95b1-a40f72ac3cfb" }
 
@@ -290,7 +290,7 @@ feature "Authorization Code Flow" do
       end
     end
 
-    context "s256" do
+    context "when S256" do
       let(:code_challenge) { "Oz733NtQ0rJP8b04fgZMJMwprn6Iw8sMCT_9bR1q4tA" }
       let(:code_verifier) { "a45a9fea-0676-477e-95b1-a40f72ac3cfb" }
 
@@ -522,38 +522,38 @@ feature "Authorization Code Flow" do
       access_token_should_have_scopes :public, :write
     end
   end
-end
 
-describe "Authorization Code Flow" do
-  before do
-    Doorkeeper.configure do
-      orm DOORKEEPER_ORM
-      use_refresh_token
-    end
-
-    client_exists
-  end
-
-  context "issuing a refresh token" do
-    let(:resource_owner) { FactoryBot.create(:resource_owner) }
-
+  context "when two requests sent" do
     before do
-      authorization_code_exists application: @client,
-                                resource_owner_id: resource_owner.id,
-                                resource_owner_type: resource_owner.class.name
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_refresh_token
+      end
+
+      client_exists
     end
 
-    it "second of simultaneous client requests get an error for revoked acccess token" do
-      authorization_code = Doorkeeper::AccessGrant.first.token
-      allow_any_instance_of(Doorkeeper::AccessGrant)
-        .to receive(:revoked?).and_return(false, true)
+    describe "issuing a refresh token" do
+      let(:resource_owner) { FactoryBot.create(:resource_owner) }
 
-      post token_endpoint_url(code: authorization_code, client: @client)
+      before do
+        authorization_code_exists application: @client,
+                                  resource_owner_id: resource_owner.id,
+                                  resource_owner_type: resource_owner.class.name
+      end
 
-      expect(json_response).to match(
-        "error" => "invalid_grant",
-        "error_description" => translated_error_message(:invalid_grant),
-      )
+      it "second of simultaneous client requests get an error for revoked access token" do
+        authorization_code = Doorkeeper::AccessGrant.first.token
+        allow_any_instance_of(Doorkeeper::AccessGrant)
+          .to receive(:revoked?).and_return(false, true)
+
+        page.driver.post token_endpoint_url(code: authorization_code, client: @client)
+
+        expect(json_response).to match(
+          "error" => "invalid_grant",
+          "error_description" => translated_error_message(:invalid_grant),
+        )
+      end
     end
   end
 end

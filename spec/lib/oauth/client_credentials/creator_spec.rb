@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe Doorkeeper::OAuth::ClientCredentials::Creator do
+RSpec.describe Doorkeeper::OAuth::ClientCredentials::Creator do
   let(:client) { FactoryBot.create :application }
   let(:scopes) { Doorkeeper::OAuth::Scopes.from_string("public") }
 
@@ -47,7 +47,7 @@ describe Doorkeeper::OAuth::ClientCredentials::Creator do
         expect(result).to eq(existing_token)
       end
 
-      context "and when revoke_previous_client_credentials_token is false" do
+      context "when revoke_previous_client_credentials_token is false" do
         before do
           allow(Doorkeeper.config).to receive(:revoke_previous_client_credentials_token).and_return(false)
         end

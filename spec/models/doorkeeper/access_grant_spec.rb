@@ -2,11 +2,7 @@
 
 require "spec_helper"
 
-describe Doorkeeper::AccessGrant do
-  let(:resource_owner) { FactoryBot.create(:resource_owner) }
-  let(:client) { FactoryBot.build_stubbed(:application) }
-  let(:clazz) { Doorkeeper::AccessGrant }
-
+RSpec.describe Doorkeeper::AccessGrant do
   subject do
     FactoryBot.build(
       :access_grant,
@@ -15,6 +11,10 @@ describe Doorkeeper::AccessGrant do
       resource_owner_type: resource_owner.class.name,
     )
   end
+
+  let(:resource_owner) { FactoryBot.create(:resource_owner) }
+  let(:client) { FactoryBot.build_stubbed(:application) }
+  let(:clazz) { described_class }
 
   it { expect(subject).to be_valid }
 
@@ -31,6 +31,7 @@ describe Doorkeeper::AccessGrant do
                         resource_owner_id: resource_owner.id,
                         resource_owner_type: resource_owner.class.name
     end
+
     include_context "with token hashing enabled"
 
     it "holds a volatile plaintext token when created" do
@@ -143,10 +144,7 @@ describe Doorkeeper::AccessGrant do
       FactoryBot.create :access_grant, default_attributes
 
       described_class.revoke_all_for(application.id, resource_owner)
-
-      described_class.all.each do |token|
-        expect(token).to be_revoked
-      end
+      expect(described_class.all).to all(be_revoked)
     end
 
     it "matches application" do

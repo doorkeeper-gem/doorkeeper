@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-describe Doorkeeper::OAuth::Error do
+RSpec.describe Doorkeeper::OAuth::Error do
   subject(:error) { described_class.new(:some_error, :some_state) }
 
   it { expect(subject).to respond_to(:name) }

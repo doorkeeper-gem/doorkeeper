@@ -2,6 +2,7 @@ inherit_from: .rubocop_todo.yml
 require:
   - rubocop-performance
   - rubocop-rails
+  - rubocop-rspec
 AllCops:
   TargetRubyVersion: 2.4
   Exclude:
@@ -10,36 +11,40 @@ AllCops:
     - "spec/dummy/config/*"
     - "Dangerfile"
     - "gemfiles/*.gemfile"
-
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+Layout/TrailingEmptyLines:
+  Enabled: true
+Layout/DotPosition:
+  EnforcedStyle: leading
+Layout/LineLength:
+  Exclude:
+    - spec/**/*
+  Max: 100
 Metrics/BlockLength:
   Exclude:
     - spec/**/*
     - lib/doorkeeper/rake/*
     - doorkeeper.gemspec
-
 Metrics/MethodLength:
   Exclude:
     - spec/dummy/db/**/*
-
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 Style/StringLiteralsInInterpolation:
   EnforcedStyle: double_quotes
 Style/FrozenStringLiteralComment:
   Enabled: true
-
 Style/TrailingCommaInHashLiteral:
   EnforcedStyleForMultiline: consistent_comma
 Style/TrailingCommaInArrayLiteral:
   EnforcedStyleForMultiline: consistent_comma
 Style/TrailingCommaInArguments:
   EnforcedStyleForMultiline: consistent_comma
-
 Style/SymbolArray:
   MinSize: 3
 Style/WordArray:
   MinSize: 3
-
 Style/ClassAndModuleChildren:
   Enabled: false
 Style/NumericPredicate:
@@ -53,17 +58,11 @@ Style/HashTransformKeys:
 Style/HashTransformValues:
   Enabled: true
 
-Layout/MultilineMethodCallIndentation:
-  EnforcedStyle: indented
-Layout/TrailingEmptyLines:
-  Enabled: true
-Layout/DotPosition:
-  EnforcedStyle: leading
-Layout/LineLength:
-  Exclude:
-    - spec/**/*
-  Max: 100
-
+Rails/DynamicFindBy:
+  Whitelist:
+    - find_by_sql
+    - find_by_plaintext_token
+    - find_by_fallback_token
 Rails/HttpPositionalArguments:
   Exclude:
     - spec/grape/*
@@ -74,8 +73,26 @@ Rails/RakeEnvironment:
     - Rakefile
 Rails/ReflectionClassName:
   Exclude:
-    - 'lib/doorkeeper/orm/active_record/mixins/access_grant.rb'
-    - 'lib/doorkeeper/orm/active_record/mixins/access_token.rb'
-    - 'lib/doorkeeper/orm/active_record/mixins/application.rb'
+    - "lib/doorkeeper/orm/active_record/mixins/access_grant.rb"
+    - "lib/doorkeeper/orm/active_record/mixins/access_token.rb"
+    - "lib/doorkeeper/orm/active_record/mixins/application.rb"
 Rails/SkipsModelValidations:
+  Enabled: false
+
+RSpec/BeforeAfterAll:
+  Exclude:
+    - "spec/routing/scoped_routes_spec.rb"
+    - "spec/routing/custom_controller_routes_spec.rb"
+RSpec/ContextWording:
+  Exclude:
+    - "spec/support/shared/controllers_shared_context.rb"
+RSpec/DescribeClass:
+  Enabled: false
+RSpec/ExampleLength:
+  Enabled: false
+RSpec/MultipleExpectations:
+  Enabled: false
+RSpec/NestedGroups:
+  Enabled: false
+Capybara/FeatureMethods:
   Enabled: false
