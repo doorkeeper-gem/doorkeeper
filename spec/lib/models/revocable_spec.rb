@@ -46,9 +46,6 @@ RSpec.describe Doorkeeper::Models::Revocable do
         previous_refresh_token: previous_token.refresh_token,
       )
 
-      expect_any_instance_of(
-        Doorkeeper::AccessToken,
-      ).to receive(:revoke).and_call_original
       current_token.revoke_previous_refresh_token!
 
       expect(current_token.previous_refresh_token).to be_empty

@@ -90,6 +90,8 @@ RSpec/DescribeClass:
   Enabled: false
 RSpec/ExampleLength:
   Enabled: false
+RSpec/FilePath:
+  Enabled: false
 RSpec/MultipleExpectations:
   Enabled: false
 RSpec/NestedGroups:

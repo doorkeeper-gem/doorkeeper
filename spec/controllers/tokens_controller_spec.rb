@@ -191,9 +191,11 @@ RSpec.describe Doorkeeper::TokensController do
     context "when associated app is confidential" do
       let(:client) { FactoryBot.create(:application, confidential: true) }
       let(:oauth_client) { Doorkeeper::OAuth::Client.new(client) }
+      let(:server) { instance_double(Doorkeeper::Server) }
 
       before do
-        allow_any_instance_of(Doorkeeper::Server).to receive(:client) { oauth_client }
+        allow(Doorkeeper::Server).to receive(:new).and_return(server)
+        allow(server).to receive(:client).and_return(oauth_client)
       end
 
       it "returns 200" do

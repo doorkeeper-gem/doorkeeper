@@ -14,7 +14,7 @@ RSpec.describe Doorkeeper::StaleRecordsCleaner do
 
   context "when ORM has no cleaner class" do
     it "raises an error" do
-      allow_any_instance_of(Doorkeeper::Config).to receive(:orm).and_return("hibernate")
+      allow(Doorkeeper.configuration).to receive(:orm).and_return("hibernate")
 
       expect do
         described_class.for(Doorkeeper::AccessToken)
