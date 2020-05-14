@@ -27,8 +27,6 @@ RSpec.describe Doorkeeper::StaleRecordsCleaner do
       let(:model) { models_by_name.fetch(model_name) }
 
       describe "#clean_revoked" do
-        subject { cleaner.clean_revoked }
-
         context "with revoked record" do
           before do
             FactoryBot.create model_name,
@@ -38,7 +36,7 @@ RSpec.describe Doorkeeper::StaleRecordsCleaner do
           end
 
           it "removes the record" do
-            expect { subject }.to change(model, :count).to(0)
+            expect { cleaner.clean_revoked }.to change(model, :count).to(0)
           end
         end
 
@@ -50,7 +48,7 @@ RSpec.describe Doorkeeper::StaleRecordsCleaner do
           end
 
           it "keeps the record" do
-            expect { subject }.not_to(change(model, :count))
+            expect { cleaner.clean_revoked }.not_to(change(model, :count))
           end
         end
 
@@ -62,14 +60,12 @@ RSpec.describe Doorkeeper::StaleRecordsCleaner do
           end
 
           it "keeps the record" do
-            expect { subject }.not_to(change(model, :count))
+            expect { cleaner.clean_revoked }.not_to(change(model, :count))
           end
         end
       end
 
       describe "#clean_expired" do
-        subject { cleaner.clean_expired(ttl) }
-
         let(:ttl) { 500 }
         let(:expiry_border) { ttl.seconds.ago }
 
@@ -82,7 +78,7 @@ RSpec.describe Doorkeeper::StaleRecordsCleaner do
           end
 
           it "removes the record" do
-            expect { subject }.to change(model, :count).to(0)
+            expect { cleaner.clean_expired(ttl) }.to change(model, :count).to(0)
           end
         end
 
@@ -94,7 +90,7 @@ RSpec.describe Doorkeeper::StaleRecordsCleaner do
           end
 
           it "keeps the record" do
-            expect { subject }.not_to(change(model, :count))
+            expect { cleaner.clean_expired(ttl) }.not_to(change(model, :count))
           end
         end
       end

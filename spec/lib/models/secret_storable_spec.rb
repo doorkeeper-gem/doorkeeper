@@ -23,7 +23,7 @@ RSpec.describe Doorkeeper::Models::SecretStorable do
   let(:strategy) { clazz.secret_strategy }
 
   describe ".find_by_plaintext_token" do
-    subject { clazz.send(:find_by_plaintext_token, "attr", "input") }
+    subject(:result) { clazz.send(:find_by_plaintext_token, "attr", "input") }
 
     it "forwards to the secret_strategy" do
       expect(strategy)
@@ -36,7 +36,7 @@ RSpec.describe Doorkeeper::Models::SecretStorable do
         .with("attr" => "found")
         .and_return "result"
 
-      expect(subject).to eq "result"
+      expect(result).to eq "result"
     end
 
     it "calls find_by_fallback_token if not found" do
@@ -50,18 +50,18 @@ RSpec.describe Doorkeeper::Models::SecretStorable do
         .with("attr", "input")
         .and_return "fallback"
 
-      expect(subject).to eq "fallback"
+      expect(result).to eq "fallback"
     end
   end
 
   describe ".find_by_fallback_token" do
-    subject { clazz.send(:find_by_fallback_token, "attr", "input") }
+    subject(:result) { clazz.send(:find_by_fallback_token, "attr", "input") }
 
     let(:fallback) { double(::Doorkeeper::SecretStoring::Plain) }
 
     it "returns nil if none defined" do
       expect(clazz.fallback_secret_strategy).to eq nil
-      expect(subject).to eq nil
+      expect(result).to eq nil
     end
 
     context "when a fallback strategy is defined" do
@@ -95,7 +95,7 @@ RSpec.describe Doorkeeper::Models::SecretStorable do
             .and_return("new value")
 
           expect(resource).to receive(:update).with("attr" => "new value")
-          expect(subject).to eq resource
+          expect(result).to eq resource
         end
       end
 
@@ -116,7 +116,7 @@ RSpec.describe Doorkeeper::Models::SecretStorable do
             .and_return("fallback")
 
           # It does not find a token even with the fallback method
-          expect(subject).to be_nil
+          expect(result).to be_nil
         end
       end
     end

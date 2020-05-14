@@ -2,8 +2,8 @@
 
 require "spec_helper"
 
-module Doorkeeper::OAuth::Helpers
-  describe ScopeChecker, ".valid?" do
+RSpec.describe Doorkeeper::OAuth::Helpers::ScopeChecker do
+  describe ".valid?" do
     let(:server_scopes) { Doorkeeper::OAuth::Scopes.new }
 
     it "is valid if scope is present" do

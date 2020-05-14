@@ -3,12 +3,14 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::InvalidTokenResponse do
+  let(:response) { described_class.new }
+
   describe "#name" do
-    it { expect(subject.name).to eq(:invalid_token) }
+    it { expect(response.name).to eq(:invalid_token) }
   end
 
   describe "#status" do
-    it { expect(subject.status).to eq(:unauthorized) }
+    it { expect(response.status).to eq(:unauthorized) }
   end
 
   describe ".from_access_token" do

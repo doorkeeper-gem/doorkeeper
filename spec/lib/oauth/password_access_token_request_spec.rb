@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
-  subject do
+  subject(:request) do
     described_class.new(server, client, owner)
   end
 
@@ -28,34 +28,34 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
 
   it "issues a new token for the client" do
     expect do
-      subject.authorize
+      request.authorize
     end.to change { application.reload.access_tokens.count }.by(1)
 
     expect(application.reload.access_tokens.max_by(&:created_at).expires_in).to eq(1234)
   end
 
   it "issues a new token without a client" do
-    subject = described_class.new(server, nil, owner)
-    expect(subject).to be_valid
+    request = described_class.new(server, nil, owner)
+    expect(request).to be_valid
 
     expect do
-      subject.authorize
+      request.authorize
     end.to change { Doorkeeper::AccessToken.count }.by(1)
   end
 
   it "does not issue a new token with an invalid client" do
-    subject = described_class.new(server, nil, owner, { client_id: "bad_id" })
+    request = described_class.new(server, nil, owner, { client_id: "bad_id" })
     expect do
-      subject.authorize
+      request.authorize
     end.not_to(change { Doorkeeper::AccessToken.count })
 
-    expect(subject.error).to eq(:invalid_client)
+    expect(request.error).to eq(:invalid_client)
   end
 
   it "requires the owner" do
-    subject = described_class.new(server, client, nil)
-    subject.validate
-    expect(subject.error).to eq(:invalid_grant)
+    request = described_class.new(server, client, nil)
+    request.validate
+    expect(request.error).to eq(:invalid_grant)
   end
 
   it "creates token even when there is already one (default)" do
@@ -67,7 +67,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
     )
 
     expect do
-      subject.authorize
+      request.authorize
     end.to change { Doorkeeper::AccessToken.count }.by(1)
   end
 
@@ -81,7 +81,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
     )
 
     expect do
-      subject.authorize
+      request.authorize
     end.not_to(change { Doorkeeper::AccessToken.count })
   end
 
@@ -96,36 +96,36 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
     allow_any_instance_of(Doorkeeper::AccessToken).to receive(:reusable?).and_return(false)
 
     expect do
-      subject.authorize
+      request.authorize
     end.to change { Doorkeeper::AccessToken.count }.by(1)
   end
 
   it "calls configured request callback methods" do
     expect(Doorkeeper.configuration.before_successful_strategy_response)
-      .to receive(:call).with(subject).once
+      .to receive(:call).with(request).once
 
     expect(Doorkeeper.configuration.after_successful_strategy_response)
-      .to receive(:call).with(subject, instance_of(Doorkeeper::OAuth::TokenResponse)).once
+      .to receive(:call).with(request, instance_of(Doorkeeper::OAuth::TokenResponse)).once
 
-    subject.authorize
+    request.authorize
   end
 
   describe "with scopes" do
-    subject do
+    subject(:request) do
       described_class.new(server, client, owner, scope: "public")
     end
 
     context "when scopes_by_grant_type is not configured for grant_type" do
       it "returns error when scopes are invalid" do
         allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("another"))
-        subject.validate
-        expect(subject.error).to eq(:invalid_scope)
+        request.validate
+        expect(request.error).to eq(:invalid_scope)
       end
 
       it "creates the token with scopes if scopes are valid" do
         allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("public"))
         expect do
-          subject.authorize
+          request.authorize
         end.to change { Doorkeeper::AccessToken.count }.by(1)
 
         expect(Doorkeeper::AccessToken.last.scopes).to include("public")
@@ -138,8 +138,8 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
           .to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("public"))
         allow(Doorkeeper.configuration)
           .to receive(:scopes_by_grant_type).and_return(password: "another")
-        subject.validate
-        expect(subject.error).to eq(:invalid_scope)
+        request.validate
+        expect(request.error).to eq(:invalid_scope)
       end
 
       it "creates the token with scopes if scopes are valid and permitted for grant_type" do
@@ -148,7 +148,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
           .to receive(:scopes_by_grant_type).and_return(password: [:public])
 
         expect do
-          subject.authorize
+          request.authorize
         end.to change { Doorkeeper::AccessToken.count }.by(1)
 
         expect(Doorkeeper::AccessToken.last.scopes).to include("public")
@@ -178,22 +178,22 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
     end
 
     it "checks scopes" do
-      subject = described_class.new(server, client, owner, scope: "public")
+      request = described_class.new(server, client, owner, scope: "public")
       allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("public"))
 
       expect do
-        subject.authorize
+        request.authorize
       end.to change { Doorkeeper::AccessToken.count }.by(1)
 
       expect(Doorkeeper::AccessToken.last.expires_in).to eq(222)
     end
 
     it "falls back to the default otherwise" do
-      subject = described_class.new(server, client, owner, scope: "private")
+      request = described_class.new(server, client, owner, scope: "private")
       allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("private"))
 
       expect do
-        subject.authorize
+        request.authorize
       end.to change { Doorkeeper::AccessToken.count }.by(1)
 
       expect(Doorkeeper::AccessToken.last.expires_in).to eq(2.hours)

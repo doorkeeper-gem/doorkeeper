@@ -22,6 +22,9 @@ Metrics/ClassLength:
 Metrics/ModuleLength:
   Max: 209
 
+Metrics/MethodLength:
+  Max: 15
+
 # Offense count: 13
 RSpec/AnyInstance:
   Exclude:
@@ -74,11 +77,6 @@ RSpec/MessageChain:
 # SupportedStyles: have_received, receive
 RSpec/MessageSpies:
   EnforcedStyle: receive
-
-# Offense count: 427
-# Configuration parameters: IgnoreSharedExamples.
-RSpec/NamedSubject:
-  Enabled: false
 
 # Offense count: 40
 RSpec/SubjectStub:

@@ -39,7 +39,8 @@ module Doorkeeper
         end
 
         def lookup_existing_token?
-          server_config.reuse_access_token || server_config.revoke_previous_client_credentials_token?
+          server_config.reuse_access_token ||
+            server_config.revoke_previous_client_credentials_token?
         end
 
         def find_existing_token_for(client, scopes)

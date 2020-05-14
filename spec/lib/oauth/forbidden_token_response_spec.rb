@@ -3,12 +3,14 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::ForbiddenTokenResponse do
+  subject(:response) { described_class.new }
+
   describe "#name" do
-    it { expect(subject.name).to eq(:invalid_scope) }
+    it { expect(response.name).to eq(:invalid_scope) }
   end
 
   describe "#status" do
-    it { expect(subject.status).to eq(:forbidden) }
+    it { expect(response.status).to eq(:forbidden) }
   end
 
   describe ".from_scopes" do

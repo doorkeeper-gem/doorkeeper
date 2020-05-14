@@ -94,8 +94,8 @@ module Doorkeeper
       # Interface to enumerate access token records in batches in order not
       # to bloat the memory. Could be overloaded in any ORM extension.
       #
-      def find_access_token_in_batches(relation, *args, &block)
-        relation.find_in_batches(*args, &block)
+      def find_access_token_in_batches(relation, **args, &block)
+        relation.find_in_batches(**args, &block)
       end
 
       # Enumerates AccessToken records in batches to find a matching token.

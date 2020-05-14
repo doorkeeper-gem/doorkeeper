@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
-  subject { described_class.new(server, refresh_token, credentials) }
+  subject(:request) { described_class.new(server, refresh_token, credentials) }
 
   let(:server) do
     double :server, access_token_expires_in: 2.minutes
@@ -22,7 +22,7 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
   end
 
   it "issues a new token for the client" do
-    expect { subject.authorize }.to change { client.reload.access_tokens.count }.by(1)
+    expect { request.authorize }.to change { client.reload.access_tokens.count }.by(1)
     # #sort_by used for MongoDB ORM extensions for valid ordering
     expect(client.reload.access_tokens.max_by(&:created_at).expires_in).to eq(refresh_token.expires_in)
   end
@@ -38,17 +38,17 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
   end
 
   it "revokes the previous token" do
-    expect { subject.authorize }.to change(refresh_token, :revoked?).from(false).to(true)
+    expect { request.authorize }.to change(refresh_token, :revoked?).from(false).to(true)
   end
 
   it "calls configured request callback methods" do
     expect(Doorkeeper.configuration.before_successful_strategy_response)
-      .to receive(:call).with(subject).once
+      .to receive(:call).with(request).once
 
     expect(Doorkeeper.configuration.after_successful_strategy_response)
-      .to receive(:call).with(subject, instance_of(Doorkeeper::OAuth::TokenResponse)).once
+      .to receive(:call).with(request, instance_of(Doorkeeper::OAuth::TokenResponse)).once
 
-    subject.authorize
+    request.authorize
   end
 
   it "requires the refresh token" do
@@ -76,15 +76,15 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
 
   it "rejects revoked tokens" do
     refresh_token.revoke
-    subject.validate
-    expect(subject.error).to eq(:invalid_grant)
+    request.validate
+    expect(request.error).to eq(:invalid_grant)
   end
 
   it "accepts expired tokens" do
     refresh_token.expires_in = -1
     refresh_token.save
-    subject.validate
-    expect(subject).to be_valid
+    request.validate
+    expect(request).to be_valid
   end
 
   context "when refresh tokens expire on access token use" do
@@ -93,16 +93,16 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
     end
 
     it "issues a new token for the client" do
-      expect { subject.authorize }.to change { client.reload.access_tokens.count }.by(1)
+      expect { request.authorize }.to change { client.reload.access_tokens.count }.by(1)
     end
 
     it "does not revoke the previous token" do
-      subject.authorize
+      request.authorize
       expect(refresh_token).not_to be_revoked
     end
 
     it "sets the previous refresh token in the new access token" do
-      subject.authorize
+      request.authorize
       expect(
         # #sort_by used for MongoDB ORM extensions for valid ordering
         client.access_tokens.max_by(&:created_at).previous_refresh_token,
@@ -111,17 +111,17 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
   end
 
   context "with clientless access tokens" do
-    subject { described_class.new server, refresh_token, nil }
+    subject(:request) { described_class.new(server, refresh_token, nil) }
 
     let!(:refresh_token) { FactoryBot.create(:clientless_access_token, use_refresh_token: true) }
 
     it "issues a new token without a client" do
-      expect { subject.authorize }.to change { Doorkeeper::AccessToken.count }.by(1)
+      expect { request.authorize }.to change { Doorkeeper::AccessToken.count }.by(1)
     end
   end
 
   context "with scopes" do
-    subject { described_class.new server, refresh_token, credentials, parameters }
+    subject(:request) { described_class.new(server, refresh_token, credentials, parameters) }
 
     let(:refresh_token) do
       FactoryBot.create :access_token,
@@ -131,27 +131,27 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
     let(:parameters) { {} }
 
     it "transfers scopes from the old token to the new token" do
-      subject.authorize
+      request.authorize
       expect(Doorkeeper::AccessToken.last.scopes).to eq(%i[public write])
     end
 
     it "reduces scopes to the provided scopes" do
       parameters[:scopes] = "public"
-      subject.authorize
+      request.authorize
       expect(Doorkeeper::AccessToken.last.scopes).to eq(%i[public])
     end
 
     it "validates that scopes are included in the original access token" do
       parameters[:scopes] = "public update"
 
-      subject.validate
-      expect(subject.error).to eq(:invalid_scope)
+      request.validate
+      expect(request.error).to eq(:invalid_scope)
     end
 
     it "uses params[:scope] in favor of scopes if present (valid)" do
       parameters[:scopes] = "public update"
       parameters[:scope] = "public"
-      subject.authorize
+      request.authorize
       expect(Doorkeeper::AccessToken.last.scopes).to eq(%i[public])
     end
 
@@ -159,8 +159,8 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
       parameters[:scopes] = "public"
       parameters[:scope] = "public update"
 
-      subject.validate
-      expect(subject.error).to eq(:invalid_scope)
+      request.validate
+      expect(request.error).to eq(:invalid_scope)
     end
   end
 end
