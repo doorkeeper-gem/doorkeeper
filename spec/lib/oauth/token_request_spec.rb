@@ -3,15 +3,15 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::TokenRequest do
-  subject do
+  subject(:request) do
     described_class.new(pre_auth, owner)
   end
 
-  let :application do
+  let(:application) do
     FactoryBot.create(:application, scopes: "public")
   end
 
-  let :pre_auth do
+  let(:pre_auth) do
     server = Doorkeeper.config
     allow(server).to receive(:default_scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("public"))
     allow(server).to receive(:grant_flows).and_return(Doorkeeper::OAuth::Scopes.from_string("implicit"))
@@ -29,24 +29,24 @@ RSpec.describe Doorkeeper::OAuth::TokenRequest do
     pre_auth
   end
 
-  let :owner do
+  let(:owner) do
     FactoryBot.create(:doorkeeper_testing_user)
   end
 
   it "creates an access token" do
     expect do
-      subject.authorize
+      request.authorize
     end.to change { Doorkeeper::AccessToken.count }.by(1)
   end
 
   it "returns a code response" do
-    expect(subject.authorize).to be_a(Doorkeeper::OAuth::CodeResponse)
+    expect(request.authorize).to be_a(Doorkeeper::OAuth::CodeResponse)
   end
 
   context "when pre_auth is denied" do
     it "does not create token and returns a error response" do
-      expect { subject.deny }.not_to(change { Doorkeeper::AccessToken.count })
-      expect(subject.deny).to be_a(Doorkeeper::OAuth::ErrorResponse)
+      expect { request.deny }.not_to(change { Doorkeeper::AccessToken.count })
+      expect(request.deny).to be_a(Doorkeeper::OAuth::ErrorResponse)
     end
   end
 
@@ -62,7 +62,7 @@ RSpec.describe Doorkeeper::OAuth::TokenRequest do
       end
 
       it "uses the custom ttl" do
-        subject.authorize
+        request.authorize
         token = Doorkeeper::AccessToken.first
         expect(token.expires_in).to eq(1234)
       end
@@ -80,7 +80,7 @@ RSpec.describe Doorkeeper::OAuth::TokenRequest do
       end
 
       it "fallbacks to access_token_expires_in" do
-        subject.authorize
+        request.authorize
         token = Doorkeeper::AccessToken.first
         expect(token.expires_in).to eq(654)
       end
@@ -98,7 +98,7 @@ RSpec.describe Doorkeeper::OAuth::TokenRequest do
       end
 
       it "fallbacks to access_token_expires_in" do
-        subject.authorize
+        request.authorize
         token = Doorkeeper::AccessToken.first
         expect(token.expires_in).to be_nil
       end
@@ -109,7 +109,7 @@ RSpec.describe Doorkeeper::OAuth::TokenRequest do
     it "creates a new token if there are no matching tokens" do
       allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
       expect do
-        subject.authorize
+        request.authorize
       end.to change { Doorkeeper::AccessToken.count }.by(1)
     end
 
@@ -124,7 +124,7 @@ RSpec.describe Doorkeeper::OAuth::TokenRequest do
       )
 
       expect do
-        subject.authorize
+        request.authorize
       end.to change { Doorkeeper::AccessToken.count }.by(1)
     end
 
@@ -138,7 +138,7 @@ RSpec.describe Doorkeeper::OAuth::TokenRequest do
                        resource_owner_id: owner.id, resource_owner_type: owner.class.name, scopes: "public",
       )
 
-      expect { subject.authorize }.not_to(change { Doorkeeper::AccessToken.count })
+      expect { request.authorize }.not_to(change { Doorkeeper::AccessToken.count })
     end
 
     it "creates new token if there is a matching one but non reusable" do
@@ -157,7 +157,7 @@ RSpec.describe Doorkeeper::OAuth::TokenRequest do
       allow_any_instance_of(Doorkeeper::AccessToken).to receive(:reusable?).and_return(false)
 
       expect do
-        subject.authorize
+        request.authorize
       end.to change { Doorkeeper::AccessToken.count }.by(1)
     end
   end

@@ -317,7 +317,7 @@ RSpec.describe "doorkeeper authorize filter" do
   end
 
   context "when handle_auth_errors option is set to :raise" do
-    subject { get :index, params: { access_token: token_string } }
+    subject(:request) { get :index, params: { access_token: token_string } }
 
     before do
       config_is_set(:handle_auth_errors, :raise)
@@ -330,25 +330,25 @@ RSpec.describe "doorkeeper authorize filter" do
 
     context "when token is unknown" do
       it "raises Doorkeeper::Errors::TokenUnknown exception", token: :invalid do
-        expect { subject }.to raise_error(Doorkeeper::Errors::TokenUnknown)
+        expect { request }.to raise_error(Doorkeeper::Errors::TokenUnknown)
       end
     end
 
     context "when token is expired" do
       it "raises Doorkeeper::Errors::TokenExpired exception", token: :expired do
-        expect { subject }.to raise_error(Doorkeeper::Errors::TokenExpired)
+        expect { request }.to raise_error(Doorkeeper::Errors::TokenExpired)
       end
     end
 
     context "when token is revoked" do
       it "raises Doorkeeper::Errors::TokenRevoked exception", token: :revoked do
-        expect { subject }.to raise_error(Doorkeeper::Errors::TokenRevoked)
+        expect { request }.to raise_error(Doorkeeper::Errors::TokenRevoked)
       end
     end
 
     context "when token is forbidden" do
       it "raises Doorkeeper::Errors::TokenForbidden exception", token: :forbidden do
-        expect { subject }.to raise_error(Doorkeeper::Errors::TokenForbidden)
+        expect { request }.to raise_error(Doorkeeper::Errors::TokenForbidden)
       end
     end
 

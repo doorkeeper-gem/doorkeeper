@@ -3,53 +3,55 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::Scopes do
+  subject(:scopes) { described_class.new }
+
   describe "#add" do
     it "allows you to add scopes with symbols" do
-      subject.add :public
-      expect(subject.all).to eq(["public"])
+      scopes.add :public
+      expect(scopes.all).to eq(["public"])
     end
 
     it "allows you to add scopes with strings" do
-      subject.add "public"
-      expect(subject.all).to eq(["public"])
+      scopes.add "public"
+      expect(scopes.all).to eq(["public"])
     end
 
     it "do not add already included scopes" do
-      subject.add :public
-      subject.add :public
-      expect(subject.all).to eq(["public"])
+      scopes.add :public
+      scopes.add :public
+      expect(scopes.all).to eq(["public"])
     end
   end
 
   describe "#exists" do
     before do
-      subject.add :public
+      scopes.add :public
     end
 
     it "returns true if scope with given name is present" do
-      expect(subject).to exist("public")
+      expect(scopes).to exist("public")
     end
 
     it "returns false if scope with given name does not exist" do
-      expect(subject).not_to exist("other")
+      expect(scopes).not_to exist("other")
     end
 
     it "handles symbols" do
-      expect(subject).to exist(:public)
-      expect(subject).not_to exist(:other)
+      expect(scopes).to exist(:public)
+      expect(scopes).not_to exist(:other)
     end
   end
 
   describe ".from_string" do
-    subject { described_class.from_string(string) }
+    subject(:scopes) { described_class.from_string(string) }
 
     let(:string) { "public write" }
 
-    it { expect(subject).to be_a(described_class) }
+    it { expect(scopes).to be_a(described_class) }
 
     describe "#all" do
       it "is an array of the expected scopes" do
-        scopes_array = subject.all
+        scopes_array = scopes.all
         expect(scopes_array.size).to eq(2)
         expect(scopes_array).to include("public")
         expect(scopes_array).to include("write")
@@ -117,30 +119,30 @@ RSpec.describe Doorkeeper::OAuth::Scopes do
   end
 
   describe "#has_scopes?" do
-    subject { described_class.from_string("public admin") }
+    subject(:scopes) { described_class.from_string("public admin") }
 
     it "returns true when at least one scope is included" do
-      expect(subject).to have_scopes(described_class.from_string("public"))
+      expect(scopes).to have_scopes(described_class.from_string("public"))
     end
 
     it "returns true when all scopes are included" do
-      expect(subject).to have_scopes(described_class.from_string("public admin"))
+      expect(scopes).to have_scopes(described_class.from_string("public admin"))
     end
 
     it "is true if all scopes are included in any order" do
-      expect(subject).to have_scopes(described_class.from_string("admin public"))
+      expect(scopes).to have_scopes(described_class.from_string("admin public"))
     end
 
     it "is false if no scopes are included" do
-      expect(subject).not_to have_scopes(described_class.from_string("notexistent"))
+      expect(scopes).not_to have_scopes(described_class.from_string("notexistent"))
     end
 
     it "returns false when any scope is not included" do
-      expect(subject).not_to have_scopes(described_class.from_string("public nope"))
+      expect(scopes).not_to have_scopes(described_class.from_string("public nope"))
     end
 
     it "is false if no scopes are included even for existing ones" do
-      expect(subject).not_to have_scopes(described_class.from_string("public admin notexistent"))
+      expect(scopes).not_to have_scopes(described_class.from_string("public admin notexistent"))
     end
   end
 end

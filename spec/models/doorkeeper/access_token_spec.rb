@@ -3,9 +3,9 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::AccessToken do
-  subject { FactoryBot.build(:access_token) }
+  subject(:access_token) { FactoryBot.build(:access_token) }
 
-  it { expect(subject).to be_valid }
+  it { expect(access_token).to be_valid }
 
   it_behaves_like "an accessible token"
   it_behaves_like "a revocable token"
@@ -361,14 +361,14 @@ RSpec.describe Doorkeeper::AccessToken do
   describe "validations" do
     it "is valid without resource_owner_id" do
       # For client credentials flow
-      subject.resource_owner_id = nil
-      expect(subject).to be_valid
+      access_token.resource_owner_id = nil
+      expect(access_token).to be_valid
     end
 
     it "is valid without application_id" do
       # For resource owner credentials flow
-      subject.application_id = nil
-      expect(subject).to be_valid
+      access_token.application_id = nil
+      expect(access_token).to be_valid
     end
   end
 
@@ -478,7 +478,7 @@ RSpec.describe Doorkeeper::AccessToken do
 
     it "revokes all tokens for given application and resource owner" do
       FactoryBot.create :access_token, default_attributes
-      described_class.revoke_all_for application.id, resource_owner
+      described_class.revoke_all_for(application.id, resource_owner)
       expect(described_class.all).to all(be_revoked)
     end
 
@@ -488,7 +488,7 @@ RSpec.describe Doorkeeper::AccessToken do
         default_attributes.merge(application: FactoryBot.create(:application)),
       )
 
-      described_class.revoke_all_for application.id, resource_owner
+      described_class.revoke_all_for(application.id, resource_owner)
 
       expect(access_token_for_different_app.reload).not_to be_revoked
     end
@@ -499,7 +499,7 @@ RSpec.describe Doorkeeper::AccessToken do
         default_attributes.merge(resource_owner_id: resource_owner.id + 1),
       )
 
-      described_class.revoke_all_for application.id, resource_owner
+      described_class.revoke_all_for(application.id, resource_owner)
 
       expect(access_token_for_different_owner.reload).not_to be_revoked
     end

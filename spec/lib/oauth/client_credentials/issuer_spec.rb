@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
-  subject { described_class.new(server, validator) }
+  subject(:issuer) { described_class.new(server, validator) }
 
   let(:creator) { double :access_token_creator }
   let(:server) do
@@ -24,9 +24,9 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
 
     it "creates and sets the token" do
       expect(creator).to receive(:call).and_return("token")
-      subject.create client, scopes, creator
+      issuer.create client, scopes, creator
 
-      expect(subject.token).to eq("token")
+      expect(issuer.token).to eq("token")
     end
 
     it "creates with correct token parameters" do
@@ -37,14 +37,14 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
         use_refresh_token: false,
       )
 
-      subject.create client, scopes, creator
+      issuer.create client, scopes, creator
     end
 
     it "has error set to :server_error if creator fails" do
       expect(creator).to receive(:call).and_return(false)
-      subject.create client, scopes, creator
+      issuer.create client, scopes, creator
 
-      expect(subject.error).to eq(:server_error)
+      expect(issuer.error).to eq(:server_error)
     end
 
     context "when validator fails" do
@@ -55,12 +55,12 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
 
       it "has error set from validator" do
         expect(creator).not_to receive(:create)
-        subject.create client, scopes, creator
-        expect(subject.error).to eq(:validation_error)
+        issuer.create client, scopes, creator
+        expect(issuer.error).to eq(:validation_error)
       end
 
       it "returns false" do
-        expect(subject.create(client, scopes, creator)).to be_falsey
+        expect(issuer.create(client, scopes, creator)).to be_falsey
       end
     end
 
@@ -93,7 +93,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
           expires_in: custom_ttl_grant,
           use_refresh_token: false,
         )
-        subject.create client, scopes, creator
+        issuer.create client, scopes, creator
       end
 
       it "respects scope based rules" do
@@ -103,7 +103,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
           expires_in: custom_ttl_scope,
           use_refresh_token: false,
         )
-        subject.create client, custom_scope, creator
+        issuer.create client, custom_scope, creator
       end
     end
   end

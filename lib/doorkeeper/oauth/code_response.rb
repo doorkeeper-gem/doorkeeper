@@ -25,20 +25,30 @@ module Doorkeeper
         if URIChecker.oob_uri?(pre_auth.redirect_uri)
           auth.oob_redirect
         elsif response_on_fragment
-          Authorization::URIBuilder.uri_with_fragment(
-            pre_auth.redirect_uri,
-            access_token: auth.token.plaintext_token,
-            token_type: auth.token.token_type,
-            expires_in: auth.token.expires_in_seconds,
-            state: pre_auth.state,
-          )
+          uri_with_fragment
         else
-          Authorization::URIBuilder.uri_with_query(
-            pre_auth.redirect_uri,
-            code: auth.token.plaintext_token,
-            state: pre_auth.state,
-          )
+          uri_with_query
         end
+      end
+
+      private
+
+      def uri_with_fragment
+        Authorization::URIBuilder.uri_with_fragment(
+          pre_auth.redirect_uri,
+          access_token: auth.token.plaintext_token,
+          token_type: auth.token.token_type,
+          expires_in: auth.token.expires_in_seconds,
+          state: pre_auth.state,
+        )
+      end
+
+      def uri_with_query
+        Authorization::URIBuilder.uri_with_query(
+          pre_auth.redirect_uri,
+          code: auth.token.plaintext_token,
+          state: pre_auth.state,
+        )
       end
     end
   end

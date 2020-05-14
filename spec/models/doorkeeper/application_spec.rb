@@ -407,18 +407,20 @@ RSpec.describe Doorkeeper::Application do
   end
 
   describe "#confidential?" do
-    subject { FactoryBot.create(:application, confidential: confidential).confidential? }
+    let(:app) do
+      FactoryBot.create(:application, confidential: confidential)
+    end
 
     context "when application is private/confidential" do
       let(:confidential) { true }
 
-      it { expect(subject).to eq(true) }
+      it { expect(app).to be_confidential }
     end
 
     context "when application is public/non-confidential" do
       let(:confidential) { false }
 
-      it { expect(subject).to eq(false) }
+      it { expect(app).not_to be_confidential }
     end
   end
 

@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::Server do
-  subject do
+  subject(:server) do
     described_class.new(context)
   end
 
@@ -13,7 +13,7 @@ RSpec.describe Doorkeeper::Server do
   describe ".authorization_request" do
     it "raises error when strategy does not match phase" do
       expect do
-        subject.token_request(:code)
+        server.token_request(:code)
       end.to raise_error(Doorkeeper::Errors::InvalidTokenStrategy)
     end
 
@@ -26,15 +26,15 @@ RSpec.describe Doorkeeper::Server do
 
       it "raises error when using the disabled Client Credentials strategy" do
         expect do
-          subject.token_request(:client_credentials)
+          server.token_request(:client_credentials)
         end.to raise_error(Doorkeeper::Errors::InvalidTokenStrategy)
       end
     end
 
     it "builds the request with selected strategy" do
       stub_const "Doorkeeper::Request::Code", fake_class
-      expect(fake_class).to receive(:new).with(subject)
-      subject.authorization_request :code
+      expect(fake_class).to receive(:new).with(server)
+      server.authorization_request :code
     end
 
     it "builds the request with composite strategy name" do
@@ -43,8 +43,8 @@ RSpec.describe Doorkeeper::Server do
         .and_return(["id_token token"])
 
       stub_const "Doorkeeper::Request::IdTokenToken", fake_class
-      expect(fake_class).to receive(:new).with(subject)
-      subject.authorization_request "id_token token"
+      expect(fake_class).to receive(:new).with(server)
+      server.authorization_request "id_token token"
     end
   end
 end

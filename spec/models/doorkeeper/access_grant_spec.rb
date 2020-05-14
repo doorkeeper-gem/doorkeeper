@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::AccessGrant do
-  subject do
+  subject(:access_grant) do
     FactoryBot.build(
       :access_grant,
       application: client,
@@ -12,11 +12,10 @@ RSpec.describe Doorkeeper::AccessGrant do
     )
   end
 
-  let(:resource_owner) { FactoryBot.create(:resource_owner) }
+  let(:resource_owner) { FactoryBot.build_stubbed(:resource_owner) }
   let(:client) { FactoryBot.build_stubbed(:application) }
-  let(:clazz) { described_class }
 
-  it { expect(subject).to be_valid }
+  it { expect(access_grant).to be_valid }
 
   it_behaves_like "an accessible token"
   it_behaves_like "a revocable token"
@@ -25,7 +24,6 @@ RSpec.describe Doorkeeper::AccessGrant do
   end
 
   context "with hashing enabled" do
-    let(:resource_owner) { FactoryBot.create(:resource_owner) }
     let(:grant) do
       FactoryBot.create :access_grant,
                         resource_owner_id: resource_owner.id,
@@ -40,14 +38,14 @@ RSpec.describe Doorkeeper::AccessGrant do
         .to eq(hashed_or_plain_token_func.call(grant.plaintext_token))
 
       # Finder method only finds the hashed token
-      loaded = clazz.find_by(token: grant.token)
+      loaded = described_class.find_by(token: grant.token)
       expect(loaded).to eq(grant)
       expect(loaded.plaintext_token).to be_nil
       expect(loaded.token).to eq(grant.token)
     end
 
     it "does not find_by plain text tokens" do
-      expect(clazz.find_by(token: grant.plaintext_token)).to be_nil
+      expect(described_class.find_by(token: grant.plaintext_token)).to be_nil
     end
 
     describe "with having a plain text token" do
@@ -60,8 +58,8 @@ RSpec.describe Doorkeeper::AccessGrant do
 
       context "without fallback lookup" do
         it "does not provide lookups with either through by_token" do
-          expect(clazz.by_token(plain_text_token)).to eq(nil)
-          expect(clazz.by_token(grant.token)).to eq(nil)
+          expect(described_class.by_token(plain_text_token)).to eq(nil)
+          expect(described_class.by_token(grant.token)).to eq(nil)
 
           # And it does not touch the token
           grant.reload
@@ -74,8 +72,8 @@ RSpec.describe Doorkeeper::AccessGrant do
 
         it "upgrades a plain token when falling back to it" do
           # Side-effect: This will automatically upgrade the token
-          expect(clazz).to receive(:upgrade_fallback_value).and_call_original
-          expect(clazz.by_token(plain_text_token))
+          expect(described_class).to receive(:upgrade_fallback_value).and_call_original
+          expect(described_class.by_token(plain_text_token))
             .to have_attributes(
               resource_owner_id: grant.resource_owner_id,
               application_id: grant.application_id,
@@ -85,7 +83,7 @@ RSpec.describe Doorkeeper::AccessGrant do
             )
 
           # Will find subsequently by hashing the token
-          expect(clazz.by_token(plain_text_token))
+          expect(described_class.by_token(plain_text_token))
             .to have_attributes(
               resource_owner_id: grant.resource_owner_id,
               application_id: grant.application_id,
@@ -95,13 +93,15 @@ RSpec.describe Doorkeeper::AccessGrant do
             )
 
           # Not all the ORM support :id PK
-          expect(clazz.by_token(plain_text_token).id).to eq(grant.id) if grant.respond_to?(:id)
+          if grant.respond_to?(:id)
+            expect(described_class.by_token(plain_text_token).id).to eq(grant.id)
+          end
 
           # And it modifies the token value
           grant.reload
           expect(grant.token).not_to eq(plain_text_token)
-          expect(clazz.find_by(token: plain_text_token)).to eq(nil)
-          expect(clazz.find_by(token: grant.token)).not_to be_nil
+          expect(described_class.find_by(token: plain_text_token)).to eq(nil)
+          expect(described_class.find_by(token: grant.token)).not_to be_nil
         end
       end
     end
@@ -109,24 +109,24 @@ RSpec.describe Doorkeeper::AccessGrant do
 
   describe "validations" do
     it "is invalid without resource_owner_id" do
-      subject.resource_owner_id = nil
-      expect(subject).not_to be_valid
+      access_grant.resource_owner_id = nil
+      expect(access_grant).not_to be_valid
     end
 
     it "is invalid without application_id" do
-      subject.application_id = nil
-      expect(subject).not_to be_valid
+      access_grant.application_id = nil
+      expect(access_grant).not_to be_valid
     end
 
     it "is invalid without token" do
-      subject.save
-      subject.token = nil
-      expect(subject).not_to be_valid
+      access_grant.save
+      access_grant.token = nil
+      expect(access_grant).not_to be_valid
     end
 
     it "is invalid without expires_in" do
-      subject.expires_in = nil
-      expect(subject).not_to be_valid
+      access_grant.expires_in = nil
+      expect(access_grant).not_to be_valid
     end
   end
 
@@ -165,7 +165,7 @@ RSpec.describe Doorkeeper::AccessGrant do
         default_attributes.merge(resource_owner_id: other_resource_owner.id),
       )
 
-      described_class.revoke_all_for application.id, resource_owner
+      described_class.revoke_all_for(application.id, resource_owner)
 
       expect(access_grant_for_different_owner.reload).not_to be_revoked
     end

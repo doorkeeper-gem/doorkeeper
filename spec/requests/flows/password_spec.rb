@@ -275,29 +275,28 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
     end
 
     context "with invalid scopes" do
-      subject do
+      it "doesn't issue new token" do
+        expect do
+          post password_token_endpoint_url(
+            client: @client,
+            resource_owner: @resource_owner,
+            scope: "random",
+          )
+        end.not_to(change { Doorkeeper::AccessToken.count })
+      end
+
+      it "returns invalid_scope error" do
         post password_token_endpoint_url(
           client: @client,
           resource_owner: @resource_owner,
           scope: "random",
         )
-      end
 
-      it "doesn't issue new token" do
-        expect { subject }.not_to(change { Doorkeeper::AccessToken.count })
-      end
-
-      it "returns invalid_scope error" do
-        subject
-
-        expect(json_response).to include(
+        expect(response.status).to eq(400)
+        expect(json_response).to match(
           "error" => "invalid_scope",
           "error_description" => translated_error_message(:invalid_scope),
         )
-
-        expect(json_response).not_to include("access_token")
-
-        expect(response.status).to eq(400)
       end
     end
 

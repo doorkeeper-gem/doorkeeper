@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::ClientCredentials::Validator do
-  subject { described_class.new(server, request) }
+  subject(:validator) { described_class.new(server, request) }
 
   let(:server)      { double :server, scopes: nil }
   let(:application) { double scopes: nil }
@@ -11,12 +11,12 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Validator do
   let(:request)     { double :request, client: client, scopes: nil }
 
   it "is valid with valid request" do
-    expect(subject).to be_valid
+    expect(validator).to be_valid
   end
 
   it "is invalid when client is not present" do
     allow(request).to receive(:client).and_return(nil)
-    expect(subject).not_to be_valid
+    expect(validator).not_to be_valid
   end
 
   context "when a grant flow check is configured" do
@@ -36,7 +36,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Validator do
           application,
         ).and_return(callback_response)
 
-        expect(subject).not_to be_valid
+        expect(validator).not_to be_valid
       end
     end
 
@@ -49,7 +49,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Validator do
           application,
         ).and_return(callback_response)
 
-        expect(subject).to be_valid
+        expect(validator).to be_valid
       end
     end
   end
@@ -62,7 +62,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Validator do
       allow(request).to receive(:scopes).and_return(
         Doorkeeper::OAuth::Scopes.from_string("invalid"),
       )
-      expect(subject).not_to be_valid
+      expect(validator).not_to be_valid
     end
 
     context "with application scopes" do
@@ -73,7 +73,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Validator do
         allow(server).to receive(:scopes).and_return(server_scopes)
         allow(request).to receive(:grant_type).and_return(Doorkeeper::OAuth::CLIENT_CREDENTIALS)
         allow(request).to receive(:scopes).and_return(application_scopes)
-        expect(subject).to be_valid
+        expect(validator).to be_valid
       end
 
       it "is invalid when scopes are not included in the application" do
@@ -85,7 +85,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Validator do
         allow(request).to receive(:scopes).and_return(
           Doorkeeper::OAuth::Scopes.from_string("email"),
         )
-        expect(subject).not_to be_valid
+        expect(validator).not_to be_valid
       end
     end
   end

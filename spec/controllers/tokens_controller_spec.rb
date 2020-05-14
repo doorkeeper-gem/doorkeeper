@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::TokensController do
-  subject { JSON.parse(response.body) }
+  subject(:json) { JSON.parse(response.body) }
 
   let(:client) { FactoryBot.create :application }
   let!(:user)  { User.create!(name: "Joe", password: "sekret") }
@@ -33,15 +33,15 @@ RSpec.describe Doorkeeper::TokensController do
     end
 
     it "includes access token in response" do
-      expect(subject["access_token"]).to eq(Doorkeeper::AccessToken.first.token)
+      expect(json["access_token"]).to eq(Doorkeeper::AccessToken.first.token)
     end
 
     it "includes token type in response" do
-      expect(subject["token_type"]).to eq("Bearer")
+      expect(json["token_type"]).to eq("Bearer")
     end
 
     it "includes token expiration in response" do
-      expect(subject["expires_in"].to_i).to eq(Doorkeeper.configuration.access_token_expires_in)
+      expect(json["expires_in"].to_i).to eq(Doorkeeper.configuration.access_token_expires_in)
     end
 
     it "issues the token for the current client" do
@@ -67,23 +67,23 @@ RSpec.describe Doorkeeper::TokensController do
     end
 
     it "include error in response" do
-      expect(subject["error"]).to eq("invalid_client")
+      expect(json["error"]).to eq("invalid_client")
     end
 
     it "include error_description in response" do
-      expect(subject["error_description"]).to be_present
+      expect(json["error_description"]).to be_present
     end
 
     it "does not include access token in response" do
-      expect(subject["access_token"]).to be_nil
+      expect(json["access_token"]).to be_nil
     end
 
     it "does not include token type in response" do
-      expect(subject["token_type"]).to be_nil
+      expect(json["token_type"]).to be_nil
     end
 
     it "does not include token expiration in response" do
-      expect(subject["expires_in"]).to be_nil
+      expect(json["expires_in"]).to be_nil
     end
 
     it "does not issue any access token" do

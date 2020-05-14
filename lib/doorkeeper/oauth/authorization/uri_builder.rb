@@ -23,7 +23,7 @@ module Doorkeeper
           private
 
           def build_query(parameters = {})
-            parameters = parameters.reject { |_, value| value.blank? }
+            parameters.reject! { |_, value| value.blank? }
             Rack::Utils.build_query(parameters)
           end
         end
