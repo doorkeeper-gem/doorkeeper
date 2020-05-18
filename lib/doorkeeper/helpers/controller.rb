@@ -16,6 +16,8 @@ module Doorkeeper
 
       # :doc:
       def current_resource_owner
+        return @current_resource_owner if defined?(@current_resource_owner)
+
         @current_resource_owner ||= begin
           instance_eval(&Doorkeeper.config.authenticate_resource_owner)
         end
