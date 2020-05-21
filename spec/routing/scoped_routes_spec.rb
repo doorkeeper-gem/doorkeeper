@@ -4,6 +4,11 @@ require "spec_helper"
 
 RSpec.describe "Scoped routes" do
   before :all do
+    Doorkeeper.configure do
+      orm DOORKEEPER_ORM
+      allow_token_introspection false
+    end
+
     Rails.application.routes.disable_clear_and_finalize = true
 
     Rails.application.routes.draw do
@@ -43,5 +48,9 @@ RSpec.describe "Scoped routes" do
 
   it "GET /scope/token/info route to authorized TokenInfo controller" do
     expect(get("/scope/token/info")).to route_to("doorkeeper/token_info#show")
+  end
+
+  it "POST /scope/introspect routes not to exist" do
+    expect(post("/scope/introspect")).not_to be_routable
   end
 end

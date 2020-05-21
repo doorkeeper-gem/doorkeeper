@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1416] Don't add introspection route if token introspection completely disabled.
 - [#1410] Properly memoize `current_resource_owner` value (consider `nil` and `false` values).
 
 ## 5.4.0
