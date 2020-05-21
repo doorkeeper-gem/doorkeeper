@@ -117,6 +117,8 @@ module Doorkeeper
       end
 
       def validate_code_challenge_method
+        return true unless Doorkeeper.config.access_grant_model.pkce_supported?
+
         code_challenge.blank? ||
           (code_challenge_method.present? && code_challenge_method =~ /^plain$|^S256$/)
       end

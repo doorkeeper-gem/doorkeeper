@@ -72,15 +72,6 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
     expect(request.missing_param).to eq(:redirect_uri)
   end
 
-  it "invalid code_verifier param because server does not support pkce" do
-    allow(Doorkeeper::AccessGrant).to receive(:pkce_supported?).and_return(false)
-    code_verifier = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
-    request = described_class.new(server, grant, client, params.merge(code_verifier: code_verifier))
-    request.validate
-    expect(request.error).to eq(:invalid_request)
-    expect(request.invalid_request_reason).to eq(:not_support_pkce)
-  end
-
   it "matches the redirect_uri with grant's one" do
     request = described_class.new(server, grant, client, params.merge(redirect_uri: "http://other.com"))
     request.validate
@@ -175,6 +166,58 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
       allow(grant).to receive(:redirect_uri) { redirect_uri }
       request.validate
       expect(request.error).to eq(nil)
+    end
+  end
+
+  context "when using PKCE params" do
+    context "when PKCE is supported" do
+      before do
+        allow(Doorkeeper::AccessGrant).to receive(:pkce_supported?).and_return(true)
+
+        grant.code_challenge = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
+        grant.code_challenge_method = "plain"
+      end
+
+      it "validates when code_verifier is present" do
+        params[:code_verifier] = grant.code_challenge
+        request.validate
+
+        expect(request.error).to eq(nil)
+      end
+
+      it "validates when both code_verifier and code_challenge are blank" do
+        params[:code_verifier] = grant.code_challenge = ""
+        request.validate
+
+        expect(request.error).to eq(nil)
+      end
+
+      it "invalidates when code_verifier is missing" do
+        request.validate
+
+        expect(request.error).to eq(:invalid_request)
+        expect(request.missing_param).to eq(:code_verifier)
+      end
+
+      it "invalidates when code_verifier is the wrong value" do
+        params[:code_verifier] = "foobar"
+        request.validate
+
+        expect(request.error).to eq(:invalid_grant)
+      end
+    end
+
+    context "when PKCE is not supported" do
+      before do
+        allow(Doorkeeper::AccessGrant).to receive(:pkce_supported?).and_return(false)
+      end
+
+      it "validates when code_verifier is present" do
+        params[:code_verifier] = "foobar"
+        request.validate
+
+        expect(request.error).to be_nil
+      end
     end
   end
 end

@@ -3,7 +3,6 @@
 module Doorkeeper
   module OAuth
     class AuthorizationCodeRequest < BaseRequest
-      validate :pkce_support, error: :invalid_request
       validate :params,       error: :invalid_request
       validate :client,       error: :invalid_client
       validate :grant,        error: :invalid_grant
@@ -55,14 +54,6 @@ module Doorkeeper
         Doorkeeper.config.access_grant_model.pkce_supported?
       end
 
-      def validate_pkce_support
-        @invalid_request_reason = :not_support_pkce if grant &&
-                                                       !pkce_supported? &&
-                                                       code_verifier.present?
-
-        @invalid_request_reason.nil?
-      end
-
       def validate_params
         @missing_param = if grant&.uses_pkce? && code_verifier.blank?
                            :code_verifier
@@ -93,8 +84,8 @@ module Doorkeeper
       # if either side (server or client) request PKCE, check the verifier
       # against the DB - if PKCE is supported
       def validate_code_verifier
-        return true unless grant.uses_pkce? || code_verifier
-        return false unless pkce_supported?
+        return true unless pkce_supported?
+        return grant.code_challenge.blank? if code_verifier.blank?
 
         if grant.code_challenge_method == "S256"
           grant.code_challenge == generate_code_challenge(code_verifier)

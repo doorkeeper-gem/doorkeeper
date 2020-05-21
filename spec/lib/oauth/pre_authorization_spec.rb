@@ -227,4 +227,49 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
       include_examples "returns the pre authorization"
     end
   end
+
+  context "when using PKCE params" do
+    context "when PKCE is supported" do
+      before do
+        allow(Doorkeeper::AccessGrant).to receive(:pkce_supported?).and_return(true)
+      end
+
+      it "accepts a blank code_challenge" do
+        attributes[:code_challenge] = " "
+
+        expect(pre_auth).to be_authorizable
+      end
+
+      it "accepts a code_challenge with a known code_challenge_method" do
+        attributes[:code_challenge] = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
+        attributes[:code_challenge_method] = "plain"
+
+        expect(pre_auth).to be_authorizable
+
+        attributes[:code_challenge_method] = "S256"
+
+        expect(pre_auth).to be_authorizable
+      end
+
+      it "rejects unknown values for code_challenge_method" do
+        attributes[:code_challenge] = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
+        attributes[:code_challenge_method] = "unknown"
+
+        expect(pre_auth).not_to be_authorizable
+      end
+    end
+
+    context "when PKCE is not supported" do
+      before do
+        allow(Doorkeeper::AccessGrant).to receive(:pkce_supported?).and_return(false)
+      end
+
+      it "accepts unknown values for code_challenge_method" do
+        attributes[:code_challenge] = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
+        attributes[:code_challenge_method] = "unknown"
+
+        expect(pre_auth).to be_authorizable
+      end
+    end
+  end
 end

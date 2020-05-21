@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#1410] Properly memoize `current_resource_owner` value (consider `nil` and `false` values).
+- [#1415] Ignore PKCE params for non-PKCE grants.
 
 ## 5.4.0
 

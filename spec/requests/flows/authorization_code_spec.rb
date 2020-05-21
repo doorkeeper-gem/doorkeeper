@@ -223,13 +223,7 @@ feature "Authorization Code Flow" do
         visit authorization_endpoint_url(client: @client)
         click_on "Authorize"
 
-        authorization_code = current_params["code"]
-        create_access_token authorization_code, @client, code_verifier
-
-        expect(json_response).to match(
-          "error" => "invalid_grant",
-          "error_description" => translated_error_message(:invalid_grant),
-        )
+        url_should_have_param("code", Doorkeeper::AccessGrant.first.token)
       end
 
       scenario "mobile app requests an access token with authorization code and plain code challenge method" do
