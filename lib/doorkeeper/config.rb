@@ -545,41 +545,72 @@ module Doorkeeper
       ]
     end
 
-    # [NOTE]: deprecated and will be removed soon
-    def authorization_response_types
-      raise "##{__method__} no more supported, use .authorization_response_flows instead"
-    end
-
-    # [NOTE]: deprecated and will be removed soon
-    def token_grant_types
-      raise "##{__method__} no more supported, use .token_grant_flows instead"
-    end
-
     def enabled_grant_flows
-      @enabled_grant_flows ||= grant_flows.map { |name| Doorkeeper::GrantFlow.get(name) }
+      @enabled_grant_flows ||= grant_flows.map { |name| Doorkeeper::GrantFlow.get(name) }.compact
     end
 
     def authorization_response_flows
-      @authorization_response_flows ||= enabled_grant_flows.select(&:handles_response_type?)
+      @authorization_response_flows ||= enabled_grant_flows.select(&:handles_response_type?) +
+                                        deprecated_authorization_flows
     end
 
     def token_grant_flows
       @token_grant_flows ||= calculate_token_grant_flows
     end
 
+    # [NOTE]: deprecated and will be removed soon
+    def authorization_response_types
+      ::Kernel.warn "##{__method__} no more supported, use #authorization_response_flows instead"
+      authorization_response_flows.map(&:response_type_matches)
+    end
+
+    # [NOTE]: deprecated and will be removed soon
+    def token_grant_types
+      ::Kernel.warn "##{__method__} no more supported, use #authorization_response_flows instead"
+      token_grant_flows.map(&:grant_type_matches)
+    end
+
+    # [NOTE]: deprecated and will be removed soon
+    def deprecated_authorization_flows
+      response_types = calculate_authorization_response_types
+
+      if response_types.any?
+        ::Kernel.warn <<~WARNING
+          Please, don't patch Doorkeeper::Config#calculate_authorization_response_types method.
+          Now you must register your custom grant flows using public API:
+          `Doorkeeper::GrantFlow.register(name, **options)`.
+        WARNING
+      end
+
+      response_types.map do |response_type|
+        Doorkeeper::GrantFlow::FallbackFlow.new(response_type, response_type_matches: response_type)
+      end
+    end
+
+    # [NOTE]: deprecated and will be removed soon
+    def deprecated_token_flows
+      grant_types = calculate_token_grant_types
+
+      if grant_types.any?
+        ::Kernel.warn <<~WARNING
+          Please, don't patch Doorkeeper::Config#calculate_token_grant_types method.
+          Now you must register your custom grant flows using public API:
+          `Doorkeeper::GrantFlow.register(name, **options)`.
+        WARNING
+      end
+
+      grant_types.map do |grant_type|
+        Doorkeeper::GrantFlow::FallbackFlow.new(grant_type, grant_type_matches: grant_type)
+      end
+    end
+
+    # [NOTE]: deprecated and will be removed soon
     def calculate_authorization_response_types
-      ::Kernel.warn <<~WARNING
-        #{__method__} was removed and now you need to register your custom grant flows
-        using `Doorkeeper::GrantFlow.register(name, **options)`.
-      WARNING
       []
     end
 
+    # [NOTE]: deprecated and will be removed soon
     def calculate_token_grant_types
-      ::Kernel.warn <<~WARNING
-        #{__method__} was removed and now you need to register your custom grant flows
-        using `Doorkeeper::GrantFlow.register(name, **options)`.
-      WARNING
       []
     end
 
