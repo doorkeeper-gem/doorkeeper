@@ -15,7 +15,7 @@ module Doorkeeper
           # For retro-compatibility only
           fallback_strategy = build_fallback_strategy_class(response_type)
 
-          Kernel.warn <<~WARNING
+          ::Kernel.warn <<~WARNING
             [DOORKEEPER] #{fallback_strategy} found using fallback, it must be
             registered using `Doorkeeper::GrantFlow.register(name, **options)`.
             This functionality will be remove in a newer versions of Doorkeeper.

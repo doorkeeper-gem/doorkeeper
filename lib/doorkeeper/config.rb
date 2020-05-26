@@ -567,6 +567,22 @@ module Doorkeeper
       @token_grant_flows ||= calculate_token_grant_flows
     end
 
+    def calculate_authorization_response_types
+      ::Kernel.warn <<~WARNING
+        #{__method__} was removed and now you need to register your custom grant flows
+        using `Doorkeeper::GrantFlow.register(name, **options)`.
+      WARNING
+      []
+    end
+
+    def calculate_token_grant_types
+      ::Kernel.warn <<~WARNING
+        #{__method__} was removed and now you need to register your custom grant flows
+        using `Doorkeeper::GrantFlow.register(name, **options)`.
+      WARNING
+      []
+    end
+
     def allow_blank_redirect_uri?(application = nil)
       if allow_blank_redirect_uri.respond_to?(:call)
         allow_blank_redirect_uri.call(grant_flows, application)
@@ -595,7 +611,7 @@ module Doorkeeper
 
     def calculate_token_grant_flows
       flows = enabled_grant_flows.select(&:handles_grant_type?)
-      flows << GrantFlow.get("refresh_token") if refresh_token_enabled?
+      flows << Doorkeeper::GrantFlow.get("refresh_token") if refresh_token_enabled?
       flows
     end
 
