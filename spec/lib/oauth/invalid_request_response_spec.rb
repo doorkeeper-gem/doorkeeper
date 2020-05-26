@@ -30,20 +30,6 @@ RSpec.describe Doorkeeper::OAuth::InvalidRequestResponse do
       end
     end
 
-    context "when server doesn't support PKCE" do
-      let(:request) { double(invalid_request_reason: :not_support_pkce) }
-
-      it "sets a description" do
-        expect(response.description).to eq(
-          I18n.t(:not_support_pkce, scope: %i[doorkeeper errors messages invalid_request]),
-        )
-      end
-
-      it "sets the reason" do
-        expect(response.reason).to eq(:not_support_pkce)
-      end
-    end
-
     context "when request is not authorized" do
       let(:request) { double(invalid_request_reason: :request_not_authorized) }
 
