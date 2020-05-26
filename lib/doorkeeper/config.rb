@@ -571,36 +571,24 @@ module Doorkeeper
     end
 
     # [NOTE]: deprecated and will be removed soon
+    def deprecated_token_grant_types_resolver
+      @deprecated_token_grant_types ||= calculate_token_grant_types
+    end
+
+    # [NOTE]: deprecated and will be removed soon
     def deprecated_authorization_flows
       response_types = calculate_authorization_response_types
 
       if response_types.any?
         ::Kernel.warn <<~WARNING
           Please, don't patch Doorkeeper::Config#calculate_authorization_response_types method.
-          Now you must register your custom grant flows using public API:
-          `Doorkeeper::GrantFlow.register(name, **options)`.
+          Register your custom grant flows using the public API:
+          `Doorkeeper::GrantFlow.register(grant_flow_name, **options)`.
         WARNING
       end
 
       response_types.map do |response_type|
         Doorkeeper::GrantFlow::FallbackFlow.new(response_type, response_type_matches: response_type)
-      end
-    end
-
-    # [NOTE]: deprecated and will be removed soon
-    def deprecated_token_flows
-      grant_types = calculate_token_grant_types
-
-      if grant_types.any?
-        ::Kernel.warn <<~WARNING
-          Please, don't patch Doorkeeper::Config#calculate_token_grant_types method.
-          Now you must register your custom grant flows using public API:
-          `Doorkeeper::GrantFlow.register(name, **options)`.
-        WARNING
-      end
-
-      grant_types.map do |grant_type|
-        Doorkeeper::GrantFlow::FallbackFlow.new(grant_type, grant_type_matches: grant_type)
       end
     end
 
@@ -611,7 +599,9 @@ module Doorkeeper
 
     # [NOTE]: deprecated and will be removed soon
     def calculate_token_grant_types
-      []
+      types = grant_flows - ["implicit"]
+      types << "refresh_token" if refresh_token_enabled?
+      types
     end
 
     def allow_blank_redirect_uri?(application = nil)

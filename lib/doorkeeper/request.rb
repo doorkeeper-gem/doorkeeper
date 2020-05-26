@@ -13,15 +13,7 @@ module Doorkeeper
         else
           # [NOTE]: this will be removed in a newer versions of Doorkeeper.
           # For retro-compatibility only
-          fallback_strategy = build_fallback_strategy_class(response_type)
-
-          ::Kernel.warn <<~WARNING
-            [DOORKEEPER] #{fallback_strategy} found using fallback, it must be
-            registered using `Doorkeeper::GrantFlow.register(name, **options)`.
-            This functionality will be remove in a newer versions of Doorkeeper.
-          WARNING
-
-          fallback_strategy
+          build_fallback_strategy_class(response_type)
         end
       end
 
@@ -32,9 +24,18 @@ module Doorkeeper
           flow.matches_grant_type?(grant_type)
         end
 
-        raise Errors::InvalidTokenStrategy unless grant_flow
+        if grant_flow
+          grant_flow.grant_type_strategy
+        else
+          # [NOTE]: this will be removed in a newer versions of Doorkeeper.
+          # For retro-compatibility only
+          raise Errors::InvalidTokenStrategy unless available.include?(grant_type.to_s)
 
-        grant_flow.grant_type_strategy
+          strategy_class = build_fallback_strategy_class(grant_type)
+          raise Errors::InvalidTokenStrategy unless strategy_class
+
+          strategy_class
+        end
       end
 
       private
@@ -47,9 +48,25 @@ module Doorkeeper
         Doorkeeper.configuration.token_grant_flows
       end
 
+      # [NOTE]: this will be removed in a newer versions of Doorkeeper.
+      # For retro-compatibility only
+      def available
+        Doorkeeper.config.deprecated_token_grant_types_resolver
+      end
+
       def build_fallback_strategy_class(grant_or_request_type)
         strategy_class_name = grant_or_request_type.to_s.tr(" ", "_").camelize
-        "Doorkeeper::Request::#{strategy_class_name}".constantize
+        fallback_strategy = "Doorkeeper::Request::#{strategy_class_name}".constantize
+
+        ::Kernel.warn <<~WARNING
+          [DOORKEEPER] #{fallback_strategy} found using fallback, it must be
+          registered using `Doorkeeper::GrantFlow.register(grant_flow_name, **options)`.
+          This functionality will be removed in a newer versions of Doorkeeper.
+        WARNING
+
+        fallback_strategy
+      rescue NameError
+        raise Errors::InvalidTokenStrategy
       end
     end
   end

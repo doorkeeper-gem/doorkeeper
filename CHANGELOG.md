@@ -10,6 +10,7 @@ User-visible changes worth mentioning.
 - [#1416] Don't add introspection route if token introspection completely disabled.
 - [#1410] Properly memoize `current_resource_owner` value (consider `nil` and `false` values).
 - [#1415] Ignore PKCE params for non-PKCE grants.
+- [#1418] Add ability to register custom OAuth Grant Flows based on certain rules.
 
 ## 5.4.0
 
