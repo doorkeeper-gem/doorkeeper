@@ -29,6 +29,9 @@ Metrics/BlockLength:
 Metrics/MethodLength:
   Exclude:
     - spec/dummy/db/**/*
+Style/CaseEquality:
+  Exclude:
+    - lib/doorkeeper/grant_flow/flow.rb
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 Style/StringLiteralsInInterpolation:

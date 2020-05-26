@@ -545,12 +545,26 @@ module Doorkeeper
       ]
     end
 
+    # [NOTE]: deprecated and will be removed soon
     def authorization_response_types
-      @authorization_response_types ||= calculate_authorization_response_types.freeze
+      raise "##{__method__} no more supported, use .authorization_response_flows instead"
     end
 
+    # [NOTE]: deprecated and will be removed soon
     def token_grant_types
-      @token_grant_types ||= calculate_token_grant_types.freeze
+      raise "##{__method__} no more supported, use .token_grant_flows instead"
+    end
+
+    def enabled_grant_flows
+      @enabled_grant_flows ||= grant_flows.map { |name| Doorkeeper::GrantFlow.get(name) }
+    end
+
+    def authorization_response_flows
+      @authorization_response_flows ||= enabled_grant_flows.select(&:handles_response_type?)
+    end
+
+    def token_grant_flows
+      @token_grant_flows ||= calculate_token_grant_flows
     end
 
     def allow_blank_redirect_uri?(application = nil)
@@ -579,23 +593,10 @@ module Doorkeeper
       !!(defined?(var) && var)
     end
 
-    # Determines what values are acceptable for 'response_type' param in
-    # authorization request endpoint, and return them as an array of strings.
-    #
-    def calculate_authorization_response_types
-      types = []
-      types << "code"  if grant_flows.include? "authorization_code"
-      types << "token" if grant_flows.include? "implicit"
-      types
-    end
-
-    # Determines what values are acceptable for 'grant_type' param token
-    # request endpoint, and return them in array.
-    #
-    def calculate_token_grant_types
-      types = grant_flows - ["implicit"]
-      types << "refresh_token" if refresh_token_enabled?
-      types
+    def calculate_token_grant_flows
+      flows = enabled_grant_flows.select(&:handles_grant_type?)
+      flows << GrantFlow.get("refresh_token") if refresh_token_enabled?
+      flows
     end
 
     # Determine whether +reuse_access_token+ and a non-restorable

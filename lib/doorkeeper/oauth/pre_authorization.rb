@@ -104,7 +104,9 @@ module Doorkeeper
       end
 
       def validate_response_type
-        server.authorization_response_types.include?(response_type)
+        server.authorization_response_flows.any? do |flow|
+          flow.matches_response_type?(response_type)
+        end
       end
 
       def validate_scopes
