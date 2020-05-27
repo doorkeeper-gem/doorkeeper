@@ -546,7 +546,7 @@ module Doorkeeper
     end
 
     def enabled_grant_flows
-      @enabled_grant_flows ||= grant_flows.map { |name| Doorkeeper::GrantFlow.get(name) }.compact
+      @enabled_grant_flows ||= calculate_grant_flows.map { |name| Doorkeeper::GrantFlow.get(name) }.compact
     end
 
     def authorization_response_flows
@@ -602,6 +602,15 @@ module Doorkeeper
       types = grant_flows - ["implicit"]
       types << "refresh_token" if refresh_token_enabled?
       types
+    end
+
+    def calculate_grant_flows
+      flows = grant_flows.map(&:to_s) - aliased_grant_flows.keys.map(&:to_s)
+      flows.concat(aliased_grant_flows.values).flatten
+    end
+
+    def aliased_grant_flows
+      Doorkeeper::GrantFlow.aliases
     end
 
     def allow_blank_redirect_uri?(application = nil)
