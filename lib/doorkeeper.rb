@@ -7,6 +7,7 @@ require "doorkeeper/engine"
 #
 module Doorkeeper
   autoload :Errors, "doorkeeper/errors"
+  autoload :GrantFlow, "doorkeeper/grant_flow"
   autoload :OAuth, "doorkeeper/oauth"
   autoload :Rake, "doorkeeper/rake"
   autoload :Request, "doorkeeper/request"

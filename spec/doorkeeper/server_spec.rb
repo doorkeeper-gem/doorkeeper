@@ -34,16 +34,18 @@ RSpec.describe Doorkeeper::Server do
     it "builds the request with selected strategy" do
       stub_const "Doorkeeper::Request::Code", fake_class
       expect(fake_class).to receive(:new).with(server)
+      expect(::Kernel).to receive(:warn)
       server.authorization_request :code
     end
 
     it "builds the request with composite strategy name" do
-      allow(Doorkeeper.configuration)
-        .to receive(:authorization_response_types)
-        .and_return(["id_token token"])
+      Doorkeeper.configure do
+        grant_flows ["id_token token"]
+      end
 
       stub_const "Doorkeeper::Request::IdTokenToken", fake_class
       expect(fake_class).to receive(:new).with(server)
+      expect(::Kernel).to receive(:warn)
       server.authorization_request "id_token token"
     end
   end

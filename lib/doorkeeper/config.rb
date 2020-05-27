@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
-require "doorkeeper/config/option"
 require "doorkeeper/config/abstract_builder"
+require "doorkeeper/config/option"
+require "doorkeeper/config/validations"
 
 module Doorkeeper
   # Defines a MissingConfiguration error for a missing Doorkeeper configuration
@@ -219,6 +220,7 @@ module Doorkeeper
     mattr_reader(:builder_class) { Builder }
 
     extend Option
+    include Validations
 
     option :resource_owner_authenticator,
            as: :authenticate_resource_owner,
@@ -423,13 +425,6 @@ module Doorkeeper
                 :token_secret_fallback_strategy,
                 :application_secret_fallback_strategy
 
-    # Return the valid subset of this configuration
-    def validate!
-      validate_reuse_access_token_value
-      validate_token_reuse_limit
-      validate_secret_strategies
-    end
-
     # Doorkeeper Access Token model class.
     #
     # @return [ActiveRecord::Base, Mongoid::Document, Sequel::Model]
@@ -545,12 +540,64 @@ module Doorkeeper
       ]
     end
 
+    def enabled_grant_flows
+      @enabled_grant_flows ||= calculate_grant_flows.map { |name| Doorkeeper::GrantFlow.get(name) }.compact
+    end
+
+    def authorization_response_flows
+      @authorization_response_flows ||= enabled_grant_flows.select(&:handles_response_type?) +
+                                        deprecated_authorization_flows
+    end
+
+    def token_grant_flows
+      @token_grant_flows ||= calculate_token_grant_flows
+    end
+
     def authorization_response_types
-      @authorization_response_types ||= calculate_authorization_response_types.freeze
+      authorization_response_flows.map(&:response_type_matches)
     end
 
     def token_grant_types
-      @token_grant_types ||= calculate_token_grant_types.freeze
+      token_grant_flows.map(&:grant_type_matches)
+    end
+
+    # [NOTE]: deprecated and will be removed soon
+    def deprecated_token_grant_types_resolver
+      @deprecated_token_grant_types ||= calculate_token_grant_types
+    end
+
+    # [NOTE]: deprecated and will be removed soon
+    def deprecated_authorization_flows
+      response_types = calculate_authorization_response_types
+
+      if response_types.any?
+        ::Kernel.warn <<~WARNING
+          Please, don't patch Doorkeeper::Config#calculate_authorization_response_types method.
+          Register your custom grant flows using the public API:
+          `Doorkeeper::GrantFlow.register(grant_flow_name, **options)`.
+        WARNING
+      end
+
+      response_types.map do |response_type|
+        Doorkeeper::GrantFlow::FallbackFlow.new(response_type, response_type_matches: response_type)
+      end
+    end
+
+    # [NOTE]: deprecated and will be removed soon
+    def calculate_authorization_response_types
+      []
+    end
+
+    # [NOTE]: deprecated and will be removed soon
+    def calculate_token_grant_types
+      types = grant_flows - ["implicit"]
+      types << "refresh_token" if refresh_token_enabled?
+      types
+    end
+
+    def calculate_grant_flows
+      flows = grant_flows.map(&:to_s) - aliased_grant_flows.keys.map(&:to_s)
+      flows.concat(aliased_grant_flows.values).flatten.uniq
     end
 
     def allow_blank_redirect_uri?(application = nil)
@@ -579,57 +626,14 @@ module Doorkeeper
       !!(defined?(var) && var)
     end
 
-    # Determines what values are acceptable for 'response_type' param in
-    # authorization request endpoint, and return them as an array of strings.
-    #
-    def calculate_authorization_response_types
-      types = []
-      types << "code"  if grant_flows.include? "authorization_code"
-      types << "token" if grant_flows.include? "implicit"
-      types
+    def calculate_token_grant_flows
+      flows = enabled_grant_flows.select(&:handles_grant_type?)
+      flows << Doorkeeper::GrantFlow.get("refresh_token") if refresh_token_enabled?
+      flows
     end
 
-    # Determines what values are acceptable for 'grant_type' param token
-    # request endpoint, and return them in array.
-    #
-    def calculate_token_grant_types
-      types = grant_flows - ["implicit"]
-      types << "refresh_token" if refresh_token_enabled?
-      types
-    end
-
-    # Determine whether +reuse_access_token+ and a non-restorable
-    # +token_secret_strategy+ have both been activated.
-    #
-    # In that case, disable reuse_access_token value and warn the user.
-    def validate_reuse_access_token_value
-      strategy = token_secret_strategy
-      return if !reuse_access_token || strategy.allows_restoring_secrets?
-
-      ::Rails.logger.warn(
-        "You have configured both reuse_access_token " \
-        "AND strategy strategy '#{strategy}' that cannot restore tokens. " \
-        "This combination is unsupported. reuse_access_token will be disabled",
-      )
-      @reuse_access_token = false
-    end
-
-    # Validate that the provided strategies are valid for
-    # tokens and applications
-    def validate_secret_strategies
-      token_secret_strategy.validate_for :token
-      application_secret_strategy.validate_for :application
-    end
-
-    def validate_token_reuse_limit
-      return if !reuse_access_token ||
-                (token_reuse_limit > 0 && token_reuse_limit <= 100)
-
-      ::Rails.logger.warn(
-        "You have configured an invalid value for token_reuse_limit option. " \
-        "It will be set to default 100",
-      )
-      @token_reuse_limit = 100
+    def aliased_grant_flows
+      Doorkeeper::GrantFlow.aliases
     end
   end
 end

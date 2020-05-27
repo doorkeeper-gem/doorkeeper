@@ -20,7 +20,7 @@ Layout/DotPosition:
 Layout/LineLength:
   Exclude:
     - spec/**/*
-  Max: 100
+  Max: 120 # Remove after we migration to 0.84
 Metrics/BlockLength:
   Exclude:
     - spec/**/*
@@ -29,6 +29,9 @@ Metrics/BlockLength:
 Metrics/MethodLength:
   Exclude:
     - spec/dummy/db/**/*
+Style/CaseEquality:
+  Exclude:
+    - lib/doorkeeper/grant_flow/flow.rb
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 Style/StringLiteralsInInterpolation:
