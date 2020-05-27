@@ -558,15 +558,11 @@ module Doorkeeper
       @token_grant_flows ||= calculate_token_grant_flows
     end
 
-    # [NOTE]: deprecated and will be removed soon
     def authorization_response_types
-      ::Kernel.warn "##{__method__} no more supported, use #authorization_response_flows instead"
       authorization_response_flows.map(&:response_type_matches)
     end
 
-    # [NOTE]: deprecated and will be removed soon
     def token_grant_types
-      ::Kernel.warn "##{__method__} no more supported, use #authorization_response_flows instead"
       token_grant_flows.map(&:grant_type_matches)
     end
 
@@ -606,7 +602,7 @@ module Doorkeeper
 
     def calculate_grant_flows
       flows = grant_flows.map(&:to_s) - aliased_grant_flows.keys.map(&:to_s)
-      flows.concat(aliased_grant_flows.values).flatten
+      flows.concat(aliased_grant_flows.values).flatten.uniq
     end
 
     def aliased_grant_flows
