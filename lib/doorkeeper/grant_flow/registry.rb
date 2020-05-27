@@ -21,11 +21,11 @@ module Doorkeeper
       end
 
       # Allows to register aliases that could be used in `grant_flows`
-      # configuration option and then exposed to single or multiple other flows
-      # under the hood.
+      # configuration option. It is possible to have aliases like 1:1 or
+      # 1:N, i.e. "implicit_oidc" => ['token', 'id_token', 'id_token token'].
       #
-      def register_alias(alias_name, *flows)
-        aliases[alias_name.to_sym] = flows
+      def register_alias(alias_name, **options)
+        aliases[alias_name.to_sym] = Array.wrap(options.fetch(:as))
       end
 
       # [NOTE]: make it to use #fetch after removing fallbacks

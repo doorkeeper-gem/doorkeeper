@@ -34,6 +34,7 @@ RSpec.describe Doorkeeper::Server do
     it "builds the request with selected strategy" do
       stub_const "Doorkeeper::Request::Code", fake_class
       expect(fake_class).to receive(:new).with(server)
+      expect(::Kernel).to receive(:warn)
       server.authorization_request :code
     end
 
@@ -44,6 +45,7 @@ RSpec.describe Doorkeeper::Server do
 
       stub_const "Doorkeeper::Request::IdTokenToken", fake_class
       expect(fake_class).to receive(:new).with(server)
+      expect(::Kernel).to receive(:warn)
       server.authorization_request "id_token token"
     end
   end

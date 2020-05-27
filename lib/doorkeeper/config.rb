@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
-require "doorkeeper/config/option"
 require "doorkeeper/config/abstract_builder"
+require "doorkeeper/config/option"
+require "doorkeeper/config/validations"
 
 module Doorkeeper
   # Defines a MissingConfiguration error for a missing Doorkeeper configuration
@@ -219,6 +220,7 @@ module Doorkeeper
     mattr_reader(:builder_class) { Builder }
 
     extend Option
+    include Validations
 
     option :resource_owner_authenticator,
            as: :authenticate_resource_owner,
@@ -423,13 +425,6 @@ module Doorkeeper
                 :token_secret_fallback_strategy,
                 :application_secret_fallback_strategy
 
-    # Return the valid subset of this configuration
-    def validate!
-      validate_reuse_access_token_value
-      validate_token_reuse_limit
-      validate_secret_strategies
-    end
-
     # Doorkeeper Access Token model class.
     #
     # @return [ActiveRecord::Base, Mongoid::Document, Sequel::Model]
@@ -605,10 +600,6 @@ module Doorkeeper
       flows.concat(aliased_grant_flows.values).flatten.uniq
     end
 
-    def aliased_grant_flows
-      Doorkeeper::GrantFlow.aliases
-    end
-
     def allow_blank_redirect_uri?(application = nil)
       if allow_blank_redirect_uri.respond_to?(:call)
         allow_blank_redirect_uri.call(grant_flows, application)
@@ -641,38 +632,8 @@ module Doorkeeper
       flows
     end
 
-    # Determine whether +reuse_access_token+ and a non-restorable
-    # +token_secret_strategy+ have both been activated.
-    #
-    # In that case, disable reuse_access_token value and warn the user.
-    def validate_reuse_access_token_value
-      strategy = token_secret_strategy
-      return if !reuse_access_token || strategy.allows_restoring_secrets?
-
-      ::Rails.logger.warn(
-        "You have configured both reuse_access_token " \
-        "AND strategy strategy '#{strategy}' that cannot restore tokens. " \
-        "This combination is unsupported. reuse_access_token will be disabled",
-      )
-      @reuse_access_token = false
-    end
-
-    # Validate that the provided strategies are valid for
-    # tokens and applications
-    def validate_secret_strategies
-      token_secret_strategy.validate_for :token
-      application_secret_strategy.validate_for :application
-    end
-
-    def validate_token_reuse_limit
-      return if !reuse_access_token ||
-                (token_reuse_limit > 0 && token_reuse_limit <= 100)
-
-      ::Rails.logger.warn(
-        "You have configured an invalid value for token_reuse_limit option. " \
-        "It will be set to default 100",
-      )
-      @token_reuse_limit = 100
+    def aliased_grant_flows
+      Doorkeeper::GrantFlow.aliases
     end
   end
 end

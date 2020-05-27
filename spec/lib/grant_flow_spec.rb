@@ -45,4 +45,18 @@ RSpec.describe Doorkeeper::GrantFlow do
       end
     end
   end
+
+  describe "#register_alias" do
+    it "allows to alias multiple grant flows" do
+      described_class.register_alias("implicit_oidc", as: ["token", "id_token", "id_token token"])
+
+      expect(described_class.aliases).to include(implicit_oidc: ["token", "id_token", "id_token token"])
+    end
+
+    it "allows to alias a single grant flow" do
+      described_class.register_alias("implicit_oidc", as: :id_token)
+
+      expect(described_class.aliases).to include(implicit_oidc: [:id_token])
+    end
+  end
 end
