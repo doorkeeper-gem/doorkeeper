@@ -270,6 +270,11 @@ module Doorkeeper
     option :handle_auth_errors,             default: :render
     option :token_lookup_batch_size,        default: 10_000
 
+    # [NOTE]: will be removed in a future version of Doorkeeper
+    option :skip_client_authentication_for_password_grant,
+           default: false,
+           deprecated: { message: "OAuth RFC requires client authentication so you need at least to create one" }
+
     # Sets the token_reuse_limit
     # It will be used only when reuse_access_token option in enabled
     # By default it will be 100

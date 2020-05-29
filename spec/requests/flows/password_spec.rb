@@ -164,17 +164,6 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
         end
       end
 
-      it "issues new token without client credentials" do
-        expect do
-          post password_token_endpoint_url(resource_owner: @resource_owner)
-        end.to(change { Doorkeeper::AccessToken.count }.by(1))
-
-        token = Doorkeeper::AccessToken.first
-
-        expect(token.application_id).to be_nil
-        expect(json_response).to include("access_token" => token.token)
-      end
-
       it "issues a refresh token if enabled" do
         config_is_set(:refresh_token_enabled, true)
 
@@ -211,6 +200,45 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
           expect(json_response).to include(
             "access_token" => token.token,
             "scope" => "public",
+          )
+        end
+      end
+    end
+
+    context "with skip_client_authentication_for_password_grant config option" do
+      context "when enabled" do
+        before do
+          allow(Doorkeeper.config)
+            .to receive(:skip_client_authentication_for_password_grant).and_return(true)
+        end
+
+        it "issues a new token without client credentials" do
+          expect do
+            post password_token_endpoint_url(resource_owner: @resource_owner)
+          end.to(change { Doorkeeper::AccessToken.count }.by(1))
+
+          token = Doorkeeper::AccessToken.first
+
+          expect(token.application_id).to be_nil
+          expect(json_response).to include("access_token" => token.token)
+        end
+      end
+
+      context "when disabled" do
+        before do
+          allow(Doorkeeper.config)
+            .to receive(:skip_client_authentication_for_password_grant).and_return(false)
+        end
+
+        it "doesn't issue a new token without client credentials" do
+          expect do
+            post password_token_endpoint_url(resource_owner: @resource_owner)
+          end.not_to(change { Doorkeeper::AccessToken.count })
+
+          expect(response.status).to eq(401)
+          expect(json_response).to match(
+            "error" => "invalid_client",
+            "error_description" => an_instance_of(String),
           )
         end
       end

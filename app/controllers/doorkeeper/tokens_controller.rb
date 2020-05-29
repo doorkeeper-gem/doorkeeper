@@ -69,6 +69,9 @@ module Doorkeeper
     private
 
     # OAuth 2.0 Section 2.1 defines two client types, "public" & "confidential".
+    #
+    # RFC7009
+    # Section 5. Security Considerations
     # A malicious client may attempt to guess valid tokens on this endpoint
     # by making revocation requests against potential token strings.
     # According to this specification, a client's request must contain a

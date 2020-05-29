@@ -34,16 +34,16 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
     expect(application.reload.access_tokens.max_by(&:created_at).expires_in).to eq(1234)
   end
 
-  it "issues a new token without a client" do
+  it "doesn't issue a new token without client authentication" do
     request = described_class.new(server, nil, owner)
-    expect(request).to be_valid
-
     expect do
       request.authorize
-    end.to change { Doorkeeper::AccessToken.count }.by(1)
+    end.not_to(change { Doorkeeper::AccessToken.count })
+
+    expect(request.error).to eq(:invalid_client)
   end
 
-  it "does not issue a new token with an invalid client" do
+  it "doesn't issue a new token with an invalid client" do
     request = described_class.new(server, nil, owner, { client_id: "bad_id" })
     expect do
       request.authorize
