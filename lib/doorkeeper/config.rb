@@ -600,9 +600,22 @@ module Doorkeeper
       types
     end
 
+    # Calculates grant flows configured by the user in Doorkeeper
+    # configuration considering registered aliases that is exposed
+    # to single or multiple other flows.
+    #
     def calculate_grant_flows
-      flows = grant_flows.map(&:to_s) - aliased_grant_flows.keys.map(&:to_s)
-      flows.concat(aliased_grant_flows.values).flatten.uniq
+      configured_flows = grant_flows.map(&:to_s)
+      aliases = Doorkeeper::GrantFlow.aliases.keys.map(&:to_s)
+
+      flows = configured_flows - aliases
+      aliases.each do |flow_alias|
+        next unless configured_flows.include?(flow_alias)
+
+        flows.concat(Doorkeeper::GrantFlow.expand_alias(flow_alias))
+      end
+
+      flows.flatten.uniq
     end
 
     def allow_blank_redirect_uri?(application = nil)
@@ -635,10 +648,6 @@ module Doorkeeper
       flows = enabled_grant_flows.select(&:handles_grant_type?)
       flows << Doorkeeper::GrantFlow.get("refresh_token") if refresh_token_enabled?
       flows
-    end
-
-    def aliased_grant_flows
-      Doorkeeper::GrantFlow.aliases
     end
   end
 end

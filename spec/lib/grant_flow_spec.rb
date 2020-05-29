@@ -3,6 +3,15 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::GrantFlow do
+  # Avoid global side effects
+  before do
+    @origin_grant_flows = Doorkeeper::GrantFlow::Registry.flows.deep_dup
+  end
+
+  after do
+    Doorkeeper::GrantFlow::Registry.flows = @origin_grant_flows
+  end
+
   describe "#register" do
     context "with a name and options" do
       subject(:the_registered_flow) { described_class.get(name) }
@@ -30,6 +39,16 @@ RSpec.describe Doorkeeper::GrantFlow do
       it "sets the options" do
         expect(the_registered_flow.grant_type_matches).to eq grant_type_matches
         expect(the_registered_flow.grant_type_strategy).to eq grant_type_strategy
+      end
+
+      it "shows a warning when trying to register already existing flow" do
+        expect(::Kernel).to receive(:warn).with(/already registered/)
+
+        described_class.register(
+          name,
+          grant_type_matches: grant_type_matches,
+          grant_type_strategy: grant_type_strategy,
+        )
       end
     end
 

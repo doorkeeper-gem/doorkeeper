@@ -17,7 +17,16 @@ module Doorkeeper
           name_or_flow = Flow.new(name_or_flow, **options)
         end
 
-        flows[name_or_flow.name.to_sym] = name_or_flow
+        flow_key = name_or_flow.name.to_sym
+
+        if flows.key?(flow_key)
+          ::Kernel.warn <<~WARNING
+            [DOORKEEPER] '#{flow_key}' grant flow already registered and will be overridden
+            in #{caller[0]}
+          WARNING
+        end
+
+        flows[flow_key] = name_or_flow
       end
 
       # Allows to register aliases that could be used in `grant_flows`
@@ -26,6 +35,10 @@ module Doorkeeper
       #
       def register_alias(alias_name, **options)
         aliases[alias_name.to_sym] = Array.wrap(options.fetch(:as))
+      end
+
+      def expand_alias(alias_name)
+        aliases.fetch(alias_name.to_sym, [])
       end
 
       # [NOTE]: make it to use #fetch after removing fallbacks
