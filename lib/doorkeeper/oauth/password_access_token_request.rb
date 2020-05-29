@@ -43,8 +43,27 @@ module Doorkeeper
         resource_owner.present?
       end
 
+      # Section 4.3.2. Access Token Request for Resource Owner Password Credentials Grant:
+      #
+      #   If the client type is confidential or the client was issued client credentials (or assigned
+      #   other authentication requirements), the client MUST authenticate with the authorization
+      #   server as described in Section 3.2.1.
+      #
+      #   The authorization server MUST:
+      #
+      #    o  require client authentication for confidential clients or for any  client that was
+      #       issued client credentials (or with other authentication requirements)
+      #
+      #    o  authenticate the client if client authentication is included,
+      #
+      #   @see https://tools.ietf.org/html/rfc6749#section-4.3
+      #
       def validate_client
-        !parameters[:client_id] || client.present?
+        if Doorkeeper.config.skip_client_authentication_for_password_grant
+          !parameters[:client_id] || client.present?
+        else
+          client.present?
+        end
       end
 
       def validate_client_supports_grant_flow

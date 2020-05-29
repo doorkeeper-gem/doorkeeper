@@ -12,6 +12,15 @@ User-visible changes worth mentioning.
 - [#1410] Properly memoize `current_resource_owner` value (consider `nil` and `false` values).
 - [#1415] Ignore PKCE params for non-PKCE grants.
 - [#1418] Add ability to register custom OAuth Grant Flows.
+- [#1419] Require client authentication for Resource Owner Password Grant as stated in OAuth RFC.
+  
+  **[IMPORTANT]** you need to create a new OAuth client (`Doorkeeper::Application`) if yoo didn't
+    have it before and use client credentials in HTTP Basic auth if you previously used this grant
+    flow without client authentication. For migration purposes you could enable
+    `skip_client_authentication_for_password_grant` configuration option to `true`, but such behavior
+    (as well as configuration option) would be completely removed in a future version of Doorkeeper.
+    All the users of your provider application now need to include client credentials when they use
+    this grant flow.
 
 ## 5.4.0
 

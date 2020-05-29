@@ -813,7 +813,7 @@ RSpec.describe Doorkeeper::Config do
   describe "options deprecation" do
     it "prints a warning message when an option is deprecated" do
       expect(Kernel).to receive(:warn).with(
-        "[DOORKEEPER] native_redirect_uri has been deprecated and will soon be removed",
+        /\[DOORKEEPER\] native_redirect_uri has been deprecated and will soon be removed/,
       )
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
