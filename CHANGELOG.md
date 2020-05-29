@@ -12,7 +12,7 @@ User-visible changes worth mentioning.
 - [#1410] Properly memoize `current_resource_owner` value (consider `nil` and `false` values).
 - [#1415] Ignore PKCE params for non-PKCE grants.
 - [#1418] Add ability to register custom OAuth Grant Flows.
-- [#1419] Require client authentication for Resource Owner Password Grant as stated in OAuth RFC.
+- [#1420] Require client authentication for Resource Owner Password Grant as stated in OAuth RFC.
   
   **[IMPORTANT]** you need to create a new OAuth client (`Doorkeeper::Application`) if yoo didn't
     have it before and use client credentials in HTTP Basic auth if you previously used this grant
