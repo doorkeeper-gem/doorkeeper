@@ -103,12 +103,13 @@ Doorkeeper.configure do
   #
   # `context` has the following properties available:
   #
-  # `client` - the OAuth client application (see Doorkeeper::OAuth::Client)
-  # `grant_type` - the grant type of the request (see Doorkeeper::OAuth)
-  # `scopes` - the requested scopes (see Doorkeeper::OAuth::Scopes)
+  #   * `client` - the OAuth client application (see Doorkeeper::OAuth::Client)
+  #   * `grant_type` - the grant type of the request (see Doorkeeper::OAuth)
+  #   * `scopes` - the requested scopes (see Doorkeeper::OAuth::Scopes)
+  #   * `resource_owner` - authorized resource owner instance (if present)
   #
   # custom_access_token_expires_in do |context|
-  #   context.client.application.additional_settings.implicit_oauth_expiration
+  #   context.client.additional_settings.implicit_oauth_expiration
   # end
 
   # Use a custom class for generating the access token.

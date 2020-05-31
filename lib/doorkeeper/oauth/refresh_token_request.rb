@@ -62,6 +62,19 @@ module Doorkeeper
           attributes[:previous_refresh_token] = refresh_token.refresh_token
         end
 
+        # RFC6749
+        # 1.5.  Refresh Token
+        #
+        # Refresh tokens are issued to the client by the authorization server and are
+        # used to obtain a new access token when the current access token
+        # becomes invalid or expires, or to obtain additional access tokens
+        # with identical or narrower scope (access tokens may have a shorter
+        # lifetime and fewer permissions than authorized by the resource
+        # owner).
+        #
+        # Here we assume that TTL of the token received after refreshing should be
+        # the same as that of the original token.
+        #
         @access_token = server_config.access_token_model.create_for(
           application: refresh_token.application,
           resource_owner: resource_owner,

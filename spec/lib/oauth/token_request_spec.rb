@@ -30,7 +30,7 @@ RSpec.describe Doorkeeper::OAuth::TokenRequest do
   end
 
   let(:owner) do
-    FactoryBot.create(:doorkeeper_testing_user)
+    FactoryBot.create(:doorkeeper_testing_user, name: "John")
   end
 
   it "creates an access token" do
@@ -101,6 +101,33 @@ RSpec.describe Doorkeeper::OAuth::TokenRequest do
         request.authorize
         token = Doorkeeper::AccessToken.first
         expect(token.expires_in).to be_nil
+      end
+    end
+
+    context "when custom_access_token_expires_in uses resource_owner condition" do
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          custom_access_token_expires_in do |context|
+            if context.resource_owner&.name == "John"
+              10_000
+            else
+              500
+            end
+          end
+        end
+      end
+
+      it "uses configured values for TTL" do
+        request = described_class.new(pre_auth, owner)
+        request.authorize
+        token = Doorkeeper::AccessToken.last
+        expect(token.expires_in).to eq(10_000)
+
+        request = described_class.new(pre_auth, nil)
+        request.authorize
+        token = Doorkeeper::AccessToken.last
+        expect(token.expires_in).to eq(500)
       end
     end
   end

@@ -7,7 +7,7 @@ module Doorkeeper
         attr_reader :pre_auth, :resource_owner, :token
 
         class << self
-          def build_context(pre_auth_or_oauth_client, grant_type, scopes)
+          def build_context(pre_auth_or_oauth_client, grant_type, scopes, resource_owner)
             oauth_client = if pre_auth_or_oauth_client.respond_to?(:application)
                              pre_auth_or_oauth_client.application
                            elsif pre_auth_or_oauth_client.respond_to?(:client)
@@ -17,9 +17,10 @@ module Doorkeeper
                            end
 
             Doorkeeper::OAuth::Authorization::Context.new(
-              oauth_client,
-              grant_type,
-              scopes,
+              client: oauth_client,
+              grant_type: grant_type,
+              scopes: scopes,
+              resource_owner: resource_owner,
             )
           end
 
@@ -55,6 +56,7 @@ module Doorkeeper
             pre_auth.client,
             Doorkeeper::OAuth::IMPLICIT,
             pre_auth.scopes,
+            resource_owner,
           )
 
           @token = Doorkeeper.config.access_token_model.find_or_create_for(

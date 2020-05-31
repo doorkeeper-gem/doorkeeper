@@ -22,6 +22,9 @@ User-visible changes worth mentioning.
     All the users of your provider application now need to include client credentials when they use
     this grant flow.
 
+- [#1421] Add Resource Owner instance to authorization hook context for `custom_access_token_expires_in`
+  configuration option to allow resource owner based Access Tokens TTL.
+
 ## 5.4.0
 
 - [#1404] Make `Doorkeeper::Application#read_attribute_for_serialization` public.
