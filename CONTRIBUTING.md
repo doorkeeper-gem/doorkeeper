@@ -14,36 +14,37 @@ Run the tests with: `docker run -it --rm doorkeeper:test`
 
 ### Local Setup
 
-Set up Ruby dependencies via Bundler
+* Set up Ruby dependencies via Bundler
 
-    bundle install
+      bundle install
 
-Make sure the tests pass:
+* Make sure the tests pass:
 
-    rake
+      rake spec
 
-Make your change.
-Write tests.
-Follow our [style guide](.rubocop.yml).
-Make the tests pass:
+* Make your changes.
+* Write tests.
+* Follow our [style guides](.rubocop.yml).
+* Make the tests pass:
 
-    rake
+      rake spec
 
-Add notes on your change to the `CHANGELOG.md` file.
+* Add notes about your changes to the `CHANGELOG.md` file.
 
-Write a [good commit message][commit].
-Push to your fork.
-[Submit a pull request][pr].
+* Write a [good commit message][commit].
+* Push to your fork.
+* [Submit a pull request][pr].
 
 [commit]: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
 [pr]: https://github.com/doorkeeper-gem/doorkeeper/compare/
 
-If [Hound] catches style violations, fix them.
+* If [Hound] catches style violations, fix them. If our bot suggested changes — please add them.
 
 [hound]: https://houndci.com
 
-Wait for us.
-We try to at least comment on pull requests within one business day.
-We may suggest changes.
+* Wait for us. We try to at least comment on pull requests within one business day.
+* We may suggest changes.
+* Please, squash your commits to a single one if you introduced a new changes or pushed more than
+one commit. Let's keep the history clean.
 
-Thank you for your contribution!
+Thank you for your contribution! :handshake:
