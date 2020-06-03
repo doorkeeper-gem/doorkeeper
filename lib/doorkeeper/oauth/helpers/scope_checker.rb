@@ -12,9 +12,7 @@ module Doorkeeper
             @scope_str = scope_str
             @valid_scopes = valid_scopes(server_scopes, app_scopes)
 
-            if grant_type
-              @scopes_by_grant_type = Doorkeeper.config.scopes_by_grant_type[grant_type.to_sym]
-            end
+            @scopes_by_grant_type = Doorkeeper.config.scopes_by_grant_type[grant_type.to_sym] if grant_type
           end
 
           def valid?

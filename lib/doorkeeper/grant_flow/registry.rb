@@ -22,7 +22,7 @@ module Doorkeeper
         if flows.key?(flow_key)
           ::Kernel.warn <<~WARNING
             [DOORKEEPER] '#{flow_key}' grant flow already registered and will be overridden
-            in #{caller[0]}
+            in #{caller(1..1).first}
           WARNING
         end
 

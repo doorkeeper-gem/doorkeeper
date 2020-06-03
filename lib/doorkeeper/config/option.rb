@@ -45,9 +45,7 @@ module Doorkeeper
           define_method name do |*args, &block|
             if (deprecation_opts = options[:deprecated])
               warning = "[DOORKEEPER] #{name} has been deprecated and will soon be removed"
-              if deprecation_opts.is_a?(Hash)
-                warning = "#{warning}\n#{deprecation_opts.fetch(:message)}"
-              end
+              warning = "#{warning}\n#{deprecation_opts.fetch(:message)}" if deprecation_opts.is_a?(Hash)
 
               Kernel.warn(warning)
             end
