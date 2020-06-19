@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1426] Ensure ActiveRecord callbacks are executed on token revocation.
 - [#1407] Remove redundant and complex to support helpers froms tests (`should_have_json`, etc).
 - [#1416] Don't add introspection route if token introspection completely disabled.
 - [#1410] Properly memoize `current_resource_owner` value (consider `nil` and `false` values).
