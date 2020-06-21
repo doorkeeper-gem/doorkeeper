@@ -9,7 +9,7 @@ module Doorkeeper
       # @param clock [Time] time object
       #
       def revoke(clock = Time)
-        update_column(:revoked_at, clock.now.utc)
+        update_attribute(:revoked_at, clock.now.utc)
       end
 
       # Indicates whether the object has been revoked.
