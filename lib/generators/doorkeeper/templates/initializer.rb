@@ -168,8 +168,7 @@ Doorkeeper.configure do
   # since plain values can no longer be retrieved.
   #
   # Note: If you are already a user of doorkeeper and have existing tokens
-  # in your installation, they will be invalid without enabling the additional
-  # setting `fallback_to_plain_secrets` below.
+  # in your installation, they will be invalid without adding 'fallback: :plain'.
   #
   # hash_token_secrets
   # By default, token secrets will be hashed using the
@@ -203,7 +202,9 @@ Doorkeeper.configure do
   # This will ensure that old access tokens and secrets
   # will remain valid even if the hashing above is enabled.
   #
-  # fallback_to_plain_secrets
+  # This can be done by adding 'fallback: plain', e.g. :
+  #
+  # hash_application_secrets using: '::Doorkeeper::SecretStoring::BCrypt', fallback: :plain
 
   # Issue access tokens with refresh token (disabled by default), you may also
   # pass a block which accepts `context` to customize when to give a refresh
