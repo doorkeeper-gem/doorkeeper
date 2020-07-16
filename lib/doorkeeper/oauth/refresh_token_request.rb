@@ -81,6 +81,7 @@ module Doorkeeper
           scopes: scopes,
           expires_in: refresh_token.expires_in,
           use_refresh_token: true,
+          grant_type: refresh_token.grant_type || Doorkeeper::OAuth::REFRESH_TOKEN,
           **attributes,
         )
       end

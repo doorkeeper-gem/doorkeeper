@@ -118,6 +118,11 @@ RSpec.describe Doorkeeper::OAuth::BaseRequest do
 
   describe "#find_or_create_access_token" do
     let(:resource_owner) { FactoryBot.build_stubbed(:resource_owner) }
+    let(:grant_type) { "authorization_code" }
+
+    before do
+      allow(request).to receive(:grant_type).and_return(grant_type)
+    end
 
     it "returns an instance of AccessToken" do
       result = request.find_or_create_access_token(
@@ -176,6 +181,16 @@ RSpec.describe Doorkeeper::OAuth::BaseRequest do
         server,
       )
       expect(result.refresh_token).to be_nil
+    end
+
+    it "stores the grant type on the token" do
+      result = request.find_or_create_access_token(
+        client,
+        resource_owner,
+        "private",
+        server,
+      )
+      expect(result.grant_type).to eq(grant_type)
     end
   end
 

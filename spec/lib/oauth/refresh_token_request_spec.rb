@@ -87,6 +87,30 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
     expect(request).to be_valid
   end
 
+  context "when refresh token has a grant type" do
+    it "sets the new tokens grant type to the refresh tokens grant type" do
+      request.authorize
+      expect(Doorkeeper::AccessToken.last.grant_type).to eq(refresh_token.grant_type)
+    end
+
+    it "creates a new token" do
+      expect { request.authorize }.to change { client.reload.access_tokens.count }.by(1)
+    end
+  end
+
+  context "when refresh token does not have a grant type" do
+    let(:refresh_token) do
+      rt = FactoryBot.build(:access_token, grant_type: nil, use_refresh_token: true, token: "some-token", refresh_token: "some-refresh")
+      rt.save(validate: false)
+      rt
+    end
+
+    it "sets the new tokens grant type to refresh_token" do
+      request.authorize
+      expect(Doorkeeper::AccessToken.last.grant_type).to eq("refresh_token")
+    end
+  end
+
   context "when refresh tokens expire on access token use" do
     before do
       allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(true)

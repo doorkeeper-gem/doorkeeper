@@ -73,6 +73,10 @@ RSpec.describe Doorkeeper::AuthorizationsController do
     it "issues the token for the current resource owner" do
       expect(Doorkeeper::AccessToken.first.resource_owner_id).to eq(user.id)
     end
+
+    it "sets the implicit grant_type on the token" do
+      expect(Doorkeeper::AccessToken.last.grant_type).to eq(Doorkeeper::OAuth::IMPLICIT)
+    end
   end
 
   describe "POST #create in API mode" do

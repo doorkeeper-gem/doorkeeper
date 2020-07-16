@@ -39,6 +39,7 @@ module Doorkeeper
             scopes,
             use_refresh_token: false,
             expires_in: ttl,
+            grant_type: Doorkeeper::OAuth::CLIENT_CREDENTIALS,
           )
         end
       end

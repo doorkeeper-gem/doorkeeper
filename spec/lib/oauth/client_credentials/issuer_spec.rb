@@ -35,6 +35,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
         scopes,
         expires_in: 100,
         use_refresh_token: false,
+        grant_type: "client_credentials",
       )
 
       issuer.create client, scopes, creator
@@ -92,6 +93,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
           scopes,
           expires_in: custom_ttl_grant,
           use_refresh_token: false,
+          grant_type: "client_credentials",
         )
         issuer.create client, scopes, creator
       end
@@ -102,6 +104,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
           custom_scope,
           expires_in: custom_ttl_scope,
           use_refresh_token: false,
+          grant_type: "client_credentials",
         )
         issuer.create client, custom_scope, creator
       end

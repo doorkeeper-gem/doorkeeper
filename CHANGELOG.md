@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#1430] Add grant types to access tokens. run `rails generate doorkeeper:grant_type_access_tokens` to generate necessary migration. If you create your own `Doorkeeper::AccessToken`s, be sure to add the relevant `grant_type` string param.
 - [#1426] Ensure ActiveRecord callbacks are executed on token revocation.
 - [#1407] Remove redundant and complex to support helpers froms tests (`should_have_json`, etc).
 - [#1416] Don't add introspection route if token introspection completely disabled.

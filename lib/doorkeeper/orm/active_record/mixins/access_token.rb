@@ -19,6 +19,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
 
       validates :token, presence: true, uniqueness: { case_sensitive: true }
       validates :refresh_token, uniqueness: { case_sensitive: true }, if: :use_refresh_token?
+      validates :grant_type, presence: true, on: :create
 
       # @attr_writer [Boolean, nil] use_refresh_token
       #   indicates the possibility of using refresh token

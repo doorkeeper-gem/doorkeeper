@@ -13,6 +13,7 @@ FactoryBot.define do
     sequence(:resource_owner_id) { |n| n }
     application
     expires_in { 2.hours }
+    grant_type { resource_owner_id.nil? ? "client_credentials" : "authorization_code" }
 
     factory :clientless_access_token do
       application { nil }

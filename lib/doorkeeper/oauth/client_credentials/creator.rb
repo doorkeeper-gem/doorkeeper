@@ -17,6 +17,7 @@ module Doorkeeper
               application: client,
               resource_owner: nil,
               scopes: scopes,
+              grant_type: Doorkeeper::OAuth::CLIENT_CREDENTIALS,
               **attributes,
             )
           end

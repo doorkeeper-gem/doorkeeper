@@ -370,6 +370,60 @@ RSpec.describe Doorkeeper::AccessToken do
       access_token.application_id = nil
       expect(access_token).to be_valid
     end
+
+    describe "grant_type" do
+      context "when creating new record" do
+        subject(:create_access_token) do
+          described_class.create(access_token_attrs)
+        end
+
+        let(:access_token_attrs) { FactoryBot.build(:access_token, grant_type: grant_type).attributes }
+
+        context "with null grant type" do
+          let(:grant_type) { nil }
+
+          it "is invalid" do
+            expect(create_access_token).not_to be_valid
+          end
+
+          it "does not create the token" do
+            expect { create_access_token }.not_to change(described_class, :count)
+          end
+        end
+
+        context "with grant type" do
+          let(:grant_type) { "password" }
+
+          it "is valid" do
+            expect(create_access_token).to be_valid
+          end
+
+          it "creates the token" do
+            expect { create_access_token }.to change(described_class, :count)
+          end
+        end
+      end
+
+      context "when updating existing records" do
+        subject(:update_access_token) { access_token.update(revoked_at: Time.zone.now) }
+
+        context "when grant type is null" do
+          let(:access_token) do
+            at = FactoryBot.build(:access_token, token: "sometoken", grant_type: nil)
+            at.save(validate: false)
+            at
+          end
+
+          it "is still be valid" do
+            expect(update_access_token).to be true
+          end
+
+          it "updates the record" do
+            expect { update_access_token }.to change(access_token, :revoked_at)
+          end
+        end
+      end
+    end
   end
 
   describe "#same_credential?" do
