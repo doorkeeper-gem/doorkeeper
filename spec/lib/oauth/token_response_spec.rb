@@ -25,7 +25,7 @@ RSpec.describe Doorkeeper::OAuth::TokenResponse do
              expires_in_seconds: "300",
              scopes_string: "two scopes",
              plaintext_refresh_token: "some-refresh-token",
-             token_type: "bearer",
+             token_type: "Bearer",
              created_at: 0
     end
 
@@ -34,7 +34,7 @@ RSpec.describe Doorkeeper::OAuth::TokenResponse do
     end
 
     it "includes :token_type" do
-      expect(body["token_type"]).to eq("bearer")
+      expect(body["token_type"]).to eq("Bearer")
     end
 
     # expires_in_seconds is returned as `expires_in` in order to match
@@ -65,7 +65,7 @@ RSpec.describe Doorkeeper::OAuth::TokenResponse do
              expires_in_seconds: "",
              scopes_string: "",
              plaintext_refresh_token: "",
-             token_type: "bearer",
+             token_type: "Bearer",
              created_at: 0
     end
 
