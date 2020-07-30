@@ -14,7 +14,7 @@ RSpec.describe Doorkeeper::OAuth::BaseRequest do
            expires_in_seconds: "300",
            scopes_string: "two scopes",
            plaintext_refresh_token: "some-refresh-token",
-           token_type: "bearer",
+           token_type: "Bearer",
            created_at: 0
   end
 
