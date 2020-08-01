@@ -38,6 +38,7 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
       redirect_uri
       params
       response_type
+      response_mode
       scopes
       code_challenge_method
     ])
@@ -79,6 +80,70 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
     it 'does not accept "token" as response type' do
       attributes[:response_type] = "token"
       expect(pre_auth).not_to be_authorizable
+    end
+  end
+
+  context "with response_mode parameter is provided" do
+    context "when response_type is 'code'" do
+      before { attributes[:response_type] = "code" }
+
+      it "sets response_mode as 'query' when it is not provided" do
+        attributes[:response_mode] = ""
+
+        expect(pre_auth).to be_authorizable
+        expect(pre_auth.response_mode).to eq("query")
+      end
+
+      it 'accepts "query" as response_mode' do
+        attributes[:response_mode] = "query"
+        expect(pre_auth).to be_authorizable
+      end
+
+      it 'accepts "fragment" as response_mode' do
+        attributes[:response_mode] = "fragment"
+        expect(pre_auth).to be_authorizable
+      end
+
+      it 'accepts "form_post" as response_mode' do
+        attributes[:response_mode] = "form_post"
+        expect(pre_auth).to be_authorizable
+      end
+
+      it "does not accept response_mode other than query, fragment, form_post" do
+        attributes[:response_mode] = "other response_mode"
+
+        expect(pre_auth).not_to be_authorizable
+      end
+    end
+
+    context "when response_type is 'token'" do
+      before do
+        allow(server).to receive(:grant_flows).and_return(["implicit"])
+        attributes[:response_type] = "token"
+      end
+
+      it "sets response_mode as 'fragment' when it is not provided" do
+        attributes[:response_mode] = ""
+
+        expect(pre_auth).to be_authorizable
+        expect(pre_auth.response_mode).to eq("fragment")
+      end
+
+      it 'accepts "fragment" as response_mode' do
+        attributes[:response_mode] = "fragment"
+        expect(pre_auth).to be_authorizable
+      end
+
+      it 'accepts "form_post" as response_mode' do
+        attributes[:response_mode] = "form_post"
+        expect(pre_auth).to be_authorizable
+      end
+
+      it 'does not accept "query" response_mode when response_type is "token"' do
+        attributes[:response_mode] = "query"
+
+        expect(pre_auth).not_to be_authorizable
+      end
     end
   end
 

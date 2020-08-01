@@ -109,6 +109,7 @@ en:
 
         # Access grant errors
         unsupported_response_type: 'The authorization server does not support this response type.'
+        unsupported_response_mode: 'The authorization server does not support this response mode.'
 
         # Access token errors
         invalid_client: 'Client authentication failed due to unknown client, no client authentication included, or unsupported authentication method.'
