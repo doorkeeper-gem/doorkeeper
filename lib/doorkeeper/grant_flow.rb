@@ -11,12 +11,14 @@ module Doorkeeper
     register(
       :implicit,
       response_type_matches: "token",
+      response_mode_matches: %w[fragment form_post],
       response_type_strategy: Doorkeeper::Request::Token,
     )
 
     register(
       :authorization_code,
       response_type_matches: "code",
+      response_mode_matches: %w[query fragment form_post],
       response_type_strategy: Doorkeeper::Request::Code,
       grant_type_matches: "authorization_code",
       grant_type_strategy: Doorkeeper::Request::AuthorizationCode,
