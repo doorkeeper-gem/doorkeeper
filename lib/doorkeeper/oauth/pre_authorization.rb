@@ -84,6 +84,11 @@ module Doorkeeper
         Doorkeeper.config.allow_grant_flow_for_client?(grant_type, client.application)
       end
 
+      def validate_resource_owner_authorize_for_client
+        # The `authorize_resource_owner_for_client` config option is used for this validation
+        client.application.authorized_for_resource_owner?(@resource_owner)
+      end
+
       def validate_redirect_uri
         return false if redirect_uri.blank?
 
@@ -123,11 +128,6 @@ module Doorkeeper
 
         code_challenge.blank? ||
           (code_challenge_method.present? && code_challenge_method =~ /^plain$|^S256$/)
-      end
-
-      def validate_resource_owner_authorize_for_client
-        # The `authorize_resource_owner_for_client` config option is used for this validation
-        client.application.authorized_for_resource_owner?(@resource_owner)
       end
 
       def response_on_fragment?

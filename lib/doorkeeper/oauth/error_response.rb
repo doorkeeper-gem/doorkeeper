@@ -5,6 +5,8 @@ module Doorkeeper
     class ErrorResponse < BaseResponse
       include OAuth::Helpers
 
+      NON_REDIRECTABLE_STATES = %i[invalid_redirect_uri invalid_client unauthorized_client].freeze
+
       def self.from_request(request, attributes = {})
         new(
           attributes.merge(
@@ -32,7 +34,7 @@ module Doorkeeper
       end
 
       def status
-        if name == :invalid_client
+        if name == :invalid_client || name == :unauthorized_client
           :unauthorized
         else
           :bad_request
@@ -40,8 +42,7 @@ module Doorkeeper
       end
 
       def redirectable?
-        name != :invalid_redirect_uri && name != :invalid_client &&
-          !URIChecker.oob_uri?(@redirect_uri)
+        !NON_REDIRECTABLE_STATES.include?(name) && !URIChecker.oob_uri?(@redirect_uri)
       end
 
       def redirect_uri

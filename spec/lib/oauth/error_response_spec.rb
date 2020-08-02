@@ -13,6 +13,12 @@ RSpec.describe Doorkeeper::OAuth::ErrorResponse do
 
       expect(subject.status).to eq(:unauthorized)
     end
+
+    it "has a status of unauthorized for an unauthorized_client error" do
+      subject = described_class.new(name: :unauthorized_client)
+
+      expect(subject.status).to eq(:unauthorized)
+    end
   end
 
   describe ".from_request" do
@@ -60,6 +66,38 @@ RSpec.describe Doorkeeper::OAuth::ErrorResponse do
       it { expect(headers).to include("realm=\"#{error_response.send(:realm)}\"") }
       it { expect(headers).to include("error=\"#{error_response.name}\"") }
       it { expect(headers).to include("error_description=\"#{error_response.description}\"") }
+    end
+  end
+
+  describe ".redirectable?" do
+    it "not redirectable when error name is invalid_redirect_uri" do
+      subject = described_class.new(name: :invalid_redirect_uri, redirect_uri: "https://example.com")
+
+      expect(subject.redirectable?).to be false
+    end
+
+    it "not redirectable when error name is invalid_client" do
+      subject = described_class.new(name: :invalid_client, redirect_uri: "https://example.com")
+
+      expect(subject.redirectable?).to be false
+    end
+
+    it "not redirectable when error name is unauthorized_client" do
+      subject = described_class.new(name: :unauthorized_client, redirect_uri: "https://example.com")
+
+      expect(subject.redirectable?).to be false
+    end
+
+    it "not redirectable when redirect_uri is oob uri" do
+      subject = described_class.new(name: :other_error, redirect_uri: Doorkeeper::OAuth::NonStandard::IETF_WG_OAUTH2_OOB)
+
+      expect(subject.redirectable?).to be false
+    end
+
+    it "is redirectable when error is not related to client or redirect_uri, and redirect_uri is not oob uri" do
+      subject = described_class.new(name: :other_error, redirect_uri: "https://example.com")
+
+      expect(subject.redirectable?).to be true
     end
   end
 end

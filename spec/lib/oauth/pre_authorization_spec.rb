@@ -27,18 +27,23 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
     }
   end
 
+  it "must call the validations on client and redirect_uri before other validations because they are not redirectable" do
+    validation_attributes = described_class.validations.map { |validation| validation[:attribute] }
+
+    expect(validation_attributes).to eq(%i[
+      client_id
+      client
+      client_supports_grant_flow
+      resource_owner_authorize_for_client
+      redirect_uri
+      params
+      response_type
+      scopes
+      code_challenge_method
+    ])
+  end
+
   it "is authorizable when request is valid" do
-    expect(pre_auth).to be_authorizable
-  end
-
-  it "accepts code as response type" do
-    attributes[:response_type] = "code"
-    expect(pre_auth).to be_authorizable
-  end
-
-  it "accepts token as response type" do
-    allow(server).to receive(:grant_flows).and_return(["implicit"])
-    attributes[:response_type] = "token"
     expect(pre_auth).to be_authorizable
   end
 
@@ -73,18 +78,6 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
 
     it 'does not accept "token" as response type' do
       attributes[:response_type] = "token"
-      expect(pre_auth).not_to be_authorizable
-    end
-  end
-
-  context "when grant flow is client credentials & redirect_uri is nil" do
-    before do
-      allow(server).to receive(:grant_flows).and_return(["client_credentials"])
-      allow(Doorkeeper.configuration).to receive(:allow_grant_flow_for_client?).and_return(false)
-      application.update_column :redirect_uri, nil
-    end
-
-    it "is not authorizable" do
       expect(pre_auth).not_to be_authorizable
     end
   end
