@@ -144,6 +144,37 @@ RSpec.describe Doorkeeper::AuthorizationsController do
       end
     end
 
+    context "when client can not use grant flow" do
+      before do
+        config_is_set(:allow_grant_flow_for_client, ->(*_) { false })
+        post :create, params: {
+          client_id: client.uid,
+          response_type: "token",
+          redirect_uri: client.redirect_uri,
+        }
+      end
+
+      let(:response_json_body) { JSON.parse(response.body) }
+
+      it "renders 401 error" do
+        expect(response.status).to eq 401
+      end
+
+      it "includes error name" do
+        expect(response_json_body["error"]).to eq("unauthorized_client")
+      end
+
+      it "includes error description" do
+        expect(response_json_body["error_description"]).to eq(
+          translated_error_message(:unauthorized_client),
+        )
+      end
+
+      it "does not issue any access token" do
+        expect(Doorkeeper::AccessToken.all).to be_empty
+      end
+    end
+
     context "when user cannot access application" do
       before do
         allow(Doorkeeper.configuration).to receive(:authorize_resource_owner_for_client).and_return(->(*_) { false })
@@ -156,7 +187,7 @@ RSpec.describe Doorkeeper::AuthorizationsController do
 
       let(:response_json_body) { JSON.parse(response.body) }
 
-      it "renders 400 error" do
+      it "renders 401 error" do
         expect(response.status).to eq 401
       end
 
@@ -214,10 +245,10 @@ RSpec.describe Doorkeeper::AuthorizationsController do
   end
 
   describe "POST #create in API mode with errors" do
+    before { config_is_set(:api_only, true) }
+
     context "when missing client_id" do
       before do
-        allow(Doorkeeper.config).to receive(:api_only).and_return(true)
-
         post :create, params: {
           client_id: "",
           response_type: "token",
@@ -246,9 +277,39 @@ RSpec.describe Doorkeeper::AuthorizationsController do
       end
     end
 
+    context "when client can not use grant flow" do
+      before do
+        config_is_set(:allow_grant_flow_for_client, ->(*_) { false })
+        post :create, params: {
+          client_id: client.uid,
+          response_type: "token",
+          redirect_uri: client.redirect_uri,
+        }
+      end
+
+      let(:response_json_body) { JSON.parse(response.body) }
+
+      it "renders 401 error" do
+        expect(response.status).to eq 401
+      end
+
+      it "includes error name" do
+        expect(response_json_body["error"]).to eq("unauthorized_client")
+      end
+
+      it "includes error description" do
+        expect(response_json_body["error_description"]).to eq(
+          translated_error_message(:unauthorized_client),
+        )
+      end
+
+      it "does not issue any access token" do
+        expect(Doorkeeper::AccessToken.all).to be_empty
+      end
+    end
+
     context "when user cannot access application" do
       before do
-        allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
         allow(Doorkeeper.configuration).to receive(:authorize_resource_owner_for_client).and_return(->(*_) { false })
 
         post :create, params: {
@@ -260,7 +321,7 @@ RSpec.describe Doorkeeper::AuthorizationsController do
 
       let(:response_json_body) { JSON.parse(response.body) }
 
-      it "renders 400 error" do
+      it "renders 401 error" do
         expect(response.status).to eq 401
       end
 
@@ -281,7 +342,6 @@ RSpec.describe Doorkeeper::AuthorizationsController do
 
     context "when other error happens" do
       before do
-        allow(Doorkeeper.config).to receive(:api_only).and_return(true)
         default_scopes_exist :public
 
         post :create, params: {

@@ -58,4 +58,18 @@ RSpec.describe Doorkeeper::OAuth::InvalidRequestResponse do
       end
     end
   end
+
+  describe ".redirectable?" do
+    it "not redirectable when missing_param is client_id" do
+      subject = described_class.new(missing_param: :client_id)
+
+      expect(subject.redirectable?).to be false
+    end
+
+    it "is redirectable when missing_param is other than client_id" do
+      subject = described_class.new(missing_param: :code_verifier)
+
+      expect(subject.redirectable?).to be true
+    end
+  end
 end
