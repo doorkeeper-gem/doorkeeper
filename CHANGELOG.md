@@ -7,6 +7,10 @@ User-visible changes worth mentioning.
 
 ## master
 
+- [#PR ID] Add your PR description here.
+
+## 5.5.0.rc1
+
 - [#1435] Make error response not redirectable when client is unauthorized
 - [#1426] Ensure ActiveRecord callbacks are executed on token revocation.
 - [#1407] Remove redundant and complex to support helpers froms tests (`should_have_json`, etc).
