@@ -21,6 +21,10 @@ module Doorkeeper
           { action: :show, code: token.plaintext_token }
         end
 
+        def access_grant?
+          true
+        end
+
         private
 
         def authorization_code_expires_in
