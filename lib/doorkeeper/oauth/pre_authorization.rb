@@ -60,6 +60,10 @@ module Doorkeeper
         pre_auth_hash
       end
 
+      def form_post_response?
+        response_mode == "form_post"
+      end
+
       private
 
       attr_reader :client_id, :server
@@ -146,7 +150,9 @@ module Doorkeeper
       end
 
       def response_on_fragment?
-        response_type == "token"
+        return response_type == "token" if response_mode.nil?
+
+        response_mode == "fragment"
       end
 
       def grant_type

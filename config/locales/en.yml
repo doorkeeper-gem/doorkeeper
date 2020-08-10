@@ -72,6 +72,8 @@ en:
         able_to: 'This application will be able to'
       show:
         title: 'Authorization code'
+      form_post:
+        title: 'Submit this form'
 
     authorized_applications:
       confirmations:

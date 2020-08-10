@@ -286,6 +286,20 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
     end
   end
 
+  describe "#form_post_response?" do
+    it { is_expected.to respond_to(:form_post_response?) }
+
+    it "return true when response_mode is form_post" do
+      attributes[:response_mode] = "form_post"
+      expect(pre_auth.form_post_response?).to be true
+    end
+
+    it "when response_mode is other than form_post" do
+      attributes[:response_mode] = "fragment"
+      expect(pre_auth.form_post_response?).to be false
+    end
+  end
+
   context "when using PKCE params" do
     context "when PKCE is supported" do
       before do
