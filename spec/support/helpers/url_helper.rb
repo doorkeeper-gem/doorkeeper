@@ -32,6 +32,7 @@ module UrlHelper
       client_id: options[:client_id] || options[:client].try(:uid),
       redirect_uri: options[:redirect_uri] || options[:client].try(:redirect_uri),
       response_type: options[:response_type] || "code",
+      response_mode: options[:response_mode] || "",
       scope: options[:scope],
       state: options[:state],
       code_challenge: options[:code_challenge],

@@ -1,0 +1,11 @@
+<header class="page-header">
+  <h1><%= t('.title') %></h1>
+</header>
+
+<main role="main" onload="document.forms[0].submit()">
+  <%= form_tag @pre_auth.redirect_uri, method: :post do %>
+    <% @authorize_response.body.each do |key, value| %>
+      <%= hidden_field_tag key, value %>
+    <% end %>
+  <% end %>
+</main>

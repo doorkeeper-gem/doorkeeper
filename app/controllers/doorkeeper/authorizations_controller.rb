@@ -52,10 +52,19 @@ module Doorkeeper
     def redirect_or_render(auth)
       if auth.redirectable?
         if Doorkeeper.configuration.api_only
-          render(
-            json: { status: :redirect, redirect_uri: auth.redirect_uri },
-            status: auth.status,
-          )
+          if pre_auth.form_post_response?
+            render(
+              json: { status: :post, redirect_uri: pre_auth.redirect_uri, body: auth.body },
+              status: auth.status,
+            )
+          else
+            render(
+              json: { status: :redirect, redirect_uri: auth.redirect_uri },
+              status: auth.status,
+            )
+          end
+        elsif pre_auth.form_post_response?
+          render :form_post
         else
           redirect_to auth.redirect_uri
         end
@@ -82,6 +91,7 @@ module Doorkeeper
         code_challenge
         code_challenge_method
         response_type
+        response_mode
         redirect_uri
         scope
         state

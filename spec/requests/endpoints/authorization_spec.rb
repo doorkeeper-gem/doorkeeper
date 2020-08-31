@@ -68,6 +68,12 @@ feature "Authorization endpoint" do
       i_should_not_see "Authorize"
       i_should_see_translated_error_message :unsupported_response_type
     end
+
+    scenario "displays unsupported_response_mode error when using an invalid response mode" do
+      visit authorization_endpoint_url(client: @client, response_mode: "invalid_response_mode")
+      i_should_not_see "Authorize"
+      i_should_see_translated_error_message :unsupported_response_mode
+    end
   end
 
   context "when forgery protection enabled" do

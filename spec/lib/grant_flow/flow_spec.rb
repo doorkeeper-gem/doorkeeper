@@ -67,4 +67,17 @@ RSpec.describe Doorkeeper::GrantFlow::Flow do
       end
     end
   end
+
+  context "when given a response_mode to match" do
+    let(:response_mode_matches) { %w[secret_handshake_1 secret_handshake_2] }
+    let(:options) { { response_mode_matches: response_mode_matches } }
+
+    it "default response_mode value" do
+      expect(flow.default_response_mode).to eq "secret_handshake_1"
+    end
+
+    it "matches response_mode values" do
+      expect(flow.matches_response_mode?("secret_handshake_2")).to be true
+    end
+  end
 end

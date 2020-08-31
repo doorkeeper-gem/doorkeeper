@@ -76,6 +76,10 @@ module Doorkeeper
           }
         end
 
+        def access_token?
+          true
+        end
+
         private
 
         def controller
