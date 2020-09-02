@@ -21,6 +21,7 @@ module Doorkeeper
           record.errors.add(attribute, :unspecified_scheme) if unspecified_scheme?(uri)
           record.errors.add(attribute, :relative_uri) if relative_uri?(uri)
           record.errors.add(attribute, :secured_uri) if invalid_ssl_uri?(uri)
+          record.errors.add(attribute, :invalid_uri) if unspecified_host?(uri)
         end
       end
     rescue URI::InvalidURIError
@@ -41,6 +42,10 @@ module Doorkeeper
       return true if uri.opaque.present?
 
       %w[localhost].include?(uri.try(:scheme))
+    end
+
+    def unspecified_host?(uri)
+      uri.is_a?(URI::HTTP) && uri.host.nil?
     end
 
     def relative_uri?(uri)

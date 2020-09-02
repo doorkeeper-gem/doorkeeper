@@ -71,6 +71,12 @@ RSpec.describe Doorkeeper::RedirectUriValidator do
     expect(client).to be_valid
   end
 
+  it "is invalid when host is not specified" do
+    client.redirect_uri = "https://"
+    expect(client).to be_invalid
+    expect(client.errors[:redirect_uri].first).to eq(I18n.t("activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.invalid_uri"))
+  end
+
   context "when force secured uri configured" do
     it "accepts a valid uri" do
       client.redirect_uri = "https://example.com/callback"

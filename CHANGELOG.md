@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#PR ID] Add your PR description here.
+- [#1440] Validate empty host in redirect_uri
 - [#1438] Add form post response mode.
 
 ## 5.5.0.rc1
