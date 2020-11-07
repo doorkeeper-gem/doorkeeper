@@ -6,6 +6,7 @@ rvm:
   - 2.6
   - 2.7
   - ruby-head
+  - truffleruby-head
 
 gemfile:
   - gemfiles/rails_5_0.gemfile
