@@ -6,7 +6,7 @@ require "doorkeeper/version"
 
 Gem::Specification.new do |gem|
   gem.name        = "doorkeeper"
-  gem.version     = Doorkeeper.gem_version
+  gem.version     = Doorkeeper::VERSION::STRING
   gem.authors     = ["Felipe Elias Philipp", "Tute Costa", "Jon Moss", "Nikita Bulai"]
   gem.email       = %w[bulaj.nikita@gmail.com]
   gem.homepage    = "https://github.com/doorkeeper-gem/doorkeeper"
