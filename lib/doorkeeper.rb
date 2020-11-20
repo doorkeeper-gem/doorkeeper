@@ -115,4 +115,8 @@ module Doorkeeper
   def self.authenticate(request, methods = Doorkeeper.config.access_token_methods)
     OAuth::Token.authenticate(request, *methods)
   end
+
+  def self.gem_version
+    ::Gem::Version.new(::Doorkeeper::VERSION::STRING)
+  end
 end
