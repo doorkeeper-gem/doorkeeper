@@ -43,6 +43,24 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
     expect(request.error).to eq(:invalid_client)
   end
 
+  context "when skip_client_authentication_for_password_grant is true" do
+    before do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        skip_client_authentication_for_password_grant true
+      end
+    end
+
+    it "issues a new token for the client without client authentication" do
+      request = described_class.new(server, nil, owner)
+      expect do
+        request.authorize
+      end.to change { Doorkeeper::AccessToken.count }.by(1)
+
+      expect(Doorkeeper::AccessToken.all.max_by(&:created_at).expires_in).to eq(1234)
+    end
+  end
+
   it "doesn't issue a new token with an invalid client" do
     request = described_class.new(server, nil, owner, { client_id: "bad_id" })
     expect do

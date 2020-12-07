@@ -173,7 +173,14 @@ RSpec.describe "Revoke Token Flow" do
     end
   end
 
-  context "without client authentication" do
+  context "without client authentication, when skip_client_authentication_for_password_grant is false (the default)" do
+    before do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        skip_client_authentication_for_password_grant false
+      end
+    end
+
     let(:access_token) do
       FactoryBot.create(
         :access_token,
@@ -191,6 +198,34 @@ RSpec.describe "Revoke Token Flow" do
 
       expect(response).not_to be_successful
       expect(access_token.reload).not_to be_revoked
+    end
+  end
+
+  context "without client authentication, when skip_client_authentication_for_password_grant is true" do
+    before do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        skip_client_authentication_for_password_grant true
+      end
+    end
+
+    let(:access_token) do
+      FactoryBot.create(
+        :access_token,
+        application: nil,
+        resource_owner_id: resource_owner.id,
+        resource_owner_type: resource_owner.class.name,
+        use_refresh_token: true,
+      )
+    end
+
+    it "revokes the access token provided" do
+      post revocation_token_endpoint_url,
+           params: { client_id: public_client_application.uid, token: access_token.token },
+           headers: headers
+
+      expect(response).to be_successful
+      expect(access_token.reload).to be_revoked
     end
   end
 end

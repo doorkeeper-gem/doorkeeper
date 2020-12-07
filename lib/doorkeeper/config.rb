@@ -276,10 +276,16 @@ module Doorkeeper
     # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/1189
     option :token_reuse_limit,              default: 100
 
-    # [NOTE]: will be removed in a future version of Doorkeeper
+    # This is discouraged. Spec says that password grants always require a client.
+    #
+    # See https://github.com/doorkeeper-gem/doorkeeper/issues/1412#issuecomment-632750422
+    # and https://github.com/doorkeeper-gem/doorkeeper/pull/1420
+    #
+    # Since many applications use this unsafe behavior in the wild, this is kept as a
+    # not-recommended option. You should be aware that you are not following the OAuth
+    # spec, and understand the security implications of doing so.
     option :skip_client_authentication_for_password_grant,
-           default: false,
-           deprecated: { message: "OAuth RFC requires client authentication so you need at least to create one" }
+           default: false
 
     option :active_record_options,
            default: {},
