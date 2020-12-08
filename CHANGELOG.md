@@ -12,6 +12,7 @@ User-visible changes worth mentioning.
 - [#1452] Empty previous_refresh_token only if present
 - [#1440] Validate empty host in redirect_uri
 - [#1438] Add form post response mode.
+- [#1458] Make `config.skip_client_authentication_for_password_grant` a long term configuration option
 
 ## 5.5.0.rc1
 
@@ -23,12 +24,12 @@ User-visible changes worth mentioning.
 - [#1415] Ignore PKCE params for non-PKCE grants.
 - [#1418] Add ability to register custom OAuth Grant Flows.
 - [#1420] Require client authentication for Resource Owner Password Grant as stated in OAuth RFC.
-  
+
   **[IMPORTANT]** you need to create a new OAuth client (`Doorkeeper::Application`) if you didn't
     have it before and use client credentials in HTTP Basic auth if you previously used this grant
-    flow without client authentication. For migration purposes you could enable
-    `skip_client_authentication_for_password_grant` configuration option to `true`, but such behavior
-    (as well as configuration option) would be completely removed in a future version of Doorkeeper.
+    flow without client authentication. To opt out of this you could set the
+    `skip_client_authentication_for_password_grant` configuration option to `true`, but note that
+    this is in violation of the OAuth spec and represents a security risk.
     All the users of your provider application now need to include client credentials when they use
     this grant flow.
 
@@ -43,7 +44,7 @@ User-visible changes worth mentioning.
 
 - [#1371] Add `#as_json` method and attributes serialization restriction for Application model.
   Fixes information disclosure vulnerability (CVE-2020-10187).
-  
+
   **[IMPORTANT]** you need to re-implement `#as_json` method for Doorkeeper Application model
   if you previously used `#to_json` serialization with custom options or attributes or rely on
   JSON response from /oauth/applications.json or /oauth/authorized_applications.json. This change
@@ -57,17 +58,17 @@ User-visible changes worth mentioning.
 - [#1402] Handle trying authorization with client credentials.
 
 ## 5.4.0.rc1
-- [#1366] Sets expiry of token generated using `refresh_token` to that of original token. (Fixes #1364) 
+- [#1366] Sets expiry of token generated using `refresh_token` to that of original token. (Fixes #1364)
 - [#1354] Add `authorize_resource_owner_for_client` option to authorize the calling user to access an application.
 - [#1355] Allow to enable polymorphic Resource Owner association for Access Token & Grant
   models (`use_polymorphic_resource_owner` configuration option).
-  
+
   **[IMPORTANT]** Review your custom patches or extensions for Doorkeeper internals if you
   have such - since now Doorkeeper passes Resource Owner instance to every objects and not
   just it's ID. See PR description for details.
-  
+
 - [#1356] Remove duplicated scopes from Access Tokens and Grants on attribute assignment.
-- [#1357] Fix `Doorkeeper::OAuth::PreAuthorization#as_json` method causing 
+- [#1357] Fix `Doorkeeper::OAuth::PreAuthorization#as_json` method causing
   `Stack level too deep` error with AMS (fix #1312).
 - [#1358] Deprecate `active_record_options` configuration option.
 - [#1359] Refactor Doorkeeper configuration options DSL to make it easy to reuse it
@@ -79,7 +80,7 @@ User-visible changes worth mentioning.
   **[IMPORTANT]** now fully according to RFC 7009 nobody can do a revocation request without `client_id`
   (for public clients) and `client_secret` (for private clients). Please update your apps to include that
   info in the revocation request payload.
-  
+
 - [#1373] Make Doorkeeper routes mapper reusable in extensions.
 - [#1374] Revoke and issue client credentials token in a transaction with a row lock.
 - [#1384] Add context object with auth/pre_auth and issued_token for authorization hooks.
@@ -124,9 +125,9 @@ User-visible changes worth mentioning.
 
 - [#1371] Backport: add `#as_json` method and attributes serialization restriction for Application model.
   Fixes information disclosure vulnerability (CVE-2020-10187).
-  
+
 ## 5.2.4
-  
+
 - [#1360] Backport: Increase `matching_token_for` batch lookup size to 10 000 and make it configurable.
 
 ## 5.2.3

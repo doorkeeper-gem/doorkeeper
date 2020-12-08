@@ -2,6 +2,8 @@
 
 module Doorkeeper
   class TokensController < Doorkeeper::ApplicationMetalController
+    before_action :validate_presence_of_client, only: [:revoke]
+
     def create
       headers.merge!(authorize_response.headers)
       render json: authorize_response.body,
@@ -12,32 +14,6 @@ module Doorkeeper
 
     # OAuth 2.0 Token Revocation - http://tools.ietf.org/html/rfc7009
     def revoke
-      # @see 2.1.  Revocation Request
-      #
-      #  The client constructs the request by including the following
-      #  parameters using the "application/x-www-form-urlencoded" format in
-      #  the HTTP request entity-body:
-      #     token   REQUIRED.
-      #     token_type_hint  OPTIONAL.
-      #
-      #  The client also includes its authentication credentials as described
-      #  in Section 2.3. of [RFC6749].
-      #
-      #  The authorization server first validates the client credentials (in
-      #  case of a confidential client) and then verifies whether the token
-      #  was issued to the client making the revocation request.
-      unless server.client
-        # If this validation [client credentials / token ownership] fails, the request is
-        # refused and the  client is informed of the error by the authorization server as
-        # described below.
-        #
-        # @see 2.2.1.  Error Response
-        #
-        # The error presentation conforms to the definition in Section 5.2 of [RFC6749].
-        render json: revocation_error_response, status: :forbidden
-        return
-      end
-
       # The authorization server responds with HTTP status code 200 if the client
       # submitted an invalid token or the token has been revoked successfully.
       if token.blank?
@@ -67,6 +43,35 @@ module Doorkeeper
     end
 
     private
+
+    def validate_presence_of_client
+      return if Doorkeeper.config.skip_client_authentication_for_password_grant
+
+      # @see 2.1.  Revocation Request
+      #
+      #  The client constructs the request by including the following
+      #  parameters using the "application/x-www-form-urlencoded" format in
+      #  the HTTP request entity-body:
+      #     token   REQUIRED.
+      #     token_type_hint  OPTIONAL.
+      #
+      #  The client also includes its authentication credentials as described
+      #  in Section 2.3. of [RFC6749].
+      #
+      #  The authorization server first validates the client credentials (in
+      #  case of a confidential client) and then verifies whether the token
+      #  was issued to the client making the revocation request.
+      return if server.client
+
+      # If this validation [client credentials / token ownership] fails, the request is
+      # refused and the  client is informed of the error by the authorization server as
+      # described below.
+      #
+      # @see 2.2.1.  Error Response
+      #
+      # The error presentation conforms to the definition in Section 5.2 of [RFC6749].
+      render json: revocation_error_response, status: :forbidden
+    end
 
     # OAuth 2.0 Section 2.1 defines two client types, "public" & "confidential".
     #
