@@ -1,6 +1,9 @@
 language: ruby
 cache: bundler
-
+arch:
+  - amd64
+  - ppc64le
+  
 rvm:
   - 2.5
   - 2.6
@@ -21,6 +24,14 @@ matrix:
     - rvm: 2.5
       gemfile: gemfiles/rails_5_2.gemfile
       script: bundle exec danger
+    - rvm: 2.5
+      arch: ppc64le
+      gemfile: gemfiles/rails_5_2.gemfile
+      script: bundle exec danger
   allow_failures:
     - gemfile: gemfiles/rails_master.gemfile
     - rvm: ruby-head
+    - gemfile: gemfiles/rails_master.gemfile
+      arch: ppc64le
+    - rvm: ruby-head
+      arch: ppc64le
