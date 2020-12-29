@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#PR ID] Add your PR description here.
+- [#1465] Memoize nil doorkeeper_token
 - [#1457] Make owner_id a bigint for newly-generated owner migrations
 - [#1452] Empty previous_refresh_token only if present
 - [#1440] Validate empty host in redirect_uri
