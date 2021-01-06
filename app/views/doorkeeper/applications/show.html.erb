@@ -35,18 +35,22 @@
 
     <h4><%= t('.callback_urls') %>:</h4>
 
-    <table>
-      <% @application.redirect_uri.split.each do |uri| %>
-        <tr>
-          <td>
-            <code class="bg-light"><%= uri %></code>
-          </td>
-          <td>
-            <%= link_to t('doorkeeper.applications.buttons.authorize'), oauth_authorization_path(client_id: @application.uid, redirect_uri: uri, response_type: 'code', scope: @application.scopes), class: 'btn btn-success', target: '_blank' %>
-          </td>
-        </tr>
-      <% end %>
-    </table>
+    <% if @application.redirect_uri.present? %>
+      <table>
+        <% @application.redirect_uri.split.each do |uri| %>
+          <tr>
+            <td>
+              <code class="bg-light"><%= uri %></code>
+            </td>
+            <td>
+              <%= link_to t('doorkeeper.applications.buttons.authorize'), oauth_authorization_path(client_id: @application.uid, redirect_uri: uri, response_type: 'code', scope: @application.scopes), class: 'btn btn-success', target: '_blank' %>
+            </td>
+          </tr>
+        <% end %>
+      </table>
+    <% else %>
+      <span class="bg-light font-italic text-uppercase text-muted"><%= t('.not_defined') %></span>
+    <% end %>
   </div>
 
   <div class="col-md-4">
