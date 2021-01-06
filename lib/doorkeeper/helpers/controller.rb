@@ -38,6 +38,8 @@ module Doorkeeper
 
       # :doc:
       def doorkeeper_token
+        return @doorkeeper_token if defined?(@doorkeeper_token)
+
         @doorkeeper_token ||= OAuth::Token.authenticate(request, *config_methods)
       end
 
