@@ -7,7 +7,7 @@ RSpec.describe Doorkeeper::PkceGenerator do
   include GeneratorSpec::TestCase
 
   tests described_class
-  destination ::File.expand_path("../tmp/dummy", __FILE__)
+  destination ::File.expand_path('tmp/dummy', __dir__)
 
   describe "after running the generator" do
     before do
