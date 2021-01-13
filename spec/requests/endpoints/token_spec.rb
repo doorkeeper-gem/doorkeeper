@@ -14,16 +14,10 @@ RSpec.describe "Token endpoint" do
 
   it "respond with correct headers" do
     post token_endpoint_url(code: @authorization.token, client: @client)
-    should_have_header "Pragma", "no-cache"
 
-    # Rails 5.2 changed headers
-    if ::Rails::VERSION::MAJOR >= 5 && ::Rails::VERSION::MINOR >= 2 || ::Rails::VERSION::MAJOR >= 6
-      should_have_header "Cache-Control", "private, no-store"
-    else
-      should_have_header "Cache-Control", "no-store"
-    end
-
-    should_have_header "Content-Type", "application/json; charset=utf-8"
+    expect(headers["Pragma"]).to eq("no-cache")
+    expect(headers["Cache-Control"]).to be_in(["no-store", "private, no-store"])
+    expect(headers["Content-Type"]).to eq("application/json; charset=utf-8")
   end
 
   it "accepts client credentials with basic auth header" do

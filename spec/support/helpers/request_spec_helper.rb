@@ -41,10 +41,6 @@ module RequestSpecHelper
     JSON.parse(request_response.body)
   end
 
-  def should_have_header(header, value)
-    expect(headers[header]).to eq(value)
-  end
-
   def should_have_status(status)
     expect(page.driver.response.status).to eq(status)
   end

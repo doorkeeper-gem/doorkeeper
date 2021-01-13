@@ -137,9 +137,9 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
         only = Array.wrap(opts[:only]).map(&:to_s)
 
         only = if only.blank?
-                 serializable_attributes
+                 client_serializable_attributes
                else
-                 only & serializable_attributes
+                 only & client_serializable_attributes
                end
 
         only -= Array.wrap(opts[:except]).map(&:to_s) if opts.key?(:except)
@@ -150,7 +150,10 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       # Override this method if you need additional attributes to be serialized.
       #
       # @return [Array<String>] collection of serializable attributes
-      def serializable_attributes
+      #
+      # NOTE: `serializable_attributes` method already taken by Rails >= 6
+      #
+      def client_serializable_attributes
         attributes = %w[id name created_at]
         attributes << "uid" unless confidential?
         attributes

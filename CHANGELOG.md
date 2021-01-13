@@ -8,13 +8,15 @@ User-visible changes worth mentioning.
 ## master
 
 - [#PR ID] Add your PR description here.
+- [#1471] Add support for Ruby 3.0.
 - [#1469] Check if `redirect_uri` exists.
-- [#1465] Memoize nil doorkeeper_token
+- [#1465] Memoize nil doorkeeper_token.
+- [#1459] Use built-in Ruby option to remove padding in PKCE code challenge value.
 - [#1457] Make owner_id a bigint for newly-generated owner migrations
-- [#1452] Empty previous_refresh_token only if present
-- [#1440] Validate empty host in redirect_uri
+- [#1452] Empty previous_refresh_token only if present.
+- [#1440] Validate empty host in redirect_uri.
 - [#1438] Add form post response mode.
-- [#1458] Make `config.skip_client_authentication_for_password_grant` a long term configuration option
+- [#1458] Make `config.skip_client_authentication_for_password_grant` a long term configuration option.
 
 ## 5.5.0.rc1
 
