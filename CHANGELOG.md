@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#PR ID] Add your PR description here.
+- [#1472] Fix `establish_connection` configuration for custom defined models.
 - [#1471] Add support for Ruby 3.0.
 - [#1469] Check if `redirect_uri` exists.
 - [#1465] Memoize nil doorkeeper_token.

@@ -29,6 +29,8 @@ module Doorkeeper
       @config
     end
 
+    # @return [Doorkeeper::Config] configuration instance
+    #
     def configuration
       @config || (raise MissingConfiguration)
     end
