@@ -8,6 +8,9 @@ User-visible changes worth mentioning.
 ## master
 
 - [#PR ID] Add your PR description here.
+
+## 5.5.0.rc2
+
 - [#1473] Enable `Applications` and `AuthorizedApplications` controllers in API mode.
   
   **[IMPORTANT]** you can still skip these controllers using `skip_controllers` in 

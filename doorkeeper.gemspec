@@ -33,6 +33,18 @@ Gem::Specification.new do |gem|
   gem.add_dependency "railties", ">= 5"
   gem.required_ruby_version = ">= 2.4"
 
+  gem.post_install_message = <<~MSG.strip
+    Starting from 5.5.0.rc1 Doorkeeper requires client authentication for Resource Owner Password Grant
+    as stated in the OAuth RFC. You have to create a new OAuth client (Doorkeeper::Application) if you didn't
+    have it before and use client credentials in HTTP Basic auth if you previously used this grant flow without
+    client authentication. 
+
+    To opt out of this you could set the "skip_client_authentication_for_password_grant" configuration option
+    to "true", but note that this is in violation of the OAuth spec and represents a security risk.
+
+    Read https://github.com/doorkeeper-gem/doorkeeper/issues/561#issuecomment-612857163 for more details.
+  MSG
+
   gem.add_development_dependency "appraisal"
   gem.add_development_dependency "capybara"
   gem.add_development_dependency "coveralls"
