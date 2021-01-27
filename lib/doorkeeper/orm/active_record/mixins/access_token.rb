@@ -5,7 +5,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
     extend ActiveSupport::Concern
 
     included do
-      self.table_name = "#{table_name_prefix}oauth_access_tokens#{table_name_suffix}"
+      self.table_name = compute_doorkeeper_table_name
 
       include ::Doorkeeper::AccessTokenMixin
 
@@ -45,6 +45,14 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
 
       def refresh_token_revoked_on_use?
         column_names.include?("previous_refresh_token")
+      end
+
+      private
+
+      def compute_doorkeeper_table_name
+        table_name = "oauth_access_token"
+        table_name = table_name.pluralize if pluralize_table_names
+        "#{table_name_prefix}#{table_name}#{table_name_suffix}"
       end
     end
   end
