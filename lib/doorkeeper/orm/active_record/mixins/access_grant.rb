@@ -5,7 +5,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
     extend ActiveSupport::Concern
 
     included do
-      self.table_name = "#{table_name_prefix}oauth_access_grants#{table_name_suffix}"
+      self.table_name = compute_doorkeeper_table_name
 
       include ::Doorkeeper::AccessGrantMixin
 
@@ -52,6 +52,16 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       def generate_token
         @raw_token = Doorkeeper::OAuth::Helpers::UniqueToken.generate
         secret_strategy.store_secret(self, :token, @raw_token)
+      end
+    end
+
+    module ClassMethods
+      private
+
+      def compute_doorkeeper_table_name
+        table_name = "oauth_access_grant"
+        table_name = table_name.pluralize if pluralize_table_names
+        "#{table_name_prefix}#{table_name}#{table_name_suffix}"
       end
     end
   end

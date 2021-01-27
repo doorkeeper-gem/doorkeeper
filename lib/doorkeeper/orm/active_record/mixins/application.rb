@@ -5,7 +5,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
     extend ActiveSupport::Concern
 
     included do
-      self.table_name = "#{table_name_prefix}oauth_applications#{table_name_suffix}"
+      self.table_name = compute_doorkeeper_table_name
 
       include ::Doorkeeper::ApplicationMixin
 
@@ -184,6 +184,14 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       def revoke_tokens_and_grants_for(id, resource_owner)
         Doorkeeper.config.access_token_model.revoke_all_for(id, resource_owner)
         Doorkeeper.config.access_grant_model.revoke_all_for(id, resource_owner)
+      end
+
+      private
+
+      def compute_doorkeeper_table_name
+        table_name = "oauth_application"
+        table_name = table_name.pluralize if pluralize_table_names
+        "#{table_name_prefix}#{table_name}#{table_name_suffix}"
       end
     end
   end
