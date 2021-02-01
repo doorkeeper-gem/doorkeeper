@@ -37,15 +37,7 @@ module Doorkeeper
       end
 
       def self.lazy_load(&block)
-        # ActiveSupport has no public interface to check if something
-        # already lazy-loaded :(
-        loaded = ActiveSupport.instance_variable_get(:"@loaded") || {}
-
-        if loaded.key?(:active_record)
-          block.call
-        else
-          ActiveSupport.on_load(:active_record, {}, &block)
-        end
+        ActiveSupport.on_load(:active_record, {}, &block)
       end
 
       def self.models
