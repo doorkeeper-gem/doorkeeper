@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## master
 
 - [#PR ID] Add your PR description here.
+- [#1478] Fix ownership association and Rake tasks when custom models configured.
 - [#1477] Respect `ActiveRecord::Base.pluralize_table_names` for Doorkeeper table names.
 
 ## 5.5.0.rc2

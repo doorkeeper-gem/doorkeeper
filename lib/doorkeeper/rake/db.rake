@@ -13,7 +13,7 @@ namespace :doorkeeper do
     namespace :cleanup do
       desc "Removes stale access tokens"
       task revoked_tokens: "doorkeeper:setup" do
-        cleaner = Doorkeeper::StaleRecordsCleaner.new(Doorkeeper::AccessToken)
+        cleaner = Doorkeeper::StaleRecordsCleaner.new(Doorkeeper.config.access_token_model)
         cleaner.clean_revoked
       end
 
@@ -26,13 +26,13 @@ namespace :doorkeeper do
 
       desc "Removes stale access grants"
       task revoked_grants: "doorkeeper:setup" do
-        cleaner = Doorkeeper::StaleRecordsCleaner.new(Doorkeeper::AccessGrant)
+        cleaner = Doorkeeper::StaleRecordsCleaner.new(Doorkeeper.config.access_grant_model)
         cleaner.clean_revoked
       end
 
       desc "Removes expired (TTL passed) access grants"
       task expired_grants: "doorkeeper:setup" do
-        cleaner = Doorkeeper::StaleRecordsCleaner.new(Doorkeeper::AccessGrant)
+        cleaner = Doorkeeper::StaleRecordsCleaner.new(Doorkeeper.config.access_grant_model)
         cleaner.clean_expired(Doorkeeper.config.authorization_code_expires_in)
       end
     end
