@@ -2,7 +2,6 @@ language: ruby
 cache: bundler
 arch:
   - amd64
-  - ppc64le
   
 rvm:
   - 2.5
@@ -12,30 +11,24 @@ rvm:
   - ruby-head
 
 gemfile:
-  - gemfiles/rails_5_0.gemfile
-  - gemfiles/rails_5_1.gemfile
   - gemfiles/rails_5_2.gemfile
   - gemfiles/rails_6_0.gemfile
+  - gemfiles/rails_6_1.gemfile
   - gemfiles/rails_master.gemfile
 
 matrix:
   fast_finish: true
   exclude:
     - rvm: 3.0
-      gemfile: gemfiles/rails_5_0.gemfile
-    - rvm: 3.0
-      gemfile: gemfiles/rails_5_1.gemfile
-    - rvm: 3.0
       gemfile: gemfiles/rails_5_2.gemfile
-    # Run Danger only once
   include:
-    - rvm: 2.5
-      gemfile: gemfiles/rails_5_2.gemfile
+    # Run Danger only once
+    - rvm: 2.7
+      gemfile: gemfiles/rails_6_1.gemfile
       script: bundle exec danger
+    - rvm: 2.7
+      gemfile: gemfiles/rails_6_1.gemfile
+      arch: ppc64le
   allow_failures:
     - gemfile: gemfiles/rails_master.gemfile
     - rvm: ruby-head
-    - gemfile: gemfiles/rails_master.gemfile
-      arch: ppc64le
-    - rvm: ruby-head
-      arch: ppc64le
