@@ -1,10 +1,10 @@
 # Doorkeeper — awesome OAuth 2 provider for your Rails / Grape app.
 
 [![Gem Version](https://badge.fury.io/rb/doorkeeper.svg)](https://rubygems.org/gems/doorkeeper)
-[![Build Status](https://travis-ci.org/doorkeeper-gem/doorkeeper.svg?branch=master)](https://travis-ci.org/doorkeeper-gem/doorkeeper)
+[![Build Status](https://travis-ci.org/doorkeeper-gem/doorkeeper.svg?branch=main)](https://travis-ci.org/doorkeeper-gem/doorkeeper)
 [![Code Climate](https://codeclimate.com/github/doorkeeper-gem/doorkeeper.svg)](https://codeclimate.com/github/doorkeeper-gem/doorkeeper)
-[![Coverage Status](https://coveralls.io/repos/github/doorkeeper-gem/doorkeeper/badge.svg?branch=master)](https://coveralls.io/github/doorkeeper-gem/doorkeeper?branch=master)
-[![Security](https://hakiri.io/github/doorkeeper-gem/doorkeeper/master.svg)](https://hakiri.io/github/doorkeeper-gem/doorkeeper/master)
+[![Coverage Status](https://coveralls.io/repos/github/doorkeeper-gem/doorkeeper/badge.svg?branch=main)](https://coveralls.io/github/doorkeeper-gem/doorkeeper?branch=main)
+[![Security](https://hakiri.io/github/doorkeeper-gem/doorkeeper/main.svg)](https://hakiri.io/github/doorkeeper-gem/doorkeeper/main)
 [![Reviewed by Hound](https://img.shields.io/badge/Reviewed_by-Hound-8E64B0.svg)](https://houndci.com)
 [![GuardRails badge](https://badges.guardrails.io/doorkeeper-gem/doorkeeper.svg?token=66768ce8f6995814df81f65a2cff40f739f688492704f973e62809e15599bb62)](https://dashboard.guardrails.io/default/gh/doorkeeper-gem/doorkeeper)
 [![Dependabot](https://img.shields.io/badge/dependabot-enabled-success.svg)](https://dependabot.com)
@@ -51,7 +51,7 @@ Supported features:
 
 ## Documentation
 
-This documentation is valid for `master` branch. Please check the documentation for the version of doorkeeper you are using in:
+This documentation is valid for `main` branch. Please check the documentation for the version of doorkeeper you are using in:
 https://github.com/doorkeeper-gem/doorkeeper/releases.
 
 Additionally, other resources can be found on:

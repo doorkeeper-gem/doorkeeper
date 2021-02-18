@@ -24,7 +24,7 @@ Gem::Specification.new do |gem|
 
   gem.metadata = {
     "homepage_uri" => "https://github.com/doorkeeper-gem/doorkeeper",
-    "changelog_uri" => "https://github.com/doorkeeper-gem/doorkeeper/blob/master/CHANGELOG.md",
+    "changelog_uri" => "https://github.com/doorkeeper-gem/doorkeeper/blob/main/CHANGELOG.md",
     "source_code_uri" => "https://github.com/doorkeeper-gem/doorkeeper",
     "bug_tracker_uri" => "https://github.com/doorkeeper-gem/doorkeeper/issues",
     "documentation_uri" => "https://doorkeeper.gitbook.io/guides/",
@@ -34,7 +34,7 @@ Gem::Specification.new do |gem|
   gem.required_ruby_version = ">= 2.4"
 
   gem.post_install_message = <<~MSG.strip
-    Starting from 5.5.0.rc1 Doorkeeper requires client authentication for Resource Owner Password Grant
+    Starting from 5.5.0 RC1 Doorkeeper requires client authentication for Resource Owner Password Grant
     as stated in the OAuth RFC. You have to create a new OAuth client (Doorkeeper::Application) if you didn't
     have it before and use client credentials in HTTP Basic auth if you previously used this grant flow without
     client authentication. 

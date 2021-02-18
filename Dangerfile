@@ -53,7 +53,7 @@ Here's an example of a #{CHANGELOG_FILE} entry:
   MARKDOWN
 
   warn(
-    "Please include a changelog entry. \nYou can find it at [#{CHANGELOG_FILE}](#{GITHUB_REPO}/blob/master/#{CHANGELOG_FILE})." +
+    "Please include a changelog entry. \nYou can find it at [#{CHANGELOG_FILE}](#{GITHUB_REPO}/blob/main/#{CHANGELOG_FILE})." +
       "You can skip this warning only if you made some typo fix or other small changes that didn't affect the API."
   )
 end

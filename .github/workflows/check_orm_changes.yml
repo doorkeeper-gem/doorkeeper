@@ -2,7 +2,7 @@ name: Check ORM changes
 on:
   push:
     branches:
-      - master
+      - main
 jobs:
   check_orm_changes_and_notify:
     name: Notify ORM extensions about required code updates
@@ -13,7 +13,7 @@ jobs:
     env:
       ISSUE_TITLE: "ORM requires update due to latest Doorkeeper changes"
       ISSUE_BODY: |
-        Doorkeeper has ORM changes merged to `master` branch.
+        Doorkeeper has ORM changes merged to `main` branch.
 
         See https://github.com/doorkeeper-gem/doorkeeper/commit/${{ github.sha }} for the details.
       ISSUE_LABELS: ORM

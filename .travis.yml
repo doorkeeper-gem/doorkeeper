@@ -14,7 +14,7 @@ gemfile:
   - gemfiles/rails_5_2.gemfile
   - gemfiles/rails_6_0.gemfile
   - gemfiles/rails_6_1.gemfile
-  - gemfiles/rails_master.gemfile
+  - gemfiles/rails_main.gemfile
 
 matrix:
   fast_finish: true
@@ -30,5 +30,5 @@ matrix:
       gemfile: gemfiles/rails_6_1.gemfile
       arch: ppc64le
   allow_failures:
-    - gemfile: gemfiles/rails_master.gemfile
+    - gemfile: gemfiles/rails_main.gemfile
     - rvm: ruby-head
