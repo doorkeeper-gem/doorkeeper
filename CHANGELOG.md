@@ -5,9 +5,12 @@ upgrade guides.
 
 User-visible changes worth mentioning.
 
-## master
+## main
 
 - [#PR ID] Add your PR description here.
+
+## 5.5.0
+
 - [#1482] Simplify `TokenInfoController` to be overridable (extract response rendering).
 - [#1478] Fix ownership association and Rake tasks when custom models configured.
 - [#1477] Respect `ActiveRecord::Base.pluralize_table_names` for Doorkeeper table names.
