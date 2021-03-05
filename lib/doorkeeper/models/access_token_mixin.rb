@@ -91,22 +91,8 @@ module Doorkeeper
         find_matching_token(tokens, application, scopes)
       end
 
-      # Interface to enumerate access token records in batches in order not
-      # to bloat the memory. Could be overloaded in any ORM extension.
-      #
-      def find_access_token_in_batches(relation, **args, &block)
-        relation.find_in_batches(**args, &block)
-      end
-
-      # Enumerates AccessToken records in batches to find a matching token.
-      # Batching is required in order not to pollute the memory if Application
-      # has huge amount of associated records.
-      #
-      # ActiveRecord 5.x - 6.x ignores custom ordering so we can't perform a
-      # database sort by created_at, so we need to load all the matching records,
-      # sort them and find latest one. Probably it would be better to rewrite this
-      # query using Time math if possible, but we n eed to consider ORM and
-      # different databases support.
+      # Finds the latest access token with the same scopes for the
+      # given application.
       #
       # @param relation [ActiveRecord::Relation]
       #   Access tokens relation
@@ -120,44 +106,113 @@ module Doorkeeper
       #
       def find_matching_token(relation, application, scopes)
         return nil unless relation
+        return nil if includes_invalid_scope(scopes, application)
 
-        matching_tokens = []
-        batch_size = Doorkeeper.configuration.token_lookup_batch_size
+        token = apply_application_scope_filters(relation, application, scopes)
+        token = filter_by_application_scopes(token, application, scopes)
 
-        find_access_token_in_batches(relation, batch_size: batch_size) do |batch|
-          tokens = batch.select do |token|
-            scopes_match?(token.scopes, scopes, application&.scopes)
-          end
-
-          matching_tokens.concat(tokens)
-        end
-
-        matching_tokens.max_by(&:created_at)
+        token.order(created_at: :desc).first
       end
 
-      # Checks whether the token scopes match the scopes from the parameters
+      # Determines if a list of scopes, when compared to an applications
+      # scopes, is invalid.
       #
-      # @param token_scopes [#to_s]
-      #   set of scopes (any object that responds to `#to_s`)
-      # @param param_scopes [Doorkeeper::OAuth::Scopes]
-      #   scopes from params
-      # @param app_scopes [Doorkeeper::OAuth::Scopes]
-      #   Application scopes
+      # There is a special case where if the application has no scopes,
+      # that we accept it as valid.
       #
-      # @return [Boolean] true if the param scopes match the token scopes,
-      #   and all the param scopes are defined in the application (or in the
-      #   server configuration if the application doesn't define any scopes),
-      #   and false in other cases
+      # @param scopes [Doorkeeper::Oauth::Scopes]
+      #   set of scopes
+      # @param application [Doorkeeper::Application]
+      #   Application instance
       #
-      def scopes_match?(token_scopes, param_scopes, app_scopes)
-        return true if token_scopes.empty? && param_scopes.empty?
+      # @return [Boolean] true if there is an invalid scope, false if
+      #   there are no invalid scopes (or if the application has no
+      #   scopes)
+      #
+      def includes_invalid_scope(scopes, application)
+        return false if application.scopes.all.count == 0
 
-        (token_scopes.sort == param_scopes.sort) &&
-          Doorkeeper::OAuth::Helpers::ScopeChecker.valid?(
-            scope_str: param_scopes.to_s,
-            server_scopes: Doorkeeper.config.scopes,
-            app_scopes: app_scopes,
-          )
+        scopes.each do |requested_scope|
+          return true unless application.scopes.exists? requested_scope
+        end
+
+        false
+      end
+
+      # Filters by acceptable application scopes.
+      #
+      # @param relation [ActiveRecord::Relation]
+      #   Access tokens relation
+      # @param application [Doorkeeper::Application]
+      #   Application instance
+      # @param scopes [String, Doorkeeper::OAuth::Scopes]
+      #   set of scopes
+      #
+      # @return [ActiveRecord::Relation] filtered relation
+      #   query
+      #
+      def filter_by_application_scopes(relation, application, scopes)
+        application.scopes.each do |scope_val|
+          next unless scopes.exists? scope_val
+
+          relation = relation.where([
+                                      "(scopes LIKE ? OR scopes LIKE ? OR scopes LIKE ? OR scopes = ?)",
+                                      "% #{scope_val} %",
+                                      "#{scope_val} %",
+                                      "% #{scope_val}",
+                                      scope_val,
+                                    ])
+        end
+
+        relation
+      end
+
+      # Applies both the scopes and application filters to the query.
+      #
+      # @param relation [ActiveRecord::Relation]
+      #   Access tokens relation
+      # @param application [Doorkeeper::Application]
+      #   Application instance
+      # @param scopes [String, Doorkeeper::OAuth::Scopes]
+      #   set of scopes
+      #
+      # @return [ActiveRecord::Relation] filtered relation
+      #   query
+      #
+      def apply_application_scope_filters(relation, application, scopes)
+        token = filter_by_application(relation, application)
+        filter_by_scopes(token, scopes)
+      end
+
+      # Filters tokens by the application - if there is one.
+      #
+      # @param relation [ActiveRecord::Relation]
+      #   Access tokens relation
+      # @param application [Doorkeeper::Application]
+      #   Application instance
+      #
+      # @return [ActiveRecord::Relation] filtered relation
+      #   query
+      #
+      def filter_by_application(relation, application)
+        relation.where(application_id: application.nil? ? nil : application.id)
+      end
+
+      # Filters tokens by the provided scopes
+      #
+      # @param relation [ActiveRecord::Relation]
+      #   Access tokens relation
+      # @param scopes [String, Doorkeeper::OAuth::Scopes]
+      #   set of scopes
+      #
+      # @return [ActiveRecord::Relation] filtered relation
+      #   query
+      #
+      def filter_by_scopes(relation, scopes)
+        relation = relation.where(scopes: scopes.to_s) if scopes.all.count > 0
+        relation = relation.where(scopes: [nil, ""]) if scopes.all.count == 0
+
+        relation
       end
 
       # Looking for not expired AccessToken record with a matching set of
