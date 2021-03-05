@@ -278,6 +278,10 @@ module Doorkeeper
     # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/1189
     option :token_reuse_limit,              default: 100
 
+    # Don't require client authentication for password grants. If client credentials
+    # are present they will still be validated, and the grant rejected if the credentials
+    # are invalid.
+    #
     # This is discouraged. Spec says that password grants always require a client.
     #
     # See https://github.com/doorkeeper-gem/doorkeeper/issues/1412#issuecomment-632750422

@@ -10,12 +10,13 @@ module Doorkeeper
       validate :resource_owner, error: :invalid_grant
       validate :scopes, error: :invalid_scope
 
-      attr_reader :client, :resource_owner, :parameters, :access_token
+      attr_reader :client, :credentials, :resource_owner, :parameters, :access_token
 
-      def initialize(server, client, resource_owner, parameters = {})
+      def initialize(server, client, credentials, resource_owner, parameters = {})
         @server          = server
         @resource_owner  = resource_owner
         @client          = client
+        @credentials     = credentials
         @parameters      = parameters
         @original_scopes = parameters[:scope]
         @grant_type      = Doorkeeper::OAuth::PASSWORD
@@ -60,7 +61,7 @@ module Doorkeeper
       #
       def validate_client
         if Doorkeeper.config.skip_client_authentication_for_password_grant
-          !parameters[:client_id] || client.present?
+          client.present? || (!parameters[:client_id] && credentials.blank?)
         else
           client.present?
         end

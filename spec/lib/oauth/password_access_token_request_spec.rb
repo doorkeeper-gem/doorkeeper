@@ -4,7 +4,7 @@ require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
   subject(:request) do
-    described_class.new(server, client, owner)
+    described_class.new(server, client, credentials, owner)
   end
 
   let(:server) do
@@ -19,6 +19,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
     )
   end
   let(:client) { Doorkeeper::OAuth::Client.new(FactoryBot.create(:application)) }
+  let(:credentials) { Doorkeeper::OAuth::Client::Credentials.new("uid", "secret") }
   let(:application) { client.application }
   let(:owner) { FactoryBot.build_stubbed(:resource_owner) }
 
@@ -35,7 +36,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
   end
 
   it "doesn't issue a new token without client authentication" do
-    request = described_class.new(server, nil, owner)
+    request = described_class.new(server, nil, nil, owner)
     expect do
       request.authorize
     end.not_to(change { Doorkeeper::AccessToken.count })
@@ -52,7 +53,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
     end
 
     it "issues a new token for the client without client authentication" do
-      request = described_class.new(server, nil, owner)
+      request = described_class.new(server, nil, nil, owner)
       expect do
         request.authorize
       end.to change { Doorkeeper::AccessToken.count }.by(1)
@@ -62,7 +63,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
   end
 
   it "doesn't issue a new token with an invalid client" do
-    request = described_class.new(server, nil, owner, { client_id: "bad_id" })
+    request = described_class.new(server, nil, credentials, owner, { client_id: "bad_id" })
     expect do
       request.authorize
     end.not_to(change { Doorkeeper::AccessToken.count })
@@ -71,7 +72,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
   end
 
   it "requires the owner" do
-    request = described_class.new(server, client, nil)
+    request = described_class.new(server, client, credentials, nil)
     request.validate
     expect(request.error).to eq(:invalid_grant)
   end
@@ -130,7 +131,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
 
   describe "with scopes" do
     subject(:request) do
-      described_class.new(server, client, owner, scope: "public")
+      described_class.new(server, client, credentials, owner, scope: "public")
     end
 
     context "when scopes_by_grant_type is not configured for grant_type" do
@@ -196,7 +197,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
     end
 
     it "checks scopes" do
-      request = described_class.new(server, client, owner, scope: "public")
+      request = described_class.new(server, client, credentials, owner, scope: "public")
       allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("public"))
 
       expect do
@@ -207,7 +208,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
     end
 
     it "falls back to the default otherwise" do
-      request = described_class.new(server, client, owner, scope: "private")
+      request = described_class.new(server, client, credentials, owner, scope: "private")
       allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("private"))
 
       expect do

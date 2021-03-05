@@ -8,6 +8,9 @@ User-visible changes worth mentioning.
 ## main
 
 - [#PR ID] Add your PR description here.
+- [#1488] Verify client authentication for Resource Owner Password Grant when
+  `config.skip_client_authentication_for_password_grant` is set and the client credentials
+  are sent in a HTTP Basic auth header.
 
 ## 5.5.0
 

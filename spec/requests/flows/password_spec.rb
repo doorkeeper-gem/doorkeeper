@@ -222,6 +222,38 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
           expect(token.application_id).to be_nil
           expect(json_response).to include("access_token" => token.token)
         end
+
+        it "doesn't issue a new token with invalid client credentials in query string" do
+          expect do
+            post password_token_endpoint_url(
+              resource_owner: @resource_owner,
+              client_id: "invalid",
+              client_secret: "invalid",
+            )
+          end.not_to(change { Doorkeeper::AccessToken.count })
+
+          expect(response.status).to eq(401)
+          expect(json_response).to match(
+            "error" => "invalid_client",
+            "error_description" => an_instance_of(String),
+          )
+        end
+
+        it "doesn't issue a new token with invalid client credentials in Basic auth" do
+          invalid_client = Doorkeeper::OAuth::Client::Credentials.new("invalid", "invalid")
+
+          expect do
+            post password_token_endpoint_url(
+              resource_owner: @resource_owner,
+            ), headers: { "HTTP_AUTHORIZATION" => basic_auth_header_for_client(invalid_client) }
+          end.not_to(change { Doorkeeper::AccessToken.count })
+
+          expect(response.status).to eq(401)
+          expect(json_response).to match(
+            "error" => "invalid_client",
+            "error_description" => an_instance_of(String),
+          )
+        end
       end
 
       context "when disabled" do
