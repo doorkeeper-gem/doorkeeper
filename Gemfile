@@ -10,7 +10,7 @@ gem "rails", "~> 6.0"
 gem "rspec-core"
 gem "rspec-expectations"
 gem "rspec-mocks"
-gem "rspec-rails", "~> 4.0"
+gem "rspec-rails", "~> 5.0"
 gem "rspec-support"
 
 gem "rubocop", "~> 1.4"
