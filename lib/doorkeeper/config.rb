@@ -21,12 +21,10 @@ module Doorkeeper
   class MissingConfigurationBuilderClass < StandardError; end
 
   class << self
+    attr_reader :orm_adapter
+
     def configure(&block)
       @config = Config::Builder.new(&block).build
-      setup_orm_adapter
-      setup_orm_models
-      setup_application_owner if @config.enable_application_owner?
-      @config
     end
 
     # @return [Doorkeeper::Config] configuration instance
@@ -36,6 +34,18 @@ module Doorkeeper
     end
 
     alias config configuration
+
+    def setup
+      setup_orm_adapter
+      run_orm_hooks
+      config.clear_cache!
+
+      # Deprecated, will be removed soon
+      unless configuration.orm == :active_record
+        setup_orm_models
+        setup_application_owner
+      end
+    end
 
     def setup_orm_adapter
       @orm_adapter = "doorkeeper/orm/#{configuration.orm}".classify.constantize
@@ -47,6 +57,18 @@ module Doorkeeper
         You probably need to add the related gem for this adapter to work with
         doorkeeper.
       ERROR_MSG
+    end
+
+    def run_orm_hooks
+      if @orm_adapter.respond_to?(:run_hooks)
+        @orm_adapter.run_hooks
+      else
+        ::Kernel.warn <<~MSG.strip_heredoc
+          [DOORKEEPER] ORM "#{configuration.orm}" should move all it's setup logic under `#run_hooks` method for
+          the #{@orm_adapter.name}. Later versions of Doorkeeper will no longer support `setup_orm_models` and
+          `setup_application_owner` API.
+        MSG
+      end
     end
 
     def setup_orm_models
@@ -293,6 +315,7 @@ module Doorkeeper
     option :skip_client_authentication_for_password_grant,
            default: false
 
+    # TODO: remove the option
     option :active_record_options,
            default: {},
            deprecated: { message: "Customize Doorkeeper models instead" }
@@ -440,6 +463,16 @@ module Doorkeeper
     attr_reader :reuse_access_token,
                 :token_secret_fallback_strategy,
                 :application_secret_fallback_strategy
+
+    def clear_cache!
+      %i[
+        application_model
+        access_token_model
+        access_grant_model
+      ].each do |var|
+        remove_instance_variable("@#{var}") if instance_variable_defined?("@#{var}")
+      end
+    end
 
     # Doorkeeper Access Token model class.
     #

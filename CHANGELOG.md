@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1551] Change lazy loading for ORM to be Ruby standard autoload.
 - [#1552] Remove duplicate IDs on Auth form to improve accessibility.
 - [#1542] Improve performance of `Doorkeeper::AccessToken#matching_token_for` using database specific SQL time math.
 

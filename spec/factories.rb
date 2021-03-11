@@ -22,6 +22,8 @@ FactoryBot.define do
   factory :application, class: "Doorkeeper::Application" do
     sequence(:name) { |n| "Application #{n}" }
     redirect_uri { "https://app.com/callback" }
+
+    factory :application_with_owner, class: "ApplicationWithOwner"
   end
 
   # do not name this factory :user, otherwise it will conflict with factories

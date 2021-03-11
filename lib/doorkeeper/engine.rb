@@ -17,6 +17,10 @@ module Doorkeeper
       end
     end
 
+    config.to_prepare do
+      Doorkeeper.setup
+    end
+
     if defined?(Sprockets) && Sprockets::VERSION.chr.to_i >= 4
       initializer "doorkeeper.assets.precompile" do |app|
         # Force users to use:

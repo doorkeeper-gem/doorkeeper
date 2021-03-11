@@ -10,6 +10,10 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
 
       include ::Doorkeeper::ApplicationMixin
 
+      if Doorkeeper.config.enable_application_owner?
+        include ::Doorkeeper::Models::Ownership
+      end
+
       has_many :access_grants,
                foreign_key: :application_id,
                dependent: :delete_all,

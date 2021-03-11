@@ -3,6 +3,7 @@
 
 require "bundler/setup"
 require "rails/all"
+require "active_support/all"
 require "doorkeeper"
 
 # You can add fixtures and/or initialization code here to make experimenting
@@ -30,6 +31,9 @@ ActiveRecord::Base.establish_connection(
 
 # Load database schema
 load File.expand_path("../spec/dummy/db/schema.rb", __dir__)
+
+# Call engine #to_prepare block
+Doorkeeper.setup
 
 require "irb"
 IRB.start(__FILE__)
