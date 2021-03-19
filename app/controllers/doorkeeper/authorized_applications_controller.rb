@@ -26,7 +26,7 @@ module Doorkeeper
           )
         end
 
-        format.json { render :no_content }
+        format.json { head :no_content }
       end
     end
   end
