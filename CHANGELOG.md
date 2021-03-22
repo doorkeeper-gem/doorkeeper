@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#PR ID] Add your PR description here.
+- [#1495] Fix `respond_to` undefined in API-only mode 
 - [#1488] Verify client authentication for Resource Owner Password Grant when
   `config.skip_client_authentication_for_password_grant` is set and the client credentials
   are sent in a HTTP Basic auth header.
