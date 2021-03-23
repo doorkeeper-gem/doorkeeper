@@ -374,10 +374,10 @@ module Doorkeeper
     # and clears `:previous_refresh_token` attribute.
     #
     def revoke_previous_refresh_token!
-      return unless self.class.refresh_token_revoked_on_use?
+      return if !self.class.refresh_token_revoked_on_use? || previous_refresh_token.blank?
 
       old_refresh_token&.revoke
-      update_attribute(:previous_refresh_token, "") if previous_refresh_token.present?
+      update_attribute(:previous_refresh_token, "")
     end
 
     private
