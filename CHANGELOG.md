@@ -8,6 +8,9 @@ User-visible changes worth mentioning.
 ## main
 
 - [#PR ID] Add your PR description here.
+
+## 5.5.1
+
 - [#1496] Revoke `old_refresh_token` if `previous_refresh_token` is present.
 - [#1495] Fix `respond_to` undefined in API-only mode 
 - [#1488] Verify client authentication for Resource Owner Password Grant when
