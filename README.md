@@ -134,6 +134,12 @@ See [list of tutorials](https://github.com/doorkeeper-gem/doorkeeper/wiki#how-to
 
 Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/doorkeeper-gem#sponsor)]
 
+<a href="https://codecademy.com/about/careers?utm_source=doorkeeper-gem" target="_blank"><img src="https://static-assets.codecademy.com/marketing/codecademy_logo_padded.png"/></a>
+
+> Codecademy supports open source as part of its mission to democratize tech. Come help us build the education the world deserves: [https://codecademy.com/about/careers](https://codecademy.com/about/careers?utm_source=doorkeeper-gem)
+
+<br>
+
 <a href="https://oauth.io/?utm_source=doorkeeper-gem" target="_blank"><img src="https://oauth.io/img/logo_text.png"/></a>
 
 > If you prefer not to deal with the gory details of OAuth 2, need dedicated customer support & consulting, try the cloud-based SaaS version: [https://oauth.io](https://oauth.io/?utm_source=doorkeeper-gem)
