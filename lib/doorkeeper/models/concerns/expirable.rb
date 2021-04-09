@@ -8,7 +8,7 @@ module Doorkeeper
       #
       # @return [Boolean] true if object expired and false in other case
       def expired?
-        expires_in && Time.now.utc > expires_at
+        !!(expires_in && Time.now.utc > expires_at)
       end
 
       # Calculates expiration time in seconds.
