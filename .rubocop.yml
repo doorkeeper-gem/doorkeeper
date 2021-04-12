@@ -4,7 +4,7 @@ require:
   - rubocop-rails
   - rubocop-rspec
 AllCops:
-  TargetRubyVersion: 2.4
+  TargetRubyVersion: 2.5
   Exclude:
     - "spec/generators/tmp/**/*"
     - "spec/dummy/db/*"
@@ -20,7 +20,6 @@ Layout/DotPosition:
 Layout/LineLength:
   Exclude:
     - spec/**/*
-  Max: 120 # Remove after we migration to 0.84
 Metrics/BlockLength:
   Exclude:
     - spec/**/*

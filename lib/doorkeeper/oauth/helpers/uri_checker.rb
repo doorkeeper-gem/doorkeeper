@@ -3,24 +3,6 @@
 require "ipaddr"
 
 module Doorkeeper
-  module IPAddrLoopback
-    def loopback?
-      case @family
-      when Socket::AF_INET
-        @addr & 0xff000000 == 0x7f000000
-      when Socket::AF_INET6
-        @addr == 1
-      else
-        raise AddressFamilyError, "unsupported address family"
-      end
-    end
-  end
-
-  # For backward compatibility with old rubies
-  if Gem::Version.new(RUBY_VERSION) < Gem::Version.new("2.5.0")
-    IPAddr.include Doorkeeper::IPAddrLoopback
-  end
-
   module OAuth
     module Helpers
       module URIChecker
