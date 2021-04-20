@@ -374,7 +374,7 @@ module Doorkeeper
 
     # The controller Doorkeeper::ApplicationController inherits from.
     # Defaults to ActionController::Base.
-    # https://doorkeeper.gitbook.io/guides/configuration/other-configurations#custom-base-controller
+    # https://doorkeeper.gitbook.io/guides/configuration/other-configurations#custom-controllers
     #
     # @param base_controller [String] the name of the base controller
     option :base_controller,

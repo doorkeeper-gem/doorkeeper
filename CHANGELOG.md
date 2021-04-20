@@ -9,6 +9,7 @@ User-visible changes worth mentioning.
 
 - [#PR ID] Add your PR description here.
 - [#1502] Drop support for Ruby 2.4 because of EOL.
+- [#1504] Updated the url fragment in the comment.
 
 ## 5.5.1
 
