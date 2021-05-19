@@ -20,19 +20,30 @@ RSpec.describe Doorkeeper::OAuth::CodeRequest do
       client_id: client.uid,
       response_type: "code",
       redirect_uri: "https://app.com/callback",
-    }
+      response_mode: response_mode,
+    }.compact
 
     pre_auth = Doorkeeper::OAuth::PreAuthorization.new(Doorkeeper.config, attributes)
     pre_auth.authorizable?
     pre_auth
   end
 
+  let(:response_mode) { nil }
   let(:owner) { FactoryBot.create(:resource_owner) }
 
   context "when pre_auth is authorized" do
     it "creates an access grant and returns a code response" do
       expect { request.authorize }.to change { Doorkeeper::AccessGrant.count }.by(1)
       expect(request.authorize).to be_a(Doorkeeper::OAuth::CodeResponse)
+      expect(request.authorize.response_on_fragment).to be false
+    end
+
+    context "with 'fragment' as response_mode" do
+      let(:response_mode) { "fragment" }
+
+      it "returns a code response with response_on_fragment set to true" do
+        expect(request.authorize.response_on_fragment).to be true
+      end
     end
   end
 
