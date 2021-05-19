@@ -2,10 +2,14 @@
   <h1><%= t('.title') %></h1>
 </header>
 
-<main role="main" onload="document.forms[0].submit()">
-  <%= form_tag @pre_auth.redirect_uri, method: :post do %>
-    <% @authorize_response.body.each do |key, value| %>
-      <%= hidden_field_tag key, value %>
-    <% end %>
+<%= form_tag @pre_auth.redirect_uri, method: :post, name: :redirect_form, authenticity_token: false do %>
+  <% @authorize_response.body.compact.each do |key, value| %>
+    <%= hidden_field_tag key, value %>
   <% end %>
-</main>
+<% end %>
+
+<script>
+  window.onload = function () {
+    document.forms['redirect_form'].submit();
+  };
+</script>
