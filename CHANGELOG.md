@@ -8,8 +8,11 @@ User-visible changes worth mentioning.
 ## main
 
 - [#PR ID] Add your PR description here.
+
+## 5.5.2
+
 - [#1502] Drop support for Ruby 2.4 because of EOL.
-- [#1504] Updated the url fragment in the comment.
+- [#1504] Updated the url fragment in the comment for code documentation.
 - [#1512] Fix form behavior when response mode is form_post.
 - [#1511] Fix that authorization code is returned by fragment if response_mode is fragament.
 
