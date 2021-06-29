@@ -271,6 +271,7 @@ module Doorkeeper
     option :grant_flows,                    default: %w[authorization_code client_credentials]
     option :handle_auth_errors,             default: :render
     option :token_lookup_batch_size,        default: 10_000
+    option :customized_token,               default: ->(access_token) { access_token }
     # Sets the token_reuse_limit
     # It will be used only when reuse_access_token option in enabled
     # By default it will be 100

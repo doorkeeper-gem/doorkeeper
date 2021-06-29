@@ -278,6 +278,8 @@ module Doorkeeper
       end
     end
 
+    attr_reader :raw_token
+
     # Access Token type: Bearer.
     # @see https://tools.ietf.org/html/rfc6750
     #   The OAuth 2.0 Authorization Framework: Bearer Token Usage
@@ -366,7 +368,7 @@ module Doorkeeper
       if secret_strategy.allows_restoring_secrets?
         secret_strategy.restore_secret(self, :token)
       else
-        @raw_token
+        raw_token
       end
     end
 
@@ -415,7 +417,10 @@ module Doorkeeper
       self.created_at ||= Time.now.utc
 
       @raw_token = token_generator.generate(attributes_for_token_generator)
-      secret_strategy.store_secret(self, :token, @raw_token)
+
+      customized_token = Doorkeeper.config.customized_token.call(@raw_token)
+      secret_strategy.store_secret(self, :token, customized_token)
+
       @raw_token
     end
 
