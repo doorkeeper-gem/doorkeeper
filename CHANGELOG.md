@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#PR ID] Add your PR description here.
+- [#1515] Add an option for token customization before persisting it in the database.
 
 ## 5.5.2
 
