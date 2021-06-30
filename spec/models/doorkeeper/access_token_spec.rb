@@ -19,8 +19,6 @@ RSpec.describe Doorkeeper::AccessToken do
 
   describe "#generate_token" do
     it "generates a token using the default method" do
-      FactoryBot.create :access_token
-
       token = FactoryBot.create :access_token
       expect(token.token).to be_a(String)
     end
@@ -100,6 +98,20 @@ RSpec.describe Doorkeeper::AccessToken do
           end
         end
       end
+    end
+
+    it "customize the token before saving" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        customized_token { |token| "#{token}_custom_part" }
+      end
+
+      owner = FactoryBot.create :resource_owner
+      token = FactoryBot.create :access_token,
+                                resource_owner_id: owner.id,
+                                resource_owner_type: owner.class.name
+
+      expect(token.token).to include("_custom_part")
     end
 
     it "generates a token using a custom object" do

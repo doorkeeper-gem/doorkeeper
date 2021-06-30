@@ -370,7 +370,7 @@ module Doorkeeper
       end
     end
 
-    # Return base value which was used as a base for token generation
+    # Return value which was used as a base for token generation
     #
     # you cannot rely on this value returning a present value for persisted tokens
     # this can be used for initial communication when there is a need to return
