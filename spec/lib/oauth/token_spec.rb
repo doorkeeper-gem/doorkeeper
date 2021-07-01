@@ -37,16 +37,6 @@ RSpec.describe Doorkeeper::OAuth::Token do
       credentials = described_class.from_request request, method
       expect(credentials).to eq("token-value")
     end
-
-    it "customize the returned credentials" do
-      Doorkeeper.configure do
-        orm DOORKEEPER_ORM
-        customized_token { |token| "#{token}_custom_part" }
-      end
-
-      credentials = described_class.from_request request, method
-      expect(credentials).to eq("token-value_custom_part")
-    end
   end
 
   describe ".from_access_token_param" do

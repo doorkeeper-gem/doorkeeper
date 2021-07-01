@@ -8,11 +8,7 @@ module Doorkeeper
           methods.inject(nil) do |_, method|
             method = self.method(method) if method.is_a?(Symbol)
             credentials = method.call(request)
-
-            if credentials.present?
-              customized_token = Doorkeeper.config.customized_token.call(credentials)
-              break customized_token
-            end
+            break credentials if credentials.present?
           end
         end
 
