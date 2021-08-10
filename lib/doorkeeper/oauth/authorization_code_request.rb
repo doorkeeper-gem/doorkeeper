@@ -55,11 +55,9 @@ module Doorkeeper
       end
 
       def validate_params
-        @missing_param = if grant&.uses_pkce? && code_verifier.blank?
-                           :code_verifier
-                         elsif redirect_uri.blank?
-                           :redirect_uri
-                         end
+        if grant&.uses_pkce? && code_verifier.blank?
+          @missing_param = :code_verifier
+        end
 
         @missing_param.nil?
       end
@@ -75,6 +73,13 @@ module Doorkeeper
       end
 
       def validate_redirect_uri
+        # 4.1.1.  Authorization Request
+        #   redirect_uri
+        #      OPTIONAL.  As described in Section 3.1.2.
+        #
+        # @see https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.1
+        return true if redirect_uri.nil?
+
         Helpers::URIChecker.valid_for_authorization?(
           redirect_uri,
           grant.redirect_uri,

@@ -65,13 +65,6 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
     expect(request.error).to eq(:invalid_client)
   end
 
-  it "requires the redirect_uri" do
-    request = described_class.new(server, grant, nil, params.except(:redirect_uri))
-    request.validate
-    expect(request.error).to eq(:invalid_request)
-    expect(request.missing_param).to eq(:redirect_uri)
-  end
-
   it "matches the redirect_uri with grant's one" do
     request = described_class.new(server, grant, client, params.merge(redirect_uri: "http://other.com"))
     request.validate
