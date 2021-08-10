@@ -7,7 +7,7 @@ module Doorkeeper
       validate :client,       error: :invalid_client
       validate :grant,        error: :invalid_grant
       # @see https://tools.ietf.org/html/rfc6749#section-5.2
-      validate :redirect_uri, error: :invalid_grant
+      validate :redirect_uri, error: :invalid_grant, if: -> { !Doorkeeper.config.allow_blank_redirect_uri }
       validate :code_verifier, error: :invalid_grant
 
       attr_reader :grant, :client, :redirect_uri, :access_token, :code_verifier,
@@ -57,7 +57,7 @@ module Doorkeeper
       def validate_params
         @missing_param = if grant&.uses_pkce? && code_verifier.blank?
                            :code_verifier
-                         elsif redirect_uri.blank?
+                         elsif !Doorkeeper.config.allow_blank_redirect_uri && redirect_uri.blank?
                            :redirect_uri
                          end
 

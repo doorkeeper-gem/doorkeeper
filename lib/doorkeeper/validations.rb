@@ -10,6 +10,8 @@ module Doorkeeper
       @error = nil
 
       self.class.validations.each do |validation|
+        next unless validation[:options][:if]&.call
+
         @error = validation[:options][:error] unless send("validate_#{validation[:attribute]}")
         break if @error
       end

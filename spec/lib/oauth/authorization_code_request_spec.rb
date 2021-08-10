@@ -220,4 +220,19 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
       end
     end
   end
+
+  context "without a redirect uri" do
+    let(:params) { {} }
+
+    it "does not throw an error without a redirect_uri" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        allow_blank_redirect_uri true
+      end
+
+      request.validate
+
+      expect(request.error).to be_nil
+    end
+  end
 end
