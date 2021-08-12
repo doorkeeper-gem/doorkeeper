@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1519] Allow to skip redirect_uri parameter for authorization request as stated in RFC 6749 section 4.1.1.
 - [#PR ID] Add your PR description here.
 
 ## 5.5.2
