@@ -75,7 +75,7 @@ module Doorkeeper
         # Here we assume that TTL of the token received after refreshing should be
         # the same as that of the original token.
         #
-        @access_token = server_config.access_token_model.create_for(
+        @access_token = server_config.access_token_model.find_or_create_for(
           application: refresh_token.application,
           resource_owner: resource_owner,
           scopes: scopes,

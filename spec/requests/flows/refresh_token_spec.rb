@@ -57,6 +57,33 @@ RSpec.describe "Refresh Token Flow" do
       )
     end
 
+    context "when reuse_access_token is used" do
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          reuse_access_token
+          use_refresh_token
+        end
+      end
+
+      it "uses the last created token when it is still valid" do
+        expect do
+          post refresh_token_endpoint_url(
+            client: @client, refresh_token: @token.refresh_token,
+          )
+        end.not_to change(Doorkeeper::AccessToken, :count)
+      end
+
+      it "creates a new access token when refresh token has expired" do
+        @token.update!(expires_in: 0)
+        expect do
+          post refresh_token_endpoint_url(
+            client: @client, refresh_token: @token.refresh_token,
+          )
+        end.to change(Doorkeeper::AccessToken, :count).by(1)
+      end
+    end
+
     context "when refresh_token revoked on use" do
       it "client requests a token with refresh token" do
         post refresh_token_endpoint_url(
