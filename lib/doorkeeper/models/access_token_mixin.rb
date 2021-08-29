@@ -279,7 +279,7 @@ module Doorkeeper
     end
 
     # Access Token type: Bearer.
-    # @see https://tools.ietf.org/html/rfc6750
+    # @see https://datatracker.ietf.org/doc/html/rfc6750
     #   The OAuth 2.0 Authorization Framework: Bearer Token Usage
     #
     def token_type

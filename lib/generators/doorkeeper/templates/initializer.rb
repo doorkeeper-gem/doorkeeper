@@ -343,8 +343,8 @@ Doorkeeper.configure do
   #
   # implicit and password grant flows have risks that you should understand
   # before enabling:
-  #   http://tools.ietf.org/html/rfc6819#section-4.4.2
-  #   http://tools.ietf.org/html/rfc6819#section-4.4.3
+  #   https://datatracker.ietf.org/doc/html/rfc6819#section-4.4.2
+  #   https://datatracker.ietf.org/doc/html/rfc6819#section-4.4.3
   #
   # grant_flows %w[authorization_code client_credentials]
 

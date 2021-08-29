@@ -4,7 +4,7 @@ module Doorkeeper
   module OAuth
     # RFC7662 OAuth 2.0 Token Introspection
     #
-    # @see https://tools.ietf.org/html/rfc7662
+    # @see https://datatracker.ietf.org/doc/html/rfc7662
     class TokenIntrospection
       def initialize(server, token)
         @server = server
@@ -107,7 +107,7 @@ module Doorkeeper
       # authorization server SHOULD NOT include any additional information
       # about an inactive token, including why the token is inactive.
       #
-      # @see https://tools.ietf.org/html/rfc7662 2.2. Introspection Response
+      # @see https://datatracker.ietf.org/doc/html/rfc7662 2.2. Introspection Response
       #
       def failure_response
         {
@@ -186,7 +186,7 @@ module Doorkeeper
       # Provides context (controller) and token for generating developer-specific
       # response.
       #
-      # @see https://tools.ietf.org/html/rfc7662#section-2.2
+      # @see https://datatracker.ietf.org/doc/html/rfc7662#section-2.2
       #
       def customize_response(response)
         customized_response = Doorkeeper.config.custom_introspection_response.call(

@@ -57,7 +57,7 @@ module Doorkeeper
       #
       #    o  authenticate the client if client authentication is included,
       #
-      #   @see https://tools.ietf.org/html/rfc6749#section-4.3
+      #   @see https://datatracker.ietf.org/doc/html/rfc6749#section-4.3
       #
       def validate_client
         if Doorkeeper.config.skip_client_authentication_for_password_grant
