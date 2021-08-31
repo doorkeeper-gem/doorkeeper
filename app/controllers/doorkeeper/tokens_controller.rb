@@ -12,7 +12,7 @@ module Doorkeeper
       handle_token_exception(e)
     end
 
-    # OAuth 2.0 Token Revocation - http://tools.ietf.org/html/rfc7009
+    # OAuth 2.0 Token Revocation - https://datatracker.ietf.org/doc/html/rfc7009
     def revoke
       # The authorization server responds with HTTP status code 200 if the client
       # submitted an invalid token or the token has been revoked successfully.
@@ -94,8 +94,8 @@ module Doorkeeper
     # types, they set the application_id as null (since the claim cannot be
     # verified).
     #
-    # https://tools.ietf.org/html/rfc6749#section-2.1
-    # https://tools.ietf.org/html/rfc7009
+    # https://datatracker.ietf.org/doc/html/rfc6749#section-2.1
+    # https://datatracker.ietf.org/doc/html/rfc7009
     def authorized?
       # Token belongs to specific client, so we need to check if
       # authenticated client could access it.

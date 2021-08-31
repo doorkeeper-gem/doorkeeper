@@ -49,7 +49,7 @@ module Doorkeeper
       end
 
       # Implements PKCE code_challenge encoding without base64 padding as described in the spec.
-      # https://tools.ietf.org/html/rfc7636#appendix-A
+      # https://datatracker.ietf.org/doc/html/rfc7636#appendix-A
       #   Appendix A.  Notes on Implementing Base64url Encoding without Padding
       #
       #   This appendix describes how to implement a base64url-encoding

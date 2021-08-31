@@ -14,18 +14,18 @@ functionality to your Ruby on Rails or Grape application.
 
 Supported features:
 
-- [The OAuth 2.0 Authorization Framework](https://tools.ietf.org/html/rfc6749)
-  - [Authorization Code Flow](http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-4.1)
-  - [Access Token Scopes](http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-3.3)
-  - [Refresh token](http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-1.5)
-  - [Implicit grant](http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-4.2)
-  - [Resource Owner Password Credentials](http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-4.3)
-  - [Client Credentials](http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-4.4)
-- [OAuth 2.0 Token Revocation](http://tools.ietf.org/html/rfc7009)
-- [OAuth 2.0 Token Introspection](https://tools.ietf.org/html/rfc7662)
-- [OAuth 2.0 Threat Model and Security Considerations](http://tools.ietf.org/html/rfc6819)
-- [OAuth 2.0 for Native Apps](https://tools.ietf.org/html/draft-ietf-oauth-native-apps-10)
-- [Proof Key for Code Exchange by OAuth Public Clients](https://tools.ietf.org/html/rfc7636)
+- [The OAuth 2.0 Authorization Framework](https://datatracker.ietf.org/doc/html/rfc6749)
+  - [Authorization Code Flow](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1)
+  - [Access Token Scopes](https://datatracker.ietf.org/doc/html/rfc6749#section-3.3)
+  - [Refresh token](https://datatracker.ietf.org/doc/html/rfc6749#section-1.5)
+  - [Implicit grant](https://datatracker.ietf.org/doc/html/rfc6749#section-4.2)
+  - [Resource Owner Password Credentials](https://datatracker.ietf.org/doc/html/rfc6749#section-4.3)
+  - [Client Credentials](https://datatracker.ietf.org/doc/html/rfc6749#section-4.4)
+- [OAuth 2.0 Token Revocation](https://datatracker.ietf.org/doc/html/rfc7009)
+- [OAuth 2.0 Token Introspection](https://datatracker.ietf.org/doc/html/rfc7662)
+- [OAuth 2.0 Threat Model and Security Considerations](https://datatracker.ietf.org/doc/html/rfc6819)
+- [OAuth 2.0 for Native Apps](https://datatracker.ietf.org/doc/html/rfc8252)
+- [Proof Key for Code Exchange by OAuth Public Clients](https://datatracker.ietf.org/doc/html/rfc7636)
 
 ## Table of Contents
 

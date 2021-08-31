@@ -101,7 +101,7 @@ module Doorkeeper
         client.present?
       end
 
-      # @see https://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-1.5
+      # @see https://datatracker.ietf.org/doc/html/rfc6749#section-1.5
       #
       def validate_client_match
         return true if refresh_token.application_id.blank?

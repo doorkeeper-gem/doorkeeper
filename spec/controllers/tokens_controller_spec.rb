@@ -167,7 +167,7 @@ RSpec.describe Doorkeeper::TokensController do
     end
   end
 
-  # http://tools.ietf.org/html/rfc7009#section-2.2
+  # https://datatracker.ietf.org/doc/html/rfc7009#section-2.2
   describe "POST #revoke" do
     let(:client) { FactoryBot.create(:application) }
     let(:access_token) { FactoryBot.create(:access_token, application: client) }

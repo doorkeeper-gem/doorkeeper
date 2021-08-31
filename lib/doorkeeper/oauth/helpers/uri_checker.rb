@@ -28,7 +28,7 @@ module Doorkeeper
           end
 
           # RFC8252, Paragraph 7.3
-          # @see https://tools.ietf.org/html/rfc8252#section-7.3
+          # @see https://datatracker.ietf.org/doc/html/rfc8252#section-7.3
           if loopback_uri?(url) && loopback_uri?(client_url)
             url.port = nil
             client_url.port = nil
