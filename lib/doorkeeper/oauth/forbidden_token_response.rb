@@ -23,7 +23,8 @@ module Doorkeeper
       end
 
       def description
-        @description ||= @scopes.map { |s| I18n.t(s, scope: %i[doorkeeper scopes]) }.join("\n")
+        @description ||= I18n.t("doorkeeper.errors.messages.forbidden_token.missing_scope",
+                                oauth_scopes: @scopes.map(&:to_s).join(" "),)
       end
 
       protected
