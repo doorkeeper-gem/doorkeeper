@@ -19,12 +19,13 @@ module Doorkeeper
           url = as_uri(url)
           client_url = as_uri(client_url)
 
-          unless client_url.query.nil?
+          unless client_url.query.nil? && url.query.nil?
             return false unless query_matches?(url.query, client_url.query)
 
             # Clear out queries so rest of URI can be tested. This allows query
             # params to be in the request but order not mattering.
             client_url.query = nil
+            url.query = nil
           end
 
           # RFC8252, Paragraph 7.3
@@ -34,7 +35,6 @@ module Doorkeeper
             client_url.port = nil
           end
 
-          url.query = nil
           url == client_url
         end
 

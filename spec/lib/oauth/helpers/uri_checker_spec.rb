@@ -72,10 +72,10 @@ module Doorkeeper::OAuth::Helpers
         expect(described_class).to be_matches(uri, client_uri)
       end
 
-      it "ignores query parameter on comparison" do
+      it "doesn't allow additional query parameters" do
         uri = "http://app.co/?query=hello"
         client_uri = "http://app.co"
-        expect(described_class).to be_matches(uri, client_uri)
+        expect(described_class).not_to be_matches(uri, client_uri)
       end
 
       it "doesn't allow non-matching domains through" do
@@ -133,7 +133,7 @@ module Doorkeeper::OAuth::Helpers
           expect(described_class).not_to be_matches(uri, client_uri)
         end
 
-        it "is true if queries are present and matche" do
+        it "is true if queries are present and match" do
           uri = "http://app.co/?vendorId=AJ4L7XXW9&foo=bar"
           client_uri = "http://app.co/?vendorId=AJ4L7XXW9&foo=bar"
           expect(described_class).to be_matches(uri, client_uri)
