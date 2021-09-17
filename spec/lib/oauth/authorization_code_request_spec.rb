@@ -130,11 +130,11 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
   end
 
   context "when redirect_uri contains some query params" do
-    let(:redirect_uri) { client.redirect_uri + "?query=q" }
+    let(:redirect_uri) { "#{client.redirect_uri}?query=q" }
 
-    it "compares only host part with grant's redirect_uri" do
+    it "responds with invalid_grant" do
       request.validate
-      expect(request.error).to eq(nil)
+      expect(request.error).to eq(:invalid_grant)
     end
   end
 
