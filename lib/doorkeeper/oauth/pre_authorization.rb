@@ -97,12 +97,7 @@ module Doorkeeper
       end
 
       def validate_redirect_uri
-        # Authorization request `redirect_uri` parameter is optional.
-        # Should validate in case it's provided, otherwise use one from the client
-        if redirect_uri.nil?
-          @redirect_uri = client.redirect_uri
-          return true
-        end
+        return false if redirect_uri.blank?
 
         Helpers::URIChecker.valid_for_authorization?(
           redirect_uri,
