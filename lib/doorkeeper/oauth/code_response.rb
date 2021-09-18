@@ -38,12 +38,14 @@ module Doorkeeper
       end
 
       def redirect_uri
-        if URIChecker.oob_uri?(pre_auth.redirect_uri)
+        uri = pre_auth.redirect_uri.presence || pre_auth.client.redirect_uri
+
+        if URIChecker.oob_uri?(uri)
           auth.oob_redirect
         elsif response_on_fragment
-          Authorization::URIBuilder.uri_with_fragment(pre_auth.redirect_uri, body)
+          Authorization::URIBuilder.uri_with_fragment(uri, body)
         else
-          Authorization::URIBuilder.uri_with_query(pre_auth.redirect_uri, body)
+          Authorization::URIBuilder.uri_with_query(uri, body)
         end
       end
     end

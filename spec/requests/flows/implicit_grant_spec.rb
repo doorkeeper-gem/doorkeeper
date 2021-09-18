@@ -42,6 +42,19 @@ feature "Implicit Grant Flow (feature spec)" do
       access_token_should_have_scopes :public, :write
     end
   end
+
+  context "when configured so that redirect uri is optional during authorization" do
+    before do
+      config_is_set(:redirect_uri_optional_during_authorization, true)
+    end
+
+    scenario "resource owner authorizes the client without the redirect uri provided" do
+      visit authorization_endpoint_url(client: @client, redirect_uri: "", response_type: "token")
+      click_on "Authorize"
+      access_token_should_exist_for @client, @resource_owner
+      i_should_be_on_client_callback @client
+    end
+  end
 end
 
 RSpec.describe "Implicit Grant Flow (request spec)" do

@@ -36,7 +36,9 @@ feature "Implicit Grant Flow Errors" do
       i_should_not_see "Authorize"
       i_should_see_translated_error_message :invalid_redirect_uri
     end
+  end
 
+  context "when configured so that redirect uri is required during authorization" do
     scenario "displays invalid_redirect_uri error when redirect_uri is missing" do
       visit authorization_endpoint_url(client: @client, redirect_uri: "", response_type: "token")
       i_should_not_see "Authorize"

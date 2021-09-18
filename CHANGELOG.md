@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1529] redirect_uri is optional in token request if it was not present in authorization request.
 - [#ID] Add your PR description here.
 
 ## 5.5.4

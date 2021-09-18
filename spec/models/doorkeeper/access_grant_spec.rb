@@ -128,6 +128,70 @@ RSpec.describe Doorkeeper::AccessGrant do
       access_grant.expires_in = nil
       expect(access_grant).not_to be_valid
     end
+
+    context "when redirect_uri is required during authorization" do
+      context "when not yet persisted" do
+        it "is invalid without a redirect_uri" do
+          access_grant.redirect_uri = nil
+          expect(access_grant).not_to be_valid
+        end
+
+        it "is valid with a redirect_uri" do
+          expect(access_grant).to be_valid
+        end
+      end
+
+      context "when persisted" do
+        before do
+          access_grant.save!
+        end
+
+        it "is invalid if its redirect_uri is changed to blank" do
+          access_grant.redirect_uri = nil
+          expect(access_grant).not_to be_valid
+        end
+
+        it "is valid if its blank redirect_uri is unchanged" do
+          access_grant.update_column(:redirect_uri, nil)
+          expect(access_grant).to be_valid
+        end
+      end
+    end
+
+    context "when redirect_uri is optional during authorization" do
+      before do
+        Doorkeeper.configure do
+          redirect_uri_optional_during_authorization true
+        end
+      end
+
+      context "when not yet persisted" do
+        it "is valid without a redirect_uri" do
+          access_grant.redirect_uri = nil
+          expect(access_grant).to be_valid
+        end
+
+        it "is valid with a redirect_uri" do
+          expect(access_grant).to be_valid
+        end
+      end
+
+      context "when persisted" do
+        before do
+          access_grant.save!
+        end
+
+        it "is valid if its redirect_uri is changed to blank" do
+          access_grant.redirect_uri = nil
+          expect(access_grant).to be_valid
+        end
+
+        it "is valid its blank redirect_uri is unchanged" do
+          access_grant.update_column(:redirect_uri, nil)
+          expect(access_grant).to be_valid
+        end
+      end
+    end
   end
 
   describe ".revoke_all_for" do

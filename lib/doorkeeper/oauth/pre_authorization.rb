@@ -97,7 +97,14 @@ module Doorkeeper
       end
 
       def validate_redirect_uri
-        return false if redirect_uri.blank?
+        # 4.1.1.  Authorization Request
+        #   redirect_uri
+        #     OPTIONAL.  As described in Section 3.1.2.
+        #
+        # @see https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.1
+        return true if redirect_uri.blank? &&
+                       client.redirect_uri.present? &&
+                       Doorkeeper.config.redirect_uri_optional_during_authorization
 
         Helpers::URIChecker.valid_for_authorization?(
           redirect_uri,

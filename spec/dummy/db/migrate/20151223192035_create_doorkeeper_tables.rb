@@ -22,7 +22,7 @@ class CreateDoorkeeperTables < ActiveRecord::Migration[4.2]
       t.references :application,     null: false
       t.string   :token,             null: false
       t.integer  :expires_in,        null: false
-      t.text     :redirect_uri,      null: false
+      t.text     :redirect_uri
       t.datetime :created_at,        null: false
       t.datetime :revoked_at
       t.string   :scopes, null: false, default: ""

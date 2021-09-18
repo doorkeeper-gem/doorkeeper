@@ -23,8 +23,17 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       validates :application_id,
                 :token,
                 :expires_in,
-                :redirect_uri,
                 presence: true
+
+      validates :redirect_uri,
+                presence: true,
+                on: :create,
+                unless: :redirect_uri_optional_during_authorization?
+
+      validates :redirect_uri,
+                presence: true,
+                on: :update,
+                if: :validate_redirect_uri_on_update?
 
       validates :token, uniqueness: { case_sensitive: true }
 
@@ -53,6 +62,18 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       def generate_token
         @raw_token = Doorkeeper::OAuth::Helpers::UniqueToken.generate
         secret_strategy.store_secret(self, :token, @raw_token)
+      end
+
+      def redirect_uri_optional_during_authorization?
+        Doorkeeper.config.redirect_uri_optional_during_authorization
+      end
+
+      def redirect_uri_required_during_authorization?
+        !redirect_uri_optional_during_authorization?
+      end
+
+      def validate_redirect_uri_on_update?
+        redirect_uri_required_during_authorization? && redirect_uri_changed?
       end
     end
 

@@ -161,6 +161,23 @@ Doorkeeper.configure do
   # If you need to block the request at all, then configure your routes.rb or web-server
   # like nginx to forbid the request.
 
+  # Allows the client to not pass a redirect_uri parameter to the
+  # authorization endpoint during the authorization code flow and implicit
+  # flow. If the client does not pass a redirect_uri parameter to the
+  # authorization endpoint then then Doorkeeper will redirect the resource
+  # owner to the redirection endpoint specified when the application was
+  # created, as per Section 3.1.2 of the OAuth 2.0 specification:
+  # https://datatracker.ietf.org/doc/html/rfc6749#section-3.1.2
+  #
+  # By default this option is false, meaning that the client must pass a
+  # redirect_uri parameter to the authorization endpoint.
+  #
+  # This option should only be set to true if your application does not have
+  # a NOT_NULL constraint applied to the redirect_uri column of its
+  # oauth_access_grants database table.
+  #
+  # redirect_uri_optional_during_authorization false
+
   # WWW-Authenticate Realm (default "Doorkeeper").
   realm "Doorkeeper"
 end

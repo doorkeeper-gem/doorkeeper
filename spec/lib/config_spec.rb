@@ -810,6 +810,21 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
+  describe "redirect_uri_optional_during_authorization" do
+    it "is false by default" do
+      expect(config.redirect_uri_optional_during_authorization).to be(false)
+    end
+
+    it "can be set to true" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        redirect_uri_optional_during_authorization true
+      end
+
+      expect(config.redirect_uri_optional_during_authorization).to be(true)
+    end
+  end
+
   describe "options deprecation" do
     it "prints a warning message when an option is deprecated" do
       expect(Kernel).to receive(:warn).with(
