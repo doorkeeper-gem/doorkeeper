@@ -66,7 +66,7 @@ module Doorkeeper
         elsif pre_auth.form_post_response?
           render :form_post
         else
-          redirect_to auth.redirect_uri
+          redirect_to auth.redirect_uri, allow_other_host: true
         end
       else
         render json: auth.body, status: auth.status

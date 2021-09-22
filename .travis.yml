@@ -13,6 +13,7 @@ gemfile:
   - gemfiles/rails_5_2.gemfile
   - gemfiles/rails_6_0.gemfile
   - gemfiles/rails_6_1.gemfile
+  - gemfiles/rails_7_0.gemfile
   - gemfiles/rails_main.gemfile
 
 matrix:

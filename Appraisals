@@ -15,6 +15,11 @@ appraise "rails-6-1" do
   gem "sqlite3", "~> 1.4", platform: %i[ruby mswin mingw x64_mingw]
 end
 
+appraise "rails-7-0" do
+  gem "rails", "~> 7.0.0alpha1"
+  gem "sqlite3", "~> 1.4", platform: %i[ruby mswin mingw x64_mingw]
+end
+
 appraise "rails-main" do
   gem "rails", git: "https://github.com/rails/rails"
   gem "sqlite3", "~> 1.4", platform: %i[ruby mswin mingw x64_mingw]
