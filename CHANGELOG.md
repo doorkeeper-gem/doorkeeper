@@ -8,6 +8,8 @@ User-visible changes worth mentioning.
 ## main
 
 - [#1528] Don't allow extra query params in redirect_uri
+- [#1519] Allow to skip redirect_uri parameter for authorization request as stated in RFC 6749 section 4.1.1.
+- [#1525] I18n source for forbidden token error is now `doorkeeper.errors.messages.forbidden_token.missing_scope`.
 - [#PR ID] Add your PR description here.
 
 ## 5.5.2

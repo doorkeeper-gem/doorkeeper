@@ -14,9 +14,18 @@ RSpec.describe Doorkeeper::OAuth::ForbiddenTokenResponse do
   end
 
   describe ".from_scopes" do
-    it "have a list of acceptable scopes" do
-      response = described_class.from_scopes(["public"])
+    subject(:response) { described_class.from_scopes(["public"]) }
+
+    it "includes a list of acceptable scopes" do
       expect(response.description).to include("public")
+    end
+
+    it "explains that the problem is due to a missing scope" do
+      expect(response.description).to match(/requires scope/i)
+    end
+
+    it "does not use the scope description from authorize page" do
+      expect(response.description).not_to eql("Access your public data")
     end
   end
 end
