@@ -6,6 +6,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
 
     included do
       self.table_name = compute_doorkeeper_table_name
+      self.strict_loading_by_default = false if respond_to?(:strict_loading_by_default)
 
       include ::Doorkeeper::ApplicationMixin
 

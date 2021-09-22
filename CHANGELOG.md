@@ -7,8 +7,9 @@ User-visible changes worth mentioning.
 
 ## main
 
-- [#1528] Don't allow extra query params in redirect_uri
+- [#1528] Don't allow extra query params in redirect_uri.
 - [#1525] I18n source for forbidden token error is now `doorkeeper.errors.messages.forbidden_token.missing_scope`.
+- [#1531] Disable `strict-loading` for models by default.
 - [#PR ID] Add your PR description here.
 
 ## 5.5.2
