@@ -21,6 +21,8 @@ matrix:
   exclude:
     - rvm: 3.0
       gemfile: gemfiles/rails_5_2.gemfile
+    - rvm: 2.6
+      gemfile: gemfiles/rails_7_0.gemfile
   include:
     # Run Danger only once
     - rvm: 2.7
