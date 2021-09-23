@@ -7,11 +7,14 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#PR ID] Add your PR description here.
+
+## 5.5.3
+
 - [#1528] Don't allow extra query params in redirect_uri.
 - [#1525] I18n source for forbidden token error is now `doorkeeper.errors.messages.forbidden_token.missing_scope`.
 - [#1531] Disable `strict-loading` for Doorkeeper models by default.
 - [#1532] Add support for Rails 7.
-- [#PR ID] Add your PR description here.
 
 ## 5.5.2
 
