@@ -7,6 +7,10 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#ID] Add your PR description here.
+
+## 5.5.4
+
 - [#1535] Revert changes introduced in #1528 to allow query params in `redirect_uri` as per the spec.
 
 ## 5.5.3
