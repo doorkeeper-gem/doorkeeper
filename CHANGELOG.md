@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
-- [#PR ID] Add your PR description here.
+- [#1534] Allow the use of `state` query param in the `redirect_uri` conforming with the specs.
 
 ## 5.5.3
 

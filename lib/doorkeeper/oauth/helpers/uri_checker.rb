@@ -20,7 +20,7 @@ module Doorkeeper
           client_url = as_uri(client_url)
 
           unless client_url.query.nil? && url.query.nil?
-            return false unless query_matches?(url.query, client_url.query)
+            return false unless query_matches?(url.query, client_url.query) || safe_query?(url.query)
 
             # Clear out queries so rest of URI can be tested. This allows query
             # params to be in the request but order not mattering.
@@ -76,6 +76,10 @@ module Doorkeeper
 
         def self.oob_uri?(uri)
           NonStandard::IETF_WG_OAUTH2_OOB_METHODS.include?(uri)
+        end
+
+        def self.safe_query?(query)
+          CGI.parse(query.to_s).keys == ["state"]
         end
       end
     end

@@ -145,6 +145,15 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
     end
   end
 
+  context "when redirect_uri contains `state` query param" do
+    let(:redirect_uri) { "#{client.redirect_uri}?state=q" }
+
+    it "validates the request" do
+      request.validate
+      expect(request.error).to eq(nil)
+    end
+  end
+
   context "when redirect_uri is not an URI" do
     let(:redirect_uri) { "123d#!s" }
 
