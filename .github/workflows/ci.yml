@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ ubuntu-20.04 ]
+        os: [ ubuntu-latest ]
         ruby:
           - 2.6
           - 2.7
@@ -33,11 +33,6 @@ jobs:
             gemfile: gemfiles/rails_5_2.gemfile
           - ruby: 2.6
             gemfile: gemfiles/rails_7_0.gemfile
-        include:
-          # Run Danger only once
-          - ruby: 2.7
-            gemfile: gemfiles/rails_6_1.gemfile
-            script: bundle exec danger
     steps:
       - name: Repo checkout
         uses: actions/checkout@v2

@@ -1,0 +1,27 @@
+name: Danger
+
+on: [pull_request]
+
+jobs:
+  danger:
+    runs-on: ubuntu-latest
+    env:
+      DANGER_GITHUB_API_TOKEN: ${{ secrets.DANGER_TOKEN }}
+      DANGER_GITHUB_BEARER_TOKEN: ${{ secrets.DANGER_GITHUB_BEARER_TOKEN }}
+    if: |
+      !(   contains(github.event.pull_request.title,  '[ci skip]')
+        || contains(github.event.pull_request.title,  '[skip ci]'))
+
+    steps:
+      - name: Repo checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '2.7'
+          bundler-cache: true
+
+      - name: Run Danger
+        timeout-minutes: 10
+        run: bundle exec danger
