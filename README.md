@@ -1,7 +1,7 @@
 # Doorkeeper — awesome OAuth 2 provider for your Rails / Grape app.
 
 [![Gem Version](https://badge.fury.io/rb/doorkeeper.svg)](https://rubygems.org/gems/doorkeeper)
-[![Build Status](https://app.travis-ci.com/doorkeeper-gem/doorkeeper.svg?branch=main)](https://app.travis-ci.com/doorkeeper-gem/doorkeeper)
+[![CI](https://github.com/doorkeeper-gem/doorkeeper/actions/workflows/ci.yml/badge.svg)](https://github.com/doorkeeper-gem/doorkeeper/actions/workflows/ci.yml)
 [![Code Climate](https://codeclimate.com/github/doorkeeper-gem/doorkeeper.svg)](https://codeclimate.com/github/doorkeeper-gem/doorkeeper)
 [![Coverage Status](https://coveralls.io/repos/github/doorkeeper-gem/doorkeeper/badge.svg?branch=main)](https://coveralls.io/github/doorkeeper-gem/doorkeeper?branch=main)
 [![Security](https://hakiri.io/github/doorkeeper-gem/doorkeeper/main.svg)](https://hakiri.io/github/doorkeeper-gem/doorkeeper/main)
