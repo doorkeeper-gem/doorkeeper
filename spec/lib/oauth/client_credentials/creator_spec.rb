@@ -128,10 +128,4 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Creator do
       expect(existing_token.reload).not_to be_revoked
     end
   end
-
-  it "returns false if creation fails" do
-    expect(Doorkeeper::AccessToken).to receive(:find_or_create_for).and_return(false)
-    created = creator.call(client, scopes)
-    expect(created).to be_falsey
-  end
 end

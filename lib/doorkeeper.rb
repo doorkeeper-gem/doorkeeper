@@ -88,6 +88,7 @@ module Doorkeeper
   module Models
     autoload :Accessible, "doorkeeper/models/concerns/accessible"
     autoload :Expirable, "doorkeeper/models/concerns/expirable"
+    autoload :ExpirationTimeSqlMath, "doorkeeper/models/concerns/expiration_time_sql_math"
     autoload :Orderable, "doorkeeper/models/concerns/orderable"
     autoload :Scopes, "doorkeeper/models/concerns/scopes"
     autoload :Reusable, "doorkeeper/models/concerns/reusable"

@@ -55,4 +55,5 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "grape"
   gem.add_development_dependency "rake", ">= 11.3.0"
   gem.add_development_dependency "rspec-rails"
+  gem.add_development_dependency "timecop"
 end

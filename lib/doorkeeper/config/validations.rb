@@ -24,8 +24,8 @@ module Doorkeeper
         return if !reuse_access_token || strategy.allows_restoring_secrets?
 
         ::Rails.logger.warn(
-          "You have configured both reuse_access_token " \
-          "AND strategy strategy '#{strategy}' that cannot restore tokens. " \
+          "[DOORKEEPER] You have configured both reuse_access_token " \
+          "AND '#{strategy}' strategy which cannot restore tokens. " \
           "This combination is unsupported. reuse_access_token will be disabled",
         )
         @reuse_access_token = false
@@ -43,7 +43,7 @@ module Doorkeeper
                   (token_reuse_limit > 0 && token_reuse_limit <= 100)
 
         ::Rails.logger.warn(
-          "You have configured an invalid value for token_reuse_limit option. " \
+          "[DOORKEEPER] You have configured an invalid value for token_reuse_limit option. " \
           "It will be set to default 100",
         )
         @token_reuse_limit = 100

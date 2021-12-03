@@ -186,11 +186,11 @@ feature "Authorization Code Flow" do
     )
   end
 
-  scenario "silently authorizes if matching token exists" do
+  scenario "silently authorizes if active matching token exists" do
     default_scopes_exist :public, :write
 
     access_token_exists application: @client,
-                        expires_in: -100, # even expired token
+                        expires_in: 10_000,
                         resource_owner_id: @resource_owner.id,
                         resource_owner_type: @resource_owner.class.name,
                         scopes: "public write"

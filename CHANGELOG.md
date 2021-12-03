@@ -7,6 +7,12 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1542] Improve performance of `Doorkeeper::AccessToken#matching_token_for` using database specific SQL time math.
+
+  **[IMPORTANT]**: API of the `Doorkeeper::AccessToken#matching_token_for` method has changed and now it returns
+  only **active** access tokens (previously they were just not revoked). Please remember that the idea of the
+  `reuse_access_token` option is to check for existing _active_ token (see configuration option description).
+
 - [#ID] Add your PR description here.
 
 ## 5.5.4
@@ -25,7 +31,7 @@ User-visible changes worth mentioning.
 - [#1502] Drop support for Ruby 2.4 because of EOL.
 - [#1504] Updated the url fragment in the comment for code documentation.
 - [#1512] Fix form behavior when response mode is form_post.
-- [#1511] Fix that authorization code is returned by fragment if response_mode is fragament.
+- [#1511] Fix that authorization code is returned by fragment if response_mode is fragment.
 
 ## 5.5.1
 

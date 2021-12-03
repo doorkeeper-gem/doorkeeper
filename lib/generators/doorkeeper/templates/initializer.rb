@@ -126,9 +126,10 @@ Doorkeeper.configure do
 
   # Reuse access token for the same resource owner within an application (disabled by default).
   #
-  # This option protects your application from creating new tokens before old valid one becomes
-  # expired so your database doesn't bloat. Keep in mind that when this option is `on` Doorkeeper
-  # doesn't updates existing token expiration time, it will create a new token instead.
+  # This option protects your application from creating new tokens before old **valid** one becomes
+  # expired so your database doesn't bloat. Keep in mind that when this option is enabled Doorkeeper
+  # doesn't update existing token expiration time, it will create a new token instead if no active matching
+  # token found for the application, resources owner and/or set of scopes.
   # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/383
   #
   # You can not enable this option together with +hash_token_secrets+.
