@@ -1,0 +1,53 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: >-
+      ${{ matrix.os }} ${{ matrix.ruby }}
+    env:
+      CI: true
+
+    runs-on: ${{ matrix.os }}
+    if: |
+      !(   contains(github.event.pull_request.title,  '[ci skip]')
+        || contains(github.event.pull_request.title,  '[skip ci]'))
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ ubuntu-20.04 ]
+        ruby:
+          - 2.6
+          - 2.7
+          - '3.0'
+          - head
+        gemfile:
+          - gemfiles/rails_5_2.gemfile
+          - gemfiles/rails_6_0.gemfile
+          - gemfiles/rails_6_1.gemfile
+          - gemfiles/rails_7_0.gemfile
+          - gemfiles/rails_main.gemfile
+        exclude:
+          - ruby: 3.0
+            gemfile: gemfiles/rails_5_2.gemfile
+          - ruby: 2.6
+            gemfile: gemfiles/rails_7_0.gemfile
+        include:
+          # Run Danger only once
+          - ruby: 2.7
+            gemfile: gemfiles/rails_6_1.gemfile
+            script: bundle exec danger
+    steps:
+      - name: Repo checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+
+      - name: Run tests
+        timeout-minutes: 10
+        run: bundle exec rake spec
