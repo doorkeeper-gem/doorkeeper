@@ -13,6 +13,7 @@ module Doorkeeper
     include Models::SecretStorable
     include Models::Scopes
     include Models::ResourceOwnerable
+    include Models::ExpirationTimeSqlMath
 
     module ClassMethods
       # Returns an instance of the Doorkeeper::AccessToken with
@@ -87,7 +88,7 @@ module Doorkeeper
       #   nil if matching record was not found
       #
       def matching_token_for(application, resource_owner, scopes)
-        tokens = authorized_tokens_for(application&.id, resource_owner)
+        tokens = authorized_tokens_for(application&.id, resource_owner).not_expired
         find_matching_token(tokens, application, scopes)
       end
 
@@ -104,9 +105,7 @@ module Doorkeeper
       #
       # ActiveRecord 5.x - 6.x ignores custom ordering so we can't perform a
       # database sort by created_at, so we need to load all the matching records,
-      # sort them and find latest one. Probably it would be better to rewrite this
-      # query using Time math if possible, but we n eed to consider ORM and
-      # different databases support.
+      # sort them and find latest one.
       #
       # @param relation [ActiveRecord::Relation]
       #   Access tokens relation

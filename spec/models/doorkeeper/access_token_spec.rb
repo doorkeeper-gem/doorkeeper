@@ -640,5 +640,34 @@ RSpec.describe Doorkeeper::AccessToken do
 
       expect(token.as_json).to match(hash)
     end
+
+    describe "#not_expired" do
+      let(:resource_owner) { FactoryBot.create(:doorkeeper_testing_user) }
+      let(:application) { FactoryBot.create(:application) }
+
+      let(:attrs) { { resource_owner_id: resource_owner.id, application_id: application.id } }
+
+      let!(:active_token1) { FactoryBot.create(:access_token, attrs.merge(expires_in: 2000)) }
+      let!(:active_token2) { FactoryBot.create(:access_token, attrs.merge(expires_in: 2)) }
+      let!(:active_token3) { FactoryBot.create(:access_token, attrs.merge(expires_in: 10, created_at: Time.current - 5.seconds)) }
+      let!(:active_token4) { FactoryBot.create(:access_token, attrs.merge(expires_in: nil)) }
+      let!(:not_active_token1) { FactoryBot.create(:access_token, attrs.merge(expires_in: 2, created_at: Time.current - 2.seconds)) }
+      let!(:not_active_token2) { FactoryBot.create(:access_token, attrs.merge(expires_in: 10, created_at: Time.current - 12.seconds)) }
+      let!(:not_active_token3) { FactoryBot.create(:access_token, attrs.merge(expires_in: 10_000, revoked_at: Time.current)) }
+
+      before do
+        Timecop.freeze(Time.current)
+      end
+
+      after do
+        Timecop.return
+      end
+
+      it "returns only non expired tokens" do
+        expired_tokens = described_class.not_expired
+        expect(expired_tokens.size).to be(4)
+        expect(expired_tokens).to match_array([active_token1, active_token2, active_token3, active_token4])
+      end
+    end
   end
 end

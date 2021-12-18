@@ -24,7 +24,7 @@ module Doorkeeper
 
     def render_success
       if skip_authorization? || matching_token?
-        redirect_or_render authorize_response
+        redirect_or_render(authorize_response)
       elsif Doorkeeper.configuration.api_only
         render json: pre_auth
       else
@@ -41,6 +41,8 @@ module Doorkeeper
       end
     end
 
+    # Active access token issued for the same client and resource owner with
+    # the same set of the scopes exists?
     def matching_token?
       Doorkeeper.config.access_token_model.matching_token_for(
         pre_auth.client,

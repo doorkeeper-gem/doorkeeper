@@ -48,6 +48,27 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
         column_names.include?("previous_refresh_token")
       end
 
+      # Returns non-expired and non-revoked access tokens
+      def not_expired
+        relation = where(revoked_at: nil)
+
+        if supports_expiration_time_math?
+          # have not reached the expiration time or it never expires
+          relation.where("#{expiration_time_sql} > ?", Time.now.utc).or(
+            relation.where(expires_in: nil)
+          )
+        else
+          ::Kernel.warn <<~WARNING.squish
+            [DOORKEEPER] Doorkeeper doesn't support expiration time math for your database adapter (#{adapter_name}).
+            Please add a class method `custom_expiration_time_sql` for your AccessToken class/mixin to provide a custom
+            SQL expression to calculate access token expiration time. See lib/doorkeeper/orm/active_record/mixins/access_token.rb
+            for more details.
+          WARNING
+
+          relation
+        end
+      end
+
       private
 
       def compute_doorkeeper_table_name

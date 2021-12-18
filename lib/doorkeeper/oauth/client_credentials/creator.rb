@@ -8,12 +8,12 @@ module Doorkeeper
           existing_token = nil
 
           if lookup_existing_token?
-            existing_token = find_existing_token_for(client, scopes)
+            existing_token = find_active_existing_token_for(client, scopes)
             return existing_token if server_config.reuse_access_token && existing_token&.reusable?
           end
 
           with_revocation(existing_token: existing_token) do
-            server_config.access_token_model.find_or_create_for(
+            server_config.access_token_model.create_for(
               application: client,
               resource_owner: nil,
               scopes: scopes,
@@ -43,7 +43,7 @@ module Doorkeeper
             server_config.revoke_previous_client_credentials_token?
         end
 
-        def find_existing_token_for(client, scopes)
+        def find_active_existing_token_for(client, scopes)
           server_config.access_token_model.matching_token_for(client, nil, scopes)
         end
 
