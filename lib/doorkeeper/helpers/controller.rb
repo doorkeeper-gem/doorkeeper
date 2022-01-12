@@ -82,7 +82,7 @@ module Doorkeeper
       end
 
       def x_www_form_urlencoded?
-        request.content_type == "application/x-www-form-urlencoded"
+        request.media_type == "application/x-www-form-urlencoded"
       end
     end
   end
