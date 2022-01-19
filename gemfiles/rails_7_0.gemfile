@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-gem "rails", "~> 7.0.0alpha1"
+gem "rails", "~> 7.0.0"
 gem "rspec-core"
 gem "rspec-expectations"
 gem "rspec-mocks"
