@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   build:
     name: >-
-      ${{ matrix.os }} ${{ matrix.ruby }}
+      Ruby ${{ matrix.ruby }} (${{ matrix.gemfile }})
     env:
       CI: true
 
