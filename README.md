@@ -189,4 +189,4 @@ contributors](https://github.com/doorkeeper-gem/doorkeeper/graphs/contributors)!
 
 ## License
 
-MIT License. Copyright 2011 Applicake.
+MIT License. Created in Applicake. Maintained by the community.
