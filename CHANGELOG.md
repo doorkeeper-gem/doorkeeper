@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1552] Remove duplicate IDs on Auth form to improve accessibility.
 - [#1542] Improve performance of `Doorkeeper::AccessToken#matching_token_for` using database specific SQL time math.
 
   **[IMPORTANT]**: API of the `Doorkeeper::AccessToken#matching_token_for` method has changed and now it returns
