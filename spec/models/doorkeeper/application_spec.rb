@@ -4,8 +4,11 @@ require "spec_helper"
 require "bcrypt"
 
 RSpec.describe Doorkeeper::Application do
-  let(:require_owner) { Doorkeeper.config.instance_variable_set("@confirm_application_owner", true) }
-  let(:unset_require_owner) { Doorkeeper.config.instance_variable_set("@confirm_application_owner", false) }
+  let(:application_with_owner_class) do
+    Class.new(::ActiveRecord::Base) do
+      include Doorkeeper::Orm::ActiveRecord::Mixins::Application
+    end
+  end
   let(:new_application) { FactoryBot.build(:application) }
 
   let(:uid) { SecureRandom.hex(8) }
@@ -84,16 +87,20 @@ RSpec.describe Doorkeeper::Application do
   end
 
   context "when application_owner is enabled" do
-    before do
-      Doorkeeper.configure do
-        orm DOORKEEPER_ORM
-        enable_application_owner
-      end
-    end
+    let(:new_application) { FactoryBot.build(:application_with_owner) }
 
     context "when application owner is not required" do
       before do
-        unset_require_owner
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          enable_application_owner
+        end
+
+        Object.const_set("ApplicationWithOwner", application_with_owner_class)
+      end
+
+      after do
+        Object.send(:remove_const, :ApplicationWithOwner)
       end
 
       it "is valid given valid attributes" do
@@ -103,8 +110,18 @@ RSpec.describe Doorkeeper::Application do
 
     context "when application owner is required" do
       before do
-        require_owner
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          enable_application_owner confirmation: true
+        end
+
         @owner = FactoryBot.build_stubbed(:doorkeeper_testing_user)
+
+        Object.const_set("ApplicationWithOwner", application_with_owner_class)
+      end
+
+      after do
+        Object.send(:remove_const, :ApplicationWithOwner)
       end
 
       it "is invalid without an owner" do
@@ -474,13 +491,19 @@ RSpec.describe Doorkeeper::Application do
     context "when called with authorized resource owner" do
       let(:owner) { FactoryBot.create(:doorkeeper_testing_user) }
       let(:other_owner) { FactoryBot.create(:doorkeeper_testing_user) }
-      let(:app) { FactoryBot.create(:application, secret: "123123123", owner: owner) }
+      let(:app) { FactoryBot.create(:application_with_owner, secret: "123123123", owner: owner) }
 
       before do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
           enable_application_owner confirmation: false
         end
+
+        Object.const_set("ApplicationWithOwner", application_with_owner_class)
+      end
+
+      after do
+        Object.send(:remove_const, :ApplicationWithOwner)
       end
 
       it "includes all the attributes" do

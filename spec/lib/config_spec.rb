@@ -51,10 +51,11 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
-  describe "setup_orm_adapter" do
+  describe "setup_orm" do
     it "adds specific error message to NameError exception" do
       expect do
         Doorkeeper.configure { orm "hibernate" }
+        Doorkeeper.setup
       end.to raise_error(NameError, /ORM adapter not found \(hibernate\)/)
     end
 
@@ -63,6 +64,7 @@ RSpec.describe Doorkeeper::Config do
 
       expect do
         Doorkeeper.configure { orm "hibernate" }
+        Doorkeeper.setup
       end.to raise_error(NoMethodError)
     end
   end
@@ -329,8 +331,14 @@ RSpec.describe Doorkeeper::Config do
   end
 
   describe "enable_application_owner" do
+    let(:application_with_owner_class) do
+      Class.new(::ActiveRecord::Base) do
+        include Doorkeeper::Orm::ActiveRecord::Mixins::Application
+      end
+    end
+
     it "is disabled by default" do
-      expect(Doorkeeper.config.enable_application_owner?).not_to eq(true)
+      expect(Doorkeeper.config.enable_application_owner?).not_to be(true)
     end
 
     context "when enabled without confirmation" do
@@ -338,15 +346,26 @@ RSpec.describe Doorkeeper::Config do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
           enable_application_owner
+
+          application_class "ApplicationWithOwner"
         end
+
+        Object.const_set("ApplicationWithOwner", application_with_owner_class)
+      end
+
+      after do
+        Object.send(:remove_const, :ApplicationWithOwner)
       end
 
       it "adds support for application owner" do
-        expect(Doorkeeper::Application.new).to respond_to :owner
+        instance = FactoryBot.build(:application_with_owner)
+
+        expect(instance).to respond_to :owner
+        expect(instance).to be_valid
       end
 
       it "Doorkeeper.configuration.confirm_application_owner? returns false" do
-        expect(Doorkeeper.config.confirm_application_owner?).not_to eq(true)
+        expect(Doorkeeper.config.confirm_application_owner?).not_to be(true)
       end
     end
 
@@ -355,15 +374,27 @@ RSpec.describe Doorkeeper::Config do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
           enable_application_owner confirmation: true
+
+          application_class "ApplicationWithOwner"
         end
+
+        Object.const_set("ApplicationWithOwner", application_with_owner_class)
+      end
+
+      after do
+        Object.send(:remove_const, :ApplicationWithOwner)
       end
 
       it "adds support for application owner" do
-        expect(Doorkeeper::Application.new).to respond_to :owner
+        instance = FactoryBot.build(:application_with_owner)
+
+        expect(instance).to respond_to :owner
+        expect(instance).not_to be_valid
+        expect(instance.errors[:owner]).to be_present
       end
 
       it "Doorkeeper.configuration.confirm_application_owner? returns true" do
-        expect(Doorkeeper.config.confirm_application_owner?).to eq(true)
+        expect(Doorkeeper.config.confirm_application_owner?).to be(true)
       end
     end
   end
@@ -576,6 +607,8 @@ RSpec.describe Doorkeeper::Config do
             establish_connection: Rails.configuration.database_configuration[Rails.env],
           )
         end
+
+        Doorkeeper.setup
       end
     end
 
