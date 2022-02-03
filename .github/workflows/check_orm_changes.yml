@@ -32,7 +32,7 @@ jobs:
            [[ $changed_files == *"lib/doorkeeper/models/"* ]];
         then
           echo "ORM files changes detected!"
-          echo "::set-env name=ORM_CHANGES::yes"
+          echo "ORM_CHANGES=yes" >> $GITHUB_ENV
         else
           echo "No changes in ORM files, exiting"
         fi
