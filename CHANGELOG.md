@@ -7,6 +7,10 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#ID] Add your PR description here.
+
+## 5.6.0.rc1
+
 - [#1551] Change lazy loading for ORM to be Ruby standard autoload.
 - [#1552] Remove duplicate IDs on Auth form to improve accessibility.
 - [#1542] Improve performance of `Doorkeeper::AccessToken#matching_token_for` using database specific SQL time math.
@@ -14,8 +18,6 @@ User-visible changes worth mentioning.
   **[IMPORTANT]**: API of the `Doorkeeper::AccessToken#matching_token_for` method has changed and now it returns
   only **active** access tokens (previously they were just not revoked). Please remember that the idea of the
   `reuse_access_token` option is to check for existing _active_ token (see configuration option description).
-
-- [#ID] Add your PR description here.
 
 ## 5.5.4
 
