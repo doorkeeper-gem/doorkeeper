@@ -150,15 +150,9 @@ RSpec.describe "Client Credentials Request" do
         "scope" => "public read",
       )
     end
-  end
 
-  context "when application scopes contain none of the default scopes and no scope is passed" do
-    before do
-      client.update(scopes: "read write")
-    end
-
-    it "issues new token with one default scope that are present in application scopes" do
-      default_scopes_exist :public
+    it "forbids the request if the public scope is not present in the application scopes" do
+      default_scopes_exist :default
 
       headers = authorization client.uid, client.secret
       params  = { grant_type: "client_credentials" }
