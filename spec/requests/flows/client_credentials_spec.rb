@@ -166,9 +166,9 @@ RSpec.describe "Client Credentials Request" do
       post "/oauth/token", params: params, headers: headers
 
       expect(json_response).to match(
-                                 "error" => "invalid_scope",
-                                 "error_description" => translated_error_message(:invalid_scope),
-                                 )
+        "error" => "invalid_scope",
+        "error_description" => translated_error_message(:invalid_scope),
+      )
     end
   end
 
