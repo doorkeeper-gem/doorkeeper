@@ -152,6 +152,26 @@ RSpec.describe "Client Credentials Request" do
     end
   end
 
+  context "when application scopes contain none of the default scopes and no scope is passed" do
+    before do
+      client.update(scopes: "read write")
+    end
+
+    it "issues new token with one default scope that are present in application scopes" do
+      default_scopes_exist :public
+
+      headers = authorization client.uid, client.secret
+      params  = { grant_type: "client_credentials" }
+
+      post "/oauth/token", params: params, headers: headers
+
+      expect(json_response).to match(
+                                 "error" => "invalid_scope",
+                                 "error_description" => translated_error_message(:invalid_scope),
+                                 )
+    end
+  end
+
   context "when request is invalid" do
     it "does not authorize the client and returns the error" do
       headers = {}

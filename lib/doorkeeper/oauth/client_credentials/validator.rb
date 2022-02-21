@@ -35,13 +35,12 @@ module Doorkeeper
         end
 
         def validate_scopes
-          return true if @request.scopes.blank?
-
           application_scopes = if @client.present?
-                                 @client.application.scopes
-                               else
-                                 ""
-                               end
+            @client.application.scopes
+          else
+            ""
+          end
+          return true if @request.scopes.blank? && application_scopes.blank?
 
           ScopeChecker.valid?(
             scope_str: @request.scopes.to_s,
