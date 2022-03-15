@@ -19,6 +19,19 @@
     </div>
   <% end %>
 
+  <% if @pre_auth.resource.count > 0 %>
+    <div id="oauth-permissions">
+      <h3>Resources</h3>
+
+      <p> This application will be able to access:</p>
+      <ul class="text-info">
+        <% Array(@pre_auth.resource).each do |resource| %>
+          <li><%= resource %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
   <div class="actions">
     <%= form_tag oauth_authorization_path, method: :post do %>
       <%= hidden_field_tag :client_id, @pre_auth.client.uid, id: nil %>
@@ -29,6 +42,9 @@
       <%= hidden_field_tag :scope, @pre_auth.scope, id: nil %>
       <%= hidden_field_tag :code_challenge, @pre_auth.code_challenge, id: nil %>
       <%= hidden_field_tag :code_challenge_method, @pre_auth.code_challenge_method, id: nil %>
+      <% @pre_auth.resource.each do |resource| %>
+        <%= hidden_field_tag "resource[]", resource, id: nil %>
+      <% end %>
       <%= submit_tag t('doorkeeper.authorizations.buttons.authorize'), class: "btn btn-success btn-lg btn-block" %>
     <% end %>
     <%= form_tag oauth_authorization_path, method: :delete do %>
@@ -40,6 +56,9 @@
       <%= hidden_field_tag :scope, @pre_auth.scope, id: nil %>
       <%= hidden_field_tag :code_challenge, @pre_auth.code_challenge, id: nil %>
       <%= hidden_field_tag :code_challenge_method, @pre_auth.code_challenge_method, id: nil %>
+      <% @pre_auth.resource.each do |resource| %>
+        <%= hidden_field_tag "resource[]", resource %>
+      <% end %>
       <%= submit_tag t('doorkeeper.authorizations.buttons.deny'), class: "btn btn-danger btn-lg btn-block" %>
     <% end %>
   </div>

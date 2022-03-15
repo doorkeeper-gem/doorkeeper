@@ -37,6 +37,7 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
       resource_owner_authorize_for_client
       redirect_uri
       params
+      resource_indicators
       response_type
       response_mode
       scopes
@@ -253,6 +254,71 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
 
     it "is not authorizable" do
       expect(pre_auth).not_to be_authorizable
+    end
+  end
+
+  context "when resource_indicators are enabled" do
+    before do
+      allow(Doorkeeper.configuration).to receive(:using_resource_indicators?).and_return(true)
+      allow(Doorkeeper.configuration).to receive(:resource_indicator_authorizer).and_return(callback_double)
+    end
+
+    context "when no resource indicator or owner is provided" do
+      let(:callback_double) { spy }
+
+      it "delegates to the callback" do
+        expect(callback_double).to receive(:call).with(
+          an_instance_of(Doorkeeper::Application),
+          nil,
+          [],
+        )
+
+        pre_auth.authorizable?
+      end
+    end
+
+    context "when a resource indicator and owner is provided" do
+      subject(:pre_auth) do
+        described_class.new(server, attributes, Object.new)
+      end
+
+      let(:callback_double) { spy }
+      let(:attributes) do
+        {
+          client_id: client.uid,
+          response_type: "code",
+          redirect_uri: "https://app.com/callback",
+          state: "save-this",
+          current_resource_owner: Object.new,
+          resource: "http://example.com",
+        }
+      end
+
+      it "delegates to the callback" do
+        expect(callback_double).to receive(:call).with(
+          an_instance_of(Doorkeeper::Application),
+          a_truthy_value,
+          [an_instance_of(String)],
+        )
+
+        pre_auth.authorizable?
+      end
+    end
+
+    context "when the callback returns false" do
+      let(:callback_double) { ->(*_) { false } }
+
+      it "is not authorizable" do
+        expect(pre_auth).not_to be_authorizable
+      end
+    end
+
+    context "when the callback returns true" do
+      let(:callback_double) { ->(*_) { true } }
+
+      it "is authorizable" do
+        expect(pre_auth).to be_authorizable
+      end
     end
   end
 

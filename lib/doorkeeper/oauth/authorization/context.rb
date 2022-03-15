@@ -4,7 +4,7 @@ module Doorkeeper
   module OAuth
     module Authorization
       class Context
-        attr_reader :client, :grant_type, :resource_owner, :scopes
+        attr_reader :client, :grant_type, :resource_owner, :scopes, :resource_indicators
 
         def initialize(**attributes)
           attributes.each do |name, value|

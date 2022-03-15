@@ -11,6 +11,7 @@ module Doorkeeper
       validate :resource_owner_authorize_for_client, error: :invalid_client
       validate :redirect_uri, error: :invalid_redirect_uri
       validate :params, error: :invalid_request
+      validate :resource_indicators, error: :invalid_target
       validate :response_type, error: :unsupported_response_type
       validate :response_mode, error: :unsupported_response_mode
       validate :scopes, error: :invalid_scope
@@ -18,7 +19,7 @@ module Doorkeeper
 
       attr_reader :client, :code_challenge, :code_challenge_method, :missing_param,
                   :redirect_uri, :resource_owner, :response_type, :state,
-                  :authorization_response_flow, :response_mode
+                  :authorization_response_flow, :response_mode, :resource
 
       def initialize(server, parameters = {}, resource_owner = nil)
         @server                = server
@@ -31,6 +32,7 @@ module Doorkeeper
         @code_challenge        = parameters[:code_challenge]
         @code_challenge_method = parameters[:code_challenge_method]
         @resource_owner        = resource_owner
+        @resource              = ResourceIndicators.from_array(parameters[:resource])
       end
 
       def authorizable?
@@ -39,6 +41,10 @@ module Doorkeeper
 
       def scopes
         Scopes.from_string(scope)
+      end
+
+      def resource_indicators
+        @resource
       end
 
       def scope
@@ -94,6 +100,16 @@ module Doorkeeper
       def validate_resource_owner_authorize_for_client
         # The `authorize_resource_owner_for_client` config option is used for this validation
         client.application.authorized_for_resource_owner?(@resource_owner)
+      end
+
+      def validate_resource_indicators
+        return true unless Doorkeeper.config.using_resource_indicators?
+
+        Doorkeeper.configuration.resource_indicator_authorizer.call(
+          client.application,
+          @resource_owner,
+          resource_indicators,
+        )
       end
 
       def validate_redirect_uri

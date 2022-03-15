@@ -51,6 +51,48 @@ RSpec.describe Doorkeeper::TokensController do
     it "issues the token for the current resource owner" do
       expect(Doorkeeper::AccessToken.first.resource_owner_id).to eq(user.id)
     end
+
+    context "with resource indicators" do
+      before do
+        allow(Doorkeeper.configuration).to receive(:using_resource_indicators?).and_return(true)
+        allow(Doorkeeper.configuration).to receive(:resource_indicator_authorizer).and_return(->(*_) { true })
+
+        post :create, params: {
+          client_id: client.uid,
+          client_secret: client.secret,
+          grant_type: "password",
+          resource: "http://example.com/resource",
+        }
+      end
+
+      it "responds after authorization" do
+        expect(response).to be_successful
+      end
+
+      it "includes access token in response" do
+        expect(json["access_token"]).to eq(Doorkeeper::AccessToken.last.token)
+      end
+
+      it "includes token type in response" do
+        expect(json["token_type"]).to eq("Bearer")
+      end
+
+      it "includes token expiration in response" do
+        expect(json["expires_in"].to_i).to eq(Doorkeeper.configuration.access_token_expires_in)
+      end
+
+      it "issues the token for the current client" do
+        expect(Doorkeeper::AccessToken.first.application_id).to eq(client.id)
+      end
+
+      it "issues the token for the current resource owner" do
+        expect(Doorkeeper::AccessToken.first.resource_owner_id).to eq(user.id)
+      end
+
+      it "issues the token for the resource indicator" do
+        expect(Doorkeeper::AccessToken.last.resource_indicators).to contain_exactly("http://example.com/resource")
+      end
+    end
   end
 
   describe "POST #create with errors" do

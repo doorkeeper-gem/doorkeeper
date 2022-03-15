@@ -21,6 +21,7 @@ RSpec.describe Doorkeeper::OAuth::CodeRequest do
       response_type: "code",
       redirect_uri: "https://app.com/callback",
       response_mode: response_mode,
+      resource: "http://example.com/resource",
     }.compact
 
     pre_auth = Doorkeeper::OAuth::PreAuthorization.new(Doorkeeper.config, attributes)
@@ -43,6 +44,28 @@ RSpec.describe Doorkeeper::OAuth::CodeRequest do
 
       it "returns a code response with response_on_fragment set to true" do
         expect(request.authorize.response_on_fragment).to be true
+      end
+    end
+
+    context "when resource indicators are disabled" do
+      before do
+        request.authorize
+      end
+
+      it "does not save a given indicator" do
+        expect(Doorkeeper::AccessGrant.last.resource_indicators).to be_empty
+      end
+    end
+
+    context "when resource indicators are enabled" do
+      before do
+        allow(Doorkeeper.configuration).to receive(:using_resource_indicators?).and_return(true)
+        allow(Doorkeeper.configuration).to receive(:resource_indicator_authorizer).and_return(->(*_) { false })
+        request.authorize
+      end
+
+      it "saves a resource indicator" do
+        expect(Doorkeeper::AccessGrant.last.resource_indicators).to contain_exactly "http://example.com/resource"
       end
     end
   end

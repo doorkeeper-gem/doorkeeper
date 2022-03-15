@@ -37,6 +37,7 @@ module Doorkeeper
           creator.call(
             client,
             scopes,
+            resource_indicators: validator.resource_indicators,
             use_refresh_token: false,
             expires_in: ttl,
           )

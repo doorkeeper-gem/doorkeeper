@@ -65,6 +65,7 @@ module Doorkeeper
             scopes: pre_auth.scopes,
             expires_in: self.class.access_token_expires_in(Doorkeeper.config, context),
             use_refresh_token: false,
+            resource_indicators: pre_auth.resource_indicators,
           )
         end
 

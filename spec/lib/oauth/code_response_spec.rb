@@ -10,6 +10,7 @@ RSpec.describe Doorkeeper::OAuth::CodeResponse do
       redirect_uri: "http://tst.com/cb",
       state: "state",
       scopes: Doorkeeper::OAuth::Scopes.from_string("public"),
+      resource_indicators: [],
     )
   end
   let(:owner) { FactoryBot.build_stubbed(:resource_owner) }

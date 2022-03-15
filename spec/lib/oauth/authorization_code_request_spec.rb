@@ -23,8 +23,7 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
                       resource_owner_type: resource_owner.class.name
   end
   let(:client) { grant.application }
-  let(:redirect_uri) { client.redirect_uri }
-  let(:params) { { redirect_uri: redirect_uri } }
+  let(:params) { { redirect_uri: client.redirect_uri } }
 
   before do
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
@@ -136,8 +135,72 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
     request.authorize
   end
 
+  context "with a grant with resource indicators" do
+    before do
+      grant.update(resource_indicators: ["http://example.com/resource1", "http://example.com/resource2"])
+      allow(Doorkeeper.config).to receive(:using_resource_indicators?).and_return true
+    end
+
+    context "when matching resource indicators are specified" do
+      let(:params) do
+        {
+          redirect_uri: client.redirect_uri,
+          resource: ["http://example.com/resource1", "http://example.com/resource2"],
+        }
+      end
+
+      it "issues a new token for the client" do
+        expect do
+          request.authorize
+        end.to change { client.reload.access_tokens.count }.by(1)
+        expect(client.access_tokens.last.resource_indicators.all).to eq ["http://example.com/resource1", "http://example.com/resource2"]
+      end
+    end
+
+    context "when a subset resource indicators are specified" do
+      let(:params) do
+        {
+          redirect_uri: client.redirect_uri,
+          resource: "http://example.com/resource1",
+        }
+      end
+
+      it "issues a new token for the client" do
+        expect do
+          request.authorize
+        end.to change { client.reload.access_tokens.count }.by(1)
+        expect(client.access_tokens.last.resource_indicators).to contain_exactly "http://example.com/resource1"
+      end
+    end
+
+    context "when resource indicators are omitted" do
+      it "issues a new token for the client" do
+        expect do
+          request.authorize
+        end.to change { client.reload.access_tokens.count }.by(0)
+        expect(request.error).to eq(:invalid_target)
+      end
+    end
+
+    context "when a superset resource indicators are specified" do
+      let(:params) do
+        {
+          redirect_uri: client.redirect_uri,
+          resource: ["http://example.com/resource1", "http://example.com/resource2", "http://example.com/resource3"],
+        }
+      end
+
+      it "issues a new token for the client" do
+        expect do
+          request.authorize
+        end.to change { client.reload.access_tokens.count }.by(0)
+        expect(request.error).to eq(:invalid_target)
+      end
+    end
+  end
+
   context "when redirect_uri contains some query params" do
-    let(:redirect_uri) { "#{client.redirect_uri}?query=q" }
+    let(:params) { { redirect_uri: "#{client.redirect_uri}?query=q" } }
 
     it "allows query params" do
       request.validate
@@ -146,7 +209,7 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
   end
 
   context "when redirect_uri is not an URI" do
-    let(:redirect_uri) { "123d#!s" }
+    let(:params) { { redirect_uri: "123d#!s" } }
 
     it "responds with invalid_grant" do
       request.validate
@@ -155,7 +218,7 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
   end
 
   context "when redirect_uri is the native one" do
-    let(:redirect_uri) { "urn:ietf:wg:oauth:2.0:oob" }
+    let(:params) { { redirect_uri: "urn:ietf:wg:oauth:2.0:oob" } }
 
     it "invalidates when redirect_uri of the grant is not native" do
       request.validate
@@ -163,7 +226,7 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
     end
 
     it "validates when redirect_uri of the grant is also native" do
-      allow(grant).to receive(:redirect_uri) { redirect_uri }
+      allow(grant).to receive(:redirect_uri).and_return "urn:ietf:wg:oauth:2.0:oob"
       request.validate
       expect(request.error).to eq(nil)
     end

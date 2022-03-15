@@ -48,6 +48,11 @@ module ModelHelper
     expect(grant.scopes).to eq(Doorkeeper::OAuth::Scopes.from_array(args))
   end
 
+  def access_grant_should_have_resource_indicators(*args)
+    grant = Doorkeeper::AccessGrant.first
+    expect(grant.resource_indicators).to eq(Doorkeeper::OAuth::ResourceIndicators.from_array(args))
+  end
+
   def access_token_should_have_scopes(*args)
     grant = Doorkeeper::AccessToken.last
     expect(grant.scopes).to eq(Doorkeeper::OAuth::Scopes.from_array(args))

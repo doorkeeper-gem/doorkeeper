@@ -22,6 +22,7 @@ module Doorkeeper
 
   module Helpers
     autoload :Controller, "doorkeeper/helpers/controller"
+    autoload :ResourceIndicators, "doorkeeper/helpers/resource_indicators"
   end
 
   module Request
@@ -56,6 +57,8 @@ module Doorkeeper
     autoload :TokenIntrospection, "doorkeeper/oauth/token_introspection"
     autoload :TokenRequest, "doorkeeper/oauth/token_request"
     autoload :TokenResponse, "doorkeeper/oauth/token_response"
+    autoload :ListLike, "doorkeeper/oauth/concerns/list_like"
+    autoload :ResourceIndicators, "doorkeeper/oauth/resource_indicators"
 
     module Authorization
       autoload :Code, "doorkeeper/oauth/authorization/code"
@@ -78,6 +81,7 @@ module Doorkeeper
       autoload :ScopeChecker, "doorkeeper/oauth/helpers/scope_checker"
       autoload :URIChecker, "doorkeeper/oauth/helpers/uri_checker"
       autoload :UniqueToken, "doorkeeper/oauth/helpers/unique_token"
+      autoload :ResourceIndicatorsChecker, "doorkeeper/oauth/helpers/resource_indicators_checker"
     end
 
     module Hooks
@@ -92,6 +96,7 @@ module Doorkeeper
     autoload :Orderable, "doorkeeper/models/concerns/orderable"
     autoload :Scopes, "doorkeeper/models/concerns/scopes"
     autoload :Reusable, "doorkeeper/models/concerns/reusable"
+    autoload :ResourceIndicators, "doorkeeper/models/concerns/resource_indicators"
     autoload :ResourceOwnerable, "doorkeeper/models/concerns/resource_ownerable"
     autoload :Revocable, "doorkeeper/models/concerns/revocable"
     autoload :SecretStorable, "doorkeeper/models/concerns/secret_storable"

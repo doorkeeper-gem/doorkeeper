@@ -125,6 +125,7 @@ RSpec.describe Doorkeeper::OAuth::BaseRequest do
         resource_owner,
         "public",
         server,
+        [],
       )
 
       expect(result).to be_an_instance_of(Doorkeeper::AccessToken)
@@ -145,6 +146,7 @@ RSpec.describe Doorkeeper::OAuth::BaseRequest do
         resource_owner,
         "public",
         server,
+        [],
       )
       expect(result.expires_in).to be(500)
     end
@@ -166,6 +168,7 @@ RSpec.describe Doorkeeper::OAuth::BaseRequest do
         resource_owner,
         "public",
         server,
+        [],
       )
       expect(result.refresh_token).not_to be_nil
 
@@ -174,6 +177,7 @@ RSpec.describe Doorkeeper::OAuth::BaseRequest do
         resource_owner,
         "private",
         server,
+        [],
       )
       expect(result.refresh_token).to be_nil
     end

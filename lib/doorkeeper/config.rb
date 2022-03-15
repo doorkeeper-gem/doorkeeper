@@ -179,6 +179,12 @@ module Doorkeeper
         @config.instance_variable_set(:@polymorphic_resource_owner, true)
       end
 
+      # Enabled Resource Indicator support. Requires additional database
+      # columns to be setup.
+      def use_resource_indicators
+        @config.instance_variable_set(:@use_resource_indicators, true)
+      end
+
       # Forbids creating/updating applications with arbitrary scopes that are
       # not in configuration, i.e. `default_scopes` or `optional_scopes`.
       # (disabled by default)
@@ -323,6 +329,9 @@ module Doorkeeper
     # Hook to allow arbitrary user-client authorization
     option :authorize_resource_owner_for_client,
            default: ->(_client, _resource_owner) { true }
+
+    option :resource_indicator_authorizer,
+           default: ->(_application, _resource_owner, _resource_indicators) { true }
 
     # Allows to customize OAuth grant flows that +each+ application support.
     # You can configure a custom block (or use a class respond to `#call`) that must
@@ -539,6 +548,10 @@ module Doorkeeper
 
     def polymorphic_resource_owner?
       option_set? :polymorphic_resource_owner
+    end
+
+    def using_resource_indicators?
+      option_set? :use_resource_indicators
     end
 
     def confirm_application_owner?

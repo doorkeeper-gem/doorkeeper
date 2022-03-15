@@ -39,6 +39,10 @@ module Doorkeeper
             scopes: pre_auth.scopes.to_s,
           }
 
+          if Doorkeeper.config.using_resource_indicators?
+            attributes[:resource_indicators] = pre_auth.resource_indicators
+          end
+
           if Doorkeeper.config.polymorphic_resource_owner?
             attributes[:resource_owner] = resource_owner
           else

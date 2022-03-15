@@ -12,7 +12,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
       access_token_expires_in: 100,
     )
   end
-  let(:validator) { double :validator, valid?: true }
+  let(:validator) { double :validator, valid?: true, resource_indicators: [] }
 
   before do
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(false)
@@ -33,6 +33,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
       expect(creator).to receive(:call).with(
         client,
         scopes,
+        resource_indicators: [],
         expires_in: 100,
         use_refresh_token: false,
       )
@@ -90,6 +91,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
         expect(creator).to receive(:call).with(
           client,
           scopes,
+          resource_indicators: [],
           expires_in: custom_ttl_grant,
           use_refresh_token: false,
         )
@@ -100,6 +102,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
         expect(creator).to receive(:call).with(
           client,
           custom_scope,
+          resource_indicators: [],
           expires_in: custom_ttl_scope,
           use_refresh_token: false,
         )

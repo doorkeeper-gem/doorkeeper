@@ -10,6 +10,7 @@ module Doorkeeper
         validate :client, error: :invalid_client
         validate :client_supports_grant_flow, error: :unauthorized_client
         validate :scopes, error: :invalid_scope
+        validate :resource_indicators, error: :invalid_target
 
         def initialize(server, request)
           @server = server
@@ -19,7 +20,21 @@ module Doorkeeper
           validate
         end
 
+        def resource_indicators
+          @request.resource
+        end
+
         private
+
+        def validate_resource_indicators
+          return true unless Doorkeeper.config.using_resource_indicators?
+
+          Doorkeeper.configuration.resource_indicator_authorizer.call(
+            @client.application,
+            nil,
+            @request.resource,
+          )
+        end
 
         def validate_client
           @client.present?

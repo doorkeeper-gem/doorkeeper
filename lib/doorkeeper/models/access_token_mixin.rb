@@ -12,6 +12,7 @@ module Doorkeeper
     include Models::Orderable
     include Models::SecretStorable
     include Models::Scopes
+    include Models::ResourceIndicators
     include Models::ResourceOwnerable
     include Models::ExpirationTimeSqlMath
 
@@ -87,9 +88,9 @@ module Doorkeeper
       # @return [Doorkeeper::AccessToken, nil] Access Token instance or
       #   nil if matching record was not found
       #
-      def matching_token_for(application, resource_owner, scopes)
+      def matching_token_for(application, resource_owner, scopes, resource_indicators = [])
         tokens = authorized_tokens_for(application&.id, resource_owner).not_expired
-        find_matching_token(tokens, application, scopes)
+        find_matching_token(tokens, application, scopes, resource_indicators)
       end
 
       # Interface to enumerate access token records in batches in order not
@@ -113,11 +114,11 @@ module Doorkeeper
       #   Application instance
       # @param scopes [String, Doorkeeper::OAuth::Scopes]
       #   set of scopes
-      #
+      # @param resource_indicators [String, Doorkeeper::OAuth::ResourceIndicators]
+      #   set of resource indicators
       # @return [Doorkeeper::AccessToken, nil] Access Token instance or
       #   nil if matching record was not found
-      #
-      def find_matching_token(relation, application, scopes)
+      def find_matching_token(relation, application, scopes, resource_indicators)
         return nil unless relation
 
         matching_tokens = []
@@ -125,7 +126,8 @@ module Doorkeeper
 
         find_access_token_in_batches(relation, batch_size: batch_size) do |batch|
           tokens = batch.select do |token|
-            scopes_match?(token.scopes, scopes, application&.scopes)
+            scopes_match?(token.scopes, scopes, application&.scopes) &&
+              token.resource_indicators_match?(resource_indicators)
           end
 
           matching_tokens.concat(tokens)
@@ -178,9 +180,9 @@ module Doorkeeper
       #
       # @return [Doorkeeper::AccessToken] existing record or a new one
       #
-      def find_or_create_for(application:, resource_owner:, scopes:, **token_attributes)
+      def find_or_create_for(application:, resource_owner:, scopes:, resource_indicators: [], **token_attributes)
         if Doorkeeper.config.reuse_access_token
-          access_token = matching_token_for(application, resource_owner, scopes)
+          access_token = matching_token_for(application, resource_owner, scopes, resource_indicators)
 
           return access_token if access_token&.reusable?
         end
@@ -189,6 +191,7 @@ module Doorkeeper
           application: application,
           resource_owner: resource_owner,
           scopes: scopes,
+          resource_indicators: resource_indicators,
           **token_attributes,
         )
       end
@@ -204,6 +207,8 @@ module Doorkeeper
       #   set of scopes (any object that responds to `#to_s`)
       # @param token_attributes [Hash]
       #   Additional attributes to use when creating a token
+      # @param resource_indicators [Hash]
+      #   Resource indicators to use when creating a token, if enabled.
       # @option token_attributes [Integer] :expires_in
       #   token lifetime in seconds
       # @option token_attributes [Boolean] :use_refresh_token
@@ -211,7 +216,7 @@ module Doorkeeper
       #
       # @return [Doorkeeper::AccessToken] new access token
       #
-      def create_for(application:, resource_owner:, scopes:, **token_attributes)
+      def create_for(application:, resource_owner:, scopes:, resource_indicators: [], **token_attributes)
         token_attributes[:application_id] = application&.id
         token_attributes[:scopes] = scopes.to_s
 
@@ -220,6 +225,8 @@ module Doorkeeper
         else
           token_attributes[:resource_owner_id] = resource_owner_id_for(resource_owner)
         end
+
+        token_attributes[:resource_indicators] = resource_indicators if Doorkeeper.config.using_resource_indicators?
 
         create!(token_attributes)
       end
@@ -377,6 +384,12 @@ module Doorkeeper
 
       old_refresh_token&.revoke
       update_attribute(:previous_refresh_token, "")
+    end
+
+    def resource_indicators_match?(requested_indicators)
+      return true unless Doorkeeper.config.using_resource_indicators?
+
+      resource_indicators.contains_all?(requested_indicators)
     end
 
     private

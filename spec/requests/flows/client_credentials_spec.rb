@@ -69,6 +69,52 @@ RSpec.describe "Client Credentials Request" do
     end
   end
 
+  context "with resource indicators" do
+    before do
+      Doorkeeper.configuration.instance_variable_set(
+        :@use_resource_indicators, true,
+      )
+    end
+
+    scenario "resource owner authorizes the client with default scopes" do
+      client.update(name: "admin")
+
+      headers = authorization client.uid, client.secret
+      params  = { grant_type: "client_credentials", resource: "http://example.com/resource1" }
+
+      post "/oauth/token", params: params, headers: headers
+
+      expect(json_response).to match(
+        "access_token" => Doorkeeper::AccessToken.first.token,
+        "token_type" => "Bearer",
+        "expires_in" => 7200,
+        "created_at" => an_instance_of(Integer),
+      )
+      expect(Doorkeeper::AccessToken.first.resource_indicators).to contain_exactly("http://example.com/resource1")
+    end
+
+    scenario "with multiple resource indicators" do
+      client.update(name: "admin")
+
+      headers = authorization client.uid, client.secret
+      params  = "#{{
+        grant_type: "client_credentials",
+        resource: "http://example.com/resource1",
+      }.to_param}&#{{ resource: "http://example.com/resource2" }.to_param}"
+
+      post "/oauth/token", params: params, headers: headers
+
+      expect(json_response).to match(
+        "access_token" => Doorkeeper::AccessToken.first.token,
+        "token_type" => "Bearer",
+        "expires_in" => 7200,
+        "created_at" => an_instance_of(Integer),
+      )
+
+      expect(Doorkeeper::AccessToken.first.resource_indicators).to contain_exactly("http://example.com/resource1", "http://example.com/resource2")
+    end
+  end
+
   context "when configured to check application supported grant flow" do
     before do
       Doorkeeper.configuration.instance_variable_set(

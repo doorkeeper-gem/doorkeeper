@@ -453,6 +453,26 @@ feature "Authorization Code Flow" do
     end
   end
 
+  context "with resource indicators" do
+    background do
+      config_is_set(:use_resource_indicators, true)
+    end
+
+    scenario "resource owner authorizes the client with default scopes" do
+      visit authorization_endpoint_url(client: @client, resource: "http://example.com/resource1")
+      click_on "Authorize"
+      access_grant_should_exist_for(@client, @resource_owner)
+      access_grant_should_have_resource_indicators "http://example.com/resource1"
+    end
+
+    scenario "with two resource indicators" do
+      visit "#{authorization_endpoint_url(client: @client, resource: "http://example.com/resource1")}&#{{ resource: "http://example.com/resource2" }.to_param}"
+      click_on "Authorize"
+      access_grant_should_exist_for(@client, @resource_owner)
+      access_grant_should_have_resource_indicators "http://example.com/resource1", "http://example.com/resource2"
+    end
+  end
+
   context "with scopes" do
     background do
       default_scopes_exist :public

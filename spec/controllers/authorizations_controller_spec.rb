@@ -76,6 +76,52 @@ RSpec.describe Doorkeeper::AuthorizationsController do
       end
     end
 
+    context "with resource indicators enabled" do
+      before do
+        allow(Doorkeeper.configuration).to receive(:using_resource_indicators?).and_return(true)
+        allow(Doorkeeper.configuration).to receive(:resource_indicator_authorizer).and_return(->(*_) { true })
+        post :create, params: {
+          client_id: client.uid,
+          response_type: "token",
+          redirect_uri: client.redirect_uri,
+          resource: "http://example.com/resource",
+        }
+      end
+
+      it "redirects after authorization" do
+        expect(response).to be_redirect
+        expect(controller).to receive(:authenticator_method).at_most(:once)
+      end
+
+      it "redirects to client redirect uri" do
+        expect(response.location).to match(/^#{client.redirect_uri}/)
+      end
+
+      it "includes access token in fragment" do
+        expect(response.query_params["access_token"]).to eq(Doorkeeper::AccessToken.first.token)
+      end
+
+      it "includes token type in fragment" do
+        expect(response.query_params["token_type"]).to eq("Bearer")
+      end
+
+      it "includes token expiration in fragment" do
+        expect(response.query_params["expires_in"].to_i).to eq(1234)
+      end
+
+      it "issues the token for the current client" do
+        expect(Doorkeeper::AccessToken.first.application_id).to eq(client.id)
+      end
+
+      it "issues the token for the current resource owner" do
+        expect(Doorkeeper::AccessToken.first.resource_owner_id).to eq(user.id)
+      end
+
+      it "issues the token for the resource indicator" do
+        expect(Doorkeeper::AccessToken.first.resource_indicators).to contain_exactly("http://example.com/resource")
+      end
+    end
+
     context "with 'form_post' as response_mode" do
       before do
         post :create, params: {
@@ -275,6 +321,40 @@ RSpec.describe Doorkeeper::AuthorizationsController do
       it "includes error description" do
         expect(response_json_body["error_description"]).to eq(
           translated_error_message(:invalid_client),
+        )
+      end
+
+      it "does not issue any access token" do
+        expect(Doorkeeper::AccessToken.all).to be_empty
+      end
+    end
+
+    context "when the user does not have access to the resource" do
+      before do
+        allow(Doorkeeper.configuration).to receive(:using_resource_indicators?).and_return(true)
+        allow(Doorkeeper.configuration).to receive(:resource_indicator_authorizer).and_return(->(*_) { false })
+        post :create, params: {
+          client_id: client.uid,
+          response_type: "token",
+          redirect_uri: client.redirect_uri,
+          resource: "http://example.com/resource",
+        }
+      end
+
+      let(:callback_double) { double(call: false) }
+      let(:response_json_body) { JSON.parse(response.body) }
+
+      it "renders 401 error" do
+        expect(response.status).to eq 401
+      end
+
+      it "includes error name" do
+        expect(response_json_body["error"]).to eq("invalid_target")
+      end
+
+      it "includes error description" do
+        expect(response_json_body["error_description"]).to eq(
+          translated_error_message(:invalid_target),
         )
       end
 

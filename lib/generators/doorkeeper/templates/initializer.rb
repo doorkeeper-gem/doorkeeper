@@ -489,4 +489,20 @@ Doorkeeper.configure do
   # WWW-Authenticate Realm (default: "Doorkeeper").
   #
   # realm "Doorkeeper"
+
+  # Enables resource indicator (https://datatracker.ietf.org/doc/html/rfc8707) support.
+  # When enabled access request will delegate to the below callback to verify that the resource
+  # paramater provided by calling apps is appropriate for your application.
+  #
+  # Although the RFC suggests to use urls for indicators there's no restriction on their form
+  # and it's entirely up to your code to make a judgement as to if the resource owner, indicator
+  # pair is valid.
+  #
+  # Authorized resources are saved to the AccessToken for inspection on your protected endpoints.
+  #
+  # use_resource_indicators
+  #
+  resource_indicator_authorizer do |_application, _resource_owner, _resource_indicators|
+    raise "Please configure doorkeeper resource_indicator_authorizer block located in #{__FILE__}"
+  end
 end

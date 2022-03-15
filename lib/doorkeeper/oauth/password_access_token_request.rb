@@ -9,6 +9,7 @@ module Doorkeeper
       validate :client_supports_grant_flow, error: :unauthorized_client
       validate :resource_owner, error: :invalid_grant
       validate :scopes, error: :invalid_scope
+      validate :resource_indicators, error: :invalid_target
 
       attr_reader :client, :credentials, :resource_owner, :parameters, :access_token
 
@@ -20,12 +21,27 @@ module Doorkeeper
         @parameters      = parameters
         @original_scopes = parameters[:scope]
         @grant_type      = Doorkeeper::OAuth::PASSWORD
+        @resource        = parameters[:resource]
       end
 
       private
 
+      def validate_resource_indicators
+        return true unless Doorkeeper.config.using_resource_indicators?
+
+        Doorkeeper.configuration.resource_indicator_authorizer.call(
+          client.application,
+          resource_owner,
+          resource_indicators,
+        )
+      end
+
+      def resource_indicators
+        @resource_indicators ||= ResourceIndicators.from_array(@resource)
+      end
+
       def before_successful_response
-        find_or_create_access_token(client, resource_owner, scopes, server)
+        find_or_create_access_token(client, resource_owner, scopes, server, resource_indicators)
         super
       end
 
