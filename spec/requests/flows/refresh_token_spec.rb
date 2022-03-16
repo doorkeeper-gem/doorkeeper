@@ -46,6 +46,57 @@ RSpec.describe "Refresh Token Flow" do
     end
   end
 
+  describe "issuing a refresh token with resource indicators" do
+    before do
+      config_is_set(:use_resource_indicators, true)
+
+      authorization_code_exists application: @client,
+                                resource_owner_id: resource_owner.id,
+                                resource_owner_type: resource_owner.class.name,
+                                resource_indicators: ["http://example.com/resource1"]
+    end
+
+    it "client gets the refresh token and refreshes it" do
+      post token_endpoint_url(code: @authorization.token, client: @client, resource: "http://example.com/resource1")
+      token = Doorkeeper::AccessToken.first
+
+      expect(json_response).to include(
+        "access_token" => token.token,
+        "refresh_token" => token.refresh_token,
+      )
+
+      expect(@authorization.reload).to be_revoked
+
+      post refresh_token_endpoint_url(client: @client, refresh_token: token.refresh_token, resource: "http://example.com/resource1")
+
+      new_token = Doorkeeper::AccessToken.last
+      expect(json_response).to include(
+        "access_token" => new_token.token,
+        "refresh_token" => new_token.refresh_token,
+      )
+
+      expect(token.token).not_to eq(new_token.token)
+      expect(token.refresh_token).not_to eq(new_token.refresh_token)
+      expect(token.resource_indicators).to eq(new_token.resource_indicators)
+    end
+
+    it "client unable to referesh with different resources" do
+      post token_endpoint_url(code: @authorization.token, client: @client, resource: "http://example.com/resource1")
+      token = Doorkeeper::AccessToken.first
+
+      expect(json_response).to include(
+        "access_token" => token.token,
+        "refresh_token" => token.refresh_token,
+      )
+
+      expect(@authorization.reload).to be_revoked
+
+      post refresh_token_endpoint_url(client: @client, refresh_token: token.refresh_token, resource: "http://example.com/resource2")
+
+      expect(json_response).to include("error" => "invalid_target")
+    end
+  end
+
   describe "refreshing the token" do
     before do
       @token = FactoryBot.create(

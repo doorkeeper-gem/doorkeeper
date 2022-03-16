@@ -174,11 +174,11 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
     end
 
     context "when resource indicators are omitted" do
-      it "issues a new token for the client" do
+      it "returns a downgraded token" do
         expect do
           request.authorize
-        end.to change { client.reload.access_tokens.count }.by(0)
-        expect(request.error).to eq(:invalid_target)
+        end.to change { client.reload.access_tokens.count }.by(1)
+        expect(client.access_tokens.last.resource_indicators).to be_empty
       end
     end
 
