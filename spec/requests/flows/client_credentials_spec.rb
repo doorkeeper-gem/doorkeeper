@@ -150,6 +150,20 @@ RSpec.describe "Client Credentials Request" do
         "scope" => "public read",
       )
     end
+
+    it "forbids the request if the public scope is not present in the application scopes" do
+      default_scopes_exist :default
+
+      headers = authorization client.uid, client.secret
+      params  = { grant_type: "client_credentials" }
+
+      post "/oauth/token", params: params, headers: headers
+
+      expect(json_response).to match(
+        "error" => "invalid_scope",
+        "error_description" => translated_error_message(:invalid_scope),
+      )
+    end
   end
 
   context "when request is invalid" do
