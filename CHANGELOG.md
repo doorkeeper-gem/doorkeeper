@@ -7,6 +7,8 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1558] Fixed bug: able to obtain a token with default scopes even if they are not present in the 
+  application scopes when using client credentials.
 - [#ID] Add your PR description here.
 
 ## 5.6.0.rc1
