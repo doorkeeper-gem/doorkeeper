@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Repo checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
