@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "coveralls"
+require "debug"
 
 Coveralls.wear!("rails") do
   add_filter("/spec/")
