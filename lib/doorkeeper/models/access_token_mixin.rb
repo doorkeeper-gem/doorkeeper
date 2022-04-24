@@ -348,6 +348,7 @@ module Doorkeeper
     # We keep a volatile copy of the raw refresh token for initial communication
     # The stored refresh_token may be mapped and not available in cleartext.
     def plaintext_refresh_token
+      binding.b
       if secret_strategy.allows_restoring_secrets?
         secret_strategy.restore_secret(self, :refresh_token)
       else
