@@ -5,7 +5,6 @@ module Doorkeeper
     before_action :validate_presence_of_client, only: [:revoke]
 
     def create
-      binding.b
       headers.merge!(authorize_response.headers)
       render json: authorize_response.body,
              status: authorize_response.status
