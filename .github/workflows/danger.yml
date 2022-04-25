@@ -2,6 +2,9 @@ name: Danger
 
 on: [pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   danger:
     runs-on: ubuntu-latest
