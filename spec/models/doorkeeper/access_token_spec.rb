@@ -71,6 +71,7 @@ RSpec.describe Doorkeeper::AccessToken do
 
           it "upgrades a plain token when falling back to it" do
             # Side-effect: This will automatically upgrade the token
+            binding.b
             expect(described_class).to receive(:upgrade_fallback_value).and_call_original
             expect(described_class.by_token(plain_text_token))
               .to have_attributes(
