@@ -9,6 +9,7 @@ User-visible changes worth mentioning.
 
 - [#1558] Fixed bug: able to obtain a token with default scopes even if they are not present in the 
   application scopes when using client credentials.
+- [#1567] Only filter `code` parameter if authorization_code grant flow is enabled
 - [#ID] Add your PR description here.
 
 ## 5.6.0.rc1
