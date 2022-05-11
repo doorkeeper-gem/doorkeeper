@@ -28,9 +28,9 @@ module Doorkeeper
         autoload :Application, "doorkeeper/orm/active_record/mixins/application"
       end
 
-      def self.run_hooks
+      def self.run_hooks(realm)
         # Deprecated, will be removed soon
-        return unless (options = Doorkeeper.config.active_record_options[:establish_connection])
+        return unless (options = Doorkeeper.config(realm).active_record_options[:establish_connection])
 
         Doorkeeper::Orm::ActiveRecord.models.each do |model|
           model.establish_connection(options)

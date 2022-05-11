@@ -5,6 +5,7 @@ module Doorkeeper
     extend ActiveSupport::Concern
 
     include OAuth::Helpers
+    include Models::Configurable
     include Models::Expirable
     include Models::Reusable
     include Models::Revocable
@@ -121,7 +122,7 @@ module Doorkeeper
         return nil unless relation
 
         matching_tokens = []
-        batch_size = Doorkeeper.configuration.token_lookup_batch_size
+        batch_size = doorkeeper_config.token_lookup_batch_size
 
         find_access_token_in_batches(relation, batch_size: batch_size) do |batch|
           tokens = batch.select do |token|
@@ -154,7 +155,7 @@ module Doorkeeper
         (token_scopes.sort == param_scopes.sort) &&
           Doorkeeper::OAuth::Helpers::ScopeChecker.valid?(
             scope_str: param_scopes.to_s,
-            server_scopes: Doorkeeper.config.scopes,
+            server_scopes: doorkeeper_config.scopes,
             app_scopes: app_scopes,
           )
       end
@@ -179,7 +180,7 @@ module Doorkeeper
       # @return [Doorkeeper::AccessToken] existing record or a new one
       #
       def find_or_create_for(application:, resource_owner:, scopes:, **token_attributes)
-        if Doorkeeper.config.reuse_access_token
+        if doorkeeper_config.reuse_access_token
           access_token = matching_token_for(application, resource_owner, scopes)
 
           return access_token if access_token&.reusable?
@@ -215,7 +216,7 @@ module Doorkeeper
         token_attributes[:application_id] = application&.id
         token_attributes[:scopes] = scopes.to_s
 
-        if Doorkeeper.config.polymorphic_resource_owner?
+        if doorkeeper_config.polymorphic_resource_owner?
           token_attributes[:resource_owner] = resource_owner
         else
           token_attributes[:resource_owner_id] = resource_owner_id_for(resource_owner)
@@ -266,14 +267,14 @@ module Doorkeeper
       # @return [Doorkeeper::SecretStoring::Base]
       #
       def secret_strategy
-        ::Doorkeeper.config.token_secret_strategy
+        doorkeeper_config.token_secret_strategy
       end
 
       ##
       # Determine the fallback storing strategy
       # Unless configured, there will be no fallback
       def fallback_secret_strategy
-        ::Doorkeeper.config.token_secret_fallback_strategy
+        doorkeeper_config.token_secret_fallback_strategy
       end
     end
 
@@ -301,7 +302,7 @@ module Doorkeeper
         application: { uid: application.try(:uid) },
         created_at: created_at.to_i,
       }.tap do |json|
-        if Doorkeeper.configuration.polymorphic_resource_owner?
+        if doorkeeper_config.polymorphic_resource_owner?
           json[:resource_owner_type] = resource_owner_type
         end
       end
@@ -327,7 +328,7 @@ module Doorkeeper
     # @return [Boolean] true if credentials are same of false in other cases
     #
     def same_resource_owner?(access_token)
-      if Doorkeeper.configuration.polymorphic_resource_owner?
+      if doorkeeper_config.polymorphic_resource_owner?
         resource_owner == access_token.resource_owner
       else
         resource_owner_id == access_token.resource_owner_id
@@ -396,7 +397,7 @@ module Doorkeeper
     # @return [String] refresh token value
     #
     def generate_refresh_token
-      @raw_refresh_token = UniqueToken.generate
+      @raw_refresh_token = UniqueToken.generate(doorkeeper_config: doorkeeper_config)
       secret_strategy.store_secret(self, :refresh_token, @raw_refresh_token)
     end
 
@@ -430,15 +431,16 @@ module Doorkeeper
         application: application,
         expires_in: expires_in,
         created_at: created_at,
+        doorkeeper_config: doorkeeper_config
       }.tap do |attributes|
-        if Doorkeeper.config.polymorphic_resource_owner?
+        if doorkeeper_config.polymorphic_resource_owner?
           attributes[:resource_owner] = resource_owner
         end
       end
     end
 
     def token_generator
-      generator_name = Doorkeeper.config.access_token_generator
+      generator_name = doorkeeper_config.access_token_generator
       generator = generator_name.constantize
 
       return generator if generator.respond_to?(:generate)

@@ -19,6 +19,7 @@ module Doorkeeper
   autoload :AccessGrantMixin, "doorkeeper/models/access_grant_mixin"
   autoload :AccessTokenMixin, "doorkeeper/models/access_token_mixin"
   autoload :ApplicationMixin, "doorkeeper/models/application_mixin"
+  autoload :Current, "doorkeeper/models/current"
 
   module Helpers
     autoload :Controller, "doorkeeper/helpers/controller"
@@ -86,6 +87,7 @@ module Doorkeeper
   end
 
   module Models
+    autoload :Configurable, "doorkeeper/models/concerns/configurable"
     autoload :Accessible, "doorkeeper/models/concerns/accessible"
     autoload :Expirable, "doorkeeper/models/concerns/expirable"
     autoload :ExpirationTimeSqlMath, "doorkeeper/models/concerns/expiration_time_sql_math"

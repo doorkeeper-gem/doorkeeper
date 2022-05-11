@@ -5,6 +5,7 @@ module Doorkeeper
     extend ActiveSupport::Concern
 
     include OAuth::Helpers
+    include Models::Configurable
     include Models::Expirable
     include Models::Revocable
     include Models::Accessible
@@ -103,7 +104,7 @@ module Doorkeeper
       # @return [Doorkeeper::SecretStoring::Base]
       #
       def secret_strategy
-        ::Doorkeeper.config.token_secret_strategy
+        doorkeeper_config.token_secret_strategy
       end
 
       ##
@@ -113,7 +114,7 @@ module Doorkeeper
       # @return [Doorkeeper::SecretStoring::Base]
       #
       def fallback_secret_strategy
-        ::Doorkeeper.config.token_secret_fallback_strategy
+        doorkeeper_config.token_secret_fallback_strategy
       end
     end
   end

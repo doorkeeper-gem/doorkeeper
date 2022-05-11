@@ -10,11 +10,11 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
 
       include ::Doorkeeper::AccessGrantMixin
 
-      belongs_to :application, class_name: Doorkeeper.config.application_class.to_s,
+      belongs_to :application, class_name: doorkeeper_config.application_class.to_s,
                                optional: true,
                                inverse_of: :access_grants
 
-      if Doorkeeper.config.polymorphic_resource_owner?
+      if doorkeeper_config.polymorphic_resource_owner?
         belongs_to :resource_owner, polymorphic: true, optional: false
       else
         validates :resource_owner_id, presence: true
@@ -51,7 +51,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       # @return [String] token value
       #
       def generate_token
-        @raw_token = Doorkeeper::OAuth::Helpers::UniqueToken.generate
+        @raw_token = Doorkeeper::OAuth::Helpers::UniqueToken.generate(doorkeeper_config: doorkeeper_config)
         secret_strategy.store_secret(self, :token, @raw_token)
       end
     end

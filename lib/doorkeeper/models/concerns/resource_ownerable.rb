@@ -16,7 +16,7 @@ module Doorkeeper
         #   collection of records
         #
         def by_resource_owner(resource_owner)
-          if Doorkeeper.configuration.polymorphic_resource_owner?
+          if doorkeeper_config.polymorphic_resource_owner?
             where(resource_owner: resource_owner)
           else
             where(resource_owner_id: resource_owner_id_for(resource_owner))

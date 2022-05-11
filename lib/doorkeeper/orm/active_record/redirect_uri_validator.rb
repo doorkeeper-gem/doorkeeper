@@ -6,9 +6,13 @@ module Doorkeeper
   # ActiveModel validator for redirect URI validation in according
   # to OAuth standards and Doorkeeper configuration.
   class RedirectUriValidator < ActiveModel::EachValidator
+    attr_reader :doorkeeper_config
+
     def validate_each(record, attribute, value)
+      @doorkeeper_config = record.doorkeeper_config
+
       if value.blank?
-        return if Doorkeeper.config.allow_blank_redirect_uri?(record)
+        return if doorkeeper_config.allow_blank_redirect_uri?(record)
 
         record.errors.add(attribute, :blank)
       else
@@ -35,7 +39,7 @@ module Doorkeeper
     end
 
     def forbidden_uri?(uri)
-      Doorkeeper.config.forbid_redirect_uri.call(uri)
+      doorkeeper_config.forbid_redirect_uri.call(uri)
     end
 
     def unspecified_scheme?(uri)
@@ -53,7 +57,7 @@ module Doorkeeper
     end
 
     def invalid_ssl_uri?(uri)
-      forces_ssl = Doorkeeper.config.force_ssl_in_redirect_uri
+      forces_ssl = doorkeeper_config.force_ssl_in_redirect_uri
       non_https = uri.try(:scheme) == "http"
 
       if forces_ssl.respond_to?(:call)

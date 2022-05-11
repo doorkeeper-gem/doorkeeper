@@ -5,6 +5,7 @@ require "spec_helper"
 RSpec.describe Doorkeeper::Models::Reusable do
   subject(:fake_object) do
     Class.new do
+      include Doorkeeper::Models::Configurable
       include Doorkeeper::Models::Reusable
     end.new
   end

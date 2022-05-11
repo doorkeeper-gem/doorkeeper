@@ -7,12 +7,12 @@ module Doorkeeper
         class Validator
           attr_reader :parsed_scopes, :scope_str
 
-          def initialize(scope_str, server_scopes, app_scopes, grant_type)
+          def initialize(scope_str, server_scopes, app_scopes, grant_type, doorkeeper_config)
             @parsed_scopes = OAuth::Scopes.from_string(scope_str)
             @scope_str = scope_str
             @valid_scopes = valid_scopes(server_scopes, app_scopes)
 
-            @scopes_by_grant_type = Doorkeeper.config.scopes_by_grant_type[grant_type.to_sym] if grant_type
+            @scopes_by_grant_type = doorkeeper_config.scopes_by_grant_type[grant_type.to_sym] if grant_type
           end
 
           def valid?
@@ -36,12 +36,13 @@ module Doorkeeper
           end
         end
 
-        def self.valid?(scope_str:, server_scopes:, app_scopes: nil, grant_type: nil)
+        def self.valid?(scope_str:, server_scopes:, app_scopes: nil, grant_type: nil, doorkeeper_config: Doorkeeper.config)
           Validator.new(
             scope_str,
             server_scopes,
             app_scopes,
             grant_type,
+            doorkeeper_config
           ).valid?
         end
       end

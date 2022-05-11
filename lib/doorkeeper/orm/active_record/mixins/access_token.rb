@@ -10,11 +10,11 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
 
       include ::Doorkeeper::AccessTokenMixin
 
-      belongs_to :application, class_name: Doorkeeper.config.application_class.to_s,
+      belongs_to :application, class_name: doorkeeper_config.application_class.to_s,
                                inverse_of: :access_tokens,
                                optional: true
 
-      if Doorkeeper.config.polymorphic_resource_owner?
+      if doorkeeper_config.polymorphic_resource_owner?
         belongs_to :resource_owner, polymorphic: true, optional: true
       end
 

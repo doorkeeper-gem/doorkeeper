@@ -11,7 +11,7 @@ module Doorkeeper
       end
 
       def validate_owner?
-        Doorkeeper.config.confirm_application_owner?
+        doorkeeper_config.confirm_application_owner?
       end
     end
   end

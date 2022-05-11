@@ -487,9 +487,9 @@ RSpec.describe Doorkeeper::Config do
   end
 
   it "raises an exception when configuration is not set" do
-    old_config = Doorkeeper.config
+    old_configs = Doorkeeper.configs
     Doorkeeper.module_eval do
-      @config = nil
+      @configs = {}
     end
 
     expect do
@@ -497,7 +497,7 @@ RSpec.describe Doorkeeper::Config do
     end.to raise_error Doorkeeper::MissingConfiguration
 
     Doorkeeper.module_eval do
-      @config = old_config
+      @configs = old_configs
     end
   end
 

@@ -5,6 +5,7 @@ module Doorkeeper
     extend ActiveSupport::Concern
 
     include OAuth::Helpers
+    include Models::Configurable
     include Models::Orderable
     include Models::SecretStorable
     include Models::Scopes
@@ -47,14 +48,14 @@ module Doorkeeper
       # Determines the secret storing transformer
       # Unless configured otherwise, uses the plain secret strategy
       def secret_strategy
-        ::Doorkeeper.config.application_secret_strategy
+        doorkeeper_config.application_secret_strategy
       end
 
       ##
       # Determine the fallback storing strategy
       # Unless configured, there will be no fallback
       def fallback_secret_strategy
-        ::Doorkeeper.config.application_secret_fallback_strategy
+        doorkeeper_config.application_secret_fallback_strategy
       end
     end
 

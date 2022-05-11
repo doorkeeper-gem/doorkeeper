@@ -10,19 +10,19 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
 
       include ::Doorkeeper::ApplicationMixin
 
-      if Doorkeeper.config.enable_application_owner?
+      if doorkeeper_config.enable_application_owner?
         include ::Doorkeeper::Models::Ownership
       end
 
       has_many :access_grants,
                foreign_key: :application_id,
                dependent: :delete_all,
-               class_name: Doorkeeper.config.access_grant_class.to_s
+               class_name: doorkeeper_config.access_grant_class.to_s
 
       has_many :access_tokens,
                foreign_key: :application_id,
                dependent: :delete_all,
-               class_name: Doorkeeper.config.access_token_class.to_s
+               class_name: doorkeeper_config.access_token_class.to_s
 
       validates :name, :secret, :uid, presence: true
       validates :uid, uniqueness: { case_sensitive: true }
@@ -36,7 +36,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       has_many :authorized_tokens,
                -> { where(revoked_at: nil) },
                foreign_key: :application_id,
-               class_name: Doorkeeper.config.access_token_class.to_s
+               class_name: doorkeeper_config.access_token_class.to_s
 
       has_many :authorized_applications,
                through: :authorized_tokens,
@@ -48,7 +48,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       # @return [String] new transformed secret value
       #
       def renew_secret
-        @raw_secret = Doorkeeper::OAuth::Helpers::UniqueToken.generate
+        @raw_secret = Doorkeeper::OAuth::Helpers::UniqueToken.generate(doorkeeper_config: doorkeeper_config)
         secret_strategy.store_secret(self, :secret, @raw_secret)
       end
 
@@ -90,7 +90,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       end
 
       def authorized_for_resource_owner?(resource_owner)
-        Doorkeeper.configuration.authorize_resource_owner_for_client.call(self, resource_owner)
+        doorkeeper_config.authorize_resource_owner_for_client.call(self, resource_owner)
       end
 
       # We need to hook into this method to allow serializing plan-text secrets
@@ -107,7 +107,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       private
 
       def generate_uid
-        self.uid = Doorkeeper::OAuth::Helpers::UniqueToken.generate if uid.blank?
+        self.uid = Doorkeeper::OAuth::Helpers::UniqueToken.generate(doorkeeper_config: doorkeeper_config) if uid.blank?
       end
 
       def generate_secret
@@ -117,16 +117,13 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       end
 
       def scopes_match_configured
-        if scopes.present? && !Doorkeeper::OAuth::Helpers::ScopeChecker.valid?(
-          scope_str: scopes.to_s,
-          server_scopes: Doorkeeper.config.scopes,
-        )
+        if scopes.present? && !Doorkeeper::OAuth::Helpers::ScopeChecker.valid?(scope_str: scopes.to_s, server_scopes: doorkeeper_config.scopes)
           errors.add(:scopes, :not_match_configured)
         end
       end
 
       def enforce_scopes?
-        Doorkeeper.config.enforce_configured_scopes?
+        doorkeeper_config.enforce_configured_scopes?
       end
 
       # Helper method to extract collection of serializable attribute names
@@ -176,7 +173,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       #   Applications authorized for the Resource Owner
       #
       def authorized_for(resource_owner)
-        resource_access_tokens = Doorkeeper.config.access_token_model.active_for(resource_owner)
+        resource_access_tokens = doorkeeper_config.access_token_model.active_for(resource_owner)
         where(id: resource_access_tokens.select(:application_id).distinct)
       end
 
@@ -187,8 +184,8 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       #   instance of the Resource Owner model
       #
       def revoke_tokens_and_grants_for(id, resource_owner)
-        Doorkeeper.config.access_token_model.revoke_all_for(id, resource_owner)
-        Doorkeeper.config.access_grant_model.revoke_all_for(id, resource_owner)
+        doorkeeper_config.access_token_model.revoke_all_for(id, resource_owner)
+        doorkeeper_config.access_grant_model.revoke_all_for(id, resource_owner)
       end
 
       private
