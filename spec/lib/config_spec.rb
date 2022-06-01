@@ -517,6 +517,22 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
+  describe "application_secret_generator" do
+    it "is 'Doorkeeper::OAuth::Helpers::UniqueToken' by default" do
+      expect(Doorkeeper.configuration.application_secret_generator).to(
+        eq("Doorkeeper::OAuth::Helpers::UniqueToken"),
+      )
+    end
+
+    it "can change the value" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        application_secret_generator "Example"
+      end
+      expect(config.application_secret_generator).to eq("Example")
+    end
+  end
+
   describe "default_generator_method" do
     it "is :urlsafe_base64 by default" do
       expect(Doorkeeper.configuration.default_generator_method)

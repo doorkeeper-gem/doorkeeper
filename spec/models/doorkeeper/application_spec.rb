@@ -86,6 +86,23 @@ RSpec.describe Doorkeeper::Application do
     expect(new_application).not_to be_valid
   end
 
+  it "generates a secret using a custom object" do
+    module CustomGeneratorArgs
+      def self.generate
+        "custom_application_secret"
+      end
+    end
+
+    Doorkeeper.configure do
+      orm DOORKEEPER_ORM
+      application_secret_generator "CustomGeneratorArgs"
+    end
+
+    expect(new_application.secret).to be_nil
+    new_application.save
+    expect(new_application.secret).to eq("custom_application_secret")
+  end
+
   context "when application_owner is enabled" do
     let(:new_application) { FactoryBot.build(:application_with_owner) }
 

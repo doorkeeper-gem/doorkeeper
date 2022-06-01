@@ -48,7 +48,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       # @return [String] new transformed secret value
       #
       def renew_secret
-        @raw_secret = Doorkeeper::OAuth::Helpers::UniqueToken.generate
+        @raw_secret = secret_generator.generate
         secret_strategy.store_secret(self, :secret, @raw_secret)
       end
 
@@ -105,6 +105,17 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       end
 
       private
+
+      def secret_generator
+        generator_name = Doorkeeper.config.application_secret_generator
+        generator = generator_name.constantize
+
+        return generator if generator.respond_to?(:generate)
+
+        raise Errors::UnableToGenerateToken, "#{generator} does not respond to `.generate`."
+      rescue NameError
+        raise Errors::TokenGeneratorNotFound, "#{generator_name} not found"
+      end
 
       def generate_uid
         self.uid = Doorkeeper::OAuth::Helpers::UniqueToken.generate if uid.blank?
