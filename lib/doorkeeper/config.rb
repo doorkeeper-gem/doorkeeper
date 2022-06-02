@@ -387,11 +387,20 @@ module Doorkeeper
     option :access_token_generator,
            default: "Doorkeeper::OAuth::Helpers::UniqueToken"
 
+    # Use a custom class for generating the application secret.
+    # https://doorkeeper.gitbook.io/guides/configuration/other-configurations#custom-application-secret-generator
+    #
+    # @param application_secret_generator [String]
+    #   the name of the application secret generator class
+    #
+    option :application_secret_generator,
+           default: "Doorkeeper::OAuth::Helpers::UniqueToken"
+
     # Default access token generator is a SecureRandom class from Ruby stdlib.
     # This option defines which method will be used to generate a unique token value.
     #
-    # @param access_token_generator [String]
-    #   the name of the access token generator class
+    # @param default_generator_method [Symbol]
+    #   the method name of the default access token generator
     #
     option :default_generator_method, default: :urlsafe_base64
 
