@@ -18,7 +18,7 @@ RSpec.describe Doorkeeper::OAuth::BaseRequest do
            created_at: 0
   end
 
-  let(:client) { double :client, id: "1" }
+  let(:client) { Doorkeeper::Application.new(id: "1") }
 
   let(:scopes_array) { %w[public write] }
 
