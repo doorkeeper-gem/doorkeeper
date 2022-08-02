@@ -37,7 +37,7 @@ RSpec.describe "Revoke Token Flow" do
     end
 
     it "revokes the refresh token provided" do
-      post revocation_token_endpoint_url, params: { token: access_token.refresh_token }, headers: headers
+      post revocation_token_endpoint_url, params: { token: access_token.refresh_token, token_type_hint: "refresh_token" }, headers: headers
 
       expect(response).to be_successful
       expect(access_token.reload).to be_revoked
