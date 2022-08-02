@@ -30,6 +30,7 @@ module Doorkeeper
       end
     end
 
+    # OAuth 2.0 Token Introspection - https://datatracker.ietf.org/doc/html/rfc7662
     def introspect
       introspection = OAuth::TokenIntrospection.new(server, token)
 
@@ -115,12 +116,14 @@ module Doorkeeper
       token.revoke if token&.accessible?
     end
 
-    # Doorkeeper does not use the token_type_hint logic described in the
-    # RFC 7009 due to the refresh token implementation that is a field in
-    # the access token model.
     def token
-      @token ||= Doorkeeper.config.access_token_model.by_token(params["token"]) ||
-                 Doorkeeper.config.access_token_model.by_refresh_token(params["token"])
+      @token ||=
+        if params[:token_type_hint] == "refresh_token"
+          Doorkeeper.config.access_token_model.by_refresh_token(params["token"])
+        else
+          Doorkeeper.config.access_token_model.by_token(params["token"]) ||
+            Doorkeeper.config.access_token_model.by_refresh_token(params["token"])
+        end
     end
 
     def strategy
