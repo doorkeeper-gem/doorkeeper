@@ -7,8 +7,11 @@ User-visible changes worth mentioning.
 
 ## main
 
-- [#1581] Consider `token_type_hint` when searching for access token in TokensController to avoid extra database calls.
 - [#ID] Add your PR description here.
+
+## 5.6.0
+
+- [#1581] Consider `token_type_hint` when searching for access token in TokensController to avoid extra database calls.
 
 ## 5.6.0.rc1
 
