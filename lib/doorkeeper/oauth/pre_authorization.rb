@@ -20,6 +20,8 @@ module Doorkeeper
                   :redirect_uri, :resource_owner, :response_type, :state,
                   :authorization_response_flow, :response_mode
 
+      Doorkeeper.config.additional_access_token_fields.each { |field| attr_reader field }
+
       def initialize(server, parameters = {}, resource_owner = nil)
         @server                = server
         @client_id             = parameters[:client_id]
@@ -31,6 +33,10 @@ module Doorkeeper
         @code_challenge        = parameters[:code_challenge]
         @code_challenge_method = parameters[:code_challenge_method]
         @resource_owner        = resource_owner
+
+        Doorkeeper.config.additional_access_token_fields.each do |field|
+          instance_variable_set("@#{field}", parameters[field])
+        end
       end
 
       def authorizable?

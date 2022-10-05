@@ -88,7 +88,7 @@ module Doorkeeper
     end
 
     def pre_auth_param_fields
-      %i[
+      Doorkeeper.configuration.additional_access_token_fields + %i[
         client_id
         code_challenge
         code_challenge_method

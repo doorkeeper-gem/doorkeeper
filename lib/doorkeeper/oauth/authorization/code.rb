@@ -45,6 +45,14 @@ module Doorkeeper
             attributes[:resource_owner_id] = resource_owner.id
           end
 
+          Doorkeeper.config.additional_access_token_fields.each do |field|
+            # Fields needs to be added to access_grants via a
+            # migration, so check first if that's been done.
+            if Doorkeeper.config.access_grant_model.respond_to?(field)
+              attributes[field] = @pre_auth.send(field)
+            end
+          end
+
           pkce_attributes.merge(attributes)
         end
 

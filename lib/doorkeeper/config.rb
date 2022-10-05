@@ -387,6 +387,14 @@ module Doorkeeper
     option :access_token_generator,
            default: "Doorkeeper::OAuth::Helpers::UniqueToken"
 
+    # Allows additional data to be passed into the AccessGrant when authorizing a new client,
+    # and subsequently included in any generated access tokens.
+    #
+    # @param fields [Array] The array of additional field names to be saved
+    #
+    option :additional_access_token_fields,
+           default: []
+
     # Use a custom class for generating the application secret.
     # https://doorkeeper.gitbook.io/guides/configuration/other-configurations#custom-application-secret-generator
     #
