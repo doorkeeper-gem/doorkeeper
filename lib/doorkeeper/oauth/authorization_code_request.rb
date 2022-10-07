@@ -31,10 +31,16 @@ module Doorkeeper
 
           grant.revoke
 
+          additional_fields = {}
+          Doorkeeper.config.additional_access_token_fields.each do |field|
+            additional_fields[field] = grant.try(field)
+          end
+
           find_or_create_access_token(
             grant.application,
             resource_owner,
             grant.scopes,
+            additional_fields.compact,
             server,
           )
         end
