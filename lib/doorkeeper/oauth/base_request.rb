@@ -37,7 +37,7 @@ module Doorkeeper
           expires_in: Authorization::Token.access_token_expires_in(server, context),
           use_refresh_token: Authorization::Token.refresh_token_enabled?(server, context)
         }
-        additional_fields.select! { |k, _v| token_model.respond_to?(k) }
+        additional_fields.select! { |k, _v| token_model.column_names.include?(k.to_s) }
 
         @access_token = token_model.find_or_create_for(token_params.merge(additional_fields))
       end
