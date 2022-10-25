@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1593] Add support for Trilogy ActiveRecord adapter.
 - [#ID] Add your PR description here.
 
 ## 5.6.0
