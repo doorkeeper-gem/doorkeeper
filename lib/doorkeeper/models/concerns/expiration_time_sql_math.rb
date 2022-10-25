@@ -56,6 +56,7 @@ module Doorkeeper
         "postgresql" => PostgresExpirationTimeSqlGenerator,
         "mysql" => MySqlExpirationTimeSqlGenerator,
         "mysql2" => MySqlExpirationTimeSqlGenerator,
+        "trilogy" => MySqlExpirationTimeSqlGenerator,
         "sqlserver" => SqlServerExpirationTimeSqlGenerator,
         "oracleenhanced" => OracleExpirationTimeSqlGenerator,
       }.freeze
