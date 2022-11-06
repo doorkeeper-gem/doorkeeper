@@ -4,9 +4,10 @@ require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::CodeResponse do
   let(:pre_auth) do
+    application = FactoryBot.create(:application, scopes: "")
     double(
       :pre_auth,
-      client: double(:application, id: 1),
+      client: application,
       redirect_uri: "http://tst.com/cb",
       state: "state",
       scopes: Doorkeeper::OAuth::Scopes.from_string("public"),
