@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#1593] Add support for Trilogy ActiveRecord adapter.
+- [#1597] Add optional support to use the url path for the native authorization code flow.  Ports forward [#1143] from 4.4.3
 - [#ID] Add your PR description here.
 
 ## 5.6.0

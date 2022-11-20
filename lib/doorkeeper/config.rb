@@ -159,6 +159,15 @@ module Doorkeeper
         @config.instance_variable_set(:@reuse_access_token, true)
       end
 
+      # Choose to use the url path for native autorization codes 
+      # Enabling this flag sets the authorization code response route for
+      # native redirect uris to oauth/authorize/<code>. The default is
+      # oauth/authorize/native?code=<code>.
+      # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/1143
+      def use_url_path_for_native_authorization
+        @config.instance_variable_set(:@use_url_path_for_native_authorization, true)
+      end
+
       # TODO: maybe make it more generic for other flows too?
       # Only allow one valid access token obtained via client credentials
       # per client. If a new access token is obtained before the old one
@@ -622,6 +631,11 @@ module Doorkeeper
     # [NOTE]: deprecated and will be removed soon
     def deprecated_token_grant_types_resolver
       @deprecated_token_grant_types ||= calculate_token_grant_types
+    end
+    
+    def native_authorization_code_route
+      @use_url_path_for_native_authorization = false unless defined?(@use_url_path_for_native_authorization)
+      @use_url_path_for_native_authorization ? '/:code' : '/native'
     end
 
     # [NOTE]: deprecated and will be removed soon
