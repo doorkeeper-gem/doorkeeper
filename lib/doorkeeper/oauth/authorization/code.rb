@@ -45,6 +45,16 @@ module Doorkeeper
             attributes[:resource_owner_id] = resource_owner.id
           end
 
+          # Custom access token fields are saved into the access grant,
+          # and then included in subsequently generated access tokens.
+          Doorkeeper.config.custom_access_token_fields.each do |field_name|
+            unless Doorkeeper.config.access_grant_model.has_attribute?(field_name)
+              raise NotImplementedError, "#{Doorkeeper.config.access_grant_model} does not recognize field: #{field_name}."
+            end
+
+            attributes[field_name] = @pre_auth.custom_access_token_fields[field_name]
+          end
+
           pkce_attributes.merge(attributes)
         end
 
