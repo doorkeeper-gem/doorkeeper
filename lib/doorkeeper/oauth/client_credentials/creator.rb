@@ -13,8 +13,9 @@ module Doorkeeper
           end
 
           with_revocation(existing_token: existing_token) do
+            application = client.is_a?(Doorkeeper::Application) ? client : client.application if client
             server_config.access_token_model.create_for(
-              application: client,
+              application: application,
               resource_owner: nil,
               scopes: scopes,
               **attributes,

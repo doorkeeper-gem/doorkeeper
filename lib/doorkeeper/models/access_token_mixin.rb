@@ -212,7 +212,7 @@ module Doorkeeper
       # @return [Doorkeeper::AccessToken] new access token
       #
       def create_for(application:, resource_owner:, scopes:, **token_attributes)
-        token_attributes[:application_id] = application&.id
+        token_attributes[:application] = application
         token_attributes[:scopes] = scopes.to_s
 
         if Doorkeeper.config.polymorphic_resource_owner?
