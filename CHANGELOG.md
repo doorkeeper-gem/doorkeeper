@@ -13,6 +13,7 @@ User-visible changes worth mentioning.
 
 - [#1593] Add support for Trilogy ActiveRecord adapter.
 - [#1597] Add optional support to use the url path for the native authorization code flow. Ports forward [#1143] from 4.4.3
+- [#1599] Remove unnecessarily re-fetch of application object when creating an access token.
 
 ## 5.6.0
 
