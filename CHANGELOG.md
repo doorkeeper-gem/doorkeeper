@@ -7,8 +7,11 @@ User-visible changes worth mentioning.
 
 ## main
 
-- [#1604] Fix fetching of the application when custom application_class defined.
 - [#ID] Add your PR description here.
+
+## 5.6.2
+
+- [#1604] Fix fetching of the application when custom application_class defined.
 
 ## 5.6.1
 
