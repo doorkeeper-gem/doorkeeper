@@ -59,7 +59,6 @@ module Doorkeeper
             resource_owner,
           )
 
-          application = pre_auth.client.is_a?(Doorkeeper::Application) ? pre_auth.client : pre_auth.client.application if pre_auth.client
           @token = Doorkeeper.config.access_token_model.find_or_create_for(
             application: application,
             resource_owner: resource_owner,
@@ -67,6 +66,12 @@ module Doorkeeper
             expires_in: self.class.access_token_expires_in(Doorkeeper.config, context),
             use_refresh_token: false,
           )
+        end
+
+        def application
+          return unless pre_auth.client
+
+          pre_auth.client.is_a?(Doorkeeper.config.application_model) ? pre_auth.client : pre_auth.client.application
         end
 
         def oob_redirect
