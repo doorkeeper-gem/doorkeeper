@@ -134,7 +134,7 @@ module Doorkeeper
       # Since resource servers using token introspection rely on the
       # authorization server to determine the state of a token, the
       # authorization server MUST perform all applicable checks against a
-      # token's state.  For instance, these tests include the following:
+      # token's state. For instance, these tests include the following:
       #
       #    o  If the token can expire, the authorization server MUST determine
       #       whether or not the token has expired.
