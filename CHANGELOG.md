@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#ID] Add your PR description here.
+- [#1605] Fix URI validation for Ruby 3.2+.
 
 ## 5.6.2
 

@@ -61,9 +61,9 @@ module Doorkeeper
         end
 
         def self.valid_scheme?(uri)
-          return false if uri.scheme.nil?
+          return false if uri.scheme.blank?
 
-          %w[localhost].include?(uri.scheme) == false
+          %w[localhost].exclude?(uri.scheme)
         end
 
         def self.hypertext_scheme?(uri)
@@ -71,7 +71,7 @@ module Doorkeeper
         end
 
         def self.iff_host?(uri)
-          !(hypertext_scheme?(uri) && uri.host.nil?)
+          !(hypertext_scheme?(uri) && uri.host.blank?)
         end
 
         def self.oob_uri?(uri)
