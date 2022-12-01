@@ -45,11 +45,11 @@ module Doorkeeper
     end
 
     def unspecified_host?(uri)
-      uri.is_a?(URI::HTTP) && uri.host.nil?
+      uri.is_a?(URI::HTTP) && uri.host.blank?
     end
 
     def relative_uri?(uri)
-      uri.scheme.nil? && uri.host.nil?
+      uri.scheme.nil? && uri.host.blank?
     end
 
     def invalid_ssl_uri?(uri)
