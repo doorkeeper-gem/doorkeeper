@@ -20,7 +20,7 @@ jobs:
     - uses: actions/cache@v1
       with:
         path: vendor/bundle
-        key: ${{ runner.os }}-gems-${{ hashFiles('Gemfile') }} # change your gemfile path
+        key: ${{ runner.os }}-gems-${{ hashFiles('Gemfile') }}
         restore-keys: |
           ${{ runner.os }}-gems-
     - uses: MeilCli/danger-action@v5
@@ -30,4 +30,4 @@ jobs:
         danger_file: 'Dangerfile'
         danger_id: 'danger-pr'
       env:
-        DANGER_GITHUB_API_TOKEN: ${{ secrets.DANGER }}
+        DANGER_GITHUB_API_TOKEN: ${{ secrets.DANGER_GITHUB_TOKEN }}
