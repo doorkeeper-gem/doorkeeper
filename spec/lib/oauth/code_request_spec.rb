@@ -16,14 +16,14 @@ RSpec.describe Doorkeeper::OAuth::CodeRequest do
     application = FactoryBot.create(:application, scopes: "public")
     client = Doorkeeper::OAuth::Client.new(application)
 
-    attributes = {
+    params = {
       client_id: client.uid,
       response_type: "code",
       redirect_uri: "https://app.com/callback",
       response_mode: response_mode,
     }.compact
 
-    pre_auth = Doorkeeper::OAuth::PreAuthorization.new(Doorkeeper.config, attributes)
+    pre_auth = Doorkeeper::OAuth::PreAuthorization.new(params)
     pre_auth.authorizable?
     pre_auth
   end

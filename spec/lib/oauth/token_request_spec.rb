@@ -12,19 +12,18 @@ RSpec.describe Doorkeeper::OAuth::TokenRequest do
   end
 
   let(:pre_auth) do
-    server = Doorkeeper.config
-    allow(server).to receive(:default_scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("public"))
-    allow(server).to receive(:grant_flows).and_return(Doorkeeper::OAuth::Scopes.from_string("implicit"))
+    allow(Doorkeeper.config).to receive(:default_scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("public"))
+    allow(Doorkeeper.config).to receive(:grant_flows).and_return(Doorkeeper::OAuth::Scopes.from_string("implicit"))
 
     client = Doorkeeper::OAuth::Client.new(application)
 
-    attributes = {
+    params = {
       client_id: client.uid,
       response_type: "token",
       redirect_uri: "https://app.com/callback",
     }
 
-    pre_auth = Doorkeeper::OAuth::PreAuthorization.new(server, attributes)
+    pre_auth = Doorkeeper::OAuth::PreAuthorization.new(params)
     pre_auth.authorizable?
     pre_auth
   end

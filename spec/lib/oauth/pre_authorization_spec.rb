@@ -4,20 +4,13 @@ require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::PreAuthorization do
   subject(:pre_auth) do
-    described_class.new(server, attributes)
-  end
-
-  let(:server) do
-    server = Doorkeeper.configuration
-    allow(server).to receive(:default_scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("default"))
-    allow(server).to receive(:optional_scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("public profile"))
-    server
+    described_class.new(params)
   end
 
   let(:application) { FactoryBot.create(:application, redirect_uri: "https://app.com/callback") }
   let(:client) { Doorkeeper::OAuth::Client.find(application.uid) }
 
-  let(:attributes) do
+  let(:params) do
     {
       client_id: client.uid,
       response_type: "code",
@@ -25,6 +18,11 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
       state: "save-this",
       current_resource_owner: Object.new,
     }
+  end
+
+  before do
+    allow(Doorkeeper.config).to receive(:default_scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("default"))
+    allow(Doorkeeper.config).to receive(:optional_scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("public profile"))
   end
 
   it "must call the validations on client and redirect_uri before other validations because they are not redirectable" do
@@ -50,67 +48,67 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
 
   context "when using default grant flows" do
     it 'accepts "code" as response type' do
-      attributes[:response_type] = "code"
+      params[:response_type] = "code"
       expect(pre_auth).to be_authorizable
     end
 
     it 'accepts "token" as response type' do
-      allow(server).to receive(:grant_flows).and_return(["implicit"])
-      attributes[:response_type] = "token"
+      allow(Doorkeeper.config).to receive(:grant_flows).and_return(["implicit"])
+      params[:response_type] = "token"
       expect(pre_auth).to be_authorizable
     end
   end
 
   context "when authorization code grant flow is disabled" do
     before do
-      allow(server).to receive(:grant_flows).and_return(["implicit"])
+      allow(Doorkeeper.config).to receive(:grant_flows).and_return(["implicit"])
     end
 
     it 'does not accept "code" as response type' do
-      attributes[:response_type] = "code"
+      params[:response_type] = "code"
       expect(pre_auth).not_to be_authorizable
     end
   end
 
   context "when implicit grant flow is disabled" do
     before do
-      allow(server).to receive(:grant_flows).and_return(["authorization_code"])
+      allow(Doorkeeper.config).to receive(:grant_flows).and_return(["authorization_code"])
     end
 
     it 'does not accept "token" as response type' do
-      attributes[:response_type] = "token"
+      params[:response_type] = "token"
       expect(pre_auth).not_to be_authorizable
     end
   end
 
   context "with response_mode parameter is provided" do
     context "when response_type is 'code'" do
-      before { attributes[:response_type] = "code" }
+      before { params[:response_type] = "code" }
 
       it "sets response_mode as 'query' when it is not provided" do
-        attributes[:response_mode] = ""
+        params[:response_mode] = ""
 
         expect(pre_auth).to be_authorizable
         expect(pre_auth.response_mode).to eq("query")
       end
 
       it 'accepts "query" as response_mode' do
-        attributes[:response_mode] = "query"
+        params[:response_mode] = "query"
         expect(pre_auth).to be_authorizable
       end
 
       it 'accepts "fragment" as response_mode' do
-        attributes[:response_mode] = "fragment"
+        params[:response_mode] = "fragment"
         expect(pre_auth).to be_authorizable
       end
 
       it 'accepts "form_post" as response_mode' do
-        attributes[:response_mode] = "form_post"
+        params[:response_mode] = "form_post"
         expect(pre_auth).to be_authorizable
       end
 
       it "does not accept response_mode other than query, fragment, form_post" do
-        attributes[:response_mode] = "other response_mode"
+        params[:response_mode] = "other response_mode"
 
         expect(pre_auth).not_to be_authorizable
       end
@@ -118,29 +116,29 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
 
     context "when response_type is 'token'" do
       before do
-        allow(server).to receive(:grant_flows).and_return(["implicit"])
-        attributes[:response_type] = "token"
+        allow(Doorkeeper.config).to receive(:grant_flows).and_return(["implicit"])
+        params[:response_type] = "token"
       end
 
       it "sets response_mode as 'fragment' when it is not provided" do
-        attributes[:response_mode] = ""
+        params[:response_mode] = ""
 
         expect(pre_auth).to be_authorizable
         expect(pre_auth.response_mode).to eq("fragment")
       end
 
       it 'accepts "fragment" as response_mode' do
-        attributes[:response_mode] = "fragment"
+        params[:response_mode] = "fragment"
         expect(pre_auth).to be_authorizable
       end
 
       it 'accepts "form_post" as response_mode' do
-        attributes[:response_mode] = "form_post"
+        params[:response_mode] = "form_post"
         expect(pre_auth).to be_authorizable
       end
 
       it 'does not accept "query" response_mode when response_type is "token"' do
-        attributes[:response_mode] = "query"
+        params[:response_mode] = "query"
 
         expect(pre_auth).not_to be_authorizable
       end
@@ -149,24 +147,24 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
 
   context "when client application does not restrict valid scopes" do
     it "accepts valid scopes" do
-      attributes[:scope] = "public"
+      params[:scope] = "public"
       expect(pre_auth).to be_authorizable
     end
 
     it "rejects (globally) non-valid scopes" do
-      attributes[:scope] = "invalid"
+      params[:scope] = "invalid"
       expect(pre_auth).not_to be_authorizable
     end
 
     it "accepts scopes which are permitted for grant_type" do
-      allow(server).to receive(:scopes_by_grant_type).and_return(authorization_code: [:public])
-      attributes[:scope] = "public"
+      allow(Doorkeeper.config).to receive(:scopes_by_grant_type).and_return(authorization_code: [:public])
+      params[:scope] = "public"
       expect(pre_auth).to be_authorizable
     end
 
     it "rejects scopes which are not permitted for grant_type" do
-      allow(server).to receive(:scopes_by_grant_type).and_return(authorization_code: [:profile])
-      attributes[:scope] = "public"
+      allow(Doorkeeper.config).to receive(:scopes_by_grant_type).and_return(authorization_code: [:profile])
+      params[:scope] = "public"
       expect(pre_auth).not_to be_authorizable
     end
   end
@@ -177,39 +175,39 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
     end
 
     it "accepts valid scopes" do
-      attributes[:scope] = "public"
+      params[:scope] = "public"
       expect(pre_auth).to be_authorizable
     end
 
     it "rejects (globally) non-valid scopes" do
-      attributes[:scope] = "invalid"
+      params[:scope] = "invalid"
       expect(pre_auth).not_to be_authorizable
     end
 
     it "rejects (application level) non-valid scopes" do
-      attributes[:scope] = "profile"
+      params[:scope] = "profile"
       expect(pre_auth).not_to be_authorizable
     end
 
     it "accepts scopes which are permitted for grant_type" do
-      allow(server).to receive(:scopes_by_grant_type).and_return(authorization_code: [:public])
-      attributes[:scope] = "public"
+      allow(Doorkeeper.config).to receive(:scopes_by_grant_type).and_return(authorization_code: [:public])
+      params[:scope] = "public"
       expect(pre_auth).to be_authorizable
     end
 
     it "rejects scopes which are not permitted for grant_type" do
-      allow(server).to receive(:scopes_by_grant_type).and_return(authorization_code: [:profile])
-      attributes[:scope] = "public"
+      allow(Doorkeeper.config).to receive(:scopes_by_grant_type).and_return(authorization_code: [:profile])
+      params[:scope] = "public"
       expect(pre_auth).not_to be_authorizable
     end
   end
 
   context "when scope is not provided to pre_authorization" do
-    before { attributes[:scope] = nil }
+    before { params[:scope] = nil }
 
     context "when default scopes is provided" do
       it "uses default scopes" do
-        allow(server).to receive(:default_scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("default_scope"))
+        allow(Doorkeeper.config).to receive(:default_scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("default_scope"))
         expect(pre_auth).to be_authorizable
         expect(pre_auth.scope).to eq("default_scope")
         expect(pre_auth.scopes).to eq(Doorkeeper::OAuth::Scopes.from_string("default_scope"))
@@ -218,14 +216,14 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
 
     context "when default scopes is none" do
       it "not be authorizable when none default scope" do
-        allow(server).to receive(:default_scopes).and_return(Doorkeeper::OAuth::Scopes.new)
+        allow(Doorkeeper.config).to receive(:default_scopes).and_return(Doorkeeper::OAuth::Scopes.new)
         expect(pre_auth).not_to be_authorizable
       end
     end
   end
 
   it "matches the redirect uri against client's one" do
-    attributes[:redirect_uri] = "http://nothesame.com"
+    params[:redirect_uri] = "http://nothesame.com"
     expect(pre_auth).not_to be_authorizable
   end
 
@@ -234,17 +232,17 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
   end
 
   it "rejects if response type is not allowed" do
-    attributes[:response_type] = "whops"
+    params[:response_type] = "whops"
     expect(pre_auth).not_to be_authorizable
   end
 
   it "requires an existing client" do
-    attributes[:client_id] = nil
+    params[:client_id] = nil
     expect(pre_auth).not_to be_authorizable
   end
 
   it "requires a redirect uri" do
-    attributes[:redirect_uri] = nil
+    params[:redirect_uri] = nil
     expect(pre_auth).not_to be_authorizable
   end
 
@@ -290,12 +288,12 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
     it { is_expected.to respond_to(:form_post_response?) }
 
     it "return true when response_mode is form_post" do
-      attributes[:response_mode] = "form_post"
+      params[:response_mode] = "form_post"
       expect(pre_auth.form_post_response?).to be true
     end
 
     it "when response_mode is other than form_post" do
-      attributes[:response_mode] = "fragment"
+      params[:response_mode] = "fragment"
       expect(pre_auth.form_post_response?).to be false
     end
   end
@@ -307,25 +305,25 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
       end
 
       it "accepts a blank code_challenge" do
-        attributes[:code_challenge] = " "
+        params[:code_challenge] = " "
 
         expect(pre_auth).to be_authorizable
       end
 
       it "accepts a code_challenge with a known code_challenge_method" do
-        attributes[:code_challenge] = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
-        attributes[:code_challenge_method] = "plain"
+        params[:code_challenge] = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
+        params[:code_challenge_method] = "plain"
 
         expect(pre_auth).to be_authorizable
 
-        attributes[:code_challenge_method] = "S256"
+        params[:code_challenge_method] = "S256"
 
         expect(pre_auth).to be_authorizable
       end
 
       it "rejects unknown values for code_challenge_method" do
-        attributes[:code_challenge] = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
-        attributes[:code_challenge_method] = "unknown"
+        params[:code_challenge] = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
+        params[:code_challenge_method] = "unknown"
 
         expect(pre_auth).not_to be_authorizable
       end
@@ -337,8 +335,8 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
       end
 
       it "accepts unknown values for code_challenge_method" do
-        attributes[:code_challenge] = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
-        attributes[:code_challenge_method] = "unknown"
+        params[:code_challenge] = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
+        params[:code_challenge_method] = "unknown"
 
         expect(pre_auth).to be_authorizable
       end

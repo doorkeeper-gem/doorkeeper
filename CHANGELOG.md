@@ -9,6 +9,7 @@ User-visible changes worth mentioning.
 
 - [#ID] Add your PR description here.
 - [#1605] Fix URI validation for Ruby 3.2+.
+- [#1608] Simplify PreAuthorization class (avoid passing `Doorkeeper.config` into initializer).
 
 ## 5.6.2
 

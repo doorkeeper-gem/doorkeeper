@@ -20,8 +20,7 @@ module Doorkeeper
                   :redirect_uri, :resource_owner, :response_type, :state,
                   :authorization_response_flow, :response_mode
 
-      def initialize(server, parameters = {}, resource_owner = nil)
-        @server                = server
+      def initialize(parameters = {}, resource_owner = nil)
         @client_id             = parameters[:client_id]
         @response_type         = parameters[:response_type]
         @response_mode         = parameters[:response_mode]
@@ -42,7 +41,7 @@ module Doorkeeper
       end
 
       def scope
-        @scope.presence || (server.default_scopes.presence && build_scopes)
+        @scope.presence || (Doorkeeper.config.default_scopes.presence && build_scopes)
       end
 
       def error_response
@@ -66,14 +65,14 @@ module Doorkeeper
 
       private
 
-      attr_reader :client_id, :server
+      attr_reader :client_id
 
       def build_scopes
         client_scopes = client.scopes
         if client_scopes.blank?
-          server.default_scopes.to_s
+          Doorkeeper.config.default_scopes.to_s
         else
-          (server.default_scopes & client_scopes).to_s
+          (Doorkeeper.config.default_scopes & client_scopes).to_s
         end
       end
 
@@ -108,7 +107,7 @@ module Doorkeeper
       def validate_params
         @missing_param = if response_type.blank?
                            :response_type
-                         elsif @scope.blank? && server.default_scopes.blank?
+                         elsif @scope.blank? && Doorkeeper.config.default_scopes.blank?
                            :scope
                          end
 
@@ -116,7 +115,7 @@ module Doorkeeper
       end
 
       def validate_response_type
-        server.authorization_response_flows.any? do |flow|
+        Doorkeeper.config.authorization_response_flows.any? do |flow|
           if flow.matches_response_type?(response_type)
             @authorization_response_flow = flow
             true
@@ -136,7 +135,7 @@ module Doorkeeper
       def validate_scopes
         Helpers::ScopeChecker.valid?(
           scope_str: scope,
-          server_scopes: server.scopes,
+          server_scopes: Doorkeeper.config.scopes,
           app_scopes: client.scopes,
           grant_type: grant_type,
         )
