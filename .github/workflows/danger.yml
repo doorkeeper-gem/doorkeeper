@@ -17,7 +17,7 @@ jobs:
     - uses: actions/setup-ruby@v1
       with:
         ruby-version: '2.7'
-    - uses: actions/cache@v1
+    - uses: actions/cache@v3
       with:
         path: vendor/bundle
         key: ${{ runner.os }}-gems-${{ hashFiles('Gemfile') }}
