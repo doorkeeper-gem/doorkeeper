@@ -24,7 +24,7 @@ User-visible changes worth mentioning.
 
 - [#1581] Consider `token_type_hint` when searching for access token in TokensController to avoid extra database calls.
 
-## 5.6.0.rc1
+## 5.6.0.rc2
 
 - [#1558] Fixed bug: able to obtain a token with default scopes even if they are not present in the 
   application scopes when using client credentials.
