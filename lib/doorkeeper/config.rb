@@ -5,14 +5,6 @@ require "doorkeeper/config/option"
 require "doorkeeper/config/validations"
 
 module Doorkeeper
-  # Defines a MissingConfiguration error for a missing Doorkeeper configuration
-  #
-  class MissingConfiguration < StandardError
-    def initialize
-      super("Configuration for doorkeeper missing. Do you have doorkeeper initializer?")
-    end
-  end
-
   # Doorkeeper option DSL could be reused in extensions to build their own
   # configurations. To use the Option DSL gems need to define `builder_class` method
   # that returns configuration Builder class. This exception raises when they don't
@@ -30,7 +22,7 @@ module Doorkeeper
     # @return [Doorkeeper::Config] configuration instance
     #
     def configuration
-      @config || (raise MissingConfiguration)
+      @config ||= Config::Builder.new(&block).build
     end
 
     alias config configuration
@@ -159,7 +151,7 @@ module Doorkeeper
         @config.instance_variable_set(:@reuse_access_token, true)
       end
 
-      # Choose to use the url path for native autorization codes 
+      # Choose to use the url path for native autorization codes
       # Enabling this flag sets the authorization code response route for
       # native redirect uris to oauth/authorize/<code>. The default is
       # oauth/authorize/native?code=<code>.
@@ -632,7 +624,7 @@ module Doorkeeper
     def deprecated_token_grant_types_resolver
       @deprecated_token_grant_types ||= calculate_token_grant_types
     end
-    
+
     def native_authorization_code_route
       @use_url_path_for_native_authorization = false unless defined?(@use_url_path_for_native_authorization)
       @use_url_path_for_native_authorization ? '/:code' : '/native'
