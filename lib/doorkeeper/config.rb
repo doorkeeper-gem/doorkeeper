@@ -22,7 +22,7 @@ module Doorkeeper
     # @return [Doorkeeper::Config] configuration instance
     #
     def configuration
-      @config ||= Config::Builder.new(&block).build
+      @config ||= Config::Builder.new.build
     end
 
     alias config configuration
