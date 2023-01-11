@@ -6,14 +6,6 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
-# Offense count: 3
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: AllowInHeredoc.
-Layout/TrailingWhitespace:
-  Exclude:
-    - 'doorkeeper.gemspec'
-    - 'lib/doorkeeper/config.rb'
-
 # Offense count: 20
 # Configuration parameters: AllowedMethods.
 # AllowedMethods: enums
