@@ -210,15 +210,6 @@ RSpec/NamedSubject:
   Exclude:
     - 'spec/lib/config_spec.rb'
 
-# Offense count: 10
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: numeric, symbolic
-RSpec/Rails/HttpStatus:
-  Exclude:
-    - 'spec/controllers/application_metal_controller_spec.rb'
-    - 'spec/controllers/applications_controller_spec.rb'
-
 # Offense count: 28
 RSpec/StubbedMock:
   Exclude:

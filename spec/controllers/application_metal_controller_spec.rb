@@ -28,17 +28,17 @@ RSpec.describe Doorkeeper::ApplicationMetalController do
 
       it "returns a 200 for the requests without body" do
         get :index, params: {}
-        expect(response).to have_http_status 200
+        expect(response).to have_http_status :ok
       end
 
       it "returns a 200 for the requests with body and correct media type" do
         post :create, params: {}, as: :url_encoded_form
-        expect(response).to have_http_status 200
+        expect(response).to have_http_status :ok
       end
 
       it "returns a 415 for the requests with body and incorrect media type" do
         post :create, params: {}, as: :json
-        expect(response).to have_http_status 415
+        expect(response).to have_http_status :unsupported_media_type
       end
     end
 
@@ -47,17 +47,17 @@ RSpec.describe Doorkeeper::ApplicationMetalController do
 
       it "returns a 200 for the correct media type" do
         get :index, as: :url_encoded_form
-        expect(response).to have_http_status 200
+        expect(response).to have_http_status :ok
       end
 
       it "returns a 200 for an incorrect media type" do
         get :index, as: :json
-        expect(response).to have_http_status 200
+        expect(response).to have_http_status :ok
       end
 
       it "returns a 200 for the requests with body and incorrect media type" do
         post :create, params: {}, as: :json
-        expect(response).to have_http_status 200
+        expect(response).to have_http_status :ok
       end
     end
   end
