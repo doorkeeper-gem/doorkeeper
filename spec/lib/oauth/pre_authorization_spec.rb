@@ -31,17 +31,17 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
     validation_attributes = described_class.validations.map { |validation| validation[:attribute] }
 
     expect(validation_attributes).to eq(%i[
-      client_id
-      client
-      client_supports_grant_flow
-      resource_owner_authorize_for_client
-      redirect_uri
-      params
-      response_type
-      response_mode
-      scopes
-      code_challenge_method
-    ])
+                                          client_id
+                                          client
+                                          client_supports_grant_flow
+                                          resource_owner_authorize_for_client
+                                          redirect_uri
+                                          params
+                                          response_type
+                                          response_mode
+                                          scopes
+                                          code_challenge_method
+                                        ])
   end
 
   it "is authorizable when request is valid" do
