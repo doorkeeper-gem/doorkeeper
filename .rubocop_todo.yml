@@ -101,14 +101,6 @@ RSpec/AnyInstance:
     - 'spec/requests/flows/authorization_code_spec.rb'
     - 'spec/requests/flows/refresh_token_spec.rb'
 
-# Offense count: 3
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: CustomTransform, IgnoredWords, DisallowedExamples.
-# DisallowedExamples: works
-RSpec/ExampleWording:
-  Exclude:
-    - 'spec/controllers/authorizations_controller_spec.rb'
-
 # Offense count: 60
 # This cop supports unsafe autocorrection (--autocorrect-all).
 # Configuration parameters: EnforcedStyle.

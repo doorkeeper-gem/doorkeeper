@@ -665,16 +665,16 @@ RSpec.describe Doorkeeper::AuthorizationsController do
         Rails.application.reload_routes!
       end
 
-      it 'should redirect immediately' do
+      it 'redirects immediately' do
         expect(response).to be_redirect
         expect(response.location).to match(/oauth\/authorize\/#{Doorkeeper::AccessGrant.first.token}/)
       end
 
-      it 'should issue a grant' do
+      it 'issues a grant' do
         expect(Doorkeeper::AccessGrant.count).to be 1
       end
 
-      it 'should not issue a token' do
+      it 'does not issue a token' do
         expect(Doorkeeper::AccessToken.count).to be 0
       end
     end
