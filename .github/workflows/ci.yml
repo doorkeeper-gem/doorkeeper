@@ -36,8 +36,6 @@ jobs:
         exclude:
           - ruby: 3.0
             gemfile: gemfiles/rails_5_2.gemfile
-          - ruby: 2.6
-            gemfile: gemfiles/rails_7_0.gemfile
     steps:
       - name: Repo checkout
         uses: actions/checkout@v3

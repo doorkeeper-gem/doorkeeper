@@ -4,7 +4,7 @@ require:
   - rubocop-rails
   - rubocop-rspec
 AllCops:
-  TargetRubyVersion: 2.5
+  TargetRubyVersion: 2.7
   Exclude:
     - "spec/generators/tmp/**/*"
     - "spec/dummy/db/*"
