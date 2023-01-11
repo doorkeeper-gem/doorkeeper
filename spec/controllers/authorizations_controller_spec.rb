@@ -667,7 +667,7 @@ RSpec.describe Doorkeeper::AuthorizationsController do
 
       it 'redirects immediately' do
         expect(response).to be_redirect
-        expect(response.location).to match(/oauth\/authorize\/#{Doorkeeper::AccessGrant.first.token}/)
+        expect(response.location).to match(%r{oauth/authorize/#{Doorkeeper::AccessGrant.first.token}})
       end
 
       it 'issues a grant' do
