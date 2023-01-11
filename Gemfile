@@ -25,5 +25,5 @@ gem "bcrypt", "~> 3.1", require: false
 gem "activerecord-jdbcsqlite3-adapter", platform: :jruby
 gem "sqlite3", "~> 1.4", platform: %i[ruby mswin mingw x64_mingw]
 
-gem "tzinfo-data", platforms: %i[mingw mswin x64_mingw]
 gem "timecop"
+gem "tzinfo-data", platforms: %i[mingw mswin x64_mingw]
