@@ -31,6 +31,8 @@ Metrics/MethodLength:
 Style/CaseEquality:
   Exclude:
     - lib/doorkeeper/grant_flow/flow.rb
+Style/Documentation:
+  Enabled: false
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 Style/StringLiteralsInInterpolation:
