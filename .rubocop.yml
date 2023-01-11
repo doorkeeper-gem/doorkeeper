@@ -104,5 +104,5 @@ RSpec/MultipleExpectations:
   Enabled: false
 RSpec/NestedGroups:
   Enabled: false
-Capybara/FeatureMethods:
+RSpec/Capybara/FeatureMethods:
   Enabled: false
