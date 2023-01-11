@@ -35,8 +35,7 @@ module Doorkeeper
 
       private
 
-      attr_reader :server, :token
-      attr_reader :error, :invalid_request_reason
+      attr_reader :server, :token, :error, :invalid_request_reason
 
       # If the protected resource uses OAuth 2.0 client credentials to
       # authenticate to the introspection endpoint and its credentials are

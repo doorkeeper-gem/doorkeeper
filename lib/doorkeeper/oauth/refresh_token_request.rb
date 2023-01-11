@@ -11,8 +11,7 @@ module Doorkeeper
       validate :client_match, error: :invalid_grant
       validate :scope,        error: :invalid_scope
 
-      attr_reader :access_token, :client, :credentials, :refresh_token
-      attr_reader :missing_param
+      attr_reader :access_token, :client, :credentials, :refresh_token, :missing_param
 
       def initialize(server, refresh_token, credentials, parameters = {})
         @server = server
