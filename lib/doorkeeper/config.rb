@@ -630,7 +630,7 @@ module Doorkeeper
 
     def native_authorization_code_route
       @use_url_path_for_native_authorization = false unless defined?(@use_url_path_for_native_authorization)
-      @use_url_path_for_native_authorization ? '/:code' : '/native'
+      @use_url_path_for_native_authorization ? "/:code" : "/native"
     end
 
     # [NOTE]: deprecated and will be removed soon

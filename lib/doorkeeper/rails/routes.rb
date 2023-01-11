@@ -54,7 +54,7 @@ module Doorkeeper
           controller: mapping[:controllers],
         ) do
           routes.get native_authorization_code_route, action: :show, on: :member
-          routes.get '/', action: :new, on: :member
+          routes.get "/", action: :new, on: :member
         end
       end
 

@@ -382,25 +382,6 @@ Style/StringConcatenation:
     - 'spec/lib/oauth/scopes_spec.rb'
     - 'spec/support/orm/active_record.rb'
 
-# Offense count: 19
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyle, ConsistentQuotesInMultiline.
-# SupportedStyles: single_quotes, double_quotes
-Style/StringLiterals:
-  Exclude:
-    - 'lib/doorkeeper/config.rb'
-    - 'lib/doorkeeper/rails/routes.rb'
-    - 'spec/controllers/authorizations_controller_spec.rb'
-    - 'spec/dummy/config.ru'
-    - 'spec/generators/application_owner_generator_spec.rb'
-    - 'spec/generators/confidential_applications_generator_spec.rb'
-    - 'spec/generators/enable_polymorphic_resource_owner_generator_spec.rb'
-    - 'spec/generators/install_generator_spec.rb'
-    - 'spec/generators/migration_generator_spec.rb'
-    - 'spec/generators/pkce_generator_spec.rb'
-    - 'spec/generators/previous_refresh_token_generator_spec.rb'
-    - 'spec/lib/config_spec.rb'
-
 # Offense count: 1
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: EnforcedStyleForMultiline.

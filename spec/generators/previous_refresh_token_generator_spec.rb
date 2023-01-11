@@ -7,7 +7,7 @@ RSpec.describe Doorkeeper::PreviousRefreshTokenGenerator do
   include GeneratorSpec::TestCase
 
   tests described_class
-  destination ::File.expand_path('tmp/dummy', __dir__)
+  destination ::File.expand_path("tmp/dummy", __dir__)
 
   describe "after running the generator" do
     before do

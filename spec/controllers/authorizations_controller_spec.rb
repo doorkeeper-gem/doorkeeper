@@ -647,7 +647,7 @@ RSpec.describe Doorkeeper::AuthorizationsController do
       expect(Doorkeeper::AccessToken.count).to be 0
     end
 
-    context 'with use_url_path_for_native_authorization' do
+    context "with use_url_path_for_native_authorization" do
       around(:each) do |example|
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
@@ -665,16 +665,16 @@ RSpec.describe Doorkeeper::AuthorizationsController do
         Rails.application.reload_routes!
       end
 
-      it 'redirects immediately' do
+      it "redirects immediately" do
         expect(response).to be_redirect
         expect(response.location).to match(%r{oauth/authorize/#{Doorkeeper::AccessGrant.first.token}})
       end
 
-      it 'issues a grant' do
+      it "issues a grant" do
         expect(Doorkeeper::AccessGrant.count).to be 1
       end
 
-      it 'does not issue a token' do
+      it "does not issue a token" do
         expect(Doorkeeper::AccessToken.count).to be 0
       end
     end
