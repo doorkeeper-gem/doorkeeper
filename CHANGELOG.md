@@ -285,7 +285,7 @@ User-visible changes worth mentioning.
 - [#1237] Allow to set blank redirect URI if Doorkeeper configured to use redirect URI-less grant flows.
 - [#1234] Fix `StaleRecordsCleaner` to properly work with big amount of records.
 - [#1228] Allow to explicitly set non-expiring tokens in `custom_access_token_expires_in` configuration
-  option using `Float::INIFINITY` return value.
+  option using `Float::INFINITY` return value.
 - [#1224] Do not try to store token if not found by fallback hashing strategy.
 - [#1223] Update Hound/Rubocop rules, correct Doorkeeper codebase to follow style-guides.
 - [#1220] Drop Rails 4.2 & Ruby < 2.4 support.
@@ -370,7 +370,7 @@ User-visible changes worth mentioning.
 - [#1116] `AccessGrant`s will now be revoked along with `AccessToken`s when
   hitting the `AuthorizedApplicationController#destroy` route.
 - [#1114] Make token info endpoint's attributes consistent with token creation
-- [#1108] Simple formating of callback URLs when listing oauth applications
+- [#1108] Simple formatting of callback URLs when listing oauth applications
 - [#1106] Restrict access to AdminController with 'Forbidden 403' if admin_authenticator is not
   configured by developers.
 

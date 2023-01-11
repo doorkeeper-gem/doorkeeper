@@ -88,7 +88,7 @@ RSpec.describe Doorkeeper::Models::SecretStorable do
             .to receive(:attr=)
             .with("new value")
 
-          # It will upgrade the secret automtically using the current strategy
+          # It will upgrade the secret automatically using the current strategy
           expect(strategy)
             .to receive(:transform_secret)
             .with("input")

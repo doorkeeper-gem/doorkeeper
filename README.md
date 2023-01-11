@@ -105,7 +105,7 @@ Extensions that are not included by default and can be installed separately.
 | JWT Token support | [doorkeeper-gem/doorkeeper-jwt](https://github.com/doorkeeper-gem/doorkeeper-jwt) |
 | Assertion grant extension | [doorkeeper-gem/doorkeeper-grants\_assertion](https://github.com/doorkeeper-gem/doorkeeper-grants_assertion) |
 | I18n translations | [doorkeeper-gem/doorkeeper-i18n](https://github.com/doorkeeper-gem/doorkeeper-i18n) |
-| CIBA - Client Initiated Backchannel Authentication Flow extention | [doorkeeper-ciba](https://github.com/autoseg/doorkeeper-ciba) |
+| CIBA - Client Initiated Backchannel Authentication Flow extension | [doorkeeper-ciba](https://github.com/autoseg/doorkeeper-ciba) |
 | Device Authorization Grant | [doorkeeper-device_authorization_grant](https://github.com/exop-group/doorkeeper-device_authorization_grant) |
 
 ## Example Applications
