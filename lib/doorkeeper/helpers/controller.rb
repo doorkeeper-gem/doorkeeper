@@ -76,9 +76,9 @@ module Doorkeeper
       end
 
       def enforce_content_type
-        if (request.put? || request.post? || request.patch?) && !x_www_form_urlencoded?
-          render json: {}, status: :unsupported_media_type
-        end
+        return unless (request.put? || request.post? || request.patch?) && !x_www_form_urlencoded?
+
+        render json: {}, status: :unsupported_media_type
       end
 
       def x_www_form_urlencoded?

@@ -13,13 +13,13 @@ module Doorkeeper
         end
 
         def authenticate(request, *methods)
-          if (token = from_request(request, *methods))
-            access_token = Doorkeeper.config.access_token_model.by_token(token)
-            if access_token.present? && Doorkeeper.config.refresh_token_enabled?
-              access_token.revoke_previous_refresh_token!
-            end
-            access_token
+          return unless (token = from_request(request, *methods))
+
+          access_token = Doorkeeper.config.access_token_model.by_token(token)
+          if access_token.present? && Doorkeeper.config.refresh_token_enabled?
+            access_token.revoke_previous_refresh_token!
           end
+          access_token
         end
 
         def from_access_token_param(request)

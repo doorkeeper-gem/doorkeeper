@@ -367,16 +367,6 @@ Style/GlobalStdStream:
     - 'benchmark/ruby/client_credentials.rb'
     - 'bin/console'
 
-# Offense count: 4
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: MinBodyLength, AllowConsecutiveConditionals.
-Style/GuardClause:
-  Exclude:
-    - 'lib/doorkeeper/config.rb'
-    - 'lib/doorkeeper/helpers/controller.rb'
-    - 'lib/doorkeeper/oauth/client/credentials.rb'
-    - 'lib/doorkeeper/oauth/token.rb'
-
 # Offense count: 8
 # This cop supports safe autocorrection (--autocorrect).
 Style/IfUnlessModifier:

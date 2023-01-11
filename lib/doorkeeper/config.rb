@@ -41,10 +41,10 @@ module Doorkeeper
       config.clear_cache!
 
       # Deprecated, will be removed soon
-      unless configuration.orm == :active_record
-        setup_orm_models
-        setup_application_owner
-      end
+      return if configuration.orm == :active_record
+
+      setup_orm_models
+      setup_application_owner
     end
 
     def setup_orm_adapter
