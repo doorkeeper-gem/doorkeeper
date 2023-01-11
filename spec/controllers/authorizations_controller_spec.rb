@@ -648,7 +648,7 @@ RSpec.describe Doorkeeper::AuthorizationsController do
     end
 
     context "with use_url_path_for_native_authorization" do
-      around(:each) do |example|
+      around do |example|
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
           use_url_path_for_native_authorization
