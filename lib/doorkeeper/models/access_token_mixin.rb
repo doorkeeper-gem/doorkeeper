@@ -301,9 +301,7 @@ module Doorkeeper
         application: { uid: application.try(:uid) },
         created_at: created_at.to_i,
       }.tap do |json|
-        if Doorkeeper.configuration.polymorphic_resource_owner?
-          json[:resource_owner_type] = resource_owner_type
-        end
+        json[:resource_owner_type] = resource_owner_type if Doorkeeper.configuration.polymorphic_resource_owner?
       end
     end
 
@@ -431,9 +429,7 @@ module Doorkeeper
         expires_in: expires_in,
         created_at: created_at,
       }.tap do |attributes|
-        if Doorkeeper.config.polymorphic_resource_owner?
-          attributes[:resource_owner] = resource_owner
-        end
+        attributes[:resource_owner] = resource_owner if Doorkeeper.config.polymorphic_resource_owner?
       end
     end
 

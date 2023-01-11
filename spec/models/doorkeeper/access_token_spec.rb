@@ -634,9 +634,7 @@ RSpec.describe Doorkeeper::AccessToken do
     it "returns as_json hash" do
       hash = token_hash
 
-      if Doorkeeper.configuration.polymorphic_resource_owner?
-        hash[:resource_owner_type] = token.resource_owner_type
-      end
+      hash[:resource_owner_type] = token.resource_owner_type if Doorkeeper.configuration.polymorphic_resource_owner?
 
       expect(token.as_json).to match(hash)
     end

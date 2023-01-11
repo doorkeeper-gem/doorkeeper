@@ -13,9 +13,7 @@ module Doorkeeper
       # could recognize and process it.
       #
       def register(name_or_flow, **options)
-        unless name_or_flow.is_a?(Doorkeeper::GrantFlow::Flow)
-          name_or_flow = Flow.new(name_or_flow, **options)
-        end
+        name_or_flow = Flow.new(name_or_flow, **options) unless name_or_flow.is_a?(Doorkeeper::GrantFlow::Flow)
 
         flow_key = name_or_flow.name.to_sym
 

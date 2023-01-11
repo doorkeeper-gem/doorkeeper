@@ -93,9 +93,7 @@ RSpec.describe Doorkeeper::AccessGrant do
             )
 
           # Not all the ORM support :id PK
-          if grant.respond_to?(:id)
-            expect(described_class.by_token(plain_text_token).id).to eq(grant.id)
-          end
+          expect(described_class.by_token(plain_text_token).id).to eq(grant.id) if grant.respond_to?(:id)
 
           # And it modifies the token value
           grant.reload

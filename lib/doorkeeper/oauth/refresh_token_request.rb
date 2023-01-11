@@ -57,9 +57,7 @@ module Doorkeeper
             refresh_token.resource_owner_id
           end
 
-        if refresh_token_revoked_on_use?
-          attributes[:previous_refresh_token] = refresh_token.refresh_token
-        end
+        attributes[:previous_refresh_token] = refresh_token.refresh_token if refresh_token_revoked_on_use?
 
         # RFC6749
         # 1.5.  Refresh Token
