@@ -53,7 +53,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
         if supports_expiration_time_math?
           # have not reached the expiration time or it never expires
           relation.where("#{expiration_time_sql} > ?", Time.now.utc).or(
-            relation.where(expires_in: nil)
+            relation.where(expires_in: nil),
           )
         else
           ::Kernel.warn <<~WARNING.squish

@@ -381,11 +381,3 @@ Style/StringConcatenation:
   Exclude:
     - 'spec/lib/oauth/scopes_spec.rb'
     - 'spec/support/orm/active_record.rb'
-
-# Offense count: 1
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyleForMultiline.
-# SupportedStylesForMultiline: comma, consistent_comma, no_comma
-Style/TrailingCommaInArguments:
-  Exclude:
-    - 'lib/doorkeeper/orm/active_record/mixins/access_token.rb'
