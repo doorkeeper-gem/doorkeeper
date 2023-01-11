@@ -14,15 +14,10 @@ jobs:
       (github.event_name  == 'pull_request')
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-ruby@v1
+    - uses: ruby/setup-ruby@v1
       with:
         ruby-version: '2.7'
-    - uses: actions/cache@v3
-      with:
-        path: vendor/bundle
-        key: ${{ runner.os }}-gems-${{ hashFiles('Gemfile') }}
-        restore-keys: |
-          ${{ runner.os }}-gems-
+        bundler-cache: true # runs 'bundle install' and caches installed gems automatically
     - uses: MeilCli/danger-action@v5
       with:
         plugins_file: 'Gemfile'
