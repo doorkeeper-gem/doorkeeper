@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-gem "rails", "~> 6.2.0"
+gem "rails", git: "https://github.com/rails/rails"
 gem "rspec-core"
 gem "rspec-expectations"
 gem "rspec-mocks"
@@ -14,6 +14,7 @@ gem "rubocop-rails", require: false
 gem "rubocop-rspec", require: false
 gem "bcrypt", "~> 3.1", require: false
 gem "activerecord-jdbcsqlite3-adapter", platform: :jruby
+gem "sprockets-rails"
 gem "sqlite3", "~> 1.4", platform: [:ruby, :mswin, :mingw, :x64_mingw]
 gem "tzinfo-data", platforms: [:mingw, :mswin, :x64_mingw]
 gem "timecop"
