@@ -14,10 +14,6 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
                                inverse_of: :access_tokens,
                                optional: true
 
-      if Doorkeeper.config.polymorphic_resource_owner?
-        belongs_to :resource_owner, polymorphic: true, optional: true
-      end
-
       validates :token, presence: true, uniqueness: { case_sensitive: true }
       validates :refresh_token, uniqueness: { case_sensitive: true }, if: :use_refresh_token?
 

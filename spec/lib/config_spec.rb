@@ -356,17 +356,15 @@ RSpec.describe Doorkeeper::Config do
   end
 
   describe "enable_application_owner" do
-    let(:application_with_owner_class) do
-      Class.new(::ActiveRecord::Base) do
-        include Doorkeeper::Orm::ActiveRecord::Mixins::Application
-      end
-    end
-
     it "is disabled by default" do
       expect(Doorkeeper.config.enable_application_owner?).not_to be(true)
     end
 
     context "when enabled without confirmation" do
+      class ApplicationWithOwner < ActiveRecord::Base
+        include Doorkeeper::Orm::ActiveRecord::Mixins::Application
+      end
+
       before do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
@@ -374,16 +372,10 @@ RSpec.describe Doorkeeper::Config do
 
           application_class "ApplicationWithOwner"
         end
-
-        Object.const_set("ApplicationWithOwner", application_with_owner_class)
-      end
-
-      after do
-        Object.send(:remove_const, :ApplicationWithOwner)
       end
 
       it "adds support for application owner" do
-        instance = FactoryBot.build(:application_with_owner)
+        instance = ApplicationWithOwner.new(FactoryBot.attributes_for(:application))
 
         expect(instance).to respond_to :owner
         expect(instance).to be_valid
@@ -395,6 +387,10 @@ RSpec.describe Doorkeeper::Config do
     end
 
     context "when enabled with confirmation set to true" do
+      class ApplicationWithOwner < ActiveRecord::Base
+        include Doorkeeper::Orm::ActiveRecord::Mixins::Application
+      end
+
       before do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
@@ -402,16 +398,10 @@ RSpec.describe Doorkeeper::Config do
 
           application_class "ApplicationWithOwner"
         end
-
-        Object.const_set("ApplicationWithOwner", application_with_owner_class)
-      end
-
-      after do
-        Object.send(:remove_const, :ApplicationWithOwner)
       end
 
       it "adds support for application owner" do
-        instance = FactoryBot.build(:application_with_owner)
+        instance = ApplicationWithOwner.new(FactoryBot.attributes_for(:application))
 
         expect(instance).to respond_to :owner
         expect(instance).not_to be_valid
@@ -624,7 +614,8 @@ RSpec.describe Doorkeeper::Config do
   end
 
   if DOORKEEPER_ORM == :active_record
-    class FakeCustomModel; end
+    class FakeCustomModel < ::ActiveRecord::Base
+    end
 
     describe "access_token_class" do
       it "uses default doorkeeper value" do

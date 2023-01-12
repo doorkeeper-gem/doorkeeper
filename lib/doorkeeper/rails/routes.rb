@@ -36,7 +36,7 @@ module Doorkeeper
           map_route(:authorizations, :authorization_routes)
           map_route(:tokens, :token_routes)
           map_route(:tokens, :revoke_routes)
-          map_route(:tokens, :introspect_routes) unless Doorkeeper.config.allow_token_introspection.is_a?(FalseClass)
+          map_route(:tokens, :introspect_routes) if introspection_routes?
           map_route(:applications, :application_routes)
           map_route(:authorized_applications, :authorized_applications_routes)
           map_route(:token_info, :token_info_routes)
@@ -99,6 +99,11 @@ module Doorkeeper
 
       def native_authorization_code_route
         Doorkeeper.configuration.native_authorization_code_route
+      end
+
+      def introspection_routes?
+        Doorkeeper.configured? &&
+          !Doorkeeper.config.allow_token_introspection.is_a?(FalseClass)
       end
     end
   end

@@ -25,12 +25,18 @@ module Doorkeeper
 
     def configure(&block)
       @config = Config::Builder.new(&block).build
+      setup
+      @config
     end
 
     # @return [Doorkeeper::Config] configuration instance
     #
     def configuration
       @config || (raise MissingConfiguration)
+    end
+
+    def configured?
+      !@config.nil?
     end
 
     alias config configuration

@@ -14,6 +14,7 @@ User-visible changes worth mentioning.
 - [#1626] Remove deprecated `active_record_options` config option.
 - [#1631] Fix regression with redirect behavior after token lookup optimizations (redirect to app URI when found).
 - [#1630] Special case unique index creation for refresh_token on SQL Server.
+- [#1627] Lazy evaluate Doorkeeper config when loading files and executing initializers.
 
 ## 5.6.2
 

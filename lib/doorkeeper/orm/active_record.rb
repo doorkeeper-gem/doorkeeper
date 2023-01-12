@@ -29,7 +29,16 @@ module Doorkeeper
       end
 
       def self.run_hooks
-        # nop
+        initialize_configured_associations
+      end
+
+      def self.initialize_configured_associations
+        if Doorkeeper.config.enable_application_owner?
+          Doorkeeper.config.application_model.include ::Doorkeeper::Models::Ownership
+        end
+
+        Doorkeeper.config.access_grant_model.include ::Doorkeeper::Models::PolymorphicResourceOwner::ForAccessGrant
+        Doorkeeper.config.access_token_model.include ::Doorkeeper::Models::PolymorphicResourceOwner::ForAccessToken
       end
     end
   end
