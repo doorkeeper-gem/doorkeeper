@@ -626,33 +626,6 @@ RSpec.describe Doorkeeper::Config do
   if DOORKEEPER_ORM == :active_record
     class FakeCustomModel; end
 
-    describe "active_record_options" do
-      let(:models) { [Doorkeeper::AccessGrant, Doorkeeper::AccessToken, Doorkeeper::Application] }
-
-      before do
-        models.each do |model|
-          allow(model).to receive(:establish_connection).and_return(true)
-        end
-      end
-
-      it "establishes connection for Doorkeeper models based on options" do
-        expect(models).to all(receive(:establish_connection))
-
-        expect(Kernel).to receive(:warn).with(
-          /\[DOORKEEPER\] active_record_options has been deprecated and will soon be removed/,
-        )
-
-        Doorkeeper.configure do
-          orm DOORKEEPER_ORM
-          active_record_options(
-            establish_connection: Rails.configuration.database_configuration[Rails.env],
-          )
-        end
-
-        Doorkeeper.setup
-      end
-    end
-
     describe "access_token_class" do
       it "uses default doorkeeper value" do
         expect(config.access_token_class).to eq("Doorkeeper::AccessToken")

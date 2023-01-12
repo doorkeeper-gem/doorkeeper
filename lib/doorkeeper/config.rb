@@ -324,11 +324,6 @@ module Doorkeeper
     option :skip_client_authentication_for_password_grant,
            default: false
 
-    # TODO: remove the option
-    option :active_record_options,
-           default: {},
-           deprecated: { message: "Customize Doorkeeper models instead" }
-
     # Hook to allow arbitrary user-client authorization
     option :authorize_resource_owner_for_client,
            default: ->(_client, _resource_owner) { true }

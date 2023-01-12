@@ -11,6 +11,7 @@ User-visible changes worth mentioning.
 - [#1622] Drop support for Rubies 2.5 and 2.6
 - [#1605] Fix URI validation for Ruby 3.2+.
 - [#1625] Exclude endless access tokens from `StaleRecordsCleaner`.
+- [#1626] Remove deprecated `active_record_options` config option.
 
 ## 5.6.2
 
