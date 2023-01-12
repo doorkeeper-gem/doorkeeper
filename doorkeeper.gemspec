@@ -31,7 +31,7 @@ Gem::Specification.new do |gem|
   }
 
   gem.add_dependency "railties", ">= 5"
-  gem.required_ruby_version = ">= 2.5"
+  gem.required_ruby_version = ">= 2.7"
 
   gem.post_install_message = <<~MSG.strip
     Starting from 5.5.0 RC1 Doorkeeper requires client authentication for Resource Owner Password Grant
