@@ -48,7 +48,6 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "appraisal"
   gem.add_development_dependency "capybara"
   gem.add_development_dependency "coveralls_reborn"
-  gem.add_development_dependency "danger", "~> 8.0"
   gem.add_development_dependency "database_cleaner", "~> 2.0"
   gem.add_development_dependency "factory_bot", "~> 6.0"
   gem.add_development_dependency "generator_spec", "~> 0.9.3"
