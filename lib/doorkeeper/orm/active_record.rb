@@ -29,20 +29,7 @@ module Doorkeeper
       end
 
       def self.run_hooks
-        # Deprecated, will be removed soon
-        return unless (options = Doorkeeper.config.active_record_options[:establish_connection])
-
-        Doorkeeper::Orm::ActiveRecord.models.each do |model|
-          model.establish_connection(options)
-        end
-      end
-
-      def self.models
-        [
-          Doorkeeper.config.access_grant_model,
-          Doorkeeper.config.access_token_model,
-          Doorkeeper.config.application_model,
-        ]
+        # nop
       end
     end
   end
