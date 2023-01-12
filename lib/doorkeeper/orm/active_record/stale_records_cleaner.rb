@@ -15,7 +15,8 @@ module Doorkeeper
         def clean_revoked
           table = @base_scope.arel_table
 
-          @base_scope.where.not(revoked_at: nil)
+          @base_scope
+            .where.not(revoked_at: nil)
             .where(table[:revoked_at].lt(Time.current))
             .in_batches(&:delete_all)
         end
@@ -24,7 +25,9 @@ module Doorkeeper
         def clean_expired(ttl)
           table = @base_scope.arel_table
 
-          @base_scope.where(table[:created_at].lt(Time.current - ttl))
+          @base_scope
+            .where.not(expires_in: nil)
+            .where(table[:created_at].lt(Time.current - ttl))
             .in_batches(&:delete_all)
         end
       end
