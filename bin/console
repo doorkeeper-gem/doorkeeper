@@ -32,8 +32,5 @@ ActiveRecord::Base.establish_connection(
 # Load database schema
 load File.expand_path("../spec/dummy/db/schema.rb", __dir__)
 
-# Call engine #to_prepare block
-Doorkeeper.setup
-
 require "irb"
 IRB.start(__FILE__)
