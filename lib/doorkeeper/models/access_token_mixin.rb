@@ -87,8 +87,9 @@ module Doorkeeper
       # @return [Doorkeeper::AccessToken, nil] Access Token instance or
       #   nil if matching record was not found
       #
-      def matching_token_for(application, resource_owner, scopes)
-        tokens = authorized_tokens_for(application&.id, resource_owner).not_expired
+      def matching_token_for(application, resource_owner, scopes, include_expired: true)
+        tokens = authorized_tokens_for(application&.id, resource_owner)
+        tokens = tokens.not_expired unless include_expired
         find_matching_token(tokens, application, scopes)
       end
 
@@ -180,7 +181,7 @@ module Doorkeeper
       #
       def find_or_create_for(application:, resource_owner:, scopes:, **token_attributes)
         if Doorkeeper.config.reuse_access_token
-          access_token = matching_token_for(application, resource_owner, scopes)
+          access_token = matching_token_for(application, resource_owner, scopes, include_expired: false)
 
           return access_token if access_token&.reusable?
         end

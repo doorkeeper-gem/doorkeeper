@@ -45,7 +45,7 @@ module Doorkeeper
         end
 
         def find_active_existing_token_for(client, scopes)
-          server_config.access_token_model.matching_token_for(client, nil, scopes)
+          server_config.access_token_model.matching_token_for(client, nil, scopes, include_expired: false)
         end
 
         def server_config
