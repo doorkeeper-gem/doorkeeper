@@ -501,21 +501,6 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
-  it "raises an exception when configuration is not set" do
-    old_config = Doorkeeper.config
-    Doorkeeper.module_eval do
-      @config = nil
-    end
-
-    expect do
-      Doorkeeper.config
-    end.to raise_error Doorkeeper::MissingConfiguration
-
-    Doorkeeper.module_eval do
-      @config = old_config
-    end
-  end
-
   describe "access_token_generator" do
     it "is 'Doorkeeper::OAuth::Helpers::UniqueToken' by default" do
       expect(Doorkeeper.configuration.access_token_generator).to(

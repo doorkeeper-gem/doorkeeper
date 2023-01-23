@@ -12,7 +12,7 @@ module Doorkeeper
       #
       def initialize(config = Config.new, &block)
         @config = config
-        instance_eval(&block)
+        instance_eval(&block) if block_given?
       end
 
       # Builds and validates configuration.

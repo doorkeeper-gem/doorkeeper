@@ -5,87 +5,11 @@ require "doorkeeper/config/option"
 require "doorkeeper/config/validations"
 
 module Doorkeeper
-  # Defines a MissingConfiguration error for a missing Doorkeeper configuration
-  #
-  class MissingConfiguration < StandardError
-    def initialize
-      super("Configuration for doorkeeper missing. Do you have doorkeeper initializer?")
-    end
-  end
-
   # Doorkeeper option DSL could be reused in extensions to build their own
   # configurations. To use the Option DSL gems need to define `builder_class` method
   # that returns configuration Builder class. This exception raises when they don't
   # define it.
   #
-  class MissingConfigurationBuilderClass < StandardError; end
-
-  class << self
-    attr_reader :orm_adapter
-
-    def configure(&block)
-      @config = Config::Builder.new(&block).build
-      setup
-      @config
-    end
-
-    # @return [Doorkeeper::Config] configuration instance
-    #
-    def configuration
-      @config || (raise MissingConfiguration)
-    end
-
-    def configured?
-      !@config.nil?
-    end
-
-    alias config configuration
-
-    def setup
-      setup_orm_adapter
-      run_orm_hooks
-      config.clear_cache!
-
-      # Deprecated, will be removed soon
-      unless configuration.orm == :active_record
-        setup_orm_models
-        setup_application_owner
-      end
-    end
-
-    def setup_orm_adapter
-      @orm_adapter = "doorkeeper/orm/#{configuration.orm}".classify.constantize
-    rescue NameError => e
-      raise e, "ORM adapter not found (#{configuration.orm})", <<-ERROR_MSG.strip_heredoc
-        [DOORKEEPER] ORM adapter not found (#{configuration.orm}), or there was an error
-        trying to load it.
-
-        You probably need to add the related gem for this adapter to work with
-        doorkeeper.
-      ERROR_MSG
-    end
-
-    def run_orm_hooks
-      if @orm_adapter.respond_to?(:run_hooks)
-        @orm_adapter.run_hooks
-      else
-        ::Kernel.warn <<~MSG.strip_heredoc
-          [DOORKEEPER] ORM "#{configuration.orm}" should move all it's setup logic under `#run_hooks` method for
-          the #{@orm_adapter.name}. Later versions of Doorkeeper will no longer support `setup_orm_models` and
-          `setup_application_owner` API.
-        MSG
-      end
-    end
-
-    def setup_orm_models
-      @orm_adapter.initialize_models!
-    end
-
-    def setup_application_owner
-      @orm_adapter.initialize_application_owner!
-    end
-  end
-
   class Config
     # Default Doorkeeper configuration builder
     class Builder < AbstractBuilder
