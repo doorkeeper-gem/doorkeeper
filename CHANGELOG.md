@@ -8,6 +8,9 @@ User-visible changes worth mentioning.
 ## main
 
 - [#ID] Add your PR description here.
+
+# 5.6.3
+
 - [#1622] Drop support for Rubies 2.5 and 2.6
 - [#1605] Fix URI validation for Ruby 3.2+.
 - [#1625] Exclude endless access tokens from `StaleRecordsCleaner`.
