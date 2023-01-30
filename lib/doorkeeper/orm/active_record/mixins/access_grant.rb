@@ -14,12 +14,6 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
                                optional: true,
                                inverse_of: :access_grants
 
-      if Doorkeeper.config.polymorphic_resource_owner?
-        belongs_to :resource_owner, polymorphic: true, optional: false
-      else
-        validates :resource_owner_id, presence: true
-      end
-
       validates :application_id,
                 :token,
                 :expires_in,

@@ -4,12 +4,8 @@ require "spec_helper"
 require "bcrypt"
 
 RSpec.describe Doorkeeper::Application do
-  let(:application_with_owner_class) do
-    Class.new(::ActiveRecord::Base) do
-      include Doorkeeper::Orm::ActiveRecord::Mixins::Application
-    end
-  end
   let(:new_application) { FactoryBot.build(:application) }
+  let(:owner) { FactoryBot.build_stubbed(:doorkeeper_testing_user) }
 
   let(:uid) { SecureRandom.hex(8) }
   let(:secret) { SecureRandom.hex(8) }
@@ -104,21 +100,14 @@ RSpec.describe Doorkeeper::Application do
   end
 
   context "when application_owner is enabled" do
-    let(:new_application) { FactoryBot.build(:application_with_owner) }
-
     context "when application owner is not required" do
       before do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
           enable_application_owner
         end
-
-        Object.const_set("ApplicationWithOwner", application_with_owner_class)
       end
 
-      after do
-        Object.send(:remove_const, :ApplicationWithOwner)
-      end
 
       it "is valid given valid attributes" do
         expect(new_application).to be_valid
@@ -131,14 +120,6 @@ RSpec.describe Doorkeeper::Application do
           orm DOORKEEPER_ORM
           enable_application_owner confirmation: true
         end
-
-        @owner = FactoryBot.build_stubbed(:doorkeeper_testing_user)
-
-        Object.const_set("ApplicationWithOwner", application_with_owner_class)
-      end
-
-      after do
-        Object.send(:remove_const, :ApplicationWithOwner)
       end
 
       it "is invalid without an owner" do
@@ -146,7 +127,7 @@ RSpec.describe Doorkeeper::Application do
       end
 
       it "is valid with an owner" do
-        new_application.owner = @owner
+        new_application.owner = owner
         expect(new_application).to be_valid
       end
     end
@@ -506,21 +487,14 @@ RSpec.describe Doorkeeper::Application do
     end
 
     context "when called with authorized resource owner" do
-      let(:owner) { FactoryBot.create(:doorkeeper_testing_user) }
       let(:other_owner) { FactoryBot.create(:doorkeeper_testing_user) }
-      let(:app) { FactoryBot.create(:application_with_owner, secret: "123123123", owner: owner) }
+      let(:app) { FactoryBot.create(:application, secret: "123123123", owner: owner) }
 
       before do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
           enable_application_owner confirmation: false
         end
-
-        Object.const_set("ApplicationWithOwner", application_with_owner_class)
-      end
-
-      after do
-        Object.send(:remove_const, :ApplicationWithOwner)
       end
 
       it "includes all the attributes" do
@@ -537,5 +511,44 @@ RSpec.describe Doorkeeper::Application do
           .not_to include("redirect_uri")
       end
     end
+  end
+
+  context "when custom model class configured" do
+    class CustomApp < ::ActiveRecord::Base
+      include Doorkeeper::Orm::ActiveRecord::Mixins::Application
+    end
+
+    let(:new_application) { CustomApp.new(FactoryBot.attributes_for(:application)) }
+
+    context "without confirmation" do
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          application_class "CustomApp"
+          enable_application_owner confirmation: false
+        end
+      end
+
+      it "is valid given valid attributes" do
+        expect(new_application).to be_valid
+      end
+    end
+
+    context "without confirmation" do
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          application_class "CustomApp"
+          enable_application_owner confirmation: true
+        end
+      end
+
+      it "is invalid without owner" do
+        expect(new_application).not_to be_valid
+        new_application.owner = owner
+        expect(new_application).to be_valid
+      end
+    end
+
   end
 end
