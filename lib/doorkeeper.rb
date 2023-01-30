@@ -137,8 +137,6 @@ module Doorkeeper
 
     def setup
       setup_orm_adapter
-      run_orm_hooks
-      config.clear_cache!
 
       # Deprecated, will be removed soon
       unless configuration.orm == :active_record
@@ -160,6 +158,8 @@ module Doorkeeper
     end
 
     def run_orm_hooks
+      config.clear_cache!
+
       if @orm_adapter.respond_to?(:run_hooks)
         @orm_adapter.run_hooks
       else

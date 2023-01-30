@@ -372,6 +372,8 @@ RSpec.describe Doorkeeper::Config do
 
           application_class "ApplicationWithOwner"
         end
+
+        Doorkeeper.run_orm_hooks
       end
 
       it "adds support for application owner" do
@@ -398,6 +400,8 @@ RSpec.describe Doorkeeper::Config do
 
           application_class "ApplicationWithOwner"
         end
+
+        Doorkeeper.run_orm_hooks
       end
 
       it "adds support for application owner" do

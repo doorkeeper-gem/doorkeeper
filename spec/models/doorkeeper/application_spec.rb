@@ -106,8 +106,9 @@ RSpec.describe Doorkeeper::Application do
           orm DOORKEEPER_ORM
           enable_application_owner
         end
-      end
 
+        Doorkeeper.run_orm_hooks
+      end
 
       it "is valid given valid attributes" do
         expect(new_application).to be_valid
@@ -120,6 +121,8 @@ RSpec.describe Doorkeeper::Application do
           orm DOORKEEPER_ORM
           enable_application_owner confirmation: true
         end
+
+        Doorkeeper.run_orm_hooks
       end
 
       it "is invalid without an owner" do
@@ -495,6 +498,8 @@ RSpec.describe Doorkeeper::Application do
           orm DOORKEEPER_ORM
           enable_application_owner confirmation: false
         end
+
+        Doorkeeper.run_orm_hooks
       end
 
       it "includes all the attributes" do
@@ -527,6 +532,8 @@ RSpec.describe Doorkeeper::Application do
           application_class "CustomApp"
           enable_application_owner confirmation: false
         end
+
+        Doorkeeper.run_orm_hooks
       end
 
       it "is valid given valid attributes" do
@@ -541,6 +548,8 @@ RSpec.describe Doorkeeper::Application do
           application_class "CustomApp"
           enable_application_owner confirmation: true
         end
+
+        Doorkeeper.run_orm_hooks
       end
 
       it "is invalid without owner" do
