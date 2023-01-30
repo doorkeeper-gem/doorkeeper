@@ -21,7 +21,7 @@ module Doorkeeper
     end
 
     config.to_prepare do
-      Doorkeeper.setup
+      Doorkeeper.run_orm_hooks
     end
 
     if defined?(Sprockets) && Sprockets::VERSION.chr.to_i >= 4
