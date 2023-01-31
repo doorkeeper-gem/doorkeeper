@@ -8,6 +8,9 @@ User-visible changes worth mentioning.
 ## main
 
 - [#ID] Add your PR description here.
+
+# 5.6.4
+
 - [#1633] Apply ORM configuration in #to_prepare block to avoid autoloading errors.
 
 # 5.6.3
