@@ -26,12 +26,12 @@ module Doorkeeper
         @scopes ||= build_scopes
       end
 
-      def find_or_create_access_token(client, resource_owner, scopes, custom_fields, server)
+      def find_or_create_access_token(client, resource_owner, scopes, custom_attributes, server)
         context = Authorization::Token.build_context(client, grant_type, scopes, resource_owner)
         token_model = server_config.access_token_model
         application = client.is_a?(server_config.application_model) ? client : client&.application
 
-        token_params = {
+        token_attributes = {
           application: application,
           resource_owner: resource_owner,
           scopes: scopes,
@@ -39,7 +39,7 @@ module Doorkeeper
           use_refresh_token: Authorization::Token.refresh_token_enabled?(server, context),
         }
 
-        @access_token = token_model.find_or_create_for(token_params.merge(custom_fields))
+        @access_token = token_model.find_or_create_for(**token_attributes.merge(custom_attributes))
       end
 
       def before_successful_response

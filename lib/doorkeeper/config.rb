@@ -323,11 +323,11 @@ module Doorkeeper
 
     # Allows additional data to be received when granting access to an Application, and for this
     # additional data to be sent with subsequently generated access tokens. The access grant and
-    # access token models will both need to respond to the specified field names.
+    # access token models will both need to respond to the specified attribute names.
     #
-    # @param fields [Array] The array of custom field names to be saved
+    # @param attributes [Array] The array of custom attribute names to be saved
     #
-    option :custom_access_token_fields,
+    option :custom_access_token_attributes,
            default: []
 
     # Use a custom class for generating the application secret.

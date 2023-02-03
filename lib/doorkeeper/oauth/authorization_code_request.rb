@@ -35,7 +35,7 @@ module Doorkeeper
             grant.application,
             resource_owner,
             grant.scopes,
-            custom_token_fields_with_data,
+            custom_token_attributes_with_data,
             server,
           )
         end
@@ -101,14 +101,8 @@ module Doorkeeper
         server_config.access_grant_model.generate_code_challenge(code_verifier)
       end
 
-      private def custom_token_fields_with_data
-        Doorkeeper.config.custom_access_token_fields.each do |field_name|
-          unless Doorkeeper.config.access_token_model.has_attribute?(field_name)
-            raise NotImplementedError, "#{Doorkeeper.config.access_token_model} does not recognize field: #{field_name}."
-          end
-        end
-
-        grant.attributes.with_indifferent_access.slice(*Doorkeeper.config.custom_access_token_fields).symbolize_keys
+      private def custom_token_attributes_with_data
+        grant.attributes.with_indifferent_access.slice(*Doorkeeper.config.custom_access_token_attributes).symbolize_keys
       end
     end
   end

@@ -18,7 +18,7 @@ module Doorkeeper
 
       attr_reader :client, :code_challenge, :code_challenge_method, :missing_param,
                   :redirect_uri, :resource_owner, :response_type, :state,
-                  :authorization_response_flow, :response_mode, :custom_access_token_fields
+                  :authorization_response_flow, :response_mode, :custom_access_token_attributes
 
       def initialize(server, parameters = {}, resource_owner = nil)
         @server                = server
@@ -32,9 +32,9 @@ module Doorkeeper
         @code_challenge_method = parameters[:code_challenge_method]
         @resource_owner        = resource_owner
 
-        @custom_access_token_fields = {}
-        Doorkeeper.config.custom_access_token_fields.each do |field|
-          @custom_access_token_fields[field] = parameters[field]
+        @custom_access_token_attributes = {}
+        Doorkeeper.config.custom_access_token_attributes.each do |field|
+          @custom_access_token_attributes[field] = parameters[field]
         end
       end
 

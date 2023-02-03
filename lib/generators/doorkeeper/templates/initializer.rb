@@ -406,7 +406,7 @@ Doorkeeper.configure do
   # tokens, you can check that the requested data belongs to the specified tenant.
   #
   # Default value is an empty Array: []
-  # custom_access_token_fields [:tenant_id]
+  # custom_access_token_attributes [:tenant_id]
 
   # Hook into the strategies' request & response life-cycle in case your
   # application needs advanced customization or logging:
