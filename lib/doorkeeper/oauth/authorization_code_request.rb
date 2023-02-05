@@ -56,11 +56,12 @@ module Doorkeeper
       end
 
       def validate_params
-        @missing_param = if grant&.uses_pkce? && code_verifier.blank?
-                           :code_verifier
-                         elsif redirect_uri.blank?
-                           :redirect_uri
-                         end
+        @missing_param =
+          if grant&.uses_pkce? && code_verifier.blank?
+            :code_verifier
+          elsif redirect_uri.blank?
+            :redirect_uri
+          end
 
         @missing_param.nil?
       end
@@ -98,11 +99,15 @@ module Doorkeeper
       end
 
       def generate_code_challenge(code_verifier)
-        server_config.access_grant_model.generate_code_challenge(code_verifier)
+        Doorkeeper.config.access_grant_model.generate_code_challenge(code_verifier)
       end
 
-      private def custom_token_attributes_with_data
-        grant.attributes.with_indifferent_access.slice(*Doorkeeper.config.custom_access_token_attributes).symbolize_keys
+      def custom_token_attributes_with_data
+        grant
+          .attributes
+          .with_indifferent_access
+          .slice(*Doorkeeper.config.custom_access_token_attributes)
+          .symbolize_keys
       end
     end
   end

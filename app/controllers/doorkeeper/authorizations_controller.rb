@@ -88,7 +88,7 @@ module Doorkeeper
     end
 
     def pre_auth_param_fields
-      Doorkeeper.configuration.custom_access_token_attributes + %i[
+      custom_access_token_attributes + %i[
         client_id
         code_challenge
         code_challenge_method
@@ -98,6 +98,10 @@ module Doorkeeper
         scope
         state
       ]
+    end
+
+    def custom_access_token_attributes
+      Doorkeeper.config.custom_access_token_attributes.map(&:to_sym)
     end
 
     def authorization

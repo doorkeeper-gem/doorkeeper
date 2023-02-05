@@ -11,6 +11,7 @@ module Doorkeeper
         validate_reuse_access_token_value
         validate_token_reuse_limit
         validate_secret_strategies
+        validate_custom_access_token_attributes
       end
 
       private
@@ -49,14 +50,16 @@ module Doorkeeper
         @token_reuse_limit = 100
       end
 
+      # Validate that the access_token and access_grant models
+      # both respond to all of the custom attributes
       def validate_custom_access_token_attributes
-        # Validate that the access_token and access_grant models
-        # both respond to all of the custom attributes
-        Doorkeeper.config.custom_access_token_attributes.each do |attribute_name|
-          [Doorkeeper.config.access_token_model, Doorkeeper.config.access_grant_model].each do |model|
-            unless model.has_attribute?(attribute_name)
-              raise NotImplementedError, "#{model} does not recognize custom attribute: #{attribute_name}."
-            end
+        return if custom_access_token_attributes.blank?
+
+        custom_access_token_attributes.each do |attribute_name|
+          [access_token_model, access_grant_model].each do |model|
+            next if model.has_attribute?(attribute_name)
+
+            raise Doorkeeper::Errors::ConfigError, "#{model} does not recognize custom attribute: #{attribute_name}."
           end
         end
       end

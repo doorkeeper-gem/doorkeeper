@@ -26,7 +26,7 @@ module Doorkeeper
       private
 
       def load_client(credentials)
-        server_config.application_model.by_uid_and_secret(credentials.uid, credentials.secret)
+        Doorkeeper.config.application_model.by_uid_and_secret(credentials.uid, credentials.secret)
       end
 
       def before_successful_response
@@ -41,7 +41,7 @@ module Doorkeeper
       end
 
       def refresh_token_revoked_on_use?
-        server_config.access_token_model.refresh_token_revoked_on_use?
+        Doorkeeper.config.access_token_model.refresh_token_revoked_on_use?
       end
 
       def default_scopes
@@ -75,7 +75,7 @@ module Doorkeeper
         # Here we assume that TTL of the token received after refreshing should be
         # the same as that of the original token.
         #
-        @access_token = server_config.access_token_model.create_for(
+        @access_token = Doorkeeper.config.access_token_model.create_for(
           application: refresh_token.application,
           resource_owner: resource_owner,
           scopes: scopes,
