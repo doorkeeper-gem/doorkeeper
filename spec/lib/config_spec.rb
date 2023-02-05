@@ -521,6 +521,20 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
+  describe "custom_access_token_attributes" do
+    it "is '[]' by default" do
+      expect(Doorkeeper.configuration.custom_access_token_attributes).to(eq([]))
+    end
+
+    it "can change the value" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        custom_access_token_attributes [:added_field_1, :added_field_2]
+      end
+      expect(config.custom_access_token_attributes).to eq([:added_field_1, :added_field_2])
+    end
+  end
+
   describe "application_secret_generator" do
     it "is 'Doorkeeper::OAuth::Helpers::UniqueToken' by default" do
       expect(Doorkeeper.configuration.application_secret_generator).to(

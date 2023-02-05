@@ -35,6 +35,7 @@ module Doorkeeper
             grant.application,
             resource_owner,
             grant.scopes,
+            custom_token_attributes_with_data,
             server,
           )
         end
@@ -98,6 +99,10 @@ module Doorkeeper
 
       def generate_code_challenge(code_verifier)
         server_config.access_grant_model.generate_code_challenge(code_verifier)
+      end
+
+      private def custom_token_attributes_with_data
+        grant.attributes.with_indifferent_access.slice(*Doorkeeper.config.custom_access_token_attributes).symbolize_keys
       end
     end
   end
