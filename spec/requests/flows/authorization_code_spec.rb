@@ -156,7 +156,8 @@ feature "Authorization Code Flow" do
 
     authorization_code = Doorkeeper::AccessGrant.first.token
     page.driver.post token_endpoint_url(
-      code: authorization_code, client_id: @client.uid,
+      code: authorization_code,
+      client_id: @client.uid,
       redirect_uri: @client.redirect_uri,
     )
 
@@ -174,7 +175,8 @@ feature "Authorization Code Flow" do
 
     authorization_code = Doorkeeper::AccessGrant.first.token
     page.driver.post token_endpoint_url(
-      code: authorization_code, client_secret: @client.secret,
+      code: authorization_code,
+      client_secret: @client.secret,
       redirect_uri: @client.redirect_uri,
     )
 
@@ -548,6 +550,33 @@ feature "Authorization Code Flow" do
           "error_description" => translated_error_message(:invalid_grant),
         )
       end
+    end
+  end
+
+  context "when custom_access_token_attributes are configured" do
+    let(:resource_owner) { FactoryBot.create(:resource_owner) }
+    let(:client) { client_exists }
+    let(:grant) do
+      authorization_code_exists(
+         application: client,
+         resource_owner_id: resource_owner.id,
+         resource_owner_type: resource_owner.class.name,
+         tenant_name: "Tenant 1",
+       )
+    end
+
+    before do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        custom_access_token_attributes [:tenant_name]
+      end
+    end
+
+    it "copies custom attributes from the grant into the token" do
+      page.driver.post token_endpoint_url(code: grant.token, client: client)
+
+      access_token = Doorkeeper::AccessToken.find_by(token: json_response["access_token"])
+      expect(access_token.tenant_name).to eq("Tenant 1")
     end
   end
 end

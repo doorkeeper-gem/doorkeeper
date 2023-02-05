@@ -68,7 +68,7 @@ module Doorkeeper
       end
 
       def validate_client_supports_grant_flow
-        server_config.allow_grant_flow_for_client?(grant_type, client&.application)
+        Doorkeeper.config.allow_grant_flow_for_client?(grant_type, client&.application)
       end
     end
   end

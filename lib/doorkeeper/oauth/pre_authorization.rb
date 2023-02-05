@@ -21,21 +21,17 @@ module Doorkeeper
                   :authorization_response_flow, :response_mode, :custom_access_token_attributes
 
       def initialize(server, parameters = {}, resource_owner = nil)
-        @server                = server
-        @client_id             = parameters[:client_id]
-        @response_type         = parameters[:response_type]
-        @response_mode         = parameters[:response_mode]
-        @redirect_uri          = parameters[:redirect_uri]
-        @scope                 = parameters[:scope]
-        @state                 = parameters[:state]
-        @code_challenge        = parameters[:code_challenge]
+        @server = server
+        @client_id = parameters[:client_id]
+        @response_type = parameters[:response_type]
+        @response_mode = parameters[:response_mode]
+        @redirect_uri = parameters[:redirect_uri]
+        @scope = parameters[:scope]
+        @state = parameters[:state]
+        @code_challenge = parameters[:code_challenge]
         @code_challenge_method = parameters[:code_challenge_method]
-        @resource_owner        = resource_owner
-
-        @custom_access_token_attributes = {}
-        Doorkeeper.config.custom_access_token_attributes.each do |field|
-          @custom_access_token_attributes[field] = parameters[field]
-        end
+        @resource_owner = resource_owner
+        @custom_access_token_attributes = parameters.slice(*Doorkeeper.config.custom_access_token_attributes)
       end
 
       def authorizable?

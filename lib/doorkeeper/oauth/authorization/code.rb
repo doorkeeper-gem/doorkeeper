@@ -45,13 +45,13 @@ module Doorkeeper
             attributes[:resource_owner_id] = resource_owner.id
           end
 
+          pkce_attributes.merge(attributes).merge(custom_attributes)
+        end
+
+        def custom_attributes
           # Custom access token attributes are saved into the access grant,
           # and then included in subsequently generated access tokens.
-          Doorkeeper.config.custom_access_token_attributes.each do |attribute_name|
-            attributes[attribute_name] = @pre_auth.custom_access_token_attributes[attribute_name]
-          end
-
-          pkce_attributes.merge(attributes)
+          @pre_auth.custom_access_token_attributes.to_h.with_indifferent_access
         end
 
         def pkce_attributes

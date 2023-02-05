@@ -3,17 +3,18 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::CodeResponse do
+  let(:application) { FactoryBot.create(:application, scopes: "") }
+  let(:owner) { FactoryBot.build_stubbed(:resource_owner) }
   let(:pre_auth) do
-    application = FactoryBot.create(:application, scopes: "")
     double(
       :pre_auth,
       client: application,
       redirect_uri: "http://tst.com/cb",
       state: "state",
       scopes: Doorkeeper::OAuth::Scopes.from_string("public"),
+      custom_access_token_attributes: {},
     )
   end
-  let(:owner) { FactoryBot.build_stubbed(:resource_owner) }
 
   describe "#body" do
     subject(:body) { described_class.new(pre_auth, auth).body }
