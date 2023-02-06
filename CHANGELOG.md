@@ -9,7 +9,7 @@ User-visible changes worth mentioning.
 
 - [#ID] Add your PR description here.
 - [#1602] Allow custom data to be stored inside access grants/tokens.
-- [#1603] Code refactoring for custom token attributes.
+- [#1634] Code refactoring for custom token attributes.
 
 # 5.6.4
 
