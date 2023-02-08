@@ -111,6 +111,8 @@ module Doorkeeper
                            :response_type
                          elsif @scope.blank? && server.default_scopes.blank?
                            :scope
+                         elsif code_challenge.blank? && !client.application.confidential?
+                           :code_challenge
                          end
 
         @missing_param.nil?
