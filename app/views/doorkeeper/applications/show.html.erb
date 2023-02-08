@@ -33,6 +33,23 @@
     <h4><%= t('.confidential') %>:</h4>
     <p><code class="bg-light" id="confidential"><%= @application.confidential? %></code></p>
 
+    <% unless @application.confidential? %>
+      <p>
+        code_verifier:
+        <code class="bg-light">
+          <%= code_verifier = SecureRandom.hex(32) %>
+        </code>
+        <br/>
+        code_challenge:
+        <code class="bg-light">
+          <%= code_challenge = Base64.urlsafe_encode64(
+                                 OpenSSL::Digest::SHA256.digest(code_verifier)
+                               ).gsub(/=/, '') %>
+        </code>
+      </p>
+    <% end %>
+
+
     <h4><%= t('.callback_urls') %>:</h4>
 
     <% if @application.redirect_uri.present? %>
@@ -43,7 +60,8 @@
               <code class="bg-light"><%= uri %></code>
             </td>
             <td>
-              <%= link_to t('doorkeeper.applications.buttons.authorize'), oauth_authorization_path(client_id: @application.uid, redirect_uri: uri, response_type: 'code', scope: @application.scopes), class: 'btn btn-success', target: '_blank' %>
+              <% pkce_params = @application.confidential? ? {} : { code_challenge:, code_challenge_method: "S256" } %>
+              <%= link_to t('doorkeeper.applications.buttons.authorize'), oauth_authorization_path({client_id: @application.uid, redirect_uri: uri, response_type: 'code', scope: @application.scopes}.merge(pkce_params)), class: 'btn btn-success', target: '_blank' %>
             </td>
           </tr>
         <% end %>
