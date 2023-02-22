@@ -25,6 +25,8 @@ RSpec.describe Doorkeeper::AuthorizationsController do
                      scopes: "default"
   end
 
+  let(:response_json_body) { JSON.parse(response.body) }
+
   before do
     Doorkeeper.configure do
       orm DOORKEEPER_ORM
@@ -111,7 +113,6 @@ RSpec.describe Doorkeeper::AuthorizationsController do
         post :create, params: { client_id: client.uid, response_type: "token", redirect_uri: client.redirect_uri }
       end
 
-      let(:response_json_body) { JSON.parse(response.body) }
       let(:redirect_uri) { response_json_body["redirect_uri"] }
 
       it "renders success after authorization" do
@@ -153,8 +154,6 @@ RSpec.describe Doorkeeper::AuthorizationsController do
           response_mode: "form_post",
         }
       end
-
-      let(:response_json_body) { JSON.parse(response.body) }
 
       it "renders success after authorization" do
         expect(response).to be_successful
@@ -200,8 +199,6 @@ RSpec.describe Doorkeeper::AuthorizationsController do
         }
       end
 
-      let(:response_json_body) { JSON.parse(response.body) }
-
       it "renders 400 error" do
         expect(response.status).to eq 400
       end
@@ -231,8 +228,6 @@ RSpec.describe Doorkeeper::AuthorizationsController do
         }
       end
 
-      let(:response_json_body) { JSON.parse(response.body) }
-
       it "renders 401 error" do
         expect(response.status).to eq 401
       end
@@ -261,8 +256,6 @@ RSpec.describe Doorkeeper::AuthorizationsController do
           redirect_uri: client.redirect_uri,
         }
       end
-
-      let(:response_json_body) { JSON.parse(response.body) }
 
       it "renders 401 error" do
         expect(response.status).to eq 401
@@ -355,8 +348,6 @@ RSpec.describe Doorkeeper::AuthorizationsController do
         }
       end
 
-      let(:response_json_body) { JSON.parse(response.body) }
-
       it "renders 400 error" do
         expect(response.status).to eq 400
       end
@@ -385,8 +376,6 @@ RSpec.describe Doorkeeper::AuthorizationsController do
           redirect_uri: client.redirect_uri,
         }
       end
-
-      let(:response_json_body) { JSON.parse(response.body) }
 
       it "renders 401 error" do
         expect(response.status).to eq 401
@@ -417,8 +406,6 @@ RSpec.describe Doorkeeper::AuthorizationsController do
           redirect_uri: client.redirect_uri,
         }
       end
-
-      let(:response_json_body) { JSON.parse(response.body) }
 
       it "renders 401 error" do
         expect(response.status).to eq 401
@@ -451,7 +438,6 @@ RSpec.describe Doorkeeper::AuthorizationsController do
         }
       end
 
-      let(:response_json_body) { JSON.parse(response.body) }
       let(:redirect_uri) { response_json_body["redirect_uri"] }
 
       it "renders 400 error" do
@@ -491,8 +477,6 @@ RSpec.describe Doorkeeper::AuthorizationsController do
           response_mode: "form_post",
         }
       end
-
-      let(:response_json_body) { JSON.parse(response.body) }
 
       it "renders 400 error" do
         expect(response.status).to eq 400
@@ -838,8 +822,6 @@ RSpec.describe Doorkeeper::AuthorizationsController do
         }
       end
 
-      let(:response_json_body) { JSON.parse(response.body) }
-
       it "renders success" do
         expect(response).to be_successful
       end
@@ -928,8 +910,6 @@ RSpec.describe Doorkeeper::AuthorizationsController do
         get :new, params: { an_invalid: "request" }
       end
 
-      let(:response_json_body) { JSON.parse(response.body) }
-
       it "renders bad request" do
         expect(response).to have_http_status(:bad_request)
       end
@@ -960,8 +940,6 @@ RSpec.describe Doorkeeper::AuthorizationsController do
         }
       end
 
-      let(:response_json_body) { JSON.parse(response.body) }
-
       it "renders bad request" do
         expect(response).to have_http_status(:bad_request)
       end
@@ -991,8 +969,6 @@ RSpec.describe Doorkeeper::AuthorizationsController do
           response_mode: "form_post",
         }
       end
-
-      let(:response_json_body) { JSON.parse(response.body) }
 
       it "renders 400 error" do
         expect(response.status).to eq 400
@@ -1104,6 +1080,28 @@ RSpec.describe Doorkeeper::AuthorizationsController do
       }
 
       expect(response).to be_successful
+    end
+  end
+
+  describe "DELETE #destroy in API mode" do
+    context "with invalid params" do
+      before do
+        allow(Doorkeeper.config).to receive(:api_only).and_return(true)
+        delete :destroy, params: {
+          client_id: client.uid,
+          response_type: "blabla",
+          redirect_uri: client.redirect_uri,
+          response_mode: "form_post",
+        }
+      end
+
+      it "renders bad request" do
+        expect(response).to have_http_status(:bad_request)
+      end
+
+      it "includes error in body" do
+        expect(response_json_body["error"]).to eq("unsupported_grant_type")
+      end
     end
   end
 end

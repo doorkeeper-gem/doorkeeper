@@ -10,6 +10,7 @@ User-visible changes worth mentioning.
 - [#ID] Add your PR description here.
 - [#1602] Allow custom data to be stored inside access grants/tokens.
 - [#1634] Code refactoring for custom token attributes.
+- [#1639] Add grant type validation to avoid Internal Server Error for DELETE /oauth/authorize endpoint.
 
 # 5.6.4
 
