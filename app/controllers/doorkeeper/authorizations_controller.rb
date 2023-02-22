@@ -13,11 +13,19 @@ module Doorkeeper
     end
 
     def create
-      redirect_or_render authorize_response
+      redirect_or_render(authorize_response)
     end
 
     def destroy
-      redirect_or_render authorization.deny
+      redirect_or_render(authorization.deny)
+    rescue Doorkeeper::Errors::InvalidTokenStrategy => e
+      error_response = get_error_response_from_exception(e)
+
+      if Doorkeeper.configuration.api_only
+        render json: error_response.body, status: :bad_request
+      else
+        render :error, locals: { error_response: error_response }
+      end
     end
 
     private
@@ -37,7 +45,7 @@ module Doorkeeper
         render json: pre_auth.error_response.body,
                status: :bad_request
       else
-        render :error
+        render :error, locals: { error_response: pre_auth.error_response }
       end
     end
 
