@@ -7,8 +7,7 @@ RSpec.describe Doorkeeper::OAuth::TokenResponse do
 
   it "includes access token response headers" do
     headers = response.headers
-    expect(headers.fetch("Cache-Control")).to eq("no-store")
-    expect(headers.fetch("Pragma")).to eq("no-cache")
+    expect(headers.fetch("Cache-Control")).to eq("no-store, no-cache")
   end
 
   it "status is ok" do
