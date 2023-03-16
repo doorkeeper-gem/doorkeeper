@@ -15,8 +15,7 @@ RSpec.describe "Token endpoint" do
   it "respond with correct headers" do
     post token_endpoint_url(code: @authorization.token, client: @client)
 
-    expect(headers["Pragma"]).to eq("no-cache")
-    expect(headers["Cache-Control"]).to be_in(["no-store", "private, no-store"])
+    expect(headers["Cache-Control"]).to be_in(["no-store", "no-cache, no-store", "private, no-store"])
     expect(headers["Content-Type"]).to eq("application/json; charset=utf-8")
   end
 

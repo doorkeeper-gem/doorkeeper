@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#ID] Add your PR description here.
+- [#1644] Update HTTP headers.
 
 # 5.6.5
 
@@ -45,7 +46,7 @@ User-visible changes worth mentioning.
 
 ## 5.6.0.rc2
 
-- [#1558] Fixed bug: able to obtain a token with default scopes even if they are not present in the 
+- [#1558] Fixed bug: able to obtain a token with default scopes even if they are not present in the
   application scopes when using client credentials.
 - [#1567] Only filter `code` parameter if authorization_code grant flow is enabled.
 
@@ -80,7 +81,7 @@ User-visible changes worth mentioning.
 ## 5.5.1
 
 - [#1496] Revoke `old_refresh_token` if `previous_refresh_token` is present.
-- [#1495] Fix `respond_to` undefined in API-only mode 
+- [#1495] Fix `respond_to` undefined in API-only mode
 - [#1488] Verify client authentication for Resource Owner Password Grant when
   `config.skip_client_authentication_for_password_grant` is set and the client credentials
   are sent in a HTTP Basic auth header.
@@ -94,10 +95,10 @@ User-visible changes worth mentioning.
 ## 5.5.0.rc2
 
 - [#1473] Enable `Applications` and `AuthorizedApplications` controllers in API mode.
-  
-  **[IMPORTANT]** you can still skip these controllers using `skip_controllers` in 
+
+  **[IMPORTANT]** you can still skip these controllers using `skip_controllers` in
     `use_doorkeeper` inside `routes.rb`. Please do it in case you don't need them.
-  
+
 - [#1472] Fix `establish_connection` configuration for custom defined models.
 - [#1471] Add support for Ruby 3.0.
 - [#1469] Check if `redirect_uri` exists.
