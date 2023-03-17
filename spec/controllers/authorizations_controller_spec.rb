@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-RSpec.describe Doorkeeper::AuthorizationsController do
+RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
   include AuthorizationRequestHelper
 
   class ActionDispatch::TestResponse
@@ -732,6 +732,50 @@ RSpec.describe Doorkeeper::AuthorizationsController do
 
       it "issues the token for the current resource owner" do
         expect(Doorkeeper::AccessToken.first.resource_owner_id).to eq(user.id)
+      end
+    end
+  end
+
+  describe "GET #new with skip_authorization false" do
+    let(:params) do
+      {
+        client_id: client.uid,
+        response_type: "token",
+        redirect_uri: client.redirect_uri,
+      }
+    end
+
+    before do
+      allow(Doorkeeper.config.access_token_model).to receive(:matching_token_for).and_return(true)
+      client.update_attribute :confidential, confidential_client
+
+      get :new, params: params
+    end
+
+    context "with matching token and confidential application" do
+      let(:confidential_client) { true }
+
+      it "redirects immediately" do
+        expect(controller).not_to receive(:render)
+        expect(response).to be_redirect
+        expect(response.location).to match(/^#{client.redirect_uri}/)
+      end
+
+      it "issues a token" do
+        expect(Doorkeeper::AccessToken.count).to be 1
+      end
+    end
+
+    context "with matching token and non-confidential application" do
+      let(:confidential_client) { false }
+
+      it "renders the new view" do
+        expect(response).to be_successful
+        expect(controller).to render_with :new
+      end
+
+      it "doesn't issue a token" do
+        expect(Doorkeeper::AccessToken.count).to be 0
       end
     end
   end
