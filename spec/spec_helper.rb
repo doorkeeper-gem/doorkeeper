@@ -30,6 +30,7 @@ end
 Doorkeeper::RSpec.print_configuration_info
 
 require "support/orm/#{DOORKEEPER_ORM}"
+require "support/render_with_matcher"
 
 Dir["#{File.dirname(__FILE__)}/support/{dependencies,helpers,shared}/*.rb"].sort.each { |file| require file }
 

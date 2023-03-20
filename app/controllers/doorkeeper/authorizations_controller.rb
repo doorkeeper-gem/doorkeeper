@@ -31,7 +31,7 @@ module Doorkeeper
     private
 
     def render_success
-      if skip_authorization? || matching_token?
+      if skip_authorization? || (matching_token? && pre_auth.client.application.confidential?)
         redirect_or_render(authorize_response)
       elsif Doorkeeper.configuration.api_only
         render json: pre_auth
