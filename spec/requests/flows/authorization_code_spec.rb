@@ -579,4 +579,15 @@ feature "Authorization Code Flow" do
       expect(access_token.tenant_name).to eq("Tenant 1")
     end
   end
+
+  context "when custom_access_token_attributes aren't recognized by models" do
+    it "raises a config error" do
+      expect do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          custom_access_token_attributes [:unrecognized_attribute]
+        end
+      end.to raise_error(Doorkeeper::Errors::ConfigError)
+    end
+  end
 end

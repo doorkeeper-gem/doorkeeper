@@ -55,11 +55,17 @@ module Doorkeeper
       def validate_custom_access_token_attributes
         return if custom_access_token_attributes.blank?
 
+        # Need lib/doorkeeper#configure to set up the orm and initialize
+        # the access token and grant models before we can access them.
+        Doorkeeper.configuration
+
         custom_access_token_attributes.each do |attribute_name|
           [access_token_model, access_grant_model].each do |model|
             next if model.has_attribute?(attribute_name)
 
-            raise Doorkeeper::Errors::ConfigError, "#{model} does not recognize custom attribute: #{attribute_name}."
+            raise Doorkeeper::Errors::ConfigError,
+              "#{model} does not recognize custom attribute: #{attribute_name}. Please disable the " \
+              "'custom_access_token_attributes' configuration option and make the necessary model changes."
           end
         end
       end

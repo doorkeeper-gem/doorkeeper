@@ -396,7 +396,8 @@ Doorkeeper.configure do
   # The 'authorizations/new' page will need to be overridden to include this additional data
   # in the request params when granting access. The access grant and access token models
   # will both need to respond to these additional data fields, and have a database column
-  # to store them in.
+  # to store them in. This configuration option should not be enabled until the access
+  # grant and access token models repond to the specified attributes.
   #
   # Example:
   # You have a multi-tenanted platform and want to be able to grant access to a specific
