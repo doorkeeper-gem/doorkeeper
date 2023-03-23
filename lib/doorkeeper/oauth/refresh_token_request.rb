@@ -49,7 +49,7 @@ module Doorkeeper
       end
 
       def create_access_token
-        attributes = {}
+        attributes = {}.merge(custom_token_attributes_with_data)
 
         resource_owner =
           if Doorkeeper.config.polymorphic_resource_owner?
@@ -118,6 +118,14 @@ module Doorkeeper
         else
           true
         end
+      end
+
+      def custom_token_attributes_with_data
+        refresh_token
+        .attributes
+        .with_indifferent_access
+        .slice(*Doorkeeper.config.custom_access_token_attributes)
+        .symbolize_keys
       end
     end
   end
