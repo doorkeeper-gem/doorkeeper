@@ -246,6 +246,33 @@ RSpec.describe "Refresh Token Flow" do
       end
     end
 
+    context "when custom_access_token_attributes are configured" do
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          custom_access_token_attributes [:tenant_name]
+        end
+
+        @token = FactoryBot.create(
+          :access_token,
+          application: @client,
+          resource_owner_id: resource_owner.id,
+          resource_owner_type: resource_owner.class.name,
+          use_refresh_token: true,
+          tenant_name: "Tenant 1",
+        )
+      end
+
+      it "copies custom attributes from the previous token into the new token" do
+        post refresh_token_endpoint_url(
+          client: @client, refresh_token: @token.refresh_token,
+        )
+
+        new_token = Doorkeeper::AccessToken.last
+        expect(new_token.tenant_name).to eq("Tenant 1")
+      end
+    end
+
     def last_token
       Doorkeeper::AccessToken.last_authorized_token_for(
         @client.id, resource_owner,

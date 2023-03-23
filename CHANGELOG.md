@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#ID] Add your PR description here.
+- [#1648] Add custom token attributes to Refresh Token Request
 - [#1644] Update HTTP headers.
 
 # 5.6.5
