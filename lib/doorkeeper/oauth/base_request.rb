@@ -38,11 +38,6 @@ module Doorkeeper
           use_refresh_token: Authorization::Token.refresh_token_enabled?(server, context),
         }
 
-        # Only select custom attributes that the token model recognizes.
-        custom_attributes.select! do |attrib, _v|
-          Doorkeeper.config.access_token_model.has_attribute?(attrib)
-        end
-
         @access_token =
           Doorkeeper.config.access_token_model.find_or_create_for(**token_attributes.merge(custom_attributes))
       end

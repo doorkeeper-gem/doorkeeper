@@ -50,11 +50,8 @@ module Doorkeeper
 
         def custom_attributes
           # Custom access token attributes are saved into the access grant,
-          # and then included in subsequently generated access tokens. Only
-          # recognized attributes are saved.
-          @pre_auth.custom_access_token_attributes.to_h.with_indifferent_access.select do |attrib, _v|
-            Doorkeeper.config.access_grant_model.has_attribute?(attrib)
-          end
+          # and then included in subsequently generated access tokens.
+          @pre_auth.custom_access_token_attributes.to_h.with_indifferent_access
         end
 
         def pkce_attributes
