@@ -56,13 +56,13 @@ module Doorkeeper
         return if custom_access_token_attributes.blank?
 
         unrecognized_attributes = []
-        custom_access_token_attributes.each do |attrib|
+        custom_access_token_attributes.each do |attribute_name|
           [access_token_model, access_grant_model].each do |model|
-            next if model.has_attribute?(attrib)
+            next if model.has_attribute?(attribute_name)
 
-            unrecognized_attributes << attrib
+            unrecognized_attributes << attribute_name
             ::Rails.logger.warn(
-              "[DOORKEEPER] #{access_token_model} does not respond to custom attribute '#{attrib}'. " \
+              "[DOORKEEPER] #{access_token_model} does not respond to custom attribute '#{attribute_name}'. " \
               "This custom attribute will be ignored.",
             )
           end
