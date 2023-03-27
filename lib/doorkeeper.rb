@@ -118,10 +118,9 @@ module Doorkeeper
     attr_reader :orm_adapter
 
     def configure(&block)
-      builder = Config::Builder.new(&block)
-      @config = builder.config
+      @config = Config::Builder.new(&block).build
       setup
-      builder.build
+      @config
     end
 
     # @return [Doorkeeper::Config] configuration instance

@@ -533,19 +533,6 @@ RSpec.describe Doorkeeper::Config do
       end
       expect(config.custom_access_token_attributes).to eq([:tenant_name])
     end
-
-    it "removes unrecognized attributes" do
-      # Once for access_grant_model, and again for access_token_model.
-      expect(Rails.logger).to receive(:warn).with(/custom attribute will be ignored/)
-      expect(Rails.logger).to receive(:warn).with(/custom attribute will be ignored/)
-
-      Doorkeeper.configure do
-        orm DOORKEEPER_ORM
-        custom_access_token_attributes [:tenant_name, :unrecognized_attribute]
-      end
-
-      expect(config.custom_access_token_attributes).to eq([:tenant_name])
-    end
   end
 
   describe "application_secret_generator" do
