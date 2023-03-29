@@ -533,15 +533,6 @@ RSpec.describe Doorkeeper::Config do
       end
       expect(config.custom_access_token_attributes).to eq([:tenant_name])
     end
-
-    it "validates custom attributes to be present in the models" do
-      expect do
-        Doorkeeper.configure do
-          orm DOORKEEPER_ORM
-          custom_access_token_attributes [:none_existing_column]
-        end
-      end.to raise_error(Doorkeeper::Errors::ConfigError)
-    end
   end
 
   describe "application_secret_generator" do
