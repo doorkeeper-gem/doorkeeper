@@ -8,8 +8,13 @@ User-visible changes worth mentioning.
 ## main
 
 - [#ID] Add your PR description here.
-- [#1648] Add custom token attributes to Refresh Token Request
+
+## 5.6.6
+
 - [#1644] Update HTTP headers.
+- [#1646] Block public clients automatic authorization skip.
+- [#1648] Add custom token attributes to Refresh Token Request.
+- [#1649] Fixed custom_access_token_attributes related errors.
 
 # 5.6.5
 
