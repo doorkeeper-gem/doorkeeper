@@ -435,6 +435,10 @@ module Doorkeeper
         if Doorkeeper.config.polymorphic_resource_owner?
           attributes[:resource_owner] = resource_owner
         end
+
+        Doorkeeper.config.custom_access_token_attributes.each do |attribute_name|
+          attributes[attribute_name] = public_send(attribute_name)
+        end
       end
     end
 

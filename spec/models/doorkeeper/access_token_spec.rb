@@ -206,6 +206,23 @@ RSpec.describe Doorkeeper::AccessToken do
       expect(token.token).to eq "custom_generator_token_#{created_at.to_i}"
     end
 
+    it "allows the custom generator to access the custom attributes" do
+      module CustomGeneratorArgs
+        def self.generate(opts = {})
+          "custom_generator_token_#{opts[:tenant_name]}"
+        end
+      end
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        access_token_generator "CustomGeneratorArgs"
+        custom_access_token_attributes [:tenant_name]
+      end
+
+      token = FactoryBot.create :access_token, tenant_name: "Tenant 1"
+      expect(token.token).to eq "custom_generator_token_Tenant 1"
+    end
+
     it "raises an error if the custom object does not support generate" do
       module NoGenerate
       end
