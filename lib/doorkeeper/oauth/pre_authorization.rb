@@ -18,7 +18,9 @@ module Doorkeeper
 
       attr_reader :client, :code_challenge, :code_challenge_method, :missing_param,
                   :redirect_uri, :resource_owner, :response_type, :state,
-                  :authorization_response_flow, :response_mode, :custom_access_token_attributes
+                  :authorization_response_flow, :response_mode
+
+      attr_accessor :custom_access_token_attributes
 
       def initialize(server, parameters = {}, resource_owner = nil)
         @server = server

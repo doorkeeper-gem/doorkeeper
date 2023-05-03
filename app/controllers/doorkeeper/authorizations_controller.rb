@@ -31,8 +31,14 @@ module Doorkeeper
     private
 
     def render_success
-      if skip_authorization? || (matching_token? && pre_auth.client.application.confidential?)
-        redirect_or_render(authorize_response)
+      if skip_authorization? || ((token = matching_token?) && pre_auth.client.application.confidential?)
+        if Doorkeeper.config.custom_access_token_attributes.any?
+          custom_attributes = token.attributes.symbolize_keys.slice(*Doorkeeper.config.custom_access_token_attributes)
+          pre_auth.custom_access_token_attributes = custom_attributes
+          render :new
+        else
+          redirect_or_render(authorize_response)
+        end
       elsif Doorkeeper.configuration.api_only
         render json: pre_auth
       else
