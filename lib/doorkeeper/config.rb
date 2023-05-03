@@ -106,6 +106,13 @@ module Doorkeeper
         @config.instance_variable_set(:@revoke_previous_client_credentials_token, true)
       end
 
+      # Only allow one valid access token obtained via authorization code
+      # per client. If a new access token is obtained before the old one
+      # expired, the old one gets revoked (disabled by default)
+      def revoke_previous_authorization_code_token
+        @config.instance_variable_set(:@revoke_previous_authorization_code_token, true)
+      end
+
       # Use an API mode for applications generated with --api argument
       # It will skip applications controller, disable forgery protection
       def api_only
@@ -479,6 +486,10 @@ module Doorkeeper
 
     def revoke_previous_client_credentials_token?
       option_set? :revoke_previous_client_credentials_token
+    end
+
+    def revoke_previous_authorization_code_token?
+      option_set? :revoke_previous_authorization_code_token
     end
 
     def enforce_configured_scopes?

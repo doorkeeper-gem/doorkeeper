@@ -83,14 +83,18 @@ module Doorkeeper
       #   Resource Owner model instance or it's ID
       # @param scopes [String, Doorkeeper::OAuth::Scopes]
       #   set of scopes
+      # @param custom_attributes [Nilable Hash]
+      #   A nil value, or hash with keys corresponding to the custom attributes
+      #   configured with the `custom_access_token_attributes` config option.
+      #   A nil value will ignore custom attributes.
       #
       # @return [Doorkeeper::AccessToken, nil] Access Token instance or
       #   nil if matching record was not found
       #
-      def matching_token_for(application, resource_owner, scopes, include_expired: true)
+      def matching_token_for(application, resource_owner, scopes, custom_attributes: nil, include_expired: true)
         tokens = authorized_tokens_for(application&.id, resource_owner)
         tokens = tokens.not_expired unless include_expired
-        find_matching_token(tokens, application, scopes)
+        find_matching_token(tokens, application, custom_attributes, scopes)
       end
 
       # Interface to enumerate access token records in batches in order not
@@ -114,11 +118,15 @@ module Doorkeeper
       #   Application instance
       # @param scopes [String, Doorkeeper::OAuth::Scopes]
       #   set of scopes
+      # @param custom_attributes [Nilable Hash]
+      #   A nil value, or hash with keys corresponding to the custom attributes
+      #   configured with the `custom_access_token_attributes` config option.
+      #   A nil value will ignore custom attributes.
       #
       # @return [Doorkeeper::AccessToken, nil] Access Token instance or
       #   nil if matching record was not found
       #
-      def find_matching_token(relation, application, scopes)
+      def find_matching_token(relation, application, custom_attributes, scopes)
         return nil unless relation
 
         matching_tokens = []
@@ -126,7 +134,8 @@ module Doorkeeper
 
         find_access_token_in_batches(relation, batch_size: batch_size) do |batch|
           tokens = batch.select do |token|
-            scopes_match?(token.scopes, scopes, application&.scopes)
+            scopes_match?(token.scopes, scopes, application&.scopes) &&
+              custom_attributes_match?(token, custom_attributes)
           end
 
           matching_tokens.concat(tokens)
@@ -160,6 +169,31 @@ module Doorkeeper
           )
       end
 
+      # Checks whether the token custom attribute values match the custom
+      # attributes from the parameters.
+      #
+      # @param token [Doorkeeper::AccessToken]
+      #   The access token whose custom attributes are being compared
+      #   to the custom_attributes.
+      #
+      # @param custom_attributes [Hash]
+      #   A hash of the attributes for which we want to determine whether
+      #   the token's custom attributes match.
+      #
+      # @return [Boolean] true if the token's custom attribute values
+      #   match those in the custom_attributes, or if both are empty/blank.
+      #   False otherwise.
+      def custom_attributes_match?(token, custom_attributes)
+        return true if custom_attributes.nil?
+
+        token_attribs = token.custom_attributes
+        return true if token_attribs.blank? && custom_attributes.blank?
+
+        Doorkeeper.config.custom_access_token_attributes.all? do |attribute|
+          token_attribs[attribute] == custom_attributes[attribute]
+        end
+      end
+
       # Looking for not expired AccessToken record with a matching set of
       # scopes that belongs to specific Application and Resource Owner.
       # If it doesn't exists - then creates it.
@@ -181,7 +215,9 @@ module Doorkeeper
       #
       def find_or_create_for(application:, resource_owner:, scopes:, **token_attributes)
         if Doorkeeper.config.reuse_access_token
-          access_token = matching_token_for(application, resource_owner, scopes, include_expired: false)
+          custom_attributes = extract_custom_attributes(token_attributes).presence
+          access_token = matching_token_for(
+            application, resource_owner, scopes, custom_attributes: custom_attributes, include_expired: false)
 
           return access_token if access_token&.reusable?
         end
@@ -276,6 +312,18 @@ module Doorkeeper
       def fallback_secret_strategy
         ::Doorkeeper.config.token_secret_fallback_strategy
       end
+
+      # Extracts the token's custom attributes (defined by the
+      # custom_access_token_attributes config option) from the token's attributes.
+      #
+      # @param attributes [Hash]
+      #   A hash of the access token's attributes.
+      # @return [Hash]
+      #   A hash containing only the custom access token attributes.
+      def extract_custom_attributes(attributes)
+        attributes.with_indifferent_access.slice(
+          *Doorkeeper.configuration.custom_access_token_attributes)
+      end
     end
 
     # Access Token type: Bearer.
@@ -306,6 +354,14 @@ module Doorkeeper
           json[:resource_owner_type] = resource_owner_type
         end
       end
+    end
+
+    # The token's custom attributes, as defined by
+    # the custom_access_token_attributes config option.
+    #
+    # @return [Hash] hash of custom access token attributes.
+    def custom_attributes
+      self.class.extract_custom_attributes(attributes)
     end
 
     # Indicates whether the token instance have the same credential

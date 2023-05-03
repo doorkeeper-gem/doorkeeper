@@ -167,6 +167,12 @@ Doorkeeper.configure do
   #
   # revoke_previous_client_credentials_token
 
+  # Only allow one valid access token obtained via authorization code
+  # per client. If a new access token is obtained before the old one
+  # expired, the old one gets revoked (disabled by default)
+  #
+  # revoke_previous_authorization_code_token
+
   # Hash access and refresh tokens before persisting them.
   # This will disable the possibility to use +reuse_access_token+
   # since plain values can no longer be retrieved.
