@@ -385,7 +385,7 @@ Doorkeeper.configure do
   # true in case resource owner authorized for the specific application or false in other
   # cases.
   #
-  # Be default all Resource Owners are authorized to any Client (application).
+  # By default all Resource Owners are authorized to any Client (application).
   #
   # authorize_resource_owner_for_client do |client, resource_owner|
   #   resource_owner.admin? || client.owners_allowlist.include?(resource_owner)
