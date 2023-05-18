@@ -20,7 +20,7 @@ jobs:
     steps:
     - name: List & cache git modified files
       id: changed_files
-      uses: lots0logs/gh-action-get-changed-files@2.1.4
+      uses: lots0logs/gh-action-get-changed-files@2.2.0
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
     - name: Check if ORM files were changed
