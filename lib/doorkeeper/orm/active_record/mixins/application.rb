@@ -22,7 +22,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
 
       validates :name, :secret, :uid, presence: true
       validates :uid, uniqueness: { case_sensitive: true }
-      validates :redirect_uri, "doorkeeper/redirect_uri": true
+      validates_with Doorkeeper::RedirectUriValidator, attributes: [:redirect_uri]
       validates :confidential, inclusion: { in: [true, false] }
 
       validate :scopes_match_configured, if: :enforce_scopes?
