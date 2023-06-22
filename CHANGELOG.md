@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#ID] Add your PR description here.
+- [#1662] Specify uri_redirect validation class explicitly.
 - [#1652] Add custom attributes support to token generator
 
 ## 5.6.6
