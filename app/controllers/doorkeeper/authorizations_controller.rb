@@ -36,7 +36,7 @@ module Doorkeeper
       elsif Doorkeeper.configuration.api_only
         render json: pre_auth
       else
-        prepare_custom_attributes
+        pre_auth.load_custom_attributes_from_token(matching_token?) if matching_token?
         render :new
       end
     end
@@ -51,14 +51,7 @@ module Doorkeeper
     end
 
     def can_authorize_response?
-      matching_token? && pre_auth.client.application.confidential? && Doorkeeper.config.custom_access_token_attributes.empty?
-    end
-
-    def prepare_custom_attributes
-      return if Doorkeeper.config.custom_access_token_attributes.empty?
-      return if (token = matching_token?).blank?
-      custom_attributes = token.attributes.symbolize_keys.slice(*Doorkeeper.config.custom_access_token_attributes)
-      pre_auth.custom_access_token_attributes = custom_attributes
+      Doorkeeper.config.custom_access_token_attributes.empty? && pre_auth.client.application.confidential? && matching_token?
     end
 
     # Active access token issued for the same client and resource owner with

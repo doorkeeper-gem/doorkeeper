@@ -33,7 +33,7 @@ module Doorkeeper
         @code_challenge = parameters[:code_challenge]
         @code_challenge_method = parameters[:code_challenge_method]
         @resource_owner = resource_owner
-        @custom_access_token_attributes = parameters.slice(*Doorkeeper.config.custom_access_token_attributes)
+        @custom_access_token_attributes = parameters.slice(*Doorkeeper.config.custom_access_token_attributes).to_h
       end
 
       def authorizable?
@@ -65,6 +65,13 @@ module Doorkeeper
 
       def form_post_response?
         response_mode == "form_post"
+      end
+
+      def load_custom_attributes_from_token(matching_token)
+        return if Doorkeeper.config.custom_access_token_attributes.empty?
+        return if matching_token.blank?
+        custom_attributes = matching_token.attributes.symbolize_keys.slice(*Doorkeeper.config.custom_access_token_attributes)
+        @custom_access_token_attributes = custom_attributes
       end
 
       private
