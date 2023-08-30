@@ -32,7 +32,7 @@ module Doorkeeper
           grant.revoke
 
           find_or_create_access_token(
-            grant.application,
+            client,
             resource_owner,
             grant.scopes,
             custom_token_attributes_with_data,
