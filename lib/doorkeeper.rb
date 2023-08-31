@@ -158,6 +158,8 @@ module Doorkeeper
     end
 
     def run_orm_hooks
+      return if config.skip_orm_hooks
+
       config.clear_cache!
 
       if @orm_adapter.respond_to?(:run_hooks)
