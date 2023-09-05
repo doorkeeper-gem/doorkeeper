@@ -57,6 +57,8 @@ module Doorkeeper
     # Active access token issued for the same client and resource owner with
     # the same set of the scopes exists?
     def matching_token?
+      # We don't match tokens on the custom attributes here - we're in the pre-auth here,
+      # so they haven't been supplied yet (there are no custom attributes to match on yet)
       @matching_token ||= Doorkeeper.config.access_token_model.matching_token_for(
         pre_auth.client,
         current_resource_owner,
