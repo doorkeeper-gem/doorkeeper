@@ -174,22 +174,24 @@ module Doorkeeper
       #
       # @param token [Doorkeeper::AccessToken]
       #   The access token whose custom attributes are being compared
-      #   to the param_attributes.
+      #   to the custom_attributes.
       #
-      # @param param_attributes [Hash]
+      # @param custom_attributes [Hash]
       #   A hash of the attributes for which we want to determine whether
       #   the token's custom attributes match.
       #
       # @return [Boolean] true if the token's custom attribute values
-      #   match those in the param_attributes, or if both are empty/blank.
+      #   match those in the custom_attributes, or if both are empty/blank.
       #   False otherwise.
-      def custom_attributes_match?(token, param_attributes)
-        return true if param_attributes.nil?
+      def custom_attributes_match?(token, custom_attributes)
+        return true if custom_attributes.nil?
 
         token_attribs = token.custom_attributes
-        return true if token_attribs.blank? && param_attributes.blank?
+        return true if token_attribs.blank? && custom_attributes.blank?
 
-        token_attribs.all? { |attrib, val| param_attributes.with_indifferent_access[attrib] == val }
+        Doorkeeper.config.custom_access_token_attributes.all? do |attribute|
+          token_attribs[attribute] == custom_attributes[attribute]
+        end
       end
 
       # Looking for not expired AccessToken record with a matching set of
