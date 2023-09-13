@@ -70,8 +70,7 @@ module Doorkeeper
       def load_custom_attributes_from_token(matching_token)
         return if Doorkeeper.config.custom_access_token_attributes.empty?
         return if matching_token.blank?
-        custom_attributes = matching_token.attributes.symbolize_keys.slice(*Doorkeeper.config.custom_access_token_attributes)
-        @custom_access_token_attributes = custom_attributes
+        @custom_access_token_attributes = matching_token.custom_attributes
       end
 
       private

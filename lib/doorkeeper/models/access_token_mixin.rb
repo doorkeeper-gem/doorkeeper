@@ -186,8 +186,7 @@ module Doorkeeper
       def custom_attributes_match?(token, param_attributes)
         return true if param_attributes.nil?
 
-        token_attribs = token.attributes.with_indifferent_access.
-          slice(*Doorkeeper.config.custom_access_token_attributes.map(&:to_s))
+        token_attribs = token.custom_attributes
         return true if token_attribs.blank? && param_attributes.blank?
 
         token_attribs.all? { |attrib, val| param_attributes.with_indifferent_access[attrib] == val }
@@ -214,10 +213,9 @@ module Doorkeeper
       #
       def find_or_create_for(application:, resource_owner:, scopes:, **token_attributes)
         if Doorkeeper.config.reuse_access_token
-          custom_attribs = token_attributes.with_indifferent_access.
-            slice(Doorkeeper.config.custom_access_token_attributes).presence
+          custom_attributes = extract_custom_attributes(token_attributes).presence
           access_token = matching_token_for(
-            application, resource_owner, scopes, custom_attributes: custom_attribs, include_expired: false)
+            application, resource_owner, scopes, custom_attributes: custom_attributes, include_expired: false)
 
           return access_token if access_token&.reusable?
         end
@@ -312,6 +310,18 @@ module Doorkeeper
       def fallback_secret_strategy
         ::Doorkeeper.config.token_secret_fallback_strategy
       end
+
+      # Extracts the token's custom attributes (defined by the
+      # custom_access_token_attributes config option) from the token's attributes.
+      #
+      # @param attributes [Hash]
+      #   A hash of the access token's attributes.
+      # @return [Hash]
+      #   A hash containing only the custom access token attributes.
+      def extract_custom_attributes(attributes)
+        attributes.with_indifferent_access.slice(
+          *Doorkeeper.configuration.custom_access_token_attributes)
+      end
     end
 
     # Access Token type: Bearer.
@@ -342,6 +352,14 @@ module Doorkeeper
           json[:resource_owner_type] = resource_owner_type
         end
       end
+    end
+
+    # The token's custom attributes, as defined by
+    # the custom_access_token_attributes config option.
+    #
+    # @return [Hash] hash of custom access token attributes.
+    def custom_attributes
+      self.class.extract_custom_attributes(attributes)
     end
 
     # Indicates whether the token instance have the same credential
