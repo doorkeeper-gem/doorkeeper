@@ -9,7 +9,8 @@ User-visible changes worth mentioning.
 
 - [#ID] Add your PR description here.
 - [#1662] Specify uri_redirect validation class explicitly.
-- [#1652] Add custom attributes support to token generator
+- [#1652] Add custom attributes support to token generator.
+- [#1667] Pass `client` instead of `grant.application` to `find_or_create_access_token`.
 
 ## 5.6.6
 
