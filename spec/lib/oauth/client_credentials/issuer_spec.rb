@@ -24,7 +24,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
 
     it "creates and sets the token" do
       expect(creator).to receive(:call).and_return("token")
-      issuer.create client, scopes, creator
+      issuer.create client, scopes, {}, creator
 
       expect(issuer.token).to eq("token")
     end
@@ -37,12 +37,24 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
         use_refresh_token: false,
       )
 
-      issuer.create client, scopes, creator
+      issuer.create client, scopes, {}, creator
+    end
+
+    it "creates with custom token parameters" do
+      expect(creator).to receive(:call).with(
+        client,
+        scopes,
+        expires_in: 100,
+        use_refresh_token: false,
+        tenant_id: 9000
+      )
+
+      issuer.create client, scopes, { tenant_id: 9000 }, creator
     end
 
     it "has error set to :server_error if creator fails" do
       expect(creator).to receive(:call).and_return(false)
-      issuer.create client, scopes, creator
+      issuer.create client, scopes, {}, creator
 
       expect(issuer.error).to eq(:server_error)
     end
@@ -55,12 +67,12 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
 
       it "has error set from validator" do
         expect(creator).not_to receive(:create)
-        issuer.create client, scopes, creator
+        issuer.create client, scopes, {}, creator
         expect(issuer.error).to eq(:validation_error)
       end
 
       it "returns false" do
-        expect(issuer.create(client, scopes, creator)).to be_falsey
+        expect(issuer.create(client, scopes, {}, creator)).to be_falsey
       end
     end
 
@@ -93,7 +105,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
           expires_in: custom_ttl_grant,
           use_refresh_token: false,
         )
-        issuer.create client, scopes, creator
+        issuer.create client, scopes, {}, creator
       end
 
       it "respects scope based rules" do
@@ -103,7 +115,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
           expires_in: custom_ttl_scope,
           use_refresh_token: false,
         )
-        issuer.create client, custom_scope, creator
+        issuer.create client, custom_scope, {}, creator
       end
     end
   end

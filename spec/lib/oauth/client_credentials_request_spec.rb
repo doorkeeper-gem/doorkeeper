@@ -23,7 +23,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
   end
 
   it "issues an access token for the current client" do
-    expect(token_creator).to receive(:create).with(client, nil)
+    expect(token_creator).to receive(:create).with(client, nil, {})
     request.authorize
   end
 
@@ -57,14 +57,29 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
     end
 
     it "issues an access token with default scopes if none was requested" do
-      expect(token_creator).to receive(:create).with(client, default_scopes)
+      expect(token_creator).to receive(:create).with(client, default_scopes, {})
       request.authorize
     end
 
     it "issues an access token with requested scopes" do
       request = described_class.new(server, client, scope: "email")
       allow(request).to receive(:issuer).and_return(token_creator)
-      expect(token_creator).to receive(:create).with(client, Doorkeeper::OAuth::Scopes.from_string("email"))
+      expect(token_creator).to receive(:create).with(client, Doorkeeper::OAuth::Scopes.from_string("email"), {})
+      request.authorize
+    end
+  end
+
+  context "with custom_access_token_attributes configured" do
+    before do
+      Doorkeeper.configure do
+        custom_access_token_attributes [:tenant_id]
+      end
+    end
+
+    it "issues an access token with the custom access token attributes" do
+      request = described_class.new(server, client, scope: "email", tenant_id: 9000)
+      allow(request).to receive(:issuer).and_return(token_creator)
+      expect(token_creator).to receive(:create).with(client, Doorkeeper::OAuth::Scopes.from_string("email"), { tenant_id: 9000 })
       request.authorize
     end
   end
