@@ -41,6 +41,8 @@ module Doorkeeper
     end
 
     def render_error
+      pre_auth.error.raise_exception! if Doorkeeper.config.raise_on_errors?
+
       if Doorkeeper.configuration.api_only
         render json: pre_auth.error_response.body,
                status: :bad_request
