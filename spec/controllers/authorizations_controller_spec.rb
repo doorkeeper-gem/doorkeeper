@@ -985,7 +985,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
 
       it "renders bad request" do
-        expect(response).to have_http_status(:bad_request)
+        expect(response).to have_http_status(:unauthorized)
       end
 
       it "includes error in body" do

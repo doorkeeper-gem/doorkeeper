@@ -112,6 +112,11 @@ module Doorkeeper
         @config.instance_variable_set(:@api_only, true)
       end
 
+      # Redirect on error instead of rendering error response
+      def redirect_on_error
+        @config.instance_variable_set(:@redirect_on_error, true)
+      end
+
       # Enables polymorphic Resource Owner association for Access Grant and
       # Access Token models. Requires additional database columns to be setup.
       def use_polymorphic_resource_owner
@@ -452,6 +457,10 @@ module Doorkeeper
 
     def api_only
       @api_only ||= false
+    end
+
+    def redirect_on_error
+      @redirect_on_error ||= false
     end
 
     def enforce_content_type

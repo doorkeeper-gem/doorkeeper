@@ -43,14 +43,12 @@ module Doorkeeper
     def render_error
       pre_auth.error.raise_exception! if Doorkeeper.config.raise_on_errors?
 
-      if Doorkeeper.configuration.api_only
+      if Doorkeeper.configuration.redirect_on_error && pre_auth.error_response.redirectable?
+        redirect_or_render(pre_auth.error_response)
+      elsif Doorkeeper.configuration.api_only
         render json: pre_auth.error_response.body, status: pre_auth.error_response.status
       else
-        if pre_auth.error_response.redirectable?
-          redirect_or_render(pre_auth.error_response)
-        else
-          render :error, locals: { error_response: pre_auth.error_response }, status: pre_auth.error_response.status
-        end
+        render :error, locals: { error_response: pre_auth.error_response }, status: pre_auth.error_response.status
       end
     end
 
