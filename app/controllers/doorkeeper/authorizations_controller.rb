@@ -47,7 +47,11 @@ module Doorkeeper
         render json: pre_auth.error_response.body,
                status: :bad_request
       else
-        render :error, locals: { error_response: pre_auth.error_response }
+        if pre_auth.error_response.redirectable?
+          redirect_or_render(pre_auth.error_response)
+        else
+          render :error, locals: { error_response: pre_auth.error_response }
+        end
       end
     end
 
