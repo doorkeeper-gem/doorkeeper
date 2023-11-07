@@ -1044,6 +1044,124 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
     end
   end
 
+  describe "GET #new with errors with redirect_on_error" do
+    before { config_is_set(:redirect_on_error, true) }
+
+    context "without valid params" do
+      before do
+        default_scopes_exist :public
+        get :new, params: { an_invalid: "request" }
+      end
+
+      it "does not redirect" do
+        expect(response).not_to be_redirect
+      end
+
+      it "does not issue any token" do
+        expect(Doorkeeper::AccessGrant.count).to eq 0
+        expect(Doorkeeper::AccessToken.count).to eq 0
+      end
+    end
+
+    context "invalid scope" do
+      before do
+        default_scopes_exist :public
+        get :new, params: {
+          client_id: client.uid,
+          response_type: "token",
+          scope: "invalid",
+          redirect_uri: client.redirect_uri,
+        }
+      end
+
+      it "redirects to client redirect uri" do
+        expect(response).to be_redirect
+        expect(response.location).to match(/^#{client.redirect_uri}/)
+      end
+
+      it "includes error in fragment" do
+        expect(response.query_params["error"]).to eq("invalid_scope")
+      end
+
+      it "includes error description in fragment" do
+        expect(response.query_params["error_description"]).to eq(translated_error_message(:invalid_scope))
+      end
+
+      it "does not issue any token" do
+        expect(Doorkeeper::AccessGrant.count).to eq 0
+        expect(Doorkeeper::AccessToken.count).to eq 0
+      end
+    end
+
+    context "invalid redirect_uri" do
+      before do
+        default_scopes_exist :public
+        get :new, params: {
+          client_id: client.uid,
+          response_type: "token",
+          redirect_uri: "invalid",
+        }
+      end
+
+      it "does not redirect" do
+        expect(response).not_to be_redirect
+      end
+
+      it "does not issue any token" do
+        expect(Doorkeeper::AccessGrant.count).to eq 0
+        expect(Doorkeeper::AccessToken.count).to eq 0
+      end
+    end
+
+    context "with client_id and redirect_uri" do
+      before do
+        default_scopes_exist :public
+        get :new, params: {
+          client_id: client.uid,
+          redirect_uri: client.redirect_uri,
+          response_mode: "fragment"
+        }
+      end
+
+      it "redirects to client redirect uri" do
+        expect(response).to be_redirect
+        expect(response.location).to match(/^#{client.redirect_uri}/)
+      end
+
+      it "includes error in fragment" do
+        expect(response.query_params["error"]).to eq("invalid_request")
+      end
+
+      it "includes error description in fragment" do
+        expect(response.query_params["error_description"]).to eq(translated_invalid_request_error_message(:missing_param, :response_type))
+      end
+
+      it "does not issue any token" do
+        expect(Doorkeeper::AccessGrant.count).to eq 0
+        expect(Doorkeeper::AccessToken.count).to eq 0
+      end
+    end
+  end
+
+  describe "GET #new with errors with handle_auth_errors :raise" do
+    before { config_is_set(:handle_auth_errors, :raise) }
+
+    context "without valid params" do
+      before do
+        default_scopes_exist :public
+      end
+
+      it "does not redirect" do
+        expect { get :new, params: { an_invalid: "request" } }.to raise_error(Doorkeeper::Errors::InvalidRequest)
+      end
+
+      it "does not issue any token" do
+        expect(Doorkeeper::AccessGrant.count).to eq 0
+        expect(Doorkeeper::AccessToken.count).to eq 0
+      end
+    end
+  end
+
   describe "GET #new with callbacks" do
     after do
       client.update_attribute :redirect_uri, "urn:ietf:wg:oauth:2.0:oob"

@@ -41,7 +41,7 @@ module Doorkeeper
     end
 
     def render_error
-      pre_auth.error.raise_exception! if Doorkeeper.config.raise_on_errors?
+      pre_auth.error_response.raise_exception! if Doorkeeper.config.raise_on_errors?
 
       if Doorkeeper.configuration.redirect_on_error && pre_auth.error_response.redirectable?
         redirect_or_render(pre_auth.error_response)

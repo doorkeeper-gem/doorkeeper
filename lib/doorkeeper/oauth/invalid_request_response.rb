@@ -35,6 +35,10 @@ module Doorkeeper
         )
       end
 
+      def exception_class
+        Doorkeeper::Errors::InvalidRequest
+      end
+
       def redirectable?
         super && @missing_param != :client_id
       end
