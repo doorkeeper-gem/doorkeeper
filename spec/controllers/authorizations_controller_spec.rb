@@ -1044,8 +1044,8 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
     end
   end
 
-  describe "GET #new with errors with redirect_on_error" do
-    before { config_is_set(:redirect_on_error, true) }
+  describe "GET #new with errors with handle_auth_errors :redirect" do
+    before { config_is_set(:handle_auth_errors, :redirect) }
 
     context "without valid params" do
       before do
@@ -1089,7 +1089,6 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
 
       it "includes state in fragment" do
-        pry
         expect(response.query_params["state"]).to eq("return-this")
       end
 
