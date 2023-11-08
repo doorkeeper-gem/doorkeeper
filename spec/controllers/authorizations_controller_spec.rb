@@ -984,7 +984,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
         }
       end
 
-      it "renders bad request" do
+      it "renders unauthorized" do
         expect(response).to have_http_status(:unauthorized)
       end
 

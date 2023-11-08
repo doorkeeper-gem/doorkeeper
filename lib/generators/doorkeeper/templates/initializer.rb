@@ -313,6 +313,16 @@ Doorkeeper.configure do
   #
   # handle_auth_errors :raise
 
+  # If an exception occurs during the authorization request, Doorkeeper will, by
+  # default, render an HTML error response with the exception message and HTTP
+  # status code. If you want to redirect back to the client application in accordance
+  # with https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.2.1, you can
+  # enable this option.
+  #
+  # This will have no effect if handle_auth_errors is set to :raise.
+  #
+  # redirect_on_error
+
   # Customize token introspection response.
   # Allows to add your own fields to default one that are required by the OAuth spec
   # for the introspection response. It could be `sub`, `aud` and so on.
