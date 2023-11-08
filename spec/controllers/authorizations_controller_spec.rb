@@ -1071,6 +1071,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
           response_type: "token",
           scope: "invalid",
           redirect_uri: client.redirect_uri,
+          state: "return-this",
         }
       end
 
@@ -1085,6 +1086,11 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
 
       it "includes error description in fragment" do
         expect(response.query_params["error_description"]).to eq(translated_error_message(:invalid_scope))
+      end
+
+      it "includes state in fragment" do
+        pry
+        expect(response.query_params["state"]).to eq("return-this")
       end
 
       it "does not issue any token" do
