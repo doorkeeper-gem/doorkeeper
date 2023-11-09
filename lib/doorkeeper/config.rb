@@ -501,6 +501,10 @@ module Doorkeeper
       handle_auth_errors == :raise
     end
 
+    def redirect_on_errors?
+      handle_auth_errors == :redirect
+    end
+
     def application_secret_hashed?
       instance_variable_defined?(:"@application_secret_strategy")
     end

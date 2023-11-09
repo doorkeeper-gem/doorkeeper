@@ -12,6 +12,7 @@ User-visible changes worth mentioning.
 - [#1652] Add custom attributes support to token generator.
 - [#1667] Pass `client` instead of `grant.application` to `find_or_create_access_token`.
 - [#1673] Honor `custom_access_token_attributes` in client credentials grant flow.
+- [#1676] Improve AuthorizationsController error response handling
 
 ## 5.6.6
 

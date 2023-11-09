@@ -312,6 +312,12 @@ Doorkeeper.configure do
   #   Doorkeeper::Errors::TokenRevoked, Doorkeeper::Errors::TokenUnknown
   #
   # handle_auth_errors :raise
+  #
+  # If you want to redirect back to the client application in accordance with
+  # https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.2.1, you can set
+  # +handle_auth_errors+ to :redirect
+  #
+  # handle_auth_errors :redirect
 
   # Customize token introspection response.
   # Allows to add your own fields to default one that are required by the OAuth spec

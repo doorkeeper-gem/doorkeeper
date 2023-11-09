@@ -29,7 +29,7 @@ feature "Implicit Grant Flow (feature spec)" do
     scenario "scope is invalid because default scope is different from application scope" do
       default_scopes_exist :admin
       visit authorization_endpoint_url(client: @client, response_type: "token")
-      response_status_should_be 200
+      response_status_should_be 400
       i_should_not_see "Authorize"
       i_should_see_translated_error_message :invalid_scope
     end
