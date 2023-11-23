@@ -1165,6 +1165,50 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
         expect(Doorkeeper::AccessToken.count).to eq 0
       end
     end
+
+    context "invalid client_id" do
+      before do
+        default_scopes_exist :public
+      end
+
+      it "does not redirect" do
+        expect { get :new, params: { client_id: "invalid" } }.to raise_error(Doorkeeper::Errors::InvalidRequest)
+      end
+    end
+
+    context "invalid scope" do
+      before do
+        default_scopes_exist :public
+      end
+
+      it "does not redirect" do
+        expect do
+          get :new, params: {
+            client_id: client.uid,
+            response_type: "token",
+            scope: "invalid",
+            redirect_uri: client.redirect_uri,
+            state: "return-this",
+          }
+        end.to raise_error(Doorkeeper::Errors::BaseResponseError)
+      end
+    end
+
+    context "invalid redirect_uri" do
+      before do
+        default_scopes_exist :public
+      end
+
+      it "does not redirect" do
+        expect do
+          get :new, params: {
+            client_id: client.uid,
+            response_type: "token",
+            redirect_uri: "invalid",
+          }
+        end.to raise_error(Doorkeeper::Errors::BaseResponseError)
+      end
+    end
   end
 
   describe "GET #new with callbacks" do
