@@ -8,11 +8,15 @@ User-visible changes worth mentioning.
 ## main
 
 - [#ID] Add your PR description here.
+
+## 5.6.7
+
 - [#1662] Specify uri_redirect validation class explicitly.
 - [#1652] Add custom attributes support to token generator.
 - [#1667] Pass `client` instead of `grant.application` to `find_or_create_access_token`.
 - [#1673] Honor `custom_access_token_attributes` in client credentials grant flow.
 - [#1676] Improve AuthorizationsController error response handling
+- [#1677] Fix URIHelper.valid_for_authorization? breaking for non url URIs.
 
 ## 5.6.6
 
