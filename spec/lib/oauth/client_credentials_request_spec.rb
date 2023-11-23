@@ -34,7 +34,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
 
   context "when issue was not created" do
     before do
-      issuer = double create: false, error: :invalid
+      issuer = double create: false, error: Doorkeeper::Errors::UnsupportedResponseType
       allow(request).to receive(:issuer).and_return(issuer)
     end
 
@@ -45,7 +45,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
 
     it "delegates the error to issuer" do
       request.authorize
-      expect(request.error).to eq(:invalid)
+      expect(request.error).to eq(Doorkeeper::Errors::UnsupportedResponseType)
     end
   end
 
@@ -107,7 +107,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
       request = described_class.new(server, client)
       request.authorize
       expect(request.response).to be_a(Doorkeeper::OAuth::ErrorResponse)
-      expect(request.error).to eq(:invalid_scope)
+      expect(request.error).to eq(Doorkeeper::Errors::InvalidScope)
     end
 
     it "issues an access token with requested scopes" do

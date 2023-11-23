@@ -68,7 +68,7 @@ RSpec.describe Doorkeeper::OAuth::BaseRequest do
       context "with error other than invalid_request" do
         before do
           allow(request).to receive(:valid?).and_return(false)
-          allow(request).to receive(:error).and_return(:server_error)
+          allow(request).to receive(:error).and_return(Doorkeeper::Errors::ServerError)
           allow(request).to receive(:state).and_return("hello")
         end
 
@@ -88,7 +88,7 @@ RSpec.describe Doorkeeper::OAuth::BaseRequest do
       context "with invalid_request error" do
         before do
           allow(request).to receive(:valid?).and_return(false)
-          allow(request).to receive(:error).and_return(:invalid_request)
+          allow(request).to receive(:error).and_return(Doorkeeper::Errors::InvalidRequest)
           allow(request).to receive(:state).and_return("hello")
         end
 

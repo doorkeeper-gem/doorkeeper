@@ -41,7 +41,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
       request.authorize
     end.not_to(change { Doorkeeper::AccessToken.count })
 
-    expect(request.error).to eq(:invalid_client)
+    expect(request.error).to eq(Doorkeeper::Errors::InvalidClient)
   end
 
   context "when skip_client_authentication_for_password_grant is true" do
@@ -68,13 +68,13 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
       request.authorize
     end.not_to(change { Doorkeeper::AccessToken.count })
 
-    expect(request.error).to eq(:invalid_client)
+    expect(request.error).to eq(Doorkeeper::Errors::InvalidClient)
   end
 
   it "requires the owner" do
     request = described_class.new(server, client, credentials, nil)
     request.validate
-    expect(request.error).to eq(:invalid_grant)
+    expect(request.error).to eq(Doorkeeper::Errors::InvalidGrant)
   end
 
   it "creates token even when there is already one (default)" do
@@ -138,7 +138,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
       it "returns error when scopes are invalid" do
         allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("another"))
         request.validate
-        expect(request.error).to eq(:invalid_scope)
+        expect(request.error).to eq(Doorkeeper::Errors::InvalidScope)
       end
 
       it "creates the token with scopes if scopes are valid" do
@@ -158,7 +158,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
         allow(Doorkeeper.configuration)
           .to receive(:scopes_by_grant_type).and_return(password: "another")
         request.validate
-        expect(request.error).to eq(:invalid_scope)
+        expect(request.error).to eq(Doorkeeper::Errors::InvalidScope)
       end
 
       it "creates the token with scopes if scopes are valid and permitted for grant_type" do

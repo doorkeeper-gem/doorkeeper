@@ -1156,7 +1156,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
         default_scopes_exist :public
       end
 
-      it "does not redirect" do
+      it "raises InvalidRequest error" do
         expect { get :new, params: { an_invalid: "request" } }.to raise_error(Doorkeeper::Errors::InvalidRequest)
       end
 
@@ -1171,8 +1171,8 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
         default_scopes_exist :public
       end
 
-      it "does not redirect" do
-        expect { get :new, params: { client_id: "invalid" } }.to raise_error(Doorkeeper::Errors::InvalidRequest)
+      it "raises InvalidClient error" do
+        expect { get :new, params: { client_id: "invalid" } }.to raise_error(Doorkeeper::Errors::InvalidClient)
       end
     end
 

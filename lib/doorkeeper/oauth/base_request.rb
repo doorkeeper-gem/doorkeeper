@@ -15,7 +15,7 @@ module Doorkeeper
           @response = TokenResponse.new(access_token)
           after_successful_response
           @response
-        elsif error == :invalid_request
+        elsif error == Errors::InvalidRequest
           @response = InvalidRequestResponse.from_request(self)
         else
           @response = ErrorResponse.from_request(self)

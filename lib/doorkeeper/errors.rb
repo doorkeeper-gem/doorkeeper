@@ -45,8 +45,22 @@ module Doorkeeper
     TokenGeneratorNotFound = Class.new(DoorkeeperError)
     NoOrmCleaner = Class.new(DoorkeeperError)
 
+    ServerError = Class.new(BaseResponseError)
+
     InvalidRequest = Class.new(BaseResponseError)
     InvalidToken = Class.new(BaseResponseError)
+    InvalidClient = Class.new(BaseResponseError)
+    InvalidScope = Class.new(BaseResponseError)
+    InvalidRedirectUri = Class.new(BaseResponseError)
+    InvalidCodeChallengeMethod = Class.new(BaseResponseError)
+    InvalidGrant = Class.new(BaseResponseError)
+
+    UnauthorizedClient = Class.new(BaseResponseError)
+    UnsupportedResponseType = Class.new(BaseResponseError)
+    UnsupportedResponseMode = Class.new(BaseResponseError)
+
+    AccessDenied = Class.new(BaseResponseError)
+
     TokenExpired = Class.new(InvalidToken)
     TokenRevoked = Class.new(InvalidToken)
     TokenUnknown = Class.new(InvalidToken)

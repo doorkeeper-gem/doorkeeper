@@ -3,12 +3,12 @@
 module Doorkeeper
   module OAuth
     class AuthorizationCodeRequest < BaseRequest
-      validate :params,       error: :invalid_request
-      validate :client,       error: :invalid_client
-      validate :grant,        error: :invalid_grant
+      validate :params,       error: Errors::InvalidRequest
+      validate :client,       error: Errors::InvalidClient
+      validate :grant,        error: Errors::InvalidGrant
       # @see https://datatracker.ietf.org/doc/html/rfc6749#section-5.2
-      validate :redirect_uri, error: :invalid_grant
-      validate :code_verifier, error: :invalid_grant
+      validate :redirect_uri, error: Errors::InvalidGrant
+      validate :code_verifier, error: Errors::InvalidGrant
 
       attr_reader :grant, :client, :redirect_uri, :access_token, :code_verifier,
                   :invalid_request_reason, :missing_param
