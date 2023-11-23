@@ -40,7 +40,7 @@ module Doorkeeper
 
         def self.loopback_uri?(uri)
           IPAddr.new(uri.host).loopback?
-        rescue IPAddr::Error
+        rescue IPAddr::Error, IPAddr::InvalidAddressError
           false
         end
 
