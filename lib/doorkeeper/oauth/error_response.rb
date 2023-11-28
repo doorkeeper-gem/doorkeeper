@@ -10,8 +10,8 @@ module Doorkeeper
       def self.from_request(request, attributes = {})
         new(
           attributes.merge(
-            name: request.error.to_s.demodulize.underscore.to_sym,
-            exception_class: request.error <= Errors::BaseResponseError ? request.error : nil,
+            name: request.error&.name_for_response,
+            exception_class: request.error,
             state: request.try(:state),
             redirect_uri: request.try(:redirect_uri),
           ),

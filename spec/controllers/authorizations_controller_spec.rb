@@ -1181,7 +1181,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
         default_scopes_exist :public
       end
 
-      it "does not redirect" do
+      it "raises InvalidScope error" do
         expect do
           get :new, params: {
             client_id: client.uid,
@@ -1190,7 +1190,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
             redirect_uri: client.redirect_uri,
             state: "return-this",
           }
-        end.to raise_error(Doorkeeper::Errors::BaseResponseError)
+        end.to raise_error(Doorkeeper::Errors::InvalidScope)
       end
     end
 
@@ -1199,14 +1199,14 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
         default_scopes_exist :public
       end
 
-      it "does not redirect" do
+      it "raises InvalidRedirectUri error" do
         expect do
           get :new, params: {
             client_id: client.uid,
             response_type: "token",
             redirect_uri: "invalid",
           }
-        end.to raise_error(Doorkeeper::Errors::BaseResponseError)
+        end.to raise_error(Doorkeeper::Errors::InvalidRedirectUri)
       end
     end
   end
