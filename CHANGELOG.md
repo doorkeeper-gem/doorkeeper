@@ -7,6 +7,10 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#PR ID] Add your changelog here.
+
+## 5.6.8
+
 - [#1680] Fix handle_auth_errors :raise NotImplementedError
 
 ## 5.6.7
