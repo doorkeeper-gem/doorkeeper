@@ -5,11 +5,11 @@ module Doorkeeper
     class RefreshTokenRequest < BaseRequest
       include OAuth::Helpers
 
-      validate :token_presence, error: :invalid_request
-      validate :token,        error: :invalid_grant
-      validate :client,       error: :invalid_client
-      validate :client_match, error: :invalid_grant
-      validate :scope,        error: :invalid_scope
+      validate :token_presence, error: Errors::InvalidRequest
+      validate :token,        error: Errors::InvalidGrant
+      validate :client,       error: Errors::InvalidClient
+      validate :client_match, error: Errors::InvalidGrant
+      validate :scope,        error: Errors::InvalidScope
 
       attr_reader :access_token, :client, :credentials, :refresh_token
       attr_reader :missing_param

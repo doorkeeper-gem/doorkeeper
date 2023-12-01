@@ -14,7 +14,7 @@ module Doorkeeper
         def create(client, scopes, attributes = {}, creator = Creator.new)
           if validator.valid?
             @token = create_token(client, scopes, attributes, creator)
-            @error = :server_error unless @token
+            @error = Errors::ServerError unless @token
           else
             @token = false
             @error = validator.error

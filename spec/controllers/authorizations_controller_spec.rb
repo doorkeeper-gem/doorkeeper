@@ -1156,13 +1156,57 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
         default_scopes_exist :public
       end
 
-      it "does not redirect" do
+      it "raises InvalidRequest error" do
         expect { get :new, params: { an_invalid: "request" } }.to raise_error(Doorkeeper::Errors::InvalidRequest)
       end
 
       it "does not issue any token" do
         expect(Doorkeeper::AccessGrant.count).to eq 0
         expect(Doorkeeper::AccessToken.count).to eq 0
+      end
+    end
+
+    context "invalid client_id" do
+      before do
+        default_scopes_exist :public
+      end
+
+      it "raises InvalidClient error" do
+        expect { get :new, params: { client_id: "invalid" } }.to raise_error(Doorkeeper::Errors::InvalidClient)
+      end
+    end
+
+    context "invalid scope" do
+      before do
+        default_scopes_exist :public
+      end
+
+      it "raises InvalidScope error" do
+        expect do
+          get :new, params: {
+            client_id: client.uid,
+            response_type: "token",
+            scope: "invalid",
+            redirect_uri: client.redirect_uri,
+            state: "return-this",
+          }
+        end.to raise_error(Doorkeeper::Errors::InvalidScope)
+      end
+    end
+
+    context "invalid redirect_uri" do
+      before do
+        default_scopes_exist :public
+      end
+
+      it "raises InvalidRedirectUri error" do
+        expect do
+          get :new, params: {
+            client_id: client.uid,
+            response_type: "token",
+            redirect_uri: "invalid",
+          }
+        end.to raise_error(Doorkeeper::Errors::InvalidRedirectUri)
       end
     end
   end

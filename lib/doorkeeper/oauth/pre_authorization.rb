@@ -5,16 +5,16 @@ module Doorkeeper
     class PreAuthorization
       include Validations
 
-      validate :client_id, error: :invalid_request
-      validate :client, error: :invalid_client
-      validate :client_supports_grant_flow, error: :unauthorized_client
-      validate :resource_owner_authorize_for_client, error: :invalid_client
-      validate :redirect_uri, error: :invalid_redirect_uri
-      validate :params, error: :invalid_request
-      validate :response_type, error: :unsupported_response_type
-      validate :response_mode, error: :unsupported_response_mode
-      validate :scopes, error: :invalid_scope
-      validate :code_challenge_method, error: :invalid_code_challenge_method
+      validate :client_id, error: Errors::InvalidRequest
+      validate :client, error: Errors::InvalidClient
+      validate :client_supports_grant_flow, error: Errors::UnauthorizedClient
+      validate :resource_owner_authorize_for_client, error: Errors::InvalidClient
+      validate :redirect_uri, error: Errors::InvalidRedirectUri
+      validate :params, error: Errors::InvalidRequest
+      validate :response_type, error: Errors::UnsupportedResponseType
+      validate :response_mode, error: Errors::UnsupportedResponseMode
+      validate :scopes, error: Errors::InvalidScope
+      validate :code_challenge_method, error: Errors::InvalidCodeChallengeMethod
 
       attr_reader :client, :code_challenge, :code_challenge_method, :missing_param,
                   :redirect_uri, :resource_owner, :response_type, :state,
@@ -47,7 +47,7 @@ module Doorkeeper
       end
 
       def error_response
-        if error == :invalid_request
+        if error == Errors::InvalidRequest
           OAuth::InvalidRequestResponse.from_request(
             self,
             response_on_fragment: response_on_fragment?,

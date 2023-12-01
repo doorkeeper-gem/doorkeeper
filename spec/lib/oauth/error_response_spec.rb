@@ -23,28 +23,28 @@ RSpec.describe Doorkeeper::OAuth::ErrorResponse do
 
   describe ".from_request" do
     it "has the error from request" do
-      error = described_class.from_request double(error: :some_error)
-      expect(error.name).to eq(:some_error)
+      error = described_class.from_request double(error: Doorkeeper::Errors::InvalidClient)
+      expect(error.name).to eq(:invalid_client)
     end
 
     it "ignores state if request does not respond to state" do
-      error = described_class.from_request double(error: :some_error)
+      error = described_class.from_request double(error: Doorkeeper::Errors::InvalidClient)
       expect(error.state).to be_nil
     end
 
     it "has state if request responds to state" do
-      error = described_class.from_request double(error: :some_error, state: :hello)
+      error = described_class.from_request double(error: Doorkeeper::Errors::InvalidClient, state: :hello)
       expect(error.state).to eq(:hello)
     end
   end
 
   it "ignores empty error values" do
-    subject = described_class.new(error: :some_error, state: nil)
+    subject = described_class.new(error: Doorkeeper::Errors::InvalidClient, state: nil)
     expect(subject.body).not_to have_key(:state)
   end
 
   describe ".body" do
-    subject(:body) { described_class.new(name: :some_error, state: :some_state).body }
+    subject(:body) { described_class.new(name: Doorkeeper::Errors::InvalidClient, state: :some_state).body }
 
     describe "#body" do
       it { expect(body).to have_key(:error) }
@@ -56,7 +56,7 @@ RSpec.describe Doorkeeper::OAuth::ErrorResponse do
   describe ".headers" do
     subject(:headers) { error_response.headers }
 
-    let(:error_response) { described_class.new(name: :some_error, state: :some_state) }
+    let(:error_response) { described_class.new(name: Doorkeeper::Errors::InvalidClient, state: :some_state) }
 
     it { expect(headers).to include "WWW-Authenticate" }
 

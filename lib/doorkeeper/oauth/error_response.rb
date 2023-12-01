@@ -10,7 +10,8 @@ module Doorkeeper
       def self.from_request(request, attributes = {})
         new(
           attributes.merge(
-            name: request.error,
+            name: request.error&.name_for_response,
+            exception_class: request.error,
             state: request.try(:state),
             redirect_uri: request.try(:redirect_uri),
           ),
@@ -21,6 +22,7 @@ module Doorkeeper
 
       def initialize(attributes = {})
         @error = OAuth::Error.new(*attributes.values_at(:name, :state))
+        @exception_class = attributes[:exception_class]
         @redirect_uri = attributes[:redirect_uri]
         @response_on_fragment = attributes[:response_on_fragment]
       end
@@ -72,6 +74,7 @@ module Doorkeeper
       end
 
       def exception_class
+        return @exception_class if @exception_class
         raise NotImplementedError, "error response must define #exception_class"
       end
 

@@ -56,7 +56,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
       expect(creator).to receive(:call).and_return(false)
       issuer.create client, scopes, {}, creator
 
-      expect(issuer.error).to eq(:server_error)
+      expect(issuer.error).to eq(Doorkeeper::Errors::ServerError)
     end
 
     context "when validator fails" do

@@ -54,7 +54,7 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
   it "requires the refresh token" do
     request = described_class.new(server, nil, credentials)
     request.validate
-    expect(request.error).to eq(:invalid_request)
+    expect(request.error).to eq(Doorkeeper::Errors::InvalidRequest)
     expect(request.missing_param).to eq(:refresh_token)
   end
 
@@ -62,7 +62,7 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
     credentials = Doorkeeper::OAuth::Client::Credentials.new("invalid", "invalid")
     request = described_class.new(server, refresh_token, credentials)
     request.validate
-    expect(request.error).to eq(:invalid_client)
+    expect(request.error).to eq(Doorkeeper::Errors::InvalidClient)
   end
 
   it "requires the token's client and current client to match" do
@@ -71,13 +71,13 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
 
     request = described_class.new(server, refresh_token, credentials)
     request.validate
-    expect(request.error).to eq(:invalid_grant)
+    expect(request.error).to eq(Doorkeeper::Errors::InvalidGrant)
   end
 
   it "rejects revoked tokens" do
     refresh_token.revoke
     request.validate
-    expect(request.error).to eq(:invalid_grant)
+    expect(request.error).to eq(Doorkeeper::Errors::InvalidGrant)
   end
 
   it "accepts expired tokens" do
@@ -145,7 +145,7 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
       parameters[:scopes] = "public update"
 
       request.validate
-      expect(request.error).to eq(:invalid_scope)
+      expect(request.error).to eq(Doorkeeper::Errors::InvalidScope)
     end
 
     it "uses params[:scope] in favor of scopes if present (valid)" do
@@ -160,7 +160,7 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
       parameters[:scope] = "public update"
 
       request.validate
-      expect(request.error).to eq(:invalid_scope)
+      expect(request.error).to eq(Doorkeeper::Errors::InvalidScope)
     end
   end
 end
