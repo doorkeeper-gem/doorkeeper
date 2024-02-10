@@ -28,6 +28,7 @@ module Doorkeeper
           @base_scope
             .where.not(expires_in: nil)
             .where(table[:created_at].lt(Time.current - ttl))
+            .where(table[:created_at] + table[:expires_in].lt(Time.current))
             .in_batches(&:delete_all)
         end
       end
