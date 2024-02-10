@@ -7,8 +7,8 @@ User-visible changes worth mentioning.
 
 ## main
 
-Add your entry here.
 
+- [#1690] Consider expires_in when clear expired tokens with StaleRecordsCleaner.
 - [#1747] Fix unknown pkce method error when configured
 
 ## 5.8.0
