@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
-- [#PR ID] Add your changelog here.
+- [#1690] Consider expires_in when clear expired tokens with StaleRecordsCleaner.
 
 ## 5.6.8
 
