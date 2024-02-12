@@ -39,7 +39,6 @@ Supported features:
 - [ORMs](#orms)
 - [Extensions](#extensions)
 - [Example Applications](#example-applications)
-- [Tutorials](#tutorials)
 - [Sponsors](#sponsors)
 - [Development](#development)
 - [Contributing](#contributing)
@@ -56,7 +55,7 @@ https://github.com/doorkeeper-gem/doorkeeper/releases.
 Additionally, other resources can be found on:
 
 - [Guides](https://doorkeeper.gitbook.io/guides/) with how-to get started and configuration documentation
-- See the [Wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki) with articles and other documentation
+- See the [Wiki](https://github.com/doorkeeper-gem/doorkeeper/wiki) for articles on how to integrate with other solutions
 - Screencast from [railscasts.com](http://railscasts.com/): [#353
 OAuth with
 Doorkeeper](http://railscasts.com/episodes/353-oauth-with-doorkeeper)
@@ -123,10 +122,6 @@ test the integration. Check out these [client
 examples](https://github.com/doorkeeper-gem/doorkeeper/wiki/Example-Applications)
 in our wiki or follow this [tutorial
 here](https://github.com/doorkeeper-gem/doorkeeper/wiki/Testing-your-provider-with-OAuth2-gem).
-
-## Tutorials
-
-See [list of tutorials](https://github.com/doorkeeper-gem/doorkeeper/wiki#how-tos--tutorials) in order to learn how to use the gem or integrate it with other solutions / gems.
 
 ## Sponsors
 
