@@ -36,6 +36,13 @@ RSpec.describe Doorkeeper::OAuth::ErrorResponse do
       error = described_class.from_request double(error: Doorkeeper::Errors::InvalidClient, state: :hello)
       expect(error.state).to eq(:hello)
     end
+
+    it "supports old extensions" do
+      error = described_class.from_request double(error: :invalid_client)
+      expect(error.name).to eq(:invalid_client)
+
+      expect { error.raise_exception! }.to raise_error(Doorkeeper::Errors::InvalidClient)
+    end
   end
 
   it "ignores empty error values" do
