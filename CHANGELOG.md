@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#PR ID] Add your changelog here.
+- [#1691] Make new Doorkeeper errors backward compatible with older extensions.
 
 ## 5.6.8
 

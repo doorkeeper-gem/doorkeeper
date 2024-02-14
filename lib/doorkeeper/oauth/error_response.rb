@@ -10,13 +10,25 @@ module Doorkeeper
       def self.from_request(request, attributes = {})
         new(
           attributes.merge(
-            name: request.error&.name_for_response,
-            exception_class: request.error,
+            name: error_name_for(request.error),
+            exception_class: exception_class_for(request.error),
             state: request.try(:state),
             redirect_uri: request.try(:redirect_uri),
           ),
         )
       end
+
+      def self.error_name_for(error)
+        error.respond_to?(:name_for_response) ? error.name_for_response : error
+      end
+
+      def self.exception_class_for(error)
+        return error if error.respond_to?(:name_for_response)
+
+        "Doorkeeper::Errors::#{error.to_s.classify}".safe_constantize
+      end
+
+      private_class_method :error_name_for, :exception_class_for
 
       delegate :name, :description, :state, to: :@error
 
