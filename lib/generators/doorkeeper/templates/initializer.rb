@@ -32,7 +32,7 @@ Doorkeeper.configure do
   # You can use your own model classes if you need to extend (or even override) default
   # Doorkeeper models such as `Application`, `AccessToken` and `AccessGrant.
   #
-  # Be default Doorkeeper ActiveRecord ORM uses it's own classes:
+  # By default Doorkeeper ActiveRecord ORM uses its own classes:
   #
   # access_token_class "Doorkeeper::AccessToken"
   # access_grant_class "Doorkeeper::AccessGrant"
