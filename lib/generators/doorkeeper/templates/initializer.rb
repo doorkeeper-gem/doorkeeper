@@ -91,7 +91,10 @@ Doorkeeper.configure do
   # authorization_code_expires_in 10.minutes
 
   # Access token expiration time (default: 2 hours).
-  # If you want to disable expiration, set this to `nil`.
+  # If you set this to `nil` Doorkeeper will not expire the token and omit expires_in in response.
+  # It is RECOMMENDED to set expiration time explicitly.
+  # Prefer access_token_expires_in 100.years or similar,
+  # which would be functionally equivalent and avoid the risk of unexpected behavior by callers.
   #
   # access_token_expires_in 2.hours
 
