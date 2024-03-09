@@ -5,6 +5,8 @@ module Doorkeeper
     class TokenResponse
       attr_reader :token
 
+      alias issued_token token
+
       def initialize(token)
         @token = token
       end
