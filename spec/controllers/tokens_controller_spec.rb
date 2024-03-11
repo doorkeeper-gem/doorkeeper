@@ -2,7 +2,9 @@
 
 require "spec_helper"
 
-RSpec.describe Doorkeeper::TokensController do
+RSpec.describe Doorkeeper::TokensController, type: :controller do
+  render_views
+
   subject(:json) { JSON.parse(response.body) }
 
   let(:client) { FactoryBot.create :application }

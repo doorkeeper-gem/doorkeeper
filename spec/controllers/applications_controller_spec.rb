@@ -2,7 +2,7 @@
 
 require "spec_helper"
 
-RSpec.describe Doorkeeper::ApplicationsController do
+RSpec.describe Doorkeeper::ApplicationsController, type: :controller do
   render_views
 
   context "when JSON API used" do

@@ -5,6 +5,8 @@ require "spec_helper"
 RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
   include AuthorizationRequestHelper
 
+  render_views
+
   class ActionDispatch::TestResponse
     def query_params
       @query_params ||= begin
@@ -39,7 +41,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
 
     allow(Doorkeeper.config).to receive(:grant_flows).and_return(["implicit"])
     allow(Doorkeeper.config).to receive(:authenticate_resource_owner).and_return(->(_) { authenticator_method })
-    allow(controller).to receive(:authenticator_method).and_return(user)
+    allow(subject).to receive(:authenticator_method).and_return(user)
   end
 
   describe "POST #create" do
@@ -50,7 +52,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
 
       it "redirects after authorization" do
         expect(response).to be_redirect
-        expect(controller).to receive(:authenticator_method).at_most(:once)
+        expect(subject).to receive(:authenticator_method).at_most(:once)
       end
 
       it "redirects to client redirect uri" do
@@ -756,7 +758,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       let(:confidential_client) { true }
 
       it "redirects immediately" do
-        expect(controller).not_to receive(:render)
+        expect(subject).not_to receive(:render)
         expect(response).to be_redirect
         expect(response.location).to match(/^#{client.redirect_uri}/)
       end
@@ -771,7 +773,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
 
       it "renders the new view" do
         expect(response).to be_successful
-        expect(controller).to render_with :new
+        expect(subject).to render_with :new
       end
 
       it "doesn't issue a token" do
@@ -1268,13 +1270,13 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
   describe "authorize response memoization" do
     it "memoizes the result of the authorization" do
       pre_auth = double(:pre_auth, authorizable?: true)
-      allow(controller).to receive(:pre_auth) { pre_auth }
+      allow(subject).to receive(:pre_auth) { pre_auth }
       strategy = double(:strategy, authorize: true)
       expect(strategy).to receive(:authorize).once
-      allow(controller).to receive(:strategy) { strategy }
-      allow(controller).to receive(:create) do
-        2.times { controller.send :authorize_response }
-        controller.render json: {}, status: :ok
+      allow(subject).to receive(:strategy) { strategy }
+      allow(subject).to receive(:create) do
+        2.times { subject.send :authorize_response }
+        subject.render json: {}, status: :ok
       end
 
       post :create

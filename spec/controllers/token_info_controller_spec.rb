@@ -2,7 +2,9 @@
 
 require "spec_helper"
 
-RSpec.describe Doorkeeper::TokenInfoController do
+RSpec.describe Doorkeeper::TokenInfoController, type: :controller do
+  render_views
+
   describe "when requesting token info with valid token" do
     let(:doorkeeper_token) { FactoryBot.create(:access_token) }
 
