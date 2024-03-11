@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
-- [#PR ID] Add your changelog here.
+- [#1696] Add missing `#issued_token` method to `OAuth::TokenResponse`
 
 ## 5.6.9
 
