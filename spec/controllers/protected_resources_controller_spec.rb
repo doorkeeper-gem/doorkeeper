@@ -17,6 +17,8 @@ module ControllerActions
 end
 
 RSpec.describe "doorkeeper authorize filter" do
+  render_views
+
   context "when accepts token code specified as" do
     controller do
       before_action :doorkeeper_authorize!

@@ -2,7 +2,9 @@
 
 require "spec_helper_integration"
 
-RSpec.describe Doorkeeper::ApplicationMetalController do
+RSpec.describe Doorkeeper::ApplicationMetalController, type: :controller do
+  render_views
+
   controller(described_class) do
     def index
       render json: {}, status: 200
