@@ -12,7 +12,7 @@ module Doorkeeper
       end
 
       def body
-        {
+        @body ||= {
           "access_token" => token.plaintext_token,
           "token_type" => token.token_type,
           "expires_in" => token.expires_in_seconds,

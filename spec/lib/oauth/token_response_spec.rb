@@ -55,6 +55,28 @@ RSpec.describe Doorkeeper::OAuth::TokenResponse do
     end
   end
 
+  describe ".body attributes" do
+    subject(:token_response) { described_class.new(access_token) }
+
+    let(:access_token) do
+      double :access_token,
+             plaintext_token: "some-token",
+             expires_in: "3600",
+             expires_in_seconds: "300",
+             scopes_string: "two scopes",
+             plaintext_refresh_token: "some-refresh-token",
+             token_type: "Bearer",
+             custom_parameter: "custom_value",
+             created_at: 0
+    end
+
+    it "can be augmented" do
+      token_response.body["custom_parameter"] = access_token.custom_parameter
+
+      expect(token_response.body["custom_parameter"]).to eq("custom_value")
+    end
+  end
+
   describe ".body filters out empty values" do
     subject(:body) { described_class.new(access_token).body }
 
