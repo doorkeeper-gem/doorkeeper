@@ -98,7 +98,31 @@ module Doorkeeper
       end
 
       def validate_redirect_uri
-        return false if redirect_uri.blank?
+        # 4.1.1.  Authorization Request
+        #
+        #    redirect_uri
+        #          OPTIONAL.  As described in Section 3.1.2.
+        #
+        #  @see https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.1
+        #
+        if redirect_uri.nil?
+          # 3.1.2.3.  Dynamic Configuration
+          #
+          #    If multiple redirection URIs have been registered, if only part of
+          #    the redirection URI has been registered, or if no redirection URI has
+          #    been registered, the client MUST include a redirection URI with the
+          #    authorization request using the "redirect_uri" request parameter.
+          #
+          # @see https://datatracker.ietf.org/doc/html/rfc6749#section-3.1.2.3
+          #
+          if client.redirect_uri.blank?
+            @missing_param = :redirect_uri
+            return false
+          else
+            @redirect_uri = client.redirect_uri
+            return true
+          end
+        end
 
         Helpers::URIChecker.valid_for_authorization?(
           redirect_uri,
