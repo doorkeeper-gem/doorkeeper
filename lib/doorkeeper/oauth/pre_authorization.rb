@@ -18,9 +18,7 @@ module Doorkeeper
 
       attr_reader :client, :code_challenge, :code_challenge_method, :missing_param,
                   :redirect_uri, :resource_owner, :response_type, :state,
-                  :authorization_response_flow, :response_mode
-
-      attr_accessor :custom_access_token_attributes
+                  :authorization_response_flow, :response_mode, :custom_access_token_attributes
 
       def initialize(server, parameters = {}, resource_owner = nil)
         @server = server
@@ -65,12 +63,6 @@ module Doorkeeper
 
       def form_post_response?
         response_mode == "form_post"
-      end
-
-      def load_custom_attributes_from_token(matching_token)
-        return if Doorkeeper.config.custom_access_token_attributes.empty?
-        return if matching_token.blank?
-        @custom_access_token_attributes = matching_token.custom_attributes
       end
 
       private

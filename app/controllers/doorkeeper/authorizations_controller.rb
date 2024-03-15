@@ -36,7 +36,6 @@ module Doorkeeper
       elsif Doorkeeper.configuration.api_only
         render json: pre_auth
       else
-        pre_auth.load_custom_attributes_from_token(matching_token?) if matching_token?
         render :new
       end
     end
