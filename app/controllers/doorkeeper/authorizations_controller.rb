@@ -77,7 +77,7 @@ module Doorkeeper
             )
           end
         elsif pre_auth.form_post_response?
-          render :form_post
+          render :form_post, locals: { auth: auth }
         else
           redirect_to auth.redirect_uri, allow_other_host: true
         end

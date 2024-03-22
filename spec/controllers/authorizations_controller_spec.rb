@@ -335,6 +335,10 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       it "does not issue any access token" do
         expect(Doorkeeper::AccessToken.all).to be_empty
       end
+
+      it "includes the error in the redirect post" do
+        expect(response.body).to include("invalid_scope")
+      end
     end
   end
 
@@ -1100,6 +1104,28 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
     end
 
+    context "invalid scope with form_post response mode" do
+      before do
+        default_scopes_exist :public
+        get :new, params: {
+          client_id: client.uid,
+          response_type: "token",
+          scope: "invalid",
+          redirect_uri: client.redirect_uri,
+          state: "return-this",
+          response_mode: "form_post",
+        }
+      end
+
+      it "renders the form_post page" do
+        expect(response.status).to eq(200)
+      end
+
+      it "includes the error in the redirect post" do
+        expect(response.body).to include("invalid_scope")
+      end
+    end
+
     context "invalid redirect_uri" do
       before do
         default_scopes_exist :public
@@ -1296,10 +1322,117 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
     end
   end
 
-  describe "DELETE #destroy in API mode" do
+  describe "DELETE #destroy" do
+    context "without form_post response mode" do
+      before do
+        delete :destroy, params: {
+          client_id: client.uid,
+          response_type: "token",
+          redirect_uri: client.redirect_uri,
+        }
+      end
+
+      it "redirects" do
+        expect(response).to be_redirect
+      end
+
+      it "redirects to client redirect uri" do
+        expect(response.location).to match(/^#{client.redirect_uri}/)
+      end
+
+      it "includes error in fragment" do
+        expect(response.query_params["error"]).to eq("access_denied")
+      end
+    end
+
+    context "with form_post response mode" do
+      before do
+        delete :destroy, params: {
+          client_id: client.uid,
+          response_type: "token",
+          redirect_uri: client.redirect_uri,
+          response_mode: "form_post",
+        }
+      end
+
+      it "redirects after authorization" do
+        expect(response.status).to eq(200)
+      end
+
+      it "includes the error in the redirect post" do
+        expect(response.body).to include("access_denied")
+      end
+    end
+
     context "with invalid params" do
       before do
-        allow(Doorkeeper.config).to receive(:api_only).and_return(true)
+        delete :destroy, params: {
+          client_id: client.uid,
+          response_type: "blabla",
+          redirect_uri: client.redirect_uri,
+        }
+      end
+
+      it "renders the error page correctly" do
+        expect(response.status).to eq(200)
+      end
+
+      it "includes the error in the page" do
+        expect(response.body).to include(
+          translated_error_message(:unsupported_grant_type),
+        )
+      end
+    end
+  end
+
+  describe "DELETE #destroy in API mode" do
+    before do
+      allow(Doorkeeper.config).to receive(:api_only).and_return(true)
+    end
+
+    context "without form_post response mode" do
+      before do
+        delete :destroy, params: {
+          client_id: client.uid,
+          response_type: "token",
+          redirect_uri: client.redirect_uri,
+        }
+      end
+
+      it "renders bad request" do
+        expect(response).to have_http_status(:bad_request)
+      end
+
+      it "includes access_denied in the redirect uri" do
+        expect(response_json_body["redirect_uri"].match(/error=(\w+)&?/)[1]).to eq("access_denied")
+      end
+    end
+
+    context "with form_post response mode" do
+      before do
+        delete :destroy, params: {
+          client_id: client.uid,
+          response_type: "token",
+          redirect_uri: client.redirect_uri,
+          response_mode: "form_post",
+        }
+      end
+
+      it "renders bad request" do
+        expect(response).to have_http_status(:bad_request)
+      end
+
+      it "includes the correct redirect uri" do
+        expect(response_json_body["redirect_uri"]).to eq(client.redirect_uri)
+      end
+
+      it "includes access_denied in the body" do
+        expect(response_json_body["body"]["error"]).to eq("access_denied")
+      end
+    end
+
+    context "with invalid params" do
+      before do
         delete :destroy, params: {
           client_id: client.uid,
           response_type: "blabla",
