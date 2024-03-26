@@ -31,7 +31,7 @@ module Doorkeeper
         @code_challenge = parameters[:code_challenge]
         @code_challenge_method = parameters[:code_challenge_method]
         @resource_owner = resource_owner
-        @custom_access_token_attributes = parameters.slice(*Doorkeeper.config.custom_access_token_attributes)
+        @custom_access_token_attributes = parameters.slice(*Doorkeeper.config.custom_access_token_attributes).to_h
       end
 
       def authorizable?

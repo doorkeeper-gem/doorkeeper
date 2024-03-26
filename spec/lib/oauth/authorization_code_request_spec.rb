@@ -220,4 +220,40 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
       end
     end
   end
+
+  context "when revoke_previous_authorization_code_token is false" do
+    before do
+      allow(Doorkeeper.config).to receive(:revoke_previous_authorization_code_token?).and_return(false)
+    end
+
+    it "does not revoke the previous token" do
+      previous_token = FactoryBot.create(
+        :access_token,
+        application_id: client.id,
+        resource_owner_id: grant.resource_owner_id,
+        resource_owner_type: grant.resource_owner_type,
+        scopes: grant.scopes.to_s,
+      )
+
+      expect { request.authorize }.not_to(change { previous_token.reload.revoked_at })
+    end
+  end
+
+  context "when revoke_previous_authorization_code_token is true" do
+    before do
+      allow(Doorkeeper.config).to receive(:revoke_previous_authorization_code_token?).and_return(true)
+    end
+
+    it "revokes the previous token" do
+      previous_token = FactoryBot.create(
+        :access_token,
+        application_id: client.id,
+        resource_owner_id: grant.resource_owner_id,
+        resource_owner_type: grant.resource_owner_type,
+        scopes: grant.scopes.to_s,
+      )
+
+      expect { request.authorize }.to(change { previous_token.reload.revoked_at })
+    end
+  end
 end
