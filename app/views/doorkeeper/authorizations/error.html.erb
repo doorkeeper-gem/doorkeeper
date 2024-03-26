@@ -4,6 +4,6 @@
 
 <main role="main">
   <pre>
-    <%= (respond_to?(:error_response) ? error_response : @pre_auth.error_response).body[:error_description] %>
+    <%= (local_assigns[:error_response] ? error_response : @pre_auth.error_response).body[:error_description] %>
   </pre>
 </main>

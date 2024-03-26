@@ -9,6 +9,7 @@ User-visible changes worth mentioning.
 
 - [#1696] Add missing `#issued_token` method to `OAuth::TokenResponse`
 - [#1697] Allow a TokenResponse body to be customized.
+- [#1702] Fix bugs for error response in the form_post and error view
 
 ## 5.6.9
 
