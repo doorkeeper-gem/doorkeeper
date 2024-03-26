@@ -518,7 +518,7 @@ RSpec.describe Doorkeeper::Application do
     end
   end
 
-  context "when custom model class configured" do
+  context "when custom model class configured", active_record: true do
     class CustomApp < ::ActiveRecord::Base
       include Doorkeeper::Orm::ActiveRecord::Mixins::Application
     end

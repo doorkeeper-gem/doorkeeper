@@ -360,7 +360,7 @@ RSpec.describe Doorkeeper::Config do
       expect(Doorkeeper.config.enable_application_owner?).not_to be(true)
     end
 
-    context "when enabled without confirmation" do
+    context "when enabled without confirmation", active_record: true do
       class ApplicationWithOwner < ActiveRecord::Base
         include Doorkeeper::Orm::ActiveRecord::Mixins::Application
       end
@@ -388,7 +388,7 @@ RSpec.describe Doorkeeper::Config do
       end
     end
 
-    context "when enabled with confirmation set to true" do
+    context "when enabled with confirmation set to true", active_record: true do
       class ApplicationWithOwner < ActiveRecord::Base
         include Doorkeeper::Orm::ActiveRecord::Mixins::Application
       end
