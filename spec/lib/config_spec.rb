@@ -360,60 +360,64 @@ RSpec.describe Doorkeeper::Config do
       expect(Doorkeeper.config.enable_application_owner?).not_to be(true)
     end
 
-    context "when enabled without confirmation", active_record: true do
-      class ApplicationWithOwner < ActiveRecord::Base
-        include Doorkeeper::Orm::ActiveRecord::Mixins::Application
-      end
-
-      before do
-        Doorkeeper.configure do
-          orm DOORKEEPER_ORM
-          enable_application_owner
-
-          application_class "ApplicationWithOwner"
+    if DOORKEEPER_ORM == :active_record
+      context "when enabled without confirmation", active_record: true do
+        class ApplicationWithOwner < ActiveRecord::Base
+          include Doorkeeper::Orm::ActiveRecord::Mixins::Application
         end
 
-        Doorkeeper.run_orm_hooks
-      end
+        before do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            enable_application_owner
 
-      it "adds support for application owner" do
-        instance = ApplicationWithOwner.new(FactoryBot.attributes_for(:application))
+            application_class "ApplicationWithOwner"
+          end
 
-        expect(instance).to respond_to :owner
-        expect(instance).to be_valid
-      end
+          Doorkeeper.run_orm_hooks
+        end
 
-      it "Doorkeeper.configuration.confirm_application_owner? returns false" do
-        expect(Doorkeeper.config.confirm_application_owner?).not_to be(true)
+        it "adds support for application owner" do
+          instance = ApplicationWithOwner.new(FactoryBot.attributes_for(:application))
+
+          expect(instance).to respond_to :owner
+          expect(instance).to be_valid
+        end
+
+        it "Doorkeeper.configuration.confirm_application_owner? returns false" do
+          expect(Doorkeeper.config.confirm_application_owner?).not_to be(true)
+        end
       end
     end
 
-    context "when enabled with confirmation set to true", active_record: true do
-      class ApplicationWithOwner < ActiveRecord::Base
-        include Doorkeeper::Orm::ActiveRecord::Mixins::Application
-      end
-
-      before do
-        Doorkeeper.configure do
-          orm DOORKEEPER_ORM
-          enable_application_owner confirmation: true
-
-          application_class "ApplicationWithOwner"
+    if DOORKEEPER_ORM == :active_record
+      context "when enabled with confirmation set to true", active_record: true do
+        class ApplicationWithOwner < ActiveRecord::Base
+          include Doorkeeper::Orm::ActiveRecord::Mixins::Application
         end
 
-        Doorkeeper.run_orm_hooks
-      end
+        before do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            enable_application_owner confirmation: true
 
-      it "adds support for application owner" do
-        instance = ApplicationWithOwner.new(FactoryBot.attributes_for(:application))
+            application_class "ApplicationWithOwner"
+          end
 
-        expect(instance).to respond_to :owner
-        expect(instance).not_to be_valid
-        expect(instance.errors[:owner]).to be_present
-      end
+          Doorkeeper.run_orm_hooks
+        end
 
-      it "Doorkeeper.configuration.confirm_application_owner? returns true" do
-        expect(Doorkeeper.config.confirm_application_owner?).to be(true)
+        it "adds support for application owner" do
+          instance = ApplicationWithOwner.new(FactoryBot.attributes_for(:application))
+
+          expect(instance).to respond_to :owner
+          expect(instance).not_to be_valid
+          expect(instance.errors[:owner]).to be_present
+        end
+
+        it "Doorkeeper.configuration.confirm_application_owner? returns true" do
+          expect(Doorkeeper.config.confirm_application_owner?).to be(true)
+        end
       end
     end
   end

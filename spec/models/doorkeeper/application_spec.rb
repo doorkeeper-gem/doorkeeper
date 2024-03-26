@@ -518,46 +518,47 @@ RSpec.describe Doorkeeper::Application do
     end
   end
 
-  context "when custom model class configured", active_record: true do
-    class CustomApp < ::ActiveRecord::Base
-      include Doorkeeper::Orm::ActiveRecord::Mixins::Application
-    end
+  if DOORKEEPER_ORM == :active_record
+    context "when custom model class configured", active_record: true do
+      class CustomApp < ::ActiveRecord::Base
+        include Doorkeeper::Orm::ActiveRecord::Mixins::Application
+      end
 
-    let(:new_application) { CustomApp.new(FactoryBot.attributes_for(:application)) }
+      let(:new_application) { CustomApp.new(FactoryBot.attributes_for(:application)) }
 
-    context "without confirmation" do
-      before do
-        Doorkeeper.configure do
-          orm DOORKEEPER_ORM
-          application_class "CustomApp"
-          enable_application_owner confirmation: false
+      context "without confirmation" do
+        before do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            application_class "CustomApp"
+            enable_application_owner confirmation: false
+          end
+
+          Doorkeeper.run_orm_hooks
         end
 
-        Doorkeeper.run_orm_hooks
+        it "is valid given valid attributes" do
+          expect(new_application).to be_valid
+        end
       end
 
-      it "is valid given valid attributes" do
-        expect(new_application).to be_valid
-      end
-    end
+      context "without confirmation" do
+        before do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            application_class "CustomApp"
+            enable_application_owner confirmation: true
+          end
 
-    context "without confirmation" do
-      before do
-        Doorkeeper.configure do
-          orm DOORKEEPER_ORM
-          application_class "CustomApp"
-          enable_application_owner confirmation: true
+          Doorkeeper.run_orm_hooks
         end
 
-        Doorkeeper.run_orm_hooks
-      end
-
-      it "is invalid without owner" do
-        expect(new_application).not_to be_valid
-        new_application.owner = owner
-        expect(new_application).to be_valid
+        it "is invalid without owner" do
+          expect(new_application).not_to be_valid
+          new_application.owner = owner
+          expect(new_application).to be_valid
+        end
       end
     end
-
   end
 end
