@@ -10,6 +10,8 @@ User-visible changes worth mentioning.
 - [#1696] Add missing `#issued_token` method to `OAuth::TokenResponse`
 - [#1697] Allow a TokenResponse body to be customized.
 - [#1702] Fix bugs for error response in the form_post and error view
+- [#1660] Custom access token attributes are now considered when finding matching tokens (fixes #1665).
+  Introduce `revoke_previous_client_credentials_token` configuration option.
 
 ## 5.6.9
 

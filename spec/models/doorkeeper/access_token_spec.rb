@@ -634,6 +634,36 @@ RSpec.describe Doorkeeper::AccessToken do
       last_token = described_class.matching_token_for(application, resource_owner_id, scopes)
       expect(last_token).to eq(matching_token)
     end
+
+    context "when custom access token attributes are used" do
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          custom_access_token_attributes [:tenant_name]
+        end
+        default_scopes_exist(*scopes.all)
+      end
+      let(:custom_attributes) { { tenant_name: "Me" } }
+
+      it "returns a token when attributes match" do
+        token = FactoryBot.create :access_token, default_attributes.merge(custom_attributes)
+        last_token = described_class.matching_token_for(
+          application, resource_owner, scopes, custom_attributes: custom_attributes)
+        expect(last_token).to eq(token)
+      end
+
+      it "does not return a token if attributes don't match" do
+        token = FactoryBot.create :access_token, default_attributes.merge(custom_attributes)
+        last_token = described_class.matching_token_for(application, resource_owner, scopes, custom_attributes: { tenant_id: 'different' })
+        expect(last_token).to eq(nil)
+      end
+
+      it "ignores custom attributes if a nil value is passed" do
+        token = FactoryBot.create :access_token, default_attributes.merge(custom_attributes)
+        last_token = described_class.matching_token_for(application, resource_owner, scopes, custom_attributes: nil)
+        expect(last_token).to eq(token)
+      end
+    end
   end
 
   describe "#as_json" do

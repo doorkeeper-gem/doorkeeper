@@ -31,7 +31,7 @@ module Doorkeeper
     private
 
     def render_success
-      if skip_authorization? || (matching_token? && pre_auth.client.application.confidential?)
+      if skip_authorization? || can_authorize_response?
         redirect_or_render(authorize_response)
       elsif Doorkeeper.configuration.api_only
         render json: pre_auth
@@ -52,10 +52,16 @@ module Doorkeeper
       end
     end
 
+    def can_authorize_response?
+      Doorkeeper.config.custom_access_token_attributes.empty? && pre_auth.client.application.confidential? && matching_token?
+    end
+
     # Active access token issued for the same client and resource owner with
     # the same set of the scopes exists?
     def matching_token?
-      Doorkeeper.config.access_token_model.matching_token_for(
+      # We don't match tokens on the custom attributes here - we're in the pre-auth here,
+      # so they haven't been supplied yet (there are no custom attributes to match on yet)
+      @matching_token ||= Doorkeeper.config.access_token_model.matching_token_for(
         pre_auth.client,
         current_resource_owner,
         pre_auth.scopes,

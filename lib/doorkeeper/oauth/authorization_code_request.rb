@@ -29,6 +29,10 @@ module Doorkeeper
           grant.lock!
           raise Errors::InvalidGrantReuse if grant.revoked?
 
+          if Doorkeeper.config.revoke_previous_authorization_code_token?
+            revoke_previous_tokens(grant.application, resource_owner)
+          end
+
           grant.revoke
 
           find_or_create_access_token(
@@ -108,6 +112,10 @@ module Doorkeeper
           .with_indifferent_access
           .slice(*Doorkeeper.config.custom_access_token_attributes)
           .symbolize_keys
+      end
+
+      def revoke_previous_tokens(application, resource_owner)
+        Doorkeeper.config.access_token_model.revoke_all_for(application.id, resource_owner)
       end
     end
   end
