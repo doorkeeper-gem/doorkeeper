@@ -8,7 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#1696] Add missing `#issued_token` method to `OAuth::TokenResponse`
-- [#1697] Allow a TokenResponse body to be customized.
+- [#1697] Allow a TokenResponse body to be customized (memoize response body).
 - [#1702] Fix bugs for error response in the form_post and error view
 - [#1660] Custom access token attributes are now considered when finding matching tokens (fixes #1665).
   Introduce `revoke_previous_client_credentials_token` configuration option.
@@ -37,17 +37,17 @@ User-visible changes worth mentioning.
 - [#1648] Add custom token attributes to Refresh Token Request.
 - [#1649] Fixed custom_access_token_attributes related errors.
 
-# 5.6.5
+## 5.6.5
 
 - [#1602] Allow custom data to be stored inside access grants/tokens.
 - [#1634] Code refactoring for custom token attributes.
 - [#1639] Add grant type validation to avoid Internal Server Error for DELETE /oauth/authorize endpoint.
 
-# 5.6.4
+## 5.6.4
 
 - [#1633] Apply ORM configuration in #to_prepare block to avoid autoloading errors.
 
-# 5.6.3
+## 5.6.3
 
 - [#1622] Drop support for Rubies 2.5 and 2.6
 - [#1605] Fix URI validation for Ruby 3.2+.
