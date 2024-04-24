@@ -7,6 +7,10 @@ User-visible changes worth mentioning.
 
 ## main
 
+Add your entry here.
+
+## 5.7.0
+
 - [#1696] Add missing `#issued_token` method to `OAuth::TokenResponse`
 - [#1697] Allow a TokenResponse body to be customized (memoize response body).
 - [#1702] Fix bugs for error response in the form_post and error view
