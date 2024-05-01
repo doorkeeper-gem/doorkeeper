@@ -170,6 +170,32 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
   end
 
   context "when using PKCE params" do
+    context "when force_pkce is enabled" do
+      before do
+        allow_any_instance_of(Doorkeeper::Config).to receive(:force_pkce?).and_return(true)
+      end
+
+      context "when the app is confidential" do
+        it "issues a new token for the client" do
+          expect do
+            request.authorize
+          end.to change { client.reload.access_tokens.count }.by(1)
+        end
+      end
+
+      context "when the app is not confidential" do
+        before do
+          client.update(confidential: false)
+        end
+
+        it "does not issue a token" do
+          expect do
+            request.authorize
+          end.not_to change { client.reload.access_tokens.count }
+        end
+      end
+    end
+
     context "when PKCE is supported" do
       before do
         allow(Doorkeeper::AccessGrant).to receive(:pkce_supported?).and_return(true)

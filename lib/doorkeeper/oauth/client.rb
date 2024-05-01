@@ -5,7 +5,7 @@ module Doorkeeper
     class Client
       attr_reader :application
 
-      delegate :id, :name, :uid, :redirect_uri, :scopes, to: :@application
+      delegate :id, :name, :uid, :redirect_uri, :scopes, :confidential, to: :@application
 
       def initialize(application)
         @application = application

@@ -10,8 +10,8 @@ module Doorkeeper
       validate :redirect_uri, error: Errors::InvalidGrant
       validate :code_verifier, error: Errors::InvalidGrant
 
-      attr_reader :grant, :client, :redirect_uri, :access_token, :code_verifier,
-                  :invalid_request_reason, :missing_param
+      attr_reader :grant, :client, :redirect_uri, :access_token, :code_challenge,
+                  :code_verifier, :invalid_request_reason, :missing_param
 
       def initialize(server, grant, client, parameters = {})
         @server = server
@@ -59,10 +59,16 @@ module Doorkeeper
         Doorkeeper.config.access_grant_model.pkce_supported?
       end
 
+      def confidential?
+        client&.confidential
+      end
+
       def validate_params
         @missing_param =
           if grant&.uses_pkce? && code_verifier.blank?
             :code_verifier
+          elsif !confidential? && Doorkeeper.config.force_pkce? && code_challenge.blank?
+            :code_challenge
           elsif redirect_uri.blank?
             :redirect_uri
           end
