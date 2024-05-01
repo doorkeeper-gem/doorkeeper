@@ -12,6 +12,7 @@ User-visible changes worth mentioning.
 - [#1702] Fix bugs for error response in the form_post and error view
 - [#1660] Custom access token attributes are now considered when finding matching tokens (fixes #1665).
   Introduce `revoke_previous_client_credentials_token` configuration option.
+- [#1705] Add `force_pkce` option that requires non-confidential clients to use PKCE when requesting an access_token using an authorization code
 
 ## 5.6.9
 
