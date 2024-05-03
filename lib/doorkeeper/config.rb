@@ -113,9 +113,8 @@ module Doorkeeper
         @config.instance_variable_set(:@revoke_previous_authorization_code_token, true)
       end
 
-      # Require non-confidential apps to use PKCE (send a code_challenge and
-      # code_verifier) when requesting an access_token using an authorization code
-      # (disabled by default)
+      # Require non-confidential apps to use PKCE (send a code_verifier) when requesting
+      # an access_token using an authorization code (disabled by default)
       def force_pkce
         @config.instance_variable_set(:@force_pkce, true)
       end
