@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 Add your entry here.
+- [#????] DRY out AuthorizationsController#render_success
 
 - [#1715] Fix token introspection invalid request reason
 - [#1714] Fix `Doorkeeper::AccessToken.find_or_create_for` with empty scopes which raises NoMethodError
