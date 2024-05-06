@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 Add your entry here.
+- [#????] DRY out AuthorizationsController#render_success
 
 ## 5.7.0
 
