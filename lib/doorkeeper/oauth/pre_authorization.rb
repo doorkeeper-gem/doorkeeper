@@ -14,6 +14,7 @@ module Doorkeeper
       validate :response_type, error: Errors::UnsupportedResponseType
       validate :response_mode, error: Errors::UnsupportedResponseMode
       validate :scopes, error: Errors::InvalidScope
+      validate :code_challenge, error: Errors::InvalidCodeChallenge
       validate :code_challenge_method, error: Errors::InvalidCodeChallengeMethod
 
       attr_reader :client, :code_challenge, :code_challenge_method, :missing_param,
@@ -141,6 +142,12 @@ module Doorkeeper
           app_scopes: client.scopes,
           grant_type: grant_type,
         )
+      end
+
+      def validate_code_challenge
+        return true unless Doorkeeper.config.force_pkce?
+        return true if client.confidential
+        code_challenge.present?
       end
 
       def validate_code_challenge_method
