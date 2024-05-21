@@ -52,7 +52,6 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "factory_bot", "~> 6.0"
   gem.add_development_dependency "generator_spec", "~> 0.10.0"
   gem.add_development_dependency "grape"
-  gem.add_development_dependency "pry-byebug"
   gem.add_development_dependency "rake", ">= 11.3.0"
   gem.add_development_dependency "rspec-rails"
   gem.add_development_dependency "timecop"
