@@ -40,6 +40,7 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
       response_type
       response_mode
       scopes
+      code_challenge
       code_challenge_method
     ])
   end
@@ -341,6 +342,50 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
         attributes[:code_challenge_method] = "unknown"
 
         expect(pre_auth).to be_authorizable
+      end
+    end
+
+    context "when force_pkce is enabled" do
+      before do
+        allow_any_instance_of(Doorkeeper::Config).to receive(:force_pkce?).and_return(true)
+      end
+
+      context "when the app is confidential" do
+        before do
+          application.update(confidential: true)
+        end
+
+        it "accepts a blank code_challenge" do
+          attributes[:code_challenge] = " "
+
+          expect(pre_auth).to be_authorizable
+        end
+
+        it "accepts a code challenge" do
+          attributes[:code_challenge] = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
+          attributes[:code_challenge_method] = "plain"
+
+          expect(pre_auth).to be_authorizable
+        end
+      end
+
+      context "when the app is not confidential" do
+        before do
+          application.update(confidential: false)
+        end
+
+        it "does not accept a blank code_challenge" do
+          attributes[:code_challenge] = " "
+
+          expect(pre_auth).not_to be_authorizable
+        end
+
+        it "accepts a code challenge" do
+          attributes[:code_challenge] = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
+          attributes[:code_challenge_method] = "plain"
+
+          expect(pre_auth).to be_authorizable
+        end
       end
     end
   end
