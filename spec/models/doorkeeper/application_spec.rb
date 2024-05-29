@@ -99,6 +99,29 @@ RSpec.describe Doorkeeper::Application do
     expect(new_application.secret).to eq("custom_application_secret")
   end
 
+  context "when precompiling assets" do
+    let(:precompiling_assets) { true }
+    let(:orm_adapter) { Doorkeeper.orm_adapter }
+
+    context "when skip orm hooks is true" do
+      before do
+        assets_compiling = precompiling_assets
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          skip_orm_hooks true if assets_compiling
+        end
+
+        allow(orm_adapter).to receive(:run_hooks)
+        Doorkeeper.run_orm_hooks
+      end
+
+      it "skips running orm hooks" do
+        expect(orm_adapter).not_to have_received(:run_hooks)
+      end
+    end
+  end
+
   context "when application_owner is enabled" do
     context "when application owner is not required" do
       before do
