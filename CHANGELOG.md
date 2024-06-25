@@ -9,6 +9,8 @@ User-visible changes worth mentioning.
 
 Add your entry here.
 
+## 5.7.1
+
 - [#1705] Add `force_pkce` option that requires non-confidential clients to use PKCE when requesting an access_token using an authorization code
 
 ## 5.7.0
