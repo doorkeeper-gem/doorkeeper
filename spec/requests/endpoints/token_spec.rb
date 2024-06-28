@@ -17,6 +17,7 @@ RSpec.describe "Token endpoint" do
 
     expect(headers["Cache-Control"]).to be_in(["no-store", "no-cache, no-store", "private, no-store"])
     expect(headers["Content-Type"]).to eq("application/json; charset=utf-8")
+    expect(headers["Pragma"]).to eq("no-cache")
   end
 
   it "accepts client credentials with basic auth header" do
