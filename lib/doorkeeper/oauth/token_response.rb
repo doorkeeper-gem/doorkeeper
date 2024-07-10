@@ -30,6 +30,7 @@ module Doorkeeper
         {
           "Cache-Control" => "no-store, no-cache",
           "Content-Type" => "application/json; charset=utf-8",
+          "Pragma" => "no-cache",
         }
       end
     end
