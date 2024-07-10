@@ -214,6 +214,8 @@ module Doorkeeper
       # @return [Doorkeeper::AccessToken] existing record or a new one
       #
       def find_or_create_for(application:, resource_owner:, scopes:, **token_attributes)
+        scopes = Doorkeeper::OAuth::Scopes.from_string(scopes) if scopes.is_a?(String)
+
         if Doorkeeper.config.reuse_access_token
           custom_attributes = extract_custom_attributes(token_attributes).presence
           access_token = matching_token_for(
