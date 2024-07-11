@@ -6,7 +6,7 @@ module Doorkeeper
     #
     # @see https://datatracker.ietf.org/doc/html/rfc7662
     class TokenIntrospection
-      attr_reader :error
+      attr_reader :error, :invalid_request_reason
 
       def initialize(server, token)
         @server = server
@@ -38,7 +38,6 @@ module Doorkeeper
       private
 
       attr_reader :server, :token
-      attr_reader :invalid_request_reason
 
       # If the protected resource uses OAuth 2.0 client credentials to
       # authenticate to the introspection endpoint and its credentials are
