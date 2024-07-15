@@ -536,7 +536,7 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
 
         expect(json_response).to match(
           "error" => "invalid_request",
-          "error_description" => an_instance_of(String),
+          "error_description" => I18n.t("doorkeeper.errors.messages.invalid_request.request_not_authorized"),
         )
       end
     end
