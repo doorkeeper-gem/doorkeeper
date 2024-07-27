@@ -1,5 +1,19 @@
 FROM ruby:3.3.4-alpine
 
+# Linux UID (user id) for the doorkeeper user, change with [--build-arg UID=1234]
+ARG UID="991"
+# Linux GID (group id) for the doorkeeper user, change with [--build-arg GID=1234]
+ARG GID="991"
+# Timezone used by the Docker container and runtime, change with [--build-arg TZ=Europe/Berlin]
+ARG TZ="Etc/UTC"
+
+# Apply timezone
+ENV TZ=${TZ}
+
+RUN addgroup -g "${GID}" doorkeeper; \
+  adduser -u "${UID}" -G "doorkeeper" -h /srv doorkeeper; \
+  echo "${TZ}" > /etc/localtime;
+
 RUN apk add --no-cache \
   ca-certificates \
   wget \
@@ -25,5 +39,10 @@ COPY lib/doorkeeper/version.rb /srv/lib/doorkeeper/version.rb
 RUN bundle install
 
 COPY . /srv/
+
+RUN chown -R doorkeeper:doorkeeper /srv/coverage
+
+# Set the running user for resulting container
+USER doorkeeper
 
 CMD ["rake"]
