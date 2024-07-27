@@ -10,11 +10,11 @@ RUN apk add --no-cache \
   sqlite-dev \
   tzdata
 
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
 
-ENV BUNDLER_VERSION 2.5.11
+ENV BUNDLER_VERSION=2.5.11
 RUN gem install bundler -v ${BUNDLER_VERSION} -i /usr/local/lib/ruby/gems/$(ls /usr/local/lib/ruby/gems) --force
 
 WORKDIR /srv
