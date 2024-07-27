@@ -32,7 +32,7 @@ module Doorkeeper
 
     def render_success
       if skip_authorization? || can_authorize_response?
-        create
+        redirect_or_render(authorize_response)
       elsif Doorkeeper.configuration.api_only
         render json: pre_auth
       else
