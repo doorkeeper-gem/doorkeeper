@@ -6,16 +6,15 @@ module Doorkeeper
     #
     # @see https://datatracker.ietf.org/doc/html/rfc7662
     class TokenIntrospection
-      attr_reader :error, :invalid_request_reason
+      attr_reader :token, :error, :invalid_request_reason
 
       def initialize(server, token)
         @server = server
         @token = token
-
-        authorize!
       end
 
       def authorized?
+        authorize!
         @error.blank?
       end
 
@@ -37,7 +36,7 @@ module Doorkeeper
 
       private
 
-      attr_reader :server, :token
+      attr_reader :server
 
       # If the protected resource uses OAuth 2.0 client credentials to
       # authenticate to the introspection endpoint and its credentials are
@@ -59,22 +58,36 @@ module Doorkeeper
       def authorize!
         # Requested client authorization
         if server.credentials
-          @error = Errors::InvalidClient unless authorized_client
+          authorize_using_basic_auth!
         elsif authorized_token
-          # Requested bearer token authorization
-          #
-          #  If the protected resource uses an OAuth 2.0 bearer token to authorize
-          #  its call to the introspection endpoint and the token used for
-          #  authorization does not contain sufficient privileges or is otherwise
-          #  invalid for this request, the authorization server responds with an
-          #  HTTP 401 code as described in Section 3 of OAuth 2.0 Bearer Token
-          #  Usage [RFC6750].
-          #
-          @error = Errors::InvalidToken unless valid_authorized_token?
+          authorize_using_bearer_token!
         else
           @error = Errors::InvalidRequest
           @invalid_request_reason = :request_not_authorized
         end
+      end
+
+      def authorize_using_basic_auth!
+        # Note that a properly formed and authorized query for an inactive or
+        # otherwise invalid token (or a token the protected resource is not
+        # allowed to know about) is not considered an error response by this
+        # specification. In these cases, the authorization server MUST instead
+        # respond with an introspection response with the "active" field set to
+        # "false" as described in Section 2.2.
+        @error = Errors::InvalidClient unless authorized_client
+      end
+
+      def authorize_using_bearer_token!
+        # Requested bearer token authorization
+        #
+        #  If the protected resource uses an OAuth 2.0 bearer token to authorize
+        #  its call to the introspection endpoint and the token used for
+        #  authorization does not contain sufficient privileges or is otherwise
+        #  invalid for this request, the authorization server responds with an
+        #  HTTP 401 code as described in Section 3 of OAuth 2.0 Bearer Token
+        #  Usage [RFC6750].
+        #
+        @error = Errors::InvalidToken unless valid_authorized_token?
       end
 
       # Client Authentication

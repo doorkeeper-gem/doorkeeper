@@ -418,7 +418,7 @@ module Doorkeeper
            default: (lambda do |token, authorized_client, authorized_token|
              if authorized_token
                authorized_token.application == token&.application
-             elsif token.application
+             elsif token&.application
                authorized_client == token.application
              else
                true
