@@ -272,7 +272,7 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
         end
       end
 
-      it "responds with invalid_token error" do
+      it "responds with invalid_token error for bearer auth" do
         request.headers["Authorization"] = "Bearer #{access_token.token}"
 
         post :introspect, params: { token: token_for_introspection.token }
@@ -281,6 +281,16 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
 
         expect(json_response).not_to include("active")
         expect(json_response).to include("error" => "invalid_token")
+      end
+
+      it "responds with access_denied error for basic auth" do
+        request.headers["Authorization"] = basic_auth_header_for_client(client)
+
+        post :introspect, params: { token: token_for_introspection.token }
+
+        response_status_should_be 200
+
+        expect(json_response).to include("active" => false)
       end
     end
 
