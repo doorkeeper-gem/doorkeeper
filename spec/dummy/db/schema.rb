@@ -50,7 +50,7 @@ ActiveRecord::Schema.define(version: 20230205064514) do
   create_table "oauth_applications", force: :cascade do |t|
     t.string "name", null: false
     t.string "uid", null: false
-    t.string "secret", null: false
+    t.string "secret"
     t.text "redirect_uri"
     t.string "scopes", default: "", null: false
     t.datetime "created_at", null: false
