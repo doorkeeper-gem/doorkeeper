@@ -20,10 +20,12 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
                dependent: :delete_all,
                class_name: Doorkeeper.config.access_token_class.to_s
 
-      validates :name, :secret, :uid, presence: true
+      validates :name, :uid, presence: true
+      validates :secret, presence: true, if: -> { secret_required? }
       validates :uid, uniqueness: { case_sensitive: true }
-      validates_with Doorkeeper::RedirectUriValidator, attributes: [:redirect_uri]
       validates :confidential, inclusion: { in: [true, false] }
+
+      validates_with Doorkeeper::RedirectUriValidator, attributes: [:redirect_uri]
 
       validate :scopes_match_configured, if: :enforce_scopes?
 
@@ -118,7 +120,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       end
 
       def generate_secret
-        return if secret.present?
+        return if secret.present? || !secret_required?
 
         renew_secret
       end
@@ -134,6 +136,11 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
 
       def enforce_scopes?
         Doorkeeper.config.enforce_configured_scopes?
+      end
+
+      def secret_required?
+        confidential? ||
+          !self.class.columns.detect { |column| column.name == "secret" }&.null
       end
 
       # Helper method to extract collection of serializable attribute names
