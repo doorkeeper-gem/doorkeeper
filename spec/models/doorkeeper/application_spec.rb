@@ -82,6 +82,12 @@ RSpec.describe Doorkeeper::Application do
     expect(new_application).not_to be_valid
   end
 
+  it "is valid without secret if client is public" do
+    new_application.confidential = false
+    new_application.secret = nil
+    expect(new_application).to be_valid
+  end
+
   it "generates a secret using a custom object" do
     module CustomGeneratorArgs
       def self.generate

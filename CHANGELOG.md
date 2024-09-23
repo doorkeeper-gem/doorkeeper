@@ -12,6 +12,8 @@ Add your entry here.
 - [#1715] Fix token introspection invalid request reason
 - [#1714] Fix `Doorkeeper::AccessToken.find_or_create_for` with empty scopes which raises NoMethodError
 - [#1712] Add `Pragma: no-cache` to token response
+- [#1726] Refactor token introspection class.
+- [#1727] Allow to set null secret value for Applications if they are public.
 
 ## 5.7.1
 
