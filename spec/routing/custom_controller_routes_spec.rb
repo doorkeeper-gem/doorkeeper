@@ -16,7 +16,8 @@ RSpec.describe "Custom controller for routes" do
           controllers authorizations: "custom_authorizations",
                       tokens: "custom_authorizations",
                       applications: "custom_authorizations",
-                      token_info: "custom_authorizations"
+                      token_info: "custom_authorizations",
+                      discovery: "custom_discovery"
 
           as authorizations: "custom_auth",
              tokens: "custom_token",
@@ -29,7 +30,8 @@ RSpec.describe "Custom controller for routes" do
           controllers authorizations: "custom_authorizations",
                       tokens: "custom_authorizations",
                       applications: "custom_authorizations",
-                      token_info: "custom_authorizations"
+                      token_info: "custom_authorizations",
+                      discovery: "custom_discovery"
 
           as authorizations: "custom_auth",
              tokens: "custom_token",
@@ -41,7 +43,8 @@ RSpec.describe "Custom controller for routes" do
         use_doorkeeper do
           controllers authorizations: "custom_authorizations",
                       tokens: "custom_authorizations",
-                      token_info: "custom_authorizations"
+                      token_info: "custom_authorizations",
+                      discovery: "custom_discovery"
 
           as authorizations: "custom_auth",
              tokens: "custom_token",
@@ -84,7 +87,7 @@ RSpec.describe "Custom controller for routes" do
   end
 
   it "GET /inner_space/.well-known/oauth-authorization-server route to show Discovery controller" do
-    expect(get("/space/.well-known/oauth-authorization-server")).to route_to("doorkeeper/discovery#show")
+    expect(get("/space/.well-known/oauth-authorization-server")).to route_to("custom_discovery#show")
   end
 
 
@@ -121,7 +124,7 @@ RSpec.describe "Custom controller for routes" do
   end
 
   it "GET /space/.well-known/oauth-authorization-server route to show Discovery controller" do
-    expect(get("/space/.well-known/oauth-authorization-server")).to route_to("doorkeeper/discovery#show")
+    expect(get("/space/.well-known/oauth-authorization-server")).to route_to("custom_discovery#show")
   end
 
   it "POST /outer_space/oauth/token is not be routable" do
@@ -141,6 +144,6 @@ RSpec.describe "Custom controller for routes" do
   end
 
   it "GET /outer_space/.well-known/oauth-authorization-server route to show Discovery controller" do
-    expect(get("/outer_space/.well-known/oauth-authorization-server")).to route_to("doorkeeper/discovery#show")
+    expect(get("/outer_space/.well-known/oauth-authorization-server")).to route_to("custom_discovery#show")
   end
 end
