@@ -36,11 +36,13 @@ WORKDIR /srv
 COPY Gemfile doorkeeper.gemspec /srv/
 COPY lib/doorkeeper/version.rb /srv/lib/doorkeeper/version.rb
 
+# This is a fix for sqlite alpine issues
+RUN bundle config force_ruby_platform true
 RUN bundle install
 
 COPY . /srv/
 
-RUN chown -R doorkeeper:doorkeeper /srv/coverage
+RUN chown -R doorkeeper:doorkeeper /srv/coverage /srv/spec/dummy/tmp /srv/spec/generators/tmp
 
 # Set the running user for resulting container
 USER doorkeeper
