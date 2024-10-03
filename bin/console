@@ -4,14 +4,9 @@
 require "bundler/setup"
 require "rails/all"
 require "active_support/all"
+require "irb"
+require "debug"
 require "doorkeeper"
-
-# You can add fixtures and/or initialization code here to make experimenting
-# with your gem easier. You can also use a different console, if you like.
-
-# (If you use this, don't forget to add pry to your Gemfile!)
-# require "pry"
-# Pry.start
 
 Rails.logger = Logger.new(STDOUT)
 
@@ -32,5 +27,4 @@ ActiveRecord::Base.establish_connection(
 # Load database schema
 load File.expand_path("../spec/dummy/db/schema.rb", __dir__)
 
-require "irb"
 IRB.start(__FILE__)
