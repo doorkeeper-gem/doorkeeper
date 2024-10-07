@@ -6,8 +6,9 @@ module Doorkeeper
     include Helpers::Controller
     include ActionController::MimeResponds if Doorkeeper.config.api_only
 
+    skip_forgery_protection
+
     unless Doorkeeper.config.api_only
-      protect_from_forgery with: :exception
       helper "doorkeeper/dashboard"
     end
   end
