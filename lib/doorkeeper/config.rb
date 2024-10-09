@@ -31,6 +31,16 @@ module Doorkeeper
         @config.instance_variable_set(:@confirm_application_owner, true)
       end
 
+      # Provide support for dynamic scopes (e.g. user:*) (disabled by default)
+      # Optional parameter delimiter (default ":") if you want to customize
+      # the delimiter separating the scope name and matching value.
+      #
+      # @param opts [Hash] the options to configure dynamic scopes
+      def enable_dynamic_scopes(opts = {})
+        @config.instance_variable_set(:@enable_dynamic_scopes, true)
+        @config.instance_variable_set(:@dynamic_scopes_delimiter, opts[:delimiter] || ':')
+      end
+
       # Define default access token scopes for your provider
       #
       # @param scopes [Array] Default set of access (OAuth::Scopes.new)
@@ -509,6 +519,14 @@ module Doorkeeper
 
     def enable_application_owner?
       option_set? :enable_application_owner
+    end
+
+    def enable_dynamic_scopes?
+      option_set? :enable_dynamic_scopes
+    end
+
+    def dynamic_scopes_delimiter
+      @dynamic_scopes_delimiter
     end
 
     def polymorphic_resource_owner?
