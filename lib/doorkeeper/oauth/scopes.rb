@@ -6,6 +6,8 @@ module Doorkeeper
       include Enumerable
       include Comparable
 
+      DYNAMIC_SCOPE_WILDCARD = "*"
+
       def self.from_string(string)
         string ||= ""
         new.tap do |scope|
@@ -26,7 +28,15 @@ module Doorkeeper
       end
 
       def exists?(scope)
-        @scopes.include? scope.to_s
+        scope = scope.to_s
+
+        @scopes.any? do |allowed_scope|
+          if dynamic_scopes_enabled? && dynamic_scopes_present?(allowed_scope, scope)
+            dynamic_scope_match?(allowed_scope, scope)
+          else
+            allowed_scope == scope
+          end
+        end
       end
 
       def add(*scopes)
@@ -65,6 +75,32 @@ module Doorkeeper
       end
 
       private
+
+      def dynamic_scopes_enabled?
+        Doorkeeper.config.enable_dynamic_scopes?
+      end
+
+      def dynamic_scope_delimiter
+        return unless dynamic_scopes_enabled?
+
+        @dynamic_scope_delimiter ||= Doorkeeper.config.dynamic_scopes_delimiter
+      end
+
+      def dynamic_scopes_present?(allowed, requested)
+        allowed.include?(dynamic_scope_delimiter) && requested.include?(dynamic_scope_delimiter)
+      end
+
+      def dynamic_scope_match?(allowed, requested)
+        allowed_pattern = allowed.split(dynamic_scope_delimiter, 2)
+        request_pattern = requested.split(dynamic_scope_delimiter, 2)
+
+        return false if allowed_pattern[0] != request_pattern[0]
+        return false if allowed_pattern[1].blank?
+        return false if request_pattern[1].blank?
+        return true  if allowed_pattern[1] == DYNAMIC_SCOPE_WILDCARD && allowed_pattern[1].present?
+
+        allowed_pattern[1] == request_pattern[1]
+      end
 
       def to_array(other)
         case other
