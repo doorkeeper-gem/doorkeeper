@@ -243,6 +243,7 @@ module Doorkeeper
     option :orm,                            default: :active_record
     option :native_redirect_uri,            default: "urn:ietf:wg:oauth:2.0:oob", deprecated: true
     option :grant_flows,                    default: %w[authorization_code client_credentials]
+    option :pkce_code_challenge_methods,    default: %w[plain S256]
     option :handle_auth_errors,             default: :render
     option :token_lookup_batch_size,        default: 10_000
     # Sets the token_reuse_limit
@@ -552,6 +553,12 @@ module Doorkeeper
 
     def scopes_by_grant_type
       @scopes_by_grant_type ||= {}
+    end
+
+    def pkce_code_challenge_methods_supported
+      return [] unless access_grant_model.pkce_supported?
+      
+      pkce_code_challenge_methods
     end
 
     def client_credentials_methods

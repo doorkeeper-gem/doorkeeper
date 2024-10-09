@@ -11,6 +11,7 @@ module Doorkeeper
         validate_reuse_access_token_value
         validate_token_reuse_limit
         validate_secret_strategies
+        validate_pkce_code_challenge_methods
       end
 
       private
@@ -47,6 +48,17 @@ module Doorkeeper
           "It will be set to default 100",
         )
         @token_reuse_limit = 100
+      end
+
+      def validate_pkce_code_challenge_methods
+        return if pkce_code_challenge_methods.all? {|method| method =~ /^plain$|^S256$/ }
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] You have configured an invalid value for pkce_code_challenge_methods option. " \
+          "It will be set to default ['plain', 'S256']",
+        )
+
+        @pkce_code_challenge_methods = ['plain', 'S256']
       end
     end
   end

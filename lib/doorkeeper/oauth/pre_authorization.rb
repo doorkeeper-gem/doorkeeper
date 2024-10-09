@@ -154,7 +154,7 @@ module Doorkeeper
         return true unless Doorkeeper.config.access_grant_model.pkce_supported?
 
         code_challenge.blank? ||
-          (code_challenge_method.present? && code_challenge_method =~ /^plain$|^S256$/)
+          (code_challenge_method.present? && Doorkeeper.config.pkce_code_challenge_methods_supported.include?(code_challenge_method))
       end
 
       def response_on_fragment?
