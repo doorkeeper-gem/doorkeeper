@@ -6,6 +6,7 @@ module Doorkeeper
 
     def create
       headers.merge!(authorize_response.headers)
+      session.send(:load!) if session.id.nil?
       render json: authorize_response.body,
              status: authorize_response.status
     rescue Errors::DoorkeeperError => e
