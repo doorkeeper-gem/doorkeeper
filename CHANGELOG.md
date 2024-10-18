@@ -14,6 +14,7 @@ Add your entry here.
 - [#1712] Add `Pragma: no-cache` to token response
 - [#1726] Refactor token introspection class.
 - [#1727] Allow to set null secret value for Applications if they are public.
+- [#1735] Add `pkce_code_challenge_methods` config option. 
 
 ## 5.7.1
 

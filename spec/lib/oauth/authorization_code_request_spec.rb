@@ -231,6 +231,28 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
 
         expect(request.error).to eq(Doorkeeper::Errors::InvalidGrant)
       end
+
+      context "when PKCE code challenge methods is set to only S256" do
+        before do
+          Doorkeeper.configure do
+            pkce_code_challenge_methods ["S256"]
+          end
+        end
+
+        it "validates when code_verifier is S256" do
+          params[:code_verifier] = grant.code_challenge = "S256"
+          request.validate
+
+          expect(request.error).to eq(nil)
+        end
+
+        it "invalidates when code_verifier is plain" do
+          params[:code_verifier] = "plain"
+          request.validate
+
+          expect(request.error).to eq(Doorkeeper::Errors::InvalidGrant)
+        end
+      end
     end
 
     context "when PKCE is not supported" do
