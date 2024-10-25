@@ -355,6 +355,38 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
+  describe "enable_dynamic_scopes" do
+    it "is disabled by default" do
+      expect(Doorkeeper.config.enable_dynamic_scopes?).not_to be(true)
+    end
+
+    context "when enabled with default delimiter" do
+      before do
+        Doorkeeper.configure do
+          enable_dynamic_scopes
+        end
+      end
+
+      it 'returns true' do
+        expect(Doorkeeper.config.enable_dynamic_scopes?).to be(true)
+        expect(Doorkeeper.config.dynamic_scopes_delimiter).to eq(":")
+      end
+    end
+
+    context "when enabled with custom delimiter" do
+      before do
+        Doorkeeper.configure do
+          enable_dynamic_scopes(delimiter: "-")
+        end
+      end
+
+      it 'returns true' do
+        expect(Doorkeeper.config.enable_dynamic_scopes?).to be(true)
+        expect(Doorkeeper.config.dynamic_scopes_delimiter).to eq("-")
+      end
+    end
+  end
+
   describe "enable_application_owner" do
     it "is disabled by default" do
       expect(Doorkeeper.config.enable_application_owner?).not_to be(true)

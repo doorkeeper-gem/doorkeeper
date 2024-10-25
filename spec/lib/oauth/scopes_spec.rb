@@ -144,5 +144,95 @@ RSpec.describe Doorkeeper::OAuth::Scopes do
     it "is false if no scopes are included even for existing ones" do
       expect(scopes).not_to have_scopes(described_class.from_string("public admin notexistent"))
     end
+
+    context "with dynamic scopes disabled" do
+      context "with wildcard dynamic scope" do
+        before do
+          scopes.add "user:*"
+        end
+
+        it "returns false with specific user" do
+          expect(scopes).not_to have_scopes(described_class.from_string("public user:1"))
+        end
+
+        it "returns true with wildcard user" do
+          expect(scopes).to have_scopes(described_class.from_string("public user:*"))
+        end
+
+        it "returns false if requested scope missing parameter" do
+          expect(scopes).not_to have_scopes(described_class.from_string("public user:"))
+        end
+      end
+    end
+
+    context "with dynamic scopes enabled" do
+      before do
+        Doorkeeper.configure do
+          enable_dynamic_scopes
+        end
+      end
+
+      context "with wildcard dynamic scope" do
+        before do
+          scopes.add "user:*"
+        end
+
+        it "returns true with specific user" do
+          expect(scopes).to have_scopes(described_class.from_string("public user:1"))
+        end
+
+        it "returns true with wildcard user" do
+          expect(scopes).to have_scopes(described_class.from_string("public user:*"))
+        end
+
+        it "returns false if requested scope missing parameter" do
+          expect(scopes).not_to have_scopes(described_class.from_string("public user:"))
+        end
+
+        it "returns false if dynamic scope does not match" do
+          expect(scopes).not_to have_scopes(described_class.from_string("public userA:1"))
+        end
+      end
+
+      context "with specific dynamic scope" do
+        before do
+          scopes.add "user:1"
+        end
+
+        it "returns true with specific user" do
+          expect(scopes).to have_scopes(described_class.from_string("public user:1"))
+        end
+
+        it "returns false with wildcard user" do
+          expect(scopes).not_to have_scopes(described_class.from_string("public user:*"))
+        end
+
+        it "returns false for disallowed user" do
+          expect(scopes).not_to have_scopes(described_class.from_string("public user:2"))
+        end
+
+        context "with custom delimiter" do
+          before do
+            Doorkeeper.configure do
+              enable_dynamic_scopes(delimiter: "-")
+            end
+
+            scopes.add "user-1"
+          end
+
+          it "returns true with specific user" do
+            expect(scopes).to have_scopes(described_class.from_string("public user-1"))
+          end
+
+          it "returns false with wildcard user" do
+            expect(scopes).not_to have_scopes(described_class.from_string("public user-*"))
+          end
+
+          it "returns false for disallowed user" do
+            expect(scopes).not_to have_scopes(described_class.from_string("public user-2"))
+          end
+        end
+      end
+    end
   end
 end
