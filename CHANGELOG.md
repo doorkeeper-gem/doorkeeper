@@ -9,6 +9,7 @@ User-visible changes worth mentioning.
 
 Add your entry here.
 
+- [#1739] Add support for dynamic scopes
 - [#1715] Fix token introspection invalid request reason
 - [#1714] Fix `Doorkeeper::AccessToken.find_or_create_for` with empty scopes which raises NoMethodError
 - [#1712] Add `Pragma: no-cache` to token response
