@@ -28,23 +28,23 @@ ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
 
+ENV BUNDLER_VERSION=2.5.11
+RUN gem install bundler -v ${BUNDLER_VERSION} -i /usr/local/lib/ruby/gems/$(ls /usr/local/lib/ruby/gems) --force
+
 WORKDIR /srv
 
-COPY . /srv/
-
-RUN chown -R doorkeeper:doorkeeper /srv
-
-# Set the running user for resulting container
-USER doorkeeper
-
-RUN mkdir -p /srv/.local/gem/share
-ENV GEM_HOME=/srv/.local/gem/share
-
-ENV BUNDLER_VERSION=2.5.11
-RUN gem install bundler -v ${BUNDLER_VERSION}
+COPY Gemfile doorkeeper.gemspec /srv/
+COPY lib/doorkeeper/version.rb /srv/lib/doorkeeper/version.rb
 
 # This is a fix for sqlite alpine issues
 RUN bundle config force_ruby_platform true
 RUN bundle install
 
-CMD ["bundle", "exec", "rake"]
+COPY . /srv/
+
+RUN chown -R doorkeeper:doorkeeper /srv/coverage /srv/spec/dummy/tmp /srv/spec/generators/tmp
+
+# Set the running user for resulting container
+USER doorkeeper
+
+CMD ["rake"]
