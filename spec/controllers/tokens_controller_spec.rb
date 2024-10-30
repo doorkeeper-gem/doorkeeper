@@ -172,7 +172,15 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
   # https://datatracker.ietf.org/doc/html/rfc7009#section-2.2
   describe "POST #revoke" do
     let(:client) { FactoryBot.create(:application) }
-    let(:access_token) { FactoryBot.create(:access_token, application: client) }
+    let(:revoked_at) { nil }
+    let(:access_token) do
+      FactoryBot.create(
+        :access_token,
+        application: client,
+        revoked_at: revoked_at,
+        use_refresh_token: true
+      )
+    end
 
     context "when associated app is public" do
       let(:client) { FactoryBot.create(:application, confidential: false) }
@@ -183,8 +191,89 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
         expect(response.status).to eq 200
       end
 
-      it "revokes the access token" do
-        post :revoke, params: { client_id: client.uid, token: access_token.token }
+      it "does not revoke the access token when token_type_hint == refresh_token" do
+        post :revoke, params: {
+          client_id: client.uid,
+          token: access_token.token,
+          token_type_hint: "refresh_token",
+        }
+
+        expect(response.status).to eq 200
+
+        expect(access_token.reload).to have_attributes(revoked?: false)
+      end
+
+      it "revokes the refresh token when token_type_hint == refresh_token" do
+        post :revoke, params: {
+          client_id: client.uid,
+          token: access_token.refresh_token,
+          token_type_hint: "refresh_token",
+        }
+
+        expect(response.status).to eq 200
+
+        expect(access_token.reload).to have_attributes(revoked?: true)
+      end
+
+      it "revokes the refresh token when token_type_hint not passed" do
+        post :revoke, params: {
+          client_id: client.uid,
+          token: access_token.refresh_token,
+        }
+
+        expect(response.status).to eq 200
+
+        expect(access_token.reload).to have_attributes(revoked?: true)
+      end
+
+      context "when access_token has already been revoked" do
+        let(:revoked_at) { 1.day.ago.floor }
+
+        it "does not update the revoked_at when the access token has already been revoked" do
+          post :revoke, params: {
+            client_id: client.uid,
+            token: access_token.token,
+          }
+
+          expect(response.status).to eq 200
+
+          expect(access_token.reload).to have_attributes(revoked_at: revoked_at)
+        end
+
+        it "does not update the revoked_at when the refresh token has already been revoked" do
+          post :revoke, params: {
+            client_id: client.uid,
+            token: access_token.refresh_token,
+          }
+
+          expect(response.status).to eq 200
+
+          expect(access_token.reload).to have_attributes(revoked_at: revoked_at)
+        end
+      end
+
+      it "does not revoke when the access token has expired" do
+        access_token.update!(created_at: access_token.created_at - access_token.expires_in - 1)
+
+        post :revoke, params: {
+          client_id: client.uid,
+          token: access_token.token,
+        }
+
+        expect(response.status).to eq 200
+
+        expect(access_token.reload).to have_attributes(revoked?: false)
+      end
+
+      it "revokes the refresh token after the access token has expired" do
+        access_token.update!(created_at: access_token.created_at - access_token.expires_in - 1)
+
+        post :revoke, params: {
+          client_id: client.uid,
+          token: access_token.refresh_token,
+        }
+
+        expect(response.status).to eq 200
 
         expect(access_token.reload).to have_attributes(revoked?: true)
       end

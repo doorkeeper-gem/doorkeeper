@@ -113,17 +113,36 @@ module Doorkeeper
       # The authorization server responds with HTTP status code 200 if the token
       # has been revoked successfully or if the client submitted an invalid
       # token
-      token.revoke if token&.accessible?
+      revocable_token.revoke if revocable_token.revocable?
     end
 
     def token
-      @token ||=
+      revocable_token&.token
+    end
+
+    def revocable_token
+      return @revocable_token if defined? @revocable_token
+
+      @revocable_token =
         if params[:token_type_hint] == "refresh_token"
-          Doorkeeper.config.access_token_model.by_refresh_token(params["token"])
+          refresh_token
         else
-          Doorkeeper.config.access_token_model.by_token(params["token"]) ||
-            Doorkeeper.config.access_token_model.by_refresh_token(params["token"])
+          access_token || refresh_token
         end
+    end
+
+    def refresh_token
+      token = Doorkeeper.config.access_token_model.by_refresh_token(params["token"])
+      return unless token
+
+      RevocableTokens::RevocableRefreshToken.new(token)
+    end
+
+    def access_token
+      token = Doorkeeper.config.access_token_model.by_token(params["token"])
+      return unless token
+
+      RevocableTokens::RevocableAccessToken.new(token)
     end
 
     def strategy

@@ -34,6 +34,11 @@ module Doorkeeper
     autoload :Token, "doorkeeper/request/token"
   end
 
+  module RevocableTokens
+    autoload :RevocableAccessToken, "doorkeeper/revocable_tokens/revocable_access_token"
+    autoload :RevocableRefreshToken, "doorkeeper/revocable_tokens/revocable_refresh_token"
+  end
+
   module OAuth
     autoload :BaseRequest, "doorkeeper/oauth/base_request"
     autoload :AuthorizationCodeRequest, "doorkeeper/oauth/authorization_code_request"
