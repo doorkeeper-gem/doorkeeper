@@ -12,6 +12,7 @@ module Doorkeeper
           attributes.merge(
             name: error_name_for(request.error),
             exception_class: exception_class_for(request.error),
+            translate_options: request.error.try(:translate_options),
             state: request.try(:state),
             redirect_uri: request.try(:redirect_uri),
           ),
@@ -33,7 +34,7 @@ module Doorkeeper
       delegate :name, :description, :state, to: :@error
 
       def initialize(attributes = {})
-        @error = OAuth::Error.new(*attributes.values_at(:name, :state))
+        @error = OAuth::Error.new(*attributes.values_at(:name, :state, :translate_options))
         @exception_class = attributes[:exception_class]
         @redirect_uri = attributes[:redirect_uri]
         @response_on_fragment = attributes[:response_on_fragment]

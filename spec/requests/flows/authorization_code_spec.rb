@@ -426,9 +426,9 @@ feature "Authorization Code Flow" do
         )
       end
 
-      scenario "expects to set code_challenge_method explicitely without fallback" do
+      scenario "expects to set code_challenge_method explicitly without fallback" do
         visit authorization_endpoint_url(client: @client, code_challenge: code_challenge)
-        expect(page).to have_content("The code challenge method must be plain or S256.")
+        expect(page).to have_content("The code challenge method must be one of plain, S256.")
       end
     end
   end

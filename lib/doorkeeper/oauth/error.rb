@@ -2,13 +2,14 @@
 
 module Doorkeeper
   module OAuth
-    Error = Struct.new(:name, :state) do
+    Error = Struct.new(:name, :state, :translate_options) do
       def description
-        I18n.translate(
-          name,
+        options = (translate_options || {}).merge(
           scope: %i[doorkeeper errors messages],
           default: :server_error,
         )
+
+        I18n.translate(name, **options)
       end
     end
   end

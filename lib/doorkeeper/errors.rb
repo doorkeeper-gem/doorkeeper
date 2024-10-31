@@ -6,6 +6,10 @@ module Doorkeeper
       def type
         message
       end
+
+      def self.translate_options
+        {}
+      end
     end
 
     class InvalidGrantReuse < DoorkeeperError
@@ -45,6 +49,14 @@ module Doorkeeper
       end
     end
 
+    class InvalidCodeChallengeMethod < BaseResponseError
+      def self.translate_options
+        {
+          challenge_methods: Doorkeeper.config.pkce_code_challenge_methods_supported.join(", ")
+        }
+      end
+    end
+
     UnableToGenerateToken = Class.new(DoorkeeperError)
     TokenGeneratorNotFound = Class.new(DoorkeeperError)
     NoOrmCleaner = Class.new(DoorkeeperError)
@@ -55,7 +67,6 @@ module Doorkeeper
     InvalidScope = Class.new(BaseResponseError)
     InvalidRedirectUri = Class.new(BaseResponseError)
     InvalidCodeChallenge = Class.new(BaseResponseError)
-    InvalidCodeChallengeMethod = Class.new(BaseResponseError)
     InvalidGrant = Class.new(BaseResponseError)
 
     UnauthorizedClient = Class.new(BaseResponseError)
