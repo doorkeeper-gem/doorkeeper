@@ -344,7 +344,7 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
 
           expect(pre_auth).to_not be_authorizable
           expect(pre_auth.error_response.description).to eq(
-            "The authorization server does not support PKCE as there are no accepted code_challenge methods"
+            "The authorization server does not support PKCE as there is no accepted code_challenge_method"
           )
         end
       end
@@ -368,7 +368,7 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
           attributes[:code_challenge_method] = "plain"
 
           expect(pre_auth).to_not be_authorizable
-          expect(pre_auth.error_response.description).to eq("The code challenge method must be S256.")
+          expect(pre_auth.error_response.description).to eq("The code_challenge_method must be S256.")
         end
       end
 
@@ -377,7 +377,7 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
         attributes[:code_challenge_method] = "unknown"
 
         expect(pre_auth).to_not be_authorizable
-        expect(pre_auth.error_response.description).to eq("The code challenge method must be one of plain, S256.")
+        expect(pre_auth.error_response.description).to eq("The code_challenge_method must be one of plain, S256.")
       end
     end
 

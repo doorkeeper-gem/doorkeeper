@@ -32,7 +32,7 @@ RSpec.describe Doorkeeper::OAuth::Error do
       end
 
       it "is translated from translation messages with variables" do
-        expect(error.description).to eq("The code challenge method must be one of foo, bar.")
+        expect(error.description).to eq("The code_challenge_method must be one of foo, bar.")
       end
     end
   end
