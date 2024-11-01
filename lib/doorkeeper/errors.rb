@@ -51,8 +51,10 @@ module Doorkeeper
 
     class InvalidCodeChallengeMethod < BaseResponseError
       def self.translate_options
+        challenge_methods = Doorkeeper.config.pkce_code_challenge_methods_supported
         {
-          challenge_methods: Doorkeeper.config.pkce_code_challenge_methods_supported.join(", ")
+          challenge_methods: challenge_methods.join(", "),
+          count: challenge_methods.length
         }
       end
     end

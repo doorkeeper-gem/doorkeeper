@@ -100,7 +100,10 @@ en:
         unauthorized_client: 'The client is not authorized to perform this request using this method.'
         access_denied: 'The resource owner or authorization server denied the request.'
         invalid_scope: 'The requested scope is invalid, unknown, or malformed.'
-        invalid_code_challenge_method: 'The code challenge method must be one of %{challenge_methods}.'
+        invalid_code_challenge_method:
+          zero: 'There are no acceptable code_challenge methods'
+          one: 'The code challenge method must be %{challenge_methods}.'
+          other: 'The code challenge method must be one of %{challenge_methods}.'
         server_error: 'The authorization server encountered an unexpected condition which prevented it from fulfilling the request.'
         temporarily_unavailable: 'The authorization server is currently unable to handle the request due to a temporary overloading or maintenance of the server.'
 
