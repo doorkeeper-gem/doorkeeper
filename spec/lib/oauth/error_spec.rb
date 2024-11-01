@@ -25,7 +25,8 @@ RSpec.describe Doorkeeper::OAuth::Error do
           :invalid_code_challenge_method,
           :some_state,
           {
-            challenge_methods: "foo, bar"
+            challenge_methods: "foo, bar",
+            count: 2,
           }
         )
       end
