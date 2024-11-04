@@ -9,6 +9,8 @@ User-visible changes worth mentioning.
 
 Add your entry here.
 
+## 5.8.0
+
 - [#1739] Add support for dynamic scopes
 - [#1715] Fix token introspection invalid request reason
 - [#1714] Fix `Doorkeeper::AccessToken.find_or_create_for` with empty scopes which raises NoMethodError
