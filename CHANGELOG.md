@@ -9,6 +9,8 @@ User-visible changes worth mentioning.
 
 Add your entry here.
 
+- [#1747] Fix unknown pkce method error when configured
+
 ## 5.8.0
 
 - [#1739] Add support for dynamic scopes
