@@ -344,7 +344,7 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
 
           expect(pre_auth).to_not be_authorizable
           expect(pre_auth.error_response.description).to eq(
-            "The authorization server does not support PKCE as there is no accepted code_challenge_method"
+            "The authorization server does not support PKCE as there are no accepted code_challenge_method values."
           )
         end
       end
