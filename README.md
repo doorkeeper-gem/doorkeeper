@@ -7,6 +7,7 @@
 [![Reviewed by Hound](https://img.shields.io/badge/Reviewed_by-Hound-8E64B0.svg)](https://houndci.com)
 [![GuardRails badge](https://badges.guardrails.io/doorkeeper-gem/doorkeeper.svg?token=66768ce8f6995814df81f65a2cff40f739f688492704f973e62809e15599bb62)](https://dashboard.guardrails.io/default/gh/doorkeeper-gem/doorkeeper)
 [![Dependabot](https://img.shields.io/badge/dependabot-enabled-success.svg)](https://dependabot.com)
+[![Gurubase](https://img.shields.io/badge/Gurubase-Ask%20Doorkeeper%20Guru-006BFF)](https://gurubase.io/g/doorkeeper)
 
 Doorkeeper is a gem (Rails engine) that makes it easy to introduce OAuth 2 provider
 functionality to your Ruby on Rails or Grape application.
