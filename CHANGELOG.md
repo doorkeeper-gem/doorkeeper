@@ -9,6 +9,7 @@ User-visible changes worth mentioning.
 
 Add your entry here.
 
+- [#1752] Bump the range of supported Ruby and Rails versions
 - [#1747] Fix unknown pkce method error when configured
 
 ## 5.8.0
