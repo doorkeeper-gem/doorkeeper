@@ -28,6 +28,7 @@ Gem::Specification.new do |gem|
     "source_code_uri" => "https://github.com/doorkeeper-gem/doorkeeper",
     "bug_tracker_uri" => "https://github.com/doorkeeper-gem/doorkeeper/issues",
     "documentation_uri" => "https://doorkeeper.gitbook.io/guides/",
+    "funding_uri" => "https://opencollective.com/doorkeeper-gem",
   }
 
   gem.add_dependency "railties", ">= 5"
