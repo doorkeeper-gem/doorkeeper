@@ -163,4 +163,53 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
       expect(request.error).to eq(Doorkeeper::Errors::InvalidScope)
     end
   end
+
+  context "with dynamic scopes enabled" do
+    subject(:request) { described_class.new(server, refresh_token, credentials, parameters) }
+
+    let(:application_scopes) { "public write user:*" }
+    let(:application) { FactoryBot.create(:application, scopes: application_scopes) }
+    let(:token_scopes) { "public write user:1" }
+
+    let(:refresh_token) do
+      FactoryBot.create :access_token,
+                        use_refresh_token: true,
+                        scopes: token_scopes,
+                        application: application
+    end
+
+    let(:parameters) { {} }
+
+    before do
+      Doorkeeper.configure do
+        enable_dynamic_scopes
+      end
+    end
+
+    it "transfers scopes from the old token to the new token" do
+      request.authorize
+      expect(Doorkeeper::AccessToken.last.scopes).to eq(%i[public write user:1])
+    end
+
+    it "returns an error with invalid scope" do
+      parameters[:scopes] = "public garbage:*"
+
+      response = request.authorize
+
+      expect(response).to be_a(Doorkeeper::OAuth::ErrorResponse)
+      expect(response.status).to eq(:bad_request)
+    end
+
+    it "reduces scopes to the dynamic scope" do
+      parameters[:scopes] = "user:1"
+      request.authorize
+      expect(Doorkeeper::AccessToken.last.scopes).to eq(%i[user:1])
+    end
+
+    it "reduces scopes to the public scope" do
+      parameters[:scopes] = "public"
+      request.authorize
+      expect(Doorkeeper::AccessToken.last.scopes).to eq(%i[public])
+    end
+  end
 end

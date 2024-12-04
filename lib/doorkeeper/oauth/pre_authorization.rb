@@ -75,7 +75,7 @@ module Doorkeeper
         if client_scopes.blank?
           server.default_scopes.to_s
         else
-          (server.default_scopes & client_scopes).to_s
+          server.default_scopes.allowed(client_scopes).to_s
         end
       end
 

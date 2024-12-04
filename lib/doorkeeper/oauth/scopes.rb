@@ -70,8 +70,26 @@ module Doorkeeper
         end
       end
 
+      # DEPRECATED: With dynamic scopes, #allowed should be called because
+      # A & B doesn't really make sense with dynamic scopes.
+      #
+      # For example, if A = user:* and B is user:1, A & B = [].
+      # If we modified this method to take dynamic scopes into an account, then order
+      # becomes important, and this would violate the principle that A & B = B & A.
       def &(other)
+        return allowed(other) if dynamic_scopes_enabled?
+
         self.class.from_array(all & to_array(other))
+      end
+
+      # Returns a set of scopes that are allowed, taking dynamic
+      # scopes into account. This instance's scopes is taken as the allowed set,
+      # and the passed value is the set to filter.
+      #
+      # @param other The set of scopes to filter
+      def allowed(other)
+        filtered_scopes = other.select { |scope| self.exists?(scope) }
+        self.class.from_array(filtered_scopes)
       end
 
       private

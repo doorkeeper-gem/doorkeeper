@@ -118,6 +118,13 @@ RSpec.describe Doorkeeper::OAuth::Scopes do
     end
   end
 
+  describe "#allowed" do
+    it "can get intersection with another scope object" do
+      scopes = described_class.from_string("public admin").allowed(described_class.from_string("write admin"))
+      expect(scopes.all).to eq(%w[admin])
+    end
+  end
+
   describe "#has_scopes?" do
     subject(:scopes) { described_class.from_string("public admin") }
 
@@ -191,6 +198,40 @@ RSpec.describe Doorkeeper::OAuth::Scopes do
 
         it "returns false if dynamic scope does not match" do
           expect(scopes).not_to have_scopes(described_class.from_string("public userA:1"))
+        end
+
+        describe "#&" do
+          it "allows user:1 scope" do
+            scopes = described_class.from_string("public user:*") & (described_class.from_string("public user:1"))
+            expect(scopes.all).to eq(%w[public user:1])
+          end
+
+          it "does not allow user:2 scope" do
+            scopes = described_class.from_string("public user:1") & (described_class.from_string("public user:2"))
+            expect(scopes.all).to eq(%w[public])
+          end
+
+          it "does not allow user:* scope" do
+            scopes = described_class.from_string("public user:1") & (described_class.from_string("public user:*"))
+            expect(scopes.all).to eq(%w[public])
+          end
+        end
+
+        describe "#allowed" do
+          it "allows user:1 scope" do
+            scopes = described_class.from_string("public user:*").allowed(described_class.from_string("public user:1"))
+            expect(scopes.all).to eq(%w[public user:1])
+          end
+
+          it "does not allow user:2 scope" do
+            scopes = described_class.from_string("public user:1").allowed(described_class.from_string("public user:2"))
+            expect(scopes.all).to eq(%w[public])
+          end
+
+          it "does not allow user:* scope" do
+            scopes = described_class.from_string("public user:1").allowed(described_class.from_string("public user:*"))
+            expect(scopes.all).to eq(%w[public])
+          end
         end
       end
 
