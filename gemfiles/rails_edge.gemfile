@@ -6,7 +6,7 @@ gem "rails", git: "https://github.com/rails/rails"
 gem "rspec-core"
 gem "rspec-expectations"
 gem "rspec-mocks"
-gem "rspec-rails", "~> 5.0"
+gem "rspec-rails", "~> 7.1"
 gem "rspec-support"
 gem "rubocop", "~> 1.4"
 gem "rubocop-performance", require: false
@@ -15,7 +15,7 @@ gem "rubocop-rspec", require: false
 gem "bcrypt", "~> 3.1", require: false
 gem "activerecord-jdbcsqlite3-adapter", platform: :jruby
 gem "sprockets-rails"
-gem "sqlite3", "~> 1.4", platform: [:ruby, :mswin, :mingw, :x64_mingw]
+gem "sqlite3", "~> 2.3", platform: [:ruby, :mswin, :mingw, :x64_mingw]
 gem "tzinfo-data", platforms: [:mingw, :mswin, :x64_mingw]
 gem "timecop"
 
