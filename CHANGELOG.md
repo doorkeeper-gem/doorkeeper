@@ -12,6 +12,7 @@ Add your entry here.
 - [#1752] Bump the range of supported Ruby and Rails versions
 - [#1747] Fix unknown pkce method error when configured
 - [#1744] Allow for expired refresh tokens to be revoked
+- [#1754] Fix refresh tokens with dynamic scopes
 
 ## 5.8.0
 
