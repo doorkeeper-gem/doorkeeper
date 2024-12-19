@@ -96,6 +96,7 @@ en:
           unknown: 'The request is missing a required parameter, includes an unsupported parameter value, or is otherwise malformed.'
           missing_param: 'Missing required parameter: %{value}.'
           request_not_authorized: 'Request need to be authorized. Required parameter for authorizing request is missing or invalid.'
+          invalid_code_challenge: 'Code challenge is required.'
         invalid_redirect_uri: "The requested redirect uri is malformed or doesn't match client redirect URI."
         unauthorized_client: 'The client is not authorized to perform this request using this method.'
         access_denied: 'The resource owner or authorization server denied the request.'
