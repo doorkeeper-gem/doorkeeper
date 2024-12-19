@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 Add your entry here.
+- [#1755] Fix the error message for force_pkce
 
 ## 5.8.1
 
