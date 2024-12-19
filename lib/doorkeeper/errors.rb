@@ -68,7 +68,6 @@ module Doorkeeper
     InvalidClient = Class.new(BaseResponseError)
     InvalidScope = Class.new(BaseResponseError)
     InvalidRedirectUri = Class.new(BaseResponseError)
-    InvalidCodeChallenge = Class.new(BaseResponseError)
     InvalidGrant = Class.new(BaseResponseError)
 
     UnauthorizedClient = Class.new(BaseResponseError)
