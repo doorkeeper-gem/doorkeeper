@@ -427,6 +427,7 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
           attributes[:code_challenge] = " "
 
           expect(pre_auth).not_to be_authorizable
+          expect(pre_auth.error_response.description).to eq(translated_invalid_request_error_message(:invalid_code_challenge, nil))
         end
 
         it "accepts a code challenge" do

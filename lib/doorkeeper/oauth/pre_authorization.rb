@@ -14,12 +14,13 @@ module Doorkeeper
       validate :response_type, error: Errors::UnsupportedResponseType
       validate :response_mode, error: Errors::UnsupportedResponseMode
       validate :scopes, error: Errors::InvalidScope
-      validate :code_challenge, error: Errors::InvalidCodeChallenge
+      validate :code_challenge, error: Errors::InvalidRequest
       validate :code_challenge_method, error: Errors::InvalidCodeChallengeMethod
 
       attr_reader :client, :code_challenge, :code_challenge_method, :missing_param,
                   :redirect_uri, :resource_owner, :response_type, :state,
-                  :authorization_response_flow, :response_mode, :custom_access_token_attributes
+                  :authorization_response_flow, :response_mode, :custom_access_token_attributes,
+                  :invalid_request_reason
 
       def initialize(server, parameters = {}, resource_owner = nil)
         @server = server
@@ -147,7 +148,10 @@ module Doorkeeper
       def validate_code_challenge
         return true unless Doorkeeper.config.force_pkce?
         return true if client.confidential
-        code_challenge.present?
+        return true if code_challenge.present?
+
+        @invalid_request_reason = :invalid_code_challenge
+        false
       end
 
       def validate_code_challenge_method
