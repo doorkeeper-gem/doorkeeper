@@ -18,5 +18,9 @@ gem "sprockets-rails"
 gem "sqlite3", "~> 1.4", platform: [:ruby, :mswin, :mingw, :x64_mingw]
 gem "tzinfo-data", platforms: [:mingw, :mswin, :x64_mingw]
 gem "timecop"
+gem "base64"
+gem "drb"
+gem "mutex_m"
+gem "concurrent-ruby", "1.3.4"
 
 gemspec path: "../"
