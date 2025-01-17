@@ -9,6 +9,7 @@ User-visible changes worth mentioning.
 
 Add your entry here.
 - [#1755] Fix the error message for force_pkce
+- [#1761] Memoize authentication failure
 
 ## 5.8.1
 
