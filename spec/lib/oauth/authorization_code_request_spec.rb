@@ -194,6 +194,14 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
           end.not_to change { client.reload.access_tokens.count }
         end
       end
+
+      context "when the app is missing" do
+        it "does not assume non-confidential and forcibly validate pkce params" do
+          request = described_class.new(server, grant, nil, params)
+          request.validate
+          expect(request.error).to eq(Doorkeeper::Errors::InvalidClient)
+        end
+      end
     end
 
     context "when PKCE is supported" do

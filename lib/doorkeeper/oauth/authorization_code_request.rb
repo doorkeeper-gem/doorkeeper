@@ -59,15 +59,11 @@ module Doorkeeper
         Doorkeeper.config.access_grant_model.pkce_supported?
       end
 
-      def confidential?
-        client&.confidential
-      end
-
       def validate_params
         @missing_param =
           if grant&.uses_pkce? && code_verifier.blank?
             :code_verifier
-          elsif !confidential? && Doorkeeper.config.force_pkce? && code_verifier.blank?
+          elsif client && !client.confidential && Doorkeeper.config.force_pkce? && code_verifier.blank?
             :code_verifier
           elsif redirect_uri.blank?
             :redirect_uri
