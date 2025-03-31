@@ -4,12 +4,14 @@ module Doorkeeper
   class TokensController < Doorkeeper::ApplicationMetalController
     before_action :validate_presence_of_client, only: [:revoke]
 
+    rescue_from Errors::DoorkeeperError do |e|
+      handle_token_exception(e)
+    end
+
     def create
       headers.merge!(authorize_response.headers)
       render json: authorize_response.body,
              status: authorize_response.status
-    rescue Errors::DoorkeeperError => e
-      handle_token_exception(e)
     end
 
     # OAuth 2.0 Token Revocation - https://datatracker.ietf.org/doc/html/rfc7009
