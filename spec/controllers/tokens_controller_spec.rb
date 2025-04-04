@@ -56,11 +56,13 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
   end
 
   describe "POST #create with errors" do
+    let(:grant_type) { "password" }
+
     before do
       post :create, params: {
         client_id: client.uid,
         client_secret: "invalid",
-        grant_type: "password",
+        grant_type:,
       }
     end
 
@@ -90,6 +92,22 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
 
     it "does not issue any access token" do
       expect(Doorkeeper::AccessToken.all).to be_empty
+    end
+
+    context "when controller is extended" do
+      controller(Doorkeeper::TokensController) do
+        def create
+          headers.merge!("Custom-Header" => authorize_response.headers)
+
+          super
+        end
+      end
+
+      let(:grant_type) { "refresh_token" }
+
+      it "still handles errors" do
+        expect(response).to be_bad_request
+      end
     end
   end
 
