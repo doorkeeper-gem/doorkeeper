@@ -8,6 +8,9 @@ User-visible changes worth mentioning.
 ## main
 
 Add your entry here.
+
+## 5.8.2
+
 - [#1755] Fix the error message for force_pkce
 - [#1761] Memoize authentication failure
 - [#1762] Allow missing client to trigger invalid client error when force_pkce is enabled
