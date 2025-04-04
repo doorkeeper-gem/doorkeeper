@@ -11,6 +11,7 @@ Add your entry here.
 - [#1755] Fix the error message for force_pkce
 - [#1761] Memoize authentication failure
 - [#1762] Allow missing client to trigger invalid client error when force_pkce is enabled
+- [#1767] Make sure error handling happens on a controller level opposed to action level to account for the controller being extended
 
 ## 5.8.1
 
