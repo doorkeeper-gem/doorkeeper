@@ -287,11 +287,56 @@ RSpec.describe Doorkeeper::Config do
     it "can change the value" do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
-        client_credentials :from_digest, :from_params
+        client_credentials :from_basic
       end
 
       expect(config.client_credentials_methods)
-        .to eq(%i[from_digest from_params])
+        .to eq(%i[from_basic])
+    end
+  end
+
+  # Returns token endpoint auth methods based on client_credentials per
+  # https://www.iana.org/assignments/oauth-parameters/oauth-parameters.xhtml#token-endpoint-auth-method
+  describe 'token_endpoint_auth_methods' do
+    it 'returns methods according to defaults' do
+      expect(config.client_credentials_methods).to eq(%i[from_basic from_params])
+      expect(config.token_endpoint_auth_methods).to contain_exactly('none', 'client_secret_post', 'client_secret_basic')
+    end
+
+    it "returns none even if no methods are configured" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_credentials
+      end
+
+      expect(config.client_credentials_methods)
+        .to eq([])
+
+      expect(config.token_endpoint_auth_methods).to contain_exactly('none')
+    end
+
+    it 'returns client_secret_post if configured' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_credentials :from_params
+      end
+
+      expect(config.client_credentials_methods)
+        .to eq(%i[from_params])
+
+      expect(config.token_endpoint_auth_methods).to contain_exactly('none', 'client_secret_post')
+    end
+
+    it 'returns client_secret_basic if configured' do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_credentials :from_basic
+      end
+
+      expect(config.client_credentials_methods)
+        .to eq(%i[from_basic])
+
+      expect(config.token_endpoint_auth_methods).to contain_exactly('none', 'client_secret_basic')
     end
   end
 

@@ -583,6 +583,16 @@ module Doorkeeper
       @client_credentials_methods ||= %i[from_basic from_params]
     end
 
+    def token_endpoint_auth_methods
+      return @token_endpoint_auth_methods if instance_variable_defined?(:@token_endpoint_auth_methods)
+
+      methods = ['none']
+      methods << 'client_secret_basic' if client_credentials_methods.include? :from_basic
+      methods << 'client_secret_post' if client_credentials_methods.include? :from_params
+
+      @token_endpoint_auth_methods = methods
+    end
+
     def access_token_methods
       @access_token_methods ||= %i[
         from_bearer_authorization
