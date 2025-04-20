@@ -57,7 +57,7 @@ module Doorkeeper
       #
       def authorize!
         # Requested client authorization
-        if server.credentials
+        if server.credentials.present?
           authorize_using_basic_auth!
         elsif authorized_token
           authorize_using_bearer_token!
