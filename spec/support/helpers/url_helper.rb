@@ -2,8 +2,12 @@
 
 module UrlHelper
   # FIXME
-  def token_endpoint_url(options = {})
-    parameters = {
+  def token_endpoint_url
+    "/oauth/token"
+  end
+    
+  def token_endpoint_params(options = {})
+    {
       code: options[:code],
       client_id: options[:client_id] || options[:client].try(:uid),
       client_secret: options[:client_secret] || options[:client].try(:secret),
@@ -12,11 +16,10 @@ module UrlHelper
       code_verifier: options[:code_verifier],
       code_challenge_method: options[:code_challenge_method],
     }.reject { |_, v| v.blank? }
-    "/oauth/token?#{build_query(parameters)}"
   end
-
-  def password_token_endpoint_url(options = {})
-    parameters = {
+  
+  def password_token_endpoint_params(options = {})
+    {
       code: options[:code],
       client_id: options[:client_id] || options[:client].try(:uid),
       client_secret: options[:client_secret] || options[:client].try(:secret),
@@ -25,7 +28,6 @@ module UrlHelper
       scope: options[:scope],
       grant_type: "password",
     }.reject { |_, v| v.blank? }
-    "/oauth/token?#{build_query(parameters)}"
   end
 
   def authorization_endpoint_url(options = {})
@@ -42,14 +44,17 @@ module UrlHelper
     "/oauth/authorize?#{build_query(parameters)}"
   end
 
-  def refresh_token_endpoint_url(options = {})
-    parameters = {
+  def refresh_token_endpoint_url
+    "/oauth/token"
+  end
+
+  def refresh_token_endpoint_params(options = {})
+    {
       refresh_token: options[:refresh_token],
       client_id: options[:client_id] || options[:client].try(:uid),
       client_secret: options[:client_secret] || options[:client].try(:secret),
       grant_type: options[:grant_type] || "refresh_token",
     }.reject { |_, v| v.blank? }
-    "/oauth/token?#{build_query(parameters)}"
   end
 
   def revocation_token_endpoint_url
