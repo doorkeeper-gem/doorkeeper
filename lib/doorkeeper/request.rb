@@ -3,6 +3,16 @@
 module Doorkeeper
   module Request
     class << self
+      def client_authentication_mechanism(request)
+        client_authentication_mechanisms = client_authentication_mechanisms.detect do |mechanism|
+          mechanism.matches_request?(request)
+        end
+
+        if client_authentication_mechanisms
+          client_authentication_mechanisms.mechanism
+        end
+      end
+
       def authorization_strategy(response_type)
         grant_flow = authorization_flows.detect do |flow|
           flow.matches_response_type?(response_type)
@@ -39,6 +49,10 @@ module Doorkeeper
       end
 
       private
+
+      def client_authentication_mechanisms
+        Doorkeeper.configuration.client_authentication_mechanisms
+      end
 
       def authorization_flows
         Doorkeeper.configuration.authorization_response_flows

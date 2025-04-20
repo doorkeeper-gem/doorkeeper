@@ -253,6 +253,7 @@ module Doorkeeper
     option :orm,                            default: :active_record
     option :native_redirect_uri,            default: "urn:ietf:wg:oauth:2.0:oob", deprecated: true
     option :grant_flows,                    default: %w[authorization_code client_credentials]
+    option :client_authentication,          default: %w[client_secret_basic client_secret_post none]
     option :pkce_code_challenge_methods,    default: %w[plain S256]
     option :handle_auth_errors,             default: :render
     option :token_lookup_batch_size,        default: 10_000
@@ -579,8 +580,15 @@ module Doorkeeper
       pkce_code_challenge_methods
     end
 
+    # Deprecated?
     def client_credentials_methods
       @client_credentials_methods ||= %i[from_basic from_params]
+    end
+
+    def client_authentication_mechanisms
+      @client_authentication_mechanisms ||= client_authentication.map do |name|
+        Doorkeeper::ClientAuthentication.get(name)  
+      end.compact
     end
 
     def access_token_methods

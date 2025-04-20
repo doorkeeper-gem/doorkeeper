@@ -17,6 +17,8 @@ module Doorkeeper
         new(application)
       end
 
+      # TODO: Figure out a way to have this just get the client but not assert
+      # authentication if not secret
       def self.authenticate(credentials, method = Doorkeeper.config.application_model.method(:by_uid_and_secret))
         return if credentials.blank?
         return unless (application = method.call(credentials.uid, credentials.secret))
