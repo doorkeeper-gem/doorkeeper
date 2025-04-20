@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 module Doorkeeper
-  module ClientAuthentication
-    module Mechanisms
+  module OAuth
+    module ClientAuthentication
       class None
         def self.matches_request?(request)
           !request.authorization && request.request_parameters[:client_id] && !request.request_parameters[:client_secret]

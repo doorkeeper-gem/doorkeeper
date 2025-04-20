@@ -8,9 +8,9 @@ module Doorkeeper
       @context = context
     end
 
-    def client_authentication_request(strategy)
+    def client_authentication_request
       klass = Request.client_authentication_mechanism(context.request)
-      klass.new(self)
+      klass.new
     end
 
     def authorization_request(strategy)

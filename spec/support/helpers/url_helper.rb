@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module UrlHelper
+  # FIXME
   def token_endpoint_url(options = {})
     parameters = {
       code: options[:code],

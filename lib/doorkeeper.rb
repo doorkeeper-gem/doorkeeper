@@ -7,6 +7,7 @@ require "doorkeeper/engine"
 #
 module Doorkeeper
   autoload :Errors, "doorkeeper/errors"
+  autoload :ClientAuthentication, "doorkeeper/client_authentication"
   autoload :GrantFlow, "doorkeeper/grant_flow"
   autoload :OAuth, "doorkeeper/oauth"
   autoload :Rake, "doorkeeper/rake"
@@ -33,7 +34,6 @@ module Doorkeeper
     autoload :RefreshToken, "doorkeeper/request/refresh_token"
     autoload :Token, "doorkeeper/request/token"
   end
-
   module RevocableTokens
     autoload :RevocableAccessToken, "doorkeeper/revocable_tokens/revocable_access_token"
     autoload :RevocableRefreshToken, "doorkeeper/revocable_tokens/revocable_refresh_token"
@@ -62,6 +62,12 @@ module Doorkeeper
     autoload :TokenRequest, "doorkeeper/oauth/token_request"
     autoload :TokenResponse, "doorkeeper/oauth/token_response"
 
+    module ClientAuthentication
+      autoload :None, "doorkeeper/oauth/client_authentication/none"
+      autoload :ClientSecretBasic, "doorkeeper/oauth/client_authentication/client_secret_basic"
+      autoload :ClientSecretPost, "doorkeeper/oauth/client_authentication/client_secret_post"
+    end
+
     module Authorization
       autoload :Code, "doorkeeper/oauth/authorization/code"
       autoload :Context, "doorkeeper/oauth/authorization/context"
@@ -69,9 +75,9 @@ module Doorkeeper
       autoload :URIBuilder, "doorkeeper/oauth/authorization/uri_builder"
     end
 
-    class Client
-      autoload :Credentials, "doorkeeper/oauth/client/credentials"
-    end
+    # class Client
+    #   autoload :Credentials, "doorkeeper/oauth/client/credentials"
+    # end
 
     module ClientCredentials
       autoload :Validator, "doorkeeper/oauth/client_credentials/validator"

@@ -4,12 +4,14 @@ module Doorkeeper
   module Request
     class << self
       def client_authentication_mechanism(request)
-        client_authentication_mechanisms = client_authentication_mechanisms.detect do |mechanism|
-          mechanism.matches_request?(request)
+        strategy = client_authentication_strategies.detect do |strategy|
+          strategy.matches_request?(request)
         end
 
-        if client_authentication_mechanisms
-          client_authentication_mechanisms.mechanism
+        if strategy
+          strategy.mechanism
+        else
+          Doorkeeper::ClientAuthentication::FallbackMechanism
         end
       end
 
@@ -50,7 +52,7 @@ module Doorkeeper
 
       private
 
-      def client_authentication_mechanisms
+      def client_authentication_strategies
         Doorkeeper.configuration.client_authentication_mechanisms
       end
 

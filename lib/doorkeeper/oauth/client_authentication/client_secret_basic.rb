@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 module Doorkeeper
-  module ClientAuthentication
-    module Mechanisms
+  module OAuth
+    module ClientAuthentication
       class ClientSecretBasic
         def self.matches_request?(request)
           request.authorization.present? && request.authorization.downcase.start_with?('basic')

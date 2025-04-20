@@ -14,6 +14,10 @@ module Doorkeeper
       def authenticates_client?
         !!@authenticates_client
       end
+
+      def matches_request?(request)
+        @mechanism.matches_request?(request)
+      end
     end
   end
 end

@@ -240,7 +240,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
         end
 
         it "doesn't issue a new token with invalid client credentials in Basic auth" do
-          invalid_client = Doorkeeper::OAuth::Client::Credentials.new("invalid", "invalid")
+          invalid_client = Doorkeeper::ClientAuthentication::Credentials.new("invalid", "invalid")
 
           expect do
             post password_token_endpoint_url(

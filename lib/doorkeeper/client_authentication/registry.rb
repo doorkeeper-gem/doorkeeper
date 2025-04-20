@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Doorkeeper
-  module GrantFlow
+  module ClientAuthentication
     module Registry
       mattr_accessor :mechanisms
       self.mechanisms = {}

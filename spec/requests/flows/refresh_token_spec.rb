@@ -97,6 +97,7 @@ RSpec.describe "Refresh Token Flow" do
 
       it "client request a token with expired access token" do
         @token.update_attribute :expires_in, -100
+        # This method is broken:
         post refresh_token_endpoint_url(
           client: @client, refresh_token: @token.refresh_token,
         )
