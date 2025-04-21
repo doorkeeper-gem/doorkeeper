@@ -9,12 +9,8 @@ module Doorkeeper
       # Allows to register custom OAuth client authentication method so that
       # Doorkeeper could recognize and process it.
       #
-      def register(name_or_method, **options)
-        unless name_or_method.is_a?(Doorkeeper::ClientAuthentication::Method)
-          name_or_method = Doorkeeper::ClientAuthentication::Method.new(name_or_method, **options)
-        end
-
-        name_key = name_or_method.name.to_sym
+      def register(name, method)
+        name_key = name.to_sym
 
         if methods.key?(name_key)
           ::Kernel.warn <<~WARNING
@@ -23,7 +19,7 @@ module Doorkeeper
           WARNING
         end
 
-        methods[name_key] = name_or_method
+        methods[name_key] = Doorkeeper::ClientAuthentication::Method.new(name, method)
       end
 
       # [NOTE]: make it to use #fetch after removing fallbacks

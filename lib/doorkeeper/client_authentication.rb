@@ -11,17 +11,17 @@ module Doorkeeper
 
     register(
       :none,
-      method: Doorkeeper::OAuth::ClientAuthentication::None,
+      Doorkeeper::OAuth::ClientAuthentication::None,
     )
 
     register(
       :client_secret_post,
-      method: Doorkeeper::OAuth::ClientAuthentication::ClientSecretPost,
+      Doorkeeper::OAuth::ClientAuthentication::ClientSecretPost,
     )
 
     register(
       :client_secret_basic,
-      method: Doorkeeper::OAuth::ClientAuthentication::ClientSecretBasic,
+      Doorkeeper::OAuth::ClientAuthentication::ClientSecretBasic,
     )
   end
 end

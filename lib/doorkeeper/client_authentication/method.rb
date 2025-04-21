@@ -6,9 +6,9 @@ module Doorkeeper
       attr_reader :name, :method
       delegate :matches_request?, to: :method
         
-      def initialize(name, **options)
+      def initialize(name, method)
         @name = name
-        @method = options[:method]
+        @method = method
       end
     end
   end
