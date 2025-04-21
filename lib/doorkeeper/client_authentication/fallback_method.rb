@@ -3,7 +3,7 @@
 module Doorkeeper
   module ClientAuthentication
     class FallbackMethod
-      def self.matches_request?
+      def self.matches_request?(request)
         true
       end
 
