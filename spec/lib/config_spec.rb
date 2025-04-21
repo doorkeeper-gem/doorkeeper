@@ -296,7 +296,7 @@ RSpec.describe Doorkeeper::Config do
         /\[DOORKEEPER\] Unknown client_credentials method detected: from_digest/,
       ).once
       expect(Kernel).to receive(:warn).with(
-        /\[DOORKEEPER\] No known client_credentials method detected, ignoring option/
+        /\[DOORKEEPER\] No known client_credentials method detected, cannot automatically convert to client_authentication option/
       ).once
 
       Doorkeeper.configure do
@@ -313,7 +313,7 @@ RSpec.describe Doorkeeper::Config do
         /\[DOORKEEPER\] Unknown client_credentials method detected, received callable block/,
       ).once
       expect(Kernel).to receive(:warn).with(
-        /\[DOORKEEPER\] No known client_credentials method detected, ignoring option/
+        /\[DOORKEEPER\] No known client_credentials method detected, cannot automatically convert to client_authentication option/
       ).once
 
       Doorkeeper.configure do

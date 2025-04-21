@@ -90,7 +90,7 @@ module Doorkeeper
         }.reject(&:nil?)
 
         if client_authentication.empty?
-          Kernel.warn("[DOORKEEPER] No known client_credentials method detected, ignoring option")
+          Kernel.warn("[DOORKEEPER] No known client_credentials method detected, cannot automatically convert to client_authentication option")
         else
           @config.instance_variable_set(:@client_credentials_methods, client_authentication.concat([:none]))
         end
