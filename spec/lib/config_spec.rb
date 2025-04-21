@@ -392,6 +392,16 @@ RSpec.describe Doorkeeper::Config do
 
       expect(config.client_authentication_methods.map(&:name)).to contain_exactly(:client_secret_basic)
     end
+
+    it "returns an array of Doorkeeper::ClientAuthentication::Method" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication [:client_secret_basic, :client_secret_post]
+      end
+
+      expect(config.client_authentication_methods.size).to be 2
+      expect(config.client_authentication_methods).to all(be_a(Doorkeeper::ClientAuthentication::Method))
+    end
   end
 
   describe "force_ssl_in_redirect_uri" do
