@@ -53,7 +53,7 @@ module Doorkeeper
       private
 
       def client_authentication_strategies
-        Doorkeeper.configuration.client_authentication_mechanisms
+        Doorkeeper.configuration.client_authentication_methods
       end
 
       def authorization_flows

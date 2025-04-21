@@ -64,6 +64,34 @@ module Doorkeeper
         @config.instance_variable_set(:@scopes_by_grant_type, hash)
       end
 
+      # Change the way client credentials are retrieved from the request object.
+      # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then
+      # falls back to the `:client_id` and `:client_secret` params from the
+      # `params` object.
+      #
+      # @param methods [Array] Define client credentials
+      # @deprecated
+      def client_credentials(*methods)
+        deprecated("client_credentials", "Use the client_authentication option instead. Automatically converting to client_authentication")
+
+        client_authentication = methods.map {|method|
+          case method
+          when :from_basic
+            :client_secret_basic 
+          when :from_params
+            :client_secret_post
+          else
+            Kernel.warn("[DOORKEEPER] Unknown client_credentials method detected: #{method}")
+          end
+        }.reject(&:nil?)
+
+        if client_authentication.empty?
+          Kernel.warn("[DOORKEEPER] No known client_credentials method detected, ignoring option")
+        else
+          @config.instance_variable_set(:@client_credentials_methods, client_authentication.concat([:none]))
+        end
+      end
+
       # Change the way access token is authenticated from the request object.
       # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then
       # falls back to the `:access_token` or `:bearer_token` params from the
@@ -176,6 +204,13 @@ module Doorkeeper
 
       private
 
+      def deprecated(name, message=nil)
+        warning = "[DOORKEEPER] #{name} has been deprecated and will soon be removed"
+        warning = "#{warning}\n#{message}" if message.present?
+
+        Kernel.warn(warning)
+      end
+
       # Configure the secret storing functionality
       def configure_secrets_for(type, using:, fallback:)
         raise ArgumentError, "Invalid type #{type}" if %i[application token].exclude?(type)
@@ -243,24 +278,10 @@ module Doorkeeper
     option :orm,                            default: :active_record
     option :native_redirect_uri,            default: "urn:ietf:wg:oauth:2.0:oob", deprecated: true
     option :grant_flows,                    default: %w[authorization_code client_credentials]
-    option :client_authentication,          default: %w[client_secret_basic client_secret_post none]
+    option :client_authentication,          default: %i[client_secret_basic client_secret_post none]
     option :pkce_code_challenge_methods,    default: %w[plain S256]
     option :handle_auth_errors,             default: :render
     option :token_lookup_batch_size,        default: 10_000
-
-    # Change the way client credentials are retrieved from the request object.
-    # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then
-    # falls back to the `:client_id` and `:client_secret` params from the
-    # `params` object.
-    #
-    # @param methods [Array] Define client credentials
-    # @deprecated
-    option :client_credentials, array: true,
-           default: %i[from_basic from_params],
-           as: :client_credentials_methods,
-           deprecated: {
-             message: "The client_credentials option has been deprecated in favor of client_authentication, as to not confuse with client_credentials grant flow"
-           }
 
     # Sets the token_reuse_limit
     # It will be used only when reuse_access_token option in enabled
@@ -585,8 +606,21 @@ module Doorkeeper
       pkce_code_challenge_methods
     end
 
-    def client_authentication_mechanisms
-      @client_authentication_mechanisms ||= client_authentication.map do |name|
+    def client_authentication_methods
+      return @client_authentication_methods if defined?(@client_authentication_methods)
+      
+      methods = if instance_variable_defined?("@client_credentials_methods")
+        if instance_variable_defined?("@client_authentication")
+          Kernel.warn("[DOORKEEPER] Both client_credentials and client_authentication are set, using client_authentication")
+          client_authentication
+        else
+          instance_variable_get("@client_credentials_methods")
+        end
+      else
+        client_authentication
+      end
+
+      @client_authentication_methods = methods.map do |name|
         Doorkeeper::ClientAuthentication.get(name)  
       end.compact
     end

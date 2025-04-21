@@ -26,7 +26,6 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::None do
         client_id: '1234'
       }, ActionController::HttpAuthentication::Basic.encode_credentials('username', 'password'))
 
-      binding.break
       expect(described_class.matches_request?(request)).to_not be true
     end
 
