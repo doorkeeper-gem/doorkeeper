@@ -64,16 +64,6 @@ module Doorkeeper
         @config.instance_variable_set(:@scopes_by_grant_type, hash)
       end
 
-      # Change the way client credentials are retrieved from the request object.
-      # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then
-      # falls back to the `:client_id` and `:client_secret` params from the
-      # `params` object.
-      #
-      # @param methods [Array] Define client credentials
-      def client_credentials(*methods)
-        @config.instance_variable_set(:@client_credentials_methods, methods)
-      end
-
       # Change the way access token is authenticated from the request object.
       # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then
       # falls back to the `:access_token` or `:bearer_token` params from the
@@ -257,6 +247,21 @@ module Doorkeeper
     option :pkce_code_challenge_methods,    default: %w[plain S256]
     option :handle_auth_errors,             default: :render
     option :token_lookup_batch_size,        default: 10_000
+
+    # Change the way client credentials are retrieved from the request object.
+    # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then
+    # falls back to the `:client_id` and `:client_secret` params from the
+    # `params` object.
+    #
+    # @param methods [Array] Define client credentials
+    # @deprecated
+    option :client_credentials, array: true,
+           default: %i[from_basic from_params],
+           as: :client_credentials_methods,
+           deprecated: {
+             message: "The client_credentials option has been deprecated in favor of client_authentication, as to not confuse with client_credentials grant flow"
+           }
+
     # Sets the token_reuse_limit
     # It will be used only when reuse_access_token option in enabled
     # By default it will be 100
@@ -578,11 +583,6 @@ module Doorkeeper
       return [] unless access_grant_model.pkce_supported?
       
       pkce_code_challenge_methods
-    end
-
-    # Deprecated?
-    def client_credentials_methods
-      @client_credentials_methods ||= %i[from_basic from_params]
     end
 
     def client_authentication_mechanisms

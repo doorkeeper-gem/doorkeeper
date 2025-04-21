@@ -53,7 +53,7 @@ module Doorkeeper
             value = if attribute_builder
                       attribute_builder.new(&block).build
                     else
-                      block || args.first
+                      block || (options[:array] == true ? args : args.first)
                     end
 
             @config.instance_variable_set(:"@#{attribute}", value)
