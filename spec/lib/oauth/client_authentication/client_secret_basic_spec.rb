@@ -5,13 +5,13 @@ require "spec_helper"
 RSpec.describe Doorkeeper::OAuth::ClientAuthentication::ClientSecretBasic do
   describe 'matches_request?' do
     it "matches if the request has basic authorization" do
-      request = mock_request({}, ActionController::HttpAuthentication::Basic.encode_credentials('username', 'password'))
+      request = mock_request authorization: ActionController::HttpAuthentication::Basic.encode_credentials('username', 'password')
 
       expect(described_class.matches_request?(request)).to be true
     end
 
     it "doesn't match if the request has bearer authorization" do
-      request = mock_request({}, "Bearer foobar")
+      request = mock_request authorization: "Bearer foobar"
 
       expect(described_class.matches_request?(request)).to_not be true
     end
@@ -19,7 +19,7 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::ClientSecretBasic do
 
   describe 'authenticate' do
     it "returns credentials using the values from the authorization header" do
-      request = mock_request({}, ActionController::HttpAuthentication::Basic.encode_credentials('client_id', 'client_secret'))
+      request = mock_request authorization: ActionController::HttpAuthentication::Basic.encode_credentials('client_id', 'client_secret')
 
       credentials = described_class.authenticate(request)
 
@@ -29,7 +29,7 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::ClientSecretBasic do
     end
 
     it "returns nil if the client_secret is missing from the authorization header" do
-      request = mock_request({}, ActionController::HttpAuthentication::Basic.encode_credentials('client_id', ''))
+      request = mock_request authorization: ActionController::HttpAuthentication::Basic.encode_credentials('client_id', '')
 
       credentials = described_class.authenticate(request)
 

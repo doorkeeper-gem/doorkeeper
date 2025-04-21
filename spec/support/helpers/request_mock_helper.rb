@@ -2,7 +2,7 @@ module RequestMockHelper
   # I'm not sure if there's a better way to get a mock rack request for
   # testing. Here we don't need a full request spec, but we do need enough to
   # check that the logic of these classes works.
-  def mock_request(params, credentials = nil)
+  def mock_request(request_parameters: {}, query_parameters: {}, authorization: nil)
     request = ActionDispatch::Request.new({
       "REQUEST_METHOD"=>"POST",
       "SERVER_NAME"=>"example.org",
@@ -12,12 +12,12 @@ module RequestMockHelper
       "HTTP_HOST"=> "example.org",
       "ORIGINAL_FULLPATH" => "/test",
       "action_dispatch.remote_ip" => "127.0.0.1",
-      "action_dispatch.request.query_parameters" => {},
-      "action_dispatch.request.request_parameters" => params
+      "action_dispatch.request.query_parameters" => query_parameters,
+      "action_dispatch.request.request_parameters" => request_parameters
     })
 
-    unless credentials.nil?
-      request.env["HTTP_AUTHORIZATION"] = credentials
+    unless authorization.nil?
+      request.env["HTTP_AUTHORIZATION"] = authorization
     end
 
     request
