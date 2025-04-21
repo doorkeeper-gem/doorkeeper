@@ -8,7 +8,7 @@ module Doorkeeper
           !request.authorization && request.request_parameters[:client_id] && !request.request_parameters[:client_secret]
         end
 
-        def authenticate(request)
+        def self.authenticate(request)
           Doorkeeper::ClientAuthentication::Credentials.new(
             request.request_parameters[:client_id], nil
           )

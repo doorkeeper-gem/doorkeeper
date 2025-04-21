@@ -8,7 +8,7 @@ module Doorkeeper
           request.authorization.present? && request.authorization.downcase.start_with?('basic')
         end
 
-        def authenticate(request)
+        def self.authenticate(request)
           value = request.authorization.to_s.split(" ", 2).second
           client_id, client_secret = Base64.decode64(value).split(':', 2)
 

@@ -2,8 +2,12 @@
 
 module Doorkeeper
   module ClientAuthentication
-    class FallbackMechanism
-      def authenticate(request)
+    class FallbackMethod
+      def self.matches_request?
+        true
+      end
+
+      def self.authenticate(request)
         nil
       end
     end

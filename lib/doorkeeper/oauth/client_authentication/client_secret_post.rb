@@ -8,7 +8,7 @@ module Doorkeeper
           request.method.upcase === "POST" && request.request_parameters[:client_id].present? && request.request_parameters[:client_secret].present?
         end
 
-        def authenticate(request)
+        def self.authenticate(request)
           client_id = request.request_parameters[:client_id]
           client_secret = request.request_parameters[:client_secret]
 

@@ -75,10 +75,6 @@ module Doorkeeper
       autoload :URIBuilder, "doorkeeper/oauth/authorization/uri_builder"
     end
 
-    # class Client
-    #   autoload :Credentials, "doorkeeper/oauth/client/credentials"
-    # end
-
     module ClientCredentials
       autoload :Validator, "doorkeeper/oauth/client_credentials/validator"
       autoload :Creator, "doorkeeper/oauth/client_credentials/creator"
