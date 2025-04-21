@@ -81,7 +81,11 @@ module Doorkeeper
           when :from_params
             :client_secret_post
           else
-            Kernel.warn("[DOORKEEPER] Unknown client_credentials method detected: #{method}")
+            if method.respond_to? :call
+              Kernel.warn("[DOORKEEPER] Unknown client_credentials method detected, received callable block")
+            else
+              Kernel.warn("[DOORKEEPER] Unknown client_credentials method detected: #{method}")
+            end
           end
         }.reject(&:nil?)
 

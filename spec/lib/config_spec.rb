@@ -307,6 +307,23 @@ RSpec.describe Doorkeeper::Config do
       expect(config.instance_variable_defined?("@client_credentials_methods")).to be false
     end
 
+    it "prints a warning message when passed a block for client_credentials" do
+      expect(Kernel).to receive(:warn).with(/\[DOORKEEPER\] client_credentials has been deprecated/).once
+      expect(Kernel).to receive(:warn).with(
+        /\[DOORKEEPER\] Unknown client_credentials method detected, received callable block/,
+      ).once
+      expect(Kernel).to receive(:warn).with(
+        /\[DOORKEEPER\] No known client_credentials method detected, ignoring option/
+      ).once
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_credentials lambda { |request| return 'uid', 'secret' }
+      end
+
+      expect(config.instance_variable_defined?("@client_credentials_methods")).to be false
+    end
+
     it "can change the value, but converts to client_authentication compatible values" do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
