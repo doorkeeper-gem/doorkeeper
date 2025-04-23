@@ -404,10 +404,11 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
           application.update(confidential: true)
         end
 
-        it "accepts a blank code_challenge" do
+        it "does not accept a blank code_challenge" do
           attributes[:code_challenge] = " "
 
-          expect(pre_auth).to be_authorizable
+          expect(pre_auth).to_not be_authorizable
+          expect(pre_auth.error_response.description).to eq(translated_invalid_request_error_message(:invalid_code_challenge, nil))
         end
 
         it "accepts a code challenge" do
