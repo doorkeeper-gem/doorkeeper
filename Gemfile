@@ -12,7 +12,7 @@ gem "sprockets-rails"
 gem "rspec-core"
 gem "rspec-expectations"
 gem "rspec-mocks"
-gem "rspec-rails", "~> 7.1"
+gem "rspec-rails", "~> 8.0"
 gem "rspec-support"
 
 gem "rubocop", "~> 1.4"
