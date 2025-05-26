@@ -279,19 +279,128 @@ RSpec.describe Doorkeeper::Config do
   end
 
   describe "client_credentials" do
-    it "has defaults order" do
-      expect(config.client_credentials_methods)
-        .to eq(%i[from_basic from_params])
+    it "prints a deprecation warning message" do
+      expect(Kernel).to receive(:warn).with(
+        /\[DOORKEEPER\] client_credentials has been deprecated and will soon be removed/,
+      )
+        
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_credentials :from_params
+      end
+    end
+
+    it "prints a warning message when passed an unknown client_credentials method" do
+      expect(Kernel).to receive(:warn).with(/\[DOORKEEPER\] client_credentials has been deprecated/).once
+      expect(Kernel).to receive(:warn).with(
+        /\[DOORKEEPER\] Unknown client_credentials method detected: from_digest/,
+      ).once
+      expect(Kernel).to receive(:warn).with(
+        /\[DOORKEEPER\] No known client_credentials method detected, cannot automatically convert to client_authentication option/
+      ).once
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_credentials :from_digest
+      end
+
+      expect(config.instance_variable_defined?("@client_credentials_methods")).to be false
+    end
+
+    it "prints a warning message when passed a block for client_credentials" do
+      expect(Kernel).to receive(:warn).with(/\[DOORKEEPER\] client_credentials has been deprecated/).once
+      expect(Kernel).to receive(:warn).with(
+        /\[DOORKEEPER\] Unknown client_credentials method detected, received callable block/,
+      ).once
+      expect(Kernel).to receive(:warn).with(
+        /\[DOORKEEPER\] No known client_credentials method detected, cannot automatically convert to client_authentication option/
+      ).once
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_credentials lambda { |request| return 'uid', 'secret' }
+      end
+
+      expect(config.instance_variable_defined?("@client_credentials_methods")).to be false
+    end
+
+    it "can change the value, but converts to client_authentication compatible values" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_credentials :from_params
+      end
+
+      expect(config.instance_variable_get("@client_credentials_methods"))
+        .to contain_exactly(:client_secret_post, :none)
+    end
+  end
+
+  describe "client_authentication" do
+    it "has a default" do
+      expect(config.client_authentication).to contain_exactly(:client_secret_basic, :client_secret_post, :none)
+    end
+
+    it "warns if configured to a non-array value & sets to default" do
+      # Not sure how to capture this expectation?
+      # 
+      # expect(::Rails.logger).to receive(:error).with(
+      #   /\[DOORKEEPER\] You have configured client_authentication as a non-array value/
+      # )
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        # :client_secret_post would get silently ignored
+        client_authentication :client_secret_basic, :client_secret_post
+      end
+
+      expect(config.client_authentication).to contain_exactly(:client_secret_basic, :client_secret_post, :none)
     end
 
     it "can change the value" do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
-        client_credentials :from_digest, :from_params
+        client_authentication [:client_secret_basic]
       end
 
-      expect(config.client_credentials_methods)
-        .to eq(%i[from_digest from_params])
+      expect(config.client_authentication).to contain_exactly(:client_secret_basic)
+    end
+  end
+
+  describe "client_authentication_methods" do
+    it "provides a warning if both client_credentials and client_authentication are set" do
+      expect(Kernel).to receive(:warn).with(/\[DOORKEEPER\] client_credentials has been deprecated/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_credentials :from_params
+        client_authentication [:client_secret_basic]
+      end
+
+      expect(Kernel).to receive(:warn).with(
+        /\[DOORKEEPER\] Both client_credentials and client_authentication are set, using client_authentication/,
+      )
+
+      expect(config.client_authentication_methods.map(&:name)).to contain_exactly(:client_secret_basic)
+    end
+
+    it "uses client_authentication if both client_credentials and client_authentication are set" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_credentials :from_params
+        client_authentication [:client_secret_basic]
+      end
+
+      expect(config.client_authentication_methods.map(&:name)).to contain_exactly(:client_secret_basic)
+    end
+
+    it "returns an array of Doorkeeper::ClientAuthentication::Method" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication [:client_secret_basic, :client_secret_post]
+      end
+
+      expect(config.client_authentication_methods.size).to be 2
+      expect(config.client_authentication_methods).to all(be_a(Doorkeeper::ClientAuthentication::Method))
     end
   end
 

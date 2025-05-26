@@ -13,7 +13,7 @@ RSpec.describe "Token endpoint" do
   end
 
   it "respond with correct headers" do
-    post token_endpoint_url(code: @authorization.token, client: @client)
+    post token_endpoint_url, params: token_endpoint_params(code: @authorization.token, client: @client)
 
     expect(headers["Cache-Control"]).to be_in(["no-store", "no-cache, no-store", "private, no-store"])
     expect(headers["Content-Type"]).to eq("application/json; charset=utf-8")
@@ -22,10 +22,10 @@ RSpec.describe "Token endpoint" do
 
   it "accepts client credentials with basic auth header" do
     post token_endpoint_url,
-         params: {
+         params: token_endpoint_params(
            code: @authorization.token,
            redirect_uri: @client.redirect_uri,
-         },
+         ),
          headers: { "HTTP_AUTHORIZATION" => basic_auth_header_for_client(@client) }
 
     expect(json_response).to include("access_token" => Doorkeeper::AccessToken.first.token)
@@ -34,14 +34,14 @@ RSpec.describe "Token endpoint" do
   it "returns null for expires_in when a permanent token is set" do
     config_is_set(:access_token_expires_in, nil)
 
-    post token_endpoint_url(code: @authorization.token, client: @client)
+    post token_endpoint_url, params: token_endpoint_params(code: @authorization.token, client: @client)
 
     expect(json_response).to include("access_token" => Doorkeeper::AccessToken.first.token)
     expect(json_response).not_to include("expires_in")
   end
 
   it "returns unsupported_grant_type for invalid grant_type param" do
-    post token_endpoint_url(code: @authorization.token, client: @client, grant_type: "nothing")
+    post token_endpoint_url, params: token_endpoint_params(code: @authorization.token, client: @client, grant_type: "nothing")
 
     expect(json_response).to match(
       "error" => "unsupported_grant_type",
@@ -51,7 +51,7 @@ RSpec.describe "Token endpoint" do
 
   it "returns unsupported_grant_type for disabled grant flows" do
     config_is_set(:grant_flows, ["implicit"])
-    post token_endpoint_url(code: @authorization.token, client: @client, grant_type: "authorization_code")
+    post token_endpoint_url, params: token_endpoint_params(code: @authorization.token, client: @client, grant_type: "authorization_code")
 
     expect(json_response).to match(
       "error" => "unsupported_grant_type",
@@ -60,7 +60,7 @@ RSpec.describe "Token endpoint" do
   end
 
   it "returns unsupported_grant_type when refresh_token is not in use" do
-    post token_endpoint_url(code: @authorization.token, client: @client, grant_type: "refresh_token")
+    post token_endpoint_url, params: token_endpoint_params(code: @authorization.token, client: @client, grant_type: "refresh_token")
 
     expect(json_response).to match(
       "error" => "unsupported_grant_type",
@@ -69,7 +69,7 @@ RSpec.describe "Token endpoint" do
   end
 
   it "returns invalid_request if grant_type is missing" do
-    post token_endpoint_url(code: @authorization.token, client: @client, grant_type: "")
+    post token_endpoint_url, params: token_endpoint_params(code: @authorization.token, client: @client, grant_type: "")
 
     expect(json_response).to match(
       "error" => "invalid_request",

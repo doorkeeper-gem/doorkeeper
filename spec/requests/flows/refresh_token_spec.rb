@@ -22,7 +22,7 @@ RSpec.describe "Refresh Token Flow" do
     end
 
     it "client gets the refresh token and refreshes it" do
-      post token_endpoint_url(code: @authorization.token, client: @client)
+      post token_endpoint_url, params: token_endpoint_params(code: @authorization.token, client: @client)
 
       token = Doorkeeper::AccessToken.first
 
@@ -33,7 +33,10 @@ RSpec.describe "Refresh Token Flow" do
 
       expect(@authorization.reload).to be_revoked
 
-      post refresh_token_endpoint_url(client: @client, refresh_token: token.refresh_token)
+      post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
+        client: @client,
+        refresh_token: token.refresh_token
+      )
 
       new_token = Doorkeeper::AccessToken.last
       expect(json_response).to include(
@@ -59,7 +62,7 @@ RSpec.describe "Refresh Token Flow" do
 
     context "when refresh_token revoked on use" do
       it "client requests a token with refresh token" do
-        post refresh_token_endpoint_url(
+        post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
           client: @client, refresh_token: @token.refresh_token,
         )
         expect(json_response).to include(
@@ -70,7 +73,7 @@ RSpec.describe "Refresh Token Flow" do
 
       it "client requests a token with expired access token" do
         @token.update_attribute :expires_in, -100
-        post refresh_token_endpoint_url(
+        post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
           client: @client, refresh_token: @token.refresh_token,
         )
         expect(json_response).to include(
@@ -86,7 +89,7 @@ RSpec.describe "Refresh Token Flow" do
       end
 
       it "client request a token with refresh token" do
-        post refresh_token_endpoint_url(
+        post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
           client: @client, refresh_token: @token.refresh_token,
         )
         expect(json_response).to include(
@@ -97,7 +100,8 @@ RSpec.describe "Refresh Token Flow" do
 
       it "client request a token with expired access token" do
         @token.update_attribute :expires_in, -100
-        post refresh_token_endpoint_url(
+        # This method is broken:
+        post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
           client: @client, refresh_token: @token.refresh_token,
         )
         expect(json_response).to include(
@@ -136,7 +140,7 @@ RSpec.describe "Refresh Token Flow" do
       end
 
       it "issues a new token without client_secret when refresh token was issued to a public client" do
-        post refresh_token_endpoint_url(
+        post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
           client_id: public_client.uid,
           refresh_token: token_for_public_client.refresh_token,
         )
@@ -149,13 +153,13 @@ RSpec.describe "Refresh Token Flow" do
       end
 
       it "returns an error without credentials" do
-        post refresh_token_endpoint_url(refresh_token: token_for_private_client.refresh_token)
+        post refresh_token_endpoint_url, params: refresh_token_endpoint_params(refresh_token: token_for_private_client.refresh_token)
 
         expect(json_response).to include("error" => "invalid_grant")
       end
 
       it "returns an error with wrong credentials" do
-        post refresh_token_endpoint_url(
+        post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
           client_id: "1",
           client_secret: "1",
           refresh_token: token_for_private_client.refresh_token,
@@ -168,7 +172,7 @@ RSpec.describe "Refresh Token Flow" do
     end
 
     it "client gets an error for invalid refresh token" do
-      post refresh_token_endpoint_url(client: @client, refresh_token: "invalid")
+      post refresh_token_endpoint_url, params: refresh_token_endpoint_params(client: @client, refresh_token: "invalid")
 
       expect(json_response).to match(
         "error" => "invalid_grant",
@@ -178,7 +182,7 @@ RSpec.describe "Refresh Token Flow" do
 
     it "client gets an error for revoked access token" do
       @token.revoke
-      post refresh_token_endpoint_url(client: @client, refresh_token: @token.refresh_token)
+      post refresh_token_endpoint_url, params: refresh_token_endpoint_params(client: @client, refresh_token: @token.refresh_token)
 
       expect(json_response).to match(
         "error" => "invalid_grant",
@@ -188,7 +192,7 @@ RSpec.describe "Refresh Token Flow" do
 
     it "second of simultaneous client requests get an error for revoked access token" do
       allow_any_instance_of(Doorkeeper::AccessToken).to receive(:revoked?).and_return(false, true)
-      post refresh_token_endpoint_url(client: @client, refresh_token: @token.refresh_token)
+      post refresh_token_endpoint_url, params: refresh_token_endpoint_params(client: @client, refresh_token: @token.refresh_token)
 
       expect(json_response).to match(
         "error" => "invalid_grant",
@@ -205,7 +209,7 @@ RSpec.describe "Refresh Token Flow" do
         User.authenticate! params[:username], params[:password]
       end
       create_resource_owner
-      _another_token = post password_token_endpoint_url(
+      _another_token = post token_endpoint_url, params: password_token_endpoint_params(
         client: @client, resource_owner: resource_owner,
       )
       last_token.update(created_at: 5.seconds.ago)
@@ -222,7 +226,7 @@ RSpec.describe "Refresh Token Flow" do
 
     context "when refresh_token revoked on use" do
       it "client request a token after creating another token with the same user" do
-        post refresh_token_endpoint_url(
+        post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
           client: @client, refresh_token: @token.refresh_token,
         )
 
@@ -237,7 +241,7 @@ RSpec.describe "Refresh Token Flow" do
       end
 
       it "client request a token after creating another token with the same user" do
-        post refresh_token_endpoint_url(
+        post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
           client: @client, refresh_token: @token.refresh_token,
         )
 
@@ -264,7 +268,7 @@ RSpec.describe "Refresh Token Flow" do
       end
 
       it "copies custom attributes from the previous token into the new token" do
-        post refresh_token_endpoint_url(
+        post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
           client: @client, refresh_token: @token.refresh_token,
         )
 
