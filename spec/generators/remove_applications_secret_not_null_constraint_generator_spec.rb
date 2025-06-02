@@ -3,7 +3,7 @@
 require "spec_helper"
 require "generators/doorkeeper/remove_applications_secret_not_null_constraint_generator"
 
-RSpec.describe Doorkeeper::RemoveApplicationSecretNotNullConstraint do
+RSpec.describe Doorkeeper::RemoveApplicationsSecretNotNullConstraintGenerator do
   include GeneratorSpec::TestCase
 
   tests described_class
