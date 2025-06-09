@@ -14,7 +14,7 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
   end
 
   let(:client) { refresh_token.application }
-  let(:credentials) { Doorkeeper::OAuth::Client::Credentials.new(client.uid, client.secret) }
+  let(:credentials) { Doorkeeper::ClientAuthentication::Credentials.new(client.uid, client.secret) }
 
   before do
     allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
@@ -59,7 +59,7 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
   end
 
   it "requires credentials to be valid if provided" do
-    credentials = Doorkeeper::OAuth::Client::Credentials.new("invalid", "invalid")
+    credentials = Doorkeeper::ClientAuthentication::Credentials.new("invalid", "invalid")
     request = described_class.new(server, refresh_token, credentials)
     request.validate
     expect(request.error).to eq(Doorkeeper::Errors::InvalidClient)
@@ -67,7 +67,7 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
 
   it "requires the token's client and current client to match" do
     other_app = FactoryBot.create(:application)
-    credentials = Doorkeeper::OAuth::Client::Credentials.new(other_app.uid, other_app.secret)
+    credentials = Doorkeeper::ClientAuthentication::Credentials.new(other_app.uid, other_app.secret)
 
     request = described_class.new(server, refresh_token, credentials)
     request.validate

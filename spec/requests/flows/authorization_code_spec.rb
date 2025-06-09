@@ -155,7 +155,7 @@ feature "Authorization Code Flow" do
     click_on "Authorize"
 
     authorization_code = Doorkeeper::AccessGrant.first.token
-    page.driver.post token_endpoint_url(
+    page.driver.post token_endpoint_url, token_endpoint_params(
       code: authorization_code,
       client_id: @client.uid,
       redirect_uri: @client.redirect_uri,
@@ -174,7 +174,7 @@ feature "Authorization Code Flow" do
     click_on "Authorize"
 
     authorization_code = Doorkeeper::AccessGrant.first.token
-    page.driver.post token_endpoint_url(
+    page.driver.post token_endpoint_url, token_endpoint_params(
       code: authorization_code,
       client_secret: @client.secret,
       redirect_uri: @client.redirect_uri,
@@ -334,7 +334,7 @@ feature "Authorization Code Flow" do
         click_on "Authorize"
 
         authorization_code = current_params["code"]
-        page.driver.post token_endpoint_url(
+        page.driver.post token_endpoint_url, token_endpoint_params(
           code: authorization_code,
           client_id: @client.uid,
           redirect_uri: @client.redirect_uri,
@@ -353,7 +353,7 @@ feature "Authorization Code Flow" do
         click_on "Authorize"
 
         authorization_code = current_params["code"]
-        page.driver.post token_endpoint_url(
+        page.driver.post token_endpoint_url, token_endpoint_params(
           code: authorization_code,
           client_id: @client.uid,
           redirect_uri: @client.redirect_uri,
@@ -413,7 +413,7 @@ feature "Authorization Code Flow" do
         click_on "Authorize"
 
         authorization_code = current_params["code"]
-        page.driver.post token_endpoint_url(
+        page.driver.post token_endpoint_url, token_endpoint_params(
           code: authorization_code,
           client: @client,
           code_verifier: code_challenge,
@@ -543,7 +543,7 @@ feature "Authorization Code Flow" do
         allow_any_instance_of(Doorkeeper::AccessGrant)
           .to receive(:revoked?).and_return(false, true)
 
-        page.driver.post token_endpoint_url(code: authorization_code, client: @client)
+        page.driver.post token_endpoint_url, token_endpoint_params(code: authorization_code, client: @client)
 
         expect(json_response).to match(
           "error" => "invalid_grant",
@@ -573,7 +573,7 @@ feature "Authorization Code Flow" do
     end
 
     it "copies custom attributes from the grant into the token" do
-      page.driver.post token_endpoint_url(code: grant.token, client: client)
+      page.driver.post token_endpoint_url, token_endpoint_params(code: grant.token, client: client)
 
       access_token = Doorkeeper::AccessToken.find_by(token: json_response["access_token"])
       expect(access_token.tenant_name).to eq("Tenant 1")
