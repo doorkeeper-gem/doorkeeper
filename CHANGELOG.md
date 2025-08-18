@@ -9,6 +9,7 @@ User-visible changes worth mentioning.
 
 Add your entry here.
 - [#1775] Fix Applications Secret Not Null Constraint generator
+- [TODO] Ensure that token revocation is idempotent by checking that that token has not already been revoked before revoking.
 
 ## 5.8.2
 
