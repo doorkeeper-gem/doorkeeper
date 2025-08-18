@@ -9,6 +9,7 @@ User-visible changes worth mentioning.
 
 Add your entry here.
 - [#1775] Fix Applications Secret Not Null Constraint generator
+- [#1779] only lock previous access token model when creating a new token from its refresh token if revoke_previous_refresh_token_on_use is false
 
 ## 5.8.2
 

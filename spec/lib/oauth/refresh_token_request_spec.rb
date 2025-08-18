@@ -108,6 +108,11 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
         client.access_tokens.max_by(&:created_at).previous_refresh_token,
       ).to eq(refresh_token.refresh_token)
     end
+
+    it "does not lock the previous token model" do
+      expect(refresh_token).not_to receive(:lock!)
+      request.authorize
+    end
   end
 
   context "with clientless access tokens" do
