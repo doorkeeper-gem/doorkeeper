@@ -10,11 +10,25 @@ RSpec.describe Doorkeeper::Models::Revocable do
   end
 
   describe "#revoke" do
+    let(:revoked_at) { nil }
+
+    before do
+      allow(fake_object).to receive(:revoked_at).and_return(revoked_at)
+    end
+
     it "updates :revoked_at attribute with current time" do
       utc = double utc: double
       clock = double now: utc
       expect(fake_object).to receive(:update_attribute).with(:revoked_at, clock.now.utc)
       fake_object.revoke(clock)
+    end
+
+    context "when the object is already revoked" do
+      let(:revoked_at) { Time.now.utc - 1000 }
+
+      it "does not update :revoked_at attribute" do
+        expect(fake_object).not_to receive(:update_attribute)
+      end
     end
   end
 
