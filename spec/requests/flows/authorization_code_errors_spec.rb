@@ -60,11 +60,11 @@ RSpec.describe "Authorization Code Flow Errors after authorization" do
 
   it "returns :invalid_grant error when posting an already revoked grant code" do
     # First successful request
-    post token_endpoint_url(code: @authorization.token, client: @client)
+    post token_endpoint_url, params: token_endpoint_params(code: @authorization.token, client: @client)
 
     # Second attempt with same token
     expect do
-      post token_endpoint_url(code: @authorization.token, client: @client)
+      post token_endpoint_url, params: token_endpoint_params(code: @authorization.token, client: @client)
     end.not_to(change { Doorkeeper::AccessToken.count })
 
     expect(json_response).to match(
@@ -74,7 +74,7 @@ RSpec.describe "Authorization Code Flow Errors after authorization" do
   end
 
   it "returns :invalid_grant error for invalid grant code" do
-    post token_endpoint_url(code: "invalid", client: @client)
+    post token_endpoint_url, params: token_endpoint_params(code: "invalid", client: @client)
 
     access_token_should_not_exist
 

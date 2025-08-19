@@ -8,6 +8,7 @@ module Doorkeeper
       # Validates configuration options to be set properly.
       #
       def validate!
+        validate_client_authentication_value
         validate_reuse_access_token_value
         validate_token_reuse_limit
         validate_secret_strategies
@@ -15,6 +16,16 @@ module Doorkeeper
       end
 
       private
+
+      def validate_client_authentication_value
+        return if client_authentication.is_a?(Array)
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] You have configured client_authentication as a non-array value. Using default value"
+        )
+
+        @client_authentication = [:client_secret_basic, :client_secret_post, :none]
+      end
 
       # Determine whether +reuse_access_token+ and a non-restorable
       # +token_secret_strategy+ have both been activated.
