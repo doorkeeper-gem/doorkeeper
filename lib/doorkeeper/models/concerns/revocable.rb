@@ -9,6 +9,7 @@ module Doorkeeper
       # @param clock [Time] time object
       #
       def revoke(clock = Time)
+        return if revoked?
         update_attribute(:revoked_at, clock.now.utc)
       end
 
