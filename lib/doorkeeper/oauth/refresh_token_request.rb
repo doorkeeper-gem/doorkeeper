@@ -30,12 +30,19 @@ module Doorkeeper
       end
 
       def before_successful_response
-        refresh_token.transaction do
-          refresh_token.lock!
-          raise Errors::InvalidGrantReuse if refresh_token.revoked?
+        raise Errors::InvalidGrantReuse if refresh_token.revoked?
 
-          refresh_token.revoke unless refresh_token_revoked_on_use?
+        if refresh_token_revoked_on_use?
+          # No locking needed when refresh tokens are revoked on use
+          # because multiple access tokens can be created
           create_access_token
+        else
+          # Use locking when refresh tokens are NOT revoked on use
+          # to prevent race conditions
+          refresh_token.with_lock do
+            refresh_token.revoke
+            create_access_token
+          end
         end
         super
       end
