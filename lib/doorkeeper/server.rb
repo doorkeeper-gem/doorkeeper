@@ -8,6 +8,10 @@ module Doorkeeper
       @context = context
     end
 
+    def client_authentication_method_for_request
+      Request.client_authentication_method(context.request)
+    end
+
     def authorization_request(strategy)
       klass = Request.authorization_strategy(strategy)
       klass.new(self)
@@ -37,8 +41,7 @@ module Doorkeeper
     end
 
     def credentials
-      methods = Doorkeeper.config.client_credentials_methods
-      @credentials ||= OAuth::Client::Credentials.from_request(context.request, *methods)
+      @credentials ||= client_authentication_method_for_request.authenticate(context.request)
     end
   end
 end
