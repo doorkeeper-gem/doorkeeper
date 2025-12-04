@@ -2,10 +2,10 @@
 
 [![Gem Version](https://badge.fury.io/rb/doorkeeper.svg)](https://rubygems.org/gems/doorkeeper)
 [![CI](https://github.com/doorkeeper-gem/doorkeeper/actions/workflows/ci.yml/badge.svg)](https://github.com/doorkeeper-gem/doorkeeper/actions/workflows/ci.yml)
-[![Code Climate](https://codeclimate.com/github/doorkeeper-gem/doorkeeper.svg)](https://codeclimate.com/github/doorkeeper-gem/doorkeeper)
+[![Maintainability](https://qlty.sh/gh/doorkeeper-gem/projects/doorkeeper/maintainability.svg)](https://qlty.sh/gh/doorkeeper-gem/projects/doorkeeper)
 [![Coverage Status](https://coveralls.io/repos/github/doorkeeper-gem/doorkeeper/badge.svg?branch=main)](https://coveralls.io/github/doorkeeper-gem/doorkeeper?branch=main)
 [![Reviewed by Hound](https://img.shields.io/badge/Reviewed_by-Hound-8E64B0.svg)](https://houndci.com)
-[![GuardRails badge](https://badges.guardrails.io/doorkeeper-gem/doorkeeper.svg?token=66768ce8f6995814df81f65a2cff40f739f688492704f973e62809e15599bb62)](https://dashboard.guardrails.io/default/gh/doorkeeper-gem/doorkeeper)
+[![GuardRails badge](https://api.guardrails.io/v2/badges/21183?token=66768ce8f6995814df81f65a2cff40f739f688492704f973e62809e15599bb62)](https://dashboard.guardrails.io/gh/doorkeeper-gem/repos/21183)
 [![Dependabot](https://img.shields.io/badge/dependabot-enabled-success.svg)](https://dependabot.com)
 
 Doorkeeper is a gem (Rails engine) that makes it easy to introduce OAuth 2 provider
