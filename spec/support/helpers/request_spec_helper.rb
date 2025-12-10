@@ -63,7 +63,7 @@ module RequestSpecHelper
   end
 
   def create_access_token(authorization_code, client, code_verifier = nil)
-    page.driver.post token_endpoint_url(code: authorization_code, client: client, code_verifier: code_verifier)
+    page.driver.post token_endpoint_url, token_endpoint_params(code: authorization_code, client: client, code_verifier: code_verifier)
   end
 
   def i_should_see_translated_error_message(key)

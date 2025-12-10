@@ -3,6 +3,21 @@
 module Doorkeeper
   module Request
     class << self
+      def client_authentication_method(request)
+        # TODO: Should we support theoretically more than one method matching a
+        # request and then check each for authentication? Currently we only
+        # check the first that matches the request
+        strategy = client_authentication_methods.detect do |strategy|
+          strategy.matches_request?(request)
+        end
+
+        if strategy
+          strategy.method
+        else
+          Doorkeeper::ClientAuthentication::FallbackMethod
+        end
+      end
+
       def authorization_strategy(response_type)
         grant_flow = authorization_flows.detect do |flow|
           flow.matches_response_type?(response_type)
@@ -39,6 +54,10 @@ module Doorkeeper
       end
 
       private
+
+      def client_authentication_methods
+        Doorkeeper.configuration.client_authentication_methods
+      end
 
       def authorization_flows
         Doorkeeper.configuration.authorization_response_flows

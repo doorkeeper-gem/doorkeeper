@@ -70,8 +70,30 @@ module Doorkeeper
       # `params` object.
       #
       # @param methods [Array] Define client credentials
+      # @deprecated
       def client_credentials(*methods)
-        @config.instance_variable_set(:@client_credentials_methods, methods)
+        deprecated("client_credentials", "Use the client_authentication option instead. Automatically converting to client_authentication")
+
+        client_authentication = methods.map {|method|
+          case method
+          when :from_basic
+            :client_secret_basic 
+          when :from_params
+            :client_secret_post
+          else
+            if method.respond_to? :call
+              Kernel.warn("[DOORKEEPER] Unknown client_credentials method detected, received callable block")
+            else
+              Kernel.warn("[DOORKEEPER] Unknown client_credentials method detected: #{method}")
+            end
+          end
+        }.reject(&:nil?)
+
+        if client_authentication.empty?
+          Kernel.warn("[DOORKEEPER] No known client_credentials method detected, cannot automatically convert to client_authentication option")
+        else
+          @config.instance_variable_set(:@client_credentials_methods, client_authentication.concat([:none]))
+        end
       end
 
       # Change the way access token is authenticated from the request object.
@@ -186,6 +208,13 @@ module Doorkeeper
 
       private
 
+      def deprecated(name, message=nil)
+        warning = "[DOORKEEPER] #{name} has been deprecated and will soon be removed"
+        warning = "#{warning}\n#{message}" if message.present?
+
+        Kernel.warn(warning)
+      end
+
       # Configure the secret storing functionality
       def configure_secrets_for(type, using:, fallback:)
         raise ArgumentError, "Invalid type #{type}" if %i[application token].exclude?(type)
@@ -253,9 +282,11 @@ module Doorkeeper
     option :orm,                            default: :active_record
     option :native_redirect_uri,            default: "urn:ietf:wg:oauth:2.0:oob", deprecated: true
     option :grant_flows,                    default: %w[authorization_code client_credentials]
+    option :client_authentication,          default: %i[client_secret_basic client_secret_post none]
     option :pkce_code_challenge_methods,    default: %w[plain S256]
     option :handle_auth_errors,             default: :render
     option :token_lookup_batch_size,        default: 10_000
+
     # Sets the token_reuse_limit
     # It will be used only when reuse_access_token option in enabled
     # By default it will be 100
@@ -579,8 +610,23 @@ module Doorkeeper
       pkce_code_challenge_methods
     end
 
-    def client_credentials_methods
-      @client_credentials_methods ||= %i[from_basic from_params]
+    def client_authentication_methods
+      return @client_authentication_methods if defined?(@client_authentication_methods)
+      
+      methods = if instance_variable_defined?("@client_credentials_methods")
+        if instance_variable_defined?("@client_authentication")
+          Kernel.warn("[DOORKEEPER] Both client_credentials and client_authentication are set, using client_authentication")
+          client_authentication
+        else
+          instance_variable_get("@client_credentials_methods")
+        end
+      else
+        client_authentication
+      end
+
+      @client_authentication_methods = methods.map do |name|
+        Doorkeeper::ClientAuthentication.get(name)  
+      end.compact
     end
 
     def access_token_methods

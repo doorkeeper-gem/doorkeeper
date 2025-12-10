@@ -12,7 +12,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
     context "with valid user credentials" do
       it "does not issue new token" do
         expect do
-          post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
+          post token_endpoint_url, params: password_token_endpoint_params(client: @client, resource_owner: @resource_owner)
         end.not_to(change { Doorkeeper::AccessToken.count })
       end
     end
@@ -32,7 +32,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
       context "with confidential client authorized using Basic auth" do
         it "issues a new token" do
           expect do
-            post password_token_endpoint_url(
+            post token_endpoint_url, params: password_token_endpoint_params(
               resource_owner: @resource_owner,
             ), headers: { "HTTP_AUTHORIZATION" => basic_auth_header_for_client(@client) }
           end.to(change { Doorkeeper::AccessToken.count })
@@ -64,7 +64,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
             @client.update(name: "sample app")
 
             expect do
-              post password_token_endpoint_url(
+              post token_endpoint_url, params: password_token_endpoint_params(
                 client_id: @client.uid,
                 client_secret: "foobar",
                 resource_owner: @resource_owner,
@@ -82,7 +82,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
             @client.update(name: "admin")
 
             expect do
-              post password_token_endpoint_url(client_id: @client.uid, resource_owner: @resource_owner)
+              post token_endpoint_url, params: password_token_endpoint_params(client_id: @client.uid, resource_owner: @resource_owner)
             end.to change { Doorkeeper::AccessToken.count }.by(1)
 
             token = Doorkeeper::AccessToken.first
@@ -95,7 +95,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
         context "when client_secret absent" do
           it "issues a new token" do
             expect do
-              post password_token_endpoint_url(client_id: @client.uid, resource_owner: @resource_owner)
+              post token_endpoint_url, params: password_token_endpoint_params(client_id: @client.uid, resource_owner: @resource_owner)
             end.to change { Doorkeeper::AccessToken.count }.by(1)
 
             token = Doorkeeper::AccessToken.first
@@ -108,7 +108,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
         context "when client_secret present" do
           it "issues a new token" do
             expect do
-              post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
+              post token_endpoint_url, params: password_token_endpoint_params(client: @client, resource_owner: @resource_owner)
             end.to change { Doorkeeper::AccessToken.count }.by(1)
 
             token = Doorkeeper::AccessToken.first
@@ -120,7 +120,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
           context "when client_secret incorrect" do
             it "doesn't issue new token" do
               expect do
-                post password_token_endpoint_url(
+                post token_endpoint_url, params: password_token_endpoint_params(
                   client_id: @client.uid,
                   client_secret: "foobar",
                   resource_owner: @resource_owner,
@@ -140,7 +140,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
       context "with confidential/private client" do
         it "issues a new token" do
           expect do
-            post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
+            post token_endpoint_url, params: password_token_endpoint_params(client: @client, resource_owner: @resource_owner)
           end.to change { Doorkeeper::AccessToken.count }.by(1)
 
           token = Doorkeeper::AccessToken.first
@@ -152,7 +152,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
         context "when client_secret absent" do
           it "doesn't issue new token" do
             expect do
-              post password_token_endpoint_url(client_id: @client.uid, resource_owner: @resource_owner)
+              post token_endpoint_url, params: password_token_endpoint_params(client_id: @client.uid, resource_owner: @resource_owner)
             end.not_to(change { Doorkeeper::AccessToken.count })
 
             expect(response.status).to eq(401)
@@ -167,7 +167,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
       it "issues a refresh token if enabled" do
         config_is_set(:refresh_token_enabled, true)
 
-        post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
+        post token_endpoint_url, params: password_token_endpoint_params(client: @client, resource_owner: @resource_owner)
 
         token = Doorkeeper::AccessToken.first
         expect(json_response).to include("refresh_token" => token.refresh_token)
@@ -178,7 +178,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
 
         client_is_authorized(@client, @resource_owner)
 
-        post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
+        post token_endpoint_url, params: password_token_endpoint_params(client: @client, resource_owner: @resource_owner)
 
         expect(Doorkeeper::AccessToken.count).to be(1)
         expect(json_response).to include("access_token" => Doorkeeper::AccessToken.first.token)
@@ -191,7 +191,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
 
         it "issues new token" do
           expect do
-            post password_token_endpoint_url(client: @client, resource_owner: @resource_owner, scope: "public")
+            post token_endpoint_url, params: password_token_endpoint_params(client: @client, resource_owner: @resource_owner, scope: "public")
           end.to change { Doorkeeper::AccessToken.count }.by(1)
 
           token = Doorkeeper::AccessToken.first
@@ -214,7 +214,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
 
         it "issues a new token without client credentials" do
           expect do
-            post password_token_endpoint_url(resource_owner: @resource_owner)
+            post token_endpoint_url, params: password_token_endpoint_params(resource_owner: @resource_owner)
           end.to(change { Doorkeeper::AccessToken.count }.by(1))
 
           token = Doorkeeper::AccessToken.first
@@ -225,7 +225,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
 
         it "doesn't issue a new token with invalid client credentials in query string" do
           expect do
-            post password_token_endpoint_url(
+            post token_endpoint_url, params: password_token_endpoint_params(
               resource_owner: @resource_owner,
               client_id: "invalid",
               client_secret: "invalid",
@@ -240,10 +240,10 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
         end
 
         it "doesn't issue a new token with invalid client credentials in Basic auth" do
-          invalid_client = Doorkeeper::OAuth::Client::Credentials.new("invalid", "invalid")
+          invalid_client = Doorkeeper::ClientAuthentication::Credentials.new("invalid", "invalid")
 
           expect do
-            post password_token_endpoint_url(
+            post token_endpoint_url, params: password_token_endpoint_params(
               resource_owner: @resource_owner,
             ), headers: { "HTTP_AUTHORIZATION" => basic_auth_header_for_client(invalid_client) }
           end.not_to(change { Doorkeeper::AccessToken.count })
@@ -264,7 +264,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
 
         it "doesn't issue a new token without client credentials" do
           expect do
-            post password_token_endpoint_url(resource_owner: @resource_owner)
+            post token_endpoint_url, params: password_token_endpoint_params(resource_owner: @resource_owner)
           end.not_to(change { Doorkeeper::AccessToken.count })
 
           expect(response.status).to eq(401)
@@ -284,7 +284,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
 
       it "issues new token without any scope" do
         expect do
-          post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
+          post token_endpoint_url, params: password_token_endpoint_params(client: @client, resource_owner: @resource_owner)
         end.to change { Doorkeeper::AccessToken.count }.by(1)
 
         token = Doorkeeper::AccessToken.first
@@ -305,7 +305,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
         default_scopes_exist :public, :admin
 
         expect do
-          post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
+          post token_endpoint_url, params: password_token_endpoint_params(client: @client, resource_owner: @resource_owner)
         end.to change { Doorkeeper::AccessToken.count }.by(1)
 
         token = Doorkeeper::AccessToken.first
@@ -321,7 +321,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
         default_scopes_exist :public, :read, :update
 
         expect do
-          post password_token_endpoint_url(client: @client, resource_owner: @resource_owner)
+          post token_endpoint_url, params: password_token_endpoint_params(client: @client, resource_owner: @resource_owner)
         end.to change { Doorkeeper::AccessToken.count }.by(1)
 
         token = Doorkeeper::AccessToken.first
@@ -337,7 +337,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
     context "with invalid scopes" do
       it "doesn't issue new token" do
         expect do
-          post password_token_endpoint_url(
+          post token_endpoint_url, params: password_token_endpoint_params(
             client: @client,
             resource_owner: @resource_owner,
             scope: "random",
@@ -346,7 +346,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
       end
 
       it "returns invalid_scope error" do
-        post password_token_endpoint_url(
+        post token_endpoint_url, params: password_token_endpoint_params(
           client: @client,
           resource_owner: @resource_owner,
           scope: "random",
@@ -363,7 +363,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
     context "with invalid user credentials" do
       it "doesn't issue new token with bad password" do
         expect do
-          post password_token_endpoint_url(
+          post token_endpoint_url, params: password_token_endpoint_params(
             client: @client,
             resource_owner_username: @resource_owner.name,
             resource_owner_password: "wrongpassword",
@@ -373,7 +373,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
 
       it "doesn't issue new token without credentials" do
         expect do
-          post password_token_endpoint_url(client: @client)
+          post token_endpoint_url, params: password_token_endpoint_params(client: @client)
         end.not_to(change { Doorkeeper::AccessToken.count })
       end
 
@@ -381,13 +381,13 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
         config_is_set(:resource_owner_from_credentials) { false }
 
         expect do
-          post password_token_endpoint_url(client: @client)
+          post token_endpoint_url, params: password_token_endpoint_params(client: @client)
         end.not_to(change { Doorkeeper::AccessToken.count })
 
         config_is_set(:resource_owner_from_credentials) { nil }
 
         expect do
-          post password_token_endpoint_url(client: @client)
+          post token_endpoint_url, params: password_token_endpoint_params(client: @client)
         end.not_to(change { Doorkeeper::AccessToken.count })
       end
     end
@@ -395,7 +395,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
     context "with invalid confidential client credentials" do
       it "doesn't issue new token with bad client credentials" do
         expect do
-          post password_token_endpoint_url(
+          post token_endpoint_url, params: password_token_endpoint_params(
             client_id: @client.uid,
             client_secret: "bad_secret",
             resource_owner: @resource_owner,
@@ -407,7 +407,7 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
     context "with invalid public client id" do
       it "doesn't issue new token with bad client id" do
         expect do
-          post password_token_endpoint_url(client_id: "bad_id", resource_owner: @resource_owner)
+          post token_endpoint_url, params: password_token_endpoint_params(client_id: "bad_id", resource_owner: @resource_owner)
         end.not_to(change { Doorkeeper::AccessToken.count })
       end
     end

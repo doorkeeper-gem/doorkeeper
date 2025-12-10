@@ -10,7 +10,7 @@ RSpec.describe "Client Credentials Request" do
       headers = authorization client.uid, client.secret
       params  = { grant_type: "client_credentials" }
 
-      post "/oauth/token", params: params, headers: headers
+      post token_endpoint_url, params: params, headers: headers
 
       expect(json_response).to match(
         "access_token" => Doorkeeper::AccessToken.first.token,
@@ -30,7 +30,7 @@ RSpec.describe "Client Credentials Request" do
         headers = authorization client.uid, client.secret
         params  = { grant_type: "client_credentials", scope: "write" }
 
-        post "/oauth/token", params: params, headers: headers
+        post token_endpoint_url, params: params, headers: headers
 
         expect(json_response).to include(
           "access_token" => Doorkeeper::AccessToken.first.token,
@@ -43,7 +43,7 @@ RSpec.describe "Client Credentials Request" do
           headers = authorization client.uid, client.secret
           params  = { grant_type: "client_credentials", scope: "public" }
 
-          post "/oauth/token", params: params, headers: headers
+          post token_endpoint_url, params: params, headers: headers
 
           expect(json_response).to include(
             "access_token" => Doorkeeper::AccessToken.first.token,
@@ -57,7 +57,7 @@ RSpec.describe "Client Credentials Request" do
           headers = authorization client.uid, client.secret
           params  = { grant_type: "client_credentials", scope: "random" }
 
-          post "/oauth/token", params: params, headers: headers
+          post token_endpoint_url, params: params, headers: headers
 
           expect(response.status).to eq(400)
           expect(json_response).to match(
@@ -83,7 +83,7 @@ RSpec.describe "Client Credentials Request" do
       headers = authorization client.uid, client.secret
       params  = { grant_type: "client_credentials" }
 
-      post "/oauth/token", params: params, headers: headers
+      post token_endpoint_url, params: params, headers: headers
 
       expect(json_response).to match(
         "error" => "unauthorized_client",
@@ -97,7 +97,7 @@ RSpec.describe "Client Credentials Request" do
       headers = authorization client.uid, client.secret
       params  = { grant_type: "client_credentials" }
 
-      post "/oauth/token", params: params, headers: headers
+      post token_endpoint_url, params: params, headers: headers
 
       expect(json_response).to match(
         "access_token" => Doorkeeper::AccessToken.first.token,
@@ -120,7 +120,7 @@ RSpec.describe "Client Credentials Request" do
       params  = { grant_type: "client_credentials" }
 
       expect do
-        post "/oauth/token", params: params, headers: headers
+        post token_endpoint_url, params: params, headers: headers
       end.to change { Doorkeeper::AccessToken.count }.by(1)
 
       token = Doorkeeper::AccessToken.first
@@ -139,7 +139,7 @@ RSpec.describe "Client Credentials Request" do
       params  = { grant_type: "client_credentials" }
 
       expect do
-        post "/oauth/token", params: params, headers: headers
+        post token_endpoint_url, params: params, headers: headers
       end.to change { Doorkeeper::AccessToken.count }.by(1)
 
       token = Doorkeeper::AccessToken.first
@@ -157,7 +157,7 @@ RSpec.describe "Client Credentials Request" do
       headers = authorization client.uid, client.secret
       params  = { grant_type: "client_credentials" }
 
-      post "/oauth/token", params: params, headers: headers
+      post token_endpoint_url, params: params, headers: headers
 
       expect(json_response).to match(
         "error" => "invalid_scope",
@@ -171,7 +171,7 @@ RSpec.describe "Client Credentials Request" do
       headers = {}
       params  = { grant_type: "client_credentials" }
 
-      post "/oauth/token", params: params, headers: headers
+      post token_endpoint_url, params: params, headers: headers
 
       expect(response.status).to eq(401)
 
@@ -192,12 +192,12 @@ RSpec.describe "Client Credentials Request" do
       headers = authorization client.uid, client.secret
       params  = { grant_type: "client_credentials" }
 
-      post "/oauth/token", params: params, headers: headers
+      post token_endpoint_url, params: params, headers: headers
       expect(json_response).to include("access_token" => Doorkeeper::AccessToken.first.token)
 
       token = Doorkeeper::AccessToken.first
 
-      post "/oauth/token", params: params, headers: headers
+      post token_endpoint_url, params: params, headers: headers
       expect(json_response).to include("access_token" => Doorkeeper::AccessToken.last.token)
 
       expect(token.reload).to be_revoked
@@ -216,7 +216,7 @@ RSpec.describe "Client Credentials Request" do
         headers = authorization client.uid, client.secret
         params  = { grant_type: "client_credentials" }
 
-        post "/oauth/token", params: params, headers: headers
+        post token_endpoint_url, params: params, headers: headers
 
         expect(json_response).to match(
           "error" => "invalid_token_reuse",
