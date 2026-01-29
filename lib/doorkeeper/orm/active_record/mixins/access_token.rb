@@ -40,6 +40,28 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
         by_resource_owner(resource_owner).where(revoked_at: nil)
       end
 
+      # Determines if refresh tokens should be revoked only when the new access token is used,
+      # rather than immediately upon refresh. This is based on the presence of the
+      # `previous_refresh_token` column in the database.
+      #
+      # When true (column exists):
+      # - Refresh tokens are NOT immediately revoked
+      # - New access token stores the old refresh token value in `previous_refresh_token`
+      # - Old refresh token is revoked later when the new access token is first used
+      # - Multiple concurrent refresh requests can succeed (no database locks)
+      # - Better database performance and lower latency
+      #
+      # When false (column does not exist):
+      # - Refresh tokens are immediately revoked using database locks
+      # - Only one concurrent refresh request can succeed
+      # - May experience database lock contention under high load
+      #
+      # To enable the revoke-on-use feature and improve performance:
+      #   rails generate doorkeeper:previous_refresh_token
+      #   rails db:migrate
+      #
+      # @return [Boolean] true if previous_refresh_token column exists
+      #
       def refresh_token_revoked_on_use?
         column_names.include?("previous_refresh_token")
       end
