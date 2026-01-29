@@ -99,6 +99,22 @@ module Doorkeeper
         @config.instance_variable_set(:@reuse_access_token, true)
       end
 
+      # Enable support for multiple database configurations with read replicas.
+      # When enabled, wraps database write operations to ensure they use the primary
+      # (writable) database when automatic role switching is enabled.
+      #
+      # For ActiveRecord (Rails 6.1+), this uses `ActiveRecord::Base.connected_to(role: :writing)`.
+      # Other ORM extensions can implement their own primary database targeting logic.
+      #
+      # This prevents `ActiveRecord::ReadOnlyError` when using read replicas with Rails
+      # automatic role switching. Enable this if your application uses multiple databases
+      # with automatic role switching for read replicas.
+      #
+      # See: https://guides.rubyonrails.org/active_record_multiple_databases.html#activating-automatic-role-switching
+      def enable_multiple_databases
+        @config.instance_variable_set(:@enable_multiple_databases, true)
+      end
+
       # Choose to use the url path for native autorization codes 
       # Enabling this flag sets the authorization code response route for
       # native redirect uris to oauth/authorize/<code>. The default is
@@ -262,14 +278,6 @@ module Doorkeeper
     # It will be used for token reusablity to some threshold percentage
     # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/1189
     option :token_reuse_limit,              default: 100
-
-    # Options for ActiveRecord ORM adapter
-    # @option handle_read_write_roles [Boolean] (false) When true, wraps database
-    #   writes in `connected_to(role: :writing)` to ensure they use the primary
-    #   database when Rails automatic role switching is enabled. This prevents
-    #   `ActiveRecord::ReadOnlyError` when using read replicas.
-    option :active_record_options,
-           default: { handle_read_write_roles: false }
 
     # Don't require client authentication for password grants. If client credentials
     # are present they will still be validated, and the grant rejected if the credentials
@@ -445,6 +453,7 @@ module Doorkeeper
            end)
 
     attr_reader :reuse_access_token,
+                :enable_multiple_databases,
                 :token_secret_fallback_strategy,
                 :application_secret_fallback_strategy
 

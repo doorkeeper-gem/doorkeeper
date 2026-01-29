@@ -179,11 +179,11 @@ RSpec.describe Doorkeeper::AccessGrant do
       FactoryBot.create(:access_grant, application: application, resource_owner_id: resource_owner.id)
     end
 
-    context "when handle_read_write_roles is enabled" do
+    context "when enable_multiple_databases is enabled" do
       before do
         Doorkeeper.configure do
           orm :active_record
-          active_record_options handle_read_write_roles: true
+          enable_multiple_databases
         end
       end
 

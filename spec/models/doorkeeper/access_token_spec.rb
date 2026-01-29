@@ -727,7 +727,7 @@ RSpec.describe Doorkeeper::AccessToken do
       before do
         Doorkeeper.configure do
           orm :active_record
-          active_record_options handle_read_write_roles: true
+          enable_multiple_databases
         end
       end
 
@@ -746,11 +746,11 @@ RSpec.describe Doorkeeper::AccessToken do
       end
     end
 
-    context "when handle_read_write_roles is disabled" do
+    context "when enable_multiple_databases is disabled" do
       before do
         Doorkeeper.configure do
           orm :active_record
-          active_record_options handle_read_write_roles: false
+          # enable_multiple_databases is disabled by default
         end
       end
 
@@ -780,7 +780,7 @@ RSpec.describe Doorkeeper::AccessToken do
       before do
         Doorkeeper.configure do
           orm :active_record
-          active_record_options handle_read_write_roles: true
+          enable_multiple_databases
         end
       end
 
@@ -799,7 +799,7 @@ RSpec.describe Doorkeeper::AccessToken do
       before do
         Doorkeeper.configure do
           orm :active_record
-          active_record_options handle_read_write_roles: true
+          enable_multiple_databases
         end
       end
 
@@ -811,11 +811,11 @@ RSpec.describe Doorkeeper::AccessToken do
       end
     end
 
-    context "when handle_read_write_roles is disabled" do
+    context "when enable_multiple_databases is disabled" do
       before do
         Doorkeeper.configure do
           orm :active_record
-          active_record_options handle_read_write_roles: false
+          # enable_multiple_databases is disabled by default
         end
       end
 

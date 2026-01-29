@@ -19,11 +19,11 @@ RSpec.describe Doorkeeper::OAuth::Authorization::Code do
   let(:authorization) { described_class.new(pre_auth, resource_owner) }
 
   describe "#issue_token! with read replica support" do
-    context "when handle_read_write_roles is enabled" do
+    context "when enable_multiple_databases is enabled" do
       before do
         Doorkeeper.configure do
           orm :active_record
-          active_record_options handle_read_write_roles: true
+          enable_multiple_databases
         end
       end
 
@@ -36,11 +36,11 @@ RSpec.describe Doorkeeper::OAuth::Authorization::Code do
       end
     end
 
-    context "when handle_read_write_roles is disabled" do
+    context "when enable_multiple_databases is disabled" do
       before do
         Doorkeeper.configure do
           orm :active_record
-          active_record_options handle_read_write_roles: false
+          # enable_multiple_databases is disabled by default
         end
       end
 

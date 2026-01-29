@@ -5,20 +5,18 @@ Doorkeeper.configure do
   # Check the list of supported ORMs here: https://github.com/doorkeeper-gem/doorkeeper#orms
   orm :active_record
 
-  # Configure ActiveRecord ORM-specific options.
-  # By default, all options are disabled.
+  # Enable support for multiple database configurations with read replicas.
+  # When enabled, Doorkeeper will wrap database write operations to ensure they
+  # use the primary (writable) database when automatic role switching is enabled.
   #
-  # active_record_options handle_read_write_roles: true
+  # For ActiveRecord (Rails 6.1+), this uses `ActiveRecord::Base.connected_to(role: :writing)`.
+  # Other ORM extensions can implement their own primary database targeting logic.
   #
-  # When `handle_read_write_roles: true`, Doorkeeper will wrap database write operations
-  # in `ActiveRecord::Base.connected_to(role: :writing)` blocks to ensure they use the
-  # primary database when Rails automatic role switching is enabled.
+  # enable_multiple_databases
   #
   # This prevents `ActiveRecord::ReadOnlyError` when using read replicas with Rails
   # automatic role switching. Enable this if your application uses multiple databases
   # with automatic role switching for read replicas.
-  #
-  # Requires Rails 6.1+ (ActiveRecord::Base.connected_to support).
   #
   # See: https://guides.rubyonrails.org/active_record_multiple_databases.html#activating-automatic-role-switching
 

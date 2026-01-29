@@ -43,9 +43,9 @@ module Doorkeeper
           def should_use_primary_role?
             # Only use primary role if:
             # 1. ActiveRecord supports connected_to (Rails 6.1+)
-            # 2. The handle_read_write_roles option is enabled in config
+            # 2. The enable_multiple_databases option is enabled in config
             ::ActiveRecord::Base.respond_to?(:connected_to) &&
-              Doorkeeper.config.active_record_options[:handle_read_write_roles]
+              Doorkeeper.config.enable_multiple_databases
           end
         end
       end
