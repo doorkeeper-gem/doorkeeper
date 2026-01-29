@@ -12,6 +12,7 @@ module Doorkeeper
     include Models::SecretStorable
     include Models::Scopes
     include Models::ResourceOwnerable
+    include Models::Concerns::WriteToPrimary
 
     # Never uses PKCE if PKCE migrations were not generated
     def uses_pkce?
@@ -40,12 +41,14 @@ module Doorkeeper
       #   instance of the Resource Owner model or it's ID
       #
       def revoke_all_for(application_id, resource_owner, clock = Time)
-        by_resource_owner(resource_owner)
-          .where(
-            application_id: application_id,
-            revoked_at: nil,
-          )
-          .update_all(revoked_at: clock.now.utc)
+        with_primary_role do
+          by_resource_owner(resource_owner)
+            .where(
+              application_id: application_id,
+              revoked_at: nil,
+            )
+            .update_all(revoked_at: clock.now.utc)
+        end
       end
 
       # Implements PKCE code_challenge encoding without base64 padding as described in the spec.

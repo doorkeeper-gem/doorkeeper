@@ -263,6 +263,14 @@ module Doorkeeper
     # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/1189
     option :token_reuse_limit,              default: 100
 
+    # Options for ActiveRecord ORM adapter
+    # @option handle_read_write_roles [Boolean] (false) When true, wraps database
+    #   writes in `connected_to(role: :writing)` to ensure they use the primary
+    #   database when Rails automatic role switching is enabled. This prevents
+    #   `ActiveRecord::ReadOnlyError` when using read replicas.
+    option :active_record_options,
+           default: { handle_read_write_roles: false }
+
     # Don't require client authentication for password grants. If client credentials
     # are present they will still be validated, and the grant rejected if the credentials
     # are invalid.
