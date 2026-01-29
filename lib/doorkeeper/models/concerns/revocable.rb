@@ -13,9 +13,7 @@ module Doorkeeper
 
         # Wrap in with_primary_role if the model class supports it
         if self.class.respond_to?(:with_primary_role)
-          self.class.with_primary_role do
-            update_attribute(:revoked_at, clock.now.utc)
-          end
+          self.class.with_primary_role { update_attribute(:revoked_at, clock.now.utc) }
         else
           update_attribute(:revoked_at, clock.now.utc)
         end

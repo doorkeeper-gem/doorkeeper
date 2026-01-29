@@ -791,4 +791,40 @@ RSpec.describe Doorkeeper::AccessToken do
       end
     end
   end
+
+  describe "#revoke with read replica support" do
+    let(:token) { FactoryBot.create(:access_token) }
+
+    context "when handle_read_write_roles is enabled" do
+      before do
+        Doorkeeper.configure do
+          orm :active_record
+          active_record_options handle_read_write_roles: true
+        end
+      end
+
+      it "revokes token using primary database role" do
+        expect(ActiveRecord::Base).to receive(:connected_to).with(role: :writing).and_call_original
+
+        token.revoke
+        expect(token).to be_revoked
+      end
+    end
+
+    context "when handle_read_write_roles is disabled" do
+      before do
+        Doorkeeper.configure do
+          orm :active_record
+          active_record_options handle_read_write_roles: false
+        end
+      end
+
+      it "revokes token without explicit role switching" do
+        expect(ActiveRecord::Base).not_to receive(:connected_to)
+
+        token.revoke
+        expect(token).to be_revoked
+      end
+    end
+  end
 end

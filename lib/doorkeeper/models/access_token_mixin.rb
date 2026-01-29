@@ -442,9 +442,7 @@ module Doorkeeper
       old_refresh_token&.revoke
 
       if self.class.respond_to?(:with_primary_role)
-        self.class.with_primary_role do
-          update_attribute(:previous_refresh_token, "")
-        end
+        self.class.with_primary_role { update_attribute(:previous_refresh_token, "") }
       else
         update_attribute(:previous_refresh_token, "")
       end
