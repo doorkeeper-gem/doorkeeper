@@ -87,6 +87,38 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
     expect(request).to be_valid
   end
 
+  context "when refresh token gets revoked between validation and authorization" do
+    before do
+      allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
+    end
+
+    it "raises InvalidGrantReuse error inside the lock block to prevent race condition" do
+      # This test simulates a race condition:
+      # 1. Request passes validation (token not revoked yet)
+      # 2. Another concurrent request revokes the token
+      # 3. This request enters the lock and should detect the token is now revoked
+      
+      # Allow the token to pass validation
+      original_revoked_at = refresh_token.revoked_at
+      
+      # Mock with_lock to simulate token being revoked by another thread
+      allow(refresh_token).to receive(:with_lock) do |&block|
+        # Simulate another thread revoking the token before this block executes
+        refresh_token.revoked_at = Time.now.utc
+        block.call
+      ensure
+        # Restore original state for cleanup
+        refresh_token.revoked_at = original_revoked_at
+      end
+      
+      # Validation should pass (token not revoked yet)
+      expect(request).to be_valid
+      
+      # Authorization should raise error when it detects token is revoked inside lock
+      expect { request.authorize }.to raise_error(Doorkeeper::Errors::InvalidGrantReuse)
+    end
+  end
+
   context "when refresh tokens expire on access token use" do
     before do
       allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(true)
