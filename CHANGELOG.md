@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 Add your entry here.
+- [#XXXX] Add support for Rails read replicas with automatic role switching via `enable_multiple_databases` configuration option
 - [#1788] Fix regex for basic auth to be case-insensitive
 - [#1775] Fix Applications Secret Not Null Constraint generator
 - [#1779] Only lock previous access token model when creating a new token from its refresh token if revoke_previous_refresh_token_on_use is false

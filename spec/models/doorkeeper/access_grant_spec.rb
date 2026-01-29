@@ -170,4 +170,28 @@ RSpec.describe Doorkeeper::AccessGrant do
       expect(access_grant_for_different_owner.reload).not_to be_revoked
     end
   end
+
+  describe ".revoke_all_for with read replica support" do
+    let(:application) { FactoryBot.create(:application) }
+    let(:resource_owner) { FactoryBot.create(:resource_owner) }
+
+    before do
+      FactoryBot.create(:access_grant, application: application, resource_owner_id: resource_owner.id)
+    end
+
+    context "when enable_multiple_databases is enabled" do
+      before do
+        Doorkeeper.configure do
+          orm :active_record
+          enable_multiple_databases
+        end
+      end
+
+      it "revokes grants using primary database role" do
+        expect(ActiveRecord::Base).to receive(:connected_to).with(role: :writing).and_call_original
+
+        described_class.revoke_all_for(application.id, resource_owner)
+      end
+    end
+  end
 end
