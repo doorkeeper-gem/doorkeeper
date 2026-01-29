@@ -717,4 +717,78 @@ RSpec.describe Doorkeeper::AccessToken do
       end
     end
   end
+
+  describe ".create_for with read replica support" do
+    let(:application) { FactoryBot.create(:application) }
+    let(:resource_owner) { FactoryBot.create(:resource_owner) }
+    let(:scopes) { Doorkeeper::OAuth::Scopes.from_string("public") }
+
+    context "when handle_read_write_roles is enabled" do
+      before do
+        Doorkeeper.configure do
+          orm :active_record
+          active_record_options handle_read_write_roles: true
+        end
+      end
+
+      it "creates token using primary database role" do
+        expect(ActiveRecord::Base).to receive(:connected_to).with(role: :writing).and_call_original
+
+        token = described_class.create_for(
+          application: application,
+          resource_owner: resource_owner,
+          scopes: scopes,
+        )
+
+        expect(token).to be_persisted
+        expect(token.application).to eq(application)
+        expect(token.resource_owner_id).to eq(resource_owner.id)
+      end
+    end
+
+    context "when handle_read_write_roles is disabled" do
+      before do
+        Doorkeeper.configure do
+          orm :active_record
+          active_record_options handle_read_write_roles: false
+        end
+      end
+
+      it "creates token without explicit role switching" do
+        expect(ActiveRecord::Base).not_to receive(:connected_to)
+
+        token = described_class.create_for(
+          application: application,
+          resource_owner: resource_owner,
+          scopes: scopes,
+        )
+
+        expect(token).to be_persisted
+      end
+    end
+  end
+
+  describe ".revoke_all_for with read replica support" do
+    let(:application) { FactoryBot.create(:application) }
+    let(:resource_owner) { FactoryBot.create(:resource_owner) }
+
+    before do
+      FactoryBot.create(:access_token, application: application, resource_owner_id: resource_owner.id)
+    end
+
+    context "when handle_read_write_roles is enabled" do
+      before do
+        Doorkeeper.configure do
+          orm :active_record
+          active_record_options handle_read_write_roles: true
+        end
+      end
+
+      it "revokes tokens using primary database role" do
+        expect(ActiveRecord::Base).to receive(:connected_to).with(role: :writing).and_call_original
+
+        described_class.revoke_all_for(application.id, resource_owner)
+      end
+    end
+  end
 end
