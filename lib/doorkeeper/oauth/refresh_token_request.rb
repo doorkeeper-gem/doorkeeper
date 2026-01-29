@@ -33,7 +33,8 @@ module Doorkeeper
         if refresh_token_revoked_on_use?
           # No locking needed when refresh tokens are revoked on use
           # because the old token is revoked later when the new token is used.
-          # Multiple access tokens can be created from the same refresh token.
+          # This allows multiple concurrent refresh requests to succeed during the
+          # transition period, after which the old refresh token will be revoked.
           raise Errors::InvalidGrantReuse if refresh_token.revoked?
           create_access_token
         else
