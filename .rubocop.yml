@@ -1,8 +1,11 @@
 inherit_from: .rubocop_todo.yml
 plugins:
+  - rubocop-capybara
+  - rubocop-factory_bot
   - rubocop-performance
   - rubocop-rails
   - rubocop-rspec
+  - rubocop-rspec_rails
 AllCops:
   TargetRubyVersion: 3.1
   Exclude:
