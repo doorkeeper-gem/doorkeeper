@@ -1,5 +1,5 @@
 inherit_from: .rubocop_todo.yml
-require:
+plugins:
   - rubocop-performance
   - rubocop-rails
   - rubocop-rspec
@@ -92,11 +92,9 @@ RSpec/DescribeClass:
   Enabled: false
 RSpec/ExampleLength:
   Enabled: false
-RSpec/FilePath:
+RSpec/SpecFilePathFormat:
   Enabled: false
 RSpec/MultipleExpectations:
   Enabled: false
 RSpec/NestedGroups:
-  Enabled: false
-Capybara/FeatureMethods:
   Enabled: false

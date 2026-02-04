@@ -15,10 +15,10 @@ gem "rspec-mocks"
 gem "rspec-rails", "~> 8.0"
 gem "rspec-support"
 
-gem "rubocop", "~> 1.4"
-gem "rubocop-performance", require: false
-gem "rubocop-rails", require: false
-gem "rubocop-rspec", require: false
+gem "rubocop", "~> 1.72"
+gem "rubocop-performance", "~> 1.24", require: false
+gem "rubocop-rails", "~> 2.30", require: false
+gem "rubocop-rspec", "~> 3.5", require: false
 
 gem "bcrypt", "~> 3.1", require: false
 
