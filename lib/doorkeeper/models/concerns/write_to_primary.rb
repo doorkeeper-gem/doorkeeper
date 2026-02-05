@@ -41,11 +41,14 @@ module Doorkeeper
           # @return [Boolean]
           #
           def should_use_primary_role?
+            # Guard clause: return false if ActiveRecord is not available
+            return false unless defined?(::ActiveRecord::Base)
+
             # Only use primary role if:
-            # 1. ActiveRecord supports connected_to (Rails 6.1+)
-            # 2. The enable_multiple_databases option is enabled in config
-            ::ActiveRecord::Base.respond_to?(:connected_to) &&
-              Doorkeeper.config.enable_multiple_databases
+            # 1. The enable_multiple_databases option is enabled in config
+            # 2. ActiveRecord supports connected_to (Rails 6.1+)
+            Doorkeeper.config.enable_multiple_databases &&
+              ::ActiveRecord::Base.respond_to?(:connected_to)
           end
         end
       end

@@ -16,6 +16,22 @@ RSpec.describe Doorkeeper::Models::Concerns::WriteToPrimary do
   end
 
   describe ".with_primary_role" do
+    context "when ActiveRecord is not defined" do
+      before do
+        Doorkeeper.configure do
+          orm :active_record
+          enable_multiple_databases
+        end
+
+        # Temporarily hide ActiveRecord constant
+        stub_const("ActiveRecord", nil)
+      end
+
+      it "executes block without connected_to when ActiveRecord is not available" do
+        expect(test_class.create_record).to eq("created")
+      end
+    end
+
     context "when enable_multiple_databases is disabled" do
       before do
         Doorkeeper.configure do

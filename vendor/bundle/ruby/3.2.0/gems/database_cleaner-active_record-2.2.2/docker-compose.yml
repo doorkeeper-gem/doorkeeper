@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:16 # specify the version needed for a given app
+    environment:
+      - POSTGRES_PASSWORD=postgres # this is required
+  mysql:
+    image: mysql:5.7
+    environment:
+      - MYSQL_ROOT_PASSWORD=mysql
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+    command: redis-server --save 20 1 --loglevel warning
+  ruby:
+    build:
+      context: .
+      args:
+        BUNDLE_GEMFILE: gemfiles/rails_7.2.gemfile # Manually change this based on the desired Rails version
+        RUBY_VERSION: 3.3 # Manually change this based on the desired Ruby version
+    volumes:
+      - ".:/app:delegated"
+    command: rake
+    depends_on:
+      - mysql
+      - postgres
+      - redis

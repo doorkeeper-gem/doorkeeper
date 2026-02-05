@@ -1,0 +1,19 @@
+current directory: /home/runner/work/doorkeeper/doorkeeper/vendor/bundle/ruby/3.2.0/gems/stringio-3.2.0/ext/stringio
+/usr/bin/ruby3.2 -I/usr/lib/ruby/vendor_ruby extconf.rb
+checking for rb_io_mode_t in ruby/io.h... no
+creating Makefile
+
+current directory: /home/runner/work/doorkeeper/doorkeeper/vendor/bundle/ruby/3.2.0/gems/stringio-3.2.0/ext/stringio
+make DESTDIR\= sitearchdir\=./.gem.20260205-3909-66gbxg sitelibdir\=./.gem.20260205-3909-66gbxg clean
+
+current directory: /home/runner/work/doorkeeper/doorkeeper/vendor/bundle/ruby/3.2.0/gems/stringio-3.2.0/ext/stringio
+make DESTDIR\= sitearchdir\=./.gem.20260205-3909-66gbxg sitelibdir\=./.gem.20260205-3909-66gbxg
+compiling stringio.c
+linking shared-object stringio.so
+
+current directory: /home/runner/work/doorkeeper/doorkeeper/vendor/bundle/ruby/3.2.0/gems/stringio-3.2.0/ext/stringio
+make DESTDIR\= sitearchdir\=./.gem.20260205-3909-66gbxg sitelibdir\=./.gem.20260205-3909-66gbxg install
+/usr/bin/install -c -m 0755 stringio.so ./.gem.20260205-3909-66gbxg
+
+current directory: /home/runner/work/doorkeeper/doorkeeper/vendor/bundle/ruby/3.2.0/gems/stringio-3.2.0/ext/stringio
+make DESTDIR\= sitearchdir\=./.gem.20260205-3909-66gbxg sitelibdir\=./.gem.20260205-3909-66gbxg clean

@@ -1,0 +1,9 @@
+# vim: set filetype=ruby:
+
+# Subtraction A = A - B, A >= 0 and A >= B
+register.A = 10                             # register names have to be uppercase
+register.B = 3
+
+label(Sub_B)  { decrement B, Stop, Sub_A }  # labels have to be uppercase as well
+label(Sub_A)  { decrement A, Stop, Sub_B }
+label(Stop)   { halt }
