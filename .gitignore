@@ -19,3 +19,4 @@ gemfiles/*.lock
 coverage
 *.gem
 gemfiles/vendor
+vendor/bundle/
