@@ -1,2 +1,0 @@
-module Mize::CacheProtocol
-end
