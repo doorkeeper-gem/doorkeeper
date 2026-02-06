@@ -1,0 +1,72 @@
+#!/usr/bin/env ruby
+
+require 'term/ansicolor'
+require 'tins/go'
+include Tins::GO
+
+class SnowFlake
+  include Term::ANSIColor
+  extend Term::ANSIColor
+
+  def initialize(x, y, shape: %w[ ❄ ❅ ❆ • • · · . . ])
+    @x, @y, @shape = x, y, Array(shape).sample
+    @shape.size != 1 and raise ArgumentError, "#@shape needs to be a character"
+  end
+
+  attr_accessor :x
+
+  attr_accessor :y
+
+  attr_accessor :shape
+
+  def to_s
+    move_to(y, x) { white on_black @shape }
+  end
+end
+
+opts           = go 'n:s:'
+new_snowflakes = (opts[?n] || 3).to_i
+sleep_duration = (opts[?s] || 0.2).to_f
+
+flakes = []
+cycles = 0
+wind   = 0.5
+
+loop do
+  print SnowFlake.hide_cursor, SnowFlake.on_black, SnowFlake.clear_screen
+
+  at_exit do
+    print SnowFlake.reset, SnowFlake.clear_screen, SnowFlake.move_home, SnowFlake.show_cursor
+  end
+
+  if cycles % (SnowFlake.terminal_lines / 3) == 0
+    wind, cycles = rand, 0
+  end
+  cycles += 1
+
+  flakes.reject! do |sf|
+    if rand > wind
+      sf.x -= 1
+      if sf.x <= 0
+        sf.x = SnowFlake.terminal_columns
+      end
+    else
+      sf.x += 1
+      if sf.x > SnowFlake.terminal_columns
+        sf.x = 1
+      end
+    end
+    sf.y += 1
+    sf.y > SnowFlake.terminal_lines
+  end
+
+  new_snowflakes.times do
+    flakes << SnowFlake.new(rand(1..SnowFlake.terminal_columns), 1)
+  end
+
+  print(*flakes)
+
+  sleep sleep_duration
+rescue Interrupt
+  exit
+end

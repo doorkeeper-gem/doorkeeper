@@ -1,0 +1,94 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: 'Ruby: ${{ matrix.ruby }}, Rails: ${{ matrix.rails }}, Channel: ${{ matrix.channel }}'
+    runs-on: 'ubuntu-22.04'
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ['3.4', '3.3', '3.2', '3.1']
+        rails: ['6.1', '7.0', '7.1', '7.2', '8.0']
+        channel: ['stable']
+
+        include:
+          - ruby: 'ruby-head'
+            rails: 'edge'
+            channel: 'experimental'
+          - ruby: 'ruby-head'
+            rails: '8.0'
+            channel: 'experimental'
+          - ruby: 'ruby-head'
+            rails: '7.2'
+            channel: 'experimental'
+          - ruby: 'ruby-head'
+            rails: '7.1'
+            channel: 'experimental'
+
+          - ruby: '3.4'
+            rails: 'edge'
+            channel: 'experimental'
+          - ruby: '3.3'
+            rails: 'edge'
+            channel: 'experimental'
+          - ruby: '3.2'
+            rails: 'edge'
+            channel: 'experimental'
+
+        exclude:
+          - ruby: '3.4'
+            rails: '6.1'
+
+          - ruby: '3.3'
+            rails: '6.1'
+
+          - ruby: '3.2'
+            rails: '6.1'
+
+          - ruby: '3.1'
+            rails: '8.0'
+
+    continue-on-error: ${{ matrix.channel != 'stable' }}
+
+    env: # $BUNDLE_GEMFILE must be set at the job level, so it is set for all steps
+      BUNDLE_GEMFILE: gemfiles/rails_${{ matrix.rails }}.gemfile
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Ruby ${{ matrix.ruby }}
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true # 'bundle install' and cache
+          rubygems: ${{ matrix.ruby == '2.5' && 'default' || 'latest' }}
+      - name: Copy config file
+        run: cp spec/support/sample.config.yml spec/support/config.yml
+      - name: Run tests
+        run: bundle exec rake
+
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+            MYSQL_ALLOW_EMPTY_PASSWORD: yes
+        ports:
+            - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+

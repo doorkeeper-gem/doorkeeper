@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'bundler/setup'
+require 'appraisal'
+require 'appraisal/cli'
+
+begin
+  Appraisal::CLI.start
+rescue Appraisal::AppraisalsNotFound => e
+  puts e.message
+  exit 127
+end

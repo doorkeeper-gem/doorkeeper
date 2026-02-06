@@ -1,0 +1,30 @@
+name: Dependabot auto-merge
+on:
+  pull_request:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'ruby/erb'
+    steps:
+      - name: Dependabot metadata
+        uses: dependabot/fetch-metadata@v2
+        id: metadata
+
+      - name: Wait for status checks
+        uses: lewagon/wait-on-check-action@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          check-regexp: 'build \(.*\)'
+          wait-interval: 30
+
+      - name: Auto-merge for Dependabot PRs
+        run: gh pr merge --auto --rebase "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.MATZBOT_DEPENDABOT_MERGE_TOKEN }}

@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16 # specify the version needed for a given app
+    environment:
+      - POSTGRES_PASSWORD=postgres # this is required
+    ports:
+      - "127.0.0.1:5432:5432" # so we can use `localhost` as the host
+  mysql:
+    image: mysql:5.7
+    environment:
+      - MYSQL_ROOT_PASSWORD=mysql
+    ports:
+      - "127.0.0.1:3306:3306"
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - "127.0.0.1:6379:6379"
+    command: redis-server --save 20 1 --loglevel warning

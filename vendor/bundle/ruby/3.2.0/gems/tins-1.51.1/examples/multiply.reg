@@ -1,0 +1,42 @@
+# vim: set filetype=ruby:
+
+# Multiplication: C = A * B, A >= 0 and B >= 0
+register.A = 3
+register.B = 7
+
+# Save A in T
+label(SaveA)  { decrement A, MoveS1, IncT }
+label(IncT) { increment T, IncS1 }
+label(IncS1) { increment S, SaveA }
+
+label(MoveS1) { decrement S, SaveB, IncA1 }
+label(IncA1) { increment A, MoveS1 }
+
+# Save B in U
+label(SaveB)  { decrement B, MoveS2, IncU }
+label(IncU) { increment U, IncS2 }
+label(IncS2) { increment S, SaveB }
+
+label(MoveS2) { decrement S, Mul, IncB1 }
+label(IncB1) { increment B, MoveS2 }
+
+# Multiply A * B
+label(Mul) { decrement A, MoveT, DecB }
+
+# Add B to C
+label(DecB) { decrement B, MoveU, IncC }
+label(IncC) { increment C, DecB }
+
+# Move U back to B
+label(MoveU) { decrement U, SaveB, IncB2 }
+label(IncB2) { increment B, MoveU }
+
+# Move T back to A
+label(MoveT) { decrement T, ClearU, IncA2 }
+label(IncA2) { increment A, MoveT }
+
+# Clear U
+label(ClearU) { decrement U, Stop, ClearU }
+
+# Stop
+label(Stop)   { halt }

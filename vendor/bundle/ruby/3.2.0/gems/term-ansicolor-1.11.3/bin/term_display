@@ -1,0 +1,93 @@
+#!/usr/bin/env ruby
+
+require 'tempfile'
+require 'term/ansicolor'
+require 'open-uri'
+require 'tins/xt'
+include Tins::GO
+
+def provide_ppm_file(filename, opts)
+  pnmtopnm = `which pnmtopnm`
+  if pnmtopnm.empty?
+    STDERR.puts "You might consider installing netpbm to enable image conversion/scaling!"
+    File.new(filename, 'rb')
+  else
+    cmd = [ pnmtopnm.chomp! ]
+    ext = File.extname(filename)
+    scale = `which pamscale`.chomp!
+    console_scale = "#{scale} -#{opts['s']} #{opts['C']} #{opts['R']}"
+    cmd.unshift console_scale
+    aspect_scaling = "#{scale} -xscale #{opts['a']}"
+    cmd.unshift aspect_scaling
+    convert_to_pnm =
+      case ext
+      when /\A(\.ppm\d*|\.pnm|\z)/
+        ''
+      when /\A.(jpe?g|exif|jfif)\z/i
+        'jpegtopnm'
+      when /\A.tiff?\z/i
+        'tifftopnm'
+      else
+        "#{ext[1..-1].downcase}topnm"
+      end
+    unless convert_to_pnm.empty?
+      convert_to_pnm = `which #{convert_to_pnm}`.chomp!
+      convert_to_pnm.empty? and fail "unknown pnm converter #{convert_to_pnm}"
+      cmd.unshift convert_to_pnm
+    end
+    temp = Tempfile.open(File.basename($0))
+    cmd *= '|'
+    STDERR.puts "Executing #{cmd.inspect}"
+    IO.popen(cmd, 'r+') do |converter|
+      open(filename, 'rb') do |input|
+        until input.eof?
+          converter.write input.read(8192)
+        end
+        converter.close_write
+      end
+      until converter.eof?
+        temp.write(converter.read)
+      end
+    end
+    temp.tap(&:rewind)
+  end
+end
+
+def usage(rc = 0)
+  puts <<EOT
+Usage: #$0 [OPTIONS] FILENAME"
+
+Options are
+
+  -m METRIC       for distance (METRIC = #{Term::ANSIColor::RGBColorMetrics.metrics * '|'})
+  -g yes|no       use/don't use gray values, defaults to yes
+  -s xyfit|xyfill scaling strategy, defaults to xyfit
+  -a ASPECT       x:y aspect, defaults to 2.2
+  -C COLS         number of columns for rendering with aspect, defaults to max
+  -R ROWS         number of rows for rendering with aspect, defaults to max - 1
+  -t              use true colors
+  -h              this help
+
+EOT
+  exit rc
+end
+
+opts = go 'hm:g:s:a:C:R:t'
+opts['h'] and usage
+filename = ARGV.shift or usage 1
+metric   = Term::ANSIColor::RGBColorMetrics.metric(opts['m'] || 'CIELab')
+gray     = (opts['g'] || 'yes') == 'yes'
+opts['s'] ||= 'xyfit'
+opts['a'] ||= '2.2'
+opts['C'] ||= Tins::Terminal.cols
+opts['R'] ||= [ Tins::Terminal.rows - 1, 0 ].max
+
+file = provide_ppm_file(filename, opts)
+ppm = Term::ANSIColor::PPMReader.new(
+  file,
+  metric:        metric,
+  gray:          gray,
+  true_coloring: opts[?t]
+)
+
+puts ppm

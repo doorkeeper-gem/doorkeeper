@@ -1,0 +1,13 @@
+development:
+  config:
+    foo: true
+    bar: false
+    baz: 'something'
+    pi:  <%= Math::PI %>
+
+test:
+  config:
+    foo: false
+    bar: true
+    baz: 'something else'
+    pi:  3.141
