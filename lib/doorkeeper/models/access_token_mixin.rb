@@ -14,6 +14,7 @@ module Doorkeeper
     include Models::Scopes
     include Models::ResourceOwnerable
     include Models::ExpirationTimeSqlMath
+    include Models::Concerns::WriteToPrimary
 
     module ClassMethods
       # Returns an instance of the Doorkeeper::AccessToken with
@@ -66,12 +67,14 @@ module Doorkeeper
       #   instance of the Resource Owner model or it's ID
       #
       def revoke_all_for(application_id, resource_owner, clock = Time)
-        by_resource_owner(resource_owner)
-          .where(
-            application_id: application_id,
-            revoked_at: nil,
-          )
-          .update_all(revoked_at: clock.now.utc)
+        with_primary_role do
+          by_resource_owner(resource_owner)
+            .where(
+              application_id: application_id,
+              revoked_at: nil,
+            )
+            .update_all(revoked_at: clock.now.utc)
+        end
       end
 
       # Looking for not revoked Access Token with a matching set of scopes
@@ -260,7 +263,9 @@ module Doorkeeper
           token_attributes[:resource_owner_id] = resource_owner_id_for(resource_owner)
         end
 
-        create!(token_attributes)
+        with_primary_role do
+          create!(token_attributes)
+        end
       end
 
       # Looking for not revoked Access Token records that belongs to specific
@@ -435,7 +440,12 @@ module Doorkeeper
       return if !self.class.refresh_token_revoked_on_use? || previous_refresh_token.blank?
 
       old_refresh_token&.revoke
-      update_attribute(:previous_refresh_token, "")
+
+      if self.class.respond_to?(:with_primary_role)
+        self.class.with_primary_role { update_attribute(:previous_refresh_token, "") }
+      else
+        update_attribute(:previous_refresh_token, "")
+      end
     end
 
     private

@@ -101,6 +101,10 @@ module Doorkeeper
     autoload :ResourceOwnerable, "doorkeeper/models/concerns/resource_ownerable"
     autoload :Revocable, "doorkeeper/models/concerns/revocable"
     autoload :SecretStorable, "doorkeeper/models/concerns/secret_storable"
+
+    module Concerns
+      autoload :WriteToPrimary, "doorkeeper/models/concerns/write_to_primary"
+    end
   end
 
   module Orm
