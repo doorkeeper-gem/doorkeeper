@@ -1,4 +1,5 @@
 .bundle/
+vendor/bundle/
 .rbx
 *.rbc
 log/*.log
