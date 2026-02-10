@@ -22,5 +22,6 @@ gem "base64"
 gem "drb"
 gem "mutex_m"
 gem "concurrent-ruby", "1.3.4"
+gem "jwt", require: false
 
 gemspec path: "../"
