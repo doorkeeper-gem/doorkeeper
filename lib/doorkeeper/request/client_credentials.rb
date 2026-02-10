@@ -9,7 +9,7 @@ module Doorkeeper
         @request ||= OAuth::ClientCredentialsRequest.new(
           Doorkeeper.config,
           client,
-          parameters,
+          parameters:,
         )
       end
     end

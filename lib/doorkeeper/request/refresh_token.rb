@@ -14,7 +14,7 @@ module Doorkeeper
           Doorkeeper.config,
           refresh_token,
           credentials,
-          parameters,
+          parameters:,
         )
       end
     end

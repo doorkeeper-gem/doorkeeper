@@ -14,7 +14,9 @@ module Doorkeeper
       attr_reader :access_token, :client, :credentials, :refresh_token
       attr_reader :missing_param
 
-      def initialize(server, refresh_token, credentials, parameters = {})
+      def initialize(server, refresh_token, credentials, **base_options)
+        super(**base_options)
+
         @server = server
         @refresh_token = refresh_token
         @credentials = credentials

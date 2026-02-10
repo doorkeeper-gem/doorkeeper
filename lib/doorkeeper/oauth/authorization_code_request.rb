@@ -13,7 +13,9 @@ module Doorkeeper
       attr_reader :grant, :client, :redirect_uri, :access_token, :code_verifier,
                   :invalid_request_reason, :missing_param
 
-      def initialize(server, grant, client, parameters = {})
+      def initialize(server, grant, client, **base_options)
+        super(**base_options)
+
         @server = server
         @client = client
         @grant  = grant

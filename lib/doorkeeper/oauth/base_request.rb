@@ -5,9 +5,13 @@ module Doorkeeper
     class BaseRequest
       include Validations
 
-      attr_reader :grant_type, :server
+      attr_reader :grant_type, :parameters, :server
 
       delegate :default_scopes, to: :server
+
+      def initialize(parameters: {})
+        @parameters = parameters
+      end
 
       def authorize
         if valid?

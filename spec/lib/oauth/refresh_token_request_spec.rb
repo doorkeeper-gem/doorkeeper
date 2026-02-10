@@ -150,7 +150,7 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
   end
 
   context "with scopes" do
-    subject(:request) { described_class.new(server, refresh_token, credentials, parameters) }
+    subject(:request) { described_class.new(server, refresh_token, credentials, parameters:) }
 
     let(:refresh_token) do
       FactoryBot.create :access_token,
@@ -194,7 +194,7 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
   end
 
   context "with dynamic scopes enabled" do
-    subject(:request) { described_class.new(server, refresh_token, credentials, parameters) }
+    subject(:request) { described_class.new(server, refresh_token, credentials, parameters:) }
 
     let(:application_scopes) { "public write user:*" }
     let(:application) { FactoryBot.create(:application, scopes: application_scopes) }

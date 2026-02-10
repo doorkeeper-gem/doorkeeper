@@ -11,7 +11,7 @@ module Doorkeeper
           client,
           credentials,
           resource_owner,
-          parameters,
+          parameters:,
         )
       end
     end

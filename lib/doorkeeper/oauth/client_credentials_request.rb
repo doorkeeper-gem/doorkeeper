@@ -3,18 +3,19 @@
 module Doorkeeper
   module OAuth
     class ClientCredentialsRequest < BaseRequest
-      attr_reader :client, :original_scopes, :parameters, :response
+      attr_reader :client, :original_scopes, :response
 
       alias error_response response
 
       delegate :error, to: :issuer
 
-      def initialize(server, client, parameters = {})
+      def initialize(server, client, parameters: {}, **base_options)
+        super(parameters: parameters.except(:scope), **base_options)
+
         @client = client
         @server = server
         @response = nil
         @original_scopes = parameters[:scope]
-        @parameters = parameters.except(:scope)
       end
 
       def access_token
