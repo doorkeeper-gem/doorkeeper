@@ -15,7 +15,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
 
   let(:application)   { FactoryBot.create(:application, scopes: "") }
   let(:client)        { double :client, application: application, scopes: "" }
-  let(:token_creator) { double :issuer, create: true, token: double }
+  let(:token_creator) { double :issuer, create: true, error: nil, token: double }
 
   before do
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
