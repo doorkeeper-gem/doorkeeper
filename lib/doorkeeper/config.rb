@@ -251,6 +251,7 @@ module Doorkeeper
     option :custom_access_token_expires_in, default: ->(_context) { nil }
     option :authorization_code_expires_in,  default: 600
     option :orm,                            default: :active_record
+    option :skip_orm_hooks,                 default: false
     option :native_redirect_uri,            default: "urn:ietf:wg:oauth:2.0:oob", deprecated: true
     option :grant_flows,                    default: %w[authorization_code client_credentials]
     option :pkce_code_challenge_methods,    default: %w[plain S256]
