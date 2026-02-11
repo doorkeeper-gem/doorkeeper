@@ -8,7 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 Add your entry here.
-- [#1690] Consider expires_in when clear expired tokens with StaleRecordsCleaner.
+- [#1792] Consider expires_in when clear expired tokens with StaleRecordsCleaner.
 - [#1790] Fix race condition in refresh token revocation check by moving InvalidGrantReuse check inside the lock block
 - [#1788] Fix regex for basic auth to be case-insensitive
 - [#1775] Fix Applications Secret Not Null Constraint generator
