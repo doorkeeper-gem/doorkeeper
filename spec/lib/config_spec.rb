@@ -324,7 +324,7 @@ RSpec.describe Doorkeeper::Config do
   describe "access_token_methods" do
     it "has defaults order" do
       expect(config.access_token_methods)
-        .to eq(%i[from_bearer_authorization from_access_token_param from_bearer_param])
+        .to eq(%i[from_dpop_authorization from_bearer_authorization from_access_token_param from_bearer_param])
     end
 
     it "can change the value" do
