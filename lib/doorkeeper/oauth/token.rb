@@ -36,6 +36,12 @@ module Doorkeeper
           token_from_header(header, pattern) if match?(header, pattern)
         end
 
+        def from_dpop_authorization(request)
+          pattern = /^DPoP /i
+          header = request.authorization
+          token_from_header(header, pattern) if match?(header, pattern)
+        end
+
         def from_basic_authorization(request)
           pattern = /^Basic /i
           header = request.authorization
