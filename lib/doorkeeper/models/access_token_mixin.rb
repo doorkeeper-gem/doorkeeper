@@ -15,6 +15,7 @@ module Doorkeeper
     include Models::ResourceOwnerable
     include Models::ExpirationTimeSqlMath
     include Models::Concerns::WriteToPrimary
+    include Models::DPoP
 
     module ClassMethods
       # Returns an instance of the Doorkeeper::AccessToken with
@@ -416,12 +417,14 @@ module Doorkeeper
       end
     end
 
-    # Access Token type: Bearer.
+    # Access Token type: Bearer or DPoP
+    #
     # @see https://datatracker.ietf.org/doc/html/rfc6750
     #   The OAuth 2.0 Authorization Framework: Bearer Token Usage
-    #
+    # @see https://datatracker.ietf.org/doc/html/rfc9449
+    #   OAuth 2.0 Demonstrating Proof of Possession (DPoP)
     def token_type
-      "Bearer"
+      uses_dpop? ? "DPoP" : "Bearer"
     end
 
     def use_refresh_token?
