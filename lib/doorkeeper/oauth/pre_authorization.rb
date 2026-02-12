@@ -147,7 +147,6 @@ module Doorkeeper
 
       def validate_code_challenge
         return true unless Doorkeeper.config.force_pkce?
-        return true if client.confidential
         return true if code_challenge.present?
 
         @invalid_request_reason = :invalid_code_challenge
