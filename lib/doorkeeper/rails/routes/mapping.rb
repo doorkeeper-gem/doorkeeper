@@ -11,6 +11,7 @@ module Doorkeeper
             authorizations: "doorkeeper/authorizations",
             applications: "doorkeeper/applications",
             authorized_applications: "doorkeeper/authorized_applications",
+            discovery: "doorkeeper/discovery",
             tokens: "doorkeeper/tokens",
             token_info: "doorkeeper/token_info",
           }

@@ -47,6 +47,7 @@ module Doorkeeper
     autoload :Client, "doorkeeper/oauth/client"
     autoload :ClientCredentialsRequest, "doorkeeper/oauth/client_credentials_request"
     autoload :CodeRequest, "doorkeeper/oauth/code_request"
+    autoload :DiscoveryResponse, "doorkeeper/oauth/discovery_response"
     autoload :ErrorResponse, "doorkeeper/oauth/error_response"
     autoload :Error, "doorkeeper/oauth/error"
     autoload :InvalidTokenResponse, "doorkeeper/oauth/invalid_token_response"
