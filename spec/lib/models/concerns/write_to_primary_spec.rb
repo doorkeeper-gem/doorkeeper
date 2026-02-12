@@ -17,6 +17,8 @@ RSpec.describe Doorkeeper::Models::Concerns::WriteToPrimary do
 
   describe ".with_primary_role" do
     context "when ActiveRecord is not defined" do
+      let(:original_active_record) { ActiveRecord }
+
       before do
         Doorkeeper.configure do
           orm :active_record
@@ -25,6 +27,11 @@ RSpec.describe Doorkeeper::Models::Concerns::WriteToPrimary do
 
         # Temporarily hide ActiveRecord constant
         stub_const("ActiveRecord", nil)
+      end
+
+      after do
+        # Restore ActiveRecord for cleanup
+        stub_const("ActiveRecord", original_active_record)
       end
 
       it "executes block without connected_to when ActiveRecord is not available" do
