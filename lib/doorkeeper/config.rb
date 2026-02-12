@@ -182,6 +182,11 @@ module Doorkeeper
         @config.instance_variable_set(:@force_pkce, true)
       end
 
+      # Require all access token token requests to include a DPoP proof (disabled by default)
+      def force_dpop
+        @config.instance_variable_set(:@force_dpop, true)
+      end
+
       # Validate the authorization request's client_id and redirect_uri before
       # authenticating the resource owner, so users are not sent through login
       # for a request that can only fail (disabled by default)
@@ -323,6 +328,8 @@ module Doorkeeper
     option :pkce_code_challenge_methods,    default: %w[plain S256]
     option :handle_auth_errors,             default: :render
     option :token_lookup_batch_size,        default: 10_000
+    option :dpop_iat_leeway,                default: 300
+    option :dpop_signature_algorithms,      default: %w[ES256 PS256]
     # Sets the token_reuse_limit
     # It will be used only when reuse_access_token option in enabled
     # By default it will be 100
@@ -636,6 +643,10 @@ module Doorkeeper
       option_set? :force_pkce
     end
 
+    def force_dpop?
+      option_set? :force_dpop
+    end
+
     def validate_client_before_resource_owner_authentication?
       option_set? :validate_client_before_resource_owner_authentication
     end
@@ -764,7 +775,7 @@ module Doorkeeper
         from_bearer_authorization
         from_access_token_param
         from_bearer_param
-      ]
+      ].tap { |it| it.prepend(:from_dpop_authorization) if access_token_model.dpop_supported? }
     end
 
     def enabled_grant_flows
