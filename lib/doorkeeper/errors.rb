@@ -59,6 +59,12 @@ module Doorkeeper
       end
     end
 
+    class InvalidDPoPProof < BaseResponseError
+      def self.name_for_response
+        :invalid_dpop_proof
+      end
+    end
+
     UnableToGenerateToken = Class.new(DoorkeeperError)
     TokenGeneratorNotFound = Class.new(DoorkeeperError)
     NoOrmCleaner = Class.new(DoorkeeperError)

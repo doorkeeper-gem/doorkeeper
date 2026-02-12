@@ -132,6 +132,8 @@ en:
         forbidden_token:
           missing_scope: 'Access to this resource requires scope "%{oauth_scopes}".'
 
+        invalid_dpop_proof: "Invalid DPoP proof"
+
     flash:
       applications:
         create:
