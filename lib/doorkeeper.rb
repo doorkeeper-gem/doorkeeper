@@ -100,6 +100,7 @@ module Doorkeeper
 
   module Models
     autoload :Accessible, "doorkeeper/models/concerns/accessible"
+    autoload :DPoP, "doorkeeper/models/concerns/dpop"
     autoload :Expirable, "doorkeeper/models/concerns/expirable"
     autoload :ExpirationTimeSqlMath, "doorkeeper/models/concerns/expiration_time_sql_math"
     autoload :Orderable, "doorkeeper/models/concerns/orderable"
