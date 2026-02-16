@@ -5,9 +5,15 @@ module Doorkeeper
     class BaseRequest
       include Validations
 
+      attr_accessor :dpop_proof
       attr_reader :grant_type, :server
 
       delegate :default_scopes, to: :server
+
+      def self.inherited(subclass)
+        super
+        subclass.validate :dpop_proof, error: Errors::InvalidDPoPProof
+      end
 
       def authorize
         if valid?
@@ -39,7 +45,7 @@ module Doorkeeper
         }
 
         @access_token =
-          Doorkeeper.config.access_token_model.find_or_create_for(**token_attributes.merge(custom_attributes))
+          Doorkeeper.config.access_token_model.find_or_create_for(**token_attributes.merge(custom_attributes).merge(dpop_token_attributes))
       end
 
       def before_successful_response
@@ -61,6 +67,25 @@ module Doorkeeper
 
           client_scopes.common(default_scopes)
         end
+      end
+
+      def dpop_supported?
+        Doorkeeper.config.access_token_model.dpop_supported?
+      end
+
+      def dpop_token_attributes
+        return {} unless dpop_supported?
+
+        { dpop_jkt: dpop_proof&.jkt }.compact
+      end
+
+      def validate_dpop_proof
+        return false if !dpop_supported? &&  Doorkeeper.config.force_dpop?
+        return true  if !dpop_supported? && !Doorkeeper.config.force_dpop?
+
+        return true unless Doorkeeper.config.force_dpop? || dpop_proof.present?
+
+        dpop_proof.valid?
       end
     end
   end
