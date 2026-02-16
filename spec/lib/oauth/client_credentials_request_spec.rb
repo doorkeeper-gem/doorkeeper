@@ -3,7 +3,9 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
-  subject(:request) { described_class.new(server, client) }
+  subject(:request) do
+    described_class.new(server, client).tap { |request| request.dpop_proof = dpop_proof }
+  end
 
   let(:server) do
     double(
@@ -16,6 +18,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
   let(:application)   { FactoryBot.create(:application, scopes: "") }
   let(:client)        { double :client, application: application, scopes: "" }
   let(:token_creator) { double :issuer, create: true, error: nil, token: double }
+  let(:dpop_proof)    { nil }
 
   before do
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
@@ -66,7 +69,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
     end
 
     it "issues an access token with requested scopes" do
-      request = described_class.new(server, client, scope: "email")
+      request = described_class.new(server, client, { scope: "email" })
       allow(request).to receive(:issuer).and_return(token_creator)
       expect(token_creator).to receive(:create).with(client, Doorkeeper::OAuth::Scopes.from_string("email"), {})
       request.authorize
@@ -81,9 +84,26 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
     end
 
     it "issues an access token with the custom access token attributes" do
-      request = described_class.new(server, client, scope: "email", tenant_id: 9000)
+      request = described_class.new(server, client, { scope: "email", tenant_id: 9000 })
       allow(request).to receive(:issuer).and_return(token_creator)
       expect(token_creator).to receive(:create).with(client, Doorkeeper::OAuth::Scopes.from_string("email"), { tenant_id: 9000 })
+      request.authorize
+    end
+  end
+
+  context "when a custom_access_token_attribute collides with the dpop thumbprint" do
+    before do
+      Doorkeeper.configure do
+        custom_access_token_attributes [:dpop_jkt]
+      end
+    end
+
+    it "does not let the custom_access_token_attribute override the dpop_jtk" do
+      request = described_class.new(server, client, { dpop_jkt: "jkt_if_successful_override" })
+      request.dpop_proof = dpop_proof_double
+      allow(request).to receive(:issuer).and_return(token_creator)
+
+      expect(token_creator).to receive(:create).with(client, nil, { dpop_jkt: "jkt_123" })
       request.authorize
     end
   end
@@ -113,10 +133,16 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
     end
 
     it "issues an access token with requested scopes" do
-      request = described_class.new(server, client, scope: "phone")
+      request = described_class.new(server, client, { scope: "phone" })
       request.authorize
       expect(request.response).to be_a(Doorkeeper::OAuth::TokenResponse)
       expect(request.response.token.scopes_string).to eq("phone")
     end
   end
+
+  include_examples(
+    "sender-constraining access_token using dpop",
+    when_bearer_token_expected: -> { expect(token_creator).to receive(:create).with(client, nil, {}) },
+    when_dpop_token_expected: -> { expect(token_creator).to receive(:create).with(client, nil, { dpop_jkt: "jkt_123" }) },
+  )
 end
