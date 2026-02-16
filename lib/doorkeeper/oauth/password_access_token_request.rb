@@ -13,8 +13,8 @@ module Doorkeeper
 
       attr_reader :client, :credentials, :resource_owner, :parameters, :access_token
 
-      def initialize(server, client, credentials, resource_owner, parameters = {})
-        super()
+      def initialize(server, client, credentials, resource_owner, parameters = {}, dpop_proof: nil)
+        super(dpop_proof: dpop_proof)
         @server          = server
         @resource_owner  = resource_owner
         @client          = client

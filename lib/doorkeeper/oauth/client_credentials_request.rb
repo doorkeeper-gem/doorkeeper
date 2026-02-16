@@ -9,8 +9,8 @@ module Doorkeeper
 
       alias error_response response
 
-      def initialize(server, client, parameters = {})
-        super()
+      def initialize(server, client, parameters = {}, dpop_proof: nil)
+        super(dpop_proof: dpop_proof)
         @client = client
         @server = server
         @response = nil
@@ -36,7 +36,7 @@ module Doorkeeper
       end
 
       def validate
-        super && issuer.create(client, scopes, custom_token_attributes_with_data)
+        super && issuer.create(client, scopes, dpop_token_attributes.merge(custom_token_attributes_with_data))
       end
 
       private
