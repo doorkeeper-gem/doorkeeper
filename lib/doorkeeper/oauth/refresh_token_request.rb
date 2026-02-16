@@ -91,7 +91,7 @@ module Doorkeeper
       end
 
       def create_access_token
-        attributes = {}.merge(custom_token_attributes_with_data)
+        attributes = custom_token_attributes_with_data.merge(dpop_token_attributes)
 
         if refresh_token_revoked_on_use?
           attributes[:previous_refresh_token] = refresh_token.refresh_token
@@ -235,6 +235,26 @@ module Doorkeeper
           .with_indifferent_access
           .slice(*Doorkeeper.config.custom_access_token_attributes)
           .symbolize_keys
+      end
+
+      def dpop_token_attributes
+        if client&.confidential && refresh_token.uses_dpop?
+          { dpop_jkt: dpop_proof&.jkt || refresh_token.dpop_jkt }
+        else
+          super
+        end
+      end
+
+      def validate_dpop_proof
+        if refresh_token&.uses_dpop?
+          if client&.confidential
+            dpop_proof.present? ? dpop_proof.valid? : true
+          else
+            dpop_proof.valid? && refresh_token.dpop_binding_matches?(dpop_proof.jkt)
+          end
+        else
+          super
+        end
       end
     end
   end
