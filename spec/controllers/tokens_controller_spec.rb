@@ -657,5 +657,25 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
         )
       end
     end
+
+    context "when access token uses dpop" do
+      let(:token_for_introspection) { FactoryBot.create(:access_token, application: client, dpop_jkt: "secret") }
+
+      it "responds with full token introspection" do
+        request.headers["Authorization"] = basic_auth_header_for_client(client)
+
+        post :introspect, params: { token: token_for_introspection.token }
+
+        expect(json_response).to match(
+          "active" => true,
+          "client_id" => client.uid,
+          "token_type" => "DPoP",
+          "scope" => nil,
+          "exp" => an_instance_of(Integer),
+          "iat" => an_instance_of(Integer),
+          "cnf" => { "jkt" => "secret" },
+        )
+      end
+    end
   end
 end
