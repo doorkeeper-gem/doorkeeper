@@ -75,6 +75,73 @@ RSpec.describe "Introspection endpoint" do
     end
   end
 
+  context "when introspecting a dpop token" do
+    before do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_refresh_token
+      end
+
+      access_token.update!(dpop_jkt: "jkt_abc")
+    end
+
+    let(:access_token) do
+      FactoryBot.create(:access_token, application: client, use_refresh_token: true)
+    end
+
+    it "reports `cnf` when the access token is presented" do
+      post introspection_endpoint_url,
+           params: { token: access_token.token },
+           headers: { "HTTP_AUTHORIZATION" => basic_auth_header_for_client(client) }
+
+      expect(response).to be_successful
+      expect(json_response).to include("cnf" => { "jkt" => "jkt_abc" })
+    end
+
+    context "with a public client" do
+      let(:client) { FactoryBot.create(:application, confidential: false) }
+
+      it "reports `cnf` when the refresh token is presented" do
+        post introspection_endpoint_url,
+             params: { token: access_token.refresh_token },
+             headers: { "HTTP_AUTHORIZATION" => basic_auth_header_for_client(client) }
+
+        expect(response).to be_successful
+        expect(json_response).to include("cnf" => { "jkt" => "jkt_abc" })
+      end
+    end
+
+    context "with a confidential client" do
+      let(:client) { FactoryBot.create(:application, confidential: true) }
+
+      it "omits `cnf` when the refresh token is presented" do
+        post introspection_endpoint_url,
+             params: { token: access_token.refresh_token },
+             headers: { "HTTP_AUTHORIZATION" => basic_auth_header_for_client(client) }
+
+        expect(response).to be_successful
+        expect(json_response).not_to include("cnf")
+      end
+    end
+
+    context "without a client" do
+      let(:auth_client) { FactoryBot.create(:application) }
+
+      let(:access_token) do
+        FactoryBot.create(:clientless_access_token, use_refresh_token: true)
+      end
+
+      it "reports `cnf` when the refresh token is presented" do
+        post introspection_endpoint_url,
+             params: { token: access_token.refresh_token },
+             headers: { "HTTP_AUTHORIZATION" => basic_auth_header_for_client(auth_client) }
+
+        expect(response).to be_successful
+        expect(json_response).to include("cnf" => { "jkt" => "jkt_abc" })
+      end
+    end
+  end
+
   # Regression specs for https://github.com/doorkeeper-gem/doorkeeper/issues/1759
   #
   # With refresh_token_revoked_on_use? the previous refresh token is revoked

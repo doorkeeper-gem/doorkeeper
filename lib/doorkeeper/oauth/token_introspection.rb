@@ -111,6 +111,8 @@ module Doorkeeper
           scope: @token.scopes_string,
           client_id: @token.try(:application).try(:uid),
           iat: @token.created_at.to_i,
+          # Section 6.2 of OAuth 2.0 Demonstrating Proof of Possession (DPoP) [RFC9449]
+          **(dpop_bound_token_presented? ? { cnf: { jkt: @token.dpop_jkt } } : {}),
         }
 
         # RFC 8707: include audience restriction when resource indicators are present
@@ -205,6 +207,13 @@ module Doorkeeper
 
       def refresh_token_presented?
         @token_type == :refresh_token
+      end
+
+      def dpop_bound_token_presented?
+        return false unless @token.uses_dpop?
+        return true unless refresh_token_presented?
+
+        !@token.try(:application)&.confidential?
       end
 
       def valid_authorized_token?
