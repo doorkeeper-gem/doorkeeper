@@ -279,4 +279,297 @@ RSpec.describe "Refresh Token Flow" do
       )
     end
   end
+
+  context "when using dpop" do
+    def build_dpop_proof(htm: "POST", htu: "http://www.example.com/oauth/token", signing_key: self.signing_key)
+      super
+    end
+
+    let(:invalid_dpop_proof) { build_dpop_proof(htm: "X") }
+    let(:mismatched_dpop_proof) { build_dpop_proof(signing_key: OpenSSL::PKey::EC.generate("prime256v1")) }
+    let(:valid_dpop_proof) { build_dpop_proof }
+
+    let(:jkt) { JWT::JWK::Thumbprint.new(JWT::JWK.new(signing_key)).generate }
+    let(:signing_key) { OpenSSL::PKey::EC.generate("prime256v1") }
+
+    let!(:token) do
+      FactoryBot.create(
+        :access_token,
+        application: client,
+        resource_owner_id: resource_owner.id,
+        resource_owner_type: resource_owner.class.name,
+        use_refresh_token: true,
+      )
+    end
+
+    context "with a private client" do
+      def make_refresh_request(headers: {})
+        post refresh_token_endpoint_url(client:, refresh_token: token.refresh_token), headers:
+      end
+
+      let(:client) { @client }
+
+      it "binds the new access token to the dpop proof's public key if it is valid" do
+        make_refresh_request(headers: { "HTTP_DPOP" => valid_dpop_proof })
+
+        new_token = Doorkeeper::AccessToken.last
+        expect(json_response).to include(
+          "access_token" => new_token.token,
+          "token_type" => "DPoP",
+          "refresh_token" => new_token.refresh_token,
+        )
+        expect(new_token).to be_uses_dpop
+        expect(new_token.dpop_jkt).to eq(jkt)
+      end
+
+      it "does not issue a new access token if dpop proof is invalid" do
+        expect do
+          make_refresh_request(headers: { "HTTP_DPOP" => invalid_dpop_proof })
+        end.not_to change(Doorkeeper::AccessToken, :count)
+
+        expect(json_response).to match(
+          "error" => "invalid_dpop_proof",
+          "error_description" => "Invalid DPoP proof",
+        )
+      end
+
+      context "when refreshing an access token that uses dpop" do
+        let!(:token) { super().tap { |it| it.update!(dpop_jkt: jkt) } }
+
+        it "issues a new access token without presenting a dpop proof since it already presents client credentials to refresh" do
+          make_refresh_request
+
+          new_token = Doorkeeper::AccessToken.last
+          expect(json_response).to include(
+            "access_token" => new_token.token,
+            "token_type" => "DPoP",
+            "refresh_token" => new_token.refresh_token,
+          )
+          expect(new_token).to be_uses_dpop
+          expect(new_token.dpop_jkt).to eq(token.dpop_jkt)
+        end
+
+        it "does not issue a new access token if dpop proof is invalid" do
+          expect do
+            make_refresh_request(headers: { "HTTP_DPOP" => invalid_dpop_proof })
+          end.not_to change(Doorkeeper::AccessToken, :count)
+
+          expect(json_response).to match(
+            "error" => "invalid_dpop_proof",
+            "error_description" => "Invalid DPoP proof",
+          )
+        end
+
+        it "binds the new access token to the dpop proof's new public key so long as it is valid" do
+          make_refresh_request(headers: { "HTTP_DPOP" => mismatched_dpop_proof })
+
+          new_token = Doorkeeper::AccessToken.last
+          expect(json_response).to include(
+            "access_token" => new_token.token,
+            "token_type" => "DPoP",
+            "refresh_token" => new_token.refresh_token,
+          )
+          expect(new_token).to be_uses_dpop
+          expect(new_token.dpop_jkt).not_to eq(token.dpop_jkt)
+
+          jkt_from_mismatched_dpop_proof =
+            JWT::JWK::Thumbprint.new(JWT::JWK.import(JWT.decode(mismatched_dpop_proof, nil, false)[1]["jwk"])).generate
+          expect(new_token.dpop_jkt).to eq(jkt_from_mismatched_dpop_proof)
+        end
+      end
+
+      context "when dpop is not supported" do
+        before { allow(Doorkeeper::AccessToken).to receive(:dpop_supported?).and_return(false) }
+
+        it "issues a new unbound access token if the dpop proof is valid" do
+          make_refresh_request(headers: { "HTTP_DPOP" => valid_dpop_proof })
+
+          new_token = Doorkeeper::AccessToken.last
+          expect(json_response).to include(
+            "access_token" => new_token.token,
+            "token_type" => "Bearer",
+            "refresh_token" => new_token.refresh_token,
+          )
+          expect(new_token).not_to be_uses_dpop
+        end
+
+        it "issues a new unbound access token if the dpop proof is invalid" do
+          make_refresh_request(headers: { "HTTP_DPOP" => invalid_dpop_proof })
+
+          new_token = Doorkeeper::AccessToken.last
+          expect(json_response).to include(
+            "access_token" => new_token.token,
+            "token_type" => "Bearer",
+            "refresh_token" => new_token.refresh_token,
+          )
+          expect(new_token).not_to be_uses_dpop
+        end
+      end
+
+      context "when dpop is required" do
+        before { config_is_set(:force_dpop, true) }
+
+        it "does not issue a new access token if the dpop proof is missing" do
+          expect do
+            make_refresh_request
+          end.not_to change(Doorkeeper::AccessToken, :count)
+
+          expect(json_response).to match(
+            "error" => "invalid_dpop_proof",
+            "error_description" => "Invalid DPoP proof",
+          )
+        end
+
+        context "when refreshing an access token that uses dpop" do
+          let!(:token) { super().tap { |it| it.update!(dpop_jkt: jkt) } }
+
+          it "issues a new access token without presenting a dpop proof since it already presents client credentials to refresh" do
+            make_refresh_request
+
+            new_token = Doorkeeper::AccessToken.last
+            expect(json_response).to include(
+              "access_token" => new_token.token,
+              "token_type" => "DPoP",
+              "refresh_token" => new_token.refresh_token,
+            )
+            expect(new_token).to be_uses_dpop
+            expect(new_token.dpop_jkt).to eq(token.dpop_jkt)
+          end
+
+          it "binds the new access token to the dpop proof's new public key so long as it is valid" do
+            make_refresh_request(headers: { "HTTP_DPOP" => mismatched_dpop_proof })
+
+            new_token = Doorkeeper::AccessToken.last
+            expect(json_response).to include(
+              "access_token" => new_token.token,
+              "token_type" => "DPoP",
+              "refresh_token" => new_token.refresh_token,
+            )
+            expect(new_token).to be_uses_dpop
+            expect(new_token.dpop_jkt).not_to eq(token.dpop_jkt)
+
+            jkt_from_mismatched_dpop_proof =
+              JWT::JWK::Thumbprint.new(JWT::JWK.import(JWT.decode(mismatched_dpop_proof, nil, false)[1]["jwk"])).generate
+            expect(new_token.dpop_jkt).to eq(jkt_from_mismatched_dpop_proof)
+          end
+        end
+      end
+    end
+
+    context "with a public client" do
+      def make_refresh_request(headers: {})
+        post refresh_token_endpoint_url(client_id: client.uid, refresh_token: token.refresh_token), headers:
+      end
+
+      let(:client) { FactoryBot.create(:application, confidential: false) }
+
+      it "binds the new access token to the dpop proof's public key if it is valid" do
+        make_refresh_request(headers: { "HTTP_DPOP" => valid_dpop_proof })
+
+        new_token = Doorkeeper::AccessToken.last
+        expect(json_response).to include(
+          "access_token" => new_token.token,
+          "token_type" => "DPoP",
+          "refresh_token" => new_token.refresh_token,
+        )
+        expect(new_token).to be_uses_dpop
+        expect(new_token.dpop_jkt).to eq(jkt)
+      end
+
+      it "does not issue a new access token if dpop proof's is invalid" do
+        expect do
+          make_refresh_request(headers: { "HTTP_DPOP" => invalid_dpop_proof })
+        end.not_to change(Doorkeeper::AccessToken, :count)
+
+        expect(json_response).to match(
+          "error" => "invalid_dpop_proof",
+          "error_description" => "Invalid DPoP proof",
+        )
+      end
+
+      context "when refreshing an access token that uses dpop" do
+        let!(:token) { super().tap { |it| it.update!(dpop_jkt: jkt) } }
+
+        it "does not issue a new access token if dpop proof is missing" do
+          expect do
+            make_refresh_request
+          end.not_to change(Doorkeeper::AccessToken, :count)
+
+          expect(json_response).to match(
+            "error" => "invalid_dpop_proof",
+            "error_description" => "Invalid DPoP proof",
+          )
+        end
+
+        it "does not issue a new access token if the public keys are mismatched" do
+          expect do
+            make_refresh_request(headers: { "HTTP_DPOP" => mismatched_dpop_proof })
+          end.not_to change(Doorkeeper::AccessToken, :count)
+
+          expect(json_response).to match(
+            "error" => "invalid_dpop_proof",
+            "error_description" => "Invalid DPoP proof",
+          )
+        end
+      end
+
+      context "when dpop is not supported" do
+        before { allow(Doorkeeper::AccessToken).to receive(:dpop_supported?).and_return(false) }
+
+        it "issues a new unbound access token if the dpop proof is valid" do
+          make_refresh_request(headers: { "HTTP_DPOP" => valid_dpop_proof })
+
+          new_token = Doorkeeper::AccessToken.last
+          expect(json_response).to include(
+            "access_token" => new_token.token,
+            "token_type" => "Bearer",
+            "refresh_token" => new_token.refresh_token,
+          )
+          expect(new_token).not_to be_uses_dpop
+        end
+
+        it "issues a new unbound access token if the dpop proof is invalid" do
+          make_refresh_request(headers: { "HTTP_DPOP" => invalid_dpop_proof })
+
+          new_token = Doorkeeper::AccessToken.last
+          expect(json_response).to include(
+            "access_token" => new_token.token,
+            "token_type" => "Bearer",
+            "refresh_token" => new_token.refresh_token,
+          )
+          expect(new_token).not_to be_uses_dpop
+        end
+      end
+
+      context "when dpop is required" do
+        before { config_is_set(:force_dpop, true) }
+
+        it "does not issue a new access token if the dpop proof is missing" do
+          expect do
+            make_refresh_request
+          end.not_to change(Doorkeeper::AccessToken, :count)
+
+          expect(json_response).to match(
+            "error" => "invalid_dpop_proof",
+            "error_description" => "Invalid DPoP proof",
+          )
+        end
+
+        context "when refreshing an access token that uses dpop" do
+          let!(:token) { super().tap { |it| it.update!(dpop_jkt: jkt) } }
+
+          it "does not issue a new access token if the dpop proof is missing" do
+            expect do
+              make_refresh_request
+            end.not_to change(Doorkeeper::AccessToken, :count)
+
+            expect(json_response).to match(
+              "error" => "invalid_dpop_proof",
+              "error_description" => "Invalid DPoP proof",
+            )
+          end
+        end
+      end
+    end
+  end
 end
