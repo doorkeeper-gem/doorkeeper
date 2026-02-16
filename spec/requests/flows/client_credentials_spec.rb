@@ -226,8 +226,95 @@ RSpec.describe "Client Credentials Request" do
     end
   end
 
+  context "when using dpop" do
+    it "authorizes the client and returns the dpop token response if the dpop proof is valid" do
+      headers =
+        authorization(client.uid, client.secret)
+          .merge(dpop(htm: "POST", htu: "http://www.example.com/oauth/token"))
+
+      params = { grant_type: "client_credentials" }
+
+      post "/oauth/token", params: params, headers: headers
+
+      expect(json_response).to match(
+        "access_token" => Doorkeeper::AccessToken.first.token,
+        "token_type" => "DPoP",
+        "expires_in" => Doorkeeper.configuration.access_token_expires_in,
+        "created_at" => an_instance_of(Integer),
+      )
+    end
+
+    it "does not authorize the client and returns the error if the dpop proof is invalid" do
+      headers = authorization(client.uid, client.secret).merge(dpop(htm: "X", htu: "X"))
+      params  = { grant_type: "client_credentials" }
+
+      post "/oauth/token", params: params, headers: headers
+
+      access_token_should_not_exist
+
+      response_status_should_be(400)
+      expect(json_response).to match(
+        "error" => "invalid_dpop_proof",
+        "error_description" => translated_error_message(:invalid_dpop_proof),
+      )
+    end
+
+    context "when dpop is not supported" do
+      before { allow(Doorkeeper::AccessToken).to receive(:dpop_supported?).and_return(false) }
+
+      it "authorizes the client and returns the bearer token response if the dpop proof is valid" do
+        headers =
+          authorization(client.uid, client.secret)
+            .merge(dpop(htm: "POST", htu: "http://www.example.com/oauth/token"))
+
+        params = { grant_type: "client_credentials" }
+
+        post "/oauth/token", params: params, headers: headers
+
+        expect(json_response).to match(
+          "access_token" => Doorkeeper::AccessToken.first.token,
+          "token_type" => "Bearer",
+          "expires_in" => Doorkeeper.configuration.access_token_expires_in,
+          "created_at" => an_instance_of(Integer),
+        )
+      end
+
+      it "authorizes the client validates the request without trying to validate the would be invalid dpop proof" do
+        headers = authorization(client.uid, client.secret).merge(dpop(htm: "X", htu: "X"))
+        params  = { grant_type: "client_credentials" }
+
+        post "/oauth/token", params: params, headers: headers
+
+        response_status_should_be(200)
+      end
+    end
+
+    context "when dpop is required" do
+      before { config_is_set(:force_dpop, true) }
+
+      it "does not authorize the client and returns the error if the dpop proof is missing" do
+        headers = authorization(client.uid, client.secret)
+        params  = { grant_type: "client_credentials" }
+
+        post "/oauth/token", params: params, headers: headers
+
+        access_token_should_not_exist
+
+        response_status_should_be(400)
+        expect(json_response).to match(
+          "error" => "invalid_dpop_proof",
+          "error_description" => translated_error_message(:invalid_dpop_proof),
+        )
+      end
+    end
+  end
+
   def authorization(username, password)
     credentials = ActionController::HttpAuthentication::Basic.encode_credentials username, password
     { "HTTP_AUTHORIZATION" => credentials }
+  end
+
+  def dpop(**kwargs)
+    { "HTTP_DPOP" => build_dpop_proof(**kwargs) }
   end
 end

@@ -32,7 +32,7 @@ module Doorkeeper
       end
 
       def validate
-        super && issuer.create(client, scopes, custom_token_attributes_with_data)
+        super && issuer.create(client, scopes, dpop_token_attributes.merge(custom_token_attributes_with_data))
       end
 
       private

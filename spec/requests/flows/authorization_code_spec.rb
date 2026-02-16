@@ -579,4 +579,98 @@ feature "Authorization Code Flow" do
       expect(access_token.tenant_name).to eq("Tenant 1")
     end
   end
+
+  context "when using dpop" do
+    scenario "resource owner requests an access token with valid dpop proof" do
+      visit authorization_endpoint_url(client: @client)
+      click_on "Authorize"
+
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      with_dpop_proof_header(htm: "POST", htu: "http://www.example.com/oauth/token")
+      create_access_token authorization_code, @client
+
+      access_token_should_exist_for(@client, @resource_owner)
+
+      expect(json_response).to match(
+        "access_token" => Doorkeeper::AccessToken.first.token,
+        "token_type" => "DPoP",
+        "expires_in" => 7200,
+        "scope" => "default",
+        "created_at" => an_instance_of(Integer),
+      )
+    end
+
+    scenario "resource owner requests an access token with an invalid dpop proof" do
+      visit authorization_endpoint_url(client: @client)
+      click_on "Authorize"
+
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      with_dpop_proof_header(htm: "X", htu: "X")
+      create_access_token authorization_code, @client
+
+      access_token_should_not_exist
+
+      response_status_should_be(400)
+      expect(json_response).to match(
+        "error" => "invalid_dpop_proof",
+        "error_description" => translated_error_message(:invalid_dpop_proof),
+      )
+    end
+
+    context "when dpop is not supported" do
+      before { allow(Doorkeeper::AccessToken).to receive(:dpop_supported?).and_return(false) }
+
+      scenario "resource owner requests an access token with valid dpop proof" do
+        visit authorization_endpoint_url(client: @client)
+        click_on "Authorize"
+
+        authorization_code = Doorkeeper::AccessGrant.first.token
+        with_dpop_proof_header(htm: "POST", htu: "http://www.example.com/oauth/token")
+        create_access_token authorization_code, @client
+
+        access_token_should_exist_for(@client, @resource_owner)
+
+        expect(json_response).to match(
+          "access_token" => Doorkeeper::AccessToken.first.token,
+          "token_type" => "Bearer",
+          "expires_in" => 7200,
+          "scope" => "default",
+          "created_at" => an_instance_of(Integer),
+        )
+      end
+
+      scenario "resource owner requests an access token with an invalid dpop proof" do
+        visit authorization_endpoint_url(client: @client)
+        click_on "Authorize"
+
+        authorization_code = Doorkeeper::AccessGrant.first.token
+        with_dpop_proof_header(htm: "X", htu: "X")
+        create_access_token authorization_code, @client
+
+        access_token_should_exist_for(@client, @resource_owner)
+
+        response_status_should_be(200)
+      end
+    end
+
+    context "when dpop is required" do
+      before { config_is_set(:force_dpop, true) }
+
+      scenario "resource owner requests an access token without a dpop proof" do
+        visit authorization_endpoint_url(client: @client)
+        click_on "Authorize"
+
+        authorization_code = Doorkeeper::AccessGrant.first.token
+        create_access_token authorization_code, @client
+
+        access_token_should_not_exist
+
+        response_status_should_be(400)
+        expect(json_response).to match(
+          "error" => "invalid_dpop_proof",
+          "error_description" => translated_error_message(:invalid_dpop_proof),
+        )
+      end
+    end
+  end
 end

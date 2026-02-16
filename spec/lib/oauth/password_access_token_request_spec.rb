@@ -4,7 +4,7 @@ require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
   subject(:request) do
-    described_class.new(server, client, credentials, owner)
+    described_class.new(server, client, credentials, owner, dpop_proof:)
   end
 
   let(:server) do
@@ -22,6 +22,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
   let(:credentials) { Doorkeeper::OAuth::Client::Credentials.new("uid", "secret") }
   let(:application) { client.application }
   let(:owner) { FactoryBot.build_stubbed(:resource_owner) }
+  let(:dpop_proof) { nil }
 
   before do
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
@@ -218,4 +219,6 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
       expect(Doorkeeper::AccessToken.last.expires_in).to eq(2.hours)
     end
   end
+
+  include_examples "sender-constraining access_token using dpop"
 end

@@ -9,7 +9,13 @@ module Doorkeeper
 
       delegate :default_scopes, to: :server
 
-      def initialize(parameters: {})
+      def self.inherited(subclass)
+        super
+        subclass.validate :dpop_proof, error: Errors::InvalidDPoPProof
+      end
+
+      def initialize(dpop_proof: nil, parameters: {})
+        @dpop_proof = dpop_proof
         @parameters = parameters
       end
 
@@ -40,6 +46,7 @@ module Doorkeeper
           scopes: scopes,
           expires_in: Authorization::Token.access_token_expires_in(server, context),
           use_refresh_token: Authorization::Token.refresh_token_enabled?(server, context),
+          **dpop_token_attributes,
         }
 
         @access_token =
@@ -56,6 +63,8 @@ module Doorkeeper
 
       private
 
+      attr_reader :dpop_proof
+
       def build_scopes
         if @original_scopes.present?
           OAuth::Scopes.from_string(@original_scopes)
@@ -66,6 +75,23 @@ module Doorkeeper
           # Avoid using Scope#& for dynamic scopes
           client_scopes.allowed(default_scopes)
         end
+      end
+
+      def dpop_supported?
+        Doorkeeper.config.access_token_model.dpop_supported?
+      end
+
+      def dpop_token_attributes
+        return {} unless dpop_supported?
+
+        { dpop_jkt: dpop_proof&.jkt }.compact
+      end
+
+      def validate_dpop_proof
+        return true unless dpop_supported?
+        return true unless Doorkeeper.config.force_dpop? || dpop_proof.present?
+
+        dpop_proof.valid?
       end
     end
   end

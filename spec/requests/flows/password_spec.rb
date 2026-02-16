@@ -411,5 +411,84 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
         end.not_to(change { Doorkeeper::AccessToken.count })
       end
     end
+
+    context "when using dpop" do
+      it "issues a new dpop token if the dpop proof is valid" do
+        expect do
+          post(
+            password_token_endpoint_url(client: @client, resource_owner: @resource_owner),
+            headers: { "HTTP_DPOP" => build_dpop_proof(htm: "POST", htu: "http://www.example.com/oauth/token") },
+          )
+        end.to change(Doorkeeper::AccessToken, :count).by(1)
+
+        token = Doorkeeper::AccessToken.first
+
+        expect(token.application_id).to eq(@client.id)
+        expect(json_response).to include("access_token" => token.token, "token_type" => "DPoP")
+      end
+
+      it "doesn't issue new token if the dpop proof is invalid" do
+        expect do
+          post(
+            password_token_endpoint_url(client: @client, resource_owner: @resource_owner),
+            headers: { "HTTP_DPOP" => build_dpop_proof(htm: "X", htu: "X") },
+          )
+        end.not_to change(Doorkeeper::AccessToken, :count)
+
+        expect(response.status).to eq(400)
+        expect(json_response).to include(
+          "error" => "invalid_dpop_proof",
+          "error_description" => an_instance_of(String),
+        )
+      end
+
+      context "when dpop is not supported" do
+        before { allow(Doorkeeper::AccessToken).to receive(:dpop_supported?).and_return(false) }
+
+        it "issues a new bearer token if the dpop proof is valid" do
+          expect do
+            post(
+              password_token_endpoint_url(client: @client, resource_owner: @resource_owner),
+              headers: { "HTTP_DPOP" => build_dpop_proof(htm: "POST", htu: "http://www.example.com/oauth/token") },
+            )
+          end.to change(Doorkeeper::AccessToken, :count).by(1)
+
+          token = Doorkeeper::AccessToken.first
+
+          expect(token.application_id).to eq(@client.id)
+          expect(json_response).to include("access_token" => token.token, "token_type" => "Bearer")
+        end
+
+        it "issues a new bearer token if the dpop proof is invalid" do
+          expect do
+            post(
+              password_token_endpoint_url(client: @client, resource_owner: @resource_owner),
+              headers: { "HTTP_DPOP" => build_dpop_proof(htm: "X", htu: "X") },
+            )
+          end.to change(Doorkeeper::AccessToken, :count).by(1)
+
+          token = Doorkeeper::AccessToken.first
+
+          expect(token.application_id).to eq(@client.id)
+          expect(json_response).to include("access_token" => token.token, "token_type" => "Bearer")
+        end
+      end
+
+      context "when dpop is required" do
+        before { config_is_set(:force_dpop, true) }
+
+        it "doesn't issue new token if the dpop proof is missing" do
+          expect do
+            post(password_token_endpoint_url(client: @client, resource_owner: @resource_owner))
+          end.not_to change(Doorkeeper::AccessToken, :count)
+
+          expect(response.status).to eq(400)
+          expect(json_response).to include(
+            "error" => "invalid_dpop_proof",
+            "error_description" => an_instance_of(String),
+          )
+        end
+      end
+    end
   end
 end

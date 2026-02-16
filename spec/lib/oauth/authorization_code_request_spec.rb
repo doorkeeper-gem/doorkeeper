@@ -4,7 +4,7 @@ require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
   subject(:request) do
-    described_class.new(server, grant, client, parameters: params)
+    described_class.new(server, grant, client, dpop_proof:, parameters: params)
   end
 
   let(:server) do
@@ -25,6 +25,7 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
   let(:client) { grant.application }
   let(:redirect_uri) { client.redirect_uri }
   let(:params) { { redirect_uri: redirect_uri } }
+  let(:dpop_proof) { nil }
 
   before do
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
@@ -312,4 +313,6 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
       expect { request.authorize }.to(change { previous_token.reload.revoked_at })
     end
   end
+
+  include_examples "sender-constraining access_token using dpop"
 end
