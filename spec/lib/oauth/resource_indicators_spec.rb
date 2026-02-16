@@ -125,9 +125,7 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
           Doorkeeper.config,
           access_grant,
           application,
-          redirect_uri: access_grant.redirect_uri,
-          code_verifier: nil,
-          resource: [resource_uri],
+          { redirect_uri: access_grant.redirect_uri, code_verifier: nil, resource: [resource_uri] },
         )
       end
 
@@ -144,9 +142,7 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
           Doorkeeper.config,
           access_grant,
           application,
-          redirect_uri: access_grant.redirect_uri,
-          code_verifier: nil,
-          resource: ["https://other.example.com/"],
+          { redirect_uri: access_grant.redirect_uri, code_verifier: nil, resource: ["https://other.example.com/"] },
         )
       end
 
@@ -163,8 +159,7 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
           Doorkeeper.config,
           access_grant,
           application,
-          redirect_uri: access_grant.redirect_uri,
-          code_verifier: nil,
+          { redirect_uri: access_grant.redirect_uri, code_verifier: nil },
         )
       end
 
@@ -189,8 +184,7 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
           Doorkeeper.config,
           access_grant,
           application,
-          redirect_uri: access_grant.redirect_uri,
-          code_verifier: nil,
+          { redirect_uri: access_grant.redirect_uri, code_verifier: nil },
         )
       end
 
@@ -221,9 +215,7 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
             Doorkeeper.config,
             access_grant,
             application,
-            redirect_uri: access_grant.redirect_uri,
-            code_verifier: nil,
-            resource: ["https://other.example.com/"],
+            { redirect_uri: access_grant.redirect_uri, code_verifier: nil, resource: ["https://other.example.com/"] },
           )
         end
 
@@ -240,9 +232,7 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
             Doorkeeper.config,
             access_grant,
             application,
-            redirect_uri: access_grant.redirect_uri,
-            code_verifier: nil,
-            resource: [resource_uri],
+            { redirect_uri: access_grant.redirect_uri, code_verifier: nil, resource: [resource_uri] },
           )
         end
 
@@ -259,8 +249,7 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
             Doorkeeper.config,
             access_grant,
             application,
-            redirect_uri: access_grant.redirect_uri,
-            code_verifier: nil,
+            { redirect_uri: access_grant.redirect_uri, code_verifier: nil },
           )
         end
 
@@ -289,7 +278,7 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
       parameters[:resource] = resource if resource
 
       request = Doorkeeper::OAuth::ClientCredentialsRequest.new(
-        Doorkeeper.config, client, **parameters,
+        Doorkeeper.config, client, parameters,
       )
       request.authorize
       request.access_token
@@ -300,8 +289,7 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
         Doorkeeper::OAuth::ClientCredentialsRequest.new(
           Doorkeeper.config,
           client,
-          scope: "public",
-          resource: [resource_uri],
+          { scope: "public", resource: [resource_uri] },
         )
       end
 
@@ -325,8 +313,7 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
         Doorkeeper::OAuth::ClientCredentialsRequest.new(
           Doorkeeper.config,
           client,
-          scope: "public",
-          resource: [resource_uri],
+          { scope: "public", resource: [resource_uri] },
         )
       end
 
@@ -342,7 +329,7 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
         Doorkeeper::OAuth::ClientCredentialsRequest.new(
           Doorkeeper.config,
           client,
-          scope: "public",
+          { scope: "public" },
         )
       end
 
@@ -470,8 +457,7 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
           Doorkeeper.config,
           access_token,
           credentials,
-          refresh_token: access_token.refresh_token,
-          resource: [resource_uri],
+          { refresh_token: access_token.refresh_token, resource: [resource_uri] },
         )
       end
 
@@ -489,8 +475,7 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
           Doorkeeper.config,
           access_token,
           credentials,
-          refresh_token: access_token.refresh_token,
-          resource: ["https://other.example.com/"],
+          { refresh_token: access_token.refresh_token, resource: ["https://other.example.com/"] },
         )
       end
 
@@ -507,7 +492,7 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
           Doorkeeper.config,
           access_token,
           credentials,
-          refresh_token: access_token.refresh_token,
+          { refresh_token: access_token.refresh_token },
         )
       end
 
@@ -533,8 +518,7 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
             Doorkeeper.config,
             access_token,
             credentials,
-            refresh_token: access_token.refresh_token,
-            resource: ["https://other.example.com/"],
+            { refresh_token: access_token.refresh_token, resource: ["https://other.example.com/"] },
           )
         end
 
@@ -551,8 +535,7 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
             Doorkeeper.config,
             access_token,
             credentials,
-            refresh_token: access_token.refresh_token,
-            resource: [resource_uri],
+            { refresh_token: access_token.refresh_token, resource: [resource_uri] },
           )
         end
 
@@ -570,7 +553,7 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
             Doorkeeper.config,
             access_token,
             credentials,
-            refresh_token: access_token.refresh_token,
+            { refresh_token: access_token.refresh_token },
           )
         end
 

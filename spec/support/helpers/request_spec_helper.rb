@@ -49,6 +49,10 @@ module RequestSpecHelper
     with_header "Authorization", "Bearer #{token}"
   end
 
+  def with_dpop_proof_header(**kwargs)
+    with_header "DPoP", build_dpop_proof(**kwargs)
+  end
+
   def with_header(header, value)
     page.driver.header(header, value)
   end

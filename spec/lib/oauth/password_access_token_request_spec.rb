@@ -4,7 +4,7 @@ require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
   subject(:request) do
-    described_class.new(server, client, credentials, owner)
+    described_class.new(server, client, credentials, owner).tap { |request| request.dpop_proof = dpop_proof }
   end
 
   let(:server) do
@@ -23,6 +23,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
   let(:credentials) { Doorkeeper::ClientAuthentication::Credentials.new("uid", "secret") }
   let(:application) { client.application }
   let(:owner) { FactoryBot.build_stubbed(:resource_owner) }
+  let(:dpop_proof) { nil }
 
   before do
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
@@ -132,7 +133,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
 
   describe "with scopes" do
     subject(:request) do
-      described_class.new(server, client, credentials, owner, scope: "public")
+      described_class.new(server, client, credentials, owner, { scope: "public" })
     end
 
     context "when scopes_by_grant_type is not configured for grant_type" do
@@ -189,7 +190,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
 
       context "with a valid resource indicator" do
         subject(:request) do
-          described_class.new(server, client, credentials, owner, resource: [resource_uri])
+          described_class.new(server, client, credentials, owner, { resource: [resource_uri] })
         end
 
         it "issues a token with the resource persisted" do
@@ -202,7 +203,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
 
       context "with multiple valid resource indicators" do
         subject(:request) do
-          described_class.new(server, client, credentials, owner, resource: [resource_uri, second_resource_uri])
+          described_class.new(server, client, credentials, owner, { resource: [resource_uri, second_resource_uri] })
         end
 
         let(:second_resource_uri) { "https://calendar.example.com/" }
@@ -231,7 +232,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
 
     context "when resource_indicator_validator rejects the resource" do
       subject(:request) do
-        described_class.new(server, client, credentials, owner, resource: [resource_uri])
+        described_class.new(server, client, credentials, owner, { resource: [resource_uri] })
       end
 
       before do
@@ -254,7 +255,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
 
     context "when resource_indicator_validator is not configured" do
       subject(:request) do
-        described_class.new(server, client, credentials, owner, resource: [resource_uri])
+        described_class.new(server, client, credentials, owner, { resource: [resource_uri] })
       end
 
       before do
@@ -295,7 +296,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
     end
 
     it "checks scopes" do
-      request = described_class.new(server, client, credentials, owner, scope: "public")
+      request = described_class.new(server, client, credentials, owner, { scope: "public" })
       allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("public"))
 
       expect do
@@ -306,7 +307,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
     end
 
     it "falls back to the default otherwise" do
-      request = described_class.new(server, client, credentials, owner, scope: "private")
+      request = described_class.new(server, client, credentials, owner, { scope: "private" })
       allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("private"))
 
       expect do
@@ -316,4 +317,6 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
       expect(Doorkeeper::AccessToken.last.expires_in).to eq(2.hours)
     end
   end
+
+  include_examples "sender-constraining access_token using dpop"
 end
