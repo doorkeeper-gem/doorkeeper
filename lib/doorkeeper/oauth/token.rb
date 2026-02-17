@@ -3,6 +3,8 @@
 module Doorkeeper
   module OAuth
     class Token
+      Resolution = Struct.new(:access_token_method, :plaintext_token, :access_token)
+
       class << self
         def from_request(request, *methods)
           methods.inject(nil) do |_, method|
@@ -12,14 +14,21 @@ module Doorkeeper
           end
         end
 
-        def authenticate(request, *methods)
-          if (token = from_request(request, *methods))
+        def resolve(request, *methods)
+          method, token = methods.lazy.map { |m| [m, from_request(request, m)] }.detect(&:last)
+
+          if token
             access_token = Doorkeeper.config.access_token_model.by_token(token)
             if access_token.present? && Doorkeeper.config.refresh_token_enabled?
               access_token.revoke_previous_refresh_token!
             end
-            access_token
           end
+
+          Resolution.new(method, token, access_token) if access_token
+        end
+
+        def authenticate(request, *methods)
+          resolve(request, *methods)&.access_token
         end
 
         def from_access_token_param(request)
