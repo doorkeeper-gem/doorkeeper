@@ -3,8 +3,8 @@
 require "jwt"
 
 module DPoPHelper
-  def build_dpop_proof(htm:, htu:, signing_key: OpenSSL::PKey::EC.generate("prime256v1"))
-    claims = { "jti" => "jti_01", "iat" => Time.current.to_i, "htm" => htm, "htu" => htu }
+  def build_dpop_proof(htm:, htu:, ath: nil, signing_key: OpenSSL::PKey::EC.generate("prime256v1"))
+    claims = { "jti" => "jti_01", "iat" => Time.current.to_i, "ath" => ath, "htm" => htm, "htu" => htu }.compact
 
     headers = { "typ" => "dpop+jwt", "alg" => "ES256", "jwk" => JWT::JWK.new(signing_key).export }
 

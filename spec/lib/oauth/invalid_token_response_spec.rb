@@ -41,7 +41,7 @@ RSpec.describe Doorkeeper::OAuth::InvalidTokenResponse do
     end
 
     context "when unknown" do
-      let(:access_token) { double(revoked?: false, expired?: false) }
+      let(:access_token) { double(revoked?: false, expired?: false, uses_dpop?: false) }
 
       it "sets a description" do
         expect(response.description).to include("invalid")
