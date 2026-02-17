@@ -10,6 +10,8 @@ module Doorkeeper
                    :revoked
                  elsif access_token&.expired?
                    :expired
+                 elsif access_token&.uses_dpop? && attributes[:access_token_method] == :from_dpop_authorization
+                   :invalid_dpop_key_binding
                  else
                    :unknown
                  end
@@ -46,6 +48,7 @@ module Doorkeeper
         {
           expired: Doorkeeper::Errors::TokenExpired,
           revoked: Doorkeeper::Errors::TokenRevoked,
+          invalid_dpop_key_binding: Doorkeeper::Errors::TokenInvalidDPoPKeyBinding,
           unknown: Doorkeeper::Errors::TokenUnknown,
         }
       end
