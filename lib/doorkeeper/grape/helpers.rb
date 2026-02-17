@@ -12,7 +12,7 @@ module Doorkeeper
       include Doorkeeper::Rails::Helpers
 
       # endpoint specific scopes > parameter scopes > default scopes
-      def doorkeeper_authorize!(*scopes)
+      def doorkeeper_authorize!(*scopes, dpop: nil)
         endpoint_scopes = endpoint.route_setting(:scopes) ||
                           endpoint.options[:route_options][:scopes]
 
@@ -22,7 +22,10 @@ module Doorkeeper
                    Doorkeeper::OAuth::Scopes.from_array(scopes)
                  end
 
-        super(*scopes)
+        endpoint_dpop = endpoint.route_setting(:dpop) ||
+                        endpoint.options[:route_options][:dpop]
+
+        super(*scopes, dpop: endpoint_dpop || dpop)
       end
 
       def doorkeeper_render_error_with(error)

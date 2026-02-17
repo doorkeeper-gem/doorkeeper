@@ -50,6 +50,7 @@ module Doorkeeper
     autoload :DPoPProof, "doorkeeper/oauth/dpop_proof"
     autoload :ErrorResponse, "doorkeeper/oauth/error_response"
     autoload :Error, "doorkeeper/oauth/error"
+    autoload :InvalidDPoPProofResponse, "doorkeeper/oauth/invalid_dpop_proof_response"
     autoload :InvalidTokenResponse, "doorkeeper/oauth/invalid_token_response"
     autoload :InvalidRequestResponse, "doorkeeper/oauth/invalid_request_response"
     autoload :ForbiddenTokenResponse, "doorkeeper/oauth/forbidden_token_response"

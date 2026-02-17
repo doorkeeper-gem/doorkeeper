@@ -87,5 +87,6 @@ module Doorkeeper
     TokenRevoked = Class.new(InvalidToken)
     TokenUnknown = Class.new(InvalidToken)
     TokenForbidden = Class.new(InvalidToken)
+    TokenInvalidDPoPKeyBinding = Class.new(InvalidToken)
   end
 end

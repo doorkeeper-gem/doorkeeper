@@ -125,6 +125,7 @@ en:
         invalid_token:
           revoked: "The access token was revoked"
           expired: "The access token expired"
+          invalid_dpop_key_binding: "Invalid DPoP key binding"
           unknown: "The access token is invalid"
         revoke:
           unauthorized: "You are not authorized to revoke this token"
