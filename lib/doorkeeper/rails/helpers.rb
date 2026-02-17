@@ -93,12 +93,16 @@ module Doorkeeper
         return @doorkeeper_token if defined?(@doorkeeper_token)
 
         @doorkeeper_token = OAuth::Token.authenticate(
-          request,
+          __doorkeeper_request__,
           *Doorkeeper.config.access_token_methods,
         )
       rescue Errors::MultipleAccessTokenMethods => e
         @_doorkeeper_multiple_token_methods_error = e
         @doorkeeper_token = nil
+      end
+
+      def __doorkeeper_request__
+        request
       end
     end
   end
