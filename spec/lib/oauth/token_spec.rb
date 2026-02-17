@@ -247,19 +247,29 @@ RSpec.describe Doorkeeper::OAuth::Token do
         end
       end
 
-      it "revokes previous refresh_token if token was found" do
-        token = ->(_r) { "token" }
+      let(:method) { ->(_r) { "token" } }
+
+      it "revokes previous refresh_token for a bearer token" do
+        access_token = instance_double(Doorkeeper::AccessToken, uses_dpop?: false)
         expect(
           Doorkeeper::AccessToken,
-        ).to receive(:by_token).with("token").and_return(token)
-        expect(token).to receive(:revoke_previous_refresh_token!)
-        described_class.authenticate double, token
+        ).to receive(:by_token).with("token").and_return(access_token)
+        expect(access_token).to receive(:revoke_previous_refresh_token!)
+        described_class.authenticate double, method
+      end
+
+      it "does not revoke previous refresh_token for a dpop token" do
+        access_token = instance_double(Doorkeeper::AccessToken, uses_dpop?: true)
+        expect(
+          Doorkeeper::AccessToken,
+        ).to receive(:by_token).with("token").and_return(access_token)
+        expect(access_token).not_to receive(:revoke_previous_refresh_token!)
+        described_class.authenticate double, method
       end
 
       it "calls the finder if token was returned" do
-        token = ->(_r) { "token" }
         expect(Doorkeeper::AccessToken).to receive(:by_token).with("token")
-        described_class.authenticate double, token
+        described_class.authenticate double, method
       end
     end
 

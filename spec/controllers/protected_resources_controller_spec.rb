@@ -36,6 +36,7 @@ RSpec.describe "doorkeeper authorize filter" do
         Doorkeeper::AccessToken,
         acceptable?: true, previous_refresh_token: "",
         revoke_previous_refresh_token!: true,
+        uses_dpop?: false,
       )
     end
 
@@ -156,6 +157,7 @@ RSpec.describe "doorkeeper authorize filter" do
         accessible?: true, scopes: %w[write public],
         previous_refresh_token: "",
         revoke_previous_refresh_token!: true,
+        uses_dpop?: false,
       )
       expect(token).to receive(:acceptable?).with([:write]).and_return(true)
       expect(
@@ -172,6 +174,7 @@ RSpec.describe "doorkeeper authorize filter" do
         accessible?: true, scopes: ["public"], revoked?: false,
         expired?: false, previous_refresh_token: "",
         revoke_previous_refresh_token!: true,
+        uses_dpop?: false,
       )
       expect(
         Doorkeeper::AccessToken,
@@ -302,6 +305,7 @@ RSpec.describe "doorkeeper authorize filter" do
         accessible?: true, scopes: ["public"], revoked?: false,
         expired?: false, previous_refresh_token: "",
         revoke_previous_refresh_token!: true,
+        uses_dpop?: false,
       )
     end
 
@@ -508,10 +512,122 @@ RSpec.describe "doorkeeper authorize filter" do
       end
     end
 
+    context "when token has mismatched public keys" do
+      it "raises Doorkeeper::Errors::TokenInvalidDPoPKeyBinding exception", token: :dpop do
+        expect do
+          @request.env["HTTP_AUTHORIZATION"] = "DPoP #{token_string}"
+          @request.env["HTTP_DPOP"] =
+            build_dpop_proof(
+              ath: Base64.urlsafe_encode64(Digest::SHA256.digest(token_string), padding: false),
+              htm: "GET",
+              htu: "http://test.host/anonymous",
+              signing_key: OpenSSL::PKey::EC.generate("prime256v1"),
+            )
+          get :index
+        end.to raise_error(Doorkeeper::Errors::TokenInvalidDPoPKeyBinding)
+      end
+    end
+
+    context "when the dpop proof is invalid" do
+      it "raises Doorkeeper::Errors::InvalidDPoPProof exception", token: :dpop do
+        expect do
+          @request.env["HTTP_AUTHORIZATION"] = "DPoP #{token_string}"
+          @request.env["HTTP_DPOP"] =
+            build_dpop_proof(
+              ath: Base64.urlsafe_encode64(Digest::SHA256.digest(token_string), padding: false),
+              htm: "WRONG",
+              htu: "http://test.host/anonymous",
+              signing_key: signing_key,
+            )
+          get :index
+        end.to raise_error(Doorkeeper::Errors::InvalidDPoPProof)
+      end
+    end
+
     context "when token is valid" do
       it "allows into index action", token: :valid do
         expect(response).to be_successful
       end
     end
   end
+
+  context "when given an invalid dpop option" do
+    controller do
+      before_action { doorkeeper_authorize!(dpop: :invalid) }
+
+      include ControllerActions
+    end
+
+    it "raises an ArgumentError" do
+      expect { get :index }.to raise_error(
+        ArgumentError, "dpop must be `:required` or `nil`, got: `:invalid`",
+      )
+    end
+  end
+
+  context "when refresh tokens are revoked on use for a dpop token", token: :dpop do
+    before { config_is_set(:refresh_token_enabled, true) }
+
+    controller do
+      before_action :doorkeeper_authorize!
+      include ControllerActions
+    end
+
+    def valid_proof(htm: "GET")
+      build_dpop_proof(
+        ath: Base64.urlsafe_encode64(Digest::SHA256.digest(token_string), padding: false),
+        htm: htm,
+        htu: "http://test.host/anonymous",
+        signing_key: signing_key,
+      )
+    end
+
+    it "revokes the previous refresh token once a valid proof is presented" do
+      expect(token).to receive(:revoke_previous_refresh_token!)
+
+      request.env["HTTP_AUTHORIZATION"] = "DPoP #{token_string}"
+      request.env["HTTP_DPOP"] = valid_proof
+      get :index
+
+      expect(response).to be_successful
+    end
+
+    it "does not revoke when the dpop token is presented as a bearer token" do
+      expect(token).not_to receive(:revoke_previous_refresh_token!)
+
+      request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
+      get :index
+
+      expect(response).to be_unauthorized
+    end
+
+    it "does not revoke when the dpop proof is invalid" do
+      expect(token).not_to receive(:revoke_previous_refresh_token!)
+
+      request.env["HTTP_AUTHORIZATION"] = "DPoP #{token_string}"
+      request.env["HTTP_DPOP"] = valid_proof(htm: "X")
+      get :index
+
+      expect(response).to be_unauthorized
+    end
+
+    context "when the request fails the scope check" do
+      controller do
+        before_action { doorkeeper_authorize! :admin }
+        include ControllerActions
+      end
+
+      it "still revokes on a valid proof" do
+        expect(token).to receive(:revoke_previous_refresh_token!)
+
+        request.env["HTTP_AUTHORIZATION"] = "DPoP #{token_string}"
+        request.env["HTTP_DPOP"] = valid_proof
+        get :index
+
+        expect(response).to be_forbidden
+      end
+    end
+  end
+
+  include_examples "enforcing proof of possession using dpop"
 end

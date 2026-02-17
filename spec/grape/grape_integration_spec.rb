@@ -56,6 +56,30 @@ module GrapeApp
       end
     end
 
+    resource :protected_with_endpoint_dpop_required do
+      before do
+        doorkeeper_authorize!
+      end
+
+      desc "Protected resource, requires DPoP token (defined in endpoint)."
+
+      get :status, dpop: :required do
+        { response: "OK" }
+      end
+    end
+
+    resource :protected_with_helper_dpop_required do
+      before do
+        doorkeeper_authorize! dpop: :required
+      end
+
+      desc "Protected resource, requires DPoP token (defined in helper)."
+
+      get :status do
+        { response: "OK" }
+      end
+    end
+
     resource :public do
       desc "Public resource, no token required."
 
@@ -114,6 +138,58 @@ RSpec.describe "Grape integration" do
       expect(last_response).to be_successful
       expect(json_body).to have_key("response")
     end
+
+    it "fails request for protected resource that requires dpop (Grape endpoint)" do
+      get "api/v1/protected_with_endpoint_dpop_required/status.json?access_token=#{access_token.token}"
+
+      expect(last_response).not_to be_successful
+      expect(json_body).to have_key("error")
+    end
+
+    it "fails request for protected resource that requires dpop (Doorkeeper helper)" do
+      get "api/v1/protected_with_helper_dpop_required/status.json?access_token=#{access_token.token}"
+
+      expect(last_response).not_to be_successful
+      expect(json_body).to have_key("error")
+    end
+  end
+
+  context "with dpop Token", token: :dpop do
+    def build_dpop_proof(htu:,
+                         ath: Base64.urlsafe_encode64(Digest::SHA256.digest(token_string), padding: false),
+                         htm: "GET",
+                         signing_key: self.signing_key)
+      super
+    end
+
+    it "successfully requests protected resource" do
+      get "api/v1/protected/status.json",
+          {},
+          "HTTP_AUTHORIZATION" => "DPoP #{token_string}",
+          "HTTP_DPOP" => build_dpop_proof(htu: "http://example.org/api/v1/protected/status.json")
+
+      expect(last_response).to be_successful
+
+      expect(json_body["token"]).to eq(token.token)
+    end
+
+    it "successfully requests protected resource that requires dpop (Grape endpoint)" do
+      get "api/v1/protected_with_endpoint_dpop_required/status.json",
+          {},
+          "HTTP_AUTHORIZATION" => "DPoP #{token_string}",
+          "HTTP_DPOP" => build_dpop_proof(htu: "http://example.org/api/v1/protected_with_endpoint_dpop_required/status.json")
+
+      expect(last_response).to be_successful
+    end
+
+    it "successfully requests protected resource that requires dpop (Doorkeeper helper)" do
+      get "api/v1/protected_with_helper_dpop_required/status.json",
+          {},
+          "HTTP_AUTHORIZATION" => "DPoP #{token_string}",
+          "HTTP_DPOP" => build_dpop_proof(htu: "http://example.org/api/v1/protected_with_helper_dpop_required/status.json")
+
+      expect(last_response).to be_successful
+    end
   end
 
   context "with invalid Access Token" do
@@ -144,7 +220,7 @@ RSpec.describe "Grape integration" do
     # rendered; a nil outcome must be memoized like a token is, or every
     # consultation runs the whole authentication again.
     it "authenticates only once per request" do
-      expect(Doorkeeper::OAuth::Token).to receive(:authenticate).once.and_call_original
+      expect(Doorkeeper::OAuth::Token).to receive(:resolve).once.and_call_original
 
       get "api/v1/protected/status.json?access_token=unknown-token"
 

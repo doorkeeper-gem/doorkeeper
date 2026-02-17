@@ -63,12 +63,10 @@ module Doorkeeper
           refuse_multiple_transmission_methods!(request, methods)
 
           method, token = methods.lazy.map { |m| [m, from_request(request, m)] }.detect(&:last)
+          access_token = Doorkeeper.config.access_token_model.by_token(token) if token
 
-          if token
-            access_token = Doorkeeper.config.access_token_model.by_token(token)
-            if access_token.present? && Doorkeeper.config.refresh_token_enabled?
-              access_token.revoke_previous_refresh_token!
-            end
+          if access_token && Doorkeeper.config.refresh_token_enabled? && !access_token.uses_dpop?
+            access_token.revoke_previous_refresh_token!
           end
 
           Resolution.new(method, token, access_token) if access_token
