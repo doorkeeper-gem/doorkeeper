@@ -36,14 +36,7 @@ module Doorkeeper
         env["api.endpoint"]
       end
 
-      def doorkeeper_token
-        @doorkeeper_token ||= OAuth::Token.authenticate(
-          decorated_request,
-          *Doorkeeper.config.access_token_methods,
-        )
-      end
-
-      def decorated_request
+      def __doorkeeper_request__
         AuthorizationDecorator.new(request)
       end
 
