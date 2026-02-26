@@ -3,7 +3,7 @@
 module Doorkeeper
   module Request
     class Password < Strategy
-      delegate :credentials, :resource_owner, :parameters, :client, to: :server
+      delegate :credentials, :resource_owner, :dpop_proof, :parameters, :client, to: :server
 
       def request
         @request ||= OAuth::PasswordAccessTokenRequest.new(
@@ -11,7 +11,8 @@ module Doorkeeper
           client,
           credentials,
           resource_owner,
-          parameters,
+          dpop_proof:,
+          parameters:,
         )
       end
     end

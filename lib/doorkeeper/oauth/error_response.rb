@@ -34,6 +34,8 @@ module Doorkeeper
       delegate :name, :description, :state, to: :@error
 
       def initialize(attributes = {})
+        @access_token_method = attributes[:access_token_method]
+        @dpop = attributes[:dpop]
         @error = OAuth::Error.new(*attributes.values_at(:name, :state, :translate_options))
         @exception_class = attributes[:exception_class]
         @redirect_uri = attributes[:redirect_uri]
@@ -93,8 +95,37 @@ module Doorkeeper
 
       private
 
+      attr_reader :access_token_method, :dpop
+
       def authenticate_info
-        %(Bearer realm="#{realm}", error="#{name}", error_description="#{description}")
+        if dpop_required?
+          %(DPoP realm="#{realm}", error="#{name}", error_description="#{description}", algs="#{dpop_algs}")
+        elsif !dpop_supported?
+          %(Bearer realm="#{realm}", error="#{name}", error_description="#{description}")
+        elsif dpop_used_to_authenticate?
+          %(Bearer, DPoP realm="#{realm}", error="#{name}", error_description="#{description}", algs="#{dpop_algs}")
+        elsif access_token_method
+          %(Bearer realm="#{realm}", error="#{name}", error_description="#{description}", DPoP algs="#{dpop_algs}")
+        else
+          %(Bearer realm="#{realm}", error="#{name}", error_description="#{description}", ) +
+            %(DPoP realm="#{realm}", error="#{name}", error_description="#{description}", algs="#{dpop_algs}")
+        end
+      end
+
+      def dpop_algs
+        Doorkeeper.config.dpop_signature_algorithms.join(" ")
+      end
+
+      def dpop_required?
+        dpop == :required
+      end
+
+      def dpop_supported?
+        Doorkeeper.config.access_token_model.dpop_supported?
+      end
+
+      def dpop_used_to_authenticate?
+        access_token_method == :from_dpop_authorization
       end
     end
   end

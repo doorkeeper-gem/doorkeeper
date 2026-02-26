@@ -40,5 +40,9 @@ module Doorkeeper
       methods = Doorkeeper.config.client_credentials_methods
       @credentials ||= OAuth::Client::Credentials.from_request(context.request, *methods)
     end
+
+    def dpop_proof
+      @dpop_proof ||= OAuth::DPoPProof.new(context.request)
+    end
   end
 end

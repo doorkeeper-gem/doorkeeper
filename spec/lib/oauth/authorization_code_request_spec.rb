@@ -4,7 +4,7 @@ require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
   subject(:request) do
-    described_class.new(server, grant, client, params)
+    described_class.new(server, grant, client, dpop_proof:, parameters: params)
   end
 
   let(:server) do
@@ -25,6 +25,7 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
   let(:client) { grant.application }
   let(:redirect_uri) { client.redirect_uri }
   let(:params) { { redirect_uri: redirect_uri } }
+  let(:dpop_proof) { nil }
 
   before do
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
@@ -54,33 +55,33 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
   end
 
   it "requires the grant" do
-    request = described_class.new(server, nil, client, params)
+    request = described_class.new(server, nil, client, parameters: params)
     request.validate
     expect(request.error).to eq(Doorkeeper::Errors::InvalidGrant)
   end
 
   it "requires the client" do
-    request = described_class.new(server, grant, nil, params)
+    request = described_class.new(server, grant, nil, parameters: params)
     request.validate
     expect(request.error).to eq(Doorkeeper::Errors::InvalidClient)
   end
 
   it "requires the redirect_uri" do
-    request = described_class.new(server, grant, nil, params.except(:redirect_uri))
+    request = described_class.new(server, grant, nil, parameters: params.except(:redirect_uri))
     request.validate
     expect(request.error).to eq(Doorkeeper::Errors::InvalidRequest)
     expect(request.missing_param).to eq(:redirect_uri)
   end
 
   it "matches the redirect_uri with grant's one" do
-    request = described_class.new(server, grant, client, params.merge(redirect_uri: "http://other.com"))
+    request = described_class.new(server, grant, client, parameters: params.merge(redirect_uri: "http://other.com"))
     request.validate
     expect(request.error).to eq(Doorkeeper::Errors::InvalidGrant)
   end
 
   it "matches the client with grant's one" do
     other_client = FactoryBot.create :application
-    request = described_class.new(server, grant, other_client, params)
+    request = described_class.new(server, grant, other_client, parameters: params)
     request.validate
     expect(request.error).to eq(Doorkeeper::Errors::InvalidGrant)
   end
@@ -197,7 +198,7 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
 
       context "when the app is missing" do
         it "does not assume non-confidential and forcibly validate pkce params" do
-          request = described_class.new(server, grant, nil, params)
+          request = described_class.new(server, grant, nil, parameters: params)
           request.validate
           expect(request.error).to eq(Doorkeeper::Errors::InvalidClient)
         end
@@ -312,4 +313,6 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
       expect { request.authorize }.to(change { previous_token.reload.revoked_at })
     end
   end
+
+  include_examples "sender-constraining access_token using dpop"
 end

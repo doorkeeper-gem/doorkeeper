@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
-  subject(:request) { described_class.new(server, client) }
+  subject(:request) { described_class.new(server, client, dpop_proof:) }
 
   let(:server) do
     double(
@@ -15,7 +15,8 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
 
   let(:application)   { FactoryBot.create(:application, scopes: "") }
   let(:client)        { double :client, application: application, scopes: "" }
-  let(:token_creator) { double :issuer, create: true, token: double }
+  let(:token_creator) { double :issuer, create: true, error: nil, token: double }
+  let(:dpop_proof)    { nil }
 
   before do
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
@@ -62,7 +63,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
     end
 
     it "issues an access token with requested scopes" do
-      request = described_class.new(server, client, scope: "email")
+      request = described_class.new(server, client, parameters: { scope: "email" })
       allow(request).to receive(:issuer).and_return(token_creator)
       expect(token_creator).to receive(:create).with(client, Doorkeeper::OAuth::Scopes.from_string("email"), {})
       request.authorize
@@ -77,7 +78,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
     end
 
     it "issues an access token with the custom access token attributes" do
-      request = described_class.new(server, client, scope: "email", tenant_id: 9000)
+      request = described_class.new(server, client, parameters: { scope: "email", tenant_id: 9000 })
       allow(request).to receive(:issuer).and_return(token_creator)
       expect(token_creator).to receive(:create).with(client, Doorkeeper::OAuth::Scopes.from_string("email"), { tenant_id: 9000 })
       request.authorize
@@ -111,10 +112,16 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
     end
 
     it "issues an access token with requested scopes" do
-      request = described_class.new(server, client, scope: "phone")
+      request = described_class.new(server, client, parameters: { scope: "phone" })
       request.authorize
       expect(request.response).to be_a(Doorkeeper::OAuth::TokenResponse)
       expect(request.response.token.scopes_string).to eq("phone")
     end
   end
+
+  include_examples(
+    "sender-constraining access_token using dpop",
+    when_bearer_token_expected: -> { expect(token_creator).to receive(:create).with(client, nil, {}) },
+    when_dpop_token_expected: -> { expect(token_creator).to receive(:create).with(client, nil, { dpop_jkt: "jkt_123" }) },
+  )
 end

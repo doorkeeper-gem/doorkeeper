@@ -10,14 +10,15 @@ module Doorkeeper
       validate :resource_owner, error: Errors::InvalidGrant
       validate :scopes, error: Errors::InvalidScope
 
-      attr_reader :client, :credentials, :resource_owner, :parameters, :access_token
+      attr_reader :client, :credentials, :resource_owner, :access_token
 
-      def initialize(server, client, credentials, resource_owner, parameters = {})
+      def initialize(server, client, credentials, resource_owner, **base_options)
+        super(**base_options)
+
         @server          = server
         @resource_owner  = resource_owner
         @client          = client
         @credentials     = credentials
-        @parameters      = parameters
         @original_scopes = parameters[:scope]
         @grant_type      = Doorkeeper::OAuth::PASSWORD
       end

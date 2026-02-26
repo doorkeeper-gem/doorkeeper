@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
-  subject(:request) { described_class.new(server, refresh_token, credentials) }
+  subject(:request) { described_class.new(server, refresh_token, credentials, dpop_proof:) }
 
   let(:server) do
     double :server, access_token_expires_in: 2.minutes
@@ -15,6 +15,7 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
 
   let(:client) { refresh_token.application }
   let(:credentials) { Doorkeeper::OAuth::Client::Credentials.new(client.uid, client.secret) }
+  let(:dpop_proof) { nil }
 
   before do
     allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
@@ -150,7 +151,7 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
   end
 
   context "with scopes" do
-    subject(:request) { described_class.new(server, refresh_token, credentials, parameters) }
+    subject(:request) { described_class.new(server, refresh_token, credentials, parameters:) }
 
     let(:refresh_token) do
       FactoryBot.create :access_token,
@@ -194,7 +195,7 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
   end
 
   context "with dynamic scopes enabled" do
-    subject(:request) { described_class.new(server, refresh_token, credentials, parameters) }
+    subject(:request) { described_class.new(server, refresh_token, credentials, parameters:) }
 
     let(:application_scopes) { "public write user:*" }
     let(:application) { FactoryBot.create(:application, scopes: application_scopes) }
@@ -241,4 +242,6 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
       expect(Doorkeeper::AccessToken.last.scopes).to eq(%i[public])
     end
   end
+
+  include_examples "sender-constraining access_token using dpop"
 end

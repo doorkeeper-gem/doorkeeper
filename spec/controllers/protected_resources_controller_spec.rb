@@ -34,6 +34,7 @@ RSpec.describe "doorkeeper authorize filter" do
         Doorkeeper::AccessToken,
         acceptable?: true, previous_refresh_token: "",
         revoke_previous_refresh_token!: true,
+        uses_dpop?: false,
       )
     end
 
@@ -117,6 +118,7 @@ RSpec.describe "doorkeeper authorize filter" do
         accessible?: true, scopes: %w[write public],
         previous_refresh_token: "",
         revoke_previous_refresh_token!: true,
+        uses_dpop?: false,
       )
       expect(token).to receive(:acceptable?).with([:write]).and_return(true)
       expect(
@@ -133,6 +135,7 @@ RSpec.describe "doorkeeper authorize filter" do
         accessible?: true, scopes: ["public"], revoked?: false,
         expired?: false, previous_refresh_token: "",
         revoke_previous_refresh_token!: true,
+        uses_dpop?: false,
       )
       expect(
         Doorkeeper::AccessToken,
@@ -237,6 +240,7 @@ RSpec.describe "doorkeeper authorize filter" do
         accessible?: true, scopes: ["public"], revoked?: false,
         expired?: false, previous_refresh_token: "",
         revoke_previous_refresh_token!: true,
+        uses_dpop?: false,
       )
     end
 
@@ -354,9 +358,176 @@ RSpec.describe "doorkeeper authorize filter" do
       end
     end
 
+    context "when token has mismatched public keys" do
+      it "raises Doorkeeper::Errors::TokenInvalidDPoPKeyBinding exception", token: :dpop do
+        expect do
+          @request.env["HTTP_AUTHORIZATION"] = "DPoP #{token_string}"
+          @request.env["HTTP_DPOP"] =
+            build_dpop_proof(
+              ath: Base64.urlsafe_encode64(Digest::SHA256.digest(token_string), padding: false),
+              htm: "GET",
+              htu: "http://test.host/anonymous",
+              signing_key: OpenSSL::PKey::EC.generate("prime256v1"),
+            )
+          get :index
+        end.to raise_error(Doorkeeper::Errors::TokenInvalidDPoPKeyBinding)
+      end
+    end
+
     context "when token is valid" do
       it "allows into index action", token: :valid do
         expect(response).to be_successful
+      end
+    end
+  end
+
+  context "when using dpop", token: :dpop do
+    def build_dpop_proof(ath: Base64.urlsafe_encode64(Digest::SHA256.digest(token_string), padding: false),
+                         htm: "GET",
+                         htu: "http://test.host/anonymous",
+                         signing_key: self.signing_key)
+      super
+    end
+
+    controller do
+      before_action :doorkeeper_authorize!
+
+      include ControllerActions
+
+      def doorkeeper_unauthorized_render_options(error: nil)
+        { json: ActiveSupport::JSON.encode(error: error.name, error_description: error.description) }
+      end
+    end
+
+    it "accepts a valid dpop proof" do
+      request.env["HTTP_AUTHORIZATION"] = "DPoP #{token_string}"
+      request.env["HTTP_DPOP"] = build_dpop_proof
+      get :index
+
+      expect(response).to be_successful
+    end
+
+    it "rejects an invalid dpop proof with incorrect request details" do
+      request.env["HTTP_AUTHORIZATION"] = "DPoP #{token_string}"
+      request.env["HTTP_DPOP"] = build_dpop_proof(htm: "X")
+      get :index
+
+      expect(response).to be_unauthorized
+      expect(response.header["WWW-Authenticate"]).to match(/^Bearer, DPoP/)
+
+      expect(json_response["error"]).to match("invalid_dpop_proof")
+      expect(json_response["error_description"]).to match("Invalid DPoP proof")
+    end
+
+    it "rejects an invalid dpop proof with ath claim" do
+      request.env["HTTP_AUTHORIZATION"] = "DPoP #{token_string}"
+      request.env["HTTP_DPOP"] = build_dpop_proof(ath: "X")
+      get :index
+
+      expect(response).to be_unauthorized
+      expect(response.header["WWW-Authenticate"]).to match(/^Bearer, DPoP/)
+
+      expect(json_response["error"]).to match("invalid_dpop_proof")
+      expect(json_response["error_description"]).to match("Invalid DPoP proof")
+    end
+
+    it "rejects an invalid dpop proof with mismatched public keys" do
+      request.env["HTTP_AUTHORIZATION"] = "DPoP #{token_string}"
+      request.env["HTTP_DPOP"] = build_dpop_proof(signing_key: OpenSSL::PKey::EC.generate("prime256v1"))
+      get :index
+
+      expect(response).to be_unauthorized
+      expect(response.header["WWW-Authenticate"]).to match(/^Bearer, DPoP/)
+
+      expect(json_response["error"]).to match("invalid_token")
+      expect(json_response["error_description"]).to match("Invalid DPoP key binding")
+    end
+
+    it "rejects a dpop token received as a bearer token" do
+      request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
+      get :index
+
+      expect(response).to be_unauthorized
+      expect(response.header["WWW-Authenticate"]).to match(/^Bearer.*DPoP algs="ES256 PS256"$/)
+
+      expect(json_response["error"]).to match("invalid_token")
+      expect(json_response["error_description"]).to match("The access token is invalid")
+    end
+
+    it "rejects a bearer token received as a dpop token", token: :valid do
+      request.env["HTTP_AUTHORIZATION"] = "DPoP #{token_string}"
+      get :index
+
+      expect(response).to be_unauthorized
+      expect(response.header["WWW-Authenticate"]).to match(/^Bearer, DPoP/)
+
+      expect(json_response["error"]).to match("invalid_dpop_proof")
+      expect(json_response["error_description"]).to match("Invalid DPoP proof")
+    end
+
+    it "rejects an empty dpop proof" do
+      request.env["HTTP_AUTHORIZATION"] = "DPoP #{token_string}"
+      get :index
+
+      expect(response).to be_unauthorized
+      expect(response.header["WWW-Authenticate"]).to match(/^Bearer, DPoP/)
+
+      expect(json_response["error"]).to match("invalid_dpop_proof")
+      expect(json_response["error_description"]).to match("Invalid DPoP proof")
+    end
+
+    it "rejects a request without an authorization token" do
+      request.env["HTTP_DPOP"] = build_dpop_proof
+      get :index
+
+      expect(response).to be_unauthorized
+      expect(response.header["WWW-Authenticate"]).to include("Bearer")
+      expect(response.header["WWW-Authenticate"]).to include("DPoP")
+      expect(response.header["WWW-Authenticate"]).to include("error=").twice
+
+      expect(json_response["error"]).to match("invalid_token")
+      expect(json_response["error_description"]).to match("The access token is invalid")
+    end
+
+    context "when dpop is not supported" do
+      before do
+        allow(Doorkeeper.config.access_token_model).to receive(:dpop_supported?).and_return(false)
+      end
+
+      it "rejects an invalid token and challenges with only bearer", token: :invalid do
+        request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
+        get :index
+
+        expect(response).to be_unauthorized
+        expect(response.header["WWW-Authenticate"]).to match(/^Bearer/)
+        expect(response.header["WWW-Authenticate"]).not_to include("DPoP")
+
+        expect(json_response["error"]).to match("invalid_token")
+        expect(json_response["error_description"]).to match("The access token is invalid")
+      end
+    end
+
+    context "when dpop required" do
+      controller do
+        before_action { doorkeeper_authorize!(dpop: :required) }
+
+        include ControllerActions
+
+        def doorkeeper_unauthorized_render_options(error: nil)
+          { json: ActiveSupport::JSON.encode(error: error.name, error_description: error.description) }
+        end
+      end
+
+      it "rejects a valid bearer token", token: :valid do
+        request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
+        get :index
+
+        expect(response).to be_unauthorized
+        expect(response.header["WWW-Authenticate"]).to match(/^DPoP/)
+        expect(response.header["WWW-Authenticate"]).not_to include("Bearer")
+
+        expect(json_response["error"]).to match("invalid_token")
+        expect(json_response["error_description"]).to match("The access token is invalid")
       end
     end
   end

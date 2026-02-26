@@ -326,14 +326,24 @@ module Doorkeeper
         attributes.with_indifferent_access.slice(
           *Doorkeeper.configuration.custom_access_token_attributes)
       end
+
+      # Checks whether the token can be sender-constrained using DPoP.
+      #
+      # @see https://datatracker.ietf.org/doc/html/rfc9449
+      #   OAuth 2.0 Demonstrating Proof of Possession (DPoP)
+      def dpop_supported?
+        column_names.include?("dpop_jkt")
+      end
     end
 
-    # Access Token type: Bearer.
+    # Access Token type: Bearer or DPoP
+    #
     # @see https://datatracker.ietf.org/doc/html/rfc6750
     #   The OAuth 2.0 Authorization Framework: Bearer Token Usage
-    #
+    # @see https://datatracker.ietf.org/doc/html/rfc9449
+    #   OAuth 2.0 Demonstrating Proof of Possession (DPoP)
     def token_type
-      "Bearer"
+      uses_dpop? ? "DPoP" : "Bearer"
     end
 
     def use_refresh_token?
@@ -436,6 +446,29 @@ module Doorkeeper
 
       old_refresh_token&.revoke
       update_attribute(:previous_refresh_token, "")
+    end
+
+    # Checks whether the token has been sender-constrained using DPoP. The token
+    # is never considered sender-constrained if the DPoP migration was not run.
+    #
+    # @see https://datatracker.ietf.org/doc/html/rfc9449
+    #   OAuth 2.0 Demonstrating Proof of Possession (DPoP)
+    def uses_dpop?
+      self.class.dpop_supported? && dpop_jkt.present?
+    end
+
+    # Checks whether the token is bound to the given DPoP key thumbprint (`jkt`).
+    #
+    # DPoP-bound (sender-constrained) access tokens are bound to a public key by its JWK
+    # SHA-256 thumbprint (`dpop_jkt`). This method returns `false` if the token is not DPoP-bound,
+    # otherwise it returns whether the token's stored thumbprint matches the provided `jkt`.
+    #
+    # @param jkt [String] The JWK SHA-256 thumbprint of the DPoP public key jkt
+    # @return [Boolean] True if the token is DPoP-bound and bound to the given `jkt`
+    def dpop_binding_matches?(jkt)
+      return false unless uses_dpop?
+
+      ActiveSupport::SecurityUtils.secure_compare(dpop_jkt, jkt)
     end
 
     private

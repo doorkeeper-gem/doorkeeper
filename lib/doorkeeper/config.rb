@@ -99,7 +99,7 @@ module Doorkeeper
         @config.instance_variable_set(:@reuse_access_token, true)
       end
 
-      # Choose to use the url path for native autorization codes 
+      # Choose to use the url path for native autorization codes
       # Enabling this flag sets the authorization code response route for
       # native redirect uris to oauth/authorize/<code>. The default is
       # oauth/authorize/native?code=<code>.
@@ -127,6 +127,11 @@ module Doorkeeper
       # an access_token using an authorization code (disabled by default)
       def force_pkce
         @config.instance_variable_set(:@force_pkce, true)
+      end
+
+      # Require all access token token requests to include a DPoP proof (disabled by default)
+      def force_dpop
+        @config.instance_variable_set(:@force_dpop, true)
       end
 
       # Use an API mode for applications generated with --api argument
@@ -256,6 +261,8 @@ module Doorkeeper
     option :pkce_code_challenge_methods,    default: %w[plain S256]
     option :handle_auth_errors,             default: :render
     option :token_lookup_batch_size,        default: 10_000
+    option :dpop_iat_leeway,                default: 300
+    option :dpop_signature_algorithms,      default: %w[ES256 PS256]
     # Sets the token_reuse_limit
     # It will be used only when reuse_access_token option in enabled
     # By default it will be 100
@@ -513,6 +520,10 @@ module Doorkeeper
       option_set? :force_pkce
     end
 
+    def force_dpop?
+      option_set? :force_dpop
+    end
+
     def enforce_configured_scopes?
       option_set? :enforce_configured_scopes
     end
@@ -575,7 +586,7 @@ module Doorkeeper
 
     def pkce_code_challenge_methods_supported
       return [] unless access_grant_model.pkce_supported?
-      
+
       pkce_code_challenge_methods
     end
 
@@ -588,7 +599,7 @@ module Doorkeeper
         from_bearer_authorization
         from_access_token_param
         from_bearer_param
-      ]
+      ].tap { |it| it.prepend(:from_dpop_authorization) if access_token_model.dpop_supported? }
     end
 
     def enabled_grant_flows
@@ -616,7 +627,7 @@ module Doorkeeper
     def deprecated_token_grant_types_resolver
       @deprecated_token_grant_types ||= calculate_token_grant_types
     end
-    
+
     def native_authorization_code_route
       @use_url_path_for_native_authorization = false unless defined?(@use_url_path_for_native_authorization)
       @use_url_path_for_native_authorization ? '/:code' : '/native'

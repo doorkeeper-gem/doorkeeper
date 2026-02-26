@@ -109,6 +109,8 @@ module Doorkeeper
           token_type: @token.token_type,
           exp: @token.expires_at.to_i,
           iat: @token.created_at.to_i,
+          # Section 6.2 of OAuth 2.0 Demonstrating Proof of Possession (DPoP) [RFC9449]
+          **(@token.uses_dpop? ? { cnf: { jkt: @token.dpop_jkt } } : {}),
         )
       end
 

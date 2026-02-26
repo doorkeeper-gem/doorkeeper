@@ -3,14 +3,15 @@
 module Doorkeeper
   module Request
     class AuthorizationCode < Strategy
-      delegate :client, :parameters, to: :server
+      delegate :client, :dpop_proof, :parameters, to: :server
 
       def request
         @request ||= OAuth::AuthorizationCodeRequest.new(
           Doorkeeper.config,
           grant,
           client,
-          parameters,
+          dpop_proof:,
+          parameters:,
         )
       end
 

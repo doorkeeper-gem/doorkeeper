@@ -21,6 +21,7 @@ gem "rubocop-rails", require: false
 gem "rubocop-rspec", require: false
 
 gem "bcrypt", "~> 3.1", require: false
+gem "jwt", require: false
 
 gem "activerecord-jdbcsqlite3-adapter", platform: :jruby
 gem "sqlite3", "~> 2.3", platform: [:ruby, :mswin, :mingw, :x64_mingw]

@@ -70,6 +70,8 @@ RSpec.describe Doorkeeper::OAuth::ErrorResponse do
     describe "WWW-Authenticate header" do
       subject(:headers) { error_response.headers["WWW-Authenticate"] }
 
+      before { allow(Doorkeeper::AccessToken).to receive(:dpop_supported?).and_return(false) }
+
       it { expect(headers).to include("realm=\"#{error_response.send(:realm)}\"") }
       it { expect(headers).to include("error=\"#{error_response.name}\"") }
       it { expect(headers).to include("error_description=\"#{error_response.description}\"") }

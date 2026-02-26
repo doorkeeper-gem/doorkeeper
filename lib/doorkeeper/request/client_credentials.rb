@@ -3,13 +3,14 @@
 module Doorkeeper
   module Request
     class ClientCredentials < Strategy
-      delegate :client, :parameters, to: :server
+      delegate :client, :dpop_proof, :parameters, to: :server
 
       def request
         @request ||= OAuth::ClientCredentialsRequest.new(
           Doorkeeper.config,
           client,
-          parameters,
+          dpop_proof:,
+          parameters:,
         )
       end
     end

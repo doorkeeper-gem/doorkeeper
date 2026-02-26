@@ -4,7 +4,7 @@ require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
   subject(:request) do
-    described_class.new(server, client, credentials, owner)
+    described_class.new(server, client, credentials, owner, dpop_proof:)
   end
 
   let(:server) do
@@ -22,6 +22,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
   let(:credentials) { Doorkeeper::OAuth::Client::Credentials.new("uid", "secret") }
   let(:application) { client.application }
   let(:owner) { FactoryBot.build_stubbed(:resource_owner) }
+  let(:dpop_proof) { nil }
 
   before do
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
@@ -63,7 +64,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
   end
 
   it "doesn't issue a new token with an invalid client" do
-    request = described_class.new(server, nil, credentials, owner, { client_id: "bad_id" })
+    request = described_class.new(server, nil, credentials, owner, parameters: { client_id: "bad_id" })
     expect do
       request.authorize
     end.not_to(change { Doorkeeper::AccessToken.count })
@@ -131,7 +132,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
 
   describe "with scopes" do
     subject(:request) do
-      described_class.new(server, client, credentials, owner, scope: "public")
+      described_class.new(server, client, credentials, owner, parameters: { scope: "public" })
     end
 
     context "when scopes_by_grant_type is not configured for grant_type" do
@@ -197,7 +198,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
     end
 
     it "checks scopes" do
-      request = described_class.new(server, client, credentials, owner, scope: "public")
+      request = described_class.new(server, client, credentials, owner, parameters: { scope: "public" })
       allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("public"))
 
       expect do
@@ -208,7 +209,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
     end
 
     it "falls back to the default otherwise" do
-      request = described_class.new(server, client, credentials, owner, scope: "private")
+      request = described_class.new(server, client, credentials, owner, parameters: { scope: "private" })
       allow(server).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("private"))
 
       expect do
@@ -218,4 +219,6 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
       expect(Doorkeeper::AccessToken.last.expires_in).to eq(2.hours)
     end
   end
+
+  include_examples "sender-constraining access_token using dpop"
 end

@@ -13,6 +13,7 @@ RSpec.describe Doorkeeper::OAuth::CodeResponse do
       state: "state",
       scopes: Doorkeeper::OAuth::Scopes.from_string("public"),
       custom_access_token_attributes: {},
+      dpop_token_attributes: {},
     )
   end
 
