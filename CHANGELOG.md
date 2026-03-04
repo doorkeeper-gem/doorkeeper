@@ -8,6 +8,9 @@ User-visible changes worth mentioning.
 ## main
 
 Add your entry here.
+
+## 5.9.0
+
 - [#1791] Add support for Rails read replicas with automatic role switching via `enable_multiple_database_roles` configuration option
 - [#1792] Consider expires_in when clear expired tokens with StaleRecordsCleaner.
 - [#1790] Fix race condition in refresh token revocation check by moving InvalidGrantReuse check inside the lock block
