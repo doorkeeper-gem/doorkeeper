@@ -6,11 +6,21 @@ RSpec.describe Doorkeeper::OAuth::ForbiddenTokenResponse do
   subject(:response) { described_class.new }
 
   describe "#name" do
-    it { expect(response.name).to eq(:invalid_scope) }
+    it { expect(response.name).to eq(:insufficient_scope) }
   end
 
   describe "#status" do
     it { expect(response.status).to eq(:forbidden) }
+  end
+
+  describe "#headers" do
+    subject(:response) { described_class.from_scopes(["public"]) }
+
+    it "includes a WWW-Authenticate header per RFC 6750 Section 3.1" do
+      www_authenticate = response.headers["WWW-Authenticate"]
+      expect(www_authenticate).to include('error="insufficient_scope"')
+      expect(www_authenticate).to include('Access to this resource requires scope "public".')
+    end
   end
 
   describe ".from_scopes" do
