@@ -73,6 +73,7 @@ RSpec.describe Doorkeeper::StaleRecordsCleaner do
           before do
             FactoryBot.create model_name,
                               created_at: expiry_border - 1.minute,
+                              expires_in: ttl,
                               resource_owner_id: resource_owner.id,
                               resource_owner_type: resource_owner.class.name
           end
@@ -82,9 +83,24 @@ RSpec.describe Doorkeeper::StaleRecordsCleaner do
           end
         end
 
+        context "with record whose global TTL has passed but individual expires_in has not" do
+          before do
+            FactoryBot.create model_name,
+                              created_at: expiry_border - 1.minute,
+                              expires_in: ttl * 10,
+                              resource_owner_id: resource_owner.id,
+                              resource_owner_type: resource_owner.class.name
+          end
+
+          it "keeps the record" do
+            expect { cleaner.clean_expired(ttl) }.not_to(change(model, :count))
+          end
+        end
+
         context "with record that is not expired" do
           before do
             FactoryBot.create model_name, created_at: expiry_border + 1.minute,
+                                          expires_in: ttl,
                                           resource_owner_id: resource_owner.id,
                                           resource_owner_type: resource_owner.class.name
           end
