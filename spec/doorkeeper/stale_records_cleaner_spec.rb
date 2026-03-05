@@ -69,12 +69,12 @@ RSpec.describe Doorkeeper::StaleRecordsCleaner do
         let(:ttl) { 500 }
         let(:expiry_border) { ttl.seconds.ago }
 
-        context "with record that is expired" do
+        context "with record that is past the threshold and expired" do
           before do
-            FactoryBot.create model_name,
-                              created_at: expiry_border - 1.minute,
-                              resource_owner_id: resource_owner.id,
-                              resource_owner_type: resource_owner.class.name
+            FactoryBot.create model_name, created_at: expiry_border - 1.minute,
+                                          expires_in: ttl,
+                                          resource_owner_id: resource_owner.id,
+                                          resource_owner_type: resource_owner.class.name
           end
 
           it "removes the record" do
@@ -82,15 +82,70 @@ RSpec.describe Doorkeeper::StaleRecordsCleaner do
           end
         end
 
-        context "with record that is not expired" do
+        context "with record that is past the threshold, but not expired" do
           before do
-            FactoryBot.create model_name, created_at: expiry_border + 1.minute,
+            FactoryBot.create model_name, created_at: expiry_border - 1.minute,
+                                          expires_in: 2 * ttl,
                                           resource_owner_id: resource_owner.id,
                                           resource_owner_type: resource_owner.class.name
           end
 
           it "keeps the record" do
             expect { cleaner.clean_expired(ttl) }.not_to(change(model, :count))
+          end
+        end
+
+        context "with record that is within the threshold and expired" do
+          before do
+            FactoryBot.create model_name, created_at: expiry_border + 1.minute,
+                                          expires_in: ttl,
+                                          resource_owner_id: resource_owner.id,
+                                          resource_owner_type: resource_owner.class.name
+          end
+
+          it "keeps the record" do
+            expect { cleaner.clean_expired(ttl) }.not_to(change(model, :count))
+          end
+        end
+
+        context "with record that is within the threshold, but not expired" do
+          before do
+            FactoryBot.create model_name, created_at: expiry_border + 1.minute,
+                                          expires_in: 2 * ttl,
+                                          resource_owner_id: resource_owner.id,
+                                          resource_owner_type: resource_owner.class.name
+          end
+
+          it "keeps the record" do
+            expect { cleaner.clean_expired(ttl) }.not_to(change(model, :count))
+          end
+        end
+
+        if model_name == :access_token
+          context "with record that is past the threshold, but never expires" do
+            before do
+              FactoryBot.create model_name, created_at: expiry_border - 1.minute,
+                                            expires_in: nil,
+                                            resource_owner_id: resource_owner.id,
+                                            resource_owner_type: resource_owner.class.name
+            end
+
+            it "keeps the record" do
+              expect { cleaner.clean_expired(ttl) }.not_to(change(model, :count))
+            end
+          end
+
+          context "with record that is within the threshold, but never expires" do
+            before do
+              FactoryBot.create model_name, created_at: expiry_border + 1.minute,
+                                            expires_in: nil,
+                                            resource_owner_id: resource_owner.id,
+                                            resource_owner_type: resource_owner.class.name
+            end
+
+            it "keeps the record" do
+              expect { cleaner.clean_expired(ttl) }.not_to(change(model, :count))
+            end
           end
         end
       end

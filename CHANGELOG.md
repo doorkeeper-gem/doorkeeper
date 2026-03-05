@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
-Add your entry here.
+- [#1798] Fix `doorkeeper:db:cleanup` rake task failure on PostgreSQL
 
 ## 5.9.0
 
