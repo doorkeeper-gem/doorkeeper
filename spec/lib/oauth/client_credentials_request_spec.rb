@@ -22,6 +22,10 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
     allow(request).to receive(:issuer).and_return(token_creator)
   end
 
+  it "returns :grant_type as client_credentials" do
+    expect(request.grant_type).to eq(Doorkeeper::OAuth::CLIENT_CREDENTIALS)
+  end
+
   it "issues an access token for the current client" do
     expect(token_creator).to receive(:create).with(client, nil, {})
     request.authorize
