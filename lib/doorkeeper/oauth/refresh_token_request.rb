@@ -18,6 +18,7 @@ module Doorkeeper
         @server = server
         @refresh_token = refresh_token
         @credentials = credentials
+        @grant_type = Doorkeeper::OAuth::REFRESH_TOKEN
         @original_scopes = parameters[:scope] || parameters[:scopes]
         @refresh_token_parameter = parameters[:refresh_token]
         @client = load_client(credentials) if credentials

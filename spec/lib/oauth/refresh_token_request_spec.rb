@@ -21,6 +21,10 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
     allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(false)
   end
 
+  it "returns :grant_type as refresh_token" do
+    expect(request.grant_type).to eq(Doorkeeper::OAuth::REFRESH_TOKEN)
+  end
+
   it "issues a new token for the client" do
     expect { request.authorize }.to change { client.reload.access_tokens.count }.by(1)
     # #sort_by used for MongoDB ORM extensions for valid ordering
