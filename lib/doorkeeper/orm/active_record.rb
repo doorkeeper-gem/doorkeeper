@@ -26,7 +26,6 @@ module Doorkeeper
         autoload :AccessGrant, "doorkeeper/orm/active_record/mixins/access_grant"
         autoload :AccessToken, "doorkeeper/orm/active_record/mixins/access_token"
         autoload :Application, "doorkeeper/orm/active_record/mixins/application"
-        autoload :Expirable, "doorkeeper/orm/active_record/mixins/expirable"
       end
 
       def self.run_hooks
