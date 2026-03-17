@@ -146,12 +146,23 @@ module Doorkeeper
 
     def setup
       setup_orm_adapter
+      setup_filter_parameters
 
       # Deprecated, will be removed soon
       unless configuration.orm == :active_record
         setup_orm_models
         setup_application_owner
       end
+    end
+
+    def setup_filter_parameters
+      return unless defined?(::Rails) && ::Rails.application
+
+      parameters = %w[client_secret authentication_token access_token refresh_token]
+      parameters << "code" if configuration.grant_flows.include?("authorization_code")
+      filter = /^(#{Regexp.union(parameters)})$/
+      filter_params = ::Rails.application.config.filter_parameters
+      filter_params << filter unless filter_params.include?(filter)
     end
 
     def setup_orm_adapter
