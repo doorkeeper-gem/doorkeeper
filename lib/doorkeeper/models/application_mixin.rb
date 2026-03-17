@@ -86,8 +86,10 @@ module Doorkeeper
 
       # When fallback lookup is enabled, ensure applications
       # with plain secrets can still be found
-      if fallback_secret_strategy
-        fallback_secret_strategy.secret_matches?(input, secret)
+      if fallback_secret_strategy && fallback_secret_strategy.secret_matches?(input, secret)
+        # Upgrade the stored secret to the current strategy
+        self.class.upgrade_fallback_value(self, :secret, input)
+        true
       else
         false
       end
