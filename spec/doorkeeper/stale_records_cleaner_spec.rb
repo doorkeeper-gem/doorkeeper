@@ -128,7 +128,7 @@ RSpec.describe Doorkeeper::StaleRecordsCleaner do
           end
 
           it "emits a warning" do
-            expect(Kernel).to receive(:warn).with(/\[DOORKEEPER\].*unsupported_db/)
+            expect(Kernel).to receive(:warn).with(/\[DOORKEEPER\].*doesn't support expiration time math for your database adapter/)
             cleaner.clean_expired(ttl)
           end
         end

@@ -76,7 +76,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
             relation.where(expires_in: nil)
           )
         else
-          ::Kernel.warn(expiration_time_math_not_supported_warning_message)
+          ::Kernel.warn(::Doorkeeper::Models::ExpirationTimeSqlMath::WARNING_MESSAGE)
 
           relation
         end

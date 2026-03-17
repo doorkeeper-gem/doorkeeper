@@ -33,7 +33,7 @@ module Doorkeeper
           if model_class.respond_to?(:supports_expiration_time_math?) && model_class.supports_expiration_time_math?
             scope = scope.where("#{model_class.expiration_time_sql} < ?", Time.current)
           else
-            ::Kernel.warn(model_class.expiration_time_math_not_supported_warning_message)
+            ::Kernel.warn(::Doorkeeper::Models::ExpirationTimeSqlMath::WARNING_MESSAGE)
           end
 
           scope.in_batches(&:delete_all)
