@@ -87,8 +87,8 @@ module Doorkeeper
           <<~WARNING.squish
             [DOORKEEPER] Doorkeeper doesn't support expiration time math for your database adapter (#{adapter_name}).
             Records with an individual expires_in value longer than the global TTL may be incorrectly removed.
-            Please add a class method `custom_expiration_time_sql` to your #{self.class.name} to provide a custom
-            SQL expression to calculate access token expiration time. See lib/doorkeeper/orm/active_record/mixins/access_token.rb
+            Please add a class method `custom_expiration_time_sql` to your #{self.name} to provide a custom
+            SQL expression to calculate expiration time. See lib/doorkeeper/models/concerns/expiration_time_sql_math.rb
             for more details.
           WARNING
         end

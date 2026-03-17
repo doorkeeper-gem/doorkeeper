@@ -122,6 +122,17 @@ RSpec.describe Doorkeeper::StaleRecordsCleaner do
           end
         end
 
+        context "when the model uses an unsupported database adapter" do
+          before do
+            allow(model).to receive(:adapter_name).and_return("unsupported_db")
+          end
+
+          it "emits a warning" do
+            expect(Kernel).to receive(:warn).with(/\[DOORKEEPER\].*unsupported_db/)
+            cleaner.clean_expired(ttl)
+          end
+        end
+
         if model_name == :access_token
           context "with record that is past the threshold, but never expires" do
             before do
