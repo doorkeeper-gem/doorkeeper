@@ -34,13 +34,14 @@ RSpec.describe Doorkeeper do
       Rails.application.config.filter_parameters.replace(original_filter_parameters)
     end
 
-    it "adds OAuth sensitive parameters to filter_parameters on configure" do
+    it "adds OAuth sensitive parameters to filter_parameters" do
       Rails.application.config.filter_parameters.clear
 
       described_class.configure do
         orm DOORKEEPER_ORM
         resource_owner_authenticator { nil }
       end
+      described_class.setup_filter_parameters
 
       filter_params = Rails.application.config.filter_parameters
       expect(filter_params).to include(
@@ -65,6 +66,7 @@ RSpec.describe Doorkeeper do
         resource_owner_authenticator { nil }
         grant_flows %w[authorization_code]
       end
+      described_class.setup_filter_parameters
 
       filter_params = Rails.application.config.filter_parameters
       expect(filter_params).to include(
@@ -80,20 +82,21 @@ RSpec.describe Doorkeeper do
         resource_owner_authenticator { nil }
         grant_flows %w[client_credentials]
       end
+      described_class.setup_filter_parameters
 
       filter_params = Rails.application.config.filter_parameters
       expect(filter_params.any? { |f| f.is_a?(Regexp) && f.match?("code") }).to be(false)
     end
 
-    it "does not add duplicate filters when configure is called multiple times" do
+    it "does not add duplicate filters when called multiple times" do
       Rails.application.config.filter_parameters.clear
 
-      2.times do
-        described_class.configure do
-          orm DOORKEEPER_ORM
-          resource_owner_authenticator { nil }
-        end
+      described_class.configure do
+        orm DOORKEEPER_ORM
+        resource_owner_authenticator { nil }
       end
+
+      2.times { described_class.setup_filter_parameters }
 
       filters = Rails.application.config.filter_parameters.select { |f|
         f.is_a?(Regexp) && f.match?("access_token")

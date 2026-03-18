@@ -2,6 +2,12 @@
 
 module Doorkeeper
   class Engine < Rails::Engine
+    initializer "doorkeeper.params.filter", after: :load_config_initializers do |app|
+      app.config.to_prepare do
+        Doorkeeper.setup_filter_parameters
+      end
+    end
+
     initializer "doorkeeper.routes" do
       Doorkeeper::Rails::Routes.install!
     end
