@@ -29,6 +29,13 @@ module Doorkeeper
         return app if secret.blank? && !app.confidential?
         return unless app.secret_matches?(secret)
 
+        # Upgrade the secret to the current strategy when it was matched via the
+        # fallback strategy (i.e. primary strategy did not match but fallback did).
+        if fallback_secret_strategy && !secret.nil? && !app.secret.nil? &&
+            !secret_strategy.secret_matches?(secret.to_s, app.secret.to_s)
+          upgrade_fallback_value(app, :secret, secret)
+        end
+
         app
       end
 
@@ -86,10 +93,8 @@ module Doorkeeper
 
       # When fallback lookup is enabled, ensure applications
       # with plain secrets can still be found
-      if fallback_secret_strategy && fallback_secret_strategy.secret_matches?(input, secret)
-        # Upgrade the stored secret to the current strategy
-        self.class.upgrade_fallback_value(self, :secret, input)
-        true
+      if fallback_secret_strategy
+        fallback_secret_strategy.secret_matches?(input, secret)
       else
         false
       end
