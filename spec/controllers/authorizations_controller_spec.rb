@@ -1239,6 +1239,69 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
     end
   end
 
+  describe "POST #create with errors with handle_auth_errors :raise" do
+    before { config_is_set(:handle_auth_errors, :raise) }
+
+    context "without valid params" do
+      before do
+        default_scopes_exist :public
+      end
+
+      it "raises InvalidRequest error" do
+        expect { post :create, params: { an_invalid: "request" } }.to raise_error(Doorkeeper::Errors::InvalidRequest)
+      end
+
+      it "does not issue any token" do
+        expect(Doorkeeper::AccessGrant.count).to eq 0
+        expect(Doorkeeper::AccessToken.count).to eq 0
+      end
+    end
+
+    context "invalid client_id" do
+      before do
+        default_scopes_exist :public
+      end
+
+      it "raises InvalidClient error" do
+        expect { post :create, params: { client_id: "invalid" } }.to raise_error(Doorkeeper::Errors::InvalidClient)
+      end
+    end
+
+    context "invalid scope" do
+      before do
+        default_scopes_exist :public
+      end
+
+      it "raises InvalidScope error" do
+        expect do
+          post :create, params: {
+            client_id: client.uid,
+            response_type: "token",
+            scope: "invalid",
+            redirect_uri: client.redirect_uri,
+            state: "return-this",
+          }
+        end.to raise_error(Doorkeeper::Errors::InvalidScope)
+      end
+    end
+
+    context "invalid redirect_uri" do
+      before do
+        default_scopes_exist :public
+      end
+
+      it "raises InvalidRedirectUri error" do
+        expect do
+          post :create, params: {
+            client_id: client.uid,
+            response_type: "token",
+            redirect_uri: "invalid",
+          }
+        end.to raise_error(Doorkeeper::Errors::InvalidRedirectUri)
+      end
+    end
+  end
+
   describe "GET #new with callbacks" do
     after do
       client.update_attribute :redirect_uri, "urn:ietf:wg:oauth:2.0:oob"
