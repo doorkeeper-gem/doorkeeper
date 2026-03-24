@@ -9,6 +9,8 @@ User-visible changes worth mentioning.
 
 Add your entry here.
 
+- [#1781] Honor `handle_auth_errors :raise` in `AuthorizationsController#authorize_response`
+
 ## 5.9.0
 
 - [#1791] Add support for Rails read replicas with automatic role switching via `enable_multiple_database_roles` configuration option
