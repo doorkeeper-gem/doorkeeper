@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#1781] Honor `handle_auth_errors :raise` in `AuthorizationsController#authorize_response`
+- [#1797] Fix `doorkeeper:db:cleanup` rake task failure on PostgreSQL
 - [#1800] Set `@grant_type` in `ClientCredentialsRequest` and `RefreshTokenRequest` constructors so `request.grant_type` returns
 - the correct value in hooks like `before_successful_strategy_response`.
 - [#1802] Fix `filter_parameters` not applied when `Doorkeeper.configure` is called inside to_prepare.
