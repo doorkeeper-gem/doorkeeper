@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1703] Use `ActiveSupport.on_load(:active_record)` in ORM hooks to prevent loading ActiveRecord models too early
 - [#1781] Honor `handle_auth_errors :raise` in `AuthorizationsController#authorize_response`
 - [#1797] Fix `doorkeeper:db:cleanup` rake task failure on PostgreSQL
 - [#1800] Set `@grant_type` in `ClientCredentialsRequest` and `RefreshTokenRequest` constructors so `request.grant_type` returns
