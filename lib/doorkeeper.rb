@@ -154,6 +154,16 @@ module Doorkeeper
       end
     end
 
+    def setup_filter_parameters
+      return unless defined?(::Rails) && ::Rails.application && configured?
+
+      parameters = %w[client_secret authentication_token access_token refresh_token]
+      parameters << "code" if configuration.grant_flows.include?("authorization_code")
+      filter = /^(#{Regexp.union(parameters)})$/
+      filter_params = ::Rails.application.config.filter_parameters
+      filter_params << filter unless filter_params.include?(filter)
+    end
+
     def setup_orm_adapter
       @orm_adapter = "doorkeeper/orm/#{configuration.orm}".classify.constantize
     rescue NameError => e
