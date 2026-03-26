@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
-Add your entry here.
+- Set `@grant_type` in `ClientCredentialsRequest` and `RefreshTokenRequest` constructors so `request.grant_type` returns the correct value in hooks like `before_successful_strategy_response`.
 
 - [#1781] Honor `handle_auth_errors :raise` in `AuthorizationsController#authorize_response`
 
