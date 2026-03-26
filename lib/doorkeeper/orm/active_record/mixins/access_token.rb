@@ -76,12 +76,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
             relation.where(expires_in: nil)
           )
         else
-          ::Kernel.warn <<~WARNING.squish
-            [DOORKEEPER] Doorkeeper doesn't support expiration time math for your database adapter (#{adapter_name}).
-            Please add a class method `custom_expiration_time_sql` for your AccessToken class/mixin to provide a custom
-            SQL expression to calculate access token expiration time. See lib/doorkeeper/orm/active_record/mixins/access_token.rb
-            for more details.
-          WARNING
+          ::Kernel.warn(::Doorkeeper::Models::ExpirationTimeSqlMath::WARNING_MESSAGE)
 
           relation
         end
