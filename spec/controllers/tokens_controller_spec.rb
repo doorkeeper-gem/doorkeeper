@@ -295,6 +295,19 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
 
         expect(access_token.reload).to have_attributes(revoked?: true)
       end
+
+      it "revokes the access token when client_id belongs to a different public client" do
+        other_client = FactoryBot.create :application, confidential: false
+
+        post :revoke, params: {
+          client_id: other_client.uid,
+          token: access_token.refresh_token,
+        }
+
+        expect(response.status).to eq 200
+
+        expect(access_token.reload).to have_attributes(revoked?: true)
+      end
     end
 
     context "when associated app is confidential" do
