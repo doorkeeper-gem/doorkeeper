@@ -8,18 +8,12 @@ module Doorkeeper
       end
 
       def initialize(attributes = {})
-        super(attributes.merge(name: :invalid_scope, state: :forbidden))
+        super(attributes.merge(name: :insufficient_scope, state: :forbidden))
         @scopes = attributes[:scopes]
       end
 
       def status
         :forbidden
-      end
-
-      def headers
-        headers = super
-        headers.delete "WWW-Authenticate"
-        headers
       end
 
       def description
