@@ -239,6 +239,33 @@ RSpec.describe Doorkeeper::Application do
       end
     end
 
+    context "with application hashing fallback enabled" do
+      include_context "with application hashing and fallback lookup enabled"
+
+      let(:plain_secret) { "plain text secret" }
+
+      before do
+        # Simulate an application that was stored with a plain secret before hashing was enabled
+        app.update_column(:secret, plain_secret)
+      end
+
+      it "upgrades a plain secret when falling back to it" do
+        # Side-effect: This will automatically upgrade the secret
+        expect(described_class).to receive(:upgrade_fallback_value).and_call_original
+        lookup = described_class.by_uid_and_secret(app.uid, plain_secret)
+        expect(lookup).to eq(app)
+
+        # The secret should now be stored as a SHA256 hash
+        app.reload
+        expect(app.secret).not_to eq(plain_secret)
+        expect(app.secret).to eq(Doorkeeper::SecretStoring::Sha256Hash.transform_secret(plain_secret))
+
+        # Will find subsequently by hashing the secret
+        lookup = described_class.by_uid_and_secret(app.uid, plain_secret)
+        expect(lookup).to eq(app)
+      end
+    end
+
     it "does not provide access to secret after loading" do
       lookup = described_class.by_uid_and_secret(app.uid, app.plaintext_secret)
       expect(lookup.plaintext_secret).to be_nil
