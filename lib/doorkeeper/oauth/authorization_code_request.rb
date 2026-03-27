@@ -63,7 +63,7 @@ module Doorkeeper
         @missing_param =
           if grant&.uses_pkce? && code_verifier.blank?
             :code_verifier
-          elsif client && !client.confidential && Doorkeeper.config.force_pkce? && code_verifier.blank?
+          elsif Doorkeeper.config.force_pkce? && code_verifier.blank?
             :code_verifier
           elsif redirect_uri.blank?
             :redirect_uri
