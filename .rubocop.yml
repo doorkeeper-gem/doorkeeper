@@ -1,8 +1,11 @@
 inherit_from: .rubocop_todo.yml
-require:
+plugins:
+  - rubocop-capybara
+  - rubocop-factory_bot
   - rubocop-performance
   - rubocop-rails
   - rubocop-rspec
+  - rubocop-rspec_rails
 AllCops:
   TargetRubyVersion: 3.1
   Exclude:
@@ -92,11 +95,9 @@ RSpec/DescribeClass:
   Enabled: false
 RSpec/ExampleLength:
   Enabled: false
-RSpec/FilePath:
+RSpec/SpecFilePathFormat:
   Enabled: false
 RSpec/MultipleExpectations:
   Enabled: false
 RSpec/NestedGroups:
-  Enabled: false
-Capybara/FeatureMethods:
   Enabled: false
