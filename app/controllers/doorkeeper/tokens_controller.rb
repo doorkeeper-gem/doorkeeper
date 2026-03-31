@@ -101,8 +101,8 @@ module Doorkeeper
       # Token belongs to specific client, so we need to check if
       # authenticated client could access it.
       if token.application_id?
-        # We authorize client by checking token's application
-        server.client && server.client.application == token.application
+        # We authorize client by comparing client and token application IDs
+        server.client && server.client.id == token.application_id
       else
         # Token was issued without client, authorization unnecessary
         true
