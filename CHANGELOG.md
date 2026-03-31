@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1784] Remove hardcoded colon from authorization view template, move punctuation to translation files
 - [#1781] Honor `handle_auth_errors :raise` in `AuthorizationsController#authorize_response`
 - [#1795] Fix: detailed error 'insufficient_scope' in protected resources 403s
 - [#1797] Fix `doorkeeper:db:cleanup` rake task failure on PostgreSQL
