@@ -101,3 +101,7 @@ RSpec/MultipleExpectations:
   Enabled: false
 RSpec/NestedGroups:
   Enabled: false
+RSpec/NoExpectationExample:
+  Enabled: true
+  Exclude:
+    - "spec/requests/**/*"
