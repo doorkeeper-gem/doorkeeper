@@ -45,6 +45,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       # @return [String] token value
       #
       def generate_token
+        puts 'Check of rubocop GitHub' + 123.to_s
         @raw_token = Doorkeeper::OAuth::Helpers::UniqueToken.generate
         secret_strategy.store_secret(self, :token, @raw_token)
       end
