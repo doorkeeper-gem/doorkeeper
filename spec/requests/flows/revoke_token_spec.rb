@@ -173,6 +173,56 @@ RSpec.describe "Revoke Token Flow" do
     end
   end
 
+  context "with a token issued to a public client" do
+    let(:access_token) do
+      FactoryBot.create(
+        :access_token,
+        application: public_client_application,
+        resource_owner_id: resource_owner.id,
+        resource_owner_type: resource_owner.class.name,
+        use_refresh_token: true,
+      )
+    end
+
+    it "revokes the token when the requesting client matches" do
+      post revocation_token_endpoint_url,
+           params: { client_id: public_client_application.uid, token: access_token.token }
+
+      expect(response).to be_successful
+      expect(access_token.reload).to be_revoked
+    end
+
+    it "revokes the refresh token when the requesting client matches" do
+      post revocation_token_endpoint_url,
+           params: { client_id: public_client_application.uid, token: access_token.refresh_token, token_type_hint: "refresh_token" }
+
+      expect(response).to be_successful
+      expect(access_token.reload).to be_revoked
+    end
+
+    it "does not revoke the token when the requesting client is a different public client" do
+      other_public_client = FactoryBot.create(:application, confidential: false)
+
+      post revocation_token_endpoint_url,
+           params: { client_id: other_public_client.uid, token: access_token.token }
+
+      expect(response).to be_forbidden
+      expect(response.body).to include("unauthorized_client")
+      expect(access_token.reload).not_to be_revoked
+    end
+
+    it "does not revoke the refresh token when the requesting client is a different public client" do
+      other_public_client = FactoryBot.create(:application, confidential: false)
+
+      post revocation_token_endpoint_url,
+           params: { client_id: other_public_client.uid, token: access_token.refresh_token, token_type_hint: "refresh_token" }
+
+      expect(response).to be_forbidden
+      expect(response.body).to include("unauthorized_client")
+      expect(access_token.reload).not_to be_revoked
+    end
+  end
+
   context "without client authentication, when skip_client_authentication_for_password_grant is false (the default)" do
     before do
       Doorkeeper.configure do

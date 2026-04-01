@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1806] Fix token revocation bypass for public clients (RFC 7009)
 - [#1703] Use `ActiveSupport.on_load(:active_record)` in ORM hooks to prevent loading ActiveRecord models too early
 - [#1781] Honor `handle_auth_errors :raise` in `AuthorizationsController#authorize_response`
 - [#1797] Fix `doorkeeper:db:cleanup` rake task failure on PostgreSQL
