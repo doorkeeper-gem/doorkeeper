@@ -4,7 +4,6 @@
 [![CI](https://github.com/doorkeeper-gem/doorkeeper/actions/workflows/ci.yml/badge.svg)](https://github.com/doorkeeper-gem/doorkeeper/actions/workflows/ci.yml)
 [![Maintainability](https://qlty.sh/gh/doorkeeper-gem/projects/doorkeeper/maintainability.svg)](https://qlty.sh/gh/doorkeeper-gem/projects/doorkeeper)
 [![Coverage Status](https://coveralls.io/repos/github/doorkeeper-gem/doorkeeper/badge.svg?branch=main)](https://coveralls.io/github/doorkeeper-gem/doorkeeper?branch=main)
-[![Reviewed by Hound](https://img.shields.io/badge/Reviewed_by-Hound-8E64B0.svg)](https://houndci.com)
 [![GuardRails badge](https://api.guardrails.io/v2/badges/21183?token=66768ce8f6995814df81f65a2cff40f739f688492704f973e62809e15599bb62)](https://dashboard.guardrails.io/gh/doorkeeper-gem/repos/21183)
 [![Dependabot](https://img.shields.io/badge/dependabot-enabled-success.svg)](https://dependabot.com)
 
