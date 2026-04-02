@@ -51,12 +51,12 @@ en:
         title: 'New Application'
       show:
         title: 'Application: %{name}'
-        application_id: 'UID'
-        secret: 'Secret'
+        application_id: 'UID:'
+        secret: 'Secret:'
         secret_hashed: 'Secret hashed'
-        scopes: 'Scopes'
-        confidential: 'Confidential'
-        callback_urls: 'Callback urls'
+        scopes: 'Scopes:'
+        confidential: 'Confidential:'
+        callback_urls: 'Callback urls:'
         actions: 'Actions'
         not_defined: 'Not defined'
 
@@ -71,7 +71,7 @@ en:
         prompt: 'Authorize %{client_name} to use your account?'
         able_to: 'This application will be able to:'
       show:
-        title: 'Authorization code'
+        title: 'Authorization code:'
       form_post:
         title: 'Submit this form'
 
