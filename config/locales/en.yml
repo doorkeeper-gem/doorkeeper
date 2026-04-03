@@ -71,7 +71,7 @@ en:
         prompt: 'Authorize %{client_name} to use your account?'
         able_to: 'This application will be able to:'
       show:
-        title: 'Authorization code'
+        title: 'Authorization code:'
       form_post:
         title: 'Submit this form'
 
