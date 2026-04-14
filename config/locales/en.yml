@@ -16,7 +16,7 @@ en:
               secured_uri: 'must be an HTTPS/SSL URI.'
               forbidden_uri: 'is forbidden by the server.'
             scopes:
-              not_match_configured: "doesn't match configured on the server."
+              not_match_configured: "doesn't match those configured on the server."
 
   doorkeeper:
     applications:
@@ -33,7 +33,7 @@ en:
       help:
         confidential: 'Application will be used where the client secret can be kept confidential. Native mobile apps and Single Page Apps are considered non-confidential.'
         redirect_uri: 'Use one line per URI'
-        blank_redirect_uri: "Leave it blank if you configured your provider to use Client Credentials, Resource Owner Password Credentials or any other grant type that doesn't require redirect URI."
+        blank_redirect_uri: "Leave it blank if you configured your provider to use Client Credentials, Resource Owner Password Credentials or any other grant type that doesn't require a redirect URI."
         scopes: 'Separate scopes with spaces. Leave blank to use the default scopes.'
       edit:
         title: 'Edit application'
@@ -56,7 +56,7 @@ en:
         secret_hashed: 'Secret hashed'
         scopes: 'Scopes'
         confidential: 'Confidential'
-        callback_urls: 'Callback urls'
+        callback_urls: 'Callback URLs'
         actions: 'Actions'
         not_defined: 'Not defined'
 
@@ -95,9 +95,9 @@ en:
         invalid_request:
           unknown: 'The request is missing a required parameter, includes an unsupported parameter value, or is otherwise malformed.'
           missing_param: 'Missing required parameter: %{value}.'
-          request_not_authorized: 'Request need to be authorized. Required parameter for authorizing request is missing or invalid.'
+          request_not_authorized: 'Request needs to be authorized. Required parameter for authorizing the request is missing or invalid.'
           invalid_code_challenge: 'Code challenge is required.'
-        invalid_redirect_uri: "The requested redirect uri is malformed or doesn't match client redirect URI."
+        invalid_redirect_uri: "The requested redirect URI is malformed or doesn't match the client redirect URI."
         unauthorized_client: 'The client is not authorized to perform this request using this method.'
         access_denied: 'The resource owner or authorization server denied the request.'
         invalid_scope: 'The requested scope is invalid, unknown, or malformed.'
