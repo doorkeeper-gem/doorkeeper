@@ -15,6 +15,10 @@ RSpec.describe Doorkeeper::ApplicationMetalController, type: :controller do
     end
   end
 
+  it "lacks `helper_method` so the included hook becomes a no-op" do
+    expect(described_class).not_to respond_to(:helper_method)
+  end
+
   it "lazy run hooks" do
     i = 0
     ActiveSupport.on_load(:doorkeeper_metal_controller) { i += 1 }
