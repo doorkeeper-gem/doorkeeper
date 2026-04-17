@@ -94,7 +94,27 @@ module Doorkeeper
       private
 
       def authenticate_info
-        %(Bearer realm="#{realm}", error="#{name}", error_description="#{description}")
+        %(Bearer realm="#{realm}", error="#{sanitize_error_values(name)}", error_description="#{sanitize_error_values(description)}")
+      end
+
+      # This method removes any characters that are invalid in error
+      # details per RFC6750.
+      #
+      # > Values for the "error" and "error_description" attributes
+      # > (specified in Appendixes A.7 and A.8 of [RFC6749]) MUST NOT
+      # > include characters outside the set %x20-21 / %x23-5B /
+      # > %x5D-7E.
+      def sanitize_error_values(string)
+        # %x20-21 / %x23-5B / %x5D-7E
+        string.to_s.each_char.map do |char|
+          if char.in?("\x20".encode("utf-8").."\x21".encode("utf-8")) ||
+            char.in?("\x23".encode("utf-8").."\x5B".encode("utf-8")) ||
+             char.in?("\x5D".encode("utf-8").."\x7E".encode("utf-8"))
+            char
+          else
+            "_"
+          end
+        end.join("")
       end
     end
   end

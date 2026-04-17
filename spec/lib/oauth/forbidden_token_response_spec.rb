@@ -19,7 +19,7 @@ RSpec.describe Doorkeeper::OAuth::ForbiddenTokenResponse do
     it "includes a WWW-Authenticate header per RFC 6750 Section 3.1" do
       www_authenticate = response.headers["WWW-Authenticate"]
       expect(www_authenticate).to include('error="insufficient_scope"')
-      expect(www_authenticate).to include('Access to this resource requires scope "public".')
+      expect(www_authenticate).to include('error_description="Access to this resource requires scope _public_."')
     end
   end
 
