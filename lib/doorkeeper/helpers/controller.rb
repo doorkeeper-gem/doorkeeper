@@ -7,6 +7,10 @@ module Doorkeeper
     # Rails controller helpers.
     #
     module Controller
+      def self.included(base)
+        base.helper_method :current_resource_owner if base.respond_to?(:helper_method)
+      end
+
       private
 
       # :doc:

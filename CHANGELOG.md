@@ -14,6 +14,7 @@ User-visible changes worth mentioning.
 - [#1802] Fix `filter_parameters` not applied when `Doorkeeper.configure` is called inside to_prepare.
 - [#1804] Use `ActiveSupport.on_load(:active_record)` in ORM hooks to prevent loading ActiveRecord models too early
 - [#1806] Fix token revocation bypass for public clients (RFC 7009)
+- [#1815] Expose `current_resource_owner` as a view helper in `Doorkeeper::ApplicationController`.
 
 ## 5.9.0
 
