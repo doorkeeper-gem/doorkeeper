@@ -7,9 +7,9 @@ module Doorkeeper
 
       validate :client_id, error: Errors::InvalidRequest
       validate :client, error: Errors::InvalidClient
+      validate :redirect_uri, error: Errors::InvalidRedirectUri
       validate :client_supports_grant_flow, error: Errors::UnauthorizedClient
       validate :resource_owner_authorize_for_client, error: Errors::InvalidClient
-      validate :redirect_uri, error: Errors::InvalidRedirectUri
       validate :params, error: Errors::InvalidRequest
       validate :response_type, error: Errors::UnsupportedResponseType
       validate :response_mode, error: Errors::UnsupportedResponseMode
