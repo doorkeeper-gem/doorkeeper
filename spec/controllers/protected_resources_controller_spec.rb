@@ -141,7 +141,7 @@ RSpec.describe "doorkeeper authorize filter" do
 
       get :index, params: { access_token: token_string }
       expect(response.status).to eq 403
-      expect(response.header).not_to include("WWW-Authenticate")
+      expect(response.header["WWW-Authenticate"]).to include('error="insufficient_scope"')
     end
   end
 
@@ -255,7 +255,7 @@ RSpec.describe "doorkeeper authorize filter" do
 
       it "renders a custom JSON response" do
         get :index, params: { access_token: token_string }
-        expect(response.header).not_to include("WWW-Authenticate")
+        expect(response.header["WWW-Authenticate"]).to include('error="insufficient_scope"')
         expect(response.content_type).to include("application/json")
         expect(response.status).to eq 403
 
@@ -294,7 +294,7 @@ RSpec.describe "doorkeeper authorize filter" do
 
       it "renders a custom status code and text response" do
         get :index, params: { access_token: token_string }
-        expect(response.header).not_to include("WWW-Authenticate")
+        expect(response.header["WWW-Authenticate"]).to include('error="insufficient_scope"')
         expect(response.status).to eq 403
         expect(response.body).to eq("Forbidden")
       end
