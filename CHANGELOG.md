@@ -16,6 +16,7 @@ User-visible changes worth mentioning.
 - [#1804] Use `ActiveSupport.on_load(:active_record)` in ORM hooks to prevent loading ActiveRecord models too early
 - [#1806] Fix token revocation bypass for public clients (RFC 7009)
 - [#1815] Expose `current_resource_owner` as a view helper in `Doorkeeper::ApplicationController`.
+- [#1818] Fix token introspection returning `exp: 0` for non-expiring tokens.
 
 ## 5.9.0
 

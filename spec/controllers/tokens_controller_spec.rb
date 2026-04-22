@@ -451,6 +451,25 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
       end
     end
 
+    context "when token never expires (expires_in is nil)" do
+      let(:token_for_introspection) { FactoryBot.create(:access_token, application: client, expires_in: nil) }
+
+      it "omits the exp field per RFC 7662" do
+        request.headers["Authorization"] = basic_auth_header_for_client(client)
+
+        post :introspect, params: { token: token_for_introspection.token }
+
+        expect(json_response).to match(
+          "active" => true,
+          "client_id" => client.uid,
+          "token_type" => "Bearer",
+          "scope" => nil,
+          "iat" => an_instance_of(Integer),
+        )
+        expect(json_response).not_to have_key("exp")
+      end
+    end
+
     context "when token was issued to a different client than is making this request" do
       let(:different_client) { FactoryBot.create(:application) }
 
