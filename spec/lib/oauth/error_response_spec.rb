@@ -14,10 +14,10 @@ RSpec.describe Doorkeeper::OAuth::ErrorResponse do
       expect(subject.status).to eq(:unauthorized)
     end
 
-    it "has a status of unauthorized for an unauthorized_client error" do
+    it "has a status of bad_request for an unauthorized_client error" do
       subject = described_class.new(name: :unauthorized_client)
 
-      expect(subject.status).to eq(:unauthorized)
+      expect(subject.status).to eq(:bad_request)
     end
   end
 
@@ -98,10 +98,10 @@ RSpec.describe Doorkeeper::OAuth::ErrorResponse do
       expect(subject.redirectable?).to be false
     end
 
-    it "not redirectable when error name is unauthorized_client" do
+    it "is redirectable when error name is unauthorized_client" do
       subject = described_class.new(name: :unauthorized_client, redirect_uri: "https://example.com")
 
-      expect(subject.redirectable?).to be false
+      expect(subject.redirectable?).to be true
     end
 
     it "not redirectable when redirect_uri is oob uri" do

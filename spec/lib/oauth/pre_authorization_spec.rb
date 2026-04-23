@@ -27,15 +27,15 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
     }
   end
 
-  it "must call the validations on client and redirect_uri before other validations because they are not redirectable" do
+  it "must validate redirect_uri before client_supports_grant_flow and resource_owner_authorize_for_client, so that non-redirectable errors are checked first" do
     validation_attributes = described_class.validations.map { |validation| validation[:attribute] }
 
     expect(validation_attributes).to eq(%i[
       client_id
       client
+      redirect_uri
       client_supports_grant_flow
       resource_owner_authorize_for_client
-      redirect_uri
       params
       response_type
       response_mode
