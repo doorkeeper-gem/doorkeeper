@@ -392,7 +392,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
 
       it "includes redirect_uri with error info" do
-        expect(response_json_body["redirect_uri"]).to include("unauthorized_client")
+        expect(response_json_body["redirect_uri"]).to include("error=unauthorized_client")
       end
 
       it "does not issue any access token" do
