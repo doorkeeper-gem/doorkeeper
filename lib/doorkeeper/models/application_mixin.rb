@@ -27,9 +27,23 @@ module Doorkeeper
         app = by_uid(uid)
         return unless app
         return app if secret.blank? && !app.confidential?
-        return unless app.secret_matches?(secret)
 
-        app
+        # Try the primary (active) secret strategy first.
+        if !secret.nil? && !app.secret.nil? &&
+            secret_strategy.secret_matches?(secret.to_s, app.secret.to_s)
+          return app
+        end
+
+        # Fall back to the previous strategy if configured, upgrading on success
+        # to migrate the stored secret to the active strategy (mirrors the
+        # find_by_plaintext_token -> find_by_fallback_token pattern).
+        if fallback_secret_strategy && !secret.nil? && !app.secret.nil? &&
+            fallback_secret_strategy.secret_matches?(secret.to_s, app.secret.to_s)
+          upgrade_fallback_value(app, :secret, secret)
+          return app
+        end
+
+        nil
       end
 
       # Returns an instance of the Doorkeeper::Application with specific UID.
