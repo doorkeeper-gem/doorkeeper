@@ -11,7 +11,7 @@ User-visible changes worth mentioning.
 - [#1795] Fix: detailed error 'insufficient_scope' in protected resources 403s
 - [#1797] Fix `doorkeeper:db:cleanup` rake task failure on PostgreSQL
 - [#1800] Set `@grant_type` in `ClientCredentialsRequest` and `RefreshTokenRequest` constructors so `request.grant_type` returns
-- the correct value in hooks like `before_successful_strategy_response`.
+  the correct value in hooks like `before_successful_strategy_response`.
 - [#1802] Fix `filter_parameters` not applied when `Doorkeeper.configure` is called inside to_prepare.
 - [#1804] Use `ActiveSupport.on_load(:active_record)` in ORM hooks to prevent loading ActiveRecord models too early
 - [#1806] Fix token revocation bypass for public clients (RFC 7009)
