@@ -17,6 +17,13 @@ User-visible changes worth mentioning.
 - [#1806] Fix token revocation bypass for public clients (RFC 7009)
 - [#1815] Expose `current_resource_owner` as a view helper in `Doorkeeper::ApplicationController`.
 - [#1818] Fix token introspection returning `exp: 0` for non-expiring tokens.
+- [#1784] Remove hardcoded colons from view templates, move punctuation to i18n translation strings.
+
+  **[IMPORTANT]**: if you have customized Doorkeeper views (`authorizations/new`, `authorizations/show`,
+  `applications/show`) or overridden the default `en.yml` translations, you may need to update them.
+  Colons are no longer hardcoded in the views — they are now part of the translation strings.
+  Update the [doorkeeper-i18n](https://github.com/doorkeeper-gem/doorkeeper-i18n) gem to get the
+  updated translations for all locales.
 
 ## 5.9.0
 
