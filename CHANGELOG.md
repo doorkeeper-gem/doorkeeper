@@ -24,6 +24,7 @@ User-visible changes worth mentioning.
   Colons are no longer hardcoded in the views — they are now part of the translation strings.
   Update the [doorkeeper-i18n](https://github.com/doorkeeper-gem/doorkeeper-i18n) gem to get the
   updated translations for all locales.
+- [#1820] Remove dead wildcard presence check in `Scopes#dynamic_scope_match?` (internal cleanup, no behavior change).
 
 ## 5.9.0
 
