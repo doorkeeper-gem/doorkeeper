@@ -28,6 +28,9 @@ User-visible changes worth mentioning.
 - [#1822] Update Rubocop config, auto-corrections.
 - [#1823] Update Rubocop config, part 2.
 - [#1825]Update Rubocop config, part 3.
+- [#1821] Fix noisy `Could not find command "no_previous_refresh_token_column?"` Thor output during the
+  `PreviousRefreshTokenGenerator` spec by stubbing the underlying DB column check instead of the generator's
+  private method (test-only change).
 
 ## 5.9.0
 
