@@ -29,17 +29,17 @@ RSpec.describe Doorkeeper::Models::Concerns::WriteToPrimary do
       around do |example|
         # Save original ActiveRecord
         original_active_record = Object.const_get("ActiveRecord")
-        
+
         begin
           # Temporarily hide ActiveRecord constant
           Object.send(:remove_const, "ActiveRecord")
-          
+
           # Run the test
           Doorkeeper.configure do
             orm :active_record
             enable_multiple_database_roles
           end
-          
+
           example.run
         ensure
           # Restore ActiveRecord for cleanup

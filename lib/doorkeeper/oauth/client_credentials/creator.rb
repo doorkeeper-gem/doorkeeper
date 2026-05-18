@@ -48,7 +48,8 @@ module Doorkeeper
           custom_attributes = Doorkeeper.config.access_token_model.
             extract_custom_attributes(attributes).presence
           Doorkeeper.config.access_token_model.matching_token_for(
-            client, nil, scopes, custom_attributes: custom_attributes, include_expired: false)
+            client, nil, scopes, custom_attributes: custom_attributes, include_expired: false,
+)
         end
       end
     end

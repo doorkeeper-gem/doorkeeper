@@ -27,7 +27,7 @@ RSpec.describe Doorkeeper::OAuth::Error do
           {
             challenge_methods: "foo, bar",
             count: 2,
-          }
+          },
         )
       end
 

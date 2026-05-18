@@ -7,7 +7,7 @@ plugins:
   - rubocop-rspec
   - rubocop-rspec_rails
 AllCops:
-  TargetRubyVersion: 3.1
+  TargetRubyVersion: 3.4
   Exclude:
     - "spec/generators/tmp/**/*"
     - "spec/dummy/db/*"
@@ -95,6 +95,10 @@ RSpec/DescribeClass:
   Enabled: false
 RSpec/ExampleLength:
   Enabled: false
+RSpec/ExpectChange:
+  Enabled: false
+RSpec/MultipleMemoizedHelpers:
+  Max: 10
 RSpec/SpecFilePathFormat:
   Enabled: false
 RSpec/MultipleExpectations:

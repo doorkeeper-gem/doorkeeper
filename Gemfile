@@ -32,7 +32,7 @@ gem "sqlite3", "~> 2.3", platform: [:ruby, :mswin, :mingw, :x64_mingw]
 gem "tzinfo-data", platforms: %i[mingw mswin x64_mingw]
 gem "timecop"
 
-gem 'irb', '~> 1.8'
+gem "irb", "~> 1.8"
 
 # Interactive Debugging tools
-gem 'debug', '~> 1.8'
+gem "debug", "~> 1.8"

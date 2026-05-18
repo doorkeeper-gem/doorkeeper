@@ -263,11 +263,11 @@ describe Doorkeeper::OAuth::Helpers::URIChecker do
       expect(described_class).to be_loopback_uri(URI.parse("http://127.0.0.1"))
     end
 
-    it 'is false if not loopback IP' do
+    it "is false if not loopback IP" do
       expect(described_class).not_to be_loopback_uri(URI.parse("http://example.com"))
     end
 
-    it 'is false for non URL' do
+    it "is false for non URL" do
       expect(described_class).not_to be_loopback_uri(URI.parse("vscode://file/home/user/.vimrc"))
     end
   end

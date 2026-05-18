@@ -39,7 +39,7 @@ module Doorkeeper
             scopes,
             use_refresh_token: false,
             expires_in: ttl,
-            **attributes
+            **attributes,
           )
         end
       end
