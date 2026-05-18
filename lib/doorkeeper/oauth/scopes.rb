@@ -115,7 +115,8 @@ module Doorkeeper
         return false if allowed_pattern[0] != request_pattern[0]
         return false if allowed_pattern[1].blank?
         return false if request_pattern[1].blank?
-        return true  if allowed_pattern[1] == DYNAMIC_SCOPE_WILDCARD && allowed_pattern[1].present?
+
+        return true if allowed_pattern[1] == DYNAMIC_SCOPE_WILDCARD
 
         allowed_pattern[1] == request_pattern[1]
       end
