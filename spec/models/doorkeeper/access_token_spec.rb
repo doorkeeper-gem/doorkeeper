@@ -648,13 +648,14 @@ RSpec.describe Doorkeeper::AccessToken do
       it "returns a token when attributes match" do
         token = FactoryBot.create :access_token, default_attributes.merge(custom_attributes)
         last_token = described_class.matching_token_for(
-          application, resource_owner, scopes, custom_attributes: custom_attributes)
+          application, resource_owner, scopes, custom_attributes: custom_attributes,
+)
         expect(last_token).to eq(token)
       end
 
       it "does not return a token if attributes don't match" do
-        token = FactoryBot.create :access_token, default_attributes.merge(custom_attributes)
-        last_token = described_class.matching_token_for(application, resource_owner, scopes, custom_attributes: { tenant_id: 'different' })
+        FactoryBot.create :access_token, default_attributes.merge(custom_attributes)
+        last_token = described_class.matching_token_for(application, resource_owner, scopes, custom_attributes: { tenant_id: "different" })
         expect(last_token).to eq(nil)
       end
 
@@ -713,7 +714,7 @@ RSpec.describe Doorkeeper::AccessToken do
       it "returns only non expired tokens" do
         expired_tokens = described_class.not_expired
         expect(expired_tokens.size).to be(4)
-        expect(expired_tokens).to match_array([active_token1, active_token2, active_token3, active_token4])
+        expect(expired_tokens).to contain_exactly(active_token1, active_token2, active_token3, active_token4)
       end
     end
   end

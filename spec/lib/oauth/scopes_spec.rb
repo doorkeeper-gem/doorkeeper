@@ -202,17 +202,17 @@ RSpec.describe Doorkeeper::OAuth::Scopes do
 
         describe "#&" do
           it "allows user:1 scope" do
-            scopes = described_class.from_string("public user:*") & (described_class.from_string("public user:1"))
+            scopes = described_class.from_string("public user:*") & described_class.from_string("public user:1")
             expect(scopes.all).to eq(%w[public user:1])
           end
 
           it "does not allow user:2 scope" do
-            scopes = described_class.from_string("public user:1") & (described_class.from_string("public user:2"))
+            scopes = described_class.from_string("public user:1") & described_class.from_string("public user:2")
             expect(scopes.all).to eq(%w[public])
           end
 
           it "does not allow user:* scope" do
-            scopes = described_class.from_string("public user:1") & (described_class.from_string("public user:*"))
+            scopes = described_class.from_string("public user:1") & described_class.from_string("public user:*")
             expect(scopes.all).to eq(%w[public])
           end
         end

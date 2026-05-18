@@ -45,16 +45,16 @@ RSpec.describe Doorkeeper do
 
       filter_params = Rails.application.config.filter_parameters
       expect(filter_params).to include(
-        a_kind_of(Regexp).and(match("client_secret"))
+        a_kind_of(Regexp).and(match("client_secret")),
       )
       expect(filter_params).to include(
-        a_kind_of(Regexp).and(match("access_token"))
+        a_kind_of(Regexp).and(match("access_token")),
       )
       expect(filter_params).to include(
-        a_kind_of(Regexp).and(match("refresh_token"))
+        a_kind_of(Regexp).and(match("refresh_token")),
       )
       expect(filter_params).to include(
-        a_kind_of(Regexp).and(match("authentication_token"))
+        a_kind_of(Regexp).and(match("authentication_token")),
       )
     end
 
@@ -70,7 +70,7 @@ RSpec.describe Doorkeeper do
 
       filter_params = Rails.application.config.filter_parameters
       expect(filter_params).to include(
-        a_kind_of(Regexp).and(match("code"))
+        a_kind_of(Regexp).and(match("code")),
       )
     end
 
@@ -98,9 +98,9 @@ RSpec.describe Doorkeeper do
 
       2.times { described_class.setup_filter_parameters }
 
-      filters = Rails.application.config.filter_parameters.select { |f|
+      filters = Rails.application.config.filter_parameters.select do |f|
         f.is_a?(Regexp) && f.match?("access_token")
-      }
+      end
       expect(filters.size).to eq(1)
     end
   end

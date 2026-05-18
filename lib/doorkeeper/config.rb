@@ -38,7 +38,7 @@ module Doorkeeper
       # @param opts [Hash] the options to configure dynamic scopes
       def enable_dynamic_scopes(opts = {})
         @config.instance_variable_set(:@enable_dynamic_scopes, true)
-        @config.instance_variable_set(:@dynamic_scopes_delimiter, opts[:delimiter] || ':')
+        @config.instance_variable_set(:@dynamic_scopes_delimiter, opts[:delimiter] || ":")
       end
 
       # Define default access token scopes for your provider
@@ -115,7 +115,7 @@ module Doorkeeper
         @config.instance_variable_set(:@enable_multiple_database_roles, true)
       end
 
-      # Choose to use the url path for native autorization codes 
+      # Choose to use the url path for native autorization codes
       # Enabling this flag sets the authorization code response route for
       # native redirect uris to oauth/authorize/<code>. The default is
       # oauth/authorize/native?code=<code>.
@@ -592,7 +592,7 @@ module Doorkeeper
 
     def pkce_code_challenge_methods_supported
       return [] unless access_grant_model.pkce_supported?
-      
+
       pkce_code_challenge_methods
     end
 
@@ -633,10 +633,10 @@ module Doorkeeper
     def deprecated_token_grant_types_resolver
       @deprecated_token_grant_types ||= calculate_token_grant_types
     end
-    
+
     def native_authorization_code_route
       @use_url_path_for_native_authorization = false unless defined?(@use_url_path_for_native_authorization)
-      @use_url_path_for_native_authorization ? '/:code' : '/native'
+      @use_url_path_for_native_authorization ? "/:code" : "/native"
     end
 
     # [NOTE]: deprecated and will be removed soon

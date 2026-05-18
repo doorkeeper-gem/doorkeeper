@@ -25,6 +25,7 @@ User-visible changes worth mentioning.
   Update the [doorkeeper-i18n](https://github.com/doorkeeper-gem/doorkeeper-i18n) gem to get the
   updated translations for all locales.
 - [#1820] Remove dead wildcard presence check in `Scopes#dynamic_scope_match?` (internal cleanup, no behavior change).
+- [#1822] Update Rubocop config, auto-corrections.
 
 ## 5.9.0
 

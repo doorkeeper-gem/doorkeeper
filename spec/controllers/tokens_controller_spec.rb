@@ -196,7 +196,7 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
         :access_token,
         application: client,
         revoked_at: revoked_at,
-        use_refresh_token: true
+        use_refresh_token: true,
       )
     end
 

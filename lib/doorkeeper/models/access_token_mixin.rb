@@ -222,7 +222,8 @@ module Doorkeeper
         if Doorkeeper.config.reuse_access_token
           custom_attributes = extract_custom_attributes(token_attributes).presence
           access_token = matching_token_for(
-            application, resource_owner, scopes, custom_attributes: custom_attributes, include_expired: false)
+            application, resource_owner, scopes, custom_attributes: custom_attributes, include_expired: false,
+)
 
           return access_token if access_token&.reusable?
         end
@@ -329,7 +330,8 @@ module Doorkeeper
       #   A hash containing only the custom access token attributes.
       def extract_custom_attributes(attributes)
         attributes.with_indifferent_access.slice(
-          *Doorkeeper.configuration.custom_access_token_attributes)
+          *Doorkeeper.configuration.custom_access_token_attributes
+)
       end
     end
 

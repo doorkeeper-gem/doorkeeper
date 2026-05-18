@@ -58,7 +58,7 @@ module Doorkeeper
           "It will be set to default ['plain', 'S256']",
         )
 
-        @pkce_code_challenge_methods = ['plain', 'S256']
+        @pkce_code_challenge_methods = ["plain", "S256"]
       end
     end
   end

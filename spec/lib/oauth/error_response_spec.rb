@@ -76,7 +76,7 @@ RSpec.describe Doorkeeper::OAuth::ErrorResponse do
 
       context "with error description containing forbidden characters (\\ or \")" do
         it "sanitize the value per RFC 6750 Section 3.1" do
-          error = double(:error, name: "backslash\\", description:"\"quotes\"")
+          error = double(:error, name: "backslash\\", description: "\"quotes\"")
           allow(Doorkeeper::OAuth::Error).to receive(:new).and_return(error)
           expect(headers).to include("error=\"backslash_\"")
           expect(headers).to include("error_description=\"_quotes_\"")
