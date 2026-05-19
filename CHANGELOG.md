@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1816] Fix: redirect `unauthorized_client` errors per RFC 6749 Section 4.1.2.1; validate redirect_uri before `client_supports_grant_flow` to prevent open redirect
 - [#1781] Honor `handle_auth_errors :raise` in `AuthorizationsController#authorize_response`
 - [#1795] Fix: detailed error 'insufficient_scope' in protected resources 403s
 - [#1797] Fix `doorkeeper:db:cleanup` rake task failure on PostgreSQL

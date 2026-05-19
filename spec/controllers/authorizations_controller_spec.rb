@@ -230,16 +230,16 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
         }
       end
 
-      it "renders 401 error" do
-        expect(response.status).to eq 401
+      it "redirects with error" do
+        expect(response).to be_redirect
       end
 
       it "includes error name" do
-        expect(response_json_body["error"]).to eq("unauthorized_client")
+        expect(response.query_params["error"]).to eq("unauthorized_client")
       end
 
       it "includes error description" do
-        expect(response_json_body["error_description"]).to eq(
+        expect(response.query_params["error_description"]).to eq(
           translated_error_message(:unauthorized_client),
         )
       end
@@ -383,18 +383,16 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
         }
       end
 
-      it "renders 401 error" do
-        expect(response.status).to eq 401
+      it "renders 400 response with redirect info" do
+        expect(response.status).to eq 400
       end
 
-      it "includes error name" do
-        expect(response_json_body["error"]).to eq("unauthorized_client")
+      it "includes redirect status" do
+        expect(response_json_body["status"]).to eq("redirect")
       end
 
-      it "includes error description" do
-        expect(response_json_body["error_description"]).to eq(
-          translated_error_message(:unauthorized_client),
-        )
+      it "includes redirect_uri with error info" do
+        expect(response_json_body["redirect_uri"]).to include("error=unauthorized_client")
       end
 
       it "does not issue any access token" do
