@@ -7,6 +7,10 @@ User-visible changes worth mentioning.
 
 ## main
 
+- Add here
+
+## 5.9.1
+
 - [#1781] Honor `handle_auth_errors :raise` in `AuthorizationsController#authorize_response`
 - [#1795] Fix: detailed error 'insufficient_scope' in protected resources 403s
 - [#1797] Fix `doorkeeper:db:cleanup` rake task failure on PostgreSQL
@@ -27,7 +31,7 @@ User-visible changes worth mentioning.
 - [#1820] Remove dead wildcard presence check in `Scopes#dynamic_scope_match?` (internal cleanup, no behavior change).
 - [#1822] Update Rubocop config, auto-corrections.
 - [#1823] Update Rubocop config, part 2.
-- [#1825]Update Rubocop config, part 3.
+- [#1825] Update Rubocop config, part 3.
 - [#1821] Fix noisy `Could not find command "no_previous_refresh_token_column?"` Thor output during the
   `PreviousRefreshTokenGenerator` spec by stubbing the underlying DB column check instead of the generator's
   private method (test-only change).
