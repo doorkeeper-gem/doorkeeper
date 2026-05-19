@@ -1,6 +1,17 @@
 name: rubocop
 on:
   pull_request:
+    paths:
+      - 'lib/**/*.rb'
+      - 'app/**/*'
+      - 'spec/**/*.rb'
+      - 'bin/*'
+      - '.rubocop.yml'
+      - '.rubocop_todo.yml'
+      - 'Gemfile'
+      - 'Gemfile.lock'
+      - 'Rakefile'
+      - '*.gemspec'
 permissions:
   contents: read
   pull-requests: write

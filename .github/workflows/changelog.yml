@@ -12,4 +12,24 @@ jobs:
   changelog:
     runs-on: ubuntu-latest
     steps:
-    - uses: dangoslen/changelog-enforcer@v3
+      - uses: actions/checkout@v4
+      - name: Check changed paths
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            gem_changes:
+              - 'lib/**'
+              - 'app/**'
+              - 'config/**'
+              - '*.gemspec'
+              - 'Gemfile'
+              - 'Gemfile.lock'
+              - 'ext/**'
+
+      - name: Enforce changelog
+        if: |
+          steps.changes.outputs.gem_changes == 'true'
+        uses: dangoslen/changelog-enforcer@v3
+        with:
+            changeLogPath: CHANGELOG.md
