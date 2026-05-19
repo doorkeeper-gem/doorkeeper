@@ -11,24 +11,19 @@ RSpec.describe Doorkeeper::Models::Reusable do
 
   describe "#reusable?" do
     it "is reusable if its expires_in is nil" do
-      allow(fake_object).to receive(:expired?).and_return(false)
-      allow(fake_object).to receive(:expires_in).and_return(nil)
+      allow(fake_object).to receive_messages(expired?: false, expires_in: nil)
       expect(fake_object).to be_reusable
     end
 
     it "is reusable if its expiry has crossed reusable limit" do
-      allow(fake_object).to receive(:expired?).and_return(false)
       allow(Doorkeeper.configuration).to receive(:token_reuse_limit).and_return(90)
-      allow(fake_object).to receive(:expires_in).and_return(100.seconds)
-      allow(fake_object).to receive(:expires_in_seconds).and_return(20.seconds)
+      allow(fake_object).to receive_messages(expired?: false, expires_in: 100.seconds, expires_in_seconds: 20.seconds)
       expect(fake_object).to be_reusable
     end
 
     it "is not reusable if its expiry has crossed reusable limit" do
-      allow(fake_object).to receive(:expired?).and_return(false)
       allow(Doorkeeper.configuration).to receive(:token_reuse_limit).and_return(90)
-      allow(fake_object).to receive(:expires_in).and_return(100.seconds)
-      allow(fake_object).to receive(:expires_in_seconds).and_return(5.seconds)
+      allow(fake_object).to receive_messages(expired?: false, expires_in: 100.seconds, expires_in_seconds: 5.seconds)
       expect(fake_object).not_to be_reusable
     end
 

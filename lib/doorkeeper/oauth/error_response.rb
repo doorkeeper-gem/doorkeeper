@@ -88,6 +88,7 @@ module Doorkeeper
 
       def exception_class
         return @exception_class if @exception_class
+
         raise NotImplementedError, "error response must define #exception_class"
       end
 
@@ -107,7 +108,7 @@ module Doorkeeper
       def sanitize_error_values(string)
         string.to_s.each_char.map do |char|
           if char.in?("\x20".encode("utf-8").."\x21".encode("utf-8")) ||
-            char.in?("\x23".encode("utf-8").."\x5B".encode("utf-8")) ||
+             char.in?("\x23".encode("utf-8").."\x5B".encode("utf-8")) ||
              char.in?("\x5D".encode("utf-8").."\x7E".encode("utf-8"))
             char
           else

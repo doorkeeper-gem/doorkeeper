@@ -827,7 +827,7 @@ RSpec.describe Doorkeeper::Config do
     end
 
     describe "hash_token_secrets together with reuse_access_token" do
-      it "will disable reuse_access_token" do
+      it "disables reuse_access_token" do
         expect(Rails.logger).to receive(:warn).with(/reuse_access_token will be disabled/)
 
         Doorkeeper.configure do

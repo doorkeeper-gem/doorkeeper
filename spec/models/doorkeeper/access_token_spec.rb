@@ -643,6 +643,7 @@ RSpec.describe Doorkeeper::AccessToken do
         end
         default_scopes_exist(*scopes.all)
       end
+
       let(:custom_attributes) { { tenant_name: "Me" } }
 
       it "returns a token when attributes match" do

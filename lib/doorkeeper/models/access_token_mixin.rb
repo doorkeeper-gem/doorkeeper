@@ -330,7 +330,7 @@ module Doorkeeper
       #   A hash containing only the custom access token attributes.
       def extract_custom_attributes(attributes)
         attributes.with_indifferent_access.slice(
-          *Doorkeeper.configuration.custom_access_token_attributes
+          *Doorkeeper.configuration.custom_access_token_attributes,
         )
       end
     end

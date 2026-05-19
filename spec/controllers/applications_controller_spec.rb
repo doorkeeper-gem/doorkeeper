@@ -7,8 +7,7 @@ RSpec.describe Doorkeeper::ApplicationsController, type: :controller do
 
   context "when JSON API used" do
     before do
-      allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
-      allow(Doorkeeper.configuration).to receive(:authenticate_admin).and_return(->(*) { true })
+      allow(Doorkeeper.configuration).to receive_messages(api_only: true, authenticate_admin: ->(*) { true })
     end
 
     it "creates an application" do
