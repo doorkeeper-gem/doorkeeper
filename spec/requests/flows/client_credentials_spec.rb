@@ -184,8 +184,7 @@ RSpec.describe "Client Credentials Request" do
 
   context "when revoke_previous_client_credentials_token is true" do
     before do
-      allow(Doorkeeper.config).to receive(:reuse_access_token).and_return(false)
-      allow(Doorkeeper.config).to receive(:revoke_previous_client_credentials_token?).and_return(true)
+      allow(Doorkeeper.config).to receive_messages(reuse_access_token: false, revoke_previous_client_credentials_token?: true)
     end
 
     it "revokes the previous token" do

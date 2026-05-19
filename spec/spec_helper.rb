@@ -52,11 +52,9 @@ RSpec.configure do |config|
   end
 
   config.after do
-    begin
-      DatabaseCleaner.clean
-    rescue NameError
-      # ActiveRecord might not be defined in some tests
-    end
+    DatabaseCleaner.clean
+  rescue NameError
+    # ActiveRecord might not be defined in some tests
   end
 
   config.order = "random"

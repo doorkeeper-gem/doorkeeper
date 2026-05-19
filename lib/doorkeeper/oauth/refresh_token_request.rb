@@ -37,12 +37,14 @@ module Doorkeeper
           # This allows multiple concurrent refresh requests to succeed during the
           # transition period, after which the old refresh token will be revoked.
           raise Errors::InvalidGrantReuse if refresh_token.revoked?
+
           create_access_token
         else
           # Use locking when refresh tokens are revoked immediately
           # to prevent race conditions where multiple tokens could be created
           refresh_token.with_lock do
             raise Errors::InvalidGrantReuse if refresh_token.revoked?
+
             refresh_token.revoke
             create_access_token
           end
@@ -132,10 +134,10 @@ module Doorkeeper
 
       def custom_token_attributes_with_data
         refresh_token
-        .attributes
-        .with_indifferent_access
-        .slice(*Doorkeeper.config.custom_access_token_attributes)
-        .symbolize_keys
+          .attributes
+          .with_indifferent_access
+          .slice(*Doorkeeper.config.custom_access_token_attributes)
+          .symbolize_keys
       end
     end
   end

@@ -57,11 +57,8 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Validator do
   context "with scopes" do
     it "is invalid when scopes are not included in the server" do
       server_scopes = Doorkeeper::OAuth::Scopes.from_string "email"
-      allow(request).to receive(:grant_type).and_return(Doorkeeper::OAuth::CLIENT_CREDENTIALS)
       allow(server).to receive(:scopes).and_return(server_scopes)
-      allow(request).to receive(:scopes).and_return(
-        Doorkeeper::OAuth::Scopes.from_string("invalid"),
-      )
+      allow(request).to receive_messages(grant_type: Doorkeeper::OAuth::CLIENT_CREDENTIALS, scopes: Doorkeeper::OAuth::Scopes.from_string("invalid"))
       expect(validator).not_to be_valid
     end
 
@@ -71,8 +68,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Validator do
         server_scopes = Doorkeeper::OAuth::Scopes.from_string "email app"
         allow(application).to receive(:scopes).and_return(application_scopes)
         allow(server).to receive(:scopes).and_return(server_scopes)
-        allow(request).to receive(:grant_type).and_return(Doorkeeper::OAuth::CLIENT_CREDENTIALS)
-        allow(request).to receive(:scopes).and_return(application_scopes)
+        allow(request).to receive_messages(grant_type: Doorkeeper::OAuth::CLIENT_CREDENTIALS, scopes: application_scopes)
         expect(validator).to be_valid
       end
 
@@ -80,11 +76,8 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Validator do
         application_scopes = Doorkeeper::OAuth::Scopes.from_string "app"
         server_scopes = Doorkeeper::OAuth::Scopes.from_string "email app"
         allow(application).to receive(:scopes).and_return(application_scopes)
-        allow(request).to receive(:grant_type).and_return(Doorkeeper::OAuth::CLIENT_CREDENTIALS)
         allow(server).to receive(:scopes).and_return(server_scopes)
-        allow(request).to receive(:scopes).and_return(
-          Doorkeeper::OAuth::Scopes.from_string("email"),
-        )
+        allow(request).to receive_messages(grant_type: Doorkeeper::OAuth::CLIENT_CREDENTIALS, scopes: Doorkeeper::OAuth::Scopes.from_string("email"))
         expect(validator).not_to be_valid
       end
     end

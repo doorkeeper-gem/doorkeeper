@@ -13,8 +13,7 @@ RSpec.describe Doorkeeper::OAuth::TokenRequest do
 
   let(:pre_auth) do
     server = Doorkeeper.config
-    allow(server).to receive(:default_scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("public"))
-    allow(server).to receive(:grant_flows).and_return(Doorkeeper::OAuth::Scopes.from_string("implicit"))
+    allow(server).to receive_messages(default_scopes: Doorkeeper::OAuth::Scopes.from_string("public"), grant_flows: Doorkeeper::OAuth::Scopes.from_string("implicit"))
 
     client = Doorkeeper::OAuth::Client.new(application)
 
@@ -157,8 +156,7 @@ RSpec.describe Doorkeeper::OAuth::TokenRequest do
 
     it "skips token creation if there is a matching one reusable" do
       allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
-      allow(application.scopes).to receive(:has_scopes?).and_return(true)
-      allow(application.scopes).to receive(:all?).and_return(true)
+      allow(application.scopes).to receive_messages(has_scopes?: true, all?: true)
 
       FactoryBot.create(
         :access_token, application_id: pre_auth.client.id,
@@ -170,8 +168,7 @@ RSpec.describe Doorkeeper::OAuth::TokenRequest do
 
     it "creates new token if there is a matching one but non reusable" do
       allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
-      allow(application.scopes).to receive(:has_scopes?).and_return(true)
-      allow(application.scopes).to receive(:all?).and_return(true)
+      allow(application.scopes).to receive_messages(has_scopes?: true, all?: true)
 
       FactoryBot.create(
         :access_token,

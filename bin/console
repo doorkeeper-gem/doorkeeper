@@ -8,7 +8,7 @@ require "irb"
 require "debug"
 require "doorkeeper"
 
-Rails.logger = Logger.new(STDOUT)
+Rails.logger = Logger.new($stdout)
 
 Rails.logger.info("Doorkeeper version: #{Doorkeeper::VERSION::STRING}")
 Rails.logger.info("Rails version: #{Rails::VERSION::STRING}")

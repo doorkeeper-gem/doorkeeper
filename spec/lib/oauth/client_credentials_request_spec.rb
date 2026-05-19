@@ -100,9 +100,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
     end
 
     before do
-      allow(server).to receive(:default_scopes).and_return(default_scopes)
-      allow(server).to receive(:scopes).and_return(server_scopes)
-      allow(server).to receive(:access_token_expires_in).and_return(100)
+      allow(server).to receive_messages(default_scopes: default_scopes, scopes: server_scopes, access_token_expires_in: 100)
       allow(application).to receive(:scopes).and_return(client_scopes)
       allow(client).to receive(:id).and_return(nil)
     end

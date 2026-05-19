@@ -39,8 +39,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end)
     end
 
-    allow(Doorkeeper.config).to receive(:grant_flows).and_return(["implicit"])
-    allow(Doorkeeper.config).to receive(:authenticate_resource_owner).and_return(->(_) { authenticator_method })
+    allow(Doorkeeper.config).to receive_messages(grant_flows: ["implicit"], authenticate_resource_owner: ->(_) { authenticator_method })
     allow(subject).to receive(:authenticator_method).and_return(user)
   end
 
@@ -609,10 +608,9 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
 
   describe "GET #new code request with native url and skip_authorization true" do
     before do
-      allow(Doorkeeper.config).to receive(:grant_flows).and_return(%w[authorization_code])
-      allow(Doorkeeper.config).to receive(:skip_authorization).and_return(proc do
+      allow(Doorkeeper.config).to receive_messages(grant_flows: %w[authorization_code], skip_authorization: proc do
         true
-      end)
+      end,)
 
       client.update_attribute :redirect_uri, "urn:ietf:wg:oauth:2.0:oob"
 
@@ -655,16 +653,16 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
         Rails.application.reload_routes!
       end
 
-      it "should redirect immediately" do
+      it "redirects immediately" do
         expect(response).to be_redirect
         expect(response.location).to match(/oauth\/authorize\/#{Doorkeeper::AccessGrant.first.token}/)
       end
 
-      it "should issue a grant" do
+      it "issues a grant" do
         expect(Doorkeeper::AccessGrant.count).to be 1
       end
 
-      it "should not issue a token" do
+      it "does not issue a token" do
         expect(Doorkeeper::AccessToken.count).to be 0
       end
     end
@@ -816,8 +814,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
 
   describe "GET #new in API mode with skip_authorization true" do
     before do
-      allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc { true })
-      allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
+      allow(Doorkeeper.configuration).to receive_messages(skip_authorization: proc { true }, api_only: true)
 
       get :new, params: params
     end
@@ -1356,8 +1353,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
 
     describe "when not authorizing in api mode" do
       before do
-        allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc { false })
-        allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
+        allow(Doorkeeper.configuration).to receive_messages(skip_authorization: proc { false }, api_only: true)
       end
 
       it "does not call :before_successful_authorization callback" do

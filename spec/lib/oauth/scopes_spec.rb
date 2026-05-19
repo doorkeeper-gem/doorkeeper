@@ -104,7 +104,9 @@ RSpec.describe Doorkeeper::OAuth::Scopes do
 
   describe "#==" do
     it "is equal to another set of scopes" do
+      # rubocop:disable RSpec/IdenticalEqualityAssertion
       expect(described_class.from_string("public")).to eq(described_class.from_string("public"))
+      # rubocop:enable RSpec/IdenticalEqualityAssertion
     end
 
     it "is equal to another set of scopes with no particular order" do
