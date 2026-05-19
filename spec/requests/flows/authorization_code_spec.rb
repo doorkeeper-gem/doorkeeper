@@ -558,11 +558,11 @@ feature "Authorization Code Flow" do
     let(:client) { client_exists }
     let(:grant) do
       authorization_code_exists(
-         application: client,
-         resource_owner_id: resource_owner.id,
-         resource_owner_type: resource_owner.class.name,
-         tenant_name: "Tenant 1",
-       )
+        application: client,
+        resource_owner_id: resource_owner.id,
+        resource_owner_type: resource_owner.class.name,
+        tenant_name: "Tenant 1",
+      )
     end
 
     before do

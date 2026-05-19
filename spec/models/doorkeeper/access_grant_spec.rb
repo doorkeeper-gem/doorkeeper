@@ -58,8 +58,8 @@ RSpec.describe Doorkeeper::AccessGrant do
 
       context "without fallback lookup" do
         it "does not provide lookups with either through by_token" do
-          expect(described_class.by_token(plain_text_token)).to eq(nil)
-          expect(described_class.by_token(grant.token)).to eq(nil)
+          expect(described_class.by_token(plain_text_token)).to be_nil
+          expect(described_class.by_token(grant.token)).to be_nil
 
           # And it does not touch the token
           grant.reload
@@ -100,7 +100,7 @@ RSpec.describe Doorkeeper::AccessGrant do
           # And it modifies the token value
           grant.reload
           expect(grant.token).not_to eq(plain_text_token)
-          expect(described_class.find_by(token: plain_text_token)).to eq(nil)
+          expect(described_class.find_by(token: plain_text_token)).to be_nil
           expect(described_class.find_by(token: grant.token)).not_to be_nil
         end
       end

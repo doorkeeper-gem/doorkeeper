@@ -60,8 +60,8 @@ RSpec.describe Doorkeeper::Models::SecretStorable do
     let(:fallback) { double(::Doorkeeper::SecretStoring::Plain) }
 
     it "returns nil if none defined" do
-      expect(clazz.fallback_secret_strategy).to eq nil
-      expect(result).to eq nil
+      expect(clazz.fallback_secret_strategy).to be_nil
+      expect(result).to be_nil
     end
 
     context "when a fallback strategy is defined" do
@@ -130,7 +130,7 @@ RSpec.describe Doorkeeper::Models::SecretStorable do
 
   describe ".fallback_secret_strategy" do
     it "defaults to nil" do
-      expect(clazz.fallback_secret_strategy).to eq nil
+      expect(clazz.fallback_secret_strategy).to be_nil
     end
   end
 end

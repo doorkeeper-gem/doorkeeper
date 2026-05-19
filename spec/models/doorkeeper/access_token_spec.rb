@@ -57,8 +57,8 @@ RSpec.describe Doorkeeper::AccessToken do
 
         context "without fallback lookup" do
           it "does not provide lookups with either through by_token" do
-            expect(described_class.by_token(plain_text_token)).to eq(nil)
-            expect(described_class.by_token(access_token.token)).to eq(nil)
+            expect(described_class.by_token(plain_text_token)).to be_nil
+            expect(described_class.by_token(access_token.token)).to be_nil
 
             # And it does not touch the token
             access_token.reload
@@ -95,7 +95,7 @@ RSpec.describe Doorkeeper::AccessToken do
             # And it modifies the token value
             access_token.reload
             expect(access_token.token).not_to eq(plain_text_token)
-            expect(described_class.find_by(token: plain_text_token)).to eq(nil)
+            expect(described_class.find_by(token: plain_text_token)).to be_nil
             expect(described_class.find_by(token: access_token.token)).not_to be_nil
           end
         end
@@ -329,8 +329,8 @@ RSpec.describe Doorkeeper::AccessToken do
 
         context "without fallback lookup" do
           it "does not provide lookups with either through by_token" do
-            expect(described_class.by_refresh_token(plain_refresh_token)).to eq(nil)
-            expect(described_class.by_refresh_token(access_token.refresh_token)).to eq(nil)
+            expect(described_class.by_refresh_token(plain_refresh_token)).to be_nil
+            expect(described_class.by_refresh_token(access_token.refresh_token)).to be_nil
 
             # And it does not touch the token
             access_token.reload
@@ -367,7 +367,7 @@ RSpec.describe Doorkeeper::AccessToken do
             # And it modifies the token value
             access_token.reload
             expect(access_token.refresh_token).not_to eq(plain_refresh_token)
-            expect(described_class.find_by(refresh_token: plain_refresh_token)).to eq(nil)
+            expect(described_class.find_by(refresh_token: plain_refresh_token)).to be_nil
             expect(described_class.find_by(refresh_token: access_token.refresh_token)).not_to be_nil
           end
         end
@@ -649,14 +649,14 @@ RSpec.describe Doorkeeper::AccessToken do
         token = FactoryBot.create :access_token, default_attributes.merge(custom_attributes)
         last_token = described_class.matching_token_for(
           application, resource_owner, scopes, custom_attributes: custom_attributes,
-)
+        )
         expect(last_token).to eq(token)
       end
 
       it "does not return a token if attributes don't match" do
         FactoryBot.create :access_token, default_attributes.merge(custom_attributes)
         last_token = described_class.matching_token_for(application, resource_owner, scopes, custom_attributes: { tenant_id: "different" })
-        expect(last_token).to eq(nil)
+        expect(last_token).to be_nil
       end
 
       it "ignores custom attributes if a nil value is passed" do

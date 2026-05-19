@@ -95,9 +95,9 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
     end
 
     context "when controller is extended" do
-      controller(Doorkeeper::TokensController) do
+      controller(described_class) do
         def create
-          headers.merge!("Custom-Header" => authorize_response.headers)
+          headers["Custom-Header"] = authorize_response.headers
 
           super
         end

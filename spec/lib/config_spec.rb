@@ -163,7 +163,7 @@ RSpec.describe Doorkeeper::Config do
 
   describe "use_refresh_token" do
     it "is false by default" do
-      expect(config.refresh_token_enabled?).to eq(false)
+      expect(config.refresh_token_enabled?).to be(false)
     end
 
     it "can change the value" do
@@ -172,7 +172,7 @@ RSpec.describe Doorkeeper::Config do
         use_refresh_token
       end
 
-      expect(config.refresh_token_enabled?).to eq(true)
+      expect(config.refresh_token_enabled?).to be(true)
     end
 
     it "can accept a boolean parameter" do
@@ -181,7 +181,7 @@ RSpec.describe Doorkeeper::Config do
         use_refresh_token false
       end
 
-      expect(config.refresh_token_enabled?).to eq(false)
+      expect(config.refresh_token_enabled?).to be(false)
     end
 
     it "can accept a block parameter" do
@@ -240,7 +240,7 @@ RSpec.describe Doorkeeper::Config do
 
   describe "enforce_configured_scopes" do
     it "is false by default" do
-      expect(config.enforce_configured_scopes?).to eq(false)
+      expect(config.enforce_configured_scopes?).to be(false)
     end
 
     it "can change the value" do
@@ -249,7 +249,7 @@ RSpec.describe Doorkeeper::Config do
         enforce_configured_scopes
       end
 
-      expect(config.enforce_configured_scopes?).to eq(true)
+      expect(config.enforce_configured_scopes?).to be(true)
     end
   end
 
@@ -297,7 +297,7 @@ RSpec.describe Doorkeeper::Config do
 
   describe "force_ssl_in_redirect_uri" do
     it "is true by default in non-development environments" do
-      expect(config.force_ssl_in_redirect_uri).to eq(true)
+      expect(config.force_ssl_in_redirect_uri).to be(true)
     end
 
     it "can change the value" do
@@ -306,7 +306,7 @@ RSpec.describe Doorkeeper::Config do
         force_ssl_in_redirect_uri(false)
       end
 
-      expect(config.force_ssl_in_redirect_uri).to eq(false)
+      expect(config.force_ssl_in_redirect_uri).to be(false)
     end
 
     it "can be a callable object" do
@@ -317,7 +317,7 @@ RSpec.describe Doorkeeper::Config do
       end
 
       expect(config.force_ssl_in_redirect_uri).to eq(block)
-      expect(config.force_ssl_in_redirect_uri.call).to eq(false)
+      expect(config.force_ssl_in_redirect_uri.call).to be(false)
     end
   end
 
@@ -340,7 +340,7 @@ RSpec.describe Doorkeeper::Config do
 
   describe "forbid_redirect_uri" do
     it "is false by default" do
-      expect(config.forbid_redirect_uri.call(URI.parse("https://localhost"))).to eq(false)
+      expect(config.forbid_redirect_uri.call(URI.parse("https://localhost"))).to be(false)
     end
 
     it "can be a callable object" do
@@ -351,7 +351,7 @@ RSpec.describe Doorkeeper::Config do
       end
 
       expect(config.forbid_redirect_uri).to eq(block)
-      expect(config.forbid_redirect_uri.call).to eq(true)
+      expect(config.forbid_redirect_uri.call).to be(true)
     end
   end
 
@@ -710,7 +710,7 @@ RSpec.describe Doorkeeper::Config do
 
   describe "api_only" do
     it "is false by default" do
-      expect(config.api_only).to eq(false)
+      expect(config.api_only).to be(false)
     end
 
     it "can change the value" do
@@ -719,7 +719,7 @@ RSpec.describe Doorkeeper::Config do
         api_only
       end
 
-      expect(config.api_only).to eq(true)
+      expect(config.api_only).to be(true)
     end
   end
 
@@ -740,7 +740,7 @@ RSpec.describe Doorkeeper::Config do
 
   describe "strict_content_type" do
     it "is false by default" do
-      expect(config.enforce_content_type).to eq(false)
+      expect(config.enforce_content_type).to be(false)
     end
 
     it "can change the value" do
@@ -749,7 +749,7 @@ RSpec.describe Doorkeeper::Config do
         enforce_content_type
       end
 
-      expect(config.enforce_content_type).to eq(true)
+      expect(config.enforce_content_type).to be(true)
     end
   end
 
@@ -770,7 +770,7 @@ RSpec.describe Doorkeeper::Config do
   describe "token_secret_strategy" do
     it "is plain by default" do
       expect(config.token_secret_strategy).to eq(Doorkeeper::SecretStoring::Plain)
-      expect(config.token_secret_fallback_strategy).to eq(nil)
+      expect(config.token_secret_fallback_strategy).to be_nil
     end
 
     context "when provided" do
@@ -781,9 +781,9 @@ RSpec.describe Doorkeeper::Config do
         end
       end
 
-      it "will enable hashing for applications" do
+      it "enables hashing for applications" do
         expect(config.token_secret_strategy).to eq(Doorkeeper::SecretStoring::Sha256Hash)
-        expect(config.token_secret_fallback_strategy).to eq(nil)
+        expect(config.token_secret_fallback_strategy).to be_nil
       end
     end
 
@@ -820,7 +820,7 @@ RSpec.describe Doorkeeper::Config do
         end
       end
 
-      it "will enable hashing for applications" do
+      it "enables hashing for applications" do
         expect(config.token_secret_strategy).to eq(Doorkeeper::SecretStoring::Sha256Hash)
         expect(config.token_secret_fallback_strategy).to eq(Doorkeeper::SecretStoring::Plain)
       end
@@ -836,7 +836,7 @@ RSpec.describe Doorkeeper::Config do
           hash_token_secrets
         end
 
-        expect(config.reuse_access_token).to eq(false)
+        expect(config.reuse_access_token).to be(false)
       end
     end
   end
@@ -844,7 +844,7 @@ RSpec.describe Doorkeeper::Config do
   describe "application_secret_strategy" do
     it "is plain by default" do
       expect(config.application_secret_strategy).to eq(Doorkeeper::SecretStoring::Plain)
-      expect(config.application_secret_fallback_strategy).to eq(nil)
+      expect(config.application_secret_fallback_strategy).to be_nil
     end
 
     context "when provided" do
@@ -855,9 +855,9 @@ RSpec.describe Doorkeeper::Config do
         end
       end
 
-      it "will enable hashing for applications" do
+      it "enables hashing for applications" do
         expect(config.application_secret_strategy).to eq(Doorkeeper::SecretStoring::Sha256Hash)
-        expect(config.application_secret_fallback_strategy).to eq(nil)
+        expect(config.application_secret_fallback_strategy).to be_nil
       end
     end
 
@@ -880,7 +880,7 @@ RSpec.describe Doorkeeper::Config do
         end
       end
 
-      it "will enable hashing for applications" do
+      it "enables hashing for applications" do
         expect(config.application_secret_strategy).to eq(Doorkeeper::SecretStoring::Sha256Hash)
         expect(config.application_secret_fallback_strategy).to eq(Doorkeeper::SecretStoring::Plain)
       end

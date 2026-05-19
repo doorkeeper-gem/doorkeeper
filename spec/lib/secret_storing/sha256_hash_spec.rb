@@ -23,14 +23,14 @@ RSpec.describe ::Doorkeeper::SecretStoring::Sha256Hash do
 
   describe "#allows_restoring_secrets?" do
     it "does not allow it" do
-      expect(described_class.allows_restoring_secrets?).to eq false
+      expect(described_class.allows_restoring_secrets?).to be false
     end
   end
 
   describe "validate_for" do
     it "allows for valid model" do
-      expect(described_class.validate_for(:application)).to eq true
-      expect(described_class.validate_for(:token)).to eq true
+      expect(described_class.validate_for(:application)).to be true
+      expect(described_class.validate_for(:token)).to be true
     end
 
     it "raises for invalid model" do
@@ -40,8 +40,8 @@ RSpec.describe ::Doorkeeper::SecretStoring::Sha256Hash do
 
   describe "secret_matches?" do
     it "compares input with #transform_secret" do
-      expect(described_class.secret_matches?("input", "input")).to eq false
-      expect(described_class.secret_matches?("a", hash_function.call("a"))).to eq true
+      expect(described_class.secret_matches?("input", "input")).to be false
+      expect(described_class.secret_matches?("a", hash_function.call("a"))).to be true
     end
   end
 end

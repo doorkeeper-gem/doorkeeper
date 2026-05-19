@@ -14,6 +14,7 @@ module Doorkeeper
                   :invalid_request_reason, :missing_param
 
       def initialize(server, grant, client, parameters = {})
+        super()
         @server = server
         @client = client
         @grant  = grant

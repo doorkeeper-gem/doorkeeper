@@ -221,7 +221,7 @@ RSpec.describe Doorkeeper::Application do
 
     it "does not fallback to plain lookup by default" do
       lookup = described_class.by_uid_and_secret(app.uid, app.secret)
-      expect(lookup).to eq(nil)
+      expect(lookup).to be_nil
 
       lookup = described_class.by_uid_and_secret(app.uid, app.plaintext_secret)
       expect(lookup).to eq(app)
@@ -406,7 +406,7 @@ RSpec.describe Doorkeeper::Application do
         it "does not find the application" do
           app = FactoryBot.create :application
           authenticated = described_class.by_uid_and_secret(app.uid, "bad")
-          expect(authenticated).to eq(nil)
+          expect(authenticated).to be_nil
         end
       end
     end
@@ -424,7 +424,7 @@ RSpec.describe Doorkeeper::Application do
         it "does not find the application" do
           app = FactoryBot.create :application, confidential: false
           authenticated = described_class.by_uid_and_secret(app.uid, "bad")
-          expect(authenticated).to eq(nil)
+          expect(authenticated).to be_nil
         end
       end
     end

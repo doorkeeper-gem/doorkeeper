@@ -1069,7 +1069,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
     end
 
-    context "invalid scope" do
+    context "when invalid scope" do
       before do
         default_scopes_exist :public
         get :new, params: {
@@ -1104,7 +1104,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
     end
 
-    context "invalid scope with form_post response mode" do
+    context "when invalid scope with form_post response mode" do
       before do
         default_scopes_exist :public
         get :new, params: {
@@ -1126,7 +1126,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
     end
 
-    context "invalid redirect_uri" do
+    context "when invalid redirect_uri" do
       before do
         default_scopes_exist :public
         get :new, params: {
@@ -1152,7 +1152,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
         get :new, params: {
           client_id: client.uid,
           redirect_uri: client.redirect_uri,
-          response_mode: "fragment"
+          response_mode: "fragment",
         }
       end
 
@@ -1201,7 +1201,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
     end
 
-    context "invalid client_id" do
+    context "when invalid client_id" do
       before do
         default_scopes_exist :public
       end
@@ -1211,7 +1211,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
     end
 
-    context "invalid scope" do
+    context "when invalid scope" do
       before do
         default_scopes_exist :public
       end
@@ -1229,7 +1229,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
     end
 
-    context "invalid redirect_uri" do
+    context "when invalid redirect_uri" do
       before do
         default_scopes_exist :public
       end
@@ -1271,7 +1271,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
     end
 
-    context "invalid client_id" do
+    context "when invalid client_id" do
       before do
         default_scopes_exist :public
       end
@@ -1281,7 +1281,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
     end
 
-    context "invalid scope" do
+    context "when invalid scope" do
       before do
         default_scopes_exist :public
       end
@@ -1299,7 +1299,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
     end
 
-    context "invalid redirect_uri" do
+    context "when invalid redirect_uri" do
       before do
         default_scopes_exist :public
       end
