@@ -88,7 +88,7 @@ module Doorkeeper
       #
       # @param other The set of scopes to filter
       def allowed(other)
-        filtered_scopes = other.select { |scope| self.exists?(scope) }
+        filtered_scopes = other.select { |scope| exists?(scope) }
         self.class.from_array(filtered_scopes)
       end
 

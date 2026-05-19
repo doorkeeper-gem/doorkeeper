@@ -45,11 +45,11 @@ module Doorkeeper
         end
 
         def find_active_existing_token_for(client, scopes, attributes)
-          custom_attributes = Doorkeeper.config.access_token_model.
-            extract_custom_attributes(attributes).presence
+          custom_attributes = Doorkeeper.config.access_token_model
+            .extract_custom_attributes(attributes).presence
           Doorkeeper.config.access_token_model.matching_token_for(
             client, nil, scopes, custom_attributes: custom_attributes, include_expired: false,
-)
+          )
         end
       end
     end

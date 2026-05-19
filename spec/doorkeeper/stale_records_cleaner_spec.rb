@@ -23,7 +23,7 @@ RSpec.describe Doorkeeper::StaleRecordsCleaner do
   end
 
   %i[access_token access_grant].each do |model_name|
-    context "(#{model_name})" do
+    context "when (#{model_name})" do
       let(:model) { models_by_name.fetch(model_name) }
 
       describe "#clean_revoked" do

@@ -26,6 +26,7 @@ User-visible changes worth mentioning.
   updated translations for all locales.
 - [#1820] Remove dead wildcard presence check in `Scopes#dynamic_scope_match?` (internal cleanup, no behavior change).
 - [#1822] Update Rubocop config, auto-corrections.
+- [#1823] Update Rubocop config, part 2.
 
 ## 5.9.0
 

@@ -137,9 +137,9 @@ Doorkeeper.configure do
   # RFC 7662 section 2.2. Introspection Response.
   #
   # Using with caution:
-  # Keep in mind that these three parameters pass to block can be nil as following case:
+  # Keep in mind that these three parameters pass to block can be_nil as following case:
   #  `authorized_client` is nil if and only if `authorized_token` is present, and vice versa.
-  #  `token` will be nil if and only if `authorized_token` is present.
+  #  `token` will be_nil if and only if `authorized_token` is present.
   # So remember to use `&` or check if it is present before calling method on
   # them to make sure you doesn't get NoMethodError exception.
   #

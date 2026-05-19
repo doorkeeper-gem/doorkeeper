@@ -76,9 +76,11 @@ RSpec.describe Doorkeeper::OAuth::Scopes do
     end
 
     it "raises an error if cannot handle addition" do
+      # rubocop:disable Style/StringConcatenation
       expect do
         described_class.from_string("public") + "admin"
       end.to raise_error(NoMethodError)
+      # rubocop:enable Style/StringConcatenation
     end
   end
 

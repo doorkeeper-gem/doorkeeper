@@ -27,7 +27,7 @@ RSpec.describe ::Doorkeeper::SecretStoring::BCrypt do
 
   describe "validate_for" do
     it "allows for valid model" do
-      expect(described_class.validate_for(:application)).to eq(true)
+      expect(described_class.validate_for(:application)).to be(true)
     end
 
     it "raises for invalid model" do
@@ -40,10 +40,10 @@ RSpec.describe ::Doorkeeper::SecretStoring::BCrypt do
 
   describe "secret_matches?" do
     it "compares input with #transform_secret" do
-      expect(described_class.secret_matches?("input", "input")).to eq(false)
+      expect(described_class.secret_matches?("input", "input")).to be(false)
 
       password = BCrypt::Password.create("foobar")
-      expect(described_class.secret_matches?("foobar", password.to_s)).to eq(true)
+      expect(described_class.secret_matches?("foobar", password.to_s)).to be(true)
     end
   end
 end

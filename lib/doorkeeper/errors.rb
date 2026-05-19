@@ -45,7 +45,7 @@ module Doorkeeper
       end
 
       def self.name_for_response
-        self.name.demodulize.underscore.to_sym
+        name.demodulize.underscore.to_sym
       end
     end
 
@@ -54,7 +54,7 @@ module Doorkeeper
         challenge_methods = Doorkeeper.config.pkce_code_challenge_methods_supported
         {
           challenge_methods: challenge_methods.join(", "),
-          count: challenge_methods.length
+          count: challenge_methods.length,
         }
       end
     end
