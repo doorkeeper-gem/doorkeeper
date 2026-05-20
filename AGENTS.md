@@ -30,6 +30,7 @@ When fixing bugs or adding features:
 ### Code Style
 
 - Run RuboCop: `bundle exec rubocop` (there's a project-wide `.rubocop.yml`)
+- When working on the project ensure using code style rules defined in `.rubocop.yml` and `.rubocop_todo.yml` files.
 
 ## Documentation
 
