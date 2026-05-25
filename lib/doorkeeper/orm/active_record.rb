@@ -30,6 +30,19 @@ module Doorkeeper
 
       def self.run_hooks
         initialize_configured_associations
+        # Force ActiveRecord::Base to load now so any pending
+        # on_load(:active_record) callbacks (including the one just registered
+        # above) fire in this safe context — typically `config.to_prepare`,
+        # well after `:load_config_initializers`.
+        #
+        # Without this, a queued callback can fire re-entrantly during a host
+        # app autoload chain (e.g. `rails db:seed` evaluating
+        # `class ApplicationRecord < ActiveRecord::Base`) and then constantize
+        # a user-configured Doorkeeper model that inherits from
+        # `ApplicationRecord` while `ApplicationRecord` itself is still
+        # mid-definition — raising `NameError: uninitialized constant
+        # ApplicationRecord` (issue #1828).
+        ::ActiveRecord::Base
       end
 
       def self.initialize_configured_associations

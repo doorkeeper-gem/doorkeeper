@@ -144,5 +144,113 @@ if DOORKEEPER_ORM == :active_record
         end
       end
     end
+
+    # Regression test for https://github.com/doorkeeper-gem/doorkeeper/issues/1828
+    #
+    # `rails db:seed` (and any flow that runs without eager_load) can autoload
+    # ActiveRecord::Base lazily from inside `class ApplicationRecord < ActiveRecord::Base`.
+    # When AR::Base finishes loading, `run_load_hooks(:active_record)` fires —
+    # while ApplicationRecord is still mid-evaluation, so its constant is not
+    # yet defined. Without the fix, the on_load callback registered by
+    # `initialize_configured_associations` (post-#1804) calls `constantize` on
+    # a user-configured class that inherits from ApplicationRecord, which
+    # raises `NameError: uninitialized constant ApplicationRecord`.
+    #
+    # This can't be reproduced inside the dummy app because AR::Base loads at
+    # spec-helper time, so we drive a fresh subprocess that replays the
+    # autoload chain end-to-end.
+    describe "issue #1828 — re-entrant on_load(:active_record) during ApplicationRecord autoload" do
+      it "does not raise NameError on uninitialized constant ApplicationRecord" do
+        require "tmpdir"
+        require "English"
+        require "bundler"
+
+        doorkeeper_lib  = File.expand_path("../../../../lib", __dir__)
+        # Use the same Gemfile the parent is running under so this passes across
+        # the Appraisal matrix (rails_7_0.gemfile pins rspec-rails ~> 5.0 etc.).
+        gemfile         = Bundler.default_gemfile.to_s
+
+        Dir.mktmpdir("doorkeeper-1828-") do |dir|
+          File.write(File.join(dir, "application_record.rb"), <<~RUBY)
+            class ApplicationRecord < ActiveRecord::Base
+              self.abstract_class = true if respond_to?(:abstract_class=)
+            end
+          RUBY
+
+          File.write(File.join(dir, "user.rb"),       "class User < ApplicationRecord; end\n")
+          File.write(File.join(dir, "foo_token.rb"),  "class FooToken < ApplicationRecord; end\n")
+          File.write(File.join(dir, "foo_grant.rb"),  "class FooGrant < ApplicationRecord; end\n")
+
+          File.write(File.join(dir, "active_record_base_stub.rb"), <<~RUBY)
+            module ActiveRecord
+              class Base
+                def self.abstract_class=(_); end
+              end
+            end
+            ActiveSupport.run_load_hooks(:active_record, ActiveRecord::Base)
+          RUBY
+
+          File.write(File.join(dir, "run.rb"), <<~RUBY)
+            $LOAD_PATH.unshift #{doorkeeper_lib.inspect}
+
+            require "active_support"
+            require "active_support/core_ext/string/inflections"
+
+            module ActiveRecord
+              autoload :Base, #{File.join(dir, "active_record_base_stub.rb").inspect}
+            end
+
+            Object.autoload :User,              #{File.join(dir, "user.rb").inspect}
+            Object.autoload :ApplicationRecord, #{File.join(dir, "application_record.rb").inspect}
+            Object.autoload :FooToken,          #{File.join(dir, "foo_token.rb").inspect}
+            Object.autoload :FooGrant,          #{File.join(dir, "foo_grant.rb").inspect}
+
+            # Minimal Doorkeeper namespace so we can load `doorkeeper/orm/active_record.rb`
+            # without pulling Rails (and therefore without pre-loading AR::Base).
+            module Doorkeeper
+              module Models
+                module Ownership; end
+                module PolymorphicResourceOwner
+                  module ForAccessGrant; end
+                  module ForAccessToken; end
+                end
+              end
+
+              def self.config
+                @config ||= Config.new
+              end
+
+              class Config
+                def enable_application_owner?; false; end
+                def access_grant_model; FooGrant; end
+                def access_token_model; FooToken; end
+              end
+            end
+
+            require "doorkeeper/orm/active_record"
+
+            # Simulate the `config.to_prepare` block in the engine.
+            Doorkeeper::Orm::ActiveRecord.run_hooks
+
+            # Simulate seed-style host-app code referencing a model after boot.
+            User
+
+            puts "OK"
+          RUBY
+
+          env = { "BUNDLE_GEMFILE" => gemfile }
+          cmd = ["bundle", "exec", "ruby", File.join(dir, "run.rb")]
+          output = IO.popen(env, cmd, err: [:child, :out], &:read)
+          status = $CHILD_STATUS.exitstatus
+
+          expect(status).to(
+            eq(0),
+            "Subprocess exited #{status} — issue #1828 fix not in place.\n" \
+            "Output:\n#{output}",
+          )
+          expect(output).to include("OK")
+        end
+      end
+    end
   end
 end
