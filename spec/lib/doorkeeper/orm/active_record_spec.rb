@@ -232,6 +232,13 @@ if DOORKEEPER_ORM == :active_record
             # Simulate the `config.to_prepare` block in the engine.
             Doorkeeper::Orm::ActiveRecord.run_hooks
 
+            # Simulate the `config.after_initialize` flush in engine.rb that
+            # force-loads ::ActiveRecord::Base in a clean (non-re-entrant)
+            # context. This drains any queued `on_load(:active_record)`
+            # callbacks before host-app code (db:seed, controllers, ...) can
+            # trigger AR autoload from inside a user-model class body.
+            ::ActiveRecord::Base
+
             # Simulate seed-style host-app code referencing a model after boot.
             User
 

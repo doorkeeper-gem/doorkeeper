@@ -22,6 +22,23 @@ module Doorkeeper
       Doorkeeper.run_orm_hooks
     end
 
+    # Drain any queued `on_load(:active_record)` callbacks (including the one
+    # `run_orm_hooks` registers above) from `config.after_initialize`.
+    #
+    # `to_prepare` runs *before* `after_initialize` in Rails finishers, so by
+    # the time this block fires AR's own `:set_configs` after_initialize has
+    # already applied framework defaults from `new_framework_defaults_*.rb`
+    # (#1703). Touching `::ActiveRecord::Base` here loads AR in that
+    # known-clean context, firing the queued callbacks before any host-app
+    # code (e.g. `rails db:seed`) can autoload models and trigger the
+    # callbacks re-entrantly from inside `class ApplicationRecord <
+    # ActiveRecord::Base` (#1828).
+    initializer "doorkeeper.orm.flush_active_record_hooks", after: "active_record.set_configs" do
+      config.after_initialize do
+        ::ActiveRecord::Base if defined?(::ActiveRecord)
+      end
+    end
+
     if defined?(Sprockets) && Sprockets::VERSION.chr.to_i >= 4
       initializer "doorkeeper.assets.precompile" do |app|
         # Force users to use:

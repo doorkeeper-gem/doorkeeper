@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
-- [#1829] Fix `NameError: uninitialized constant ApplicationRecord` on `rails db:seed` and other non-eager-loading flows caused by `on_load(:active_record)` firing re-entrantly during `ApplicationRecord` autoload.
+- [#1829] Fix `NameError: uninitialized constant ApplicationRecord` on `rails db:seed` (and other non-eager-loading flows) caused by `on_load(:active_record)` firing re-entrantly during `ApplicationRecord` autoload, without re-introducing the early-AR-load regression that #1804 fixed.
 
 ## 5.9.1
 
