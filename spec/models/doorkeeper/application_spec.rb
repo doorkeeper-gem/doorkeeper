@@ -105,6 +105,33 @@ RSpec.describe Doorkeeper::Application do
     expect(new_application.secret).to eq("custom_application_secret")
   end
 
+  # Regression for #1830: `Ownership` is now included unconditionally
+  # from `Mixins::Application`'s `included` block (previously gated by
+  # `enable_application_owner?` inside an `on_load(:active_record)` block).
+  # Runtime behavior must be unchanged when the feature is off: the
+  # presence validator is dynamically gated by `confirm_application_owner?`,
+  # and `belongs_to :owner` must be harmless on its own.
+  context "when application_owner is not enabled (default)" do
+    it "leaves the application valid without an owner" do
+      expect(Doorkeeper.config.enable_application_owner?).to be(false)
+      expect(Doorkeeper.config.confirm_application_owner?).to be(false)
+      expect(new_application).to be_valid
+    end
+
+    it "does not fire the :owner presence validator" do
+      expect(new_application.send(:validate_owner?)).to be(false)
+      new_application.valid?
+      expect(new_application.errors[:owner]).to be_empty
+    end
+
+    it "exposes belongs_to :owner without requiring an owner record" do
+      expect(described_class.reflect_on_association(:owner)).not_to be_nil
+      expect(new_application.owner).to be_nil
+      expect(new_application.save).to be(true)
+      expect(new_application.errors[:owner]).to be_empty
+    end
+  end
+
   context "when application_owner is enabled" do
     context "when application owner is not required" do
       before do
@@ -520,6 +547,70 @@ RSpec.describe Doorkeeper::Application do
       it "doesn't include unsafe attributes if current owner isn't the same as owner" do
         expect(app.as_json(current_resource_owner: other_owner))
           .not_to include("redirect_uri")
+      end
+    end
+
+    # Regression test for the Copilot review note on #1830: `Ownership` is
+    # now included unconditionally, so `belongs_to :owner` is always
+    # declared and `respond_to?(:owner)` is always true — even on schemas
+    # that don't carry the `owner_id` / `owner_type` columns. The
+    # `respond_to?(:owner) && owner && ...` guard in `#as_json` must still
+    # short-circuit safely in that shape (no owner columns,
+    # `enable_application_owner` off): `owner` returns nil, the public
+    # attribute branch runs, and nothing raises.
+    if DOORKEEPER_ORM == :active_record
+      context "when the schema lacks owner columns" do
+        before(:all) do
+          ActiveRecord::Base.connection.create_table(:oauth_applications_no_owner) do |t|
+            t.string :name, null: false
+            t.string :uid, null: false
+            t.string :secret
+            t.text :redirect_uri
+            t.string :scopes, default: "", null: false
+            t.boolean :confidential, default: true, null: false
+            t.timestamps
+          end
+        end
+
+        after(:all) do
+          ActiveRecord::Base.connection.drop_table(:oauth_applications_no_owner)
+        end
+
+        let(:no_owner_class) do
+          Class.new(::ActiveRecord::Base) do
+            include Doorkeeper::Orm::ActiveRecord::Mixins::Application
+            self.table_name = "oauth_applications_no_owner"
+          end
+        end
+
+        let(:no_owner_app) do
+          no_owner_class.create!(name: "NoOwnerApp", redirect_uri: "https://example.com")
+        end
+
+        it "leaves the owner columns out of the schema" do
+          expect(no_owner_class.column_names).not_to include("owner_id", "owner_type")
+        end
+
+        it "still declares belongs_to :owner but returns nil lazily" do
+          expect(no_owner_app).to respond_to(:owner)
+          expect(no_owner_app.owner).to be_nil
+        end
+
+        it "renders the public attribute set without raising" do
+          expect(Doorkeeper.config.enable_application_owner?).to be(false)
+          expect { no_owner_app.as_json }.not_to raise_error
+          expect(no_owner_app.as_json).to match(
+            "id" => no_owner_app.id,
+            "name" => "NoOwnerApp",
+            "created_at" => anything,
+          )
+        end
+
+        it "ignores :current_resource_owner without raising" do
+          expect { no_owner_app.as_json(current_resource_owner: owner) }.not_to raise_error
+          expect(no_owner_app.as_json(current_resource_owner: owner))
+            .not_to include("redirect_uri", "secret")
+        end
       end
     end
   end

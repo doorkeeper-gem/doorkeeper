@@ -9,6 +9,13 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       self.strict_loading_by_default = false if respond_to?(:strict_loading_by_default)
 
       include ::Doorkeeper::ApplicationMixin
+      # Included unconditionally: this block runs once at parent-class
+      # autoload time, so gating on `enable_application_owner?` would
+      # freeze behavior at first-load time. The actual owner validation
+      # is still gated dynamically via `validate_owner?` →
+      # `confirm_application_owner?`, and `belongs_to :owner` is lazy on
+      # schemas that lack the columns.
+      include ::Doorkeeper::Models::Ownership
 
       has_many :access_grants,
                foreign_key: :application_id,
