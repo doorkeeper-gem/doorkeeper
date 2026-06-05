@@ -9,6 +9,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       self.strict_loading_by_default = false if respond_to?(:strict_loading_by_default)
 
       include ::Doorkeeper::AccessTokenMixin
+      include ::Doorkeeper::Models::PolymorphicResourceOwner::ForAccessToken
 
       belongs_to :application, class_name: Doorkeeper.config.application_class.to_s,
                                inverse_of: :access_tokens,
