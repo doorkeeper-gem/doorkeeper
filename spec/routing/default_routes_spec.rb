@@ -38,4 +38,8 @@ RSpec.describe "Default routes" do
   it "GET /oauth/token/info route to authorized TokenInfo controller" do
     expect(get("/oauth/token/info")).to route_to("doorkeeper/token_info#show")
   end
+
+  it "GET /.well-known/oauth-authorization-server route to show Discovery controller" do
+    expect(get("/.well-known/oauth-authorization-server")).to route_to("doorkeeper/discovery#show")
+  end
 end

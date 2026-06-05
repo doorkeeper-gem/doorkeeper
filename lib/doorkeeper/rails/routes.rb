@@ -41,9 +41,15 @@ module Doorkeeper
           map_route(:authorized_applications, :authorized_applications_routes)
           map_route(:token_info, :token_info_routes)
         end
+
+        map_route(:discovery, :discovery_routes)
       end
 
       private
+
+      def discovery_routes(mapping)
+        routes.get ".well-known/oauth-authorization-server", controller: mapping[:controllers], action: :show
+      end
 
       def authorization_routes(mapping)
         routes.resource(
