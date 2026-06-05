@@ -7,6 +7,11 @@ User-visible changes worth mentioning.
 
 ## main
 
+- Please add here
+
+## 5.9.2
+
+- [#1822][#1823][#1825] Update Rubocop config, auto-corrections and codebase cleanup.
 - [#1830] Fix `NameError: uninitialized constant ApplicationRecord` on `rails db:seed` (and other non-eager-loading flows) caused by `on_load(:active_record)` firing re-entrantly during `ApplicationRecord` autoload. The orm hooks no longer depend on `ActiveSupport.on_load(:active_record)`; model concerns (`Ownership`, `PolymorphicResourceOwner::ForAccessGrant`, `PolymorphicResourceOwner::ForAccessToken`) are now wired up from each `Mixins::*` `included` block, which fires at parent-class autoload time — after `Doorkeeper.configure` has applied user settings and without re-entering the AR load chain.
   - **Upgrade note**: fully custom model classes that don't include `Doorkeeper::Orm::ActiveRecord::Mixins::{Application,AccessToken,AccessGrant}` will no longer auto-receive `Ownership` / `PolymorphicResourceOwner` concerns (previously injected by `run_orm_hooks` via the configured class name). Either inherit from the Doorkeeper default model, include the corresponding `Mixins::*` module, or `include` the concerns directly.
 
