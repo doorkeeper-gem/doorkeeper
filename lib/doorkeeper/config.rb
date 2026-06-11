@@ -444,9 +444,9 @@ module Doorkeeper
     option :allow_token_introspection,
            default: (lambda do |token, authorized_client, authorized_token|
              if authorized_token
-               authorized_token.application == token&.application
+               authorized_token.application_id == token&.application_id
              elsif token&.application
-               authorized_client == token.application
+               authorized_client.id == token.application_id
              else
                true
              end
