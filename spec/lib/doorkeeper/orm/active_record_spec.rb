@@ -45,8 +45,21 @@ if DOORKEEPER_ORM == :active_record
         )
       end
 
-      it "includes Ownership in Doorkeeper::Application" do
-        expect(Doorkeeper::Application.ancestors).to include(Doorkeeper::Models::Ownership)
+      # `Ownership` is included only when `enable_application_owner` is
+      # configured, read at parent-class autoload time (#1831). The default
+      # config leaves the feature off, so the singleton model never carries
+      # the module (or its `:owner` association).
+      it "does not include Ownership in Doorkeeper::Application by default" do
+        expect(Doorkeeper::Application.ancestors).not_to include(Doorkeeper::Models::Ownership)
+      end
+
+      it "includes Ownership when application owner is enabled" do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          enable_application_owner
+        end
+
+        expect(build_application_model.ancestors).to include(Doorkeeper::Models::Ownership)
       end
     end
 
@@ -58,8 +71,23 @@ if DOORKEEPER_ORM == :active_record
       #         https://github.com/doorkeeper-gem/doorkeeper/issues/1513
 
       context "when application_class is a STI subclass of Doorkeeper::Application" do
+        # `Ownership` is included only if `enable_application_owner?` is set
+        # at include time (#1831), so the owner association lives on whichever
+        # base class was defined while the feature was on. We build an
+        # owner-enabled base (standing in for `Doorkeeper::Application` loaded
+        # with the feature on) and STI-subclass it, rather than mutating the
+        # already-loaded singleton — keeping the example order-independent.
+        let(:application_base_class) do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            enable_application_owner
+          end
+
+          build_application_model
+        end
+
         let!(:custom_application_class) do
-          Class.new(Doorkeeper::Application) do
+          Class.new(application_base_class) do
             def self.name
               "CustomStiApplication"
             end
@@ -76,7 +104,7 @@ if DOORKEEPER_ORM == :active_record
           end
         end
 
-        it "inherits Ownership from Doorkeeper::Application" do
+        it "inherits Ownership from the application base class" do
           expect(CustomStiApplication.ancestors).to include(Doorkeeper::Models::Ownership)
         end
 

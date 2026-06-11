@@ -394,23 +394,19 @@ RSpec.describe Doorkeeper::Config do
 
     if DOORKEEPER_ORM == :active_record
       context "when enabled without confirmation", active_record: true do
-        class ApplicationWithOwner < ActiveRecord::Base
-          include Doorkeeper::Orm::ActiveRecord::Mixins::Application
-        end
+        # The owner association is wired at include time (#1831), so the model
+        # is built after `enable_application_owner` has been configured.
+        let(:application_with_owner) { build_application_model }
 
         before do
           Doorkeeper.configure do
             orm DOORKEEPER_ORM
             enable_application_owner
-
-            application_class "ApplicationWithOwner"
           end
-
-          Doorkeeper.run_orm_hooks
         end
 
         it "adds support for application owner" do
-          instance = ApplicationWithOwner.new(FactoryBot.attributes_for(:application))
+          instance = application_with_owner.new(FactoryBot.attributes_for(:application))
 
           expect(instance).to respond_to :owner
           expect(instance).to be_valid
@@ -424,23 +420,19 @@ RSpec.describe Doorkeeper::Config do
 
     if DOORKEEPER_ORM == :active_record
       context "when enabled with confirmation set to true", active_record: true do
-        class ApplicationWithOwner < ActiveRecord::Base
-          include Doorkeeper::Orm::ActiveRecord::Mixins::Application
-        end
+        # The owner association is wired at include time (#1831), so the model
+        # is built after `enable_application_owner` has been configured.
+        let(:application_with_owner) { build_application_model(name: "ApplicationWithOwner") }
 
         before do
           Doorkeeper.configure do
             orm DOORKEEPER_ORM
             enable_application_owner confirmation: true
-
-            application_class "ApplicationWithOwner"
           end
-
-          Doorkeeper.run_orm_hooks
         end
 
         it "adds support for application owner" do
-          instance = ApplicationWithOwner.new(FactoryBot.attributes_for(:application))
+          instance = application_with_owner.new(FactoryBot.attributes_for(:application))
 
           expect(instance).to respond_to :owner
           expect(instance).not_to be_valid
