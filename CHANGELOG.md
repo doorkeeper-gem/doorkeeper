@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - Please add here
+- [#1832] Fix confusing `belongs_to :owner` side effect: `Doorkeeper::Models::Ownership` is now included only when `enable_application_owner?` is set (read at include time), so models no longer expose a misleading `owner` association/reflection when the application owner feature is disabled and the schema lacks the owner columns.
 
 ## 5.9.2
 
