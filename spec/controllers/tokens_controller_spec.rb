@@ -371,6 +371,31 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
       end
     end
 
+    context "when application_class is configured to a custom subclass" do
+      # Regression test for doorkeeper#1833: the default allow_token_introspection
+      # proc compared application objects with `==`, which fails when the
+      # authorized client is resolved as a different (sub)class than the
+      # introspected token's application, even though they reference the same row.
+      let(:custom_application_class) { Class.new(Doorkeeper::Application) }
+
+      before do
+        stub_const("CustomDoorkeeperApplication", custom_application_class)
+        allow(Doorkeeper.config).to receive(:application_model).and_return(CustomDoorkeeperApplication)
+      end
+
+      it "responds with full token introspection when authorized via Client Credentials" do
+        # token_for_introspection.application is a Doorkeeper::Application, while the
+        # authorized client is resolved as CustomDoorkeeperApplication for the same row.
+        expect(token_for_introspection.application).to be_an_instance_of(Doorkeeper::Application)
+
+        request.headers["Authorization"] = basic_auth_header_for_client(client)
+
+        post :introspect, params: { token: token_for_introspection.token }
+
+        expect(json_response).to include("active" => true)
+      end
+    end
+
     context "when token introspection disabled" do
       before do
         Doorkeeper.configure do
