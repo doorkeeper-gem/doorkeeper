@@ -1,0 +1,155 @@
+ko:
+  activerecord:
+    attributes:
+      doorkeeper/application:
+        name: '이름'
+        redirect_uri: '리다이렉트 URI'
+    errors:
+      models:
+        doorkeeper/application:
+          attributes:
+            redirect_uri:
+              fragment_present: '프래그먼트를 포함할 수 없습니다.'
+              invalid_uri: '유효한 URI여야 합니다.'
+              unspecified_scheme: '스킴을 지정해야 합니다.'
+              relative_uri: '절대 URI여야 합니다.'
+              secured_uri: 'HTTPS/SSL URI여야 합니다.'
+              forbidden_uri: '서버에서 허용하지 않는 URI입니다.'
+            scopes:
+              not_match_configured: '서버에 설정된 스코프와 일치하지 않습니다.'
+
+  doorkeeper:
+    applications:
+      confirmations:
+        destroy: '정말 삭제하시겠습니까?'
+      buttons:
+        edit: '수정'
+        destroy: '삭제'
+        submit: '제출'
+        cancel: '취소'
+        authorize: '승인'
+      form:
+        error: '이런! 입력한 양식에 오류가 없는지 확인해 주세요'
+      help:
+        confidential: '클라이언트 시크릿을 비밀로 유지할 수 있는 환경에서 애플리케이션이 사용됩니다. 네이티브 모바일 앱과 단일 페이지 앱(SPA)은 비기밀(non-confidential)로 간주됩니다.'
+        redirect_uri: 'URI당 한 줄씩 입력하세요'
+        blank_redirect_uri: '클라이언트 자격 증명(Client Credentials), 리소스 소유자 비밀번호 자격 증명(Resource Owner Password Credentials) 또는 리다이렉트 URI가 필요하지 않은 그랜트 타입을 사용하도록 공급자를 설정했다면 비워 두세요.'
+        scopes: '스코프는 공백으로 구분하세요. 기본 스코프를 사용하려면 비워 두세요.'
+      edit:
+        title: '애플리케이션 수정'
+      index:
+        title: '내 애플리케이션'
+        new: '새 애플리케이션'
+        name: '이름'
+        callback_url: '콜백 URL'
+        confidential: '기밀 여부'
+        actions: '작업'
+        confidentiality:
+          'yes': '예'
+          'no': '아니오'
+      new:
+        title: '새 애플리케이션'
+      show:
+        title: '애플리케이션: %{name}'
+        application_id: 'UID:'
+        secret: '시크릿:'
+        secret_hashed: '시크릿 해시 처리됨'
+        scopes: '스코프:'
+        confidential: '기밀:'
+        callback_urls: '콜백 URL:'
+        actions: '작업'
+        not_defined: '정의되지 않음'
+
+    authorizations:
+      buttons:
+        authorize: '승인'
+        deny: '거부'
+      error:
+        title: '오류가 발생했습니다'
+      new:
+        title: '인증이 필요합니다'
+        prompt: '%{client_name}이(가) 회원님의 계정을 사용하도록 승인하시겠습니까?'
+        able_to: '이 애플리케이션은 다음 작업을 수행할 수 있습니다:'
+      show:
+        title: '인증 코드:'
+      form_post:
+        title: '이 양식을 제출하세요'
+
+    authorized_applications:
+      confirmations:
+        revoke: '정말 취소하시겠습니까?'
+      buttons:
+        revoke: '권한 취소'
+      index:
+        title: '내가 승인한 애플리케이션'
+        application: '애플리케이션'
+        created_at: '생성일'
+        date_format: '%Y-%m-%d %H:%M:%S'
+
+    pre_authorization:
+      status: '사전 인증'
+
+    errors:
+      messages:
+        # 공통 오류 메시지
+        invalid_request:
+          unknown: '요청에 필수 매개변수가 누락되었거나, 지원하지 않는 매개변수 값이 포함되었거나, 그 밖의 잘못된 형식입니다.'
+          missing_param: '필수 매개변수가 누락되었습니다: %{value}.'
+          request_not_authorized: '요청을 인증해야 합니다. 요청을 인증하는 데 필요한 매개변수가 누락되었거나 유효하지 않습니다.'
+          invalid_code_challenge: '코드 챌린지가 필요합니다.'
+        invalid_redirect_uri: '요청한 리다이렉트 URI의 형식이 잘못되었거나 클라이언트 리다이렉트 URI와 일치하지 않습니다.'
+        unauthorized_client: '클라이언트가 이 방식으로 해당 요청을 수행할 권한이 없습니다.'
+        access_denied: '리소스 소유자 또는 인증 서버가 요청을 거부했습니다.'
+        invalid_scope: '요청한 스코프가 유효하지 않거나, 알 수 없거나, 형식이 잘못되었습니다.'
+        invalid_code_challenge_method:
+          zero: '허용되는 code_challenge_method 값이 없어 인증 서버가 PKCE를 지원하지 않습니다.'
+          one: 'code_challenge_method는 %{challenge_methods}여야 합니다.'
+          other: 'code_challenge_method는 %{challenge_methods} 중 하나여야 합니다.'
+        server_error: '인증 서버가 요청을 처리하지 못하게 만든 예기치 않은 상황이 발생했습니다.'
+        temporarily_unavailable: '인증 서버가 일시적인 과부하 또는 유지 보수로 인해 현재 요청을 처리할 수 없습니다.'
+
+        # 설정 오류 메시지
+        credential_flow_not_configured: 'Doorkeeper.configure.resource_owner_from_credentials가 설정되지 않아 리소스 소유자 비밀번호 자격 증명(Resource Owner Password Credentials) 플로우가 실패했습니다.'
+        resource_owner_authenticator_not_configured: 'Doorkeeper.configure.resource_owner_authenticator가 설정되지 않아 리소스 소유자 조회에 실패했습니다.'
+        admin_authenticator_not_configured: 'Doorkeeper.configure.admin_authenticator가 설정되지 않아 관리자 패널 접근이 금지되었습니다.'
+
+        # 액세스 그랜트 오류
+        unsupported_response_type: '인증 서버가 이 응답 타입을 지원하지 않습니다.'
+        unsupported_response_mode: '인증 서버가 이 응답 모드를 지원하지 않습니다.'
+
+        # 액세스 토큰 오류
+        invalid_client: '알 수 없는 클라이언트, 클라이언트 인증 누락, 또는 지원하지 않는 인증 방식으로 인해 클라이언트 인증에 실패했습니다.'
+        invalid_grant: '제공된 인증 그랜트가 유효하지 않거나, 만료되었거나, 취소되었거나, 인증 요청에 사용된 리다이렉션 URI와 일치하지 않거나, 다른 클라이언트에 발급된 것입니다.'
+        unsupported_grant_type: '인증 서버가 이 인증 그랜트 타입을 지원하지 않습니다.'
+
+        invalid_token:
+          revoked: '액세스 토큰이 취소되었습니다'
+          expired: '액세스 토큰이 만료되었습니다'
+          unknown: '액세스 토큰이 유효하지 않습니다'
+        revoke:
+          unauthorized: '이 토큰을 취소할 권한이 없습니다'
+
+        forbidden_token:
+          missing_scope: '이 리소스에 접근하려면 "%{oauth_scopes}" 스코프가 필요합니다.'
+
+    flash:
+      applications:
+        create:
+          notice: '애플리케이션이 생성되었습니다.'
+        destroy:
+          notice: '애플리케이션이 삭제되었습니다.'
+        update:
+          notice: '애플리케이션이 수정되었습니다.'
+      authorized_applications:
+        destroy:
+          notice: '애플리케이션 권한이 취소되었습니다.'
+
+    layouts:
+      admin:
+        title: 'Doorkeeper'
+        nav:
+          oauth2_provider: 'OAuth2 공급자'
+          applications: '애플리케이션'
+          home: '홈'
+      application:
+        title: 'OAuth 인증이 필요합니다'
