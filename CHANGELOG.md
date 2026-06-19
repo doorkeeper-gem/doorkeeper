@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - Please add here
+- [#1837] Drop Ruby 3.1 support: bump `required_ruby_version` to `>= 3.2` and remove Ruby 3.1 from the CI matrix. Ruby 3.1 reached EOL on 2025-03-25, and since i18n 1.15.0 uses the Ruby 3.2+ `Fiber[:i18n_config]` storage API, Ruby 3.1 builds fail with `NoMethodError`.
 
 ## 5.9.3
 
