@@ -43,12 +43,18 @@ RSpec.configure do |config|
   config.include RSpec::Rails::RequestExampleGroup, type: :request
 
   config.before do
-    DatabaseCleaner.start
+    begin
+      DatabaseCleaner.start
+    rescue NameError
+      # ActiveRecord might not be defined in some tests
+    end
     Doorkeeper.configure { orm DOORKEEPER_ORM }
   end
 
   config.after do
     DatabaseCleaner.clean
+  rescue NameError
+    # ActiveRecord might not be defined in some tests
   end
 
   config.order = "random"

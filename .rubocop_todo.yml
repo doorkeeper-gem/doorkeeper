@@ -6,6 +6,9 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
+Lint/ConstantDefinitionInBlock:
+  Enabled: false
+
 # Offense count: 13
 # Configuration parameters: IgnoredMethods.
 Metrics/AbcSize:
@@ -65,6 +68,9 @@ RSpec/ExpectInHook:
   Exclude:
     - 'spec/controllers/protected_resources_controller_spec.rb'
 
+RSpec/IndexedLet:
+  Enabled: false
+
 # Offense count: 300
 # Configuration parameters: AssignmentOnly.
 RSpec/InstanceVariable:
@@ -90,6 +96,9 @@ RSpec/MessageChain:
 # SupportedStyles: have_received, receive
 RSpec/MessageSpies:
   EnforcedStyle: receive
+
+RSpec/RepeatedExampleGroupDescription:
+  Enabled: false
 
 # Offense count: 39
 RSpec/SubjectStub:

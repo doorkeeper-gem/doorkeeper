@@ -14,6 +14,7 @@ module Doorkeeper
     include Models::Scopes
     include Models::ResourceOwnerable
     include Models::ExpirationTimeSqlMath
+    include Models::Concerns::WriteToPrimary
 
     module ClassMethods
       # Returns an instance of the Doorkeeper::AccessToken with
@@ -66,12 +67,14 @@ module Doorkeeper
       #   instance of the Resource Owner model or it's ID
       #
       def revoke_all_for(application_id, resource_owner, clock = Time)
-        by_resource_owner(resource_owner)
-          .where(
-            application_id: application_id,
-            revoked_at: nil,
-          )
-          .update_all(revoked_at: clock.now.utc)
+        with_primary_role do
+          by_resource_owner(resource_owner)
+            .where(
+              application_id: application_id,
+              revoked_at: nil,
+            )
+            .update_all(revoked_at: clock.now.utc)
+        end
       end
 
       # Looking for not revoked Access Token with a matching set of scopes
@@ -219,7 +222,8 @@ module Doorkeeper
         if Doorkeeper.config.reuse_access_token
           custom_attributes = extract_custom_attributes(token_attributes).presence
           access_token = matching_token_for(
-            application, resource_owner, scopes, custom_attributes: custom_attributes, include_expired: false)
+            application, resource_owner, scopes, custom_attributes: custom_attributes, include_expired: false,
+          )
 
           return access_token if access_token&.reusable?
         end
@@ -260,7 +264,9 @@ module Doorkeeper
           token_attributes[:resource_owner_id] = resource_owner_id_for(resource_owner)
         end
 
-        create!(token_attributes)
+        with_primary_role do
+          create!(token_attributes)
+        end
       end
 
       # Looking for not revoked Access Token records that belongs to specific
@@ -324,7 +330,8 @@ module Doorkeeper
       #   A hash containing only the custom access token attributes.
       def extract_custom_attributes(attributes)
         attributes.with_indifferent_access.slice(
-          *Doorkeeper.configuration.custom_access_token_attributes)
+          *Doorkeeper.configuration.custom_access_token_attributes,
+        )
       end
     end
 
@@ -435,7 +442,12 @@ module Doorkeeper
       return if !self.class.refresh_token_revoked_on_use? || previous_refresh_token.blank?
 
       old_refresh_token&.revoke
-      update_attribute(:previous_refresh_token, "")
+
+      if self.class.respond_to?(:with_primary_role)
+        self.class.with_primary_role { update_attribute(:previous_refresh_token, "") }
+      else
+        update_attribute(:previous_refresh_token, "")
+      end
     end
 
     private

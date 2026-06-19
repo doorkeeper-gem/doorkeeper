@@ -1,0 +1,35 @@
+name: "Changelog verifier"
+on:
+  pull_request:
+    # The specific activity types are listed here to include "labeled" and "unlabeled"
+    # (which are not included by default for the "pull_request" trigger).
+    # This is needed to allow skipping enforcement of the changelog in PRs with specific labels,
+    # as defined in the (optional) "skipLabels" property.
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
+
+jobs:
+  # Enforces the update of a changelog file on every pull request
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check changed paths
+        id: changes
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            gem_changes:
+              - 'lib/**'
+              - 'app/**'
+              - 'config/**'
+              - '*.gemspec'
+              - 'Gemfile'
+              - 'Gemfile.lock'
+              - 'ext/**'
+
+      - name: Enforce changelog
+        if: |
+          steps.changes.outputs.gem_changes == 'true'
+        uses: dangoslen/changelog-enforcer@v3
+        with:
+            changeLogPath: CHANGELOG.md

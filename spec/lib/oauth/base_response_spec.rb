@@ -27,7 +27,7 @@ RSpec.describe Doorkeeper::OAuth::BaseResponse do
 
   describe "#redirectable?" do
     it "returns false" do
-      expect(response.redirectable?).to eq(false)
+      expect(response.redirectable?).to be(false)
     end
   end
 

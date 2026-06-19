@@ -85,6 +85,22 @@ class Doorkeeper::OAuth::Client
         expect(uid).to be_blank
         expect(secret).to be_blank
       end
+
+      it "decodes credentials with lowercase 'basic' prefix" do
+        request = double authorization: "basic #{credentials}"
+        uid, secret = described_class.from_basic(request)
+
+        expect(uid).to eq("some-uid")
+        expect(secret).to eq("some-secret")
+      end
+
+      it "decodes credentials with mixed case 'BaSiC' prefix" do
+        request = double authorization: "BaSiC #{credentials}"
+        uid, secret = described_class.from_basic(request)
+
+        expect(uid).to eq("some-uid")
+        expect(secret).to eq("some-secret")
+      end
     end
   end
 end

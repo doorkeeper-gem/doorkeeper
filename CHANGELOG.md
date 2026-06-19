@@ -7,7 +7,56 @@ User-visible changes worth mentioning.
 
 ## main
 
-Add your entry here.
+- Please add here
+
+## 5.9.3
+
+- [#1834] Fix default `allow_token_introspection` returning `false` when a custom `application_class` is configured. The default proc compared application objects with `==`, which fails when the authorized client and the introspected token's application are resolved as different classes (e.g. a base `Doorkeeper::Application` vs. a configured subclass) even though they reference the same record. It now compares application ids instead.
+- [#1832] Fix confusing `belongs_to :owner` side effect: `Doorkeeper::Models::Ownership` is now included only when `enable_application_owner?` is set (read at include time), so models no longer expose a misleading `owner` association/reflection when the application owner feature is disabled and the schema lacks the owner columns.
+
+## 5.9.2
+
+- [#1822][#1823][#1825] Update Rubocop config, auto-corrections and codebase cleanup.
+- [#1830] Fix `NameError: uninitialized constant ApplicationRecord` on `rails db:seed` (and other non-eager-loading flows) caused by `on_load(:active_record)` firing re-entrantly during `ApplicationRecord` autoload. The orm hooks no longer depend on `ActiveSupport.on_load(:active_record)`; model concerns (`Ownership`, `PolymorphicResourceOwner::ForAccessGrant`, `PolymorphicResourceOwner::ForAccessToken`) are now wired up from each `Mixins::*` `included` block, which fires at parent-class autoload time — after `Doorkeeper.configure` has applied user settings and without re-entering the AR load chain.
+  - **Upgrade note**: fully custom model classes that don't include `Doorkeeper::Orm::ActiveRecord::Mixins::{Application,AccessToken,AccessGrant}` will no longer auto-receive `Ownership` / `PolymorphicResourceOwner` concerns (previously injected by `run_orm_hooks` via the configured class name). Either inherit from the Doorkeeper default model, include the corresponding `Mixins::*` module, or `include` the concerns directly.
+
+## 5.9.1
+
+- [#1781] Honor `handle_auth_errors :raise` in `AuthorizationsController#authorize_response`
+- [#1795] Fix: detailed error 'insufficient_scope' in protected resources 403s
+- [#1797] Fix `doorkeeper:db:cleanup` rake task failure on PostgreSQL
+- [#1800] Set `@grant_type` in `ClientCredentialsRequest` and `RefreshTokenRequest` constructors so `request.grant_type` returns
+  the correct value in hooks like `before_successful_strategy_response`.
+- [#1802] Fix `filter_parameters` not applied when `Doorkeeper.configure` is called inside to_prepare.
+- [#1804] Use `ActiveSupport.on_load(:active_record)` in ORM hooks to prevent loading ActiveRecord models too early
+- [#1806] Fix token revocation bypass for public clients (RFC 7009)
+- [#1815] Expose `current_resource_owner` as a view helper in `Doorkeeper::ApplicationController`.
+- [#1818] Fix token introspection returning `exp: 0` for non-expiring tokens.
+- [#1784] Remove hardcoded colons from view templates, move punctuation to i18n translation strings.
+
+  **[IMPORTANT]**: if you have customized Doorkeeper views (`authorizations/new`, `authorizations/show`,
+  `applications/show`) or overridden the default `en.yml` translations, you may need to update them.
+  Colons are no longer hardcoded in the views — they are now part of the translation strings.
+  Update the [doorkeeper-i18n](https://github.com/doorkeeper-gem/doorkeeper-i18n) gem to get the
+  updated translations for all locales.
+- [#1820] Remove dead wildcard presence check in `Scopes#dynamic_scope_match?` (internal cleanup, no behavior change).
+- [#1822] Update Rubocop config, auto-corrections.
+- [#1823] Update Rubocop config, part 2.
+- [#1825] Update Rubocop config, part 3.
+- [#1821] Fix noisy `Could not find command "no_previous_refresh_token_column?"` Thor output during the
+  `PreviousRefreshTokenGenerator` spec by stubbing the underlying DB column check instead of the generator's
+  private method (test-only change).
+
+## 5.9.0
+
+- [#1791] Add support for Rails read replicas with automatic role switching via `enable_multiple_database_roles` configuration option
+- [#1792] Consider expires_in when clear expired tokens with StaleRecordsCleaner.
+- [#1790] Fix race condition in refresh token revocation check by moving InvalidGrantReuse check inside the lock block
+- [#1788] Fix regex for basic auth to be case-insensitive
+- [#1775] Fix Applications Secret Not Null Constraint generator
+- [#1779] Only lock previous access token model when creating a new token from its refresh token if revoke_previous_refresh_token_on_use is false
+- [#1778] Ensure that token revocation is idempotent by checking that that token has not already been revoked before revoking.
+
 
 ## 5.8.2
 
@@ -31,7 +80,7 @@ Add your entry here.
 - [#1712] Add `Pragma: no-cache` to token response
 - [#1726] Refactor token introspection class.
 - [#1727] Allow to set null secret value for Applications if they are public.
-- [#1735] Add `pkce_code_challenge_methods` config option. 
+- [#1735] Add `pkce_code_challenge_methods` config option.
 
 ## 5.7.1
 

@@ -9,8 +9,7 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
 
   let(:server) do
     server = Doorkeeper.configuration
-    allow(server).to receive(:default_scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("default"))
-    allow(server).to receive(:optional_scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("public profile"))
+    allow(server).to receive_messages(default_scopes: Doorkeeper::OAuth::Scopes.from_string("default"), optional_scopes: Doorkeeper::OAuth::Scopes.from_string("public profile"))
     server
   end
 
@@ -31,18 +30,18 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
     validation_attributes = described_class.validations.map { |validation| validation[:attribute] }
 
     expect(validation_attributes).to eq(%i[
-      client_id
-      client
-      client_supports_grant_flow
-      resource_owner_authorize_for_client
-      redirect_uri
-      params
-      response_type
-      response_mode
-      scopes
-      code_challenge
-      code_challenge_method
-    ])
+                                          client_id
+                                          client
+                                          client_supports_grant_flow
+                                          resource_owner_authorize_for_client
+                                          redirect_uri
+                                          params
+                                          response_type
+                                          response_mode
+                                          scopes
+                                          code_challenge
+                                          code_challenge_method
+                                        ])
   end
 
   it "is authorizable when request is valid" do
@@ -342,9 +341,9 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
           attributes[:code_challenge] = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
           attributes[:code_challenge_method] = "plain"
 
-          expect(pre_auth).to_not be_authorizable
+          expect(pre_auth).not_to be_authorizable
           expect(pre_auth.error_response.description).to eq(
-            "The authorization server does not support PKCE as there are no accepted code_challenge_method values."
+            "The authorization server does not support PKCE as there are no accepted code_challenge_method values.",
           )
         end
       end
@@ -367,7 +366,7 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
           attributes[:code_challenge] = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
           attributes[:code_challenge_method] = "plain"
 
-          expect(pre_auth).to_not be_authorizable
+          expect(pre_auth).not_to be_authorizable
           expect(pre_auth.error_response.description).to eq("The code_challenge_method must be S256.")
         end
       end
@@ -376,7 +375,7 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
         attributes[:code_challenge] = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
         attributes[:code_challenge_method] = "unknown"
 
-        expect(pre_auth).to_not be_authorizable
+        expect(pre_auth).not_to be_authorizable
         expect(pre_auth.error_response.description).to eq("The code_challenge_method must be one of plain, S256.")
       end
     end

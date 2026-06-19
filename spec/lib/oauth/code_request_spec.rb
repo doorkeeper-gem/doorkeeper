@@ -9,9 +9,7 @@ RSpec.describe Doorkeeper::OAuth::CodeRequest do
 
   let(:pre_auth) do
     allow(Doorkeeper.config)
-      .to receive(:default_scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("public"))
-    allow(Doorkeeper.config)
-      .to receive(:grant_flows).and_return(Doorkeeper::OAuth::Scopes.from_string("authorization_code"))
+      .to receive_messages(default_scopes: Doorkeeper::OAuth::Scopes.from_string("public"), grant_flows: Doorkeeper::OAuth::Scopes.from_string("authorization_code"))
 
     application = FactoryBot.create(:application, scopes: "public")
     client = Doorkeeper::OAuth::Client.new(application)

@@ -25,8 +25,7 @@ RSpec.describe Doorkeeper::OAuth::CodeResponse do
       end
 
       before do
-        allow(pre_auth).to receive(:code_challenge).and_return("code_challenge")
-        allow(pre_auth).to receive(:code_challenge_method).and_return("plain")
+        allow(pre_auth).to receive_messages(code_challenge: "code_challenge", code_challenge_method: "plain")
       end
 
       it "return body response for authorization code" do
@@ -67,8 +66,7 @@ RSpec.describe Doorkeeper::OAuth::CodeResponse do
       end
 
       before do
-        allow(pre_auth).to receive(:code_challenge).and_return("code_challenge")
-        allow(pre_auth).to receive(:code_challenge_method).and_return("plain")
+        allow(pre_auth).to receive_messages(code_challenge: "code_challenge", code_challenge_method: "plain")
       end
 
       it "includes the authorization code was generated and state" do

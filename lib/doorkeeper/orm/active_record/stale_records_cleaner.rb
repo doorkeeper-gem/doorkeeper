@@ -24,11 +24,19 @@ module Doorkeeper
         # Clears expired records
         def clean_expired(ttl)
           table = @base_scope.arel_table
+          model_class = @base_scope.is_a?(::ActiveRecord::Relation) ? @base_scope.klass : @base_scope
 
-          @base_scope
+          scope = @base_scope
             .where.not(expires_in: nil)
             .where(table[:created_at].lt(Time.current - ttl))
-            .in_batches(&:delete_all)
+
+          if model_class.respond_to?(:supports_expiration_time_math?) && model_class.supports_expiration_time_math?
+            scope = scope.where("#{model_class.expiration_time_sql} < ?", Time.current)
+          else
+            ::Kernel.warn(::Doorkeeper::Models::ExpirationTimeSqlMath::WARNING_MESSAGE)
+          end
+
+          scope.in_batches(&:delete_all)
         end
       end
     end

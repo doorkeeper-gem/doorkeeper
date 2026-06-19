@@ -38,7 +38,7 @@ module Doorkeeper
       # @param opts [Hash] the options to configure dynamic scopes
       def enable_dynamic_scopes(opts = {})
         @config.instance_variable_set(:@enable_dynamic_scopes, true)
-        @config.instance_variable_set(:@dynamic_scopes_delimiter, opts[:delimiter] || ':')
+        @config.instance_variable_set(:@dynamic_scopes_delimiter, opts[:delimiter] || ":")
       end
 
       # Define default access token scopes for your provider
@@ -99,7 +99,23 @@ module Doorkeeper
         @config.instance_variable_set(:@reuse_access_token, true)
       end
 
-      # Choose to use the url path for native autorization codes 
+      # Enable support for multiple database configurations with read replicas.
+      # When enabled, wraps database write operations to ensure they use the primary
+      # (writable) database when automatic role switching is enabled.
+      #
+      # For ActiveRecord (Rails 6.1+), this uses `ActiveRecord::Base.connected_to(role: :writing)`.
+      # Other ORM extensions can implement their own primary database targeting logic.
+      #
+      # This prevents `ActiveRecord::ReadOnlyError` when using read replicas with Rails
+      # automatic role switching. Enable this if your application uses multiple databases
+      # with automatic role switching for read replicas.
+      #
+      # See: https://guides.rubyonrails.org/active_record_multiple_databases.html#activating-automatic-role-switching
+      def enable_multiple_database_roles
+        @config.instance_variable_set(:@enable_multiple_database_roles, true)
+      end
+
+      # Choose to use the url path for native autorization codes
       # Enabling this flag sets the authorization code response route for
       # native redirect uris to oauth/authorize/<code>. The default is
       # oauth/authorize/native?code=<code>.
@@ -435,15 +451,16 @@ module Doorkeeper
     option :allow_token_introspection,
            default: (lambda do |token, authorized_client, authorized_token|
              if authorized_token
-               authorized_token.application == token&.application
+               authorized_token.application_id == token&.application_id
              elsif token&.application
-               authorized_client == token.application
+               authorized_client.id == token.application_id
              else
                true
              end
            end)
 
     attr_reader :reuse_access_token,
+                :enable_multiple_database_roles,
                 :token_secret_fallback_strategy,
                 :application_secret_fallback_strategy
 
@@ -582,7 +599,7 @@ module Doorkeeper
 
     def pkce_code_challenge_methods_supported
       return [] unless access_grant_model.pkce_supported?
-      
+
       pkce_code_challenge_methods
     end
 
@@ -623,10 +640,10 @@ module Doorkeeper
     def deprecated_token_grant_types_resolver
       @deprecated_token_grant_types ||= calculate_token_grant_types
     end
-    
+
     def native_authorization_code_route
       @use_url_path_for_native_authorization = false unless defined?(@use_url_path_for_native_authorization)
-      @use_url_path_for_native_authorization ? '/:code' : '/native'
+      @use_url_path_for_native_authorization ? "/:code" : "/native"
     end
 
     # [NOTE]: deprecated and will be removed soon

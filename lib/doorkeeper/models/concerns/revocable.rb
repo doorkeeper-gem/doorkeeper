@@ -9,7 +9,14 @@ module Doorkeeper
       # @param clock [Time] time object
       #
       def revoke(clock = Time)
-        update_attribute(:revoked_at, clock.now.utc)
+        return if revoked?
+
+        # Wrap in with_primary_role if the model class supports it
+        if self.class.respond_to?(:with_primary_role)
+          self.class.with_primary_role { update_attribute(:revoked_at, clock.now.utc) }
+        else
+          update_attribute(:revoked_at, clock.now.utc)
+        end
       end
 
       # Indicates whether the object has been revoked.

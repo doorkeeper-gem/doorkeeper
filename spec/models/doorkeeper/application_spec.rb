@@ -105,15 +105,46 @@ RSpec.describe Doorkeeper::Application do
     expect(new_application.secret).to eq("custom_application_secret")
   end
 
+  # Regression for #1831: `Doorkeeper::Models::Ownership` is included only
+  # when `enable_application_owner?` is set at include time. When the feature
+  # is off (the default), the `:owner` association must NOT be declared, so
+  # the model never exposes an owner reflection on schemas that don't carry
+  # the owner columns (the confusing side effect reported in #1831).
+  context "when application_owner is not enabled (default)" do
+    it "leaves the application valid without an owner" do
+      expect(Doorkeeper.config.enable_application_owner?).to be(false)
+      expect(Doorkeeper.config.confirm_application_owner?).to be(false)
+      expect(new_application).to be_valid
+    end
+
+    it "does not declare the :owner presence validator" do
+      expect(new_application).not_to respond_to(:validate_owner?)
+      new_application.valid?
+      expect(new_application.errors[:owner]).to be_empty
+    end
+
+    it "does not declare the belongs_to :owner association" do
+      expect(described_class.reflect_on_association(:owner)).to be_nil
+      expect(new_application).not_to respond_to(:owner)
+      expect(new_application.save).to be(true)
+      expect(new_application.errors[:owner]).to be_empty
+    end
+  end
+
   context "when application_owner is enabled" do
+    # `enable_application_owner` is a load-time switch: the owner association
+    # is wired into the model when its class is defined. We build the model
+    # after enabling the feature so the include-time gate sees it on, rather
+    # than reconfiguring the already-loaded `Doorkeeper::Application`.
+    let(:owner_application_class) { build_application_model }
+    let(:new_application) { owner_application_class.new(FactoryBot.attributes_for(:application)) }
+
     context "when application owner is not required" do
       before do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
           enable_application_owner
         end
-
-        Doorkeeper.run_orm_hooks
       end
 
       it "is valid given valid attributes" do
@@ -127,8 +158,6 @@ RSpec.describe Doorkeeper::Application do
           orm DOORKEEPER_ORM
           enable_application_owner confirmation: true
         end
-
-        Doorkeeper.run_orm_hooks
       end
 
       it "is invalid without an owner" do
@@ -221,7 +250,7 @@ RSpec.describe Doorkeeper::Application do
 
     it "does not fallback to plain lookup by default" do
       lookup = described_class.by_uid_and_secret(app.uid, app.secret)
-      expect(lookup).to eq(nil)
+      expect(lookup).to be_nil
 
       lookup = described_class.by_uid_and_secret(app.uid, app.plaintext_secret)
       expect(lookup).to eq(app)
@@ -406,7 +435,7 @@ RSpec.describe Doorkeeper::Application do
         it "does not find the application" do
           app = FactoryBot.create :application
           authenticated = described_class.by_uid_and_secret(app.uid, "bad")
-          expect(authenticated).to eq(nil)
+          expect(authenticated).to be_nil
         end
       end
     end
@@ -424,7 +453,7 @@ RSpec.describe Doorkeeper::Application do
         it "does not find the application" do
           app = FactoryBot.create :application, confidential: false
           authenticated = described_class.by_uid_and_secret(app.uid, "bad")
-          expect(authenticated).to eq(nil)
+          expect(authenticated).to be_nil
         end
       end
     end
@@ -497,15 +526,23 @@ RSpec.describe Doorkeeper::Application do
 
     context "when called with authorized resource owner" do
       let(:other_owner) { FactoryBot.create(:doorkeeper_testing_user) }
-      let(:app) { FactoryBot.create(:application, secret: "123123123", owner: owner) }
+
+      # Build the model after enabling the owner feature so `belongs_to :owner`
+      # is declared (the gate is evaluated at include time, see #1831).
+      let(:owner_application_class) { build_application_model }
+      let(:app) do
+        owner_application_class.new(FactoryBot.attributes_for(:application)).tap do |application|
+          application.secret = "123123123"
+          application.owner = owner
+          application.save!
+        end
+      end
 
       before do
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
           enable_application_owner confirmation: false
         end
-
-        Doorkeeper.run_orm_hooks
       end
 
       it "includes all the attributes" do
@@ -522,14 +559,77 @@ RSpec.describe Doorkeeper::Application do
           .not_to include("redirect_uri")
       end
     end
+
+    # Regression test for #1831: when `enable_application_owner` is off,
+    # `belongs_to :owner` is NOT declared, so a schema without the
+    # `owner_id` / `owner_type` columns no longer exposes a misleading
+    # `:owner` association. The `respond_to?(:owner) && owner && ...` guard
+    # in `#as_json` must still short-circuit safely in that shape (no owner
+    # columns, `enable_application_owner` off): `respond_to?(:owner)` is
+    # false, the public attribute branch runs, and nothing raises.
+    if DOORKEEPER_ORM == :active_record
+      context "when the schema lacks owner columns" do
+        before(:all) do
+          ActiveRecord::Base.connection.create_table(:oauth_applications_no_owner) do |t|
+            t.string :name, null: false
+            t.string :uid, null: false
+            t.string :secret
+            t.text :redirect_uri
+            t.string :scopes, default: "", null: false
+            t.boolean :confidential, default: true, null: false
+            t.timestamps
+          end
+        end
+
+        after(:all) do
+          ActiveRecord::Base.connection.drop_table(:oauth_applications_no_owner)
+        end
+
+        let(:no_owner_class) do
+          Class.new(::ActiveRecord::Base) do
+            include Doorkeeper::Orm::ActiveRecord::Mixins::Application
+            self.table_name = "oauth_applications_no_owner"
+          end
+        end
+
+        let(:no_owner_app) do
+          no_owner_class.create!(name: "NoOwnerApp", redirect_uri: "https://example.com")
+        end
+
+        it "leaves the owner columns out of the schema" do
+          expect(no_owner_class.column_names).not_to include("owner_id", "owner_type")
+        end
+
+        it "does not declare belongs_to :owner when the feature is off" do
+          expect(Doorkeeper.config.enable_application_owner?).to be(false)
+          expect(no_owner_class.reflect_on_association(:owner)).to be_nil
+          expect(no_owner_app).not_to respond_to(:owner)
+        end
+
+        it "renders the public attribute set without raising" do
+          expect(Doorkeeper.config.enable_application_owner?).to be(false)
+          expect { no_owner_app.as_json }.not_to raise_error
+          expect(no_owner_app.as_json).to match(
+            "id" => no_owner_app.id,
+            "name" => "NoOwnerApp",
+            "created_at" => anything,
+          )
+        end
+
+        it "ignores :current_resource_owner without raising" do
+          expect { no_owner_app.as_json(current_resource_owner: owner) }.not_to raise_error
+          expect(no_owner_app.as_json(current_resource_owner: owner))
+            .not_to include("redirect_uri", "secret")
+        end
+      end
+    end
   end
 
   if DOORKEEPER_ORM == :active_record
     context "when custom model class configured", active_record: true do
-      class CustomApp < ::ActiveRecord::Base
-        include Doorkeeper::Orm::ActiveRecord::Mixins::Application
-      end
-
+      # `CustomApp` is rebuilt inside each context's `before`, after the
+      # owner feature is configured, so its include-time owner gate (#1831)
+      # reflects that context's `enable_application_owner` setting.
       let(:new_application) { CustomApp.new(FactoryBot.attributes_for(:application)) }
 
       context "without confirmation" do
@@ -540,7 +640,7 @@ RSpec.describe Doorkeeper::Application do
             enable_application_owner confirmation: false
           end
 
-          Doorkeeper.run_orm_hooks
+          stub_const("CustomApp", build_application_model)
         end
 
         it "is valid given valid attributes" do
@@ -548,7 +648,7 @@ RSpec.describe Doorkeeper::Application do
         end
       end
 
-      context "without confirmation" do
+      context "with confirmation" do
         before do
           Doorkeeper.configure do
             orm DOORKEEPER_ORM
@@ -556,7 +656,7 @@ RSpec.describe Doorkeeper::Application do
             enable_application_owner confirmation: true
           end
 
-          Doorkeeper.run_orm_hooks
+          stub_const("CustomApp", build_application_model)
         end
 
         it "is invalid without owner" do

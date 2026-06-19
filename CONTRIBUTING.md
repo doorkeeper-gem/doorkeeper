@@ -38,9 +38,7 @@ Run the tests with: `docker run -it --rm doorkeeper:test`
 [commit]: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
 [pr]: https://github.com/doorkeeper-gem/doorkeeper/compare/
 
-* If [Hound] catches style violations, fix them. If our bot suggested changes — please add them.
-
-[hound]: https://houndci.com
+* If [Rubocop] catches style violations, fix them. If our bot suggested changes — please add them.
 
 * Wait for us. We try to at least comment on pull requests within one business day.
 * We may suggest changes.

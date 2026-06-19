@@ -39,8 +39,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end)
     end
 
-    allow(Doorkeeper.config).to receive(:grant_flows).and_return(["implicit"])
-    allow(Doorkeeper.config).to receive(:authenticate_resource_owner).and_return(->(_) { authenticator_method })
+    allow(Doorkeeper.config).to receive_messages(grant_flows: ["implicit"], authenticate_resource_owner: ->(_) { authenticator_method })
     allow(subject).to receive(:authenticator_method).and_return(user)
   end
 
@@ -609,10 +608,9 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
 
   describe "GET #new code request with native url and skip_authorization true" do
     before do
-      allow(Doorkeeper.config).to receive(:grant_flows).and_return(%w[authorization_code])
-      allow(Doorkeeper.config).to receive(:skip_authorization).and_return(proc do
+      allow(Doorkeeper.config).to receive_messages(grant_flows: %w[authorization_code], skip_authorization: proc do
         true
-      end)
+      end,)
 
       client.update_attribute :redirect_uri, "urn:ietf:wg:oauth:2.0:oob"
 
@@ -637,7 +635,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       expect(Doorkeeper::AccessToken.count).to be 0
     end
 
-    context 'with use_url_path_for_native_authorization' do
+    context "with use_url_path_for_native_authorization" do
       around(:each) do |example|
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
@@ -655,16 +653,16 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
         Rails.application.reload_routes!
       end
 
-      it 'should redirect immediately' do
+      it "redirects immediately" do
         expect(response).to be_redirect
         expect(response.location).to match(/oauth\/authorize\/#{Doorkeeper::AccessGrant.first.token}/)
       end
 
-      it 'should issue a grant' do
+      it "issues a grant" do
         expect(Doorkeeper::AccessGrant.count).to be 1
       end
 
-      it 'should not issue a token' do
+      it "does not issue a token" do
         expect(Doorkeeper::AccessToken.count).to be 0
       end
     end
@@ -816,8 +814,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
 
   describe "GET #new in API mode with skip_authorization true" do
     before do
-      allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc { true })
-      allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
+      allow(Doorkeeper.configuration).to receive_messages(skip_authorization: proc { true }, api_only: true)
 
       get :new, params: params
     end
@@ -1069,7 +1066,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
     end
 
-    context "invalid scope" do
+    context "when invalid scope" do
       before do
         default_scopes_exist :public
         get :new, params: {
@@ -1104,7 +1101,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
     end
 
-    context "invalid scope with form_post response mode" do
+    context "when invalid scope with form_post response mode" do
       before do
         default_scopes_exist :public
         get :new, params: {
@@ -1126,7 +1123,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
     end
 
-    context "invalid redirect_uri" do
+    context "when invalid redirect_uri" do
       before do
         default_scopes_exist :public
         get :new, params: {
@@ -1152,7 +1149,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
         get :new, params: {
           client_id: client.uid,
           redirect_uri: client.redirect_uri,
-          response_mode: "fragment"
+          response_mode: "fragment",
         }
       end
 
@@ -1189,12 +1186,19 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
 
       it "does not issue any token" do
-        expect(Doorkeeper::AccessGrant.count).to eq 0
-        expect(Doorkeeper::AccessToken.count).to eq 0
+        expect do
+          get :new, params: { an_invalid: "request" }
+        rescue Doorkeeper::Errors::InvalidRequest
+        end.not_to change(Doorkeeper::AccessGrant, :count)
+
+        expect do
+          get :new, params: { an_invalid: "request" }
+        rescue Doorkeeper::Errors::InvalidRequest
+        end.not_to change(Doorkeeper::AccessToken, :count)
       end
     end
 
-    context "invalid client_id" do
+    context "when invalid client_id" do
       before do
         default_scopes_exist :public
       end
@@ -1204,7 +1208,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
     end
 
-    context "invalid scope" do
+    context "when invalid scope" do
       before do
         default_scopes_exist :public
       end
@@ -1222,7 +1226,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
     end
 
-    context "invalid redirect_uri" do
+    context "when invalid redirect_uri" do
       before do
         default_scopes_exist :public
       end
@@ -1230,6 +1234,76 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       it "raises InvalidRedirectUri error" do
         expect do
           get :new, params: {
+            client_id: client.uid,
+            response_type: "token",
+            redirect_uri: "invalid",
+          }
+        end.to raise_error(Doorkeeper::Errors::InvalidRedirectUri)
+      end
+    end
+  end
+
+  describe "POST #create with errors with handle_auth_errors :raise" do
+    before { config_is_set(:handle_auth_errors, :raise) }
+
+    context "without valid params" do
+      before do
+        default_scopes_exist :public
+      end
+
+      it "raises InvalidRequest error" do
+        expect { post :create, params: { an_invalid: "request" } }.to raise_error(Doorkeeper::Errors::InvalidRequest)
+      end
+
+      it "does not issue any token" do
+        expect do
+          post :create, params: { an_invalid: "request" }
+        rescue Doorkeeper::Errors::InvalidRequest
+        end.not_to change(Doorkeeper::AccessGrant, :count)
+
+        expect do
+          post :create, params: { an_invalid: "request" }
+        rescue Doorkeeper::Errors::InvalidRequest
+        end.not_to change(Doorkeeper::AccessToken, :count)
+      end
+    end
+
+    context "when invalid client_id" do
+      before do
+        default_scopes_exist :public
+      end
+
+      it "raises InvalidClient error" do
+        expect { post :create, params: { client_id: "invalid" } }.to raise_error(Doorkeeper::Errors::InvalidClient)
+      end
+    end
+
+    context "when invalid scope" do
+      before do
+        default_scopes_exist :public
+      end
+
+      it "raises InvalidScope error" do
+        expect do
+          post :create, params: {
+            client_id: client.uid,
+            response_type: "token",
+            scope: "invalid",
+            redirect_uri: client.redirect_uri,
+            state: "return-this",
+          }
+        end.to raise_error(Doorkeeper::Errors::InvalidScope)
+      end
+    end
+
+    context "when invalid redirect_uri" do
+      before do
+        default_scopes_exist :public
+      end
+
+      it "raises InvalidRedirectUri error" do
+        expect do
+          post :create, params: {
             client_id: client.uid,
             response_type: "token",
             redirect_uri: "invalid",
@@ -1279,8 +1353,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
 
     describe "when not authorizing in api mode" do
       before do
-        allow(Doorkeeper.configuration).to receive(:skip_authorization).and_return(proc { false })
-        allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
+        allow(Doorkeeper.configuration).to receive_messages(skip_authorization: proc { false }, api_only: true)
       end
 
       it "does not call :before_successful_authorization callback" do

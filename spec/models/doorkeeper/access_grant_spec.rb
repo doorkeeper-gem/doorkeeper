@@ -58,8 +58,8 @@ RSpec.describe Doorkeeper::AccessGrant do
 
       context "without fallback lookup" do
         it "does not provide lookups with either through by_token" do
-          expect(described_class.by_token(plain_text_token)).to eq(nil)
-          expect(described_class.by_token(grant.token)).to eq(nil)
+          expect(described_class.by_token(plain_text_token)).to be_nil
+          expect(described_class.by_token(grant.token)).to be_nil
 
           # And it does not touch the token
           grant.reload
@@ -100,7 +100,7 @@ RSpec.describe Doorkeeper::AccessGrant do
           # And it modifies the token value
           grant.reload
           expect(grant.token).not_to eq(plain_text_token)
-          expect(described_class.find_by(token: plain_text_token)).to eq(nil)
+          expect(described_class.find_by(token: plain_text_token)).to be_nil
           expect(described_class.find_by(token: grant.token)).not_to be_nil
         end
       end
@@ -168,6 +168,30 @@ RSpec.describe Doorkeeper::AccessGrant do
       described_class.revoke_all_for(application.id, resource_owner)
 
       expect(access_grant_for_different_owner.reload).not_to be_revoked
+    end
+  end
+
+  describe ".revoke_all_for with read replica support" do
+    let(:application) { FactoryBot.create(:application) }
+    let(:resource_owner) { FactoryBot.create(:resource_owner) }
+
+    before do
+      FactoryBot.create(:access_grant, application: application, resource_owner_id: resource_owner.id)
+    end
+
+    context "when enable_multiple_database_roles is enabled" do
+      before do
+        Doorkeeper.configure do
+          orm :active_record
+          enable_multiple_database_roles
+        end
+      end
+
+      it "revokes grants using primary database role" do
+        expect(ActiveRecord::Base).to receive(:connected_to).with(role: :writing).and_call_original
+
+        described_class.revoke_all_for(application.id, resource_owner)
+      end
     end
   end
 end

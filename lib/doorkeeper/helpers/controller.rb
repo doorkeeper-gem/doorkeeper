@@ -7,6 +7,10 @@ module Doorkeeper
     # Rails controller helpers.
     #
     module Controller
+      def self.included(base)
+        base.helper_method :current_resource_owner if base.respond_to?(:helper_method)
+      end
+
       private
 
       # :doc:
@@ -18,9 +22,7 @@ module Doorkeeper
       def current_resource_owner
         return @current_resource_owner if defined?(@current_resource_owner)
 
-        @current_resource_owner ||= begin
-          instance_eval(&Doorkeeper.config.authenticate_resource_owner)
-        end
+        @current_resource_owner ||= instance_eval(&Doorkeeper.config.authenticate_resource_owner)
       end
 
       def resource_owner_from_credentials

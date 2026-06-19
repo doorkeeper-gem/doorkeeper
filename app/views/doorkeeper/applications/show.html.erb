@@ -4,10 +4,10 @@
 
 <div class="row">
   <div class="col-md-8">
-    <h4><%= t('.application_id') %>:</h4>
+    <h4><%= t('.application_id') %></h4>
     <p><code class="bg-light" id="application_id"><%= @application.uid %></code></p>
 
-    <h4><%= t('.secret') %>:</h4>
+    <h4><%= t('.secret') %></h4>
     <p>
       <code class="bg-light" id="secret">
         <% secret = flash[:application_secret].presence || @application.plaintext_secret %>
@@ -19,7 +19,7 @@
       </code>
     </p>
 
-    <h4><%= t('.scopes') %>:</h4>
+    <h4><%= t('.scopes') %></h4>
     <p>
       <code class="bg-light" id="scopes">
         <% if @application.scopes.present? %>
@@ -30,10 +30,10 @@
       </code>
     </p>
 
-    <h4><%= t('.confidential') %>:</h4>
+    <h4><%= t('.confidential') %></h4>
     <p><code class="bg-light" id="confidential"><%= @application.confidential? %></code></p>
 
-    <h4><%= t('.callback_urls') %>:</h4>
+    <h4><%= t('.callback_urls') %></h4>
 
     <% if @application.redirect_uri.present? %>
       <table>

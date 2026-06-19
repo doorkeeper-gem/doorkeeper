@@ -7,12 +7,12 @@ module Doorkeeper
   # Generates migration with which drops NOT NULL constraint and allows not
   # to bloat the database with redundant secret value.
   #
-  class RemoveApplicationSecretNotNullConstraint < ::Rails::Generators::Base
+  class RemoveApplicationsSecretNotNullConstraintGenerator < ::Rails::Generators::Base
     include ::Rails::Generators::Migration
     source_root File.expand_path("templates", __dir__)
     desc "Removes NOT NULL constraint for OAuth2 applications."
 
-    def enable_polymorphic_resource_owner
+    def remove_applications_secret_not_null_constraint
       migration_template(
         "remove_applications_secret_not_null_constraint.rb.erb",
         "db/migrate/remove_applications_secret_not_null_constraint.rb",

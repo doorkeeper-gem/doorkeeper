@@ -7,8 +7,7 @@ RSpec.describe Doorkeeper::ApplicationsController, type: :controller do
 
   context "when JSON API used" do
     before do
-      allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
-      allow(Doorkeeper.configuration).to receive(:authenticate_admin).and_return(->(*) { true })
+      allow(Doorkeeper.configuration).to receive_messages(api_only: true, authenticate_admin: ->(*) { true })
     end
 
     it "creates an application" do
@@ -42,7 +41,7 @@ RSpec.describe Doorkeeper::ApplicationsController, type: :controller do
         }
       end.not_to(change { Doorkeeper::Application.count })
 
-      expect(response).to have_http_status(422)
+      expect(response).to have_http_status(:unprocessable_entity)
 
       expect(json_response).to include("errors")
     end
@@ -57,7 +56,7 @@ RSpec.describe Doorkeeper::ApplicationsController, type: :controller do
         }
       end.not_to(change { Doorkeeper::Application.count })
 
-      expect(response).to have_http_status(422)
+      expect(response).to have_http_status(:unprocessable_entity)
 
       expect(json_response).to include("errors")
     end
@@ -99,7 +98,7 @@ RSpec.describe Doorkeeper::ApplicationsController, type: :controller do
         }, format: :json,
       }
 
-      expect(response).to have_http_status(422)
+      expect(response).to have_http_status(:unprocessable_entity)
 
       expect(json_response).to include("errors")
     end
@@ -109,7 +108,7 @@ RSpec.describe Doorkeeper::ApplicationsController, type: :controller do
 
       delete :destroy, params: { id: application.id, format: :json }
 
-      expect(response).to have_http_status(204)
+      expect(response).to have_http_status(:no_content)
       expect(Doorkeeper::Application.count).to be_zero
     end
   end

@@ -76,9 +76,11 @@ RSpec.describe Doorkeeper::OAuth::Scopes do
     end
 
     it "raises an error if cannot handle addition" do
+      # rubocop:disable Style/StringConcatenation
       expect do
         described_class.from_string("public") + "admin"
       end.to raise_error(NoMethodError)
+      # rubocop:enable Style/StringConcatenation
     end
   end
 
@@ -102,7 +104,9 @@ RSpec.describe Doorkeeper::OAuth::Scopes do
 
   describe "#==" do
     it "is equal to another set of scopes" do
+      # rubocop:disable RSpec/IdenticalEqualityAssertion
       expect(described_class.from_string("public")).to eq(described_class.from_string("public"))
+      # rubocop:enable RSpec/IdenticalEqualityAssertion
     end
 
     it "is equal to another set of scopes with no particular order" do
@@ -202,17 +206,17 @@ RSpec.describe Doorkeeper::OAuth::Scopes do
 
         describe "#&" do
           it "allows user:1 scope" do
-            scopes = described_class.from_string("public user:*") & (described_class.from_string("public user:1"))
+            scopes = described_class.from_string("public user:*") & described_class.from_string("public user:1")
             expect(scopes.all).to eq(%w[public user:1])
           end
 
           it "does not allow user:2 scope" do
-            scopes = described_class.from_string("public user:1") & (described_class.from_string("public user:2"))
+            scopes = described_class.from_string("public user:1") & described_class.from_string("public user:2")
             expect(scopes.all).to eq(%w[public])
           end
 
           it "does not allow user:* scope" do
-            scopes = described_class.from_string("public user:1") & (described_class.from_string("public user:*"))
+            scopes = described_class.from_string("public user:1") & described_class.from_string("public user:*")
             expect(scopes.all).to eq(%w[public])
           end
         end

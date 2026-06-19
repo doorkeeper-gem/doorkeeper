@@ -102,14 +102,18 @@ module Doorkeeper
 
       # 2.2. Introspection Response
       def success_response
-        customize_response(
+        response = {
           active: true,
           scope: @token.scopes_string,
           client_id: @token.try(:application).try(:uid),
           token_type: @token.token_type,
-          exp: @token.expires_at.to_i,
           iat: @token.created_at.to_i,
-        )
+        }
+        # `exp` is OPTIONAL per RFC 7662 §2.2; omit it for non-expiring tokens
+        # so clients don't interpret `0` as "expired at 1970-01-01".
+        response[:exp] = @token.expires_at.to_i if @token.expires_at
+
+        customize_response(response)
       end
 
       # If the introspection call is properly authorized but the token is not

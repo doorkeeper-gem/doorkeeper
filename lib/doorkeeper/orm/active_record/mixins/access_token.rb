@@ -9,6 +9,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       self.strict_loading_by_default = false if respond_to?(:strict_loading_by_default)
 
       include ::Doorkeeper::AccessTokenMixin
+      include ::Doorkeeper::Models::PolymorphicResourceOwner::ForAccessToken
 
       belongs_to :application, class_name: Doorkeeper.config.application_class.to_s,
                                inverse_of: :access_tokens,
@@ -40,6 +41,28 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
         by_resource_owner(resource_owner).where(revoked_at: nil)
       end
 
+      # Determines if refresh tokens should be revoked only when the new access token is used,
+      # rather than immediately upon refresh. This is based on the presence of the
+      # `previous_refresh_token` column in the database.
+      #
+      # When true (column exists):
+      # - Refresh tokens are NOT immediately revoked
+      # - New access token stores the old refresh token value in `previous_refresh_token`
+      # - Old refresh token is revoked later when the new access token is first used
+      # - Multiple concurrent refresh requests can succeed (no database locks)
+      # - Better database performance and lower latency
+      #
+      # When false (column does not exist):
+      # - Refresh tokens are immediately revoked using database locks
+      # - Only one concurrent refresh request can succeed
+      # - May experience database lock contention under high load
+      #
+      # To enable the revoke-on-use feature and improve performance:
+      #   rails generate doorkeeper:previous_refresh_token
+      #   rails db:migrate
+      #
+      # @return [Boolean] true if previous_refresh_token column exists
+      #
       def refresh_token_revoked_on_use?
         column_names.include?("previous_refresh_token")
       end
@@ -51,15 +74,10 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
         if supports_expiration_time_math?
           # have not reached the expiration time or it never expires
           relation.where("#{expiration_time_sql} > ?", Time.now.utc).or(
-            relation.where(expires_in: nil)
+            relation.where(expires_in: nil),
           )
         else
-          ::Kernel.warn <<~WARNING.squish
-            [DOORKEEPER] Doorkeeper doesn't support expiration time math for your database adapter (#{adapter_name}).
-            Please add a class method `custom_expiration_time_sql` for your AccessToken class/mixin to provide a custom
-            SQL expression to calculate access token expiration time. See lib/doorkeeper/orm/active_record/mixins/access_token.rb
-            for more details.
-          WARNING
+          ::Kernel.warn(::Doorkeeper::Models::ExpirationTimeSqlMath::WARNING_MESSAGE)
 
           relation
         end

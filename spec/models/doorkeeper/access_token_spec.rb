@@ -57,8 +57,8 @@ RSpec.describe Doorkeeper::AccessToken do
 
         context "without fallback lookup" do
           it "does not provide lookups with either through by_token" do
-            expect(described_class.by_token(plain_text_token)).to eq(nil)
-            expect(described_class.by_token(access_token.token)).to eq(nil)
+            expect(described_class.by_token(plain_text_token)).to be_nil
+            expect(described_class.by_token(access_token.token)).to be_nil
 
             # And it does not touch the token
             access_token.reload
@@ -95,7 +95,7 @@ RSpec.describe Doorkeeper::AccessToken do
             # And it modifies the token value
             access_token.reload
             expect(access_token.token).not_to eq(plain_text_token)
-            expect(described_class.find_by(token: plain_text_token)).to eq(nil)
+            expect(described_class.find_by(token: plain_text_token)).to be_nil
             expect(described_class.find_by(token: access_token.token)).not_to be_nil
           end
         end
@@ -329,8 +329,8 @@ RSpec.describe Doorkeeper::AccessToken do
 
         context "without fallback lookup" do
           it "does not provide lookups with either through by_token" do
-            expect(described_class.by_refresh_token(plain_refresh_token)).to eq(nil)
-            expect(described_class.by_refresh_token(access_token.refresh_token)).to eq(nil)
+            expect(described_class.by_refresh_token(plain_refresh_token)).to be_nil
+            expect(described_class.by_refresh_token(access_token.refresh_token)).to be_nil
 
             # And it does not touch the token
             access_token.reload
@@ -367,7 +367,7 @@ RSpec.describe Doorkeeper::AccessToken do
             # And it modifies the token value
             access_token.reload
             expect(access_token.refresh_token).not_to eq(plain_refresh_token)
-            expect(described_class.find_by(refresh_token: plain_refresh_token)).to eq(nil)
+            expect(described_class.find_by(refresh_token: plain_refresh_token)).to be_nil
             expect(described_class.find_by(refresh_token: access_token.refresh_token)).not_to be_nil
           end
         end
@@ -643,19 +643,21 @@ RSpec.describe Doorkeeper::AccessToken do
         end
         default_scopes_exist(*scopes.all)
       end
+
       let(:custom_attributes) { { tenant_name: "Me" } }
 
       it "returns a token when attributes match" do
         token = FactoryBot.create :access_token, default_attributes.merge(custom_attributes)
         last_token = described_class.matching_token_for(
-          application, resource_owner, scopes, custom_attributes: custom_attributes)
+          application, resource_owner, scopes, custom_attributes: custom_attributes,
+        )
         expect(last_token).to eq(token)
       end
 
       it "does not return a token if attributes don't match" do
-        token = FactoryBot.create :access_token, default_attributes.merge(custom_attributes)
-        last_token = described_class.matching_token_for(application, resource_owner, scopes, custom_attributes: { tenant_id: 'different' })
-        expect(last_token).to eq(nil)
+        FactoryBot.create :access_token, default_attributes.merge(custom_attributes)
+        last_token = described_class.matching_token_for(application, resource_owner, scopes, custom_attributes: { tenant_id: "different" })
+        expect(last_token).to be_nil
       end
 
       it "ignores custom attributes if a nil value is passed" do
@@ -713,7 +715,117 @@ RSpec.describe Doorkeeper::AccessToken do
       it "returns only non expired tokens" do
         expired_tokens = described_class.not_expired
         expect(expired_tokens.size).to be(4)
-        expect(expired_tokens).to match_array([active_token1, active_token2, active_token3, active_token4])
+        expect(expired_tokens).to contain_exactly(active_token1, active_token2, active_token3, active_token4)
+      end
+    end
+  end
+
+  describe ".create_for with read replica support" do
+    let(:application) { FactoryBot.create(:application) }
+    let(:resource_owner) { FactoryBot.create(:resource_owner) }
+    let(:scopes) { Doorkeeper::OAuth::Scopes.from_string("public") }
+
+    context "when handle_read_write_roles is enabled" do
+      before do
+        Doorkeeper.configure do
+          orm :active_record
+          enable_multiple_database_roles
+        end
+      end
+
+      it "creates token using primary database role" do
+        expect(ActiveRecord::Base).to receive(:connected_to).with(role: :writing).and_call_original
+
+        token = described_class.create_for(
+          application: application,
+          resource_owner: resource_owner,
+          scopes: scopes,
+        )
+
+        expect(token).to be_persisted
+        expect(token.application).to eq(application)
+        expect(token.resource_owner_id).to eq(resource_owner.id)
+      end
+    end
+
+    context "when enable_multiple_database_roles is disabled" do
+      before do
+        Doorkeeper.configure do
+          orm :active_record
+          # enable_multiple_database_roles is disabled by default
+        end
+      end
+
+      it "creates token without explicit role switching" do
+        expect(ActiveRecord::Base).not_to receive(:connected_to)
+
+        token = described_class.create_for(
+          application: application,
+          resource_owner: resource_owner,
+          scopes: scopes,
+        )
+
+        expect(token).to be_persisted
+      end
+    end
+  end
+
+  describe ".revoke_all_for with read replica support" do
+    let(:application) { FactoryBot.create(:application) }
+    let(:resource_owner) { FactoryBot.create(:resource_owner) }
+
+    before do
+      FactoryBot.create(:access_token, application: application, resource_owner_id: resource_owner.id)
+    end
+
+    context "when handle_read_write_roles is enabled" do
+      before do
+        Doorkeeper.configure do
+          orm :active_record
+          enable_multiple_database_roles
+        end
+      end
+
+      it "revokes tokens using primary database role" do
+        expect(ActiveRecord::Base).to receive(:connected_to).with(role: :writing).and_call_original
+
+        described_class.revoke_all_for(application.id, resource_owner)
+      end
+    end
+  end
+
+  describe "#revoke with read replica support" do
+    let(:token) { FactoryBot.create(:access_token) }
+
+    context "when handle_read_write_roles is enabled" do
+      before do
+        Doorkeeper.configure do
+          orm :active_record
+          enable_multiple_database_roles
+        end
+      end
+
+      it "revokes token using primary database role" do
+        expect(ActiveRecord::Base).to receive(:connected_to).with(role: :writing).and_call_original
+
+        token.revoke
+        expect(token).to be_revoked
+      end
+    end
+
+    context "when enable_multiple_database_roles is disabled" do
+      before do
+        Doorkeeper.configure do
+          orm :active_record
+          # enable_multiple_database_roles is disabled by default
+        end
+      end
+
+      it "revokes token without explicit role switching" do
+        expect(ActiveRecord::Base).not_to receive(:connected_to)
+
+        token.revoke
+        expect(token).to be_revoked
       end
     end
   end

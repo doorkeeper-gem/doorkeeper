@@ -18,6 +18,7 @@ module Doorkeeper
         @server = server
         @refresh_token = refresh_token
         @credentials = credentials
+        @grant_type = Doorkeeper::OAuth::REFRESH_TOKEN
         @original_scopes = parameters[:scope] || parameters[:scopes]
         @refresh_token_parameter = parameters[:refresh_token]
         @client = load_client(credentials) if credentials
@@ -30,12 +31,23 @@ module Doorkeeper
       end
 
       def before_successful_response
-        refresh_token.transaction do
-          refresh_token.lock!
+        if refresh_token_revoked_on_use?
+          # No locking needed when refresh tokens are revoked on use
+          # because the old token is revoked later when the new token is used.
+          # This allows multiple concurrent refresh requests to succeed during the
+          # transition period, after which the old refresh token will be revoked.
           raise Errors::InvalidGrantReuse if refresh_token.revoked?
 
-          refresh_token.revoke unless refresh_token_revoked_on_use?
           create_access_token
+        else
+          # Use locking when refresh tokens are revoked immediately
+          # to prevent race conditions where multiple tokens could be created
+          refresh_token.with_lock do
+            raise Errors::InvalidGrantReuse if refresh_token.revoked?
+
+            refresh_token.revoke
+            create_access_token
+          end
         end
         super
       end
@@ -122,10 +134,10 @@ module Doorkeeper
 
       def custom_token_attributes_with_data
         refresh_token
-        .attributes
-        .with_indifferent_access
-        .slice(*Doorkeeper.config.custom_access_token_attributes)
-        .symbolize_keys
+          .attributes
+          .with_indifferent_access
+          .slice(*Doorkeeper.config.custom_access_token_attributes)
+          .symbolize_keys
       end
     end
   end

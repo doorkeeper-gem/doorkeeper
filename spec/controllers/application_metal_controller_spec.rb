@@ -15,6 +15,10 @@ RSpec.describe Doorkeeper::ApplicationMetalController, type: :controller do
     end
   end
 
+  it "lacks `helper_method` so the included hook becomes a no-op" do
+    expect(described_class).not_to respond_to(:helper_method)
+  end
+
   it "lazy run hooks" do
     i = 0
     ActiveSupport.on_load(:doorkeeper_metal_controller) { i += 1 }
@@ -30,17 +34,17 @@ RSpec.describe Doorkeeper::ApplicationMetalController, type: :controller do
 
       it "returns a 200 for the requests without body" do
         get :index, params: {}
-        expect(response).to have_http_status 200
+        expect(response).to have_http_status :ok
       end
 
       it "returns a 200 for the requests with body and correct media type" do
         post :create, params: {}, as: :url_encoded_form
-        expect(response).to have_http_status 200
+        expect(response).to have_http_status :ok
       end
 
       it "returns a 415 for the requests with body and incorrect media type" do
         post :create, params: {}, as: :json
-        expect(response).to have_http_status 415
+        expect(response).to have_http_status :unsupported_media_type
       end
     end
 
@@ -49,17 +53,17 @@ RSpec.describe Doorkeeper::ApplicationMetalController, type: :controller do
 
       it "returns a 200 for the correct media type" do
         get :index, as: :url_encoded_form
-        expect(response).to have_http_status 200
+        expect(response).to have_http_status :ok
       end
 
       it "returns a 200 for an incorrect media type" do
         get :index, as: :json
-        expect(response).to have_http_status 200
+        expect(response).to have_http_status :ok
       end
 
       it "returns a 200 for the requests with body and incorrect media type" do
         post :create, params: {}, as: :json
-        expect(response).to have_http_status 200
+        expect(response).to have_http_status :ok
       end
     end
   end

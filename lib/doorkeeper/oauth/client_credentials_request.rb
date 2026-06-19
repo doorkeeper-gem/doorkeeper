@@ -13,6 +13,7 @@ module Doorkeeper
         @client = client
         @server = server
         @response = nil
+        @grant_type = Doorkeeper::OAuth::CLIENT_CREDENTIALS
         @original_scopes = parameters[:scope]
         @parameters = parameters.except(:scope)
       end

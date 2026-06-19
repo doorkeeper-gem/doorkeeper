@@ -102,6 +102,10 @@ module Doorkeeper
     autoload :ResourceOwnerable, "doorkeeper/models/concerns/resource_ownerable"
     autoload :Revocable, "doorkeeper/models/concerns/revocable"
     autoload :SecretStorable, "doorkeeper/models/concerns/secret_storable"
+
+    module Concerns
+      autoload :WriteToPrimary, "doorkeeper/models/concerns/write_to_primary"
+    end
   end
 
   module Orm
@@ -149,6 +153,16 @@ module Doorkeeper
         setup_orm_models
         setup_application_owner
       end
+    end
+
+    def setup_filter_parameters
+      return unless defined?(::Rails) && ::Rails.application && configured?
+
+      parameters = %w[client_secret authentication_token access_token refresh_token]
+      parameters << "code" if configuration.grant_flows.include?("authorization_code")
+      filter = /^(#{Regexp.union(parameters)})$/
+      filter_params = ::Rails.application.config.filter_parameters
+      filter_params << filter unless filter_params.include?(filter)
     end
 
     def setup_orm_adapter

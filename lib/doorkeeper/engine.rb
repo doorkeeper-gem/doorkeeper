@@ -3,10 +3,8 @@
 module Doorkeeper
   class Engine < Rails::Engine
     initializer "doorkeeper.params.filter", after: :load_config_initializers do |app|
-      if Doorkeeper.configured?
-        parameters = %w[client_secret authentication_token access_token refresh_token]
-        parameters << "code" if Doorkeeper.config.grant_flows.include?("authorization_code")
-        app.config.filter_parameters << /^(#{Regexp.union(parameters)})$/
+      app.config.to_prepare do
+        Doorkeeper.setup_filter_parameters
       end
     end
 

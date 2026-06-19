@@ -46,7 +46,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
         scopes,
         expires_in: 100,
         use_refresh_token: false,
-        tenant_id: 9000
+        tenant_id: 9000,
       )
 
       issuer.create client, scopes, { tenant_id: 9000 }, creator
@@ -61,8 +61,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
 
     context "when validator fails" do
       before do
-        allow(validator).to receive(:valid?).and_return(false)
-        allow(validator).to receive(:error).and_return(:validation_error)
+        allow(validator).to receive_messages(valid?: false, error: :validation_error)
       end
 
       it "has error set from validator" do

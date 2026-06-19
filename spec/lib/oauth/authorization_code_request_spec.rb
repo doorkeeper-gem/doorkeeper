@@ -141,7 +141,7 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
 
     it "allows query params" do
       request.validate
-      expect(request.error).to eq(nil)
+      expect(request.error).to be_nil
     end
   end
 
@@ -165,7 +165,7 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
     it "validates when redirect_uri of the grant is also native" do
       allow(grant).to receive(:redirect_uri) { redirect_uri }
       request.validate
-      expect(request.error).to eq(nil)
+      expect(request.error).to be_nil
     end
   end
 
@@ -216,14 +216,14 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
         params[:code_verifier] = grant.code_challenge
         request.validate
 
-        expect(request.error).to eq(nil)
+        expect(request.error).to be_nil
       end
 
       it "validates when both code_verifier and code_challenge are blank" do
         params[:code_verifier] = grant.code_challenge = ""
         request.validate
 
-        expect(request.error).to eq(nil)
+        expect(request.error).to be_nil
       end
 
       it "invalidates when code_verifier is missing" do
@@ -251,7 +251,7 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
           params[:code_verifier] = grant.code_challenge = "S256"
           request.validate
 
-          expect(request.error).to eq(nil)
+          expect(request.error).to be_nil
         end
 
         it "invalidates when code_verifier is plain" do

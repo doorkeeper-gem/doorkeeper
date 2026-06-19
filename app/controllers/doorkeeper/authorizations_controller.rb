@@ -131,7 +131,11 @@ module Doorkeeper
 
     def authorize_response
       @authorize_response ||= begin
-        return pre_auth.error_response unless pre_auth.authorizable?
+        unless pre_auth.authorizable?
+          response = pre_auth.error_response
+          response.raise_exception! if Doorkeeper.config.raise_on_errors?
+          return response
+        end
 
         context = build_context(pre_auth: pre_auth)
         before_successful_authorization(context)

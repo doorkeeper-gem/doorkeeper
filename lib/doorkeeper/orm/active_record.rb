@@ -28,18 +28,14 @@ module Doorkeeper
         autoload :Application, "doorkeeper/orm/active_record/mixins/application"
       end
 
-      def self.run_hooks
-        initialize_configured_associations
-      end
-
-      def self.initialize_configured_associations
-        if Doorkeeper.config.enable_application_owner?
-          Doorkeeper.config.application_model.include ::Doorkeeper::Models::Ownership
-        end
-
-        Doorkeeper.config.access_grant_model.include ::Doorkeeper::Models::PolymorphicResourceOwner::ForAccessGrant
-        Doorkeeper.config.access_token_model.include ::Doorkeeper::Models::PolymorphicResourceOwner::ForAccessToken
-      end
+      # Kept as a no-op so `Doorkeeper.run_orm_hooks` (and any plugin that
+      # checks `respond_to?(:run_hooks)`) stays quiet. The model concerns
+      # that used to be wired up here are now included from each Mixin's
+      # `included` block, which runs at parent-class autoload time — well
+      # after `Doorkeeper.configure` has applied user settings, and without
+      # touching `ActiveSupport.on_load(:active_record)` (whose re-entrant
+      # firing during `ApplicationRecord` autoload caused #1828).
+      def self.run_hooks; end
     end
   end
 end

@@ -9,6 +9,12 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       self.strict_loading_by_default = false if respond_to?(:strict_loading_by_default)
 
       include ::Doorkeeper::ApplicationMixin
+      # `enable_application_owner?` is read once, at parent-class autoload
+      # time (#1831): with the feature off the model exposes no `:owner`
+      # association — avoiding a misleading reflection on schemas that lack
+      # the owner columns. The flag is therefore a load-time switch; turning
+      # it on later requires defining a fresh model class.
+      include ::Doorkeeper::Models::Ownership if Doorkeeper.config.enable_application_owner?
 
       has_many :access_grants,
                foreign_key: :application_id,

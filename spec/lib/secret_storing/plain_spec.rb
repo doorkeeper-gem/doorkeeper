@@ -19,14 +19,14 @@ RSpec.describe ::Doorkeeper::SecretStoring::Plain do
 
   describe "#allows_restoring_secrets?" do
     it "does allow it" do
-      expect(described_class.allows_restoring_secrets?).to eq true
+      expect(described_class.allows_restoring_secrets?).to be true
     end
   end
 
   describe "validate_for" do
     it "allows for valid model" do
-      expect(described_class.validate_for(:application)).to eq true
-      expect(described_class.validate_for(:token)).to eq true
+      expect(described_class.validate_for(:application)).to be true
+      expect(described_class.validate_for(:token)).to be true
     end
 
     it "raises for invalid model" do
@@ -37,8 +37,8 @@ RSpec.describe ::Doorkeeper::SecretStoring::Plain do
 
   describe "secret_matches?" do
     it "compares input with #transform_secret" do
-      expect(described_class.secret_matches?("input", "input")).to eq true
-      expect(described_class.secret_matches?("a", "b")).to eq false
+      expect(described_class.secret_matches?("input", "input")).to be true
+      expect(described_class.secret_matches?("a", "b")).to be false
     end
   end
 end
