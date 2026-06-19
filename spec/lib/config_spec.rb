@@ -490,6 +490,16 @@ RSpec.describe Doorkeeper::Config do
       expect(config.client_authentication_methods.map(&:name)).to contain_exactly(:client_secret_basic)
     end
 
+    it "drops duplicate method names so one method cannot count twice" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication %i[client_secret_basic client_secret_post client_secret_basic]
+      end
+
+      expect(config.client_authentication_methods.map(&:name))
+        .to eq(%i[client_secret_basic client_secret_post])
+    end
+
     it "resolves a legacy callable extractor through its adapter" do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM

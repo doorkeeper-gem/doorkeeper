@@ -7,12 +7,12 @@ module Doorkeeper
       # given request uses. Returns the matching method's strategy (not the
       # registry's Method wrapper), or FallbackMethod when none matches
       # (which authenticates to no credentials).
+      #
+      # Raises Errors::MultipleClientAuthMethods when the request uses more
+      # than one client authentication method, since RFC 6749 §2.3 forbids
+      # that.
       def client_authentication_method(request)
-        authentication_method = client_authentication_methods.detect do |method|
-          method.matches_request?(request)
-        end
-
-        if authentication_method
+        if (authentication_method = matching_client_authentication_method(request))
           authentication_method.strategy
         else
           Doorkeeper::ClientAuthentication::FallbackMethod
@@ -55,6 +55,35 @@ module Doorkeeper
       end
 
       private
+
+      # Only distinct authentication mechanisms used by the client count
+      # towards the RFC 6749 §2.3 "more than one method" rejection:
+      #
+      # * +:none+ is the absence of client authentication (a public client
+      #   identifying itself with a bare +client_id+), not a mechanism of its
+      #   own, so a real method matching alongside it wins instead of being
+      #   counted as a second method — RFC 7521 §4.2, for example, explicitly
+      #   allows a +client_id+ next to a client assertion.
+      # * Deprecated +client_credentials+ callable extractors match whenever
+      #   they can extract credentials and so may legitimately overlap the
+      #   built-in methods they are configured with; those configs keep the
+      #   historical "first extractor that returns a uid wins" behaviour
+      #   (see ClientAuthentication::LegacyCallable) for the deprecation
+      #   window.
+      def matching_client_authentication_method(request)
+        methods = client_authentication_methods
+
+        if methods.any? { |method| method.name == :legacy_callable }
+          methods.detect { |method| method.matches_request?(request) }
+        else
+          matching_methods = methods.select { |method| method.matches_request?(request) }
+          matching_methods = matching_methods.reject { |method| method.name == :none } if matching_methods.size > 1
+
+          raise Errors::MultipleClientAuthMethods if matching_methods.size > 1
+
+          matching_methods.first
+        end
+      end
 
       def client_authentication_methods
         Doorkeeper.configuration.client_authentication_methods
