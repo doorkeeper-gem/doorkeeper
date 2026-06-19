@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1839] Send client credentials in the request body (not the query string) in the token endpoint specs, per RFC 6749 §2.3.1. Test-only change: the `*_endpoint_url` helpers now return a path plus a matching `*_endpoint_params` builder so flow specs post credentials through the body.
 - Please add here
 
 ## 5.9.3
