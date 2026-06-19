@@ -39,7 +39,7 @@ RSpec.describe "Default routes" do
     expect(get("/oauth/token/info")).to route_to("doorkeeper/token_info#show")
   end
 
-  it "GET /.well-known/oauth-authorization-server route to show Discovery controller" do
-    expect(get("/.well-known/oauth-authorization-server")).to route_to("doorkeeper/discovery#show")
+  it "GET /.well-known/oauth-authorization-server routes to Metadata controller" do
+    expect(get("/.well-known/oauth-authorization-server")).to route_to("doorkeeper/metadata#show")
   end
 end

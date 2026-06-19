@@ -12,7 +12,7 @@ module Doorkeeper
         validate_token_reuse_limit
         validate_secret_strategies
         validate_pkce_code_challenge_methods
-        validate_custom_discovery_data
+        validate_custom_metadata
       end
 
       private
@@ -62,15 +62,15 @@ module Doorkeeper
         @pkce_code_challenge_methods = ["plain", "S256"]
       end
 
-      def validate_custom_discovery_data
-        return if custom_discovery_data.is_a? Hash
+      def validate_custom_metadata
+        return if custom_metadata.is_a? Hash
 
         ::Rails.logger.warn(
-          "[DOORKEEPER] You have configured an invalid value for custom_discovery_data option. " \
+          "[DOORKEEPER] You have configured an invalid value for custom_metadata option. " \
           "It must be a Hash, and will be overridden with an empty hash.",
         )
 
-        @custom_discovery_data = {}
+        @custom_metadata = {}
       end
     end
   end

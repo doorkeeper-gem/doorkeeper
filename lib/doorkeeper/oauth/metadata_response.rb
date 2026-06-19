@@ -1,0 +1,144 @@
+# frozen_string_literal: true
+
+module Doorkeeper
+  module OAuth
+    # OAuth 2.0 Authorization Server Metadata response as described in
+    # RFC 8414 (https://www.rfc-editor.org/rfc/rfc8414).
+    class MetadataResponse < BaseResponse
+      def initialize(base_url, url_builder)
+        super()
+        @base_url = base_url
+        @url_builder = url_builder
+      end
+
+      def body
+        @body ||= begin
+          data = {
+            issuer: issuer || @base_url,
+            # Only advertise endpoints whose controllers are installed. A
+            # controller disabled through skip_controllers has no routes mapping
+            # and no route, so its endpoint resolves to nil and is dropped below.
+            authorization_endpoint: try_endpoint { authorization_endpoint },
+            token_endpoint: try_endpoint { token_endpoint },
+            revocation_endpoint: try_endpoint { revocation_endpoint },
+            introspection_endpoint: (try_endpoint { introspection_endpoint } if introspection_enabled?),
+            scopes_supported: scopes_supported,
+            response_types_supported: response_types_supported,
+            response_modes_supported: response_modes_supported,
+            grant_types_supported: grant_types_supported,
+            token_endpoint_auth_methods_supported: token_endpoint_auth_methods_supported,
+            code_challenge_methods_supported: code_challenge_methods_supported,
+          }
+          data.compact!
+
+          # userinfo_endpoint is intentionally advertised as null for backwards
+          # compatibility; it is meant to be populated through custom_metadata
+          # (e.g. by an OIDC extension), so it must survive the compaction above.
+          data[:userinfo_endpoint] = userinfo_endpoint
+
+          data.merge(custom_metadata)
+        end
+      end
+
+      def status
+        :ok
+      end
+
+      def headers
+        {
+          "Cache-Control" => "public",
+          "Content-Type" => "application/json; charset=utf-8",
+        }
+      end
+
+      private
+
+      def config
+        @config ||= Doorkeeper.configuration
+      end
+
+      def url_for(**args)
+        @url_builder.call(**args)
+      end
+
+      # Build the URL for a Doorkeeper endpoint, returning nil when the
+      # underlying controller is not installed. A controller disabled through
+      # skip_controllers leaves no routes mapping (and no route), so url_for
+      # would otherwise raise ActionController::UrlGenerationError.
+      def try_endpoint
+        yield
+      rescue ActionController::UrlGenerationError
+        nil
+      end
+
+      # Resolve the URL for the given route group, or nil when the group has no
+      # routes mapping (i.e. the controller was disabled via skip_controllers).
+      def endpoint_for(group, action:)
+        mapping = Doorkeeper::Rails::Routes.mapping[group]
+        return unless mapping
+
+        url_for(controller: mapping[:controllers], action: action)
+      end
+
+      def custom_metadata
+        config.custom_metadata.symbolize_keys
+      end
+
+      def issuer
+        config.issuer
+      end
+
+      def authorization_endpoint
+        endpoint_for(:authorizations, action: "new")
+      end
+
+      def token_endpoint
+        endpoint_for(:tokens, action: "create")
+      end
+
+      def userinfo_endpoint
+        nil
+      end
+
+      def revocation_endpoint
+        endpoint_for(:tokens, action: "revoke")
+      end
+
+      def introspection_endpoint
+        endpoint_for(:tokens, action: "introspect")
+      end
+
+      def introspection_enabled?
+        Doorkeeper.configured? &&
+          !config.allow_token_introspection.is_a?(FalseClass)
+      end
+
+      def scopes_supported
+        config.scopes.to_a
+      end
+
+      def response_types_supported
+        config.authorization_response_types
+      end
+
+      def response_modes_supported
+        config.authorization_response_flows.flat_map(&:response_mode_matches).uniq
+      end
+
+      def grant_types_supported
+        grant_types = config.grant_flows.dup
+        grant_types << "refresh_token" if config.refresh_token_enabled?
+        grant_types
+      end
+
+      # FIXME: https://github.com/doorkeeper-gem/doorkeeper/pull/1840
+      def token_endpoint_auth_methods_supported
+        %w[none client_secret_basic client_secret_post]
+      end
+
+      def code_challenge_methods_supported
+        config.pkce_code_challenge_methods_supported
+      end
+    end
+  end
+end

@@ -42,12 +42,12 @@ module Doorkeeper
           map_route(:token_info, :token_info_routes)
         end
 
-        map_route(:discovery, :discovery_routes)
+        map_route(:metadata, :metadata_routes)
       end
 
       private
 
-      def discovery_routes(mapping)
+      def metadata_routes(mapping)
         routes.get ".well-known/oauth-authorization-server", controller: mapping[:controllers], action: :show
       end
 

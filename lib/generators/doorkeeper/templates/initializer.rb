@@ -541,4 +541,24 @@ Doorkeeper.configure do
   # WWW-Authenticate Realm (default: "Doorkeeper").
   #
   # realm "Doorkeeper"
+
+  # OAuth 2.0 Authorization Server Metadata (RFC 8414).
+  #
+  # Doorkeeper exposes an authorization server metadata document at
+  # `/.well-known/oauth-authorization-server`, built from the configuration
+  # above. The two options below let you customize that document.
+  #
+  # `issuer` is the authorization server's issuer identifier. When left as nil
+  # (the default) the request base URL is used.
+  #
+  # issuer "https://auth.example.com"
+  #
+  # `custom_metadata` is a Hash that is merged into the metadata response. Use
+  # it to advertise additional or non-default metadata fields, for example a
+  # `userinfo_endpoint` (which Doorkeeper itself leaves null) when pairing with
+  # an OpenID Connect extension.
+  #
+  # custom_metadata(
+  #   userinfo_endpoint: "https://auth.example.com/oauth/userinfo",
+  # )
 end
