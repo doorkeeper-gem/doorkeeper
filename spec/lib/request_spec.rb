@@ -34,6 +34,19 @@ RSpec.describe Doorkeeper::Request do
       end
     end
 
+    context "with both an HTTP Basic header and client credentials in the body" do
+      let(:request) do
+        mock_request(
+          authorization: "Basic #{Base64.strict_encode64("id:secret")}",
+          request_parameters: { client_id: "id", client_secret: "secret" },
+        )
+      end
+
+      it "raises MultipleClientAuthMethods (RFC 6749 §2.3)" do
+        expect { strategy }.to raise_error(Doorkeeper::Errors::MultipleClientAuthMethods)
+      end
+    end
+
     context "when no configured method matches the request" do
       let(:request) { mock_request(request_method: "GET") }
 

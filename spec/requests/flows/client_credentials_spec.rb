@@ -182,6 +182,25 @@ RSpec.describe "Client Credentials Request" do
     end
   end
 
+  context "when the request uses more than one client authentication method" do
+    it "rejects the request per RFC 6749 §2.3" do
+      headers = authorization client.uid, client.secret
+      params  = {
+        grant_type: "client_credentials",
+        client_id: client.uid,
+        client_secret: client.secret,
+      }
+
+      post token_endpoint_url, params: params, headers: headers
+
+      expect(response.status).to eq(400)
+      expect(json_response).to match(
+        "error" => "invalid_request",
+        "error_description" => translated_invalid_request_error_message(:multiple_client_auth_methods, nil),
+      )
+    end
+  end
+
   context "when revoke_previous_client_credentials_token is true" do
     before do
       allow(Doorkeeper.config).to receive_messages(reuse_access_token: false, revoke_previous_client_credentials_token?: true)

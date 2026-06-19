@@ -8,11 +8,16 @@ module Doorkeeper
       # registry's Method wrapper), or FallbackMethod when none matches
       # (which authenticates to no credentials).
       def client_authentication_method(request)
-        authentication_method = client_authentication_methods.detect do |method|
+        # RFC 6749 §2.3 forbids using more than one client authentication
+        # method in a single request, so we collect every method that matches
+        # and reject the request when there is more than one.
+        matching_methods = client_authentication_methods.select do |method|
           method.matches_request?(request)
         end
 
-        if authentication_method
+        raise Errors::MultipleClientAuthMethods if matching_methods.size > 1
+
+        if (authentication_method = matching_methods.first)
           authentication_method.strategy
         else
           Doorkeeper::ClientAuthentication::FallbackMethod
