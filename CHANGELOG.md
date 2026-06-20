@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#1839] Send client credentials in the request body (not the query string) in the token endpoint specs, per RFC 6749 §2.3.1. Test-only change: the `*_endpoint_url` helpers now return a path plus a matching `*_endpoint_params` builder so flow specs post credentials through the body.
+- [#1842] **[BREAKING]** `force_pkce` now requires PKCE for all clients, including confidential ones, in line with the OAuth 2.0 Security BCP (RFC 9700) and OAuth 2.1. Previously confidential clients were exempt. If you enable `force_pkce` and have confidential clients that do not yet send a `code_challenge`/`code_verifier`, their authorization requests will start to be rejected.
 - Please add here
 
 ## 5.9.3
