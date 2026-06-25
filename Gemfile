@@ -17,7 +17,7 @@ gem "rspec-support"
 
 group :development, :rubocop do
   gem "rubocop", "~> 1.72"
-  gem "rubocop-capybara", "~> 2.22", require: false
+  gem "rubocop-capybara", "~> 3.0", require: false
   gem "rubocop-factory_bot", "~> 2.27", require: false
   gem "rubocop-performance", "~> 1.24", require: false
   gem "rubocop-rails", "~> 2.30", require: false
