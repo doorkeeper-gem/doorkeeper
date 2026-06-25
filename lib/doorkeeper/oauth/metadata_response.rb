@@ -16,12 +16,12 @@ module Doorkeeper
           data = {
             issuer: issuer || @base_url,
             # Only advertise endpoints whose controllers are installed. A
-            # controller disabled through skip_controllers has no routes mapping
-            # and no route, so its endpoint resolves to nil and is dropped below.
-            authorization_endpoint: try_endpoint { authorization_endpoint },
-            token_endpoint: try_endpoint { token_endpoint },
-            revocation_endpoint: try_endpoint { revocation_endpoint },
-            introspection_endpoint: (try_endpoint { introspection_endpoint } if introspection_enabled?),
+            # controller disabled through skip_controllers has no routes mapping,
+            # so endpoint_for resolves it to nil and it is dropped below.
+            authorization_endpoint: authorization_endpoint,
+            token_endpoint: token_endpoint,
+            revocation_endpoint: revocation_endpoint,
+            introspection_endpoint: (introspection_endpoint if introspection_enabled?),
             scopes_supported: scopes_supported,
             response_types_supported: response_types_supported,
             response_modes_supported: response_modes_supported,
@@ -59,16 +59,6 @@ module Doorkeeper
 
       def url_for(**args)
         @url_builder.call(**args)
-      end
-
-      # Build the URL for a Doorkeeper endpoint, returning nil when the
-      # underlying controller is not installed. A controller disabled through
-      # skip_controllers leaves no routes mapping (and no route), so url_for
-      # would otherwise raise ActionController::UrlGenerationError.
-      def try_endpoint
-        yield
-      rescue ActionController::UrlGenerationError
-        nil
       end
 
       # Resolve the URL for the given route group, or nil when the group has no
