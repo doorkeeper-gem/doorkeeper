@@ -8,6 +8,7 @@ module Doorkeeper
       # Validates configuration options to be set properly.
       #
       def validate!
+        validate_client_authentication_value
         validate_reuse_access_token_value
         validate_token_reuse_limit
         validate_secret_strategies
@@ -16,6 +17,20 @@ module Doorkeeper
       end
 
       private
+
+      # The +client_authentication+ option must be an array of method names.
+      # If it is set to anything else (e.g. passed as varargs), warn the user
+      # and fall back to the default ordering.
+      def validate_client_authentication_value
+        return if client_authentication.is_a?(Array)
+
+        Kernel.warn(
+          "[DOORKEEPER] You have configured client_authentication as a non-array value. " \
+          "It will be set to default [:client_secret_basic, :client_secret_post, :none]",
+        )
+
+        @client_authentication = %i[client_secret_basic client_secret_post none]
+      end
 
       # Determine whether +reuse_access_token+ and a non-restorable
       # +token_secret_strategy+ have both been activated.

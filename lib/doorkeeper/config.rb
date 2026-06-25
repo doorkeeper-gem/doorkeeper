@@ -269,6 +269,7 @@ module Doorkeeper
     option :orm,                            default: :active_record
     option :native_redirect_uri,            default: "urn:ietf:wg:oauth:2.0:oob", deprecated: true
     option :grant_flows,                    default: %w[authorization_code client_credentials]
+    option :client_authentication,          default: %i[client_secret_basic client_secret_post none]
     option :pkce_code_challenge_methods,    default: %w[plain S256]
     option :handle_auth_errors,             default: :render
     option :token_lookup_batch_size,        default: 10_000
@@ -602,6 +603,33 @@ module Doorkeeper
       return [] unless access_grant_model.pkce_supported?
 
       pkce_code_challenge_methods
+    end
+
+    # Resolves the configured client authentication methods (RFC 6749 §2.3)
+    # into the registered +Doorkeeper::ClientAuthentication::Method+ objects.
+    #
+    # Honors the deprecated +client_credentials+ option for backwards
+    # compatibility: if it was used it provides the source of truth, unless
+    # +client_authentication+ was also set explicitly, in which case the
+    # latter wins.
+    def client_authentication_methods
+      return @client_authentication_methods if defined?(@client_authentication_methods)
+
+      methods =
+        if instance_variable_defined?(:@client_credentials_methods)
+          if instance_variable_defined?(:@client_authentication)
+            Kernel.warn("[DOORKEEPER] Both client_credentials and client_authentication are set, using client_authentication")
+            client_authentication
+          else
+            @client_credentials_methods
+          end
+        else
+          client_authentication
+        end
+
+      @client_authentication_methods = methods.filter_map do |name|
+        Doorkeeper::ClientAuthentication.get(name)
+      end
     end
 
     def client_credentials_methods

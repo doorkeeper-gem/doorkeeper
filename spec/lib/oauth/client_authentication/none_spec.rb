@@ -1,0 +1,50 @@
+# frozen_string_literal: true
+
+require "spec_helper"
+
+RSpec.describe Doorkeeper::OAuth::ClientAuthentication::None do
+  describe ".matches_request?" do
+    it "matches if the request body has a client_id but no client_secret" do
+      request = mock_request(request_parameters: { client_id: "1234" })
+
+      expect(described_class.matches_request?(request)).to be true
+    end
+
+    it "doesn't match if the request has a client_secret" do
+      request = mock_request(request_parameters: { client_id: "1234", client_secret: "5678" })
+
+      expect(described_class.matches_request?(request)).not_to be true
+    end
+
+    it "doesn't match if the request has authorization" do
+      request = mock_request(
+        request_parameters: { client_id: "1234" },
+        authorization: ActionController::HttpAuthentication::Basic.encode_credentials("username", "password"),
+      )
+
+      expect(described_class.matches_request?(request)).not_to be true
+    end
+  end
+
+  describe ".authenticate" do
+    it "returns credentials using the client_id from the request body, without a secret" do
+      request = mock_request(request_parameters: { client_id: "client_id" })
+
+      credentials = described_class.authenticate(request)
+
+      expect(credentials).to be_instance_of(Doorkeeper::ClientAuthentication::Credentials)
+      expect(credentials.uid).to eq("client_id")
+      expect(credentials.secret).to be_nil
+    end
+
+    it "ignores the client_secret if set" do
+      request = mock_request(request_parameters: { client_id: "client_id", client_secret: "client_secret" })
+
+      credentials = described_class.authenticate(request)
+
+      expect(credentials).to be_instance_of(Doorkeeper::ClientAuthentication::Credentials)
+      expect(credentials.uid).to eq("client_id")
+      expect(credentials.secret).to be_nil
+    end
+  end
+end

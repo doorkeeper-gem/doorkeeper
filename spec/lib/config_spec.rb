@@ -295,6 +295,45 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
+  describe "client_authentication" do
+    it "has a default" do
+      expect(config.client_authentication)
+        .to contain_exactly(:client_secret_basic, :client_secret_post, :none)
+    end
+
+    it "resets to the default when configured to a non-array value" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        # passed as varargs (not an array) it is silently ignored and reset
+        client_authentication :client_secret_basic, :client_secret_post
+      end
+
+      expect(config.client_authentication)
+        .to contain_exactly(:client_secret_basic, :client_secret_post, :none)
+    end
+
+    it "can change the value" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication [:client_secret_basic]
+      end
+
+      expect(config.client_authentication).to contain_exactly(:client_secret_basic)
+    end
+  end
+
+  describe "client_authentication_methods" do
+    it "returns an array of Doorkeeper::ClientAuthentication::Method" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication [:client_secret_basic, :client_secret_post]
+      end
+
+      expect(config.client_authentication_methods.size).to be 2
+      expect(config.client_authentication_methods).to all(be_a(Doorkeeper::ClientAuthentication::Method))
+    end
+  end
+
   describe "force_ssl_in_redirect_uri" do
     it "is true by default in non-development environments" do
       expect(config.force_ssl_in_redirect_uri).to be(true)

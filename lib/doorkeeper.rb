@@ -7,6 +7,7 @@ require "doorkeeper/engine"
 #
 module Doorkeeper
   autoload :Errors, "doorkeeper/errors"
+  autoload :ClientAuthentication, "doorkeeper/client_authentication"
   autoload :GrantFlow, "doorkeeper/grant_flow"
   autoload :OAuth, "doorkeeper/oauth"
   autoload :Rake, "doorkeeper/rake"
@@ -62,6 +63,12 @@ module Doorkeeper
     autoload :TokenIntrospection, "doorkeeper/oauth/token_introspection"
     autoload :TokenRequest, "doorkeeper/oauth/token_request"
     autoload :TokenResponse, "doorkeeper/oauth/token_response"
+
+    module ClientAuthentication
+      autoload :None, "doorkeeper/oauth/client_authentication/none"
+      autoload :ClientSecretBasic, "doorkeeper/oauth/client_authentication/client_secret_basic"
+      autoload :ClientSecretPost, "doorkeeper/oauth/client_authentication/client_secret_post"
+    end
 
     module Authorization
       autoload :Code, "doorkeeper/oauth/authorization/code"
