@@ -32,4 +32,5 @@ jobs:
           steps.changes.outputs.gem_changes == 'true'
         uses: dangoslen/changelog-enforcer@v3
         with:
-            changeLogPath: CHANGELOG.md
+          changeLogPath: CHANGELOG.md
+          skipLabels: "dependencies"
