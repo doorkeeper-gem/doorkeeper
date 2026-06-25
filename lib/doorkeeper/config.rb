@@ -65,13 +65,43 @@ module Doorkeeper
       end
 
       # Change the way client credentials are retrieved from the request object.
-      # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then
-      # falls back to the `:client_id` and `:client_secret` params from the
-      # `params` object.
+      #
+      # @deprecated Use the +client_authentication+ option instead. The legacy
+      #   +:from_basic+ / +:from_params+ methods are automatically converted to
+      #   the +:client_secret_basic+ / +:client_secret_post+ authentication
+      #   methods (with +:none+ appended to preserve public client support).
       #
       # @param methods [Array] Define client credentials
       def client_credentials(*methods)
-        @config.instance_variable_set(:@client_credentials_methods, methods)
+        deprecated(
+          "client_credentials",
+          "Use the client_authentication option instead. Automatically converting to client_authentication",
+        )
+
+        client_authentication = methods.filter_map do |method|
+          case method
+          when :from_basic
+            :client_secret_basic
+          when :from_params
+            :client_secret_post
+          else
+            if method.respond_to?(:call)
+              Kernel.warn("[DOORKEEPER] Unknown client_credentials method detected, received callable block")
+            else
+              Kernel.warn("[DOORKEEPER] Unknown client_credentials method detected: #{method}")
+            end
+            nil
+          end
+        end
+
+        if client_authentication.empty?
+          Kernel.warn(
+            "[DOORKEEPER] No known client_credentials method detected, " \
+            "cannot automatically convert to client_authentication option",
+          )
+        else
+          @config.instance_variable_set(:@client_credentials_methods, client_authentication.push(:none))
+        end
       end
 
       # Change the way access token is authenticated from the request object.
@@ -201,6 +231,13 @@ module Doorkeeper
       end
 
       private
+
+      def deprecated(name, message = nil)
+        warning = "[DOORKEEPER] #{name} has been deprecated and will soon be removed"
+        warning = "#{warning}\n#{message}" if message.present?
+
+        Kernel.warn(warning)
+      end
 
       # Configure the secret storing functionality
       def configure_secrets_for(type, using:, fallback:)
@@ -632,8 +669,16 @@ module Doorkeeper
       end
     end
 
+    # @deprecated Renamed to +client_authentication_methods+. This alias keeps
+    #   external callers (e.g. doorkeeper-openid_connect) working for one release
+    #   and will be removed afterwards.
     def client_credentials_methods
-      @client_credentials_methods ||= %i[from_basic from_params]
+      Kernel.warn(
+        "[DOORKEEPER] Doorkeeper.config.client_credentials_methods has been renamed to " \
+        "client_authentication_methods and will be removed in a future version.",
+      )
+
+      client_authentication_methods
     end
 
     def access_token_methods
