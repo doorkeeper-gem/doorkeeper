@@ -337,6 +337,10 @@ module Doorkeeper
     #
     option :realm,                          default: "Doorkeeper"
 
+    # Issuer URL advertised in the OAuth 2.0 Authorization Server Metadata
+    # (RFC 8414). When nil, the request base URL is used instead.
+    option :issuer,                         default: nil
+
     # Forces the usage of the HTTPS protocol in non-native redirect uris
     # (enabled by default in non-development environments). OAuth2
     # delegates security in communication to the HTTPS protocol so it is
@@ -412,6 +416,10 @@ module Doorkeeper
 
     option :application_class,
            default: "Doorkeeper::Application"
+
+    # Allows setting a hash of custom data merged into the OAuth 2.0
+    # Authorization Server Metadata response (RFC 8414).
+    option :custom_metadata, default: {}
 
     # Allows to set blank redirect URIs for Applications in case
     # server configured to use URI-less grant flows.

@@ -52,6 +52,7 @@ module Doorkeeper
     autoload :InvalidTokenResponse, "doorkeeper/oauth/invalid_token_response"
     autoload :InvalidRequestResponse, "doorkeeper/oauth/invalid_request_response"
     autoload :ForbiddenTokenResponse, "doorkeeper/oauth/forbidden_token_response"
+    autoload :MetadataResponse, "doorkeeper/oauth/metadata_response"
     autoload :NonStandard, "doorkeeper/oauth/nonstandard"
     autoload :PasswordAccessTokenRequest, "doorkeeper/oauth/password_access_token_request"
     autoload :PreAuthorization, "doorkeeper/oauth/pre_authorization"

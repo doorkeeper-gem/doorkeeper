@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1838] Add OAuth 2.0 Authorization Server Metadata endpoint (RFC 8414) served at `/.well-known/oauth-authorization-server`. The response is built from your Doorkeeper configuration and advertises the authorization, token, revocation and (when token introspection is enabled) introspection endpoints, supported scopes, response/grant types and PKCE code challenge methods. Two new config options are available: `issuer` (defaults to the request base URL) and `custom_metadata` (a Hash merged into the response, e.g. to advertise an OIDC `userinfo_endpoint`). The controller/response use the RFC 8414 "Metadata" naming so they don't collide with a future OpenID Connect Discovery (`.well-known/openid-configuration`) implementation. Endpoints disabled through `skip_controllers` are omitted from the response instead of raising a route-generation error.
 - [#1839] Send client credentials in the request body (not the query string) in the token endpoint specs, per RFC 6749 §2.3.1. Test-only change: the `*_endpoint_url` helpers now return a path plus a matching `*_endpoint_params` builder so flow specs post credentials through the body.
 - Please add here
 

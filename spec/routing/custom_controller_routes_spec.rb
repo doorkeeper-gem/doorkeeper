@@ -16,7 +16,8 @@ RSpec.describe "Custom controller for routes" do
           controllers authorizations: "custom_authorizations",
                       tokens: "custom_authorizations",
                       applications: "custom_authorizations",
-                      token_info: "custom_authorizations"
+                      token_info: "custom_authorizations",
+                      metadata: "custom_metadata"
 
           as authorizations: "custom_auth",
              tokens: "custom_token",
@@ -29,7 +30,8 @@ RSpec.describe "Custom controller for routes" do
           controllers authorizations: "custom_authorizations",
                       tokens: "custom_authorizations",
                       applications: "custom_authorizations",
-                      token_info: "custom_authorizations"
+                      token_info: "custom_authorizations",
+                      metadata: "custom_metadata"
 
           as authorizations: "custom_auth",
              tokens: "custom_token",
@@ -41,7 +43,8 @@ RSpec.describe "Custom controller for routes" do
         use_doorkeeper do
           controllers authorizations: "custom_authorizations",
                       tokens: "custom_authorizations",
-                      token_info: "custom_authorizations"
+                      token_info: "custom_authorizations",
+                      metadata: "custom_metadata"
 
           as authorizations: "custom_auth",
              tokens: "custom_token",
@@ -83,6 +86,10 @@ RSpec.describe "Custom controller for routes" do
     expect(get("/inner_space/scope/token/info")).to route_to("custom_authorizations#show")
   end
 
+  it "GET /inner_space/.well-known/oauth-authorization-server routes to custom Metadata controller" do
+    expect(get("/inner_space/.well-known/oauth-authorization-server")).to route_to("custom_metadata#show")
+  end
+
   it "GET /space/oauth/authorize routes to custom authorizations controller" do
     expect(get("/space/oauth/authorize")).to route_to("custom_authorizations#new")
   end
@@ -115,6 +122,10 @@ RSpec.describe "Custom controller for routes" do
     expect(get("/space/oauth/token/info")).to route_to("custom_authorizations#show")
   end
 
+  it "GET /space/.well-known/oauth-authorization-server routes to custom Metadata controller" do
+    expect(get("/space/.well-known/oauth-authorization-server")).to route_to("custom_metadata#show")
+  end
+
   it "POST /outer_space/oauth/token is not be routable" do
     expect(post("/outer_space/oauth/token")).not_to be_routable
   end
@@ -129,5 +140,9 @@ RSpec.describe "Custom controller for routes" do
 
   it "GET /outer_space/oauth/token_info is not routable" do
     expect(get("/outer_space/oauth/token/info")).not_to be_routable
+  end
+
+  it "GET /outer_space/.well-known/oauth-authorization-server routes to custom Metadata controller" do
+    expect(get("/outer_space/.well-known/oauth-authorization-server")).to route_to("custom_metadata#show")
   end
 end
