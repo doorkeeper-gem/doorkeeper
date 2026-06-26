@@ -9,6 +9,7 @@ module Doorkeeper
       #
       def validate!
         validate_client_authentication_value
+        validate_client_authentication_registered
         validate_reuse_access_token_value
         validate_token_reuse_limit
         validate_secret_strategies
@@ -24,12 +25,31 @@ module Doorkeeper
       def validate_client_authentication_value
         return if client_authentication.is_a?(Array)
 
-        Kernel.warn(
+        ::Rails.logger.warn(
           "[DOORKEEPER] You have configured client_authentication as a non-array value. " \
           "It will be set to default [:client_secret_basic, :client_secret_post, :none]",
         )
 
         @client_authentication = %i[client_secret_basic client_secret_post none]
+      end
+
+      # Warn about configured client authentication methods that are not
+      # registered (e.g. a typo, or an extension that failed to load). Such
+      # names are silently ignored when resolving the methods, which could
+      # otherwise leave the application with no usable authentication methods.
+      def validate_client_authentication_registered
+        return unless client_authentication.is_a?(Array)
+
+        unknown = client_authentication.reject do |name|
+          Doorkeeper::ClientAuthentication.get(name)
+        end
+        return if unknown.empty?
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] Unknown client authentication method(s) configured and will be ignored: " \
+          "#{unknown.map(&:inspect).join(", ")}. " \
+          "Ensure each method is registered (e.g. by the extension that provides it).",
+        )
       end
 
       # Determine whether +reuse_access_token+ and a non-restorable

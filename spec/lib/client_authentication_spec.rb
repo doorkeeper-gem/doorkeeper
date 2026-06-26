@@ -5,11 +5,11 @@ require "spec_helper"
 RSpec.describe Doorkeeper::ClientAuthentication do
   # Avoid global side effects from (un)registering methods.
   before do
-    @original_methods = Doorkeeper::ClientAuthentication::Registry.methods.deep_dup
+    @original_methods = Doorkeeper::ClientAuthentication::Registry.registered_methods.deep_dup
   end
 
   after do
-    Doorkeeper::ClientAuthentication::Registry.methods = @original_methods
+    Doorkeeper::ClientAuthentication::Registry.registered_methods = @original_methods
   end
 
   describe "#register" do

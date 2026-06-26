@@ -8,7 +8,7 @@ module Doorkeeper
       class ClientSecretBasic
         def self.matches_request?(request)
           request.authorization.present? &&
-            request.authorization.downcase.start_with?("basic")
+            request.authorization.downcase.start_with?("basic ")
         end
 
         def self.authenticate(request)

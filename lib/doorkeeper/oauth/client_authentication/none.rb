@@ -9,7 +9,7 @@ module Doorkeeper
         def self.matches_request?(request)
           params = request.request_parameters.with_indifferent_access
 
-          !request.authorization &&
+          request.authorization.blank? &&
             params[:client_id].present? &&
             params[:client_secret].blank?
         end

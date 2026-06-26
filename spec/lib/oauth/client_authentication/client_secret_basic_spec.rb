@@ -23,6 +23,12 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::ClientSecretBasic do
 
       expect(described_class.matches_request?(request)).not_to be true
     end
+
+    it "doesn't match a malformed header that merely starts with 'basic' but has no credentials" do
+      request = mock_request(authorization: "basicgarbage")
+
+      expect(described_class.matches_request?(request)).not_to be true
+    end
   end
 
   describe ".authenticate" do

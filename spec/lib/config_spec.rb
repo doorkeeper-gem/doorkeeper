@@ -360,6 +360,17 @@ RSpec.describe Doorkeeper::Config do
 
       expect(config.client_authentication).to contain_exactly(:client_secret_basic)
     end
+
+    it "warns about unregistered method names" do
+      expect(Rails.logger).to receive(:warn).with(
+        /Unknown client authentication method\(s\).*:does_not_exist/,
+      )
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication [:client_secret_basic, :does_not_exist]
+      end
+    end
   end
 
   describe "client_authentication_methods" do
@@ -397,6 +408,15 @@ RSpec.describe Doorkeeper::Config do
 
       expect(config.client_authentication_methods.size).to be 2
       expect(config.client_authentication_methods).to all(be_a(Doorkeeper::ClientAuthentication::Method))
+    end
+
+    it "ignores an unregistered method name" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication [:client_secret_basic, :does_not_exist]
+      end
+
+      expect(config.client_authentication_methods.map(&:name)).to contain_exactly(:client_secret_basic)
     end
   end
 

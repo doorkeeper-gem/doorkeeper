@@ -24,6 +24,12 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::None do
 
       expect(described_class.matches_request?(request)).not_to be true
     end
+
+    it "matches if the Authorization header is present but empty" do
+      request = mock_request(request_parameters: { client_id: "1234" }, authorization: "")
+
+      expect(described_class.matches_request?(request)).to be true
+    end
   end
 
   describe ".authenticate" do
