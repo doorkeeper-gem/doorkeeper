@@ -176,10 +176,15 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
       end
 
       context "when the app is confidential" do
-        it "issues a new token for the client" do
+        it "does not issue a token" do
           expect do
             request.authorize
-          end.to change { client.reload.access_tokens.count }.by(1)
+          end.not_to change { client.reload.access_tokens.count }
+        end
+
+        it "responds with invalid_request for the missing code_verifier" do
+          request.validate
+          expect(request.error).to eq(Doorkeeper::Errors::InvalidRequest)
         end
       end
 

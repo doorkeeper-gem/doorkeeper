@@ -188,8 +188,8 @@ Doorkeeper.configure do
   #
   # revoke_previous_authorization_code_token
 
-  # Require non-confidential clients to use PKCE when using an authorization code
-  # to obtain an access_token (disabled by default)
+  # Require all clients (including confidential ones) to use PKCE when using an
+  # authorization code to obtain an access_token (disabled by default)
   #
   # force_pkce
 
