@@ -74,7 +74,7 @@ module Doorkeeper
       def self.extended(base)
         return if base.respond_to?(:builder_class)
 
-        raise Doorkeeper::MissingConfigurationBuilderClass, "Define `self.builder_class` method " \
+        raise Doorkeeper::Errors::MissingConfigurationBuilderClass, "Define `self.builder_class` method " \
                           "for #{base} that returns your custom Builder class to use options DSL!"
       end
     end
