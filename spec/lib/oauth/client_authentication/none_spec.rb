@@ -30,6 +30,12 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::None do
 
       expect(described_class.matches_request?(request)).to be true
     end
+
+    it "doesn't match if the request is not a POST" do
+      request = mock_request(request_parameters: { client_id: "1234" }, request_method: "GET")
+
+      expect(described_class.matches_request?(request)).not_to be true
+    end
   end
 
   describe ".authenticate" do

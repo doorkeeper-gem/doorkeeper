@@ -12,6 +12,17 @@ module Doorkeeper
       # Doorkeeper could recognize and process it.
       #
       def register(name, method)
+        unless name.respond_to?(:to_sym)
+          raise ArgumentError,
+                "client authentication method name must be a Symbol or String, got #{name.inspect}"
+        end
+
+        unless method.respond_to?(:matches_request?) && method.respond_to?(:authenticate)
+          raise ArgumentError,
+                "client authentication method '#{name}' must respond to " \
+                "#matches_request? and #authenticate, got #{method.inspect}"
+        end
+
         name_key = name.to_sym
 
         if registered_methods.key?(name_key)
@@ -21,12 +32,14 @@ module Doorkeeper
           WARNING
         end
 
-        registered_methods[name_key] = Doorkeeper::ClientAuthentication::Method.new(name, method)
+        registered_methods[name_key] = Doorkeeper::ClientAuthentication::Method.new(name_key, method)
       end
 
       # [NOTE]: switch to #fetch once the deprecated client_credentials
       # fallbacks are removed.
       def get(name)
+        return unless name.respond_to?(:to_sym)
+
         registered_methods[name.to_sym]
       end
     end

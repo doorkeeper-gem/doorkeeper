@@ -29,6 +29,26 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::ClientSecretBasic do
 
       expect(described_class.matches_request?(request)).not_to be true
     end
+
+    it "doesn't match a 'Basic ' header with an empty payload" do
+      request = mock_request(authorization: "Basic ")
+
+      expect(described_class.matches_request?(request)).not_to be true
+    end
+
+    it "doesn't match when the payload doesn't decode to id:secret" do
+      request = mock_request(authorization: "Basic #{Base64.strict_encode64("no-colon-here")}")
+
+      expect(described_class.matches_request?(request)).not_to be true
+    end
+
+    it "doesn't match when the decoded secret is empty" do
+      request = mock_request(
+        authorization: ActionController::HttpAuthentication::Basic.encode_credentials("client_id", ""),
+      )
+
+      expect(described_class.matches_request?(request)).not_to be true
+    end
   end
 
   describe ".authenticate" do

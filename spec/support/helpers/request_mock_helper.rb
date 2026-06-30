@@ -5,9 +5,9 @@ module RequestMockHelper
   # authentication strategies. We don't need a full request spec here, just
   # enough of an +ActionDispatch::Request+ to exercise the matching and
   # authentication logic.
-  def mock_request(request_parameters: {}, query_parameters: {}, authorization: nil)
+  def mock_request(request_parameters: {}, query_parameters: {}, authorization: nil, request_method: "POST")
     request = ActionDispatch::Request.new(
-      "REQUEST_METHOD" => "POST",
+      "REQUEST_METHOD" => request_method,
       "SERVER_NAME" => "example.org",
       "SERVER_PORT" => "80",
       "SERVER_PROTOCOL" => "HTTP/1.1",

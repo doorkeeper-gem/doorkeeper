@@ -371,6 +371,19 @@ RSpec.describe Doorkeeper::Config do
         client_authentication [:client_secret_basic, :does_not_exist]
       end
     end
+
+    it "warns instead of raising on a non-symbolizable method name" do
+      expect(Rails.logger).to receive(:warn).with(
+        /Unknown client authentication method\(s\).*nil/,
+      )
+
+      expect do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          client_authentication [:client_secret_basic, nil]
+        end
+      end.not_to raise_error
+    end
   end
 
   describe "client_authentication_methods" do

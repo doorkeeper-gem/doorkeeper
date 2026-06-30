@@ -16,7 +16,7 @@ RSpec.describe Doorkeeper::ClientAuthentication do
     subject(:registered_method) { described_class.get(name) }
 
     let(:name) { "puzzle_box" }
-    let(:client_authentication_method) { double }
+    let(:client_authentication_method) { double(matches_request?: false, authenticate: nil) }
 
     before do
       described_class.register(name, client_authentication_method)
@@ -26,8 +26,8 @@ RSpec.describe Doorkeeper::ClientAuthentication do
       expect(registered_method).to be_a(Doorkeeper::ClientAuthentication::Method)
     end
 
-    it "passes on the given name" do
-      expect(registered_method.name).to eq name
+    it "normalizes the given name to a symbol" do
+      expect(registered_method.name).to eq name.to_sym
     end
 
     it "stores the given method" do
@@ -38,6 +38,28 @@ RSpec.describe Doorkeeper::ClientAuthentication do
       expect(::Kernel).to receive(:warn).with(/already registered/)
 
       described_class.register(name, client_authentication_method)
+    end
+
+    it "raises ArgumentError when the name is not symbolizable" do
+      expect { described_class.register(nil, client_authentication_method) }
+        .to raise_error(ArgumentError, /must be a Symbol or String/)
+    end
+
+    it "raises ArgumentError when the method does not implement the strategy interface" do
+      expect { described_class.register(:incomplete, Object.new) }
+        .to raise_error(ArgumentError, /must respond to/)
+    end
+  end
+
+  describe "#get" do
+    it "looks up a registered method by symbol or string" do
+      expect(described_class.get(:client_secret_basic)).to be_a(Doorkeeper::ClientAuthentication::Method)
+      expect(described_class.get("client_secret_basic")).to be_a(Doorkeeper::ClientAuthentication::Method)
+    end
+
+    it "returns nil for a non-symbolizable name instead of raising" do
+      expect { described_class.get(nil) }.not_to raise_error
+      expect(described_class.get(nil)).to be_nil
     end
   end
 end
