@@ -105,6 +105,23 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
           end
         end
 
+        context "when identified via Basic auth with an empty secret" do
+          it "issues a new token for the identified client" do
+            empty_secret = Doorkeeper::ClientAuthentication::Credentials.new(@client.uid, "")
+
+            expect do
+              post token_endpoint_url, params: password_token_endpoint_params(
+                resource_owner: @resource_owner,
+              ), headers: { "HTTP_AUTHORIZATION" => basic_auth_header_for_client(empty_secret) }
+            end.to change { Doorkeeper::AccessToken.count }.by(1)
+
+            token = Doorkeeper::AccessToken.first
+
+            expect(token.application_id).to eq(@client.id)
+            expect(json_response).to include("access_token" => token.token)
+          end
+        end
+
         context "when client_secret present" do
           it "issues a new token" do
             expect do
@@ -246,6 +263,22 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
             post token_endpoint_url, params: password_token_endpoint_params(
               resource_owner: @resource_owner,
             ), headers: { "HTTP_AUTHORIZATION" => basic_auth_header_for_client(invalid_client) }
+          end.not_to(change { Doorkeeper::AccessToken.count })
+
+          expect(response.status).to eq(401)
+          expect(json_response).to match(
+            "error" => "invalid_client",
+            "error_description" => an_instance_of(String),
+          )
+        end
+
+        it "doesn't downgrade a partial Basic auth attempt (empty secret) to no authentication" do
+          partial_credentials = Doorkeeper::ClientAuthentication::Credentials.new(@client.uid, "")
+
+          expect do
+            post token_endpoint_url, params: password_token_endpoint_params(
+              resource_owner: @resource_owner,
+            ), headers: { "HTTP_AUTHORIZATION" => basic_auth_header_for_client(partial_credentials) }
           end.not_to(change { Doorkeeper::AccessToken.count })
 
           expect(response.status).to eq(401)
