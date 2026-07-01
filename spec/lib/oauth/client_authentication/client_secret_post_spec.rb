@@ -21,6 +21,15 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::ClientSecretPost do
 
       expect(described_class.matches_request?(request)).not_to be true
     end
+
+    it "doesn't match a non-POST request even with body credentials" do
+      request = mock_request(
+        request_parameters: { client_id: "1234", client_secret: "5678" },
+        request_method: "GET",
+      )
+
+      expect(described_class.matches_request?(request)).not_to be true
+    end
   end
 
   describe ".authenticate" do
