@@ -686,14 +686,19 @@ module Doorkeeper
 
     # @deprecated Renamed to +client_authentication_methods+. This alias keeps
     #   external callers (e.g. doorkeeper-openid_connect) working for one release
-    #   and will be removed afterwards.
+    #   and will be removed afterwards. It returns the legacy symbol names
+    #   (e.g. +:from_basic+) rather than the internal Method objects so that
+    #   consumers mapping from those symbols keep working unchanged.
     def client_credentials_methods
-      Kernel.warn(
-        "[DOORKEEPER] Doorkeeper.config.client_credentials_methods has been renamed to " \
-        "client_authentication_methods and will be removed in a future version.",
-      )
+      unless defined?(@client_credentials_methods_rename_warned)
+        Kernel.warn(
+          "[DOORKEEPER] Doorkeeper.config.client_credentials_methods has been renamed to " \
+          "client_authentication_methods and will be removed in a future version.",
+        )
+        @client_credentials_methods_rename_warned = true
+      end
 
-      client_authentication_methods
+      Doorkeeper::ClientAuthentication.to_legacy_client_credentials_names(client_authentication_methods)
     end
 
     def access_token_methods

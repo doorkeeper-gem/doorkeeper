@@ -18,6 +18,23 @@ module Doorkeeper
     # +client_authentication+ is not configured.
     DEFAULT_METHODS = %i[client_secret_basic client_secret_post none].freeze
 
+    # Maps the current method names back onto the deprecated +client_credentials+
+    # names so the +client_credentials_methods+ alias can keep returning the
+    # legacy symbols that external callers (e.g. doorkeeper-openid_connect) map
+    # from. Names without a legacy equivalent (e.g. +:none+, custom methods) are
+    # returned unchanged — consumers that don't recognise them drop them, just
+    # as they did before.
+    LEGACY_NAME_FOR = {
+      client_secret_basic: :from_basic,
+      client_secret_post: :from_params,
+    }.freeze
+
+    # Converts resolved Method objects into the legacy client_credentials
+    # symbol names for the deprecated +client_credentials_methods+ alias.
+    def self.to_legacy_client_credentials_names(methods)
+      methods.map { |method| LEGACY_NAME_FOR.fetch(method.name, method.name) }
+    end
+
     register(
       :none,
       Doorkeeper::OAuth::ClientAuthentication::None,

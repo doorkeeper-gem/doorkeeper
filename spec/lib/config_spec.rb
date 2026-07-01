@@ -485,7 +485,7 @@ RSpec.describe Doorkeeper::Config do
   end
 
   describe "client_credentials_methods" do
-    it "warns and delegates to client_authentication_methods" do
+    it "warns and returns legacy method-name symbols (not Method objects) for external callers" do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
         client_authentication [:client_secret_basic, :client_secret_post]
@@ -495,7 +495,28 @@ RSpec.describe Doorkeeper::Config do
         /\[DOORKEEPER\] Doorkeeper.config.client_credentials_methods has been renamed/,
       )
 
-      expect(config.client_credentials_methods).to eq(config.client_authentication_methods)
+      # Reverse-mapped to the pre-1840 symbols so consumers such as
+      # doorkeeper-openid_connect keep resolving them unchanged.
+      expect(config.client_credentials_methods).to eq(%i[from_basic from_params])
+    end
+
+    it "maps the default configuration back to legacy symbols" do
+      allow(Kernel).to receive(:warn)
+
+      expect(config.client_credentials_methods).to eq(%i[from_basic from_params none])
+    end
+
+    it "warns only once across repeated calls" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication [:client_secret_basic]
+      end
+
+      expect(Kernel).to receive(:warn).with(
+        /client_credentials_methods has been renamed/,
+      ).once
+
+      3.times { config.client_credentials_methods }
     end
   end
 
