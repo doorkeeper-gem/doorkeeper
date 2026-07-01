@@ -62,6 +62,7 @@ module Doorkeeper
     UnableToGenerateToken = Class.new(DoorkeeperError)
     TokenGeneratorNotFound = Class.new(DoorkeeperError)
     NoOrmCleaner = Class.new(DoorkeeperError)
+    MissingConfigurationBuilderClass = Class.new(DoorkeeperError)
 
     InvalidRequest = Class.new(BaseResponseError)
     InvalidToken = Class.new(BaseResponseError)
