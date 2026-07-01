@@ -1,8 +1,19 @@
 # frozen_string_literal: true
 
+require "doorkeeper/client_authentication/credentials"
+
 module Doorkeeper
   module OAuth
     class Client
+      # @deprecated Moved to +Doorkeeper::ClientAuthentication::Credentials+.
+      #   This alias keeps the long-standing +Doorkeeper::OAuth::Client::Credentials+
+      #   constant resolvable for one release so referencing code does not raise
+      #   +NameError+; update references to the new constant. Note the legacy
+      #   +.from_request+/+.from_basic+/+.from_params+ class methods are gone —
+      #   client credential extraction now goes through the client authentication
+      #   registry (RFC 6749 §2.3).
+      Credentials = Doorkeeper::ClientAuthentication::Credentials
+
       attr_reader :application
 
       delegate :id, :name, :uid, :redirect_uri, :scopes, :confidential, to: :@application
