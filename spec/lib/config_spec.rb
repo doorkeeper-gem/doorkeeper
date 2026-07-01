@@ -424,21 +424,39 @@ RSpec.describe Doorkeeper::Config do
         end
       end.not_to raise_error
     end
+
+    it "logs an error when a typo leaves no usable method" do
+      allow(Rails.logger).to receive(:warn)
+      expect(Rails.logger).to receive(:error).with(/No usable client authentication methods/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication [:client_secret_bassic] # deliberate typo -> unregistered
+      end
+    end
+
+    it "logs an error for an empty client_authentication configuration" do
+      expect(Rails.logger).to receive(:error).with(/No usable client authentication methods/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication []
+      end
+    end
   end
 
   describe "client_authentication_methods" do
-    it "warns and uses client_authentication when both options are set" do
-      expect(Kernel).to receive(:warn).with(/\[DOORKEEPER\] client_credentials has been deprecated/)
+    it "warns at configure time and uses client_authentication when both options are set" do
+      allow(Kernel).to receive(:warn)
+      expect(Rails.logger).to receive(:warn).with(
+        /\[DOORKEEPER\] Both client_credentials and client_authentication are set, using client_authentication/,
+      )
 
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
         client_credentials :from_params
         client_authentication [:client_secret_basic]
       end
-
-      expect(Kernel).to receive(:warn).with(
-        /\[DOORKEEPER\] Both client_credentials and client_authentication are set, using client_authentication/,
-      )
 
       expect(config.client_authentication_methods.map(&:name)).to contain_exactly(:client_secret_basic)
     end

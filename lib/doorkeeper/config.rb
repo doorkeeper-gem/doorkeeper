@@ -658,19 +658,15 @@ module Doorkeeper
     def client_authentication_methods
       return @client_authentication_methods if defined?(@client_authentication_methods)
 
-      methods =
-        if instance_variable_defined?(:@client_credentials_methods)
-          if instance_variable_defined?(:@client_authentication)
-            Kernel.warn("[DOORKEEPER] Both client_credentials and client_authentication are set, using client_authentication")
-            client_authentication
-          else
-            @client_credentials_methods
-          end
-        else
-          client_authentication
-        end
+      # When both the deprecated +client_credentials+ and the new
+      # +client_authentication+ are set, +client_authentication+ wins. The
+      # conflict is warned about at validation time (see Validations), not here,
+      # so the message is not swallowed by this memoised resolver.
+      only_legacy = instance_variable_defined?(:@client_credentials_methods) &&
+                    !instance_variable_defined?(:@client_authentication)
+      names = only_legacy ? @client_credentials_methods : client_authentication
 
-      @client_authentication_methods = methods.filter_map do |name|
+      @client_authentication_methods = names.filter_map do |name|
         # Legacy callables are already wrapped as Method adapters (see #client_credentials).
         name.is_a?(Doorkeeper::ClientAuthentication::Method) ? name : Doorkeeper::ClientAuthentication.get(name)
       end
