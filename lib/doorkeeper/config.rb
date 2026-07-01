@@ -69,7 +69,12 @@ module Doorkeeper
       # @deprecated Use the +client_authentication+ option instead. The legacy
       #   +:from_basic+ / +:from_params+ methods are automatically converted to
       #   the +:client_secret_basic+ / +:client_secret_post+ authentication
-      #   methods (with +:none+ appended to preserve public client support).
+      #   methods. +:none+ (public client support) is appended only when
+      #   +:from_params+ was configured, since that is the only legacy method
+      #   that accepted a bare +client_id+ without a secret — +:from_basic+ on
+      #   its own never did, so it is not broadened. Callable extractors are
+      #   wrapped in a legacy adapter so they keep working during the
+      #   deprecation window.
       #
       # @param methods [Array] Define client credentials
       def client_credentials(*methods)
@@ -78,21 +83,7 @@ module Doorkeeper
           "Use the client_authentication option instead. Automatically converting to client_authentication",
         )
 
-        client_authentication = methods.filter_map do |method|
-          case method
-          when :from_basic
-            :client_secret_basic
-          when :from_params
-            :client_secret_post
-          else
-            if method.respond_to?(:call)
-              Kernel.warn("[DOORKEEPER] Unknown client_credentials method detected, received callable block")
-            else
-              Kernel.warn("[DOORKEEPER] Unknown client_credentials method detected: #{method}")
-            end
-            nil
-          end
-        end
+        client_authentication = Doorkeeper::ClientAuthentication.from_legacy_client_credentials(methods)
 
         if client_authentication.empty?
           Kernel.warn(
@@ -100,7 +91,7 @@ module Doorkeeper
             "cannot automatically convert to client_authentication option",
           )
         else
-          @config.instance_variable_set(:@client_credentials_methods, client_authentication.push(:none))
+          @config.instance_variable_set(:@client_credentials_methods, client_authentication)
         end
       end
 
@@ -665,7 +656,8 @@ module Doorkeeper
         end
 
       @client_authentication_methods = methods.filter_map do |name|
-        Doorkeeper::ClientAuthentication.get(name)
+        # Legacy callables are already wrapped as Method adapters (see #client_credentials).
+        name.is_a?(Doorkeeper::ClientAuthentication::Method) ? name : Doorkeeper::ClientAuthentication.get(name)
       end
     end
 

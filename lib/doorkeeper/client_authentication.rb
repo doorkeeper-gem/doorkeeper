@@ -2,6 +2,7 @@
 
 require "doorkeeper/client_authentication/credentials"
 require "doorkeeper/client_authentication/fallback_method"
+require "doorkeeper/client_authentication/legacy_callable"
 require "doorkeeper/client_authentication/method"
 require "doorkeeper/client_authentication/registry"
 
@@ -27,5 +28,45 @@ module Doorkeeper
       :client_secret_basic,
       Doorkeeper::OAuth::ClientAuthentication::ClientSecretBasic,
     )
+
+    # Converts a deprecated +client_credentials+ configuration into the client
+    # authentication method names / adapters understood by the registry.
+    # Unknown values are warned about and dropped; callables are wrapped in a
+    # LegacyCallable adapter. +:none+ (public client support) is appended only
+    # for +:from_params+ — the sole legacy method that accepted a bare
+    # +client_id+ without a secret — so a Basic-only configuration is not
+    # silently broadened.
+    def self.from_legacy_client_credentials(methods)
+      converted = methods.filter_map { |method| legacy_client_credential(method) }
+      converted.push(:none) if methods.include?(:from_params)
+      converted
+    end
+
+    def self.legacy_client_credential(method)
+      case method
+      when :from_basic
+        :client_secret_basic
+      when :from_params
+        :client_secret_post
+      else
+        legacy_extractor_or_nil(method)
+      end
+    end
+    private_class_method :legacy_client_credential
+
+    def self.legacy_extractor_or_nil(method)
+      unless method.respond_to?(:call)
+        Kernel.warn("[DOORKEEPER] Unknown client_credentials method detected: #{method}")
+        return nil
+      end
+
+      Kernel.warn(
+        "[DOORKEEPER] client_credentials callable extractors are deprecated; wrapping it in a " \
+        "legacy client authentication adapter. Register it via " \
+        "Doorkeeper::ClientAuthentication.register instead.",
+      )
+      Method.new(:legacy_callable, LegacyCallable.new(method))
+    end
+    private_class_method :legacy_extractor_or_nil
   end
 end

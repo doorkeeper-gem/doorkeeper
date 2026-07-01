@@ -307,13 +307,10 @@ RSpec.describe Doorkeeper::Config do
       expect(config.instance_variable_defined?(:@client_credentials_methods)).to be false
     end
 
-    it "warns and does not convert a callable client_credentials method" do
+    it "warns about and wraps a callable client_credentials method in a legacy adapter" do
       expect(Kernel).to receive(:warn).with(/\[DOORKEEPER\] client_credentials has been deprecated/).once
       expect(Kernel).to receive(:warn).with(
-        /\[DOORKEEPER\] Unknown client_credentials method detected, received callable block/,
-      ).once
-      expect(Kernel).to receive(:warn).with(
-        /\[DOORKEEPER\] No known client_credentials method detected/,
+        /\[DOORKEEPER\] client_credentials callable extractors are deprecated; wrapping it/,
       ).once
 
       Doorkeeper.configure do
@@ -321,7 +318,20 @@ RSpec.describe Doorkeeper::Config do
         client_credentials ->(request) { [request, "secret"] }
       end
 
-      expect(config.instance_variable_defined?(:@client_credentials_methods)).to be false
+      methods = config.instance_variable_get(:@client_credentials_methods)
+      expect(methods.size).to eq(1)
+      expect(methods.first).to be_a(Doorkeeper::ClientAuthentication::Method)
+      expect(methods.first.name).to eq(:legacy_callable)
+      expect(methods.first.method).to be_a(Doorkeeper::ClientAuthentication::LegacyCallable)
+    end
+
+    it "does not append :none to a callable-only configuration" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_credentials ->(request) { [request, "secret"] }
+      end
+
+      expect(config.instance_variable_get(:@client_credentials_methods)).not_to include(:none)
     end
 
     it "converts legacy methods to client_authentication compatible values" do
@@ -331,7 +341,27 @@ RSpec.describe Doorkeeper::Config do
       end
 
       expect(config.instance_variable_get(:@client_credentials_methods))
-        .to contain_exactly(:client_secret_post, :none)
+        .to eq(%i[client_secret_post none])
+    end
+
+    it "appends :none for :from_params to preserve public client support" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_credentials :from_basic, :from_params
+      end
+
+      expect(config.instance_variable_get(:@client_credentials_methods))
+        .to eq(%i[client_secret_basic client_secret_post none])
+    end
+
+    it "does not broaden a Basic-only configuration with :none" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_credentials :from_basic
+      end
+
+      expect(config.instance_variable_get(:@client_credentials_methods))
+        .to eq(%i[client_secret_basic])
     end
   end
 
@@ -410,7 +440,7 @@ RSpec.describe Doorkeeper::Config do
       end
 
       expect(config.client_authentication_methods.map(&:name))
-        .to contain_exactly(:client_secret_post, :none)
+        .to eq(%i[client_secret_post none])
     end
 
     it "returns an array of Doorkeeper::ClientAuthentication::Method" do
@@ -430,6 +460,17 @@ RSpec.describe Doorkeeper::Config do
       end
 
       expect(config.client_authentication_methods.map(&:name)).to contain_exactly(:client_secret_basic)
+    end
+
+    it "resolves a legacy callable extractor through its adapter" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_credentials ->(request) { [request, "secret"] }
+      end
+
+      methods = config.client_authentication_methods
+      expect(methods.map(&:name)).to eq(%i[legacy_callable])
+      expect(methods.first.method).to be_a(Doorkeeper::ClientAuthentication::LegacyCallable)
     end
   end
 

@@ -18,7 +18,8 @@ User-visible changes worth mentioning.
   - `Doorkeeper::OAuth::Client::Credentials` has moved to `Doorkeeper::ClientAuthentication::Credentials` with no backwards-compatible alias. Any code (including third-party gems such as `doorkeeper-openid_connect`) referencing the old constant must be updated.
 
   And the following **deprecations**:
-  - The `client_credentials` option is deprecated in favour of `client_authentication`. The legacy values `:from_basic` and `:from_params` are automatically mapped to `:client_secret_basic` and `:client_secret_post`, with `:none` appended so public clients keep working. If both options are set, `client_authentication` wins.
+  - The `client_credentials` option is deprecated in favour of `client_authentication`. The legacy values `:from_basic` and `:from_params` are automatically mapped to `:client_secret_basic` and `:client_secret_post`. `:none` (public client support) is appended only when `:from_params` was configured — that is the only legacy method that accepted a bare `client_id` without a secret, so a Basic-only (`client_credentials :from_basic`) configuration is no longer silently broadened to accept public clients. If both options are set, `client_authentication` wins (warned about at boot).
+  - A callable passed to `client_credentials` (e.g. `client_credentials ->(request) { [client_id, client_secret] }`) is now wrapped in a legacy adapter (`Doorkeeper::ClientAuthentication::LegacyCallable`) so it keeps working during the deprecation window. Migrate it to a registered strategy via `Doorkeeper::ClientAuthentication.register` before the `client_credentials` option is removed.
   - `Doorkeeper.config.client_credentials_methods` has been renamed to `client_authentication_methods`; the old name remains as a delegating alias that emits a deprecation warning.
 
   **Upgrade notes**:
