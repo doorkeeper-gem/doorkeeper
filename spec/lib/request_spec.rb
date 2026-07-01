@@ -8,7 +8,7 @@ RSpec.describe Doorkeeper::Request do
 
     context "with an HTTP Basic authorization header" do
       let(:request) do
-        mock_request(authorization: "Basic #{Base64.encode64("id:secret")}")
+        mock_request(authorization: "Basic #{Base64.strict_encode64("id:secret")}")
       end
 
       it "selects the client_secret_basic strategy (unwrapped from its Method)" do

@@ -21,4 +21,10 @@ RSpec.describe Doorkeeper::ClientAuthentication::Method do
 
     method.matches_request?(example: true)
   end
+
+  it "delegates authenticate to the method" do
+    expect(client_authentication_method).to receive(:authenticate).with(example: true)
+
+    method.authenticate(example: true)
+  end
 end

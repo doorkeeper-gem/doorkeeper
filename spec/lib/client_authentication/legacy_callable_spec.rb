@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::ClientAuthentication::LegacyCallable do
-  let(:request) { double(:request) }
+  let(:request) { double(:request, env: {}) }
 
   describe "#matches_request?" do
     it "matches when the callable yields present credentials" do
@@ -71,7 +71,7 @@ RSpec.describe Doorkeeper::ClientAuthentication::LegacyCallable do
       end)
 
       adapter.matches_request?(request)
-      adapter.matches_request?(double(:another_request))
+      adapter.matches_request?(double(:another_request, env: {}))
 
       expect(calls).to eq(2)
     end

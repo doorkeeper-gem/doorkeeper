@@ -5,6 +5,11 @@ module RequestMockHelper
   # authentication strategies. We don't need a full request spec here, just
   # enough of an +ActionDispatch::Request+ to exercise the matching and
   # authentication logic.
+  #
+  # Parameters are stringified to mirror what Rack/ActionDispatch actually
+  # hand back from +request_parameters+ (string keys), so specs genuinely
+  # exercise the strategies' indifferent-access handling instead of silently
+  # passing on the symbol keys they were written with.
   def mock_request(request_parameters: {}, query_parameters: {}, authorization: nil, request_method: "POST")
     request = ActionDispatch::Request.new(
       "REQUEST_METHOD" => request_method,
@@ -15,8 +20,8 @@ module RequestMockHelper
       "HTTP_HOST" => "example.org",
       "ORIGINAL_FULLPATH" => "/test",
       "action_dispatch.remote_ip" => "127.0.0.1",
-      "action_dispatch.request.query_parameters" => query_parameters,
-      "action_dispatch.request.request_parameters" => request_parameters,
+      "action_dispatch.request.query_parameters" => query_parameters.deep_stringify_keys,
+      "action_dispatch.request.request_parameters" => request_parameters.deep_stringify_keys,
     )
 
     request.env["HTTP_AUTHORIZATION"] = authorization unless authorization.nil?

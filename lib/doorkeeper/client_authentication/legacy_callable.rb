@@ -29,13 +29,17 @@ module Doorkeeper
       # Invoke the wrapped extractor at most once per request. +matches_request?+
       # and +authenticate+ both need the extracted credentials, and the legacy
       # +Credentials.from_request+ contract called each extractor exactly once,
-      # so cache the result keyed on the request object to preserve that.
+      # so cache the result on the request itself to preserve that. The adapter
+      # is stored in the config/registry and therefore shared across requests
+      # and threads, so the cache must live on the per-request +env+ (keyed per
+      # adapter instance) rather than on the adapter, which would otherwise race.
       def credentials_for(request)
-        return @cached_credentials if defined?(@cached_request) && @cached_request.equal?(request)
-
-        @cached_request = request
-        @cached_credentials =
+        request.env[cache_key] ||=
           Doorkeeper::ClientAuthentication::Credentials.new(*@callable.call(request))
+      end
+
+      def cache_key
+        @cache_key ||= "doorkeeper.client_authentication.legacy_callable.#{@callable.object_id}"
       end
     end
   end
