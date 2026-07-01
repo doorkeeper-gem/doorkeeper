@@ -368,18 +368,28 @@ RSpec.describe Doorkeeper::Config do
   describe "client_authentication" do
     it "has a default" do
       expect(config.client_authentication)
-        .to contain_exactly(:client_secret_basic, :client_secret_post, :none)
+        .to eq(%i[client_secret_basic client_secret_post none])
     end
 
-    it "resets to the default when configured to a non-array value" do
+    it "honors the varargs form verbatim without appending :none" do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
-        # passed as varargs (not an array) it is silently ignored and reset
+        # passed as varargs (not wrapped in an array) — must be honored as-is,
+        # not reset to the default (which would silently re-enable :none)
         client_authentication :client_secret_basic, :client_secret_post
       end
 
       expect(config.client_authentication)
-        .to contain_exactly(:client_secret_basic, :client_secret_post, :none)
+        .to eq(%i[client_secret_basic client_secret_post])
+    end
+
+    it "honors a single symbol form" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication :client_secret_basic
+      end
+
+      expect(config.client_authentication).to eq(%i[client_secret_basic])
     end
 
     it "can change the value" do
@@ -388,7 +398,7 @@ RSpec.describe Doorkeeper::Config do
         client_authentication [:client_secret_basic]
       end
 
-      expect(config.client_authentication).to contain_exactly(:client_secret_basic)
+      expect(config.client_authentication).to eq(%i[client_secret_basic])
     end
 
     it "warns about unregistered method names" do

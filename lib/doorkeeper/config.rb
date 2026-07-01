@@ -95,6 +95,22 @@ module Doorkeeper
         end
       end
 
+      # Declare which client authentication methods (RFC 6749 §2.3) are
+      # accepted and the order in which they are tried. Accepts either an array
+      # or varargs, so both forms are honoured exactly as written:
+      #
+      #   client_authentication %i[client_secret_basic client_secret_post none]
+      #   client_authentication :client_secret_basic, :client_secret_post
+      #
+      # Unlike the deprecated +client_credentials+ option, the listed methods
+      # are used verbatim — nothing (in particular +:none+) is appended, so a
+      # restrictive configuration is never silently broadened.
+      #
+      # @param methods [Array<Symbol>] the client authentication method names
+      def client_authentication(*methods)
+        @config.instance_variable_set(:@client_authentication, methods.flatten)
+      end
+
       # Change the way access token is authenticated from the request object.
       # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then
       # falls back to the `:access_token` or `:bearer_token` params from the
@@ -297,7 +313,6 @@ module Doorkeeper
     option :orm,                            default: :active_record
     option :native_redirect_uri,            default: "urn:ietf:wg:oauth:2.0:oob", deprecated: true
     option :grant_flows,                    default: %w[authorization_code client_credentials]
-    option :client_authentication,          default: %i[client_secret_basic client_secret_post none]
     option :pkce_code_challenge_methods,    default: %w[plain S256]
     option :handle_auth_errors,             default: :render
     option :token_lookup_batch_size,        default: 10_000
@@ -659,6 +674,14 @@ module Doorkeeper
         # Legacy callables are already wrapped as Method adapters (see #client_credentials).
         name.is_a?(Doorkeeper::ClientAuthentication::Method) ? name : Doorkeeper::ClientAuthentication.get(name)
       end
+    end
+
+    # The configured client authentication method names (RFC 6749 §2.3),
+    # defaulting to the registry's DEFAULT_METHODS when not set.
+    def client_authentication
+      return Doorkeeper::ClientAuthentication::DEFAULT_METHODS.dup unless instance_variable_defined?(:@client_authentication)
+
+      @client_authentication
     end
 
     # @deprecated Renamed to +client_authentication_methods+. This alias keeps

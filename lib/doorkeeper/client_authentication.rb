@@ -14,6 +14,10 @@ module Doorkeeper
   module ClientAuthentication
     extend Registry
 
+    # Default ordered client authentication methods (RFC 6749 §2.3) used when
+    # +client_authentication+ is not configured.
+    DEFAULT_METHODS = %i[client_secret_basic client_secret_post none].freeze
+
     register(
       :none,
       Doorkeeper::OAuth::ClientAuthentication::None,
