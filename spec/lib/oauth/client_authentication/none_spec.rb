@@ -25,6 +25,15 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::None do
       expect(described_class.matches_request?(request)).not_to be true
     end
 
+    it "doesn't match if the request has a non-Basic Authorization header (e.g. Bearer)" do
+      request = mock_request(
+        request_parameters: { client_id: "1234" },
+        authorization: "Bearer some-token",
+      )
+
+      expect(described_class.matches_request?(request)).not_to be true
+    end
+
     it "matches if the Authorization header is present but empty" do
       request = mock_request(request_parameters: { client_id: "1234" }, authorization: "")
 
