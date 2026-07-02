@@ -30,8 +30,8 @@ RSpec.describe Doorkeeper::ClientAuthentication do
       expect(registered_method.name).to eq name.to_sym
     end
 
-    it "stores the given method" do
-      expect(registered_method.method).to eq client_authentication_method
+    it "stores the given strategy" do
+      expect(registered_method.strategy).to eq client_authentication_method
     end
 
     it "shows a warning when trying to register an already existing method" do

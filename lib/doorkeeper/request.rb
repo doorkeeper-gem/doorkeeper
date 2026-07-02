@@ -8,12 +8,12 @@ module Doorkeeper
       # FallbackMethod when none matches (which authenticates to no
       # credentials).
       def client_authentication_method(request)
-        strategy = client_authentication_methods.detect do |method|
+        authentication_method = client_authentication_methods.detect do |method|
           method.matches_request?(request)
         end
 
-        if strategy
-          strategy.method
+        if authentication_method
+          authentication_method.strategy
         else
           Doorkeeper::ClientAuthentication::FallbackMethod
         end

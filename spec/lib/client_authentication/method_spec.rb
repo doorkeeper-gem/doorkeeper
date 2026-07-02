@@ -12,8 +12,12 @@ RSpec.describe Doorkeeper::ClientAuthentication::Method do
     expect(method.name).to eq name
   end
 
-  it "reflects the given method" do
-    expect(method.method).to eq client_authentication_method
+  it "reflects the given strategy" do
+    expect(method.strategy).to eq client_authentication_method
+  end
+
+  it "does not shadow Object#method" do
+    expect(method.method(:authenticate)).to be_a(::Method)
   end
 
   it "delegates matches_request? to the method" do

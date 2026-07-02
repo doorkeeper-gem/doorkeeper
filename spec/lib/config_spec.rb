@@ -322,7 +322,7 @@ RSpec.describe Doorkeeper::Config do
       expect(methods.size).to eq(1)
       expect(methods.first).to be_a(Doorkeeper::ClientAuthentication::Method)
       expect(methods.first.name).to eq(:legacy_callable)
-      expect(methods.first.method).to be_a(Doorkeeper::ClientAuthentication::LegacyCallable)
+      expect(methods.first.strategy).to be_a(Doorkeeper::ClientAuthentication::LegacyCallable)
     end
 
     it "does not append :none to a callable-only configuration" do
@@ -498,7 +498,7 @@ RSpec.describe Doorkeeper::Config do
 
       methods = config.client_authentication_methods
       expect(methods.map(&:name)).to eq(%i[legacy_callable])
-      expect(methods.first.method).to be_a(Doorkeeper::ClientAuthentication::LegacyCallable)
+      expect(methods.first.strategy).to be_a(Doorkeeper::ClientAuthentication::LegacyCallable)
     end
   end
 
