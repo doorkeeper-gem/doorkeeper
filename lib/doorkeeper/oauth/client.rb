@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
-require "doorkeeper/client_authentication/credentials"
+# The full registry rather than just credentials: requiring only
+# client_authentication/credentials fires the ClientAuthentication autoload
+# mid-load, which re-requires the in-progress file and warns under -w
+# ("circular require considered harmful").
+require "doorkeeper/client_authentication"
 
 module Doorkeeper
   module OAuth
