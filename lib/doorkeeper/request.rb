@@ -4,9 +4,9 @@ module Doorkeeper
   module Request
     class << self
       # Detect the OAuth client authentication method (RFC 6749 §2.3) that the
-      # given request uses. Returns the matching method object, or the
-      # FallbackMethod when none matches (which authenticates to no
-      # credentials).
+      # given request uses. Returns the matching method's strategy (not the
+      # registry's Method wrapper), or FallbackMethod when none matches
+      # (which authenticates to no credentials).
       def client_authentication_method(request)
         authentication_method = client_authentication_methods.detect do |method|
           method.matches_request?(request)
