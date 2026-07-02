@@ -11,8 +11,11 @@ module Doorkeeper
       #   +NameError+; update references to the new constant. Note the legacy
       #   +.from_request+/+.from_basic+/+.from_params+ class methods are gone —
       #   client credential extraction now goes through the client authentication
-      #   registry (RFC 6749 §2.3).
+      #   registry (RFC 6749 §2.3). Marked with +deprecate_constant+, so Ruby
+      #   warns on access when deprecation warnings are enabled
+      #   (+Warning[:deprecated] = true+ or +-W:deprecated+).
       Credentials = Doorkeeper::ClientAuthentication::Credentials
+      deprecate_constant :Credentials
 
       attr_reader :application
 

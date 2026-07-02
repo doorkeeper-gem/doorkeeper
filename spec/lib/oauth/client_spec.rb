@@ -3,6 +3,37 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::Client do
+  describe "::Credentials (deprecated alias)" do
+    it "still resolves to Doorkeeper::ClientAuthentication::Credentials" do
+      credentials = silence_deprecation_warnings do
+        Doorkeeper::OAuth::Client::Credentials
+      end
+
+      expect(credentials).to be(Doorkeeper::ClientAuthentication::Credentials)
+    end
+
+    it "warns on access when deprecation warnings are enabled" do
+      expect { with_deprecation_warnings { Doorkeeper::OAuth::Client::Credentials } }
+        .to output(/Doorkeeper::OAuth::Client::Credentials is deprecated/).to_stderr
+    end
+
+    def with_deprecation_warnings
+      original = Warning[:deprecated]
+      Warning[:deprecated] = true
+      yield
+    ensure
+      Warning[:deprecated] = original
+    end
+
+    def silence_deprecation_warnings
+      original = Warning[:deprecated]
+      Warning[:deprecated] = false
+      yield
+    ensure
+      Warning[:deprecated] = original
+    end
+  end
+
   describe ".find" do
     let(:method) { double }
 
