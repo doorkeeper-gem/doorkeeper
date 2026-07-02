@@ -6,12 +6,12 @@ module Doorkeeper
       # RFC 6749 §2.3 "none": a public client that authenticates with only a
       # client_id and no secret (in the request body, not the query string).
       class None
-        # Requires the Authorization header to be absent: a request that
-        # carries one (Basic, Bearer, or anything else) is attempting
-        # header-based authentication and must not be silently treated as an
-        # unauthenticated public client. This is narrower than the legacy
-        # +from_params+ extractor, which read the body +client_id+ regardless
-        # of the Authorization header.
+        # Requires the Authorization header to be absent or blank: a request
+        # that carries a non-blank one (Basic, Bearer, or anything else) is
+        # attempting header-based authentication and must not be silently
+        # treated as an unauthenticated public client. This is narrower than
+        # the legacy +from_params+ extractor, which read the body +client_id+
+        # regardless of the Authorization header.
         def self.matches_request?(request)
           params = request.request_parameters.with_indifferent_access
 
