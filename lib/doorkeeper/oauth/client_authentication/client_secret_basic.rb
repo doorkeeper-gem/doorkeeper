@@ -5,6 +5,13 @@ module Doorkeeper
     module ClientAuthentication
       # RFC 6749 §2.3.1 "client_secret_basic": client credentials are sent
       # using HTTP Basic authentication.
+      #
+      # Known deviation: §2.3.1 also requires the client_id and client_secret
+      # to be form-urlencoded before being placed into the Basic header.
+      # Doorkeeper has never URL-decoded them (like much of the ecosystem),
+      # and this strategy deliberately keeps that behaviour — adding the
+      # decoding now would break every existing client whose credentials
+      # contain URL-encodable characters.
       class ClientSecretBasic
         # Match whenever the header decodes to a non-blank +client_id+ — i.e.
         # whenever a Basic authentication *attempt* is present. The secret may
@@ -35,7 +42,7 @@ module Doorkeeper
 
           value = authorization.split(" ", 2).last
           client_id, client_secret = Base64.decode64(value.to_s).split(":", 2)
-          return unless client_id.present?
+          return if client_id.blank?
 
           [client_id, client_secret]
         end
