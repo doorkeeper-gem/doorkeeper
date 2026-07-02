@@ -24,6 +24,19 @@ module Doorkeeper
       end
     end
 
+    # Raised when a request uses more than one client authentication method,
+    # which RFC 6749 §2.3 explicitly forbids ("The client MUST NOT use more
+    # than one authentication method in each request").
+    class MultipleClientAuthMethods < DoorkeeperError
+      def type
+        :invalid_request
+      end
+
+      def reason
+        :multiple_client_auth_methods
+      end
+    end
+
     class MissingRequiredParameter < DoorkeeperError
       attr_reader :missing_param
 

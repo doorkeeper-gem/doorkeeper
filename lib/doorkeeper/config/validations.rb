@@ -8,6 +8,8 @@ module Doorkeeper
       # Validates configuration options to be set properly.
       #
       def validate!
+        validate_client_authentication_conflict
+        validate_client_authentication_registered
         validate_reuse_access_token_value
         validate_token_reuse_limit
         validate_secret_strategies
@@ -16,6 +18,54 @@ module Doorkeeper
       end
 
       private
+
+      # Warn once, at configuration time, when both the deprecated
+      # +client_credentials+ and the new +client_authentication+ options are
+      # set. +client_authentication+ takes precedence; the warning lives here
+      # (rather than in the memoised resolver) so it is not swallowed and
+      # surfaces during boot instead of on the first request.
+      def validate_client_authentication_conflict
+        return unless instance_variable_defined?(:@client_credentials_methods) &&
+                      instance_variable_defined?(:@client_authentication)
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] Both client_credentials and client_authentication are set, " \
+          "using client_authentication",
+        )
+      end
+
+      # Warn about configured client authentication methods that are not
+      # registered (e.g. a typo, or an extension that failed to load). Such
+      # names are silently ignored when resolving the methods, which could
+      # otherwise leave the application with no usable authentication methods.
+      def validate_client_authentication_registered
+        # The deprecated client_credentials path already validates its own input.
+        return if instance_variable_defined?(:@client_credentials_methods) &&
+                  !instance_variable_defined?(:@client_authentication)
+
+        configured = client_authentication
+        unknown = configured.reject { |name| Doorkeeper::ClientAuthentication.get(name) }
+
+        unless unknown.empty?
+          ::Rails.logger.warn(
+            "[DOORKEEPER] Unknown client authentication method(s) configured and will be ignored: " \
+            "#{unknown.map(&:inspect).join(", ")}. " \
+            "Ensure each method is registered (e.g. by the extension that provides it).",
+          )
+        end
+
+        # A configuration that resolves to zero usable methods fails every
+        # client authentication attempt (all requests fall back to no
+        # credentials), so make that loud rather than silent.
+        return unless (configured - unknown).empty?
+
+        ::Rails.logger.error(
+          "[DOORKEEPER] No usable client authentication methods are configured " \
+          "(client_authentication resolved to an empty set). All client authentication " \
+          "will fail. Configure at least one registered method, e.g. " \
+          "client_authentication #{Doorkeeper::ClientAuthentication::DEFAULT_METHODS.inspect}.",
+        )
+      end
 
       # Determine whether +reuse_access_token+ and a non-restorable
       # +token_secret_strategy+ have both been activated.

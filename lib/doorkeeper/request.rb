@@ -3,6 +3,27 @@
 module Doorkeeper
   module Request
     class << self
+      # Detect the OAuth client authentication method (RFC 6749 §2.3) that the
+      # given request uses. Returns the matching method's strategy (not the
+      # registry's Method wrapper), or FallbackMethod when none matches
+      # (which authenticates to no credentials).
+      def client_authentication_method(request)
+        # RFC 6749 §2.3 forbids using more than one client authentication
+        # method in a single request, so we collect every method that matches
+        # and reject the request when there is more than one.
+        matching_methods = client_authentication_methods.select do |method|
+          method.matches_request?(request)
+        end
+
+        raise Errors::MultipleClientAuthMethods if matching_methods.size > 1
+
+        if (authentication_method = matching_methods.first)
+          authentication_method.strategy
+        else
+          Doorkeeper::ClientAuthentication::FallbackMethod
+        end
+      end
+
       def authorization_strategy(response_type)
         grant_flow = authorization_flows.detect do |flow|
           flow.matches_response_type?(response_type)
@@ -39,6 +60,10 @@ module Doorkeeper
       end
 
       private
+
+      def client_authentication_methods
+        Doorkeeper.configuration.client_authentication_methods
+      end
 
       def authorization_flows
         Doorkeeper.configuration.authorization_response_flows

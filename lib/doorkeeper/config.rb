@@ -65,13 +65,50 @@ module Doorkeeper
       end
 
       # Change the way client credentials are retrieved from the request object.
-      # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then
-      # falls back to the `:client_id` and `:client_secret` params from the
-      # `params` object.
+      #
+      # @deprecated Use the +client_authentication+ option instead. The legacy
+      #   +:from_basic+ / +:from_params+ methods are automatically converted to
+      #   the +:client_secret_basic+ / +:client_secret_post+ authentication
+      #   methods. +:none+ (public client support) is appended only when
+      #   +:from_params+ was configured, since that is the only legacy method
+      #   that accepted a bare +client_id+ without a secret — +:from_basic+ on
+      #   its own never did, so it is not broadened. Callable extractors are
+      #   wrapped in a legacy adapter so they keep working during the
+      #   deprecation window.
       #
       # @param methods [Array] Define client credentials
       def client_credentials(*methods)
-        @config.instance_variable_set(:@client_credentials_methods, methods)
+        deprecated(
+          "client_credentials",
+          "Use the client_authentication option instead. Automatically converting to client_authentication",
+        )
+
+        client_authentication = Doorkeeper::ClientAuthentication.from_legacy_client_credentials(methods)
+
+        if client_authentication.empty?
+          Kernel.warn(
+            "[DOORKEEPER] No known client_credentials method detected, " \
+            "cannot automatically convert to client_authentication option",
+          )
+        else
+          @config.instance_variable_set(:@client_credentials_methods, client_authentication)
+        end
+      end
+
+      # Declare which client authentication methods (RFC 6749 §2.3) are
+      # accepted and the order in which they are tried. Accepts either an array
+      # or varargs, so both forms are honoured exactly as written:
+      #
+      #   client_authentication %i[client_secret_basic client_secret_post none]
+      #   client_authentication :client_secret_basic, :client_secret_post
+      #
+      # Unlike the deprecated +client_credentials+ option, the listed methods
+      # are used verbatim — nothing (in particular +:none+) is appended, so a
+      # restrictive configuration is never silently broadened.
+      #
+      # @param methods [Array<Symbol>] the client authentication method names
+      def client_authentication(*methods)
+        @config.instance_variable_set(:@client_authentication, methods.flatten)
       end
 
       # Change the way access token is authenticated from the request object.
@@ -201,6 +238,13 @@ module Doorkeeper
       end
 
       private
+
+      def deprecated(name, message = nil)
+        warning = "[DOORKEEPER] #{name} has been deprecated and will soon be removed"
+        warning = "#{warning}\n#{message}" if message.present?
+
+        Kernel.warn(warning)
+      end
 
       # Configure the secret storing functionality
       def configure_secrets_for(type, using:, fallback:)
@@ -604,8 +648,53 @@ module Doorkeeper
       pkce_code_challenge_methods
     end
 
+    # Resolves the configured client authentication methods (RFC 6749 §2.3)
+    # into the registered +Doorkeeper::ClientAuthentication::Method+ objects.
+    #
+    # Honors the deprecated +client_credentials+ option for backwards
+    # compatibility: if it was used it provides the source of truth, unless
+    # +client_authentication+ was also set explicitly, in which case the
+    # latter wins.
+    def client_authentication_methods
+      return @client_authentication_methods if defined?(@client_authentication_methods)
+
+      # When both the deprecated +client_credentials+ and the new
+      # +client_authentication+ are set, +client_authentication+ wins. The
+      # conflict is warned about at validation time (see Validations), not here,
+      # so the message is not swallowed by this memoised resolver.
+      only_legacy = instance_variable_defined?(:@client_credentials_methods) &&
+                    !instance_variable_defined?(:@client_authentication)
+      names = only_legacy ? @client_credentials_methods : client_authentication
+
+      @client_authentication_methods = names.filter_map do |name|
+        # Legacy callables are already wrapped as Method adapters (see #client_credentials).
+        name.is_a?(Doorkeeper::ClientAuthentication::Method) ? name : Doorkeeper::ClientAuthentication.get(name)
+      end
+    end
+
+    # The configured client authentication method names (RFC 6749 §2.3),
+    # defaulting to the registry's DEFAULT_METHODS when not set.
+    def client_authentication
+      return Doorkeeper::ClientAuthentication::DEFAULT_METHODS.dup unless instance_variable_defined?(:@client_authentication)
+
+      @client_authentication
+    end
+
+    # @deprecated Renamed to +client_authentication_methods+. This alias keeps
+    #   external callers (e.g. doorkeeper-openid_connect) working for one release
+    #   and will be removed afterwards. It returns the legacy symbol names
+    #   (e.g. +:from_basic+) rather than the internal Method objects so that
+    #   consumers mapping from those symbols keep working unchanged.
     def client_credentials_methods
-      @client_credentials_methods ||= %i[from_basic from_params]
+      unless defined?(@client_credentials_methods_rename_warned)
+        Kernel.warn(
+          "[DOORKEEPER] Doorkeeper.config.client_credentials_methods has been renamed to " \
+          "client_authentication_methods and will be removed in a future version.",
+        )
+        @client_credentials_methods_rename_warned = true
+      end
+
+      Doorkeeper::ClientAuthentication.to_legacy_client_credentials_names(client_authentication_methods)
     end
 
     def access_token_methods
