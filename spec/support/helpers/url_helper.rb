@@ -58,6 +58,10 @@ module UrlHelper
     "/oauth/revoke"
   end
 
+  def introspection_endpoint_url
+    "/oauth/introspect"
+  end
+
   def build_query(hash)
     Rack::Utils.build_query(hash)
   end

@@ -12,7 +12,7 @@ User-visible changes worth mentioning.
 - [#1840] Introduce a pluggable client authentication registry (RFC 6749 §2.3).
   - New `client_authentication` config option declares which methods are accepted and in which order. Built-in strategies: `client_secret_basic`, `client_secret_post` and `none`.
   - Custom strategies can be registered with `Doorkeeper::ClientAuthentication.register`.
-  - **[BREAKING]** Client credentials are no longer read from the query string — send them in the request body or via HTTP Basic.
+  - **[BREAKING]** Client credentials are no longer read from the query string — send them in the request body or via HTTP Basic. This applies to every endpoint that authenticates clients: token, revocation and introspection.
   - **[BREAKING]** The `none` strategy rejects requests that carry a non-blank `Authorization` header.
   - **Deprecated**: the `client_credentials` option — use `client_authentication` instead.
   - **Deprecated**: `Doorkeeper::OAuth::Client::Credentials` — use `Doorkeeper::ClientAuthentication::Credentials` instead.

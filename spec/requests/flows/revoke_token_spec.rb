@@ -83,6 +83,35 @@ RSpec.describe "Revoke Token Flow" do
       end
     end
 
+    context "with credentials in the request body (client_secret_post)" do
+      it "revokes the access token provided" do
+        post revocation_token_endpoint_url,
+             params: {
+               client_id: private_client_application.uid,
+               client_secret: private_client_application.secret,
+               token: access_token.token,
+             }
+
+        expect(response).to be_successful
+        expect(access_token.reload).to be_revoked
+      end
+    end
+
+    context "with credentials in the query string" do
+      it "does not authenticate the client and does not revoke the token (RFC 6749 §2.3.1)" do
+        query = build_query(
+          client_id: private_client_application.uid,
+          client_secret: private_client_application.secret,
+        )
+
+        post "#{revocation_token_endpoint_url}?#{query}", params: { token: access_token.token }
+
+        expect(response).to be_forbidden
+        expect(response.body).to include("unauthorized_client")
+        expect(access_token.reload).not_to be_revoked
+      end
+    end
+
     context "with valid token for another client application" do
       let(:other_client_application) { FactoryBot.create :application }
       let(:headers) do
@@ -216,6 +245,16 @@ RSpec.describe "Revoke Token Flow" do
 
       post revocation_token_endpoint_url,
            params: { client_id: other_public_client.uid, token: access_token.refresh_token, token_type_hint: "refresh_token" }
+
+      expect(response).to be_forbidden
+      expect(response.body).to include("unauthorized_client")
+      expect(access_token.reload).not_to be_revoked
+    end
+
+    it "does not revoke the token when client_id is only in the query string (RFC 6749 §2.3.1)" do
+      query = build_query(client_id: public_client_application.uid)
+
+      post "#{revocation_token_endpoint_url}?#{query}", params: { token: access_token.token }
 
       expect(response).to be_forbidden
       expect(response.body).to include("unauthorized_client")
