@@ -176,4 +176,17 @@ RSpec.describe "Authorization Server Metadata endpoint" do
       expect(json_response["app_registration_url"]).to eq("app_registration_url.example")
     end
   end
+
+  context "with explicit client_authentication configuration" do
+    before do
+      config_is_set(:client_authentication, %i[client_secret_basic])
+    end
+
+    it "returns only the configured authentication methods" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["token_endpoint_auth_methods_supported"]).to eq(%w[client_secret_basic])
+    end
+  end
 end

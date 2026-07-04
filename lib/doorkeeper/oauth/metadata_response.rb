@@ -125,9 +125,8 @@ module Doorkeeper
         config.token_grant_types
       end
 
-      # FIXME: https://github.com/doorkeeper-gem/doorkeeper/pull/1840
       def token_endpoint_auth_methods_supported
-        %w[none client_secret_basic client_secret_post]
+        config.client_authentication.map(&:to_s)
       end
 
       def code_challenge_methods_supported
