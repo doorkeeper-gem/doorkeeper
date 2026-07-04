@@ -277,13 +277,18 @@ Doorkeeper.configure do
   #
   # enforce_configured_scopes
 
-  # Change the way client credentials are retrieved from the request object.
-  # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then
-  # falls back to the `:client_id` and `:client_secret` params from the `params` object.
+  # Configure the OAuth client authentication methods (RFC 6749 §2.3) Doorkeeper
+  # will accept and the order in which they are tried. By default it accepts
+  # HTTP Basic auth (`client_secret_basic`), credentials in the request body
+  # (`client_secret_post`), and public clients with no secret (`none`).
   # Check out https://github.com/doorkeeper-gem/doorkeeper/wiki/Changing-how-clients-are-authenticated
   # for more information on customization
   #
-  # client_credentials :from_basic, :from_params
+  # client_authentication %i[client_secret_basic client_secret_post none]
+  #
+  # The legacy `client_credentials` option is deprecated; `:from_basic` and
+  # `:from_params` are automatically mapped to `:client_secret_basic` and
+  # `:client_secret_post`.
 
   # Change the way access token is authenticated from the request object.
   # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then

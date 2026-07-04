@@ -19,7 +19,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
     )
   end
   let(:client) { Doorkeeper::OAuth::Client.new(FactoryBot.create(:application)) }
-  let(:credentials) { Doorkeeper::OAuth::Client::Credentials.new("uid", "secret") }
+  let(:credentials) { Doorkeeper::ClientAuthentication::Credentials.new("uid", "secret") }
   let(:application) { client.application }
   let(:owner) { FactoryBot.build_stubbed(:resource_owner) }
 

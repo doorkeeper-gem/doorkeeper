@@ -31,6 +31,20 @@ RSpec.describe "Token endpoint" do
     expect(json_response).to include("access_token" => Doorkeeper::AccessToken.first.token)
   end
 
+  it "does not read client credentials from the query string (RFC 6749 §2.3.1)" do
+    query = build_query(client_id: @client.uid, client_secret: @client.secret)
+
+    post "#{token_endpoint_url}?#{query}",
+         params: token_endpoint_params(
+           code: @authorization.token,
+           redirect_uri: @client.redirect_uri,
+         )
+
+    expect(response).to have_http_status(:unauthorized)
+    expect(json_response).to include("error" => "invalid_client")
+    expect(Doorkeeper::AccessToken.count).to be_zero
+  end
+
   it "returns null for expires_in when a permanent token is set" do
     config_is_set(:access_token_expires_in, nil)
 
