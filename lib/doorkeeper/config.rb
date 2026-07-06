@@ -762,12 +762,16 @@ module Doorkeeper
     def calculate_token_grant_types
       types = grant_flows - ["implicit"]
       types << "refresh_token" if refresh_token_enabled?
-      types
+      types.uniq
     end
 
     # Calculates grant flows configured by the user in Doorkeeper
     # configuration considering registered aliases that is exposed
     # to single or multiple other flows.
+    #
+    # The refresh_token flow is added implicitly when +use_refresh_token+
+    # is configured, so the result lists every enabled flow (useful for
+    # RFC 8414 authorization server metadata).
     #
     def calculate_grant_flows
       configured_flows = grant_flows.map(&:to_s)
@@ -779,6 +783,8 @@ module Doorkeeper
 
         flows.concat(Doorkeeper::GrantFlow.expand_alias(flow_alias))
       end
+
+      flows << "refresh_token" if refresh_token_enabled?
 
       flows.flatten.uniq
     end
@@ -810,9 +816,7 @@ module Doorkeeper
     end
 
     def calculate_token_grant_flows
-      flows = enabled_grant_flows.select(&:handles_grant_type?)
-      flows << Doorkeeper::GrantFlow.get("refresh_token") if refresh_token_enabled?
-      flows
+      enabled_grant_flows.select(&:handles_grant_type?)
     end
   end
 end

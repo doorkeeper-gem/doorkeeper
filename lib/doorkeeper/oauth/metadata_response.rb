@@ -116,9 +116,7 @@ module Doorkeeper
       end
 
       def grant_types_supported
-        grant_types = config.grant_flows.dup
-        grant_types << "refresh_token" if config.refresh_token_enabled?
-        grant_types
+        config.calculate_grant_flows
       end
 
       # FIXME: https://github.com/doorkeeper-gem/doorkeeper/pull/1840

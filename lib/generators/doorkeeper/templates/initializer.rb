@@ -382,6 +382,9 @@ Doorkeeper.configure do
   # If not specified, Doorkeeper enables authorization_code and
   # client_credentials.
   #
+  # The Refresh Token Grant Flow ("refresh_token") doesn't need to be listed
+  # here: it is enabled automatically when +use_refresh_token+ is configured.
+  #
   # implicit and password grant flows have risks that you should understand
   # before enabling:
   #   https://datatracker.ietf.org/doc/html/rfc6819#section-4.4.2
