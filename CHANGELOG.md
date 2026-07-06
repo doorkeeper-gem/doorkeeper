@@ -19,6 +19,7 @@ User-visible changes worth mentioning.
   - See the [Upgrade Guide](https://github.com/doorkeeper-gem/doorkeeper/wiki/Migration-from-old-versions) for detailed breaking changes, deprecations and migration steps.
 - [#1842] **[BREAKING]** `force_pkce` now requires PKCE for all clients, including confidential ones, in line with the OAuth 2.0 Security BCP (RFC 9700) and OAuth 2.1. Previously confidential clients were exempt. If you enable `force_pkce` and have confidential clients that do not yet send a `code_challenge`/`code_verifier`, their authorization requests will start to be rejected.
 - [#1845] Fix `NameError` when the config option DSL (`Doorkeeper::Config::Option`) is extended into a class that does not define `self.builder_class`. The guard raised `Doorkeeper::MissingConfigurationBuilderClass`, a constant that was never defined, so callers saw `uninitialized constant` instead of the intended message. The error is now defined as `Doorkeeper::Errors::MissingConfigurationBuilderClass` (a `DoorkeeperError`) and referenced correctly.
+- [#1846] Document and pin with regression specs that a `scope` parameter sent to the token endpoint is ignored for the `authorization_code` grant (RFC 6749 §4.1.3 does not define one): the access token always inherits the scopes of the authorization grant, and the response reports the actual granted `scope`. No behavior change.
 - Please add here
 
 ## 5.9.3
