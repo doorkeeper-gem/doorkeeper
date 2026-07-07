@@ -8,11 +8,17 @@ module Doorkeeper
       # registry's Method wrapper), or FallbackMethod when none matches
       # (which authenticates to no credentials).
       #
-      # Raises Errors::MultipleClientAuthMethods when the request uses more
-      # than one client authentication method, since RFC 6749 §2.3 forbids
-      # that.
+      # Raises Errors::MultipleClientAuthMethods when the request itself
+      # uses more than one client authentication method, since RFC 6749 §2.3
+      # forbids that (see +validate_client_authentication!+).
       def client_authentication_method(request)
-        if (authentication_method = matching_client_authentication_method(request))
+        validate_client_authentication!(request)
+
+        authentication_method = client_authentication_methods.detect do |method|
+          method.matches_request?(request)
+        end
+
+        if authentication_method
           authentication_method.strategy
         else
           Doorkeeper::ClientAuthentication::FallbackMethod
@@ -56,33 +62,30 @@ module Doorkeeper
 
       private
 
-      # Only distinct authentication mechanisms used by the client count
-      # towards the RFC 6749 §2.3 "more than one method" rejection:
+      # RFC 6749 §2.3 forbids clients to "use more than one authentication
+      # method in each request", so the request payload is validated against
+      # every *registered* method — regardless of which ones are configured —
+      # before any method is selected: a client sending, say, both Basic
+      # credentials and body credentials is rejected even when only one of
+      # those methods is enabled on the server.
+      #
+      # Only real authentication mechanisms count towards the limit:
       #
       # * +:none+ is the absence of client authentication (a public client
       #   identifying itself with a bare +client_id+), not a mechanism of its
-      #   own, so a real method matching alongside it wins instead of being
-      #   counted as a second method — RFC 7521 §4.2, for example, explicitly
-      #   allows a +client_id+ next to a client assertion.
-      # * Deprecated +client_credentials+ callable extractors match whenever
-      #   they can extract credentials and so may legitimately overlap the
-      #   built-in methods they are configured with; those configs keep the
-      #   historical "first extractor that returns a uid wins" behaviour
-      #   (see ClientAuthentication::LegacyCallable) for the deprecation
-      #   window.
-      def matching_client_authentication_method(request)
-        methods = client_authentication_methods
-
-        if methods.any? { |method| method.name == :legacy_callable }
-          methods.detect { |method| method.matches_request?(request) }
-        else
-          matching_methods = methods.select { |method| method.matches_request?(request) }
-          matching_methods = matching_methods.reject { |method| method.name == :none } if matching_methods.size > 1
-
-          raise Errors::MultipleClientAuthMethods if matching_methods.size > 1
-
-          matching_methods.first
+      #   own — RFC 7521 §4.2, for example, explicitly allows a +client_id+
+      #   next to a client assertion.
+      # * Deprecated +client_credentials+ callable extractors are
+      #   configuration adapters rather than registered methods, so they
+      #   cannot count either; they keep the historical "first extractor that
+      #   returns a uid wins" selection (see
+      #   ClientAuthentication::LegacyCallable) for the deprecation window.
+      def validate_client_authentication!(request)
+        used_methods = Doorkeeper::ClientAuthentication.registered_methods.each_value.count do |method|
+          method.name != :none && method.matches_request?(request)
         end
+
+        raise Errors::MultipleClientAuthMethods if used_methods > 1
       end
 
       def client_authentication_methods

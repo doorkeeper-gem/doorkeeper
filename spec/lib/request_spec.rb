@@ -45,6 +45,19 @@ RSpec.describe Doorkeeper::Request do
       it "raises MultipleClientAuthMethods (RFC 6749 §2.3)" do
         expect { strategy }.to raise_error(Doorkeeper::Errors::MultipleClientAuthMethods)
       end
+
+      context "when only one of the used methods is configured" do
+        before do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            client_authentication %i[client_secret_basic]
+          end
+        end
+
+        it "still raises MultipleClientAuthMethods (the payload is validated before selection)" do
+          expect { strategy }.to raise_error(Doorkeeper::Errors::MultipleClientAuthMethods)
+        end
+      end
     end
 
     context "when no configured method matches the request" do
@@ -69,7 +82,7 @@ RSpec.describe Doorkeeper::Request do
 
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
-          client_authentication %i[client_secret_basic client_secret_post none client_assertion]
+          client_authentication %i[client_secret_basic client_secret_post client_assertion none]
         end
       end
 
@@ -79,23 +92,6 @@ RSpec.describe Doorkeeper::Request do
 
       it "selects the real method instead of counting the bare client_id as a second mechanism" do
         expect(strategy).to eq(client_assertion_method)
-      end
-    end
-
-    context "when the configuration lists the same method twice" do
-      let(:request) do
-        mock_request(authorization: "Basic #{Base64.strict_encode64("id:secret")}")
-      end
-
-      before do
-        Doorkeeper.configure do
-          orm DOORKEEPER_ORM
-          client_authentication %i[client_secret_basic client_secret_post client_secret_basic]
-        end
-      end
-
-      it "does not treat the duplicate entry as a second authentication method" do
-        expect(strategy).to eq(Doorkeeper::OAuth::ClientAuthentication::ClientSecretBasic)
       end
     end
 
@@ -118,7 +114,7 @@ RSpec.describe Doorkeeper::Request do
           end
         end
 
-        it "keeps the historical first-extractor-wins behaviour instead of raising" do
+        it "does not count the overlapping callable as a second method (first match wins)" do
           expect(strategy).to eq(Doorkeeper::OAuth::ClientAuthentication::ClientSecretPost)
         end
       end
@@ -145,6 +141,28 @@ RSpec.describe Doorkeeper::Request do
         it "does not invoke a later callable extractor (first match wins)" do
           expect(strategy).to eq(Doorkeeper::OAuth::ClientAuthentication::ClientSecretBasic)
           expect(extractor_calls).to be_empty
+        end
+      end
+
+      context "when the request uses two real authentication mechanisms" do
+        let(:request) do
+          mock_request(
+            authorization: "Basic #{Base64.strict_encode64("id:secret")}",
+            request_parameters: { client_id: "id", client_secret: "secret" },
+          )
+        end
+
+        before do
+          extractor = ->(req) { req.request_parameters.values_at("client_id", "client_secret") }
+
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            client_credentials :from_basic, extractor
+          end
+        end
+
+        it "raises MultipleClientAuthMethods regardless of the legacy configuration" do
+          expect { strategy }.to raise_error(Doorkeeper::Errors::MultipleClientAuthMethods)
         end
       end
     end

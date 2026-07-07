@@ -650,9 +650,6 @@ module Doorkeeper
 
     # Resolves the configured client authentication methods (RFC 6749 §2.3)
     # into the registered +Doorkeeper::ClientAuthentication::Method+ objects.
-    # Duplicate names are dropped, so a method configured twice cannot count
-    # as a second authentication method when a request is checked against
-    # the RFC 6749 §2.3 single-method rule.
     #
     # Honors the deprecated +client_credentials+ option for backwards
     # compatibility: if it was used it provides the source of truth, unless
@@ -672,7 +669,7 @@ module Doorkeeper
       @client_authentication_methods = names.filter_map do |name|
         # Legacy callables are already wrapped as Method adapters (see #client_credentials).
         name.is_a?(Doorkeeper::ClientAuthentication::Method) ? name : Doorkeeper::ClientAuthentication.get(name)
-      end.uniq
+      end
     end
 
     # The configured client authentication method names (RFC 6749 §2.3),
