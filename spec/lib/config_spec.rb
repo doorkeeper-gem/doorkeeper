@@ -809,6 +809,36 @@ RSpec.describe Doorkeeper::Config do
         expect(config.calculate_grant_flows.count("refresh_token")).to eq(1)
         expect(config.token_grant_flows.count(Doorkeeper::GrantFlow.get("refresh_token"))).to eq(1)
       end
+
+      context "when enabled through a registered alias" do
+        around do |example|
+          origin_aliases = Doorkeeper::GrantFlow::Registry.aliases.deep_dup
+          Doorkeeper::GrantFlow.register_alias("refreshable_code", as: %w[authorization_code refresh_token])
+          example.run
+          Doorkeeper::GrantFlow::Registry.aliases = origin_aliases
+        end
+
+        it "warns when use_refresh_token is not configured" do
+          expect(Rails.logger).to receive(:warn).with(/refresh tokens will not be issued/)
+
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            grant_flows %w[refreshable_code]
+          end
+
+          expect(config.token_grant_flows).to include Doorkeeper::GrantFlow.get("refresh_token")
+        end
+
+        it "does not warn when use_refresh_token is configured" do
+          expect(Rails.logger).not_to receive(:warn).with(/refresh tokens will not be issued/)
+
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            grant_flows %w[refreshable_code]
+            use_refresh_token
+          end
+        end
+      end
     end
   end
 
