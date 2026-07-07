@@ -81,11 +81,18 @@ module Doorkeeper
       #   returns a uid wins" selection (see
       #   ClientAuthentication::LegacyCallable) for the deprecation window.
       def validate_client_authentication!(request)
-        used_methods = Doorkeeper::ClientAuthentication.registered_methods.each_value.count do |method|
-          method.name != :none && method.matches_request?(request)
-        end
+        matched = 0
 
-        raise Errors::MultipleClientAuthMethods if used_methods > 1
+        Doorkeeper::ClientAuthentication.registered_methods.each_value do |method|
+          next if method.name == :none
+          next unless method.matches_request?(request)
+
+          matched += 1
+
+          # RFC 6749 §2.3 only forbids using more than one method, so bail out
+          # on the second match instead of evaluating the remaining methods.
+          raise Errors::MultipleClientAuthMethods if matched > 1
+        end
       end
 
       def client_authentication_methods
