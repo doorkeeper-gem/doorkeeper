@@ -13,6 +13,9 @@ module Doorkeeper
       attr_reader :grant, :client, :redirect_uri, :access_token, :code_verifier,
                   :invalid_request_reason, :missing_param
 
+      # A scope parameter is deliberately not read here: RFC 6749 does not
+      # define one for the authorization_code token request (§4.1.3), so it
+      # is ignored and the access token inherits the scopes of the grant.
       def initialize(server, grant, client, parameters = {})
         super()
         @server = server

@@ -150,6 +150,51 @@ feature "Authorization Code Flow" do
     )
   end
 
+  # RFC 6749 does not define a scope parameter for the authorization_code
+  # token request (§4.1.3): access token scopes always come from the
+  # authorization grant, and a scope parameter sent to the token endpoint
+  # is ignored (see issue #1765).
+  context "when a scope parameter is sent to the token endpoint" do
+    background do
+      optional_scopes_exist :write
+      @client.update(scopes: "default write")
+    end
+
+    scenario "the token is issued with the grant's scopes, not the requested ones" do
+      visit authorization_endpoint_url(client: @client, scope: "default")
+      click_on "Authorize"
+
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      page.driver.post token_endpoint_url, token_endpoint_params(
+        code: authorization_code,
+        client: @client,
+        scope: "write",
+      )
+
+      access_token_should_exist_for(@client, @resource_owner)
+
+      expect(Doorkeeper::AccessToken.first.scopes.to_s).to eq("default")
+      expect(json_response.fetch("scope")).to eq("default")
+    end
+
+    scenario "an unknown scope value is ignored as well" do
+      visit authorization_endpoint_url(client: @client, scope: "default")
+      click_on "Authorize"
+
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      page.driver.post token_endpoint_url, token_endpoint_params(
+        code: authorization_code,
+        client: @client,
+        scope: "admin",
+      )
+
+      access_token_should_exist_for(@client, @resource_owner)
+
+      expect(Doorkeeper::AccessToken.first.scopes.to_s).to eq("default")
+      expect(json_response.fetch("scope")).to eq("default")
+    end
+  end
+
   scenario "resource owner requests an access token with authorization code but without secret" do
     visit authorization_endpoint_url(client: @client)
     click_on "Authorize"
