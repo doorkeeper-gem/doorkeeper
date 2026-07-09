@@ -66,6 +66,41 @@ RSpec.describe "Authorization Server Metadata endpoint" do
     end
   end
 
+  context "with refresh tokens enabled" do
+    before do
+      config_is_set(:refresh_token_enabled, true)
+    end
+
+    it "includes refresh_token in grant_types_supported" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["grant_types_supported"]).to include("refresh_token")
+    end
+  end
+
+  context "with a response-type-only flow enabled (implicit)" do
+    before do
+      config_is_set(:grant_flows, %w[authorization_code implicit client_credentials])
+    end
+
+    it "omits implicit from grant_types_supported (it has no token-endpoint grant type)" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["grant_types_supported"]).to contain_exactly(
+        "authorization_code", "client_credentials"
+      )
+    end
+
+    it "still advertises implicit in response_types_supported" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["response_types_supported"]).to include("token")
+    end
+  end
+
   context "with token introspection enabled (default)" do
     it "includes the introspection_endpoint" do
       get "/.well-known/oauth-authorization-server"

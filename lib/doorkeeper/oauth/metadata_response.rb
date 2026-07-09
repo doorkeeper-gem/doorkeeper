@@ -116,9 +116,13 @@ module Doorkeeper
       end
 
       def grant_types_supported
-        grant_types = config.grant_flows.dup
-        grant_types << "refresh_token" if config.refresh_token_enabled?
-        grant_types
+        # RFC 8414 lists token-endpoint grant type values (e.g.
+        # "authorization_code", "refresh_token"), so derive them from the
+        # flows that actually handle a grant_type and use their grant_type
+        # value rather than the configured flow name. This drops
+        # response-type-only flows such as :implicit and reports the real
+        # grant type for flows whose name differs from it (e.g. a URN).
+        config.token_grant_types
       end
 
       # FIXME: https://github.com/doorkeeper-gem/doorkeeper/pull/1840

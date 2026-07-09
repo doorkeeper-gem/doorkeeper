@@ -15,6 +15,7 @@ module Doorkeeper
         validate_secret_strategies
         validate_pkce_code_challenge_methods
         validate_custom_metadata
+        validate_refresh_token_flow
       end
 
       private
@@ -121,6 +122,29 @@ module Doorkeeper
         )
 
         @custom_metadata = {}
+      end
+
+      # Warn when the refresh_token grant flow is enabled but refresh tokens
+      # are never issued: refresh token requests would always fail because
+      # there are no tokens to refresh. The flow is enabled automatically
+      # when +use_refresh_token+ is configured, so it doesn't need to be
+      # listed in +grant_flows+ explicitly.
+      #
+      # +calculate_grant_flows+ is used (rather than the raw +grant_flows+) so
+      # that the flow is also detected when enabled through a registered
+      # grant-flow alias. When +use_refresh_token+ is not configured the
+      # refresh_token flow is not appended implicitly, so its presence there
+      # means it was requested explicitly (directly or via an alias).
+      def validate_refresh_token_flow
+        return if refresh_token_enabled?
+        return unless calculate_grant_flows.map(&:to_s).include?("refresh_token")
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] You have enabled the refresh_token grant flow without " \
+          "configuring use_refresh_token, so refresh tokens will not be issued. " \
+          "Configure use_refresh_token to issue refresh tokens (the refresh_token " \
+          "grant flow is then enabled automatically).",
+        )
       end
     end
   end
