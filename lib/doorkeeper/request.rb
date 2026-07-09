@@ -7,7 +7,13 @@ module Doorkeeper
       # given request uses. Returns the matching method's strategy (not the
       # registry's Method wrapper), or FallbackMethod when none matches
       # (which authenticates to no credentials).
+      #
+      # Raises Errors::MultipleClientAuthMethods when the request itself
+      # uses more than one client authentication method, since RFC 6749 §2.3
+      # forbids that (see +validate_client_authentication!+).
       def client_authentication_method(request)
+        validate_client_authentication!(request)
+
         authentication_method = client_authentication_methods.detect do |method|
           method.matches_request?(request)
         end
@@ -55,6 +61,39 @@ module Doorkeeper
       end
 
       private
+
+      # RFC 6749 §2.3 forbids clients to "use more than one authentication
+      # method in each request", so the request payload is validated against
+      # every *registered* method — regardless of which ones are configured —
+      # before any method is selected: a client sending, say, both Basic
+      # credentials and body credentials is rejected even when only one of
+      # those methods is enabled on the server.
+      #
+      # Only real authentication mechanisms count towards the limit:
+      #
+      # * +:none+ is the absence of client authentication (a public client
+      #   identifying itself with a bare +client_id+), not a mechanism of its
+      #   own — RFC 7521 §4.2, for example, explicitly allows a +client_id+
+      #   next to a client assertion.
+      # * Deprecated +client_credentials+ callable extractors are
+      #   configuration adapters rather than registered methods, so they
+      #   cannot count either; they keep the historical "first extractor that
+      #   returns a uid wins" selection (see
+      #   ClientAuthentication::LegacyCallable) for the deprecation window.
+      def validate_client_authentication!(request)
+        matched = 0
+
+        Doorkeeper::ClientAuthentication.registered_methods.each_value do |method|
+          next if method.name == :none
+          next unless method.matches_request?(request)
+
+          matched += 1
+
+          # RFC 6749 §2.3 only forbids using more than one method, so bail out
+          # on the second match instead of evaluating the remaining methods.
+          raise Errors::MultipleClientAuthMethods if matched > 1
+        end
+      end
 
       def client_authentication_methods
         Doorkeeper.configuration.client_authentication_methods
