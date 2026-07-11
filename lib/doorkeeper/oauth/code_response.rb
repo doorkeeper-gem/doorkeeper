@@ -28,23 +28,37 @@ module Doorkeeper
             token_type: auth.token.token_type,
             expires_in: auth.token.expires_in_seconds,
             state: pre_auth.state,
-          }
+          }.merge(iss_parameter)
         elsif auth.try(:access_grant?)
           {
             code: auth.token.plaintext_token,
             state: pre_auth.state,
-          }
+          }.merge(iss_parameter)
         end
       end
 
       def redirect_uri
         if URIChecker.oob_uri?(pre_auth.redirect_uri)
+          # Out-of-band "redirects" render the code/token on an authorization
+          # server page for the user to copy manually; there is no redirect
+          # back to the client. RFC 9207 scopes the iss parameter to the
+          # authorization response sent to the client, so - like state, which
+          # oob_redirect also omits - iss is intentionally not carried here.
           auth.oob_redirect
         elsif response_on_fragment
           Authorization::URIBuilder.uri_with_fragment(pre_auth.redirect_uri, body)
         else
           Authorization::URIBuilder.uri_with_query(pre_auth.redirect_uri, body)
         end
+      end
+
+      private
+
+      # RFC 9207 Authorization Server Issuer Identification: advertise the
+      # issuer in the authorization response only when an issuer is configured.
+      def iss_parameter
+        issuer = Doorkeeper.config.issuer
+        issuer.present? ? { iss: issuer } : {}
       end
     end
   end

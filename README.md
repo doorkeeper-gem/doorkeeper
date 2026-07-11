@@ -24,6 +24,7 @@ Supported features:
 - [OAuth 2.0 Threat Model and Security Considerations](https://datatracker.ietf.org/doc/html/rfc6819)
 - [OAuth 2.0 for Native Apps](https://datatracker.ietf.org/doc/html/rfc8252)
 - [Proof Key for Code Exchange by OAuth Public Clients](https://datatracker.ietf.org/doc/html/rfc7636)
+- [OAuth 2.0 Authorization Server Issuer Identification](https://datatracker.ietf.org/doc/html/rfc9207) — opt-in by setting `issuer`; adds the `iss` parameter to authorization redirects returned to the client
 
 ## Table of Contents
 

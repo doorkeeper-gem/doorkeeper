@@ -51,6 +51,22 @@ RSpec.describe "Authorization Server Metadata endpoint" do
       response_status_should_be(200)
       expect(json_response["issuer"]).to eq "http://example.test/"
     end
+
+    it "advertises RFC 9207 iss parameter support" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["authorization_response_iss_parameter_supported"]).to be true
+    end
+  end
+
+  context "without a custom issuer" do
+    it "does not advertise RFC 9207 iss parameter support" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["authorization_response_iss_parameter_supported"]).to be false
+    end
   end
 
   context "with code challenge methods" do

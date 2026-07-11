@@ -46,6 +46,28 @@ feature "Authorization Code Flow Errors" do
       url_should_not_have_param "code"
       url_should_have_param "state", "return-this"
     end
+
+    # RFC 9207: an authorization error response redirected back to the client
+    # must carry the issuer when one is configured.
+    scenario "redirects with iss when an issuer is configured" do
+      config_is_set(:issuer, "https://auth.example.com")
+
+      visit authorization_endpoint_url(client: @client)
+      click_on "Deny"
+
+      i_should_be_on_client_callback @client
+      url_should_have_param "error", "access_denied"
+      url_should_have_param "iss", "https://auth.example.com"
+    end
+
+    scenario "redirects without iss when no issuer is configured" do
+      visit authorization_endpoint_url(client: @client)
+      click_on "Deny"
+
+      i_should_be_on_client_callback @client
+      url_should_have_param "error", "access_denied"
+      url_should_not_have_param "iss"
+    end
   end
 end
 
@@ -82,5 +104,16 @@ RSpec.describe "Authorization Code Flow Errors after authorization" do
       "error" => "invalid_grant",
       "error_description" => translated_error_message("invalid_grant"),
     )
+  end
+
+  # RFC 9207 scopes the iss parameter to authorization responses. Token
+  # endpoint errors share ErrorResponse but must not leak iss even when an
+  # issuer is configured.
+  it "omits iss from token endpoint errors even when an issuer is configured" do
+    config_is_set(:issuer, "https://auth.example.com")
+
+    post token_endpoint_url, params: token_endpoint_params(code: "invalid", client: @client)
+
+    expect(json_response).not_to have_key("iss")
   end
 end
