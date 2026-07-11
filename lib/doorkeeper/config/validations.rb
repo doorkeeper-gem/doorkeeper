@@ -16,6 +16,8 @@ module Doorkeeper
         validate_pkce_code_challenge_methods
         validate_custom_metadata
         validate_refresh_token_flow
+        validate_issuer_format
+        validate_issuer_metadata_discoverability
       end
 
       private
@@ -145,6 +147,71 @@ module Doorkeeper
           "Configure use_refresh_token to issue refresh tokens (the refresh_token " \
           "grant flow is then enabled automatically).",
         )
+      end
+
+      # Warn when a configured issuer is not RFC-compliant. RFC 8414 (the
+      # metadata issuer) and RFC 9207 (the authorization response iss parameter)
+      # both require an https URL with a host and no query or fragment component.
+      # The value is still used as-is - this is a warning, not a hard failure, so
+      # local setups using e.g. http://localhost keep working - but a
+      # non-compliant issuer produces responses that strict clients may reject.
+      def validate_issuer_format
+        return if issuer.blank?
+
+        uri =
+          begin
+            URI.parse(issuer.to_s)
+          rescue URI::InvalidURIError
+            nil
+          end
+
+        return if uri.is_a?(URI::HTTPS) && uri.host.present? &&
+                  uri.query.nil? && uri.fragment.nil?
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] issuer #{redacted_issuer.inspect} is not RFC-compliant: " \
+          "RFC 8414 and RFC 9207 require an https URL with a host and no query " \
+          "or fragment component. It is still advertised in the metadata and " \
+          "emitted as the iss parameter as-is, but strict clients may reject it.",
+        )
+      end
+
+      # Warn when a path-bearing issuer cannot be discovered. RFC 8414 clients
+      # build the metadata URL by inserting the well-known path into the issuer,
+      # so an issuer of https://host/tenant is looked up at
+      # https://host/.well-known/oauth-authorization-server/tenant. Doorkeeper
+      # only serves the document at the root well-known path, so such a value is
+      # not discoverable (and its advertised issuer would not match the lookup).
+      # This is a separate concern from validate_issuer_format: a path component
+      # is valid per RFC 8414, just unsupported by Doorkeeper's fixed route.
+      def validate_issuer_metadata_discoverability
+        return if issuer.blank?
+
+        uri =
+          begin
+            URI.parse(issuer.to_s)
+          rescue URI::InvalidURIError
+            nil
+          end
+
+        return if uri&.host.blank?
+        return if uri.path.blank? || uri.path == "/"
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] issuer #{redacted_issuer.inspect} has a path component, but " \
+          "Doorkeeper serves its RFC 8414 metadata only at the root " \
+          "/.well-known/oauth-authorization-server. RFC 8414 clients derive the " \
+          "metadata URL from the issuer path (…/.well-known/" \
+          "oauth-authorization-server#{uri.path}), so they will not discover the " \
+          "document. Use a host-only issuer, or route the derived well-known path " \
+          "to Doorkeeper.",
+        )
+      end
+
+      # Redact any userinfo (e.g. a misconfigured user:pass@host) before the
+      # issuer is written to the log, so credentials are not leaked there.
+      def redacted_issuer
+        issuer.to_s.sub(%r{//[^/@]*@}, "//***@")
       end
     end
   end
