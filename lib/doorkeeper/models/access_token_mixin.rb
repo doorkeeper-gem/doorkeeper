@@ -147,6 +147,31 @@ module Doorkeeper
         matching_tokens.max_by(&:created_at)
       end
 
+      # Checks whether a candidate token for reuse matches the refresh token
+      # requirement of the current request.
+      #
+      # The candidate's refresh token presence must match what the request asks
+      # for, in both directions. A request that expects a refresh token (e.g. an
+      # authorization_code or password grant while `use_refresh_token` is
+      # enabled) must not reuse a token issued without one, or the response would
+      # silently omit the refresh token. Conversely, a request that does not ask
+      # for a refresh token must not reuse a token that carries one, or the
+      # response would return a refresh token the request never requested (this
+      # is reachable when `refresh_token_enabled` is a per-request callable).
+      # When they don't match a fresh token is issued instead.
+      #
+      # @param access_token [Doorkeeper::AccessToken]
+      #   the candidate token for reuse
+      # @param token_attributes [Hash]
+      #   attributes for the token being requested
+      #
+      # @return [Boolean] true if the candidate token's refresh token presence
+      #   matches the request's refresh token requirement, false otherwise
+      #
+      def refresh_token_matches?(access_token, token_attributes)
+        access_token.refresh_token.present? == !!token_attributes[:use_refresh_token]
+      end
+
       # Checks whether the token scopes match the scopes from the parameters
       #
       # @param token_scopes [#to_s]
@@ -225,7 +250,8 @@ module Doorkeeper
             application, resource_owner, scopes, custom_attributes: custom_attributes, include_expired: false,
           )
 
-          return access_token if access_token&.reusable?
+          return access_token if access_token&.reusable? &&
+                                 refresh_token_matches?(access_token, token_attributes)
         end
 
         create_for(

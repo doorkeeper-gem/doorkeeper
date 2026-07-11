@@ -668,6 +668,87 @@ RSpec.describe Doorkeeper::AccessToken do
     end
   end
 
+  describe ".find_or_create_for" do
+    let(:resource_owner) { FactoryBot.create :resource_owner }
+    let(:application)    { FactoryBot.create :application, scopes: "public write" }
+    let(:scopes)         { Doorkeeper::OAuth::Scopes.from_string("public write") }
+    let(:default_attributes) do
+      {
+        application_id: application.id,
+        resource_owner_id: resource_owner.id,
+        resource_owner_type: resource_owner.class.name,
+        scopes: scopes.to_s,
+      }
+    end
+
+    before do
+      default_scopes_exist(*scopes.all)
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        reuse_access_token
+      end
+    end
+
+    context "when the request expects a refresh token" do
+      it "reuses a matching token that already has a refresh token" do
+        existing = FactoryBot.create :access_token, default_attributes.merge(use_refresh_token: true)
+
+        expect do
+          token = described_class.find_or_create_for(
+            application: application, resource_owner: resource_owner,
+            scopes: scopes, use_refresh_token: true,
+          )
+          expect(token).to eq(existing)
+        end.not_to(change { described_class.count })
+      end
+
+      it "does not reuse a matching token that has no refresh token" do
+        existing = FactoryBot.create :access_token, default_attributes.merge(use_refresh_token: false)
+
+        token = nil
+        expect do
+          token = described_class.find_or_create_for(
+            application: application, resource_owner: resource_owner,
+            scopes: scopes, use_refresh_token: true,
+          )
+        end.to(change { described_class.count }.by(1))
+
+        expect(token).not_to eq(existing)
+        expect(token.plaintext_refresh_token).to be_present
+      end
+    end
+
+    context "when the request does not expect a refresh token" do
+      it "reuses a matching token that has no refresh token" do
+        existing = FactoryBot.create :access_token, default_attributes.merge(use_refresh_token: false)
+
+        expect do
+          token = described_class.find_or_create_for(
+            application: application, resource_owner: resource_owner,
+            scopes: scopes, use_refresh_token: false,
+          )
+          expect(token).to eq(existing)
+        end.not_to(change { described_class.count })
+      end
+
+      it "does not reuse a matching token that has a refresh token" do
+        existing = FactoryBot.create :access_token, default_attributes.merge(use_refresh_token: true)
+        expect(existing.refresh_token).to be_present
+
+        token = nil
+        expect do
+          token = described_class.find_or_create_for(
+            application: application, resource_owner: resource_owner,
+            scopes: scopes, use_refresh_token: false,
+          )
+        end.to(change { described_class.count }.by(1))
+
+        expect(token).not_to eq(existing)
+        expect(token.plaintext_refresh_token).to be_blank
+      end
+    end
+  end
+
   describe "#as_json" do
     let(:token) { FactoryBot.create(:access_token) }
     let(:token_hash) do

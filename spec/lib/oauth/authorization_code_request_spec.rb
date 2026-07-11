@@ -127,6 +127,34 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
     expect { request.authorize }.to change { Doorkeeper::AccessToken.count }.by(1)
   end
 
+  # Regression for #1731: with token reuse enabled and refresh tokens expected,
+  # a matching token issued without a refresh token must not be reused - a fresh
+  # token is created so the response still carries a refresh token.
+  it "creates a token with a refresh token instead of reusing a refresh token-less one" do
+    scopes = grant.scopes
+    allow(server).to receive(:refresh_token_enabled?).and_return(true)
+
+    Doorkeeper.configure do
+      orm DOORKEEPER_ORM
+      reuse_access_token
+      use_refresh_token
+      default_scopes(*scopes)
+    end
+
+    FactoryBot.create(
+      :access_token,
+      application_id: client.id,
+      resource_owner_id: grant.resource_owner_id,
+      resource_owner_type: grant.resource_owner_type,
+      scopes: grant.scopes.to_s,
+      use_refresh_token: false,
+    )
+
+    response = nil
+    expect { response = request.authorize }.to change { Doorkeeper::AccessToken.count }.by(1)
+    expect(response.token.plaintext_refresh_token).to be_present
+  end
+
   it "calls configured request callback methods" do
     expect(Doorkeeper.configuration.before_successful_strategy_response)
       .to receive(:call).with(request).once
