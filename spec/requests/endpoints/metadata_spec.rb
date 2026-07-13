@@ -203,9 +203,22 @@ RSpec.describe "Authorization Server Metadata endpoint" do
     end
   end
 
+  context "with a duplicated client_authentication method configured" do
+    before do
+      config_is_set(:client_authentication, %i[client_secret_basic client_secret_post client_secret_basic])
+    end
+
+    it "advertises each method once" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["token_endpoint_auth_methods_supported"])
+        .to eq(%w[client_secret_basic client_secret_post])
+    end
+  end
+
   context "with a custom client_authentication method registered by an extension" do
     before do
-      @original_methods = Doorkeeper::ClientAuthentication::Registry.registered_methods.deep_dup
       Doorkeeper::ClientAuthentication.register(
         :private_key_jwt,
         double(matches_request?: false, authenticate: nil),
@@ -214,7 +227,9 @@ RSpec.describe "Authorization Server Metadata endpoint" do
     end
 
     after do
-      Doorkeeper::ClientAuthentication::Registry.registered_methods = @original_methods
+      # The example only adds this one method, so removing it restores the
+      # registry in-place without replacing the Hash other code may hold.
+      Doorkeeper::ClientAuthentication::Registry.registered_methods.delete(:private_key_jwt)
     end
 
     it "advertises the custom method alongside the built-ins" do
