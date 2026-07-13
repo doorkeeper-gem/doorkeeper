@@ -105,7 +105,11 @@ module Doorkeeper
       end
 
       def validate_pkce_code_challenge_methods
-        return if pkce_code_challenge_methods.all? { |method| method.match?(/\A(?:plain|S256)\z/) }
+        methods = pkce_code_challenge_methods.map(&:to_s)
+        if methods.all? { |method| method.match?(/\A(?:plain|S256)\z/) }
+          @pkce_code_challenge_methods = methods
+          return
+        end
 
         ::Rails.logger.warn(
           "[DOORKEEPER] You have configured an invalid value for pkce_code_challenge_methods option. " \

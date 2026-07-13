@@ -264,6 +264,15 @@ RSpec.describe Doorkeeper::Config do
       expect(config.pkce_code_challenge_methods).to eq(["S256"])
     end
 
+    it "normalizes symbols to strings" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        pkce_code_challenge_methods [:S256]
+      end
+
+      expect(config.pkce_code_challenge_methods).to eq(["S256"])
+    end
+
     it "resets to the default when an unknown method is configured" do
       expect(Rails.logger).to receive(:warn).with(/pkce_code_challenge_methods/)
 
