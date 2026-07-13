@@ -273,6 +273,17 @@ RSpec.describe Doorkeeper::Config do
       expect(config.pkce_code_challenge_methods).to eq(["S256"])
     end
 
+    it "leaves the option undefined when it was not explicitly configured" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+
+      # Validation must not flip the "was it explicitly set?" signal that
+      # instance_variable_defined? carries for config options.
+      expect(config.instance_variable_defined?(:@pkce_code_challenge_methods)).to be(false)
+      expect(config.pkce_code_challenge_methods).to eq(%w[plain S256])
+    end
+
     it "resets to the default when an unknown method is configured" do
       expect(Rails.logger).to receive(:warn).with(/pkce_code_challenge_methods/)
 

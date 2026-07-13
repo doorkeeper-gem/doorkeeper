@@ -107,7 +107,11 @@ module Doorkeeper
       def validate_pkce_code_challenge_methods
         methods = pkce_code_challenge_methods.map(&:to_s)
         if methods.all? { |method| method.match?(/\A(?:plain|S256)\z/) }
-          @pkce_code_challenge_methods = methods
+          # Persist the normalized (string) values only when the option was
+          # explicitly configured — the default is already normalized, and an
+          # unconfigured option should stay undefined rather than have
+          # validation flip its instance_variable_defined? signal.
+          @pkce_code_challenge_methods = methods if instance_variable_defined?(:@pkce_code_challenge_methods)
           return
         end
 
