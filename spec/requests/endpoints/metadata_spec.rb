@@ -176,4 +176,88 @@ RSpec.describe "Authorization Server Metadata endpoint" do
       expect(json_response["app_registration_url"]).to eq("app_registration_url.example")
     end
   end
+
+  context "with explicit client_authentication configuration" do
+    before do
+      config_is_set(:client_authentication, %i[client_secret_basic])
+    end
+
+    it "returns only the configured authentication methods" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["token_endpoint_auth_methods_supported"]).to eq(%w[client_secret_basic])
+    end
+  end
+
+  context "with an unregistered client_authentication method configured" do
+    before do
+      config_is_set(:client_authentication, %i[client_secret_basic private_key_jwt])
+    end
+
+    it "does not advertise the method the resolver ignores" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["token_endpoint_auth_methods_supported"]).to eq(%w[client_secret_basic])
+    end
+  end
+
+  context "with a duplicated client_authentication method configured" do
+    before do
+      config_is_set(:client_authentication, %i[client_secret_basic client_secret_post client_secret_basic])
+    end
+
+    it "advertises each method once" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["token_endpoint_auth_methods_supported"])
+        .to eq(%w[client_secret_basic client_secret_post])
+    end
+  end
+
+  context "with a custom client_authentication method registered by an extension" do
+    before do
+      Doorkeeper::ClientAuthentication.register(
+        :private_key_jwt,
+        double(matches_request?: false, authenticate: nil),
+      )
+      config_is_set(:client_authentication, %i[client_secret_basic private_key_jwt])
+    end
+
+    after do
+      # The example only adds this one method, so removing it restores the
+      # registry in-place without replacing the Hash other code may hold.
+      Doorkeeper::ClientAuthentication::Registry.registered_methods.delete(:private_key_jwt)
+    end
+
+    it "advertises the custom method alongside the built-ins" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["token_endpoint_auth_methods_supported"])
+        .to eq(%w[client_secret_basic private_key_jwt])
+    end
+  end
+
+  context "with a deprecated client_credentials-only configuration" do
+    before do
+      # The legacy DSL converts client_credentials names and stores them in
+      # @client_credentials_methods (see Config::Builder#client_credentials);
+      # derive the stored value through the real conversion so this example
+      # stays coupled to what `client_credentials :from_basic` actually stores.
+      config_is_set(
+        :client_credentials_methods,
+        Doorkeeper::ClientAuthentication.from_legacy_client_credentials(%i[from_basic]),
+      )
+    end
+
+    it "advertises the legacy-derived methods instead of the defaults" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["token_endpoint_auth_methods_supported"]).to eq(%w[client_secret_basic])
+    end
+  end
 end

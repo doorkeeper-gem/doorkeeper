@@ -125,9 +125,16 @@ module Doorkeeper
         config.token_grant_types
       end
 
-      # FIXME: https://github.com/doorkeeper-gem/doorkeeper/pull/1840
+      # The resolved methods (rather than the raw client_authentication names)
+      # reflect what the server actually accepts: unregistered names are
+      # dropped by the resolver, and a deprecated client_credentials-only
+      # configuration is honored as the source of truth. Legacy callable
+      # extractors have no registered method name a client could use, so they
+      # are not advertised.
       def token_endpoint_auth_methods_supported
-        %w[none client_secret_basic client_secret_post]
+        config.client_authentication_methods.filter_map do |method|
+          method.name.to_s if Doorkeeper::ClientAuthentication.get(method.name)
+        end
       end
 
       def code_challenge_methods_supported

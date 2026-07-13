@@ -666,10 +666,14 @@ module Doorkeeper
                     !instance_variable_defined?(:@client_authentication)
       names = only_legacy ? @client_credentials_methods : client_authentication
 
+      # Names configured more than once resolve to the same registered Method
+      # instance, so identity-based #uniq drops the duplicates (which would
+      # otherwise be matched against requests twice and advertised twice in
+      # the server metadata) while distinct legacy callable adapters survive.
       @client_authentication_methods = names.filter_map do |name|
         # Legacy callables are already wrapped as Method adapters (see #client_credentials).
         name.is_a?(Doorkeeper::ClientAuthentication::Method) ? name : Doorkeeper::ClientAuthentication.get(name)
-      end
+      end.uniq
     end
 
     # The configured client authentication method names (RFC 6749 §2.3),
