@@ -42,14 +42,14 @@ RSpec.describe "Authorization Server Metadata endpoint" do
 
   context "with custom issuer" do
     before do
-      config_is_set(:issuer, "http://example.test/")
+      config_is_set(:issuer, "https://example.test")
     end
 
     it "returns the configured issuer" do
       get "/.well-known/oauth-authorization-server"
 
       response_status_should_be(200)
-      expect(json_response["issuer"]).to eq "http://example.test/"
+      expect(json_response["issuer"]).to eq "https://example.test"
     end
 
     it "advertises RFC 9207 iss parameter support" do
@@ -65,6 +65,20 @@ RSpec.describe "Authorization Server Metadata endpoint" do
       get "/.well-known/oauth-authorization-server"
 
       response_status_should_be(200)
+      expect(json_response["authorization_response_iss_parameter_supported"]).to be false
+    end
+  end
+
+  context "with a blank issuer (e.g. an unset env var)" do
+    before do
+      config_is_set(:issuer, "")
+    end
+
+    it "falls back to the request base URL and does not advertise iss support" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["issuer"]).to eq "http://www.example.com"
       expect(json_response["authorization_response_iss_parameter_supported"]).to be false
     end
   end

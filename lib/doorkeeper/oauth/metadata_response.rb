@@ -14,7 +14,10 @@ module Doorkeeper
       def body
         @body ||= begin
           data = {
-            issuer: issuer || @base_url,
+            # presence: a blank issuer (e.g. an unset env var) must fall back
+            # to base_url, matching the issuer.present? condition below so the
+            # two fields cannot disagree.
+            issuer: issuer.presence || @base_url,
             # Only advertise endpoints whose controllers are installed. A
             # controller disabled through skip_controllers has no routes mapping,
             # so endpoint_for resolves it to nil and it is dropped below.
