@@ -189,4 +189,33 @@ RSpec.describe "Authorization Server Metadata endpoint" do
       expect(json_response["token_endpoint_auth_methods_supported"]).to eq(%w[client_secret_basic])
     end
   end
+
+  context "with an unregistered client_authentication method configured" do
+    before do
+      config_is_set(:client_authentication, %i[client_secret_basic private_key_jwt])
+    end
+
+    it "does not advertise the method the resolver ignores" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["token_endpoint_auth_methods_supported"]).to eq(%w[client_secret_basic])
+    end
+  end
+
+  context "with a deprecated client_credentials-only configuration" do
+    before do
+      # The legacy DSL converts client_credentials names and stores them in
+      # @client_credentials_methods (see Config::Builder#client_credentials);
+      # emulate a `client_credentials :from_basic` configuration.
+      config_is_set(:client_credentials_methods, %i[client_secret_basic])
+    end
+
+    it "advertises the legacy-derived methods instead of the defaults" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["token_endpoint_auth_methods_supported"]).to eq(%w[client_secret_basic])
+    end
+  end
 end
