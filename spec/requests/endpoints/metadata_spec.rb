@@ -203,12 +203,39 @@ RSpec.describe "Authorization Server Metadata endpoint" do
     end
   end
 
+  context "with a custom client_authentication method registered by an extension" do
+    before do
+      @original_methods = Doorkeeper::ClientAuthentication::Registry.registered_methods.deep_dup
+      Doorkeeper::ClientAuthentication.register(
+        :private_key_jwt,
+        double(matches_request?: false, authenticate: nil),
+      )
+      config_is_set(:client_authentication, %i[client_secret_basic private_key_jwt])
+    end
+
+    after do
+      Doorkeeper::ClientAuthentication::Registry.registered_methods = @original_methods
+    end
+
+    it "advertises the custom method alongside the built-ins" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["token_endpoint_auth_methods_supported"])
+        .to eq(%w[client_secret_basic private_key_jwt])
+    end
+  end
+
   context "with a deprecated client_credentials-only configuration" do
     before do
       # The legacy DSL converts client_credentials names and stores them in
       # @client_credentials_methods (see Config::Builder#client_credentials);
-      # emulate a `client_credentials :from_basic` configuration.
-      config_is_set(:client_credentials_methods, %i[client_secret_basic])
+      # derive the stored value through the real conversion so this example
+      # stays coupled to what `client_credentials :from_basic` actually stores.
+      config_is_set(
+        :client_credentials_methods,
+        Doorkeeper::ClientAuthentication.from_legacy_client_credentials(%i[from_basic]),
+      )
     end
 
     it "advertises the legacy-derived methods instead of the defaults" do
