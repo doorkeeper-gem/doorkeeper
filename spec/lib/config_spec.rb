@@ -502,6 +502,28 @@ RSpec.describe Doorkeeper::Config do
       expect(config.client_authentication_methods.map(&:name)).to contain_exactly(:client_secret_basic)
     end
 
+    it "drops duplicated method names so each method resolves once" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication [:client_secret_basic, :client_secret_post, :client_secret_basic]
+      end
+
+      expect(config.client_authentication_methods.map(&:name))
+        .to eq(%i[client_secret_basic client_secret_post])
+    end
+
+    it "does not collapse distinct legacy callables sharing the adapter name" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_credentials ->(request) { [request, "one"] }, ->(request) { [request, "two"] }
+      end
+
+      # Both adapters are named :legacy_callable; deduplication is by
+      # resolved Method identity, so neither of them may be dropped.
+      expect(config.client_authentication_methods.map(&:name))
+        .to eq(%i[legacy_callable legacy_callable])
+    end
+
     it "resolves a legacy callable extractor through its adapter" do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
