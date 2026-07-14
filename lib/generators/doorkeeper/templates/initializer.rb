@@ -557,7 +557,24 @@ Doorkeeper.configure do
   # above. The two options below let you customize that document.
   #
   # `issuer` is the authorization server's issuer identifier. When left as nil
-  # (the default) the request base URL is used.
+  # (the default) the request base URL is used for the metadata `issuer` field
+  # only. Note the asymmetry: RFC 9207 below is gated on an explicitly
+  # configured issuer, so leaving it nil still advertises a metadata `issuer`
+  # (the base URL) while `authorization_response_iss_parameter_supported` stays
+  # false and no `iss` parameter is emitted.
+  #
+  # Configuring an issuer also enables RFC 9207 (Authorization Server Issuer
+  # Identification): the `iss` parameter is added to the authorization
+  # responses redirected back to the client - both successful responses and
+  # error responses such as access_denied - and advertised via the
+  # `authorization_response_iss_parameter_supported` metadata field. Clients
+  # that parse the authorization redirect will start seeing this parameter.
+  # Per RFC 8414 and RFC 9207 the value should be an https URL with no query or
+  # fragment; a non-compliant value logs a warning at boot but is still used.
+  # Prefer a host-only issuer: Doorkeeper serves its metadata only at the root
+  # /.well-known/oauth-authorization-server, so a path-bearing issuer (e.g.
+  # https://auth.example.com/tenant) is not discoverable by RFC 8414 clients and
+  # also logs a warning.
   #
   # issuer "https://auth.example.com"
   #
@@ -565,6 +582,12 @@ Doorkeeper.configure do
   # it to advertise additional or non-default metadata fields, for example a
   # `userinfo_endpoint` (which Doorkeeper itself leaves null) when pairing with
   # an OpenID Connect extension.
+  #
+  # The merge happens last, so it can also override computed fields - including
+  # `authorization_response_iss_parameter_supported`, which Doorkeeper derives
+  # from whether `issuer` is set. Overriding a computed field is allowed but is
+  # your responsibility to keep consistent with the server's actual behaviour
+  # (e.g. don't advertise iss support as true if no `issuer` is configured).
   #
   # custom_metadata(
   #   userinfo_endpoint: "https://auth.example.com/oauth/userinfo",

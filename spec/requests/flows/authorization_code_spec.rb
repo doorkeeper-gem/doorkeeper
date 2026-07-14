@@ -22,6 +22,21 @@ feature "Authorization Code Flow" do
     url_should_have_param("code", Doorkeeper::AccessGrant.first.token)
     url_should_not_have_param("state")
     url_should_not_have_param("error")
+    url_should_not_have_param("iss")
+  end
+
+  # RFC 9207: a successful authorization response carries the issuer when one
+  # is configured.
+  scenario "resource owner authorizes the client with an issuer configured" do
+    config_is_set(:issuer, "https://auth.example.com")
+
+    visit authorization_endpoint_url(client: @client)
+    click_on "Authorize"
+
+    i_should_be_on_client_callback(@client)
+
+    url_should_have_param("code", Doorkeeper::AccessGrant.first.token)
+    url_should_have_param("iss", "https://auth.example.com")
   end
 
   context "when configured to check application supported grant flow" do
@@ -109,6 +124,20 @@ feature "Authorization Code Flow" do
     url_should_have_param("code", Doorkeeper::AccessGrant.first.token)
     i_should_see "Authorization code:"
     i_should_see Doorkeeper::AccessGrant.first.token
+  end
+
+  # RFC 9207 scopes the iss parameter to the redirect back to the client. The
+  # oob flow shows the code on an authorization server page instead, so iss is
+  # not carried even when an issuer is configured.
+  scenario "resource owner authorizes using oob url with an issuer configured" do
+    config_is_set(:issuer, "https://auth.example.com")
+    @client.redirect_uri = "urn:ietf:wg:oauth:2.0:oob"
+    @client.save!
+    visit authorization_endpoint_url(client: @client)
+    click_on "Authorize"
+
+    url_should_have_param("code", Doorkeeper::AccessGrant.first.token)
+    url_should_not_have_param("iss")
   end
 
   scenario "resource owner authorizes the client with state parameter set" do

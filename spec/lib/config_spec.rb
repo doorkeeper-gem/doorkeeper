@@ -864,6 +864,93 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
+  describe "issuer format validation" do
+    def configure_issuer(value)
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        issuer value
+      end
+    end
+
+    it "does not warn when no issuer is configured" do
+      expect(Rails.logger).not_to receive(:warn).with(/is not RFC-compliant/)
+
+      Doorkeeper.configure { orm DOORKEEPER_ORM }
+    end
+
+    it "does not warn for a compliant host-only https issuer" do
+      expect(Rails.logger).not_to receive(:warn)
+
+      configure_issuer "https://auth.example.com"
+    end
+
+    it "does not warn for a host-only https issuer with a root path" do
+      expect(Rails.logger).not_to receive(:warn)
+
+      configure_issuer "https://auth.example.com/"
+    end
+
+    it "warns for a non-https issuer" do
+      allow(Rails.logger).to receive(:warn)
+      expect(Rails.logger).to receive(:warn).with(/is not RFC-compliant/)
+
+      configure_issuer "http://auth.example.com"
+    end
+
+    it "warns for an issuer with a query component" do
+      allow(Rails.logger).to receive(:warn)
+      expect(Rails.logger).to receive(:warn).with(/is not RFC-compliant/)
+
+      configure_issuer "https://auth.example.com?foo=bar"
+    end
+
+    it "warns for an issuer with a fragment component" do
+      allow(Rails.logger).to receive(:warn)
+      expect(Rails.logger).to receive(:warn).with(/is not RFC-compliant/)
+
+      configure_issuer "https://auth.example.com#frag"
+    end
+
+    ["https:foo", "https:///foo", "https://"].each do |value|
+      it "warns for an https issuer without a host (#{value.inspect})" do
+        allow(Rails.logger).to receive(:warn)
+        expect(Rails.logger).to receive(:warn).with(/is not RFC-compliant/)
+
+        configure_issuer value
+      end
+    end
+
+    it "redacts userinfo from the warning so credentials are not logged" do
+      allow(Rails.logger).to receive(:warn)
+      expect(Rails.logger).to receive(:warn).with(
+        satisfy { |msg| msg.include?("//***@") && !msg.include?("s3cret") },
+      )
+
+      configure_issuer "http://user:s3cret@auth.example.com"
+    end
+
+    context "with a path-bearing issuer (metadata discoverability)" do
+      it "warns that a path-bearing issuer is not discoverable" do
+        allow(Rails.logger).to receive(:warn)
+        expect(Rails.logger).to receive(:warn).with(/has a path component/)
+
+        configure_issuer "https://auth.example.com/tenant"
+      end
+
+      it "does not warn for a host-only issuer" do
+        expect(Rails.logger).not_to receive(:warn).with(/has a path component/)
+
+        configure_issuer "https://auth.example.com"
+      end
+
+      it "does not warn for a root path" do
+        expect(Rails.logger).not_to receive(:warn).with(/has a path component/)
+
+        configure_issuer "https://auth.example.com/"
+      end
+    end
+  end
+
   describe "access_token_generator" do
     it "is 'Doorkeeper::OAuth::Helpers::UniqueToken' by default" do
       expect(Doorkeeper.configuration.access_token_generator).to(

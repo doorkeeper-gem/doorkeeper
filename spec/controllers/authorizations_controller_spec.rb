@@ -344,6 +344,24 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
   describe "POST #create in API mode with errors" do
     before { config_is_set(:api_only, true) }
 
+    # RFC 9207 requires iss only on responses returned to the client. A
+    # non-redirectable error is rendered to the user rather than redirected to
+    # the client, so it must not carry iss even when an issuer is configured.
+    context "when an issuer is configured and the error is non-redirectable" do
+      before do
+        config_is_set(:issuer, "https://auth.example.com")
+        post :create, params: {
+          client_id: "",
+          response_type: "token",
+          redirect_uri: client.redirect_uri,
+        }
+      end
+
+      it "omits the iss parameter from the rendered error" do
+        expect(response_json_body).not_to have_key("iss")
+      end
+    end
+
     context "when missing client_id" do
       before do
         post :create, params: {
@@ -509,6 +527,45 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
 
       it "does not issue any access token" do
         expect(Doorkeeper::AccessToken.all).to be_empty
+      end
+    end
+
+    # RFC 9207: a redirectable authorization error returned to the client must
+    # carry iss regardless of the response mode the client requested.
+    context "when an issuer is configured for a redirectable error" do
+      before { config_is_set(:issuer, "https://auth.example.com") }
+
+      context "with a query/fragment redirect" do
+        before do
+          default_scopes_exist :public
+          post :create, params: {
+            client_id: client.uid,
+            response_type: "token",
+            scope: "invalid",
+            redirect_uri: client.redirect_uri,
+          }
+        end
+
+        it "includes iss in the redirect uri" do
+          expect(response_json_body["redirect_uri"]).to include("iss=https%3A%2F%2Fauth.example.com")
+        end
+      end
+
+      context "with a form_post response" do
+        before do
+          default_scopes_exist :public
+          post :create, params: {
+            client_id: client.uid,
+            response_type: "token",
+            scope: "invalid",
+            redirect_uri: client.redirect_uri,
+            response_mode: "form_post",
+          }
+        end
+
+        it "includes iss in the form_post body" do
+          expect(response_json_body["body"]["iss"]).to eq("https://auth.example.com")
+        end
       end
     end
   end

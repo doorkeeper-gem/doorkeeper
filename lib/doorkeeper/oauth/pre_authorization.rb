@@ -49,13 +49,21 @@ module Doorkeeper
       end
 
       def error_response
+        # RFC 9207: authorization error responses advertise the issuer. Passing
+        # the configured issuer here (nil when unset) scopes the iss parameter
+        # to the authorization endpoint only.
         if error == Errors::InvalidRequest
           OAuth::InvalidRequestResponse.from_request(
             self,
             response_on_fragment: response_on_fragment?,
+            issuer: Doorkeeper.config.issuer,
           )
         else
-          OAuth::ErrorResponse.from_request(self, response_on_fragment: response_on_fragment?)
+          OAuth::ErrorResponse.from_request(
+            self,
+            response_on_fragment: response_on_fragment?,
+            issuer: Doorkeeper.config.issuer,
+          )
         end
       end
 

@@ -38,6 +38,7 @@ module Doorkeeper
         @exception_class = attributes[:exception_class]
         @redirect_uri = attributes[:redirect_uri]
         @response_on_fragment = attributes[:response_on_fragment]
+        @issuer = attributes[:issuer]
       end
 
       def body
@@ -45,6 +46,14 @@ module Doorkeeper
           error: name,
           error_description: description,
           state: state,
+          # RFC 9207 scopes the issuer to authorization error responses sent to
+          # the client, i.e. the ones redirected back to its redirect_uri. It is
+          # supplied only by the authorization endpoint (never token,
+          # introspection or protected resource), and gated on redirectable? so
+          # non-redirectable errors (invalid_client, invalid_redirect_uri) and
+          # out-of-band flows - which render to the user instead of redirecting
+          # to the client - do not carry it. Blank values are dropped below.
+          iss: (@issuer if redirectable?),
         }.reject { |_, v| v.blank? }
       end
 

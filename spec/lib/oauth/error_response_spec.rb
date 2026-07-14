@@ -58,6 +58,71 @@ RSpec.describe Doorkeeper::OAuth::ErrorResponse do
       it { expect(body).to have_key(:error_description) }
       it { expect(body).to have_key(:state) }
     end
+
+    context "when an issuer is supplied for an error redirected to the client" do
+      subject(:body) do
+        described_class.new(
+          name: :access_denied,
+          state: :some_state,
+          redirect_uri: "https://client.example.com/cb",
+          issuer: "https://auth.example.com",
+        ).body
+      end
+
+      it "includes the iss parameter" do
+        expect(body).to include(iss: "https://auth.example.com")
+      end
+    end
+
+    context "when no issuer is supplied" do
+      it "omits the iss parameter" do
+        expect(body).not_to have_key(:iss)
+      end
+    end
+
+    # RFC 9207 scopes the iss parameter to authorization responses. A configured
+    # issuer alone must NOT leak iss into token/introspection/protected-resource
+    # error bodies, which share this class but never supply an issuer.
+    context "when an issuer is configured but not supplied" do
+      before { config_is_set(:issuer, "https://auth.example.com") }
+
+      it "omits the iss parameter" do
+        expect(body).not_to have_key(:iss)
+      end
+    end
+
+    # RFC 9207 requires iss only on responses returned to the client. Errors
+    # that are not redirected to the client - non-redirectable errors and
+    # out-of-band flows, which render to the user instead - must not carry it.
+    context "when an issuer is supplied for a non-redirectable error" do
+      subject(:body) do
+        described_class.new(
+          name: :invalid_client,
+          state: :some_state,
+          redirect_uri: "https://client.example.com/cb",
+          issuer: "https://auth.example.com",
+        ).body
+      end
+
+      it "omits the iss parameter" do
+        expect(body).not_to have_key(:iss)
+      end
+    end
+
+    context "when an issuer is supplied for an out-of-band error" do
+      subject(:body) do
+        described_class.new(
+          name: :access_denied,
+          state: :some_state,
+          redirect_uri: Doorkeeper::OAuth::NonStandard::IETF_WG_OAUTH2_OOB,
+          issuer: "https://auth.example.com",
+        ).body
+      end
+
+      it "omits the iss parameter" do
+        expect(body).not_to have_key(:iss)
+      end
+    end
   end
 
   describe ".headers" do
