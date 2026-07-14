@@ -293,6 +293,14 @@ RSpec.describe Doorkeeper::Application do
         lookup = described_class.by_uid_and_secret(app.uid, plain_secret)
         expect(lookup).to eq(app)
       end
+
+      it "upgrades a plain secret when #secret_matches? falls back to it" do
+        expect(described_class).to receive(:upgrade_fallback_value).and_call_original
+        expect(app.secret_matches?(plain_secret)).to be(true)
+
+        app.reload
+        expect(app.secret).to eq(Doorkeeper::SecretStoring::Sha256Hash.transform_secret(plain_secret))
+      end
     end
 
     it "does not provide access to secret after loading" do
