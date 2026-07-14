@@ -201,6 +201,29 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
         expect(json_response).to include("access_token" => Doorkeeper::AccessToken.first.token)
       end
 
+      # Regression test for #1731: with token reuse enabled, a matching token
+      # that was issued without a refresh token must not be reused when the
+      # current request expects one - the response would otherwise silently
+      # omit the refresh token the client is entitled to.
+      it "issues a fresh token with a refresh token instead of reusing a refresh token-less one" do
+        allow(Doorkeeper.configuration).to receive(:reuse_access_token).and_return(true)
+        config_is_set(:refresh_token_enabled, true)
+
+        existing = client_is_authorized(@client, @resource_owner, use_refresh_token: false)
+        expect(existing.refresh_token).to be_nil
+
+        expect do
+          post token_endpoint_url, params: password_token_endpoint_params(client: @client, resource_owner: @resource_owner)
+        end.to(change { Doorkeeper::AccessToken.count }.by(1))
+
+        token = Doorkeeper::AccessToken.last
+        expect(token).not_to eq(existing)
+        expect(json_response).to include(
+          "access_token" => token.token,
+          "refresh_token" => token.refresh_token,
+        )
+      end
+
       context "with valid, default scope" do
         before do
           default_scopes_exist :public
