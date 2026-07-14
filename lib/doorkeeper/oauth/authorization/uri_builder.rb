@@ -10,7 +10,12 @@ module Doorkeeper
           def uri_with_query(url, parameters = {})
             uri = URI.parse(url)
             original_query = Rack::Utils.parse_query(uri.query)
-            uri.query = build_query(original_query.merge(parameters))
+            # `parse_query` yields string keys while `parameters` uses symbol
+            # keys, so a naive merge cannot dedupe a collision (e.g. a registered
+            # redirect_uri already carrying `state`) and would emit the param
+            # twice. Normalize keys so the response parameters win over any
+            # same-named query already present in the redirect_uri.
+            uri.query = build_query(original_query.merge(parameters.transform_keys(&:to_s)))
             uri.to_s
           end
 

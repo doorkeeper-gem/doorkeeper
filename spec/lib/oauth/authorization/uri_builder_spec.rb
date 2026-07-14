@@ -19,6 +19,19 @@ RSpec.describe Doorkeeper::OAuth::Authorization::URIBuilder do
       expect(uri).to match(/query1=value/)
       expect(uri).to match(/parameter=value/)
     end
+
+    it "does not duplicate a parameter already present in the original query" do
+      uri = described_class.uri_with_query "http://example.com/?state=fixed", code: "abc", state: "user-state"
+      raw_query = URI.parse(uri).query
+      query = Rack::Utils.parse_query(raw_query)
+      param_names = raw_query.split("&").map { |pair| pair.split("=", 2).first }
+
+      # The response parameter must override the one baked into the redirect_uri,
+      # and it must appear exactly once (no `state=fixed&...&state=user-state`).
+      expect(param_names.count("state")).to eq(1)
+      expect(query["state"]).to eq("user-state")
+      expect(query["code"]).to eq("abc")
+    end
   end
 
   describe ".uri_with_fragment" do
