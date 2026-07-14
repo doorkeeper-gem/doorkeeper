@@ -250,6 +250,63 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
+  describe "pkce_code_challenge_methods" do
+    it "is ['plain', 'S256'] by default" do
+      expect(config.pkce_code_challenge_methods).to eq(%w[plain S256])
+    end
+
+    it "can be set to a valid subset" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        pkce_code_challenge_methods ["S256"]
+      end
+
+      expect(config.pkce_code_challenge_methods).to eq(["S256"])
+    end
+
+    it "normalizes symbols to strings" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        pkce_code_challenge_methods [:S256]
+      end
+
+      expect(config.pkce_code_challenge_methods).to eq(["S256"])
+    end
+
+    it "leaves the option undefined when it was not explicitly configured" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+
+      # Validation must not flip the "was it explicitly set?" signal that
+      # instance_variable_defined? carries for config options.
+      expect(config.instance_variable_defined?(:@pkce_code_challenge_methods)).to be(false)
+      expect(config.pkce_code_challenge_methods).to eq(%w[plain S256])
+    end
+
+    it "resets to the default when an unknown method is configured" do
+      expect(Rails.logger).to receive(:warn).with(/pkce_code_challenge_methods/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        pkce_code_challenge_methods ["plain", "invalid"]
+      end
+
+      expect(config.pkce_code_challenge_methods).to eq(%w[plain S256])
+    end
+
+    it "rejects a multi-line value that only matches on one line" do
+      expect(Rails.logger).to receive(:warn).with(/pkce_code_challenge_methods/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        pkce_code_challenge_methods ["plain\ngarbage"]
+      end
+
+      expect(config.pkce_code_challenge_methods).to eq(%w[plain S256])
+    end
+  end
+
   describe "enforce_configured_scopes" do
     it "is false by default" do
       expect(config.enforce_configured_scopes?).to be(false)

@@ -105,7 +105,15 @@ module Doorkeeper
       end
 
       def validate_pkce_code_challenge_methods
-        return if pkce_code_challenge_methods.all? { |method| method =~ /^plain$|^S256$/ }
+        methods = pkce_code_challenge_methods.map(&:to_s)
+        if methods.all? { |method| method.match?(/\A(?:plain|S256)\z/) }
+          # Persist the normalized (string) values only when the option was
+          # explicitly configured — the default is already normalized, and an
+          # unconfigured option should stay undefined rather than have
+          # validation flip its instance_variable_defined? signal.
+          @pkce_code_challenge_methods = methods if instance_variable_defined?(:@pkce_code_challenge_methods)
+          return
+        end
 
         ::Rails.logger.warn(
           "[DOORKEEPER] You have configured an invalid value for pkce_code_challenge_methods option. " \
