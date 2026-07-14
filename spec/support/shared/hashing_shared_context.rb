@@ -38,3 +38,16 @@ shared_context "with application hashing enabled" do
     end
   end
 end
+
+shared_context "with application hashing and fallback lookup enabled" do
+  let(:hashed_or_plain_token_func) do
+    Doorkeeper::SecretStoring::Sha256Hash.method(:transform_secret)
+  end
+
+  before do
+    Doorkeeper.configure do
+      orm DOORKEEPER_ORM
+      hash_application_secrets fallback: :plain
+    end
+  end
+end

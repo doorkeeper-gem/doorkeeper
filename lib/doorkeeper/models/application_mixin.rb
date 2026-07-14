@@ -27,9 +27,8 @@ module Doorkeeper
         app = by_uid(uid)
         return unless app
         return app if secret.blank? && !app.confidential?
-        return unless app.secret_matches?(secret)
 
-        app
+        app if app.secret_matches?(secret)
       end
 
       # Returns an instance of the Doorkeeper::Application with specific UID.
@@ -76,18 +75,26 @@ module Doorkeeper
     # @return [Boolean] Whether the given secret matches the stored secret
     #                of this application.
     #
+    # @note When the secret matches only via the fallback strategy, the stored
+    #       secret is upgraded to the active strategy as a side-effect (mirrors
+    #       the find_by_plaintext_token -> find_by_fallback_token pattern).
+    #
     def secret_matches?(input)
       # return false if either is nil, since secure_compare depends on strings
       # but Application secrets MAY be nil depending on confidentiality.
       return false if input.nil? || secret.nil?
 
+      input = input.to_s
+
       # When matching the secret by comparer function, all is well.
       return true if secret_strategy.secret_matches?(input, secret)
 
-      # When fallback lookup is enabled, ensure applications
-      # with plain secrets can still be found
-      if fallback_secret_strategy
-        fallback_secret_strategy.secret_matches?(input, secret)
+      # When fallback lookup is enabled, ensure applications with plain secrets
+      # can still be found, upgrading the stored secret to the active strategy
+      # on a successful match.
+      if fallback_secret_strategy&.secret_matches?(input, secret)
+        self.class.upgrade_fallback_value(self, :secret, input)
+        true
       else
         false
       end
