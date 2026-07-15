@@ -197,6 +197,54 @@ RSpec.describe "Refresh Token Flow" do
     end
   end
 
+  # Regression specs for https://github.com/doorkeeper-gem/doorkeeper/issues/1686
+  #
+  # In `application/x-www-form-urlencoded` payloads (and query strings) a "+"
+  # is the encoding of a space, so Rack turns `scope=public+write` into the
+  # space-delimited scope list "public write" before Doorkeeper sees it. A
+  # literal "+" inside a scope value has to be sent percent-encoded as %2B and
+  # names a different, single scope (RFC 6749 §3.3 allows "+" in scope tokens).
+  describe "refreshing the token with '+' in the scope parameter" do
+    before do
+      @token = FactoryBot.create(
+        :access_token,
+        application: @client,
+        resource_owner_id: resource_owner.id,
+        resource_owner_type: resource_owner.class.name,
+        use_refresh_token: true,
+        scopes: "public write",
+      )
+    end
+
+    it "treats '+' between scopes as an encoded space" do
+      post refresh_token_endpoint_url,
+           params: raw_form_refresh_params(scope: "public+write"),
+           headers: { "CONTENT_TYPE" => "application/x-www-form-urlencoded" }
+
+      new_token = Doorkeeper::AccessToken.last
+      expect(json_response).to include(
+        "access_token" => new_token.token,
+        "scope" => "public write",
+      )
+    end
+
+    it "treats a percent-encoded '+' as part of a single scope name and rejects it when unknown" do
+      post refresh_token_endpoint_url,
+           params: raw_form_refresh_params(scope: "public%2Bwrite"),
+           headers: { "CONTENT_TYPE" => "application/x-www-form-urlencoded" }
+
+      expect(json_response).to include("error" => "invalid_scope")
+    end
+
+    def raw_form_refresh_params(scope:)
+      "grant_type=refresh_token" \
+        "&client_id=#{CGI.escape(@client.uid)}" \
+        "&client_secret=#{CGI.escape(@client.secret)}" \
+        "&refresh_token=#{CGI.escape(@token.refresh_token)}" \
+        "&scope=#{scope}"
+    end
+  end
+
   context "when refreshing the token with multiple sessions (devices)" do
     before do
       # enable password auth to simulate other devices
