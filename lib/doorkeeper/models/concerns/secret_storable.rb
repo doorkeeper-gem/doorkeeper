@@ -84,7 +84,16 @@ module Doorkeeper
         #
         def upgrade_fallback_value(instance, attr, plain_secret)
           upgraded = secret_strategy.store_secret(instance, attr, plain_secret)
-          instance.update(attr => upgraded)
+
+          # The upgrade is a write on what is otherwise a read path (finding a
+          # record by its secret), so it must reach the primary database when
+          # automatic role switching would route the surrounding request to a
+          # read replica.
+          if respond_to?(:with_primary_role)
+            with_primary_role { instance.update(attr => upgraded) }
+          else
+            instance.update(attr => upgraded)
+          end
         end
 
         ##

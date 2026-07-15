@@ -5,6 +5,7 @@ module Doorkeeper
     extend ActiveSupport::Concern
 
     include OAuth::Helpers
+    include Models::Concerns::WriteToPrimary
     include Models::Orderable
     include Models::SecretStorable
     include Models::Scopes

@@ -301,6 +301,16 @@ RSpec.describe Doorkeeper::Application do
         app.reload
         expect(app.secret).to eq(Doorkeeper::SecretStoring::Sha256Hash.transform_secret(plain_secret))
       end
+
+      it "performs the fallback upgrade through the primary database role" do
+        # The upgrade writes during a lookup, which automatic role switching
+        # may route to a read replica.
+        config_is_set(:enable_multiple_database_roles, true)
+        expect(ActiveRecord::Base).to receive(:connected_to).with(role: :writing).and_yield
+
+        expect(described_class.by_uid_and_secret(app.uid, plain_secret)).to eq(app)
+        expect(app.reload.secret).to eq(Doorkeeper::SecretStoring::Sha256Hash.transform_secret(plain_secret))
+      end
     end
 
     it "does not provide access to secret after loading" do

@@ -69,6 +69,17 @@ RSpec.describe Doorkeeper::AccessToken do
         context "with fallback lookup" do
           include_context "with token hashing and fallback lookup enabled"
 
+          it "performs the fallback upgrade through the primary database role" do
+            # The upgrade writes during a lookup, which automatic role
+            # switching may route to a read replica (e.g. a GET request
+            # authenticated with a plain token from before hashing was enabled).
+            config_is_set(:enable_multiple_database_roles, true)
+            expect(ActiveRecord::Base).to receive(:connected_to).with(role: :writing).and_yield
+
+            expect(described_class.by_token(plain_text_token)).to be_present
+            expect(access_token.reload.token).not_to eq(plain_text_token)
+          end
+
           it "upgrades a plain token when falling back to it" do
             # Side-effect: This will automatically upgrade the token
             expect(described_class).to receive(:upgrade_fallback_value).and_call_original
@@ -846,6 +857,36 @@ RSpec.describe Doorkeeper::AccessToken do
 
         expect(token).not_to eq(existing)
         expect(token.plaintext_refresh_token).to be_blank
+      end
+    end
+
+    context "when the newest matching token does not satisfy the refresh token requirement" do
+      it "reuses an older matching token that carries the expected refresh token" do
+        older = FactoryBot.create :access_token,
+                                  default_attributes.merge(use_refresh_token: true, created_at: 1.hour.ago)
+        FactoryBot.create :access_token, default_attributes.merge(use_refresh_token: false)
+
+        expect do
+          token = described_class.find_or_create_for(
+            application: application, resource_owner: resource_owner,
+            scopes: scopes, use_refresh_token: true,
+          )
+          expect(token).to eq(older)
+        end.not_to(change { described_class.count })
+      end
+
+      it "reuses an older matching token without a refresh token when none is expected" do
+        older = FactoryBot.create :access_token,
+                                  default_attributes.merge(use_refresh_token: false, created_at: 1.hour.ago)
+        FactoryBot.create :access_token, default_attributes.merge(use_refresh_token: true)
+
+        expect do
+          token = described_class.find_or_create_for(
+            application: application, resource_owner: resource_owner,
+            scopes: scopes, use_refresh_token: false,
+          )
+          expect(token).to eq(older)
+        end.not_to(change { described_class.count })
       end
     end
   end
