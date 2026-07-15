@@ -86,6 +86,40 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Creator do
         expect(result).not_to eq(existing_token)
       end
     end
+
+    context "when custom access token attributes are used" do
+      before do
+        allow(Doorkeeper.config).to receive(:custom_access_token_attributes).and_return([:tenant_name])
+      end
+
+      it "does not return an existing token with custom attributes when the request has none" do
+        existing_token = creator.call(client, scopes, tenant_name: "Me")
+
+        result = creator.call(client, scopes)
+
+        expect(Doorkeeper::AccessToken.count).to eq(2)
+        expect(result).not_to eq(existing_token)
+        expect(result.custom_attributes[:tenant_name]).to be_nil
+      end
+
+      it "returns an existing token when the custom attributes match" do
+        existing_token = creator.call(client, scopes, tenant_name: "Me")
+
+        result = creator.call(client, scopes, tenant_name: "Me")
+
+        expect(Doorkeeper::AccessToken.count).to eq(1)
+        expect(result).to eq(existing_token)
+      end
+
+      it "returns an existing token without custom attributes when the request has none" do
+        existing_token = creator.call(client, scopes)
+
+        result = creator.call(client, scopes)
+
+        expect(Doorkeeper::AccessToken.count).to eq(1)
+        expect(result).to eq(existing_token)
+      end
+    end
   end
 
   context "when reuse_access_token is false" do

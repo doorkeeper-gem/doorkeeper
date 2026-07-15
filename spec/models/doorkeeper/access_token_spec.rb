@@ -665,6 +665,107 @@ RSpec.describe Doorkeeper::AccessToken do
         last_token = described_class.matching_token_for(application, resource_owner, scopes, custom_attributes: nil)
         expect(last_token).to eq(token)
       end
+
+      it "does not return a token with custom attributes if an empty hash is passed" do
+        FactoryBot.create :access_token, default_attributes.merge(custom_attributes)
+        last_token = described_class.matching_token_for(application, resource_owner, scopes, custom_attributes: {})
+        expect(last_token).to be_nil
+      end
+
+      it "returns a token without custom attributes if an empty hash is passed" do
+        token = FactoryBot.create :access_token, default_attributes
+        last_token = described_class.matching_token_for(application, resource_owner, scopes, custom_attributes: {})
+        expect(last_token).to eq(token)
+      end
+    end
+  end
+
+  describe ".find_or_create_for" do
+    let(:resource_owner)    { FactoryBot.create :resource_owner }
+    let(:application)       { FactoryBot.create :application }
+    let(:scopes) { Doorkeeper::OAuth::Scopes.from_string("public write") }
+
+    context "when reuse_access_token is enabled and custom access token attributes are used" do
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          reuse_access_token
+          custom_access_token_attributes [:tenant_name]
+        end
+        default_scopes_exist(*scopes.all)
+      end
+
+      let!(:tenant_token) do
+        described_class.find_or_create_for(
+          application: application,
+          resource_owner: resource_owner,
+          scopes: scopes,
+          expires_in: 2.hours,
+          use_refresh_token: false,
+          tenant_name: "Me",
+        )
+      end
+
+      it "does not reuse a token that has custom attributes when the request has none" do
+        token = described_class.find_or_create_for(
+          application: application,
+          resource_owner: resource_owner,
+          scopes: scopes,
+          expires_in: 2.hours,
+          use_refresh_token: false,
+        )
+
+        expect(token).not_to eq(tenant_token)
+        expect(token.custom_attributes[:tenant_name]).to be_nil
+      end
+
+      it "reuses a token when the custom attributes match" do
+        token = described_class.find_or_create_for(
+          application: application,
+          resource_owner: resource_owner,
+          scopes: scopes,
+          expires_in: 2.hours,
+          use_refresh_token: false,
+          tenant_name: "Me",
+        )
+
+        expect(token).to eq(tenant_token)
+      end
+
+      it "reuses a token without custom attributes when the request has none" do
+        plain_token = described_class.find_or_create_for(
+          application: application,
+          resource_owner: resource_owner,
+          scopes: scopes,
+          expires_in: 2.hours,
+          use_refresh_token: false,
+        )
+
+        token = described_class.find_or_create_for(
+          application: application,
+          resource_owner: resource_owner,
+          scopes: scopes,
+          expires_in: 2.hours,
+          use_refresh_token: false,
+        )
+
+        expect(token).to eq(plain_token)
+        expect(token).not_to eq(tenant_token)
+      end
+
+      it "does not reuse a token when the request has different custom attributes" do
+        token = described_class.find_or_create_for(
+          application: application,
+          resource_owner: resource_owner,
+          scopes: scopes,
+          expires_in: 2.hours,
+          use_refresh_token: false,
+          tenant_name: "Other",
+        )
+
+        expect(token).not_to eq(tenant_token)
+        expect(token.custom_attributes[:tenant_name]).to eq("Other")
+      end
     end
   end
 

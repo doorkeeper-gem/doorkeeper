@@ -89,7 +89,8 @@ module Doorkeeper
       # @param custom_attributes [Nilable Hash]
       #   A nil value, or hash with keys corresponding to the custom attributes
       #   configured with the `custom_access_token_attributes` config option.
-      #   A nil value will ignore custom attributes.
+      #   A nil value will ignore custom attributes, while an empty hash will
+      #   only match tokens that have no custom attributes set.
       #
       # @return [Doorkeeper::AccessToken, nil] Access Token instance or
       #   nil if matching record was not found
@@ -124,7 +125,8 @@ module Doorkeeper
       # @param custom_attributes [Nilable Hash]
       #   A nil value, or hash with keys corresponding to the custom attributes
       #   configured with the `custom_access_token_attributes` config option.
-      #   A nil value will ignore custom attributes.
+      #   A nil value will ignore custom attributes, while an empty hash will
+      #   only match tokens that have no custom attributes set.
       #
       # @return [Doorkeeper::AccessToken, nil] Access Token instance or
       #   nil if matching record was not found
@@ -220,7 +222,10 @@ module Doorkeeper
         scopes = Doorkeeper::OAuth::Scopes.from_string(scopes) if scopes.is_a?(String)
 
         if Doorkeeper.config.reuse_access_token
-          custom_attributes = extract_custom_attributes(token_attributes).presence
+          # An empty hash must stay distinct from nil here: nil ignores custom
+          # attributes when matching, while an empty hash only matches tokens
+          # that have no custom attributes set.
+          custom_attributes = extract_custom_attributes(token_attributes)
           access_token = matching_token_for(
             application, resource_owner, scopes, custom_attributes: custom_attributes, include_expired: false,
           )
