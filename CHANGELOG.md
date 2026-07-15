@@ -28,6 +28,7 @@ User-visible changes worth mentioning.
 - [#1851] Fix duplicate query parameter in the authorization callback when a client's registered `redirect_uri` already contains a parameter with the same name as a response parameter (e.g. `state`). The redirect query was merged with string keys on one side and symbol keys on the other, so a collision emitted the parameter twice (`?state=fixed&code=...&state=user`); the response parameter now overrides the registered one and appears exactly once.
 - [#1852] Fix the `pkce_code_challenge_methods` config validator using line anchors (`^`/`$`) instead of string anchors (`\A`/`\z`), so a multi-line value such as `"plain\ngarbage"` passed validation and was retained as a (never-matching) challenge method instead of being rejected and reset to the default.
 - [#1853] Fix `reuse_access_token` reusing a token that was created with `custom_access_token_attributes` values when the new request doesn't specify any custom attributes. Such requests now only match tokens without custom attributes.
+- [#1854] Fix the RFC 8414 metadata endpoint raising `ActionController::UrlGenerationError` (HTTP 500) when `use_doorkeeper` configures a custom controller whose namespace depth differs from `doorkeeper/metadata` (e.g. `controllers tokens: "custom_tokens"`).
 - Please add here
 
 ## 5.9.3

@@ -74,7 +74,12 @@ module Doorkeeper
         mapping = Doorkeeper::Rails::Routes.mapping[group]
         return unless mapping
 
-        url_for(controller: mapping[:controllers], action: action)
+        # The leading slash anchors the controller name: without it, Rails
+        # resolves the name relative to the current (doorkeeper/metadata)
+        # namespace whenever their segment depths differ, e.g. a configured
+        # `controllers tokens: "custom_tokens"` would be looked up as
+        # "doorkeeper/custom_tokens" and raise ActionController::UrlGenerationError.
+        url_for(controller: "/#{mapping[:controllers]}", action: action)
       end
 
       def custom_metadata

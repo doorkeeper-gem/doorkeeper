@@ -189,6 +189,51 @@ RSpec.describe "Authorization Server Metadata endpoint" do
     end
   end
 
+  context "with a custom tokens controller outside the doorkeeper namespace" do
+    # Regression: endpoint_for passed the configured controller name to url_for
+    # unanchored, so Rails resolved it relative to the current
+    # (doorkeeper/metadata) namespace whenever their segment depths differed —
+    # `controllers tokens: "custom_tokens"` was looked up as
+    # "doorkeeper/custom_tokens" and raised ActionController::UrlGenerationError.
+    #
+    # The routes must be redrawn per example (not in before(:all)): route
+    # drawing consults Doorkeeper.config (e.g. allow_token_introspection gates
+    # the introspect route), and before(:all) runs before the global config
+    # reset hook, so it would draw against whatever config the previous example
+    # happened to leave behind.
+    before do
+      @original_disable_clear_and_finalize = Rails.application.routes.disable_clear_and_finalize
+      Rails.application.routes.disable_clear_and_finalize = false
+      Rails.application.routes.draw do
+        use_doorkeeper do
+          controllers tokens: "custom_tokens"
+        end
+      end
+    end
+
+    # The flag must be restored only after the dummy routes are reloaded: if
+    # the captured value is true, restoring it first would make the reload
+    # skip clear!/finalize! and leave the routes unusable for later specs.
+    after do
+      Rails.application.routes.clear!
+
+      load File.expand_path("../../dummy/config/routes.rb", __dir__)
+
+      Rails.application.routes.disable_clear_and_finalize = @original_disable_clear_and_finalize
+    end
+
+    it "advertises the custom controller's endpoints" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+
+      expect(json_response["authorization_endpoint"]).to eq("http://www.example.com/oauth/authorize")
+      expect(json_response["token_endpoint"]).to eq("http://www.example.com/oauth/token")
+      expect(json_response["revocation_endpoint"]).to eq("http://www.example.com/oauth/revoke")
+      expect(json_response["introspection_endpoint"]).to eq("http://www.example.com/oauth/introspect")
+    end
+  end
+
   context "with custom metadata attributes" do
     before do
       config_is_set(
