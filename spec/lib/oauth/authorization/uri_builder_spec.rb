@@ -32,6 +32,17 @@ RSpec.describe Doorkeeper::OAuth::Authorization::URIBuilder do
       expect(query["state"]).to eq("user-state")
       expect(query["code"]).to eq("abc")
     end
+
+    it "retains an original query parameter when the same-named response parameter is blank" do
+      # RFC 6749 §3.1.2: the registered query component must be retained when
+      # adding additional query parameters. A blank response parameter (e.g. no
+      # state was sent with the request) must not clobber it.
+      uri = described_class.uri_with_query "http://example.com/?state=fixed", code: "abc", state: nil
+      query = Rack::Utils.parse_query(URI.parse(uri).query)
+
+      expect(query["state"]).to eq("fixed")
+      expect(query["code"]).to eq("abc")
+    end
   end
 
   describe ".uri_with_fragment" do

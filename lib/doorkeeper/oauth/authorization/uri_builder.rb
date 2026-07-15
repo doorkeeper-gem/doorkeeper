@@ -14,8 +14,14 @@ module Doorkeeper
             # keys, so a naive merge cannot dedupe a collision (e.g. a registered
             # redirect_uri already carrying `state`) and would emit the param
             # twice. Normalize keys so the response parameters win over any
-            # same-named query already present in the redirect_uri.
-            uri.query = build_query(original_query.merge(parameters.transform_keys(&:to_s)))
+            # same-named query already present in the redirect_uri. Blank
+            # response parameters are dropped before the merge: they carry no
+            # value to respond with, and letting them clobber a same-named
+            # registered parameter would violate RFC 6749 §3.1.2 (the registered
+            # query component "MUST be retained when adding additional query
+            # parameters").
+            parameters = parameters.transform_keys(&:to_s).reject { |_, value| value.blank? }
+            uri.query = build_query(original_query.merge(parameters))
             uri.to_s
           end
 

@@ -92,13 +92,16 @@ module Doorkeeper
       #   A nil value will ignore custom attributes, while an empty hash will
       #   only match tokens that have no custom attributes set.
       #
+      # @yield [token] optional additional predicate a token must satisfy to
+      #   count as a match (e.g. the refresh token requirement of the request).
+      #
       # @return [Doorkeeper::AccessToken, nil] Access Token instance or
       #   nil if matching record was not found
       #
-      def matching_token_for(application, resource_owner, scopes, custom_attributes: nil, include_expired: true)
+      def matching_token_for(application, resource_owner, scopes, custom_attributes: nil, include_expired: true, &filter)
         tokens = authorized_tokens_for(application&.id, resource_owner)
         tokens = tokens.not_expired unless include_expired
-        find_matching_token(tokens, application, custom_attributes, scopes)
+        find_matching_token(tokens, application, custom_attributes, scopes, &filter)
       end
 
       # Interface to enumerate access token records in batches in order not
@@ -131,7 +134,7 @@ module Doorkeeper
       # @return [Doorkeeper::AccessToken, nil] Access Token instance or
       #   nil if matching record was not found
       #
-      def find_matching_token(relation, application, custom_attributes, scopes)
+      def find_matching_token(relation, application, custom_attributes, scopes, &filter)
         return nil unless relation
 
         matching_tokens = []
@@ -140,7 +143,8 @@ module Doorkeeper
         find_access_token_in_batches(relation, batch_size: batch_size) do |batch|
           tokens = batch.select do |token|
             scopes_match?(token.scopes, scopes, application&.scopes) &&
-              custom_attributes_match?(token, custom_attributes)
+              custom_attributes_match?(token, custom_attributes) &&
+              (filter.nil? || filter.call(token))
           end
 
           matching_tokens.concat(tokens)
@@ -160,7 +164,8 @@ module Doorkeeper
       # for a refresh token must not reuse a token that carries one, or the
       # response would return a refresh token the request never requested (this
       # is reachable when `refresh_token_enabled` is a per-request callable).
-      # When they don't match a fresh token is issued instead.
+      # When no matching token satisfies the requirement a fresh token is
+      # issued instead.
       #
       # @param access_token [Doorkeeper::AccessToken]
       #   the candidate token for reuse
@@ -251,12 +256,16 @@ module Doorkeeper
           # attributes when matching, while an empty hash only matches tokens
           # that have no custom attributes set.
           custom_attributes = extract_custom_attributes(token_attributes)
+          # The refresh token requirement participates in the matching itself
+          # rather than being checked on its single newest result: the newest
+          # matching token may carry the wrong refresh token presence (e.g. it
+          # was issued through a grant with a different `use_refresh_token`)
+          # while an older token satisfies the request and can still be reused.
           access_token = matching_token_for(
             application, resource_owner, scopes, custom_attributes: custom_attributes, include_expired: false,
-          )
+          ) { |token| refresh_token_matches?(token, token_attributes) }
 
-          return access_token if access_token&.reusable? &&
-                                 refresh_token_matches?(access_token, token_attributes)
+          return access_token if access_token&.reusable?
         end
 
         create_for(
