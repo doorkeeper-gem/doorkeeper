@@ -9,6 +9,7 @@ RSpec.describe "Scoped routes" do
       allow_token_introspection false
     end
 
+    @original_disable_clear_and_finalize = Rails.application.routes.disable_clear_and_finalize
     Rails.application.routes.disable_clear_and_finalize = true
 
     Rails.application.routes.draw do
@@ -16,7 +17,12 @@ RSpec.describe "Scoped routes" do
     end
   end
 
+  # The flag is restored before the dummy routes are reloaded so that the
+  # reload runs with the original (normally false) value and finalizes the
+  # route set again.
   after :all do
+    Rails.application.routes.disable_clear_and_finalize = @original_disable_clear_and_finalize
+
     Rails.application.routes.clear!
 
     load File.expand_path("../dummy/config/routes.rb", __dir__)
