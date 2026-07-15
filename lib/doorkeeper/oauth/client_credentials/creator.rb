@@ -45,8 +45,11 @@ module Doorkeeper
         end
 
         def find_active_existing_token_for(client, scopes, attributes)
+          # An empty hash must stay distinct from nil here: nil ignores custom
+          # attributes when matching, while an empty hash only matches tokens
+          # that have no custom attributes set.
           custom_attributes = Doorkeeper.config.access_token_model
-            .extract_custom_attributes(attributes).presence
+            .extract_custom_attributes(attributes)
           Doorkeeper.config.access_token_model.matching_token_for(
             client, nil, scopes, custom_attributes: custom_attributes, include_expired: false,
           )

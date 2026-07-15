@@ -9,6 +9,10 @@ User-visible changes worth mentioning.
 
 - Please add here
 
+## 5.9.4
+
+- [#1853] Fix `reuse_access_token` reusing a token that was created with `custom_access_token_attributes` values when the new request doesn't specify any custom attributes. Such requests now only match tokens without custom attributes.
+
 ## 5.9.3
 
 - [#1834] Fix default `allow_token_introspection` returning `false` when a custom `application_class` is configured. The default proc compared application objects with `==`, which fails when the authorized client and the introspected token's application are resolved as different classes (e.g. a base `Doorkeeper::Application` vs. a configured subclass) even though they reference the same record. It now compares application ids instead.
