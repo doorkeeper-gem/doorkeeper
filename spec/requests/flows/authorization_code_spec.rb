@@ -179,6 +179,33 @@ feature "Authorization Code Flow" do
     )
   end
 
+  # Regression test for #1693: `reuse_access_token` matches tokens by
+  # application, resource owner, scopes and custom token attributes — it does
+  # not track which authorization grant produced the token. Exchanging two
+  # independently issued grants for the same combination therefore yields one
+  # shared access token by design.
+  scenario "separate authorization grants share the access token when token reuse is enabled" do
+    config_is_set(:reuse_access_token, true)
+
+    visit authorization_endpoint_url(client: @client)
+    click_on "Authorize"
+    create_access_token Doorkeeper::AccessGrant.first.token, @client
+    first_token = json_response.fetch("access_token")
+
+    # A valid matching token now exists, so the second authorization request
+    # skips the consent screen and immediately redirects back with a new grant.
+    visit authorization_endpoint_url(client: @client)
+    i_should_be_on_client_callback(@client)
+
+    second_grant = Doorkeeper::AccessGrant.order(:id).last
+    expect(second_grant.token).not_to eq(Doorkeeper::AccessGrant.order(:id).first.token)
+
+    create_access_token second_grant.token, @client
+
+    expect(Doorkeeper::AccessToken.count).to eq(1)
+    expect(json_response).to include("access_token" => first_token)
+  end
+
   # RFC 6749 does not define a scope parameter for the authorization_code
   # token request (§4.1.3): access token scopes always come from the
   # authorization grant, and a scope parameter sent to the token endpoint
