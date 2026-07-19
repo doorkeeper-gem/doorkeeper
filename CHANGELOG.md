@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
-- [#PR] Add the `jwt-bearer` grant (`urn:ietf:params:oauth:grant-type:jwt-bearer`, RFC 7523), profiled by the Identity Assertion Authorization Grant (ID-JAG) draft, letting Doorkeeper act as the Resource Authorization Server side of a Cross App Access exchange: it verifies an ID-JAG assertion minted by an external Identity Provider and issues a locally-scoped access token, without ever issuing a refresh token.
+- [#1861] Add the `jwt-bearer` grant (`urn:ietf:params:oauth:grant-type:jwt-bearer`, RFC 7523), profiled by the Identity Assertion Authorization Grant (ID-JAG) draft, letting Doorkeeper act as the Resource Authorization Server side of a Cross App Access exchange: it verifies an ID-JAG assertion minted by an external Identity Provider and issues a locally-scoped access token, without ever issuing a refresh token.
   - Not enabled by default — add `:jwt_bearer` to `grant_flows` to opt in.
   - Restricted to confidential clients by default per ID-JAG §8.1 (relax with `jwt_bearer_allow_public_clients`, not recommended for production).
   - New required config hooks: `jwt_bearer_trusted_issuer`, `jwt_bearer_issuer_key`, `jwt_bearer_resource_owner_from_assertion`. New optional hooks/options: `jwt_bearer_authorize`, `jwt_bearer_replay_store`, `jwt_bearer_audience` (required to actually issue tokens), `jwt_bearer_clock_skew`, `jwt_bearer_allowed_algorithms`.
