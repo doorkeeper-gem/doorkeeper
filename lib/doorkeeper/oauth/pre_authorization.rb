@@ -187,7 +187,7 @@ module Doorkeeper
           scope: scope,
           client_name: client.name,
           status: I18n.t("doorkeeper.pre_authorization.status"),
-        }
+        }.reverse_merge(custom_access_token_attributes.symbolize_keys)
       end
     end
   end

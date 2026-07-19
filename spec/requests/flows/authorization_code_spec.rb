@@ -654,6 +654,35 @@ feature "Authorization Code Flow" do
     end
   end
 
+  context "when custom_access_token_attributes are requested through the consent screen" do
+    background do
+      config_is_set(:custom_access_token_attributes, [:tenant_name])
+    end
+
+    scenario "custom attributes are carried through the consent form into the grant and token" do
+      visit "#{authorization_endpoint_url(client: @client)}&tenant_name=alpha"
+      click_on "Authorize"
+
+      access_grant_should_exist_for(@client, @resource_owner)
+
+      grant = Doorkeeper::AccessGrant.first
+      expect(grant.tenant_name).to eq("alpha")
+
+      create_access_token grant.token, @client
+
+      access_token = Doorkeeper::AccessToken.find_by(token: json_response["access_token"])
+      expect(access_token.tenant_name).to eq("alpha")
+    end
+
+    scenario "consent form omits custom attribute fields when none are supplied" do
+      visit authorization_endpoint_url(client: @client)
+      click_on "Authorize"
+
+      access_grant_should_exist_for(@client, @resource_owner)
+      expect(Doorkeeper::AccessGrant.first.tenant_name).to be_nil
+    end
+  end
+
   context "when custom_access_token_attributes are configured" do
     let(:resource_owner) { FactoryBot.create(:resource_owner) }
     let(:client) { client_exists }

@@ -286,6 +286,18 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
     end
   end
 
+  describe "as_json with custom access token attributes" do
+    before do
+      allow(Doorkeeper.config).to receive(:custom_access_token_attributes).and_return([:tenant_name])
+      attributes[:tenant_name] = "alpha"
+    end
+
+    it "includes the custom attributes in the pre authorization" do
+      expect(pre_auth).to be_authorizable
+      expect(pre_auth.as_json).to include(tenant_name: "alpha")
+    end
+  end
+
   describe "#form_post_response?" do
     it { is_expected.to respond_to(:form_post_response?) }
 
