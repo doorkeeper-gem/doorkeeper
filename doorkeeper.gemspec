@@ -31,6 +31,7 @@ Gem::Specification.new do |gem|
     "funding_uri" => "https://opencollective.com/doorkeeper-gem",
   }
 
+  gem.add_dependency "jwt", ">= 2.7"
   gem.add_dependency "railties", ">= 5"
   gem.required_ruby_version = ">= 2.7"
 

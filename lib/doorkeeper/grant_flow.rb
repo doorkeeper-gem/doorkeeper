@@ -41,5 +41,14 @@ module Doorkeeper
       grant_type_matches: "refresh_token",
       grant_type_strategy: Doorkeeper::Request::RefreshToken,
     )
+
+    # JWT Bearer grant (RFC 7523), profiled by the Identity Assertion
+    # Authorization Grant (ID-JAG) draft. Not enabled by default; add
+    # `:jwt_bearer` to `grant_flows` to opt in.
+    register(
+      :jwt_bearer,
+      grant_type_matches: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      grant_type_strategy: Doorkeeper::Request::JwtBearer,
+    )
   end
 end

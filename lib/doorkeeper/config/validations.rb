@@ -18,6 +18,7 @@ module Doorkeeper
         validate_refresh_token_flow
         validate_issuer_format
         validate_issuer_metadata_discoverability
+        validate_jwt_bearer_configuration
       end
 
       private
@@ -181,6 +182,20 @@ module Doorkeeper
           "RFC 8414 and RFC 9207 require an https URL with a host and no query " \
           "or fragment component. It is still advertised in the metadata and " \
           "emitted as the iss parameter as-is, but strict clients may reject it.",
+        )
+      end
+
+      # Warn when the jwt_bearer grant flow is enabled but jwt_bearer_audience
+      # is not configured. Every assertion's aud check would then never match
+      # (the audience is nil), so every jwt_bearer request would be rejected.
+      def validate_jwt_bearer_configuration
+        return unless calculate_grant_flows.map(&:to_s).include?("jwt_bearer")
+        return if jwt_bearer_audience.present?
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] The jwt_bearer grant flow is enabled but jwt_bearer_audience is not configured. " \
+          "Every ID-JAG assertion's `aud` claim check will fail, so every jwt_bearer request will be rejected " \
+          "until you configure jwt_bearer_audience to this Resource AS's own issuer identifier (RFC 8414).",
         )
       end
 

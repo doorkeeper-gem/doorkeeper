@@ -366,7 +366,7 @@ module Doorkeeper
     # @param allow_grant_flow_for_client [Proc] Block or any object respond to #call
     # @return [Boolean] `true` if allow or `false` if forbid the request
     #
-    option :allow_grant_flow_for_client,    default: ->(_grant_flow, _client) { true }
+    option :allow_grant_flow_for_client, default: ->(_grant_flow, _client) { true }
 
     # Allows to forbid specific Application redirect URI's by custom rules.
     # Doesn't forbid any URI by default.
@@ -824,3 +824,7 @@ module Doorkeeper
     end
   end
 end
+
+# Reopens Config to add the jwt_bearer_* options in their own file, keeping
+# this already-large class from growing further (Metrics/ClassLength).
+require "doorkeeper/config/jwt_bearer"
