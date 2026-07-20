@@ -30,7 +30,7 @@ jobs:
       - name: Enforce changelog
         if: |
           steps.changes.outputs.gem_changes == 'true'
-        uses: dangoslen/changelog-enforcer@v3
+        uses: dangoslen/changelog-enforcer@v3.7.0
         with:
           changeLogPath: CHANGELOG.md
           skipLabels: "dependencies"
