@@ -95,6 +95,17 @@ RSpec.describe "Authorization Code Flow Errors after authorization" do
     )
   end
 
+  it "revokes the token issued for the code when it is exchanged twice (RFC 6749 §4.1.2)" do
+    post token_endpoint_url, params: token_endpoint_params(code: @authorization.token, client: @client)
+
+    issued_token = Doorkeeper::AccessToken.by_token(json_response["access_token"])
+
+    post token_endpoint_url, params: token_endpoint_params(code: @authorization.token, client: @client)
+
+    expect(json_response).to include("error" => "invalid_grant")
+    expect(issued_token.reload).to be_revoked
+  end
+
   it "returns :invalid_grant error for invalid grant code" do
     post token_endpoint_url, params: token_endpoint_params(code: "invalid", client: @client)
 

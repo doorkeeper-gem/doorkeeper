@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1865] Revoke the token issued for an authorization code when the code is exchanged more than once, per RFC 6749 §4.1.2 / §10.5. Active when the `oauth_access_grants.access_token_id` column exists: new installs get it from the generated migration, existing apps can add it with `rails generate doorkeeper:grant_reuse_revocation`. Closes [#1713].
 - Please add here
 
 ## 6.0.0.beta1
@@ -47,7 +48,6 @@ and changelog below before the update since this version includes breaking chang
 - [#1864] Fix `custom_access_token_attributes` values being dropped when the authorization goes through the consent screen: the approve/deny forms now carry the custom attributes as hidden fields, and the pre-authorization JSON (`api_only` mode) includes them so custom consent UIs can send them back.
 - [#1869] Improve test coverage
 - [#1870] Fix: raise the intended `Doorkeeper::Errors::TokenGeneratorNotFound` / `UnableToGenerateToken` (instead of a confusing `NameError`) when `application_secret_generator` is misconfigured.
-- Please add here
 
 ## 5.9.3
 

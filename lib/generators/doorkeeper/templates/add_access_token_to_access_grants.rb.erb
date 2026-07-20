@@ -1,0 +1,9 @@
+# frozen_string_literal: true
+
+class AddAccessTokenToAccessGrants < ActiveRecord::Migration<%= migration_version %>
+  def change
+    # No index: the column is only read back from an already-loaded grant,
+    # never used to filter queries.
+    add_reference :oauth_access_grants, :access_token, index: false
+  end
+end

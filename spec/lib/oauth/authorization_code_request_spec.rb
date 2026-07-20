@@ -155,6 +155,100 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
     expect(response.token.plaintext_refresh_token).to be_present
   end
 
+  context "when the authorization code is reused (RFC 6749 §4.1.2)" do
+    it "records the issued access token on the grant" do
+      request.authorize
+
+      expect(grant.reload.access_token_id).to eq(request.access_token.id)
+    end
+
+    it "revokes the token issued for the code when it is exchanged a second time" do
+      request.authorize
+      issued_token = request.access_token
+
+      replay = described_class.new(server, grant.reload, client, params)
+      replay.validate
+
+      expect(replay.error).to eq(Doorkeeper::Errors::InvalidGrant)
+      expect(issued_token.reload).to be_revoked
+    end
+
+    it "revokes the reused access token when reuse_access_token is enabled" do
+      scopes = grant.scopes
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        reuse_access_token
+        default_scopes(*scopes)
+      end
+
+      existing_token = FactoryBot.create(
+        :access_token,
+        application_id: client.id,
+        resource_owner_id: grant.resource_owner_id,
+        resource_owner_type: grant.resource_owner_type,
+        scopes: grant.scopes.to_s,
+      )
+
+      request.authorize
+
+      expect(grant.reload.access_token_id).to eq(existing_token.id)
+
+      replay = described_class.new(server, grant.reload, client, params)
+      replay.validate
+
+      expect(existing_token.reload).to be_revoked
+    end
+
+    it "revokes the winning exchange's token when losing the race for the same code" do
+      issued_token = FactoryBot.create(
+        :access_token,
+        application_id: client.id,
+        resource_owner_id: grant.resource_owner_id,
+        resource_owner_type: grant.resource_owner_type,
+      )
+
+      # Simulate a concurrent exchange committing between validation and the
+      # row lock: the reload performed by `lock!` reveals the revoked grant
+      # with its token linkage.
+      allow(grant).to receive(:lock!) do
+        grant.update_columns(revoked_at: Time.current, access_token_id: issued_token.id)
+      end
+
+      expect { request.authorize }.to raise_error(Doorkeeper::Errors::InvalidGrantReuse)
+      expect(issued_token.reload).to be_revoked
+    end
+
+    it "only denies the request when the access_token_id column is not available" do
+      request.authorize
+      issued_token = request.access_token
+
+      allow(Doorkeeper::AccessGrant).to receive(:access_token_revoked_on_reuse?).and_return(false)
+
+      replay = described_class.new(server, grant.reload, client, params)
+      replay.validate
+
+      expect(replay.error).to eq(Doorkeeper::Errors::InvalidGrant)
+      expect(issued_token.reload).not_to be_revoked
+    end
+
+    it "does not revoke the issued token when the replay cannot prove possession of the code" do
+      request.authorize
+      issued_token = request.access_token
+
+      # A replay that fails the redirect_uri check (RFC 6749 §4.1.3) is
+      # denied before the single-use enforcement runs, so it cannot revoke
+      # the token issued for the code without proving possession of it.
+      replay = described_class.new(
+        server, grant.reload, client, redirect_uri: "https://other.example/callback",
+      )
+      replay.validate
+
+      expect(replay.error).to eq(Doorkeeper::Errors::InvalidGrant)
+      expect(issued_token.reload).not_to be_revoked
+    end
+  end
+
   it "calls configured request callback methods" do
     expect(Doorkeeper.configuration.before_successful_strategy_response)
       .to receive(:call).with(request).once
