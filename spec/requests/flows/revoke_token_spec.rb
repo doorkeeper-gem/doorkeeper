@@ -281,6 +281,62 @@ RSpec.describe "Revoke Token Flow" do
     end
   end
 
+  # Regression specs for https://github.com/doorkeeper-gem/doorkeeper/issues/1671,
+  # fixed by #1744: revoking a refresh token must work even after the access
+  # token it is bound to has expired.
+  context "with a refresh token bound to an expired access token" do
+    before do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_refresh_token
+      end
+    end
+
+    let(:access_token) do
+      FactoryBot.create(
+        :access_token,
+        application: public_client_application,
+        resource_owner_id: resource_owner.id,
+        resource_owner_type: resource_owner.class.name,
+        use_refresh_token: true,
+      ).tap do |token|
+        token.update!(created_at: token.created_at - token.expires_in - 1)
+      end
+    end
+
+    it "revokes the refresh token" do
+      post revocation_token_endpoint_url,
+           params: {
+             client_id: public_client_application.uid,
+             token: access_token.refresh_token,
+             token_type_hint: "refresh_token",
+           }
+
+      expect(response).to be_successful
+      expect(access_token.reload).to be_revoked
+    end
+
+    it "rejects a refresh attempt made with the revoked refresh token" do
+      post revocation_token_endpoint_url,
+           params: {
+             client_id: public_client_application.uid,
+             token: access_token.refresh_token,
+             token_type_hint: "refresh_token",
+           }
+
+      expect(response).to be_successful
+
+      post refresh_token_endpoint_url,
+           params: refresh_token_endpoint_params(
+             client_id: public_client_application.uid,
+             refresh_token: access_token.refresh_token,
+           )
+
+      expect(response).to have_http_status(:bad_request)
+      expect(json_response).to include("error" => "invalid_grant")
+    end
+  end
+
   context "without client authentication, when skip_client_authentication_for_password_grant is false (the default)" do
     before do
       Doorkeeper.configure do

@@ -32,6 +32,7 @@ User-visible changes worth mentioning.
 - [#1854] Fix the RFC 8414 metadata endpoint raising `ActionController::UrlGenerationError` (HTTP 500) when `use_doorkeeper` configures a custom controller whose namespace depth differs from `doorkeeper/metadata` (e.g. `controllers tokens: "custom_tokens"`).
 - [#1855] Perform the fallback secret upgrade-on-access write (plain → hashed token or application secret) through the primary database role, so `enable_multiple_database_roles` setups no longer attempt the write on a read replica when the lookup happens in a request routed to the reading role.
 - [#1857] Pin with regression specs that a `+` between scopes in a form-encoded token request is decoded as a space (so `scope=public+write` refreshes fine), while a percent-encoded literal `+` (`%2B`) names a single scope and is rejected when unknown, per RFC 6749 §3.3. Test-only change, closes [#1686].
+- [#1859] Pin with regression specs that a refresh token bound to an expired access token can be revoked (fixed by [#1744]) and that the revoked refresh token is rejected at the token endpoint afterwards. Test-only change, closes [#1671].
 - Please add here
 
 ## 5.9.3
