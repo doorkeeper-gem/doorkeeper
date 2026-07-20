@@ -150,6 +150,15 @@ Doorkeeper.configure do
   # token found for the application, resources owner and/or set of scopes.
   # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/383
   #
+  # Matching considers only the application, resource owner, scopes, custom access token
+  # attributes (see +custom_access_token_attributes+) and whether a refresh token is
+  # expected — not the authorization request that produced the token. Separate authorization
+  # grants for the same combination share a single access token, so concurrent sessions of
+  # the same client become interdependent (e.g. refreshing the token in one session revokes
+  # it for the others). If you need independent tokens per session or device, keep this
+  # option disabled or differentiate the sessions with +custom_access_token_attributes+.
+  # See https://github.com/doorkeeper-gem/doorkeeper/issues/1693
+  #
   # You can not enable this option together with +hash_token_secrets+.
   #
   # reuse_access_token
