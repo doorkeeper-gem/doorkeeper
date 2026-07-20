@@ -29,6 +29,9 @@
       <%= hidden_field_tag :scope, @pre_auth.scope, id: nil %>
       <%= hidden_field_tag :code_challenge, @pre_auth.code_challenge, id: nil %>
       <%= hidden_field_tag :code_challenge_method, @pre_auth.code_challenge_method, id: nil %>
+      <% @pre_auth.custom_access_token_attributes.each do |attribute_name, attribute_value| %>
+        <%= hidden_field_tag attribute_name, attribute_value, id: nil %>
+      <% end %>
       <%= submit_tag t('doorkeeper.authorizations.buttons.authorize'), class: "btn btn-success btn-lg btn-block" %>
     <% end %>
     <%= form_tag oauth_authorization_path, method: :delete do %>
@@ -40,6 +43,9 @@
       <%= hidden_field_tag :scope, @pre_auth.scope, id: nil %>
       <%= hidden_field_tag :code_challenge, @pre_auth.code_challenge, id: nil %>
       <%= hidden_field_tag :code_challenge_method, @pre_auth.code_challenge_method, id: nil %>
+      <% @pre_auth.custom_access_token_attributes.each do |attribute_name, attribute_value| %>
+        <%= hidden_field_tag attribute_name, attribute_value, id: nil %>
+      <% end %>
       <%= submit_tag t('doorkeeper.authorizations.buttons.deny'), class: "btn btn-danger btn-lg btn-block" %>
     <% end %>
   </div>

@@ -34,6 +34,7 @@ User-visible changes worth mentioning.
 - [#1857] Pin with regression specs that a `+` between scopes in a form-encoded token request is decoded as a space (so `scope=public+write` refreshes fine), while a percent-encoded literal `+` (`%2B`) names a single scope and is rejected when unknown, per RFC 6749 §3.3. Test-only change, closes [#1686].
 - [#1859] Pin with regression specs that a refresh token bound to an expired access token can be revoked (fixed by [#1744]) and that the revoked refresh token is rejected at the token endpoint afterwards. Test-only change, closes [#1671].
 - [#1862] Document that with `reuse_access_token` enabled token matching considers only the application, resource owner, scopes and custom token attributes — separate authorization grants for the same combination intentionally share one access token — and pin the behavior with a regression spec. Docs/test-only change, closes [#1693].
+- [#1864] Fix `custom_access_token_attributes` values being dropped when the authorization goes through the consent screen: the approve/deny forms now carry the custom attributes as hidden fields, and the pre-authorization JSON (`api_only` mode) includes them so custom consent UIs can send them back.
 - Please add here
 
 ## 5.9.3
