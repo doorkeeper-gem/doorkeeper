@@ -30,6 +30,7 @@ module Doorkeeper
     autoload :AuthorizationCode, "doorkeeper/request/authorization_code"
     autoload :ClientCredentials, "doorkeeper/request/client_credentials"
     autoload :Code, "doorkeeper/request/code"
+    autoload :JwtBearer, "doorkeeper/request/jwt_bearer"
     autoload :Password, "doorkeeper/request/password"
     autoload :RefreshToken, "doorkeeper/request/refresh_token"
     autoload :Token, "doorkeeper/request/token"
@@ -53,6 +54,7 @@ module Doorkeeper
     autoload :InvalidTokenResponse, "doorkeeper/oauth/invalid_token_response"
     autoload :InvalidRequestResponse, "doorkeeper/oauth/invalid_request_response"
     autoload :ForbiddenTokenResponse, "doorkeeper/oauth/forbidden_token_response"
+    autoload :JwtBearerAccessTokenRequest, "doorkeeper/oauth/jwt_bearer_access_token_request"
     autoload :MetadataResponse, "doorkeeper/oauth/metadata_response"
     autoload :NonStandard, "doorkeeper/oauth/nonstandard"
     autoload :PasswordAccessTokenRequest, "doorkeeper/oauth/password_access_token_request"
@@ -84,6 +86,7 @@ module Doorkeeper
     end
 
     module Helpers
+      autoload :JwtBearerAssertion, "doorkeeper/oauth/helpers/jwt_bearer_assertion"
       autoload :ScopeChecker, "doorkeeper/oauth/helpers/scope_checker"
       autoload :URIChecker, "doorkeeper/oauth/helpers/uri_checker"
       autoload :UniqueToken, "doorkeeper/oauth/helpers/unique_token"

@@ -8,6 +8,7 @@ module Doorkeeper
       PASSWORD = "password",
       CLIENT_CREDENTIALS = "client_credentials",
       REFRESH_TOKEN = "refresh_token",
+      JWT_BEARER = "urn:ietf:params:oauth:grant-type:jwt-bearer",
     ].freeze
   end
 end
