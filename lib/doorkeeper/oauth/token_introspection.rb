@@ -8,9 +8,13 @@ module Doorkeeper
     class TokenIntrospection
       attr_reader :token, :error, :invalid_request_reason
 
-      def initialize(server, token)
+      # +token_type+ tells which credential of the token record the caller
+      # actually received (:access_token or :refresh_token), so the "active"
+      # state and the response describe the presented token per RFC 7662 §2.2.
+      def initialize(server, token, token_type: :access_token)
         @server = server
         @token = token
+        @token_type = token_type
       end
 
       def authorized?
@@ -106,12 +110,19 @@ module Doorkeeper
           active: true,
           scope: @token.scopes_string,
           client_id: @token.try(:application).try(:uid),
-          token_type: @token.token_type,
           iat: @token.created_at.to_i,
         }
-        # `exp` is OPTIONAL per RFC 7662 §2.2; omit it for non-expiring tokens
-        # so clients don't interpret `0` as "expired at 1970-01-01".
-        response[:exp] = @token.expires_at.to_i if @token.expires_at
+
+        # `token_type` (RFC 6749 §7.1) and `exp` describe the access token:
+        # a refresh token is not a Bearer credential and has no expiry of its
+        # own, so both are omitted (they are OPTIONAL per RFC 7662 §2.2) when
+        # a refresh token is presented.
+        unless refresh_token_presented?
+          response[:token_type] = @token.token_type
+          # `exp` is OPTIONAL per RFC 7662 §2.2; omit it for non-expiring tokens
+          # so clients don't interpret `0` as "expired at 1970-01-01".
+          response[:exp] = @token.expires_at.to_i if @token.expires_at
+        end
 
         customize_response(response)
       end
@@ -176,9 +187,18 @@ module Doorkeeper
         end
       end
 
-      # Token can be valid only if it is not expired or revoked.
+      # The presented token can be valid only if it is not revoked; an access
+      # token must additionally be unexpired. A refresh token has no expiry of
+      # its own and stays usable at the token endpoint after its paired access
+      # token expires, so that expiry is not consulted here.
       def valid_token?
-        @token&.accessible?
+        return false if @token.blank?
+
+        refresh_token_presented? ? !@token.revoked? : @token.accessible?
+      end
+
+      def refresh_token_presented?
+        @token_type == :refresh_token
       end
 
       def valid_authorized_token?

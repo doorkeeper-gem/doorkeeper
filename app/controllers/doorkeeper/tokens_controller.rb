@@ -34,7 +34,7 @@ module Doorkeeper
 
     # OAuth 2.0 Token Introspection - https://datatracker.ietf.org/doc/html/rfc7662
     def introspect
-      introspection = OAuth::TokenIntrospection.new(server, token)
+      introspection = OAuth::TokenIntrospection.new(server, token, token_type: presented_token_type)
 
       if introspection.authorized?
         render json: introspection.to_json, status: 200
@@ -136,6 +136,15 @@ module Doorkeeper
       return unless token
 
       RevocableTokens::RevocableRefreshToken.new(token)
+    end
+
+    # Revocation (RFC 7009) and introspection (RFC 7662) deliberately share
+    # the same request shape — `token` plus an optional `token_type_hint` —
+    # so both actions resolve the presented token through #revocable_token.
+    # The wrapper type doubles as the record of which credential the client
+    # actually presented.
+    def presented_token_type
+      revocable_token.is_a?(RevocableTokens::RevocableRefreshToken) ? :refresh_token : :access_token
     end
 
     def access_token

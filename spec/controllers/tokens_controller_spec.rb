@@ -686,6 +686,60 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
       end
     end
 
+    context "when a refresh token is introspected" do
+      let(:token_for_introspection) do
+        FactoryBot.create(:access_token, application: client, use_refresh_token: true)
+      end
+
+      before do
+        request.headers["Authorization"] = basic_auth_header_for_client(client)
+      end
+
+      it "responds with the state of the refresh token, without access token type and expiry" do
+        post :introspect, params: { token: token_for_introspection.refresh_token }
+
+        expect(json_response).to match(
+          "active" => true,
+          "client_id" => client.uid,
+          "scope" => nil,
+          "iat" => an_instance_of(Integer),
+        )
+      end
+
+      it "responds with the state of the refresh token when token_type_hint is refresh_token" do
+        post :introspect, params: {
+          token: token_for_introspection.refresh_token,
+          token_type_hint: "refresh_token",
+        }
+
+        expect(json_response).to match(
+          "active" => true,
+          "client_id" => client.uid,
+          "scope" => nil,
+          "iat" => an_instance_of(Integer),
+        )
+      end
+
+      # Regression test for doorkeeper#1858: the refresh token stays usable at
+      # the token endpoint after the paired access token expires, so it must
+      # introspect as active.
+      it "responds with active state when the paired access token has expired" do
+        token_for_introspection.update!(created_at: 1.year.ago)
+
+        post :introspect, params: { token: token_for_introspection.refresh_token }
+
+        expect(json_response).to include("active" => true)
+      end
+
+      it "responds with only active state when the token has been revoked" do
+        token_for_introspection.update!(revoked_at: 1.year.ago)
+
+        post :introspect, params: { token: token_for_introspection.refresh_token }
+
+        expect(json_response).to match("active" => false)
+      end
+    end
+
     context "when unauthorized (no bearer token or client credentials)" do
       let(:token_for_introspection) { FactoryBot.create(:access_token) }
 
