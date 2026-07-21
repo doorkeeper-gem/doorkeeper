@@ -273,6 +273,14 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
         expect(request.error).to eq(Doorkeeper::Errors::InvalidGrant)
       end
 
+      it "invalidates when the stored code challenge method is unknown" do
+        grant.code_challenge_method = "unknown"
+        params[:code_verifier] = grant.code_challenge
+        request.validate
+
+        expect(request.error).to eq(Doorkeeper::Errors::InvalidGrant)
+      end
+
       context "when PKCE code challenge methods is set to only S256" do
         before do
           Doorkeeper.configure do

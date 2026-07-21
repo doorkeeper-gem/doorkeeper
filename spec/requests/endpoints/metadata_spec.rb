@@ -40,6 +40,15 @@ RSpec.describe "Authorization Server Metadata endpoint" do
     expect(json_response["code_challenge_methods_supported"]).to be_a(Array)
   end
 
+  it "omits client authentication methods that are not registered" do
+    unregistered = double(name: :made_up_method)
+    allow(Doorkeeper.config).to receive(:client_authentication_methods).and_return([unregistered])
+
+    get "/.well-known/oauth-authorization-server"
+
+    expect(json_response["token_endpoint_auth_methods_supported"]).to eq([])
+  end
+
   context "with custom issuer" do
     before do
       config_is_set(:issuer, "https://example.test")

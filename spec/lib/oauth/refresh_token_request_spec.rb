@@ -25,6 +25,41 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
     expect(request.grant_type).to eq(Doorkeeper::OAuth::REFRESH_TOKEN)
   end
 
+  context "with a polymorphic resource owner" do
+    let(:resource_owner) { FactoryBot.create(:doorkeeper_testing_user) }
+    let(:application) { FactoryBot.create(:application) }
+    let(:refresh_token) do
+      PolyAccessToken.create_for(
+        application: application,
+        resource_owner: resource_owner,
+        scopes: Doorkeeper::OAuth::Scopes.from_string("public"),
+        use_refresh_token: true,
+      )
+    end
+
+    before do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_polymorphic_resource_owner
+      end
+      stub_const(
+        "PolyAccessToken",
+        Class.new(ApplicationRecord) do
+          include Doorkeeper::Orm::ActiveRecord::Mixins::AccessToken
+        end,
+      )
+      config_is_set(:access_token_class, "PolyAccessToken")
+    end
+
+    it "passes the full resource owner on to the new token" do
+      described_class.new(server, refresh_token, credentials).authorize
+
+      new_token = PolyAccessToken.order(:id).last
+      expect(new_token.id).not_to eq(refresh_token.id)
+      expect(new_token.resource_owner).to eq(resource_owner)
+    end
+  end
+
   it "issues a new token for the client" do
     expect { request.authorize }.to change { client.reload.access_tokens.count }.by(1)
     # #sort_by used for MongoDB ORM extensions for valid ordering

@@ -209,6 +209,32 @@ RSpec.describe "doorkeeper authorize filter" do
         expect(response.body).to eq("Unauthorized")
       end
     end
+
+    context "with an explicit layout in the custom render options", token: :invalid do
+      before do
+        module ControllerActions
+          remove_method :doorkeeper_unauthorized_render_options
+
+          def doorkeeper_unauthorized_render_options(**)
+            { plain: "Unauthorized", layout: false }
+          end
+        end
+      end
+
+      after do
+        module ControllerActions
+          remove_method :doorkeeper_unauthorized_render_options
+
+          def doorkeeper_unauthorized_render_options(error: nil); end
+        end
+      end
+
+      it "respects the layout provided by the render options", token: :invalid do
+        get :index, params: { access_token: token_string }
+        expect(response.status).to eq 401
+        expect(response.body).to eq("Unauthorized")
+      end
+    end
   end
 
   context "when custom forbidden render options are configured" do

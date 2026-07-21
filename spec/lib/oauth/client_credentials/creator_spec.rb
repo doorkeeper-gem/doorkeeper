@@ -18,6 +18,16 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Creator do
     end.to change { Doorkeeper::AccessToken.count }.by(1)
   end
 
+  it "resolves the application from an authenticated client wrapper" do
+    oauth_client = Doorkeeper::OAuth::Client.new(client)
+
+    expect do
+      creator.call(oauth_client, scopes)
+    end.to change { Doorkeeper::AccessToken.count }.by(1)
+
+    expect(Doorkeeper::AccessToken.last.application).to eq(client)
+  end
+
   context "when reuse_access_token is true" do
     before do
       allow(Doorkeeper.config).to receive(:reuse_access_token).and_return(true)

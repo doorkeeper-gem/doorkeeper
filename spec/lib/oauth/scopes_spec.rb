@@ -204,6 +204,12 @@ RSpec.describe Doorkeeper::OAuth::Scopes do
           expect(scopes).not_to have_scopes(described_class.from_string("public userA:1"))
         end
 
+        it "returns false when the allowed dynamic scope has no right-hand side" do
+          allowed = described_class.from_string("user:")
+
+          expect(allowed.exists?("user:1")).to be(false)
+        end
+
         describe "#&" do
           it "allows user:1 scope" do
             scopes = described_class.from_string("public user:*") & described_class.from_string("public user:1")

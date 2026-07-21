@@ -103,5 +103,49 @@ RSpec.describe Doorkeeper do
       end
       expect(filters.size).to eq(1)
     end
+
+    it "does nothing when Doorkeeper is not configured" do
+      allow(described_class).to receive(:configured?).and_return(false)
+
+      expect { described_class.setup_filter_parameters }
+        .not_to(change { Rails.application.config.filter_parameters })
+    end
+  end
+
+  describe "#setup" do
+    context "with a non-ActiveRecord ORM" do
+      after do
+        # Restore the real ActiveRecord adapter for the rest of the suite. The
+        # orm stub is still active in this hook, so the adapter is restored
+        # directly instead of re-running setup.
+        described_class.instance_variable_set(:@orm_adapter, Doorkeeper::Orm::ActiveRecord)
+      end
+
+      it "runs the deprecated model setup hooks" do
+        adapter = double
+        stub_const("Doorkeeper::Orm::FakeOrm", adapter)
+        allow(described_class.configuration).to receive(:orm).and_return(:fake_orm)
+
+        expect(adapter).to receive(:initialize_models!)
+        expect(adapter).to receive(:initialize_application_owner!)
+
+        described_class.setup
+      end
+    end
+  end
+
+  describe "#run_orm_hooks" do
+    after do
+      described_class.setup
+    end
+
+    it "warns when the ORM adapter does not implement run_hooks" do
+      legacy_adapter = double(name: "LegacyOrm")
+      described_class.instance_variable_set(:@orm_adapter, legacy_adapter)
+
+      expect(Kernel).to receive(:warn).with(/setup logic under `#run_hooks` method/)
+
+      described_class.run_orm_hooks
+    end
   end
 end

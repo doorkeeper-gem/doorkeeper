@@ -167,4 +167,43 @@ RSpec.describe Doorkeeper::Request do
       end
     end
   end
+
+  describe ".token_strategy" do
+    it "raises MissingRequiredParameter for a blank grant type" do
+      expect { described_class.token_strategy(nil) }
+        .to raise_error(Doorkeeper::Errors::MissingRequiredParameter)
+    end
+
+    context "when no registered flow matches the grant type (legacy fallback)" do
+      before do
+        allow(Doorkeeper.config).to receive(:token_grant_flows).and_return([])
+      end
+
+      it "raises InvalidTokenStrategy when the grant type is not configured" do
+        allow(Doorkeeper.config)
+          .to receive(:deprecated_token_grant_types_resolver).and_return([])
+
+        expect { described_class.token_strategy("client_credentials") }
+          .to raise_error(Doorkeeper::Errors::InvalidTokenStrategy)
+      end
+
+      it "falls back to the legacy strategy class with a deprecation warning" do
+        allow(Doorkeeper.config)
+          .to receive(:deprecated_token_grant_types_resolver).and_return(["client_credentials"])
+
+        expect(Kernel).to receive(:warn).with(/found using fallback/)
+
+        expect(described_class.token_strategy("client_credentials"))
+          .to eq(Doorkeeper::Request::ClientCredentials)
+      end
+
+      it "raises InvalidTokenStrategy when no legacy strategy class exists" do
+        allow(Doorkeeper.config)
+          .to receive(:deprecated_token_grant_types_resolver).and_return(["bogus_grant"])
+
+        expect { described_class.token_strategy("bogus_grant") }
+          .to raise_error(Doorkeeper::Errors::InvalidTokenStrategy)
+      end
+    end
+  end
 end
