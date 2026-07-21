@@ -28,6 +28,7 @@ RSpec.describe Doorkeeper::Models::Revocable do
 
       it "does not update :revoked_at attribute" do
         expect(fake_object).not_to receive(:update_attribute)
+        fake_object.revoke
       end
     end
   end

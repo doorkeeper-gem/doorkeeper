@@ -36,6 +36,7 @@ User-visible changes worth mentioning.
 - [#1860] Fix introspection of refresh tokens (RFC 7662): a refresh token bound to an expired access token now introspects as `active: true`, matching the token endpoint which still accepts it. The introspection response for a presented refresh token no longer includes the paired access token's `token_type` and `exp`. Fixes [#1858].
 - [#1862] Document that with `reuse_access_token` enabled token matching considers only the application, resource owner, scopes and custom token attributes — separate authorization grants for the same combination intentionally share one access token — and pin the behavior with a regression spec. Docs/test-only change, closes [#1693].
 - [#1864] Fix `custom_access_token_attributes` values being dropped when the authorization goes through the consent screen: the approve/deny forms now carry the custom attributes as hidden fields, and the pre-authorization JSON (`api_only` mode) includes them so custom consent UIs can send them back.
+- [#1869] Improve test coverage
 - Please add here
 
 ## 5.9.3

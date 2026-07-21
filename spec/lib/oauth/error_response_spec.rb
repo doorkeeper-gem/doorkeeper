@@ -21,6 +21,22 @@ RSpec.describe Doorkeeper::OAuth::ErrorResponse do
     end
   end
 
+  describe "#raise_exception!" do
+    it "raises the exception class the response was built with" do
+      response = described_class.new(
+        name: :invalid_request,
+        exception_class: Doorkeeper::Errors::InvalidRequest,
+      )
+
+      expect { response.raise_exception! }.to raise_error(Doorkeeper::Errors::InvalidRequest)
+    end
+
+    it "raises NotImplementedError when no exception class is defined" do
+      expect { described_class.new.raise_exception! }
+        .to raise_error(NotImplementedError, /must define #exception_class/)
+    end
+  end
+
   describe ".from_request" do
     it "has the error from request" do
       error = described_class.from_request double(error: Doorkeeper::Errors::InvalidClient)

@@ -16,6 +16,17 @@ RSpec.describe Doorkeeper::OAuth::CodeResponse do
     )
   end
 
+  describe "#issued_token" do
+    it "exposes the token issued by the authorization" do
+      allow(pre_auth).to receive_messages(code_challenge: nil, code_challenge_method: nil)
+      auth = Doorkeeper::OAuth::Authorization::Code.new(pre_auth, owner).tap(&:issue_token!)
+
+      response = described_class.new(pre_auth, auth)
+
+      expect(response.issued_token).to eq(auth.token)
+    end
+  end
+
   describe "#body" do
     subject(:body) { described_class.new(pre_auth, auth).body }
 

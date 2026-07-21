@@ -570,6 +570,37 @@ RSpec.describe Doorkeeper::AccessToken do
       expect(last_token).to be_nil
     end
 
+    it "excludes expired tokens when include_expired is false" do
+      FactoryBot.create :access_token, default_attributes.merge(expires_in: 2, created_at: 10.seconds.ago)
+      last_token = described_class.matching_token_for(
+        application, resource_owner_id, scopes, include_expired: false,
+      )
+      expect(last_token).to be_nil
+    end
+
+    it "matches a clientless token when application is nil" do
+      token = FactoryBot.create :clientless_access_token,
+                                resource_owner_id: resource_owner_id,
+                                resource_owner_type: resource_owner.class.name,
+                                scopes: scopes.to_s
+
+      expect(described_class.matching_token_for(nil, resource_owner_id, scopes)).to eq(token)
+    end
+
+    it "applies the additional filter block" do
+      token = FactoryBot.create :access_token, default_attributes
+
+      rejected = described_class.matching_token_for(application, resource_owner_id, scopes) do |candidate|
+        candidate.refresh_token.present?
+      end
+      expect(rejected).to be_nil
+
+      accepted = described_class.matching_token_for(application, resource_owner_id, scopes) do |candidate|
+        candidate.refresh_token.blank?
+      end
+      expect(accepted).to eq(token)
+    end
+
     it "excludes tokens with a different application" do
       FactoryBot.create :access_token, default_attributes.merge(application: FactoryBot.create(:application))
       last_token = described_class.matching_token_for(application, resource_owner_id, scopes)
@@ -1014,6 +1045,36 @@ RSpec.describe Doorkeeper::AccessToken do
 
         described_class.revoke_all_for(application.id, resource_owner)
       end
+    end
+  end
+
+  describe ".not_expired when expiration time math is not supported" do
+    it "warns and returns the relation unfiltered" do
+      allow(described_class).to receive(:supports_expiration_time_math?).and_return(false)
+      expect(Kernel).to receive(:warn).with(Doorkeeper::Models::ExpirationTimeSqlMath::WARNING_MESSAGE)
+
+      expired_token = FactoryBot.create(:access_token, expires_in: 2, created_at: 10.seconds.ago)
+
+      expect(described_class.not_expired).to include(expired_token)
+    end
+  end
+
+  describe "#revoke_previous_refresh_token!" do
+    it "does nothing when refresh tokens are not revoked on use" do
+      allow(described_class).to receive(:refresh_token_revoked_on_use?).and_return(false)
+      token = FactoryBot.create(:access_token, previous_refresh_token: "previous")
+
+      token.revoke_previous_refresh_token!
+
+      expect(token.reload.previous_refresh_token).to eq("previous")
+    end
+
+    it "clears the attribute even when the previous token no longer exists" do
+      token = FactoryBot.create(:access_token, previous_refresh_token: "vanished")
+
+      token.revoke_previous_refresh_token!
+
+      expect(token.reload.previous_refresh_token).to eq("")
     end
   end
 

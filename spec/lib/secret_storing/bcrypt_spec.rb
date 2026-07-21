@@ -36,6 +36,21 @@ RSpec.describe ::Doorkeeper::SecretStoring::BCrypt do
       expect { described_class.validate_for(:token) }
         .to raise_error(ArgumentError, /can only be used for storing application secrets/)
     end
+
+    it "raises when the bcrypt gem is not available" do
+      allow(described_class).to receive(:bcrypt_present?).and_return(false)
+
+      expect { described_class.validate_for(:application) }
+        .to raise_error(ArgumentError, /requires the 'bcrypt' gem/)
+    end
+  end
+
+  describe "bcrypt_present?" do
+    it "is false when bcrypt cannot be loaded" do
+      allow(described_class).to receive(:require).with("bcrypt").and_raise(LoadError)
+
+      expect(described_class.bcrypt_present?).to be(false)
+    end
   end
 
   describe "secret_matches?" do

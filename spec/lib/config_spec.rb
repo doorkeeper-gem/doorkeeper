@@ -1365,4 +1365,178 @@ RSpec.describe Doorkeeper::Config do
       end
     end
   end
+
+  describe "deprecated_authorization_flows" do
+    before do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+    end
+
+    it "returns no flows when calculate_authorization_response_types is not patched" do
+      expect(config.deprecated_authorization_flows).to eq([])
+    end
+
+    it "warns and wraps patched response types into fallback flows" do
+      allow(Doorkeeper.config)
+        .to receive(:calculate_authorization_response_types).and_return(["custom_type"])
+
+      expect(Kernel).to receive(:warn).with(
+        /don't patch Doorkeeper::Config#calculate_authorization_response_types/,
+      )
+
+      flows = config.deprecated_authorization_flows
+
+      expect(flows.map(&:class)).to eq([Doorkeeper::GrantFlow::FallbackFlow])
+      expect(flows.first.name).to eq("custom_type")
+      expect(flows.first.matches_response_type?("custom_type")).to be(true)
+    end
+  end
+
+  describe "calculate_token_grant_types" do
+    it "includes refresh_token when refresh tokens are enabled" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_refresh_token
+      end
+
+      expect(config.calculate_token_grant_types).to include("refresh_token")
+    end
+
+    it "excludes implicit and refresh_token otherwise" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        grant_flows %w[authorization_code implicit]
+      end
+
+      expect(config.calculate_token_grant_types).to eq(%w[authorization_code])
+    end
+  end
+
+  describe "#clear_cache!" do
+    it "makes model resolution pick up configuration changes" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+
+      expect(config.access_token_model).to eq(Doorkeeper::AccessToken)
+
+      config_is_set(:access_token_class, "Doorkeeper::AccessGrant")
+      expect(config.access_token_model).to eq(Doorkeeper::AccessToken)
+
+      config.clear_cache!
+      expect(config.access_token_model).to eq(Doorkeeper::AccessGrant)
+    end
+  end
+
+  describe "hash_application_secrets with a custom fallback strategy" do
+    before do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        hash_application_secrets using: "::Doorkeeper::SecretStoring::BCrypt",
+                                 fallback: "::Doorkeeper::SecretStoring::Sha256Hash"
+      end
+    end
+
+    it "constantizes the custom fallback strategy" do
+      expect(config.application_secret_strategy).to eq(Doorkeeper::SecretStoring::BCrypt)
+      expect(config.application_secret_fallback_strategy).to eq(Doorkeeper::SecretStoring::Sha256Hash)
+    end
+  end
+
+  describe "pkce_code_challenge_methods_supported" do
+    before do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+    end
+
+    it "returns an empty array when the access grant model does not support PKCE" do
+      allow(config.access_grant_model).to receive(:pkce_supported?).and_return(false)
+
+      expect(config.pkce_code_challenge_methods_supported).to eq([])
+    end
+  end
+
+  describe "allow_token_introspection default policy" do
+    let(:policy) { config.allow_token_introspection }
+
+    before do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+    end
+
+    it "authorizes any client to introspect a token that has no application" do
+      token = double(application: nil)
+
+      expect(policy.call(token, double(id: 5), nil)).to be(true)
+    end
+
+    it "authorizes introspection of a missing token so the endpoint can answer active: false" do
+      expect(policy.call(nil, double(id: 5), nil)).to be(true)
+    end
+  end
+
+  describe "custom_metadata validation" do
+    it "warns and falls back to an empty hash for non-Hash values" do
+      expect(Rails.logger).to receive(:warn).with(/invalid value for custom_metadata/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        custom_metadata "not-a-hash"
+      end
+
+      expect(Doorkeeper.config.custom_metadata).to eq({})
+    end
+  end
+
+  describe "boolean flags set by the builder DSL" do
+    it "enables revoke_previous_client_credentials_token" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        revoke_previous_client_credentials_token
+      end
+
+      expect(config.revoke_previous_client_credentials_token?).to be(true)
+    end
+
+    it "enables revoke_previous_authorization_code_token" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        revoke_previous_authorization_code_token
+      end
+
+      expect(config.revoke_previous_authorization_code_token?).to be(true)
+    end
+
+    it "enables force_pkce" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        force_pkce
+      end
+
+      expect(config.force_pkce?).to be(true)
+    end
+
+    it "enables use_polymorphic_resource_owner" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_polymorphic_resource_owner
+      end
+
+      expect(config.polymorphic_resource_owner?).to be(true)
+    end
+  end
+
+  describe "issuer that cannot be parsed as a URI" do
+    it "warns about the non-compliant issuer" do
+      expect(Rails.logger).to receive(:warn).with(/is not RFC-compliant/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        issuer "not a valid uri"
+      end
+    end
+  end
 end

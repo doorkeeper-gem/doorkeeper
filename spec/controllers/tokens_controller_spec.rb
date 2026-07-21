@@ -55,6 +55,23 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
     end
   end
 
+  describe "POST #create when handle_auth_errors is set to :raise" do
+    before do
+      config_is_set(:handle_auth_errors, :raise)
+    end
+
+    it "renders the error response carried by the raised exception" do
+      post :create, params: {
+        client_id: "bogus",
+        client_secret: "bogus",
+        grant_type: "password",
+      }
+
+      expect(response.status).to eq(401)
+      expect(json["error"]).to eq("invalid_client")
+    end
+  end
+
   describe "POST #create with errors" do
     let(:grant_type) { "password" }
 
