@@ -105,6 +105,40 @@ RSpec.describe Doorkeeper::Application do
     expect(new_application.secret).to eq("custom_application_secret")
   end
 
+  describe "#authorized_tokens" do
+    it "returns non-revoked tokens only" do
+      application = FactoryBot.create(:application)
+      active_token = FactoryBot.create(:access_token, application: application)
+      FactoryBot.create(:access_token, application: application, revoked_at: 1.hour.ago)
+
+      expect(application.authorized_tokens).to eq([active_token])
+    end
+  end
+
+  it "raises an error when the configured secret generator is not found" do
+    Doorkeeper.configure do
+      orm DOORKEEPER_ORM
+      application_secret_generator "UnknownSecretGenerator"
+    end
+
+    expect { new_application.save }.to raise_error(
+      Doorkeeper::Errors::TokenGeneratorNotFound, /UnknownSecretGenerator/,
+    )
+  end
+
+  it "raises an error when the secret generator does not respond to generate" do
+    stub_const("InvalidSecretGenerator", Class.new)
+
+    Doorkeeper.configure do
+      orm DOORKEEPER_ORM
+      application_secret_generator "InvalidSecretGenerator"
+    end
+
+    expect { new_application.save }.to raise_error(
+      Doorkeeper::Errors::UnableToGenerateToken, /does not respond to/,
+    )
+  end
+
   # Regression for #1831: `Doorkeeper::Models::Ownership` is included only
   # when `enable_application_owner?` is set at include time. When the feature
   # is off (the default), the `:owner` association must NOT be declared, so
