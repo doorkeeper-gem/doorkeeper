@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#1865] Revoke the token issued for an authorization code when the code is exchanged more than once, per RFC 6749 §4.1.2 / §10.5. Active when the `oauth_access_grants.access_token_id` column exists: new installs get it from the generated migration, existing apps can add it with `rails generate doorkeeper:grant_reuse_revocation`. Closes [#1713].
+- [#1871] **[BREAKING]** `redirect_uri` is now compared to the registered redirect URIs with the simple string comparison required by RFC 6749 §3.1.2.3 (the RFC 8252 §7.3 loopback port exception is kept). Clients relying on the previous lenient matching must send the exact registered URI, closes [#1718].
 - Please add here
 
 ## 6.0.0.beta1
