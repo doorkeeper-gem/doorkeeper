@@ -7,6 +7,13 @@ User-visible changes worth mentioning.
 
 ## main
 
+- Please add here
+
+## 6.0.0.beta1
+
+**Please make sure** you read the [Upgrade guides](https://github.com/doorkeeper-gem/doorkeeper/wiki/Migration-from-old-versions)
+and changelog below before the update since this version includes breaking changes.
+
 - [#1816] Fix: redirect `unauthorized_client` errors per RFC 6749 Section 4.1.2.1; validate redirect_uri before `client_supports_grant_flow` to prevent open redirect
 - [#1867] Fix: use `access_denied` instead of `invalid_client` for `resource_owner_authorize_for_client` validation per RFC 6749 Section 4.1.2.1. `invalid_client` is a token endpoint error (Section 5.2), not an authorization endpoint error.
 - [#1838] Add OAuth 2.0 Authorization Server Metadata endpoint (RFC 8414) served at `/.well-known/oauth-authorization-server`. The response is built from your Doorkeeper configuration and advertises the authorization, token, revocation and (when token introspection is enabled) introspection endpoints, supported scopes, response/grant types and PKCE code challenge methods. Two new config options are available: `issuer` (defaults to the request base URL) and `custom_metadata` (a Hash merged into the response, e.g. to advertise an OIDC `userinfo_endpoint`). The controller/response use the RFC 8414 "Metadata" naming so they don't collide with a future OpenID Connect Discovery (`.well-known/openid-configuration`) implementation. Endpoints disabled through `skip_controllers` are omitted from the response instead of raising a route-generation error.
