@@ -39,6 +39,7 @@ User-visible changes worth mentioning.
 - [#1862] Document that with `reuse_access_token` enabled token matching considers only the application, resource owner, scopes and custom token attributes — separate authorization grants for the same combination intentionally share one access token — and pin the behavior with a regression spec. Docs/test-only change, closes [#1693].
 - [#1864] Fix `custom_access_token_attributes` values being dropped when the authorization goes through the consent screen: the approve/deny forms now carry the custom attributes as hidden fields, and the pre-authorization JSON (`api_only` mode) includes them so custom consent UIs can send them back.
 - [#1869] Improve test coverage
+- [#1870] Fix: raise the intended `Doorkeeper::Errors::TokenGeneratorNotFound` / `UnableToGenerateToken` (instead of a confusing `NameError`) when `application_secret_generator` is misconfigured.
 - Please add here
 
 ## 5.9.3

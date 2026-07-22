@@ -116,9 +116,9 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
 
         return generator if generator.respond_to?(:generate)
 
-        raise Errors::UnableToGenerateToken, "#{generator} does not respond to `.generate`."
+        raise Doorkeeper::Errors::UnableToGenerateToken, "#{generator} does not respond to `.generate`."
       rescue NameError
-        raise Errors::TokenGeneratorNotFound, "#{generator_name} not found"
+        raise Doorkeeper::Errors::TokenGeneratorNotFound, "#{generator_name} not found"
       end
 
       def generate_uid
