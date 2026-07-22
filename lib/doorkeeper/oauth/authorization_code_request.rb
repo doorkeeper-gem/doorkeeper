@@ -157,8 +157,12 @@ module Doorkeeper
         return unless grant.class.access_token_revoked_on_reuse?
         return if grant.access_token_id.blank?
 
-        token = Doorkeeper.config.access_token_model.find_by(id: grant.access_token_id)
-        token&.revoke
+        # Look the token up on the primary too: a lagging read replica may not
+        # have it yet, which would silently skip the revocation.
+        Doorkeeper.config.access_token_model.with_primary_role do
+          token = Doorkeeper.config.access_token_model.find_by(id: grant.access_token_id)
+          token&.revoke
+        end
       end
     end
   end
