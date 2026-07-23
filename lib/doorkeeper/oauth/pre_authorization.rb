@@ -155,6 +155,14 @@ module Doorkeeper
 
       def validate_code_challenge
         return true unless Doorkeeper.config.force_pkce?
+        # PKCE (RFC 7636) protects the exchange of an authorization code, so
+        # a code_challenge is only required from response types that issue one
+        # ("code" and code-carrying hybrid types like "code id_token"). For
+        # response types that never issue a code (e.g. "token" or an OIDC
+        # extension's "id_token"), there is no token-endpoint exchange where a
+        # verifier could ever be checked, so requiring a challenge would
+        # reject those requests over a parameter that cannot be validated.
+        return true unless code_issuing_response_type?
         return true if code_challenge.present?
 
         @invalid_request_reason = :invalid_code_challenge
@@ -176,6 +184,15 @@ module Doorkeeper
 
       def grant_type
         response_type == "code" ? AUTHORIZATION_CODE : IMPLICIT
+      end
+
+      # Whether the requested response type issues an authorization code.
+      # Multi-valued response types (OIDC hybrid flows registered by
+      # extensions, e.g. "code id_token") are space-delimited per OAuth 2.0
+      # Multiple Response Type Encoding Practices, so a token-wise check also
+      # covers response types Doorkeeper itself does not ship.
+      def code_issuing_response_type?
+        response_type.to_s.split.include?("code")
       end
 
       def pre_auth_hash
