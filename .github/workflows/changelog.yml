@@ -1,4 +1,7 @@
 name: "Changelog verifier"
+permissions:
+  contents: read
+  pull-requests: write
 on:
   pull_request:
     # The specific activity types are listed here to include "labeled" and "unlabeled"
