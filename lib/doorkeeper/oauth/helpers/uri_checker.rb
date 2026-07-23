@@ -15,27 +15,30 @@ module Doorkeeper
           false
         end
 
+        # RFC6749, Section 3.1.2.3 requires the requested redirect URI to be
+        # compared to the registered redirect URIs using the simple string
+        # comparison defined in RFC3986, Section 6.2.1.
+        # @see https://datatracker.ietf.org/doc/html/rfc6749#section-3.1.2.3
         def self.matches?(url, client_url)
+          return true if url == client_url
+
+          # RFC8252, Paragraph 7.3 allows the port of loopback interface
+          # redirect URIs to vary at runtime, so it is ignored when both
+          # URIs point to the loopback interface.
+          # @see https://datatracker.ietf.org/doc/html/rfc8252#section-7.3
           url = as_uri(url)
           client_url = as_uri(client_url)
 
-          unless client_url.query.nil?
-            return false unless query_matches?(url.query, client_url.query)
+          return false unless loopback_uri?(url) && loopback_uri?(client_url)
 
-            # Clear out queries so rest of URI can be tested. This allows query
-            # params to be in the request but order not mattering.
-            client_url.query = nil
-          end
-
-          # RFC8252, Paragraph 7.3
-          # @see https://datatracker.ietf.org/doc/html/rfc8252#section-7.3
-          if loopback_uri?(url) && loopback_uri?(client_url)
-            url.port = nil
-            client_url.port = nil
-          end
-
-          url.query = nil
-          url == client_url
+          url.port = nil
+          client_url.port = nil
+          # Compare the reassembled strings rather than the URI objects so the
+          # URI#== normalizations (e.g. an empty path matching "/") don't
+          # widen the exception beyond the port.
+          url.to_s == client_url.to_s
+        rescue URI::InvalidURIError
+          false
         end
 
         def self.loopback_uri?(uri)
@@ -50,14 +53,6 @@ module Doorkeeper
 
         def self.as_uri(url)
           URI.parse(url)
-        end
-
-        def self.query_matches?(query, client_query)
-          return true if client_query.blank? && query.blank?
-          return false if client_query.nil? || query.nil?
-
-          # Will return true independent of query order
-          client_query.split("&").sort == query.split("&").sort
         end
 
         def self.valid_scheme?(uri)

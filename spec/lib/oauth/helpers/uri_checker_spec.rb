@@ -71,10 +71,34 @@ describe Doorkeeper::OAuth::Helpers::URIChecker do
       expect(described_class).to be_matches(uri, client_uri)
     end
 
-    it "allows additional query parameters" do
+    it "doesn't allow additional query parameters" do
       uri = "http://app.co/?query=hello"
       client_uri = "http://app.co"
-      expect(described_class).to be_matches(uri, client_uri)
+      expect(described_class).not_to be_matches(uri, client_uri)
+    end
+
+    it "doesn't allow a trailing slash difference" do
+      uri = "http://app.co/aaa/"
+      client_uri = "http://app.co/aaa"
+      expect(described_class).not_to be_matches(uri, client_uri)
+    end
+
+    it "doesn't allow a path case difference" do
+      uri = "http://app.co/AAA"
+      client_uri = "http://app.co/aaa"
+      expect(described_class).not_to be_matches(uri, client_uri)
+    end
+
+    it "doesn't allow a host case difference" do
+      uri = "http://APP.CO/aaa"
+      client_uri = "http://app.co/aaa"
+      expect(described_class).not_to be_matches(uri, client_uri)
+    end
+
+    it "doesn't allow a blank query difference" do
+      uri = "http://app.co/aaa?"
+      client_uri = "http://app.co/aaa"
+      expect(described_class).not_to be_matches(uri, client_uri)
     end
 
     it "doesn't allow non-matching domains through" do
@@ -89,6 +113,33 @@ describe Doorkeeper::OAuth::Helpers::URIChecker do
       expect(described_class).not_to be_matches(uri, client_uri)
     end
 
+    it "is false if one of the uris is not a valid URI" do
+      uri = "http://app.co/aaa"
+      client_uri = "http://app.co/ /aaa"
+      expect(described_class).not_to be_matches(uri, client_uri)
+    end
+
+    it "is false if only one of the uris is a loopback URI" do
+      uri = "http://127.0.0.1:5555/auth/callback"
+      client_uri = "http://app.co/auth/callback"
+      expect(described_class).not_to be_matches(uri, client_uri)
+    end
+
+    it "is true for identical custom-scheme URIs" do
+      uri = client_uri = "com.example.app:/oauth/callback"
+      expect(described_class).to be_matches(uri, client_uri)
+    end
+
+    it "is false for non-matching custom-scheme URIs" do
+      uri = "com.example.app:/oauth/callback"
+      client_uri = "com.example.app:/oauth/other"
+      expect(described_class).not_to be_matches(uri, client_uri)
+
+      uri = "com.example.app:/oauth/callback"
+      client_uri = "com.example.other:/oauth/callback"
+      expect(described_class).not_to be_matches(uri, client_uri)
+    end
+
     context "when loopback IP redirect URIs" do
       it "ignores port for same URIs" do
         uri = "http://127.0.0.1:5555/auth/callback"
@@ -96,13 +147,45 @@ describe Doorkeeper::OAuth::Helpers::URIChecker do
         expect(described_class).to be_matches(uri, client_uri)
 
         uri = "http://[::1]:5555/auth/callback"
-        client_uri = "http://[::1]:5555/auth/callback"
+        client_uri = "http://[::1]:48599/auth/callback"
         expect(described_class).to be_matches(uri, client_uri)
       end
 
-      it "doesn't ignore port for URIs with different queries" do
+      it "ignores port when only the request URI specifies one" do
+        uri = "http://127.0.0.1:5555/auth/callback"
+        client_uri = "http://127.0.0.1/auth/callback"
+        expect(described_class).to be_matches(uri, client_uri)
+
+        uri = "http://[::1]:5555/auth/callback"
+        client_uri = "http://[::1]/auth/callback"
+        expect(described_class).to be_matches(uri, client_uri)
+      end
+
+      it "ignores port when only the client URI specifies one" do
+        uri = "http://127.0.0.1/auth/callback"
+        client_uri = "http://127.0.0.1:48599/auth/callback"
+        expect(described_class).to be_matches(uri, client_uri)
+
+        uri = "http://[::1]/auth/callback"
+        client_uri = "http://[::1]:48599/auth/callback"
+        expect(described_class).to be_matches(uri, client_uri)
+      end
+
+      it "doesn't ignore port for URIs with different paths" do
         uri = "http://127.0.0.1:5555/auth/callback"
         client_uri = "http://127.0.0.1:48599/auth/callback2"
+        expect(described_class).not_to be_matches(uri, client_uri)
+      end
+
+      it "doesn't ignore port for URIs with different queries" do
+        uri = "http://127.0.0.1:5555/auth/callback?foo=bar"
+        client_uri = "http://127.0.0.1:48599/auth/callback?foo=baz"
+        expect(described_class).not_to be_matches(uri, client_uri)
+      end
+
+      it "doesn't ignore port for URIs with an empty path vs root path difference" do
+        uri = "http://127.0.0.1:5555"
+        client_uri = "http://127.0.0.1:48599/"
         expect(described_class).not_to be_matches(uri, client_uri)
       end
     end
@@ -138,10 +221,10 @@ describe Doorkeeper::OAuth::Helpers::URIChecker do
         expect(described_class).to be_matches(uri, client_uri)
       end
 
-      it "is true if queries are present, match and in different order" do
+      it "is false if queries are present and match but in different order" do
         uri = "http://app.co/?bing=bang&foo=bar"
         client_uri = "http://app.co/?foo=bar&bing=bang"
-        expect(described_class).to be_matches(uri, client_uri)
+        expect(described_class).not_to be_matches(uri, client_uri)
       end
     end
   end
@@ -155,17 +238,19 @@ describe Doorkeeper::OAuth::Helpers::URIChecker do
       expect(described_class).to be_valid_for_authorization(uri, client_uri)
     end
 
-    it "is true if uri includes blank query" do
+    it "is true if uri includes blank query and client uri is identical" do
       uri = client_uri = "http://app.co/aaa?"
       expect(described_class).to be_valid_for_authorization(uri, client_uri)
+    end
 
+    it "is false if only one of the uris includes a blank query" do
       uri = "http://app.co/aaa?"
       client_uri = "http://app.co/aaa"
-      expect(described_class).to be_valid_for_authorization(uri, client_uri)
+      expect(described_class).not_to be_valid_for_authorization(uri, client_uri)
 
       uri = "http://app.co/aaa"
       client_uri = "http://app.co/aaa?"
-      expect(described_class).to be_valid_for_authorization(uri, client_uri)
+      expect(described_class).not_to be_valid_for_authorization(uri, client_uri)
     end
 
     it "is false if valid and mismatches" do
@@ -204,57 +289,6 @@ describe Doorkeeper::OAuth::Helpers::URIChecker do
       client_uri = "http://app.co/aaa?waffles=abc"
       expect(described_class).to receive(:valid?).with(uri).once
       described_class.valid_for_authorization?(uri, client_uri)
-    end
-  end
-
-  describe ".query_matches?" do
-    it "is true if no queries" do
-      expect(described_class).to be_query_matches("", "")
-      expect(described_class).to be_query_matches(nil, nil)
-    end
-
-    it "is true if same query" do
-      expect(described_class).to be_query_matches("foo", "foo")
-    end
-
-    it "is false if different query" do
-      expect(described_class).not_to be_query_matches("foo", "bar")
-    end
-
-    it "is true if same queries" do
-      expect(described_class).to be_query_matches("foo&bar", "foo&bar")
-    end
-
-    it "is true if same queries, different order" do
-      expect(described_class).to be_query_matches("foo&bar", "bar&foo")
-    end
-
-    it "is false if one different query" do
-      expect(described_class).not_to be_query_matches("foo&bang", "foo&bing")
-    end
-
-    it "is true if same query with same value" do
-      expect(described_class).to be_query_matches("foo=bar", "foo=bar")
-    end
-
-    it "is true if same queries with same values" do
-      expect(described_class).to be_query_matches("foo=bar&bing=bang", "foo=bar&bing=bang")
-    end
-
-    it "is true if same queries with same values, different order" do
-      expect(described_class).to be_query_matches("foo=bar&bing=bang", "bing=bang&foo=bar")
-    end
-
-    it "is false if same query with different value" do
-      expect(described_class).not_to be_query_matches("foo=bar", "foo=bang")
-    end
-
-    it "is false if some queries missing" do
-      expect(described_class).not_to be_query_matches("foo=bar", "foo=bar&bing=bang")
-    end
-
-    it "is false if some queries different value" do
-      expect(described_class).not_to be_query_matches("foo=bar&bing=bang", "foo=bar&bing=banana")
     end
   end
 
