@@ -449,6 +449,62 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
           expect(pre_auth).to be_authorizable
         end
       end
+
+      # PKCE protects the authorization code exchange (RFC 7636), so response
+      # types that never issue a code have no token-endpoint step where a
+      # code_verifier could be checked — a challenge must not be required.
+      context "when the response type does not issue an authorization code" do
+        before do
+          allow(server).to receive(:grant_flows).and_return(%w[implicit])
+          attributes[:response_type] = "token"
+        end
+
+        it "accepts the request without a code_challenge" do
+          attributes.delete(:code_challenge)
+
+          expect(pre_auth).to be_authorizable
+        end
+
+        it "accepts the request with a code_challenge" do
+          attributes[:code_challenge] = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
+          attributes[:code_challenge_method] = "plain"
+
+          expect(pre_auth).to be_authorizable
+        end
+      end
+
+      context "when an extension-registered hybrid response type issues a code" do
+        around do |example|
+          origin_flows = Doorkeeper::GrantFlow::Registry.flows.dup
+          example.run
+          Doorkeeper::GrantFlow::Registry.flows = origin_flows
+        end
+
+        before do
+          Doorkeeper::GrantFlow.register(
+            :hybrid,
+            response_type_matches: "code id_token",
+            response_mode_matches: %w[fragment form_post],
+            response_type_strategy: Doorkeeper::Request::Code,
+          )
+          allow(server).to receive(:grant_flows).and_return(%w[hybrid])
+          attributes[:response_type] = "code id_token"
+        end
+
+        it "does not accept the request without a code_challenge" do
+          attributes.delete(:code_challenge)
+
+          expect(pre_auth).not_to be_authorizable
+          expect(pre_auth.error_response.description).to eq(translated_invalid_request_error_message(:invalid_code_challenge, nil))
+        end
+
+        it "accepts a code challenge" do
+          attributes[:code_challenge] = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
+          attributes[:code_challenge_method] = "plain"
+
+          expect(pre_auth).to be_authorizable
+        end
+      end
     end
   end
 end
