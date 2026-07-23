@@ -100,6 +100,15 @@ module Doorkeeper
         column_names.include?("code_challenge")
       end
 
+      # Replay protection for authorization codes (RFC 6749 §4.1.2, §10.5)
+      # is active only when the `access_token_id` column exists (added by
+      # the `doorkeeper:grant_reuse_revocation` generator): the column
+      # records the access token issued when the code was exchanged, so a
+      # second exchange attempt can revoke it.
+      def access_token_revoked_on_reuse?
+        column_names.include?("access_token_id")
+      end
+
       ##
       # Determines the secret storing transformer
       # Unless configured otherwise, uses the plain secret strategy

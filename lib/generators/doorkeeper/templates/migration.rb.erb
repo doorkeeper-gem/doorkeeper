@@ -28,6 +28,18 @@ class CreateDoorkeeperTables < ActiveRecord::Migration<%= migration_version %>
       t.string   :scopes,            null: false, default: ''
       t.datetime :created_at,        null: false
       t.datetime :revoked_at
+
+      # Authorization codes are single-use (RFC 6749 §4.1.2). Doorkeeper
+      # records the access token issued when the code is exchanged, so that
+      # a second exchange attempt revokes the previously issued tokens as
+      # recommended by RFC 6749 §10.5.
+      #
+      # Comment out this line if you don't want a reused authorization code
+      # to revoke the tokens already issued for it.
+      #
+      # No index: the column is only read back from an already-loaded grant,
+      # never used to filter queries.
+      t.references :access_token,    index: false
     end
 
     add_index :oauth_access_grants, :token, unique: true

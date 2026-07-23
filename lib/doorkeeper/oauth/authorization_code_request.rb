@@ -9,6 +9,9 @@ module Doorkeeper
       # @see https://datatracker.ietf.org/doc/html/rfc6749#section-5.2
       validate :redirect_uri, error: Errors::InvalidGrant
       validate :code_verifier, error: Errors::InvalidGrant
+      # Runs last, so the single-use enforcement it performs only acts once
+      # the caller has proven possession of the code (redirect_uri + PKCE).
+      validate :grant_accessible, error: Errors::InvalidGrant
 
       attr_reader :grant, :client, :redirect_uri, :access_token, :code_verifier,
                   :invalid_request_reason, :missing_param
@@ -46,9 +49,18 @@ module Doorkeeper
             custom_token_attributes_with_data,
             server,
           )
+
+          link_access_token_to_grant
         end
 
         super
+      rescue Errors::InvalidGrantReuse
+        # A concurrent exchange of the same code won the race: the raise
+        # rolled this transaction back, so the revocation must happen
+        # outside of it. `lock!` reloaded the grant after the winning
+        # exchange committed, so the token linkage is visible here.
+        revoke_token_issued_for_grant
+        raise
       end
 
       def resource_owner
@@ -81,7 +93,16 @@ module Doorkeeper
       end
 
       def validate_grant
-        return false unless grant && grant.application_id == client.id
+        grant && grant.application_id == client.id
+      end
+
+      # Checked after redirect_uri and PKCE so that a caller who cannot prove
+      # possession of the code never reaches the reuse handling below.
+      def validate_grant_accessible
+        # Authorization codes are single-use (RFC 6749 §4.1.2): observing a
+        # second exchange attempt denies the request and revokes the tokens
+        # already issued for the code (§10.5).
+        revoke_token_issued_for_grant if grant.revoked?
 
         grant.accessible?
       end
@@ -122,6 +143,26 @@ module Doorkeeper
 
       def revoke_previous_tokens(application, resource_owner)
         Doorkeeper.config.access_token_model.revoke_all_for(application.id, resource_owner)
+      end
+
+      def link_access_token_to_grant
+        return unless grant.class.access_token_revoked_on_reuse?
+
+        grant.class.with_primary_role do
+          grant.update_column(:access_token_id, access_token.id)
+        end
+      end
+
+      def revoke_token_issued_for_grant
+        return unless grant.class.access_token_revoked_on_reuse?
+        return if grant.access_token_id.blank?
+
+        # Look the token up on the primary too: a lagging read replica may not
+        # have it yet, which would silently skip the revocation.
+        Doorkeeper.config.access_token_model.with_primary_role do
+          token = Doorkeeper.config.access_token_model.find_by(id: grant.access_token_id)
+          token&.revoke
+        end
       end
     end
   end
