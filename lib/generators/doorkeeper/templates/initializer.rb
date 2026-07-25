@@ -298,6 +298,28 @@ Doorkeeper.configure do
   # The legacy `client_credentials` option is deprecated; `:from_basic` and
   # `:from_params` are automatically mapped to `:client_secret_basic` and
   # `:client_secret_post`.
+  #
+  # A `private_key_jwt` method (RFC 7523 / OIDC Core §9) is also registered
+  # but not enabled by default — add it to the list above to accept it. It
+  # requires the `jwt` gem (>= 2.7) in your bundle, and verifies assertions
+  # against the client's published public keys: the `jwks` / `jwks_uri` of a
+  # Client ID Metadata Document client, or `jwks` / `jwks_uri` attributes you
+  # define on your Application model for registered clients (Doorkeeper does
+  # not add these columns itself). Assertions must carry iss = sub =
+  # client_id, an aud of your `issuer` (or the token endpoint URL), a bounded
+  # exp, a kid header, and a single-use jti (replay is tracked per process).
+  #
+  # The accepted audiences are built from your `issuer` or from Rails'
+  # `default_url_options`; set at least one of them, otherwise Doorkeeper has
+  # nothing but the request's Host header to identify itself with and the
+  # audience check cannot tell your server apart from another one.
+  #
+  # A registered client's `jwks_uri` is fetched with the same hardened HTTP
+  # client as a metadata document, so a jwks_uri on a private network or on
+  # localhost is refused even though you configured it yourself; inline `jwks`
+  # has no such restriction.
+  #
+  # client_authentication %i[client_secret_basic client_secret_post none private_key_jwt]
 
   # Change the way access token is authenticated from the request object.
   # By default it retrieves first from the `HTTP_AUTHORIZATION` header, then

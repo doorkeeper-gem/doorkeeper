@@ -298,7 +298,7 @@ RSpec.describe "Authorization Server Metadata endpoint" do
 
   context "with an unregistered client_authentication method configured" do
     before do
-      config_is_set(:client_authentication, %i[client_secret_basic private_key_jwt])
+      config_is_set(:client_authentication, %i[client_secret_basic tls_client_auth])
     end
 
     it "does not advertise the method the resolver ignores" do
@@ -326,16 +326,16 @@ RSpec.describe "Authorization Server Metadata endpoint" do
   context "with a custom client_authentication method registered by an extension" do
     before do
       Doorkeeper::ClientAuthentication.register(
-        :private_key_jwt,
+        :tls_client_auth,
         double(matches_request?: false, authenticate: nil),
       )
-      config_is_set(:client_authentication, %i[client_secret_basic private_key_jwt])
+      config_is_set(:client_authentication, %i[client_secret_basic tls_client_auth])
     end
 
     after do
       # The example only adds this one method, so removing it restores the
       # registry in-place without replacing the Hash other code may hold.
-      Doorkeeper::ClientAuthentication::Registry.registered_methods.delete(:private_key_jwt)
+      Doorkeeper::ClientAuthentication::Registry.registered_methods.delete(:tls_client_auth)
     end
 
     it "advertises the custom method alongside the built-ins" do
@@ -343,7 +343,7 @@ RSpec.describe "Authorization Server Metadata endpoint" do
 
       response_status_should_be(200)
       expect(json_response["token_endpoint_auth_methods_supported"])
-        .to eq(%w[client_secret_basic private_key_jwt])
+        .to eq(%w[client_secret_basic tls_client_auth])
     end
   end
 

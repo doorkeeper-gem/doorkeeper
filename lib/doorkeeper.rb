@@ -69,6 +69,7 @@ module Doorkeeper
       autoload :None, "doorkeeper/oauth/client_authentication/none"
       autoload :ClientSecretBasic, "doorkeeper/oauth/client_authentication/client_secret_basic"
       autoload :ClientSecretPost, "doorkeeper/oauth/client_authentication/client_secret_post"
+      autoload :PrivateKeyJwt, "doorkeeper/oauth/client_authentication/private_key_jwt"
     end
 
     module Authorization
