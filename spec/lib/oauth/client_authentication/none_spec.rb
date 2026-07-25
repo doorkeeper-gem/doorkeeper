@@ -38,6 +38,35 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::None do
       expect(described_class.matches_request?(request)).to be true
     end
 
+    it "matches a Bearer header with irregular whitespace" do
+      request = mock_request(
+        request_parameters: { client_id: "1234" },
+        authorization: "  Bearer   some-token",
+      )
+
+      expect(described_class.matches_request?(request)).to be true
+    end
+
+    it "doesn't treat a line break as the whitespace HTTP allows around a field value" do
+      # A header value can never contain a line break, so a value that only
+      # looks like a bearer token across lines must not be exempted.
+      request = mock_request(
+        request_parameters: { client_id: "1234" },
+        authorization: "Bearer\nBasic dXNlcjpwYXNzd29yZA==",
+      )
+
+      expect(described_class.matches_request?(request)).not_to be true
+    end
+
+    it "doesn't match a Bearer scheme preceded by a line break" do
+      request = mock_request(
+        request_parameters: { client_id: "1234" },
+        authorization: "\nBearer some-token",
+      )
+
+      expect(described_class.matches_request?(request)).not_to be true
+    end
+
     it "doesn't match if the request has a non-Bearer Authorization header (e.g. Digest)" do
       request = mock_request(
         request_parameters: { client_id: "1234" },

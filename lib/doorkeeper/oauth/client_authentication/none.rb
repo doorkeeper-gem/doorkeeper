@@ -31,13 +31,18 @@ module Doorkeeper
         # A blank Authorization header carries no client authentication; a
         # bearer token authorizes the endpoint rather than the client. Every
         # other non-blank scheme (Basic, etc.) is header-based client
-        # authentication.
+        # authentication. The pattern tolerates the optional whitespace HTTP
+        # allows around a field value (spaces and tabs only, RFC 9110 §5.6.3)
+        # so a well-formed Bearer header is not misclassified, while a value
+        # carrying a line break — never legal in a header — is not treated as
+        # a bearer token.
         def self.client_authentication_header?(request)
           header = request.authorization
           return false if header.blank?
 
-          !header.match?(/^Bearer /i)
+          !header.match?(/\A[ \t]*Bearer[ \t]+/i)
         end
+        private_class_method :client_authentication_header?
 
         def self.authenticate(request)
           params = request.request_parameters.with_indifferent_access
