@@ -31,14 +31,26 @@ module Doorkeeper
 
           return false unless loopback_uri?(url) && loopback_uri?(client_url)
 
-          url.port = nil
-          client_url.port = nil
-          # Compare the reassembled strings rather than the URI objects so the
-          # URI#== normalizations (e.g. an empty path matching "/") don't
-          # widen the exception beyond the port.
-          url.to_s == client_url.to_s
+          urls_match?(url, client_url)
         rescue URI::InvalidURIError
           false
+        end
+
+        # RFC 8252 §7.3 lets only the PORT of a loopback redirect URI vary at
+        # runtime. Compare every other component explicitly instead of blanking
+        # the port and comparing the reassembled strings: `URI#port=` also
+        # clears the userinfo on Ruby >= 4.0, which would let
+        # `http://attacker@127.0.0.1/cb` match a registered
+        # `http://127.0.0.1/cb`. Comparing components (not `URI#==`) also keeps
+        # the exception from widening past the port — e.g. an empty path is not
+        # treated as equal to "/".
+        def self.urls_match?(url, client_url)
+          url.scheme == client_url.scheme &&
+            url.userinfo == client_url.userinfo &&
+            url.host == client_url.host &&
+            url.path == client_url.path &&
+            url.query == client_url.query &&
+            url.fragment == client_url.fragment
         end
 
         def self.loopback_uri?(uri)

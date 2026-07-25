@@ -188,6 +188,22 @@ describe Doorkeeper::OAuth::Helpers::URIChecker do
         client_uri = "http://127.0.0.1:48599/"
         expect(described_class).not_to be_matches(uri, client_uri)
       end
+
+      it "doesn't ignore userinfo (only the port may vary, RFC 8252 §7.3)" do
+        uri = "http://attacker@127.0.0.1:5555/auth/callback"
+        client_uri = "http://127.0.0.1/auth/callback"
+        expect(described_class).not_to be_matches(uri, client_uri)
+
+        uri = "http://attacker@[::1]:5555/auth/callback"
+        client_uri = "http://[::1]/auth/callback"
+        expect(described_class).not_to be_matches(uri, client_uri)
+      end
+
+      it "still matches when the userinfo is identical and only the port differs" do
+        uri = "http://user@127.0.0.1:5555/auth/callback"
+        client_uri = "http://user@127.0.0.1:48599/auth/callback"
+        expect(described_class).to be_matches(uri, client_uri)
+      end
     end
 
     context "when client registered query params" do
