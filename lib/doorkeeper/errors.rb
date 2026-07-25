@@ -50,6 +50,16 @@ module Doorkeeper
       end
     end
 
+    # Raised when the `scope` parameter is present but not a string — e.g.
+    # `scope[a]=b`, which Rack parses into a Hash. Its octets cannot be split
+    # into scope tokens, so the request is malformed (RFC 6749 §3.3) and must
+    # be answered with `invalid_request` rather than an unhandled 500.
+    class InvalidScopeParameter < DoorkeeperError
+      def type
+        :invalid_request
+      end
+    end
+
     class BaseResponseError < DoorkeeperError
       attr_reader :response
 
