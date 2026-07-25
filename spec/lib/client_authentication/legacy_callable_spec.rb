@@ -5,6 +5,10 @@ require "spec_helper"
 RSpec.describe Doorkeeper::ClientAuthentication::LegacyCallable do
   let(:request) { double(:request, env: {}) }
 
+  it "is treated as a shared-secret method" do
+    expect(described_class.new(->(_request) {}).uses_shared_secret?).to be true
+  end
+
   describe "#matches_request?" do
     it "matches when the callable yields present credentials" do
       adapter = described_class.new(->(_request) { %w[uid secret] })

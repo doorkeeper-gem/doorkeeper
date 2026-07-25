@@ -31,6 +31,7 @@ gem "sqlite3", "~> 2.3", platform: %i[ruby mswin mingw x64_mingw]
 
 gem "timecop"
 gem "tzinfo-data", platforms: %i[mingw mswin x64_mingw]
+gem "webmock"
 
 gem "irb", "~> 1.8"
 

@@ -3,6 +3,10 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::ClientAuthentication::None do
+  it "declares that it uses no shared secret" do
+    expect(described_class.uses_shared_secret?).to be false
+  end
+
   describe ".matches_request?" do
     it "matches if the request body has a client_id but no client_secret" do
       request = mock_request(request_parameters: { client_id: "1234" })

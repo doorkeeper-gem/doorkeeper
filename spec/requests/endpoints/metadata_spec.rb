@@ -78,6 +78,28 @@ RSpec.describe "Authorization Server Metadata endpoint" do
     end
   end
 
+  context "with client ID metadata documents enabled" do
+    before do
+      config_is_set(:client_id_metadata_documents, true)
+    end
+
+    it "advertises client_id_metadata_document_supported" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["client_id_metadata_document_supported"]).to be true
+    end
+  end
+
+  context "with client ID metadata documents disabled" do
+    it "advertises client_id_metadata_document_supported as false" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["client_id_metadata_document_supported"]).to be false
+    end
+  end
+
   context "with a blank issuer (e.g. an unset env var)" do
     before do
       config_is_set(:issuer, "")

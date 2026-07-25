@@ -31,4 +31,17 @@ RSpec.describe Doorkeeper::ClientAuthentication::Method do
 
     method.authenticate(example: true)
   end
+
+  describe "#uses_shared_secret?" do
+    it "trusts a strategy that declares it" do
+      declared = described_class.new(:client_secret_sounding, double(uses_shared_secret?: false))
+
+      expect(declared.uses_shared_secret?).to be false
+    end
+
+    it "falls back to the registration name when undeclared" do
+      expect(described_class.new(:my_client_secret_thing, double).uses_shared_secret?).to be true
+      expect(described_class.new(:tls_client_auth, double).uses_shared_secret?).to be false
+    end
+  end
 end

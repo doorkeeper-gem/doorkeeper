@@ -18,6 +18,23 @@ module Doorkeeper
         @name = name
         @strategy = strategy
       end
+
+      # Whether this method authenticates clients with a shared symmetric
+      # secret. Some contexts must refuse such methods — e.g. Client ID
+      # Metadata Document clients, with whom no secret can have been
+      # established (draft Section 4.1).
+      #
+      # Strategies may declare this themselves by defining
+      # +uses_shared_secret?+; for strategies that don't, the registration
+      # name is checked for "client_secret" as a conservative fallback, so an
+      # undeclared method errs on the side of being treated as secret-based.
+      def uses_shared_secret?
+        if strategy.respond_to?(:uses_shared_secret?)
+          strategy.uses_shared_secret?
+        else
+          name.to_s.include?("client_secret")
+        end
+      end
     end
   end
 end

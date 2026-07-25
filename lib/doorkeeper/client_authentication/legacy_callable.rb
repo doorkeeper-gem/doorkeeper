@@ -16,6 +16,12 @@ module Doorkeeper
         @callable = callable
       end
 
+      # Legacy extractors pull a uid/secret pair out of the request, so they
+      # are treated as shared-secret methods.
+      def uses_shared_secret?
+        true
+      end
+
       def matches_request?(request)
         credentials_for(request).present?
       end

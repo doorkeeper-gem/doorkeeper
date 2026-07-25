@@ -1,0 +1,100 @@
+# frozen_string_literal: true
+
+require "spec_helper"
+
+RSpec.describe Doorkeeper::ClientIdMetadata::UrlValidator do
+  describe ".valid?" do
+    it "accepts an https URL with a path" do
+      expect(described_class.valid?("https://client.example.com/oauth-client")).to be true
+    end
+
+    it "accepts a URL with a port" do
+      expect(described_class.valid?("https://client.example.com:8443/oauth-client")).to be true
+    end
+
+    it "accepts a URL with a query string (SHOULD NOT, but tolerated)" do
+      expect(described_class.valid?("https://client.example.com/oauth-client?v=1")).to be true
+    end
+
+    it "rejects an http URL" do
+      expect(described_class.valid?("http://client.example.com/oauth-client")).to be false
+    end
+
+    it "rejects other schemes" do
+      expect(described_class.valid?("ftp://client.example.com/oauth-client")).to be false
+    end
+
+    it "rejects a URL without a path component" do
+      expect(described_class.valid?("https://client.example.com")).to be false
+    end
+
+    it "rejects a URL with a fragment" do
+      expect(described_class.valid?("https://client.example.com/oauth-client#frag")).to be false
+    end
+
+    it "rejects a URL with a username" do
+      expect(described_class.valid?("https://user@client.example.com/oauth-client")).to be false
+    end
+
+    it "rejects a URL with a username and password" do
+      expect(described_class.valid?("https://user:pass@client.example.com/oauth-client")).to be false
+    end
+
+    it "rejects single-dot path segments" do
+      expect(described_class.valid?("https://client.example.com/./oauth-client")).to be false
+    end
+
+    it "rejects double-dot path segments" do
+      expect(described_class.valid?("https://client.example.com/../oauth-client")).to be false
+    end
+
+    it "rejects a trailing double-dot path segment" do
+      expect(described_class.valid?("https://client.example.com/a/..")).to be false
+    end
+
+    it "rejects percent-encoded single-dot path segments" do
+      expect(described_class.valid?("https://client.example.com/%2e/oauth-client")).to be false
+    end
+
+    it "rejects percent-encoded double-dot path segments" do
+      expect(described_class.valid?("https://client.example.com/%2e%2e/oauth-client")).to be false
+    end
+
+    it "rejects mixed-case percent-encoded dot segments" do
+      expect(described_class.valid?("https://client.example.com/%2E%2e/oauth-client")).to be false
+    end
+
+    it "rejects partially encoded double-dot path segments" do
+      expect(described_class.valid?("https://client.example.com/.%2e/oauth-client")).to be false
+    end
+
+    it "accepts a percent-encoded segment that is not a dot segment" do
+      expect(described_class.valid?("https://client.example.com/oauth%2Dclient")).to be true
+    end
+
+    it "accepts a URL right at the maximum length" do
+      url = "https://client.example.com/#{"a" * (described_class::MAX_LENGTH - 27)}"
+
+      expect(url.length).to eq(described_class::MAX_LENGTH)
+      expect(described_class.valid?(url)).to be true
+    end
+
+    # The uid column the URL is stored in is a string, which MySQL sizes at
+    # 255 characters; a longer client_id could never be materialized.
+    it "rejects a URL longer than the uid column can hold" do
+      url = "https://client.example.com/#{"a" * (described_class::MAX_LENGTH - 26)}"
+
+      expect(url.length).to eq(described_class::MAX_LENGTH + 1)
+      expect(described_class.valid?(url)).to be false
+    end
+
+    it "rejects unparseable URLs" do
+      expect(described_class.valid?("https://client example com/oauth-client")).to be false
+    end
+
+    it "rejects blank values" do
+      expect(described_class.valid?(nil)).to be false
+      expect(described_class.valid?("")).to be false
+    end
+  end
+end

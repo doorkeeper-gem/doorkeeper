@@ -35,6 +35,9 @@ module Doorkeeper
             # condition under which the iss parameter is emitted. false survives
             # the compaction below, so it is advertised explicitly.
             authorization_response_iss_parameter_supported: config.issuer.present?,
+            # Client ID Metadata Document draft, Section 5. Like the RFC 9207
+            # field above, false is advertised explicitly.
+            client_id_metadata_document_supported: config.client_id_metadata_documents?,
           }
           data.compact!
 

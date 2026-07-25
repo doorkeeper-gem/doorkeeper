@@ -29,7 +29,16 @@ module Doorkeeper
         @application = application
       end
 
+      # @param uid [String] the client identifier to look up
+      # @param method [#call] how to look an opaque uid up. Not consulted for
+      #   URL client_ids, which are resolved through their metadata document
+      #   rather than through the application table.
       def self.find(uid, method = Doorkeeper.config.application_model.method(:by_uid))
+        if Doorkeeper::ClientIdMetadata.url_client_id?(uid)
+          application = Doorkeeper::ClientIdMetadata.resolve(uid)
+          return application && new(application)
+        end
+
         return unless (application = method.call(uid))
 
         new(application)
@@ -37,6 +46,21 @@ module Doorkeeper
 
       def self.authenticate(credentials, method = Doorkeeper.config.application_model.method(:by_uid_and_secret))
         return if credentials.blank?
+
+        if Doorkeeper::ClientIdMetadata.url_client_id?(credentials.uid)
+          # Shared-secret authentication is forbidden for URL client_ids
+          # (draft Section 4.1): no secret is ever established with such a
+          # client, so a presented secret is rejected outright — never
+          # compared against the materialized row's auto-generated (or a
+          # pre-existing row's) secret.
+          return if credentials.secret.present?
+
+          # The document is resolved before the regular lookup so the
+          # application row exists and reflects the current document; the
+          # lookup below still applies the public-client check against it.
+          return if Doorkeeper::ClientIdMetadata.resolve(credentials.uid).nil?
+        end
+
         return unless (application = method.call(credentials.uid, credentials.secret))
 
         new(application)
