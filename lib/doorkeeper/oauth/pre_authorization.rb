@@ -123,11 +123,17 @@ module Doorkeeper
                            :scope
                          end
 
+        return false unless @missing_param.nil?
+
         # A structured `scope` (e.g. `scope[a]=b`, parsed by Rack into a Hash)
         # is malformed (RFC 6749 §3.3). Reject it here — before validate_scopes
         # reaches Scopes.from_string — so the authorization endpoint answers
         # invalid_request instead of letting the raised error surface as a 500.
-        @missing_param.nil? && scope_param_well_formed?
+        # Set a reason so the error_description is not translated from nil.
+        return true if scope_param_well_formed?
+
+        @invalid_request_reason = :unknown
+        false
       end
 
       def scope_param_well_formed?

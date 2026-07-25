@@ -164,6 +164,7 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
       expect { @authorizable = pre_auth.authorizable? }.not_to raise_error
       expect(@authorizable).to be false
       expect(pre_auth.error).to eq(Doorkeeper::Errors::InvalidRequest)
+      expect(pre_auth.invalid_request_reason).to eq(:unknown)
     end
 
     it "accepts scopes which are permitted for grant_type" do

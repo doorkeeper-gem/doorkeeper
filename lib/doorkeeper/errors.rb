@@ -58,6 +58,13 @@ module Doorkeeper
       def type
         :invalid_request
       end
+
+      # Maps to `invalid_request.unknown` ("... or is otherwise malformed").
+      # Without a reason the token endpoint would translate `nil` and return a
+      # blank error_description.
+      def reason
+        :unknown
+      end
     end
 
     class BaseResponseError < DoorkeeperError

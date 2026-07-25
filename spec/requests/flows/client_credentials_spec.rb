@@ -191,6 +191,7 @@ RSpec.describe "Client Credentials Request" do
 
       expect(response).to have_http_status(:bad_request)
       expect(json_response).to include("error" => "invalid_request")
+      expect(json_response["error_description"]).to be_present
     end
   end
 
