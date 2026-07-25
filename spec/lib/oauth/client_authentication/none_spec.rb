@@ -25,10 +25,23 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::None do
       expect(described_class.matches_request?(request)).not_to be true
     end
 
-    it "doesn't match if the request has a non-Basic Authorization header (e.g. Bearer)" do
+    it "matches if the Authorization header is a Bearer token (endpoint protection, not client auth)" do
+      # A Bearer credential authorizes access to the endpoint itself (e.g. a
+      # bearer-protected introspection endpoint, RFC 7662 §2.1) rather than
+      # authenticating the client, so it must not suppress the none strategy
+      # for a public client identifying itself with a body client_id.
       request = mock_request(
         request_parameters: { client_id: "1234" },
         authorization: "Bearer some-token",
+      )
+
+      expect(described_class.matches_request?(request)).to be true
+    end
+
+    it "doesn't match if the request has a non-Bearer Authorization header (e.g. Digest)" do
+      request = mock_request(
+        request_parameters: { client_id: "1234" },
+        authorization: "Digest username=\"a\"",
       )
 
       expect(described_class.matches_request?(request)).not_to be true
