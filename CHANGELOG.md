@@ -9,6 +9,7 @@ User-visible changes worth mentioning.
 
 - [#1865] Revoke the token issued for an authorization code when the code is exchanged more than once, per RFC 6749 §4.1.2 / §10.5. Active when the `oauth_access_grants.access_token_id` column exists: new installs get it from the generated migration, existing apps can add it with `rails generate doorkeeper:grant_reuse_revocation`. Closes [#1713].
 - [#1871] **[BREAKING]** `redirect_uri` is now compared to the registered redirect URIs with the simple string comparison required by RFC 6749 §3.1.2.3 (the RFC 8252 §7.3 loopback port exception is kept). Clients relying on the previous lenient matching must send the exact registered URI, closes [#1718].
+- [#1876] Fix: reject a non-string `scope` parameter (e.g. `scope[a]=b`, which Rack parses into a Hash) with `invalid_request` (RFC 6749 §3.3) instead of an unhandled 500. `Scopes.from_string` now raises `Errors::InvalidScopeParameter` for a non-string argument — turned into `invalid_request` by the token endpoint's `rescue_from`, so every grant type is covered — and the authorization endpoint rejects it up front in pre-authorization validation. The crash was reachable unauthenticated, before client authentication.
 - Please add here
 
 ## 6.0.0.beta1

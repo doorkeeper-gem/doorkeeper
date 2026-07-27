@@ -10,6 +10,14 @@ module Doorkeeper
 
       def self.from_string(string)
         string ||= ""
+
+        # A non-string scope (e.g. `scope[a]=b`, parsed by Rack into a Hash)
+        # has no octets to split into tokens. Reject it as a malformed request
+        # (RFC 6749 §3.3); at the token endpoint TokensController's rescue_from
+        # turns this into invalid_request. Callers that always pass a string
+        # (the model layer) never hit this.
+        raise Errors::InvalidScopeParameter, "scope must be a String" unless string.is_a?(String)
+
         new.tap do |scope|
           scope.add(*string.split)
         end

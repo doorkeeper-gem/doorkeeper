@@ -158,6 +158,15 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
       expect(pre_auth).not_to be_authorizable
     end
 
+    it "rejects a non-string scope (e.g. scope[a]=b) with invalid_request rather than raising" do
+      attributes[:scope] = { "a" => "b" }.with_indifferent_access
+
+      expect { @authorizable = pre_auth.authorizable? }.not_to raise_error
+      expect(@authorizable).to be false
+      expect(pre_auth.error).to eq(Doorkeeper::Errors::InvalidRequest)
+      expect(pre_auth.invalid_request_reason).to eq(:unknown)
+    end
+
     it "accepts scopes which are permitted for grant_type" do
       allow(server).to receive(:scopes_by_grant_type).and_return(authorization_code: [:public])
       attributes[:scope] = "public"

@@ -182,6 +182,19 @@ RSpec.describe "Client Credentials Request" do
     end
   end
 
+  context "when the scope parameter is not a string (e.g. scope[a]=b)" do
+    it "responds with invalid_request instead of a 500 (RFC 6749 §3.3)" do
+      headers = authorization client.uid, client.secret
+      params  = { grant_type: "client_credentials", scope: { "a" => "b" } }
+
+      post token_endpoint_url, params: params, headers: headers
+
+      expect(response).to have_http_status(:bad_request)
+      expect(json_response).to include("error" => "invalid_request")
+      expect(json_response["error_description"]).to be_present
+    end
+  end
+
   context "when the request uses more than one client authentication method" do
     it "rejects the request per RFC 6749 §2.3" do
       headers = authorization client.uid, client.secret

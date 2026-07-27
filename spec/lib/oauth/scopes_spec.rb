@@ -49,6 +49,15 @@ RSpec.describe Doorkeeper::OAuth::Scopes do
 
     it { expect(scopes).to be_a(described_class) }
 
+    it "treats nil as an empty scope" do
+      expect(described_class.from_string(nil).all).to be_empty
+    end
+
+    it "raises InvalidScopeParameter for a non-string scope (e.g. scope[a]=b)" do
+      expect { described_class.from_string({ "a" => "b" }.with_indifferent_access) }
+        .to raise_error(Doorkeeper::Errors::InvalidScopeParameter)
+    end
+
     describe "#all" do
       it "is an array of the expected scopes" do
         scopes_array = scopes.all
