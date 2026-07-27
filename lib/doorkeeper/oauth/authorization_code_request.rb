@@ -161,8 +161,33 @@ module Doorkeeper
         # have it yet, which would silently skip the revocation.
         Doorkeeper.config.access_token_model.with_primary_role do
           token = Doorkeeper.config.access_token_model.find_by(id: grant.access_token_id)
-          token&.revoke
+          next if token.nil?
+
+          # With `reuse_access_token` the same token can back several grants
+          # (find_or_create returns a shared one). Revoking it on a replay of
+          # this grant's code would take down another valid session that still
+          # holds it. Only revoke when no other grant references the token, so
+          # the single-use revocation reaches a token unique to the replayed
+          # code and never collaterally revokes a reused, shared one.
+          next if token_shared_with_other_grant?(token)
+
+          token.revoke
         end
+      end
+
+      # Reads the grant -> token link, which lives in the optional
+      # `oauth_access_grants.access_token_id` column: new installs get it from
+      # the generated migration, existing apps add it with the
+      # `doorkeeper:grant_reuse_revocation` generator. Callers must therefore
+      # guard with `access_token_revoked_on_reuse?` (as
+      # `link_access_token_to_grant` and `revoke_token_issued_for_grant` do),
+      # so an app that never ran the generator returns early and never queries
+      # a column it does not have.
+      def token_shared_with_other_grant?(token)
+        grant.class
+          .where(access_token_id: token.id)
+          .where.not(id: grant.id)
+          .exists?
       end
     end
   end

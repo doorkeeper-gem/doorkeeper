@@ -200,6 +200,40 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
       expect(existing_token.reload).to be_revoked
     end
 
+    it "does not revoke a reused token that another grant still shares (no collateral revocation)" do
+      scopes = grant.scopes
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        reuse_access_token
+        default_scopes(*scopes)
+      end
+
+      # First grant exchanges its code and mints the token.
+      request.authorize
+      shared_token = request.access_token
+
+      # A second grant for the same app / owner / scope reuses that same token.
+      other_grant = FactoryBot.create(
+        :access_grant,
+        application_id: client.id,
+        resource_owner_id: grant.resource_owner_id,
+        resource_owner_type: grant.resource_owner_type,
+        scopes: grant.scopes.to_s,
+        redirect_uri: grant.redirect_uri,
+      )
+      described_class.new(server, other_grant, client, params).authorize
+      expect(other_grant.reload.access_token_id).to eq(shared_token.id)
+
+      # Replaying the first grant's code denies the request but must not revoke
+      # the token the second grant legitimately holds.
+      replay = described_class.new(server, grant.reload, client, params)
+      replay.validate
+
+      expect(replay.error).to eq(Doorkeeper::Errors::InvalidGrant)
+      expect(shared_token.reload).not_to be_revoked
+    end
+
     it "revokes the winning exchange's token when losing the race for the same code" do
       issued_token = FactoryBot.create(
         :access_token,
