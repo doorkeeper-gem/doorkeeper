@@ -35,12 +35,14 @@ module Doorkeeper
         # allows around a field value (spaces and tabs only, RFC 9110 §5.6.3)
         # so a well-formed Bearer header is not misclassified, while a value
         # carrying a line break — never legal in a header — is not treated as
-        # a bearer token.
+        # a bearer token. A bearer credential also carries at least one token
+        # character after the scheme (RFC 6750 §2.1), so a scheme-only value
+        # such as "Bearer " is not exempted either.
         def self.client_authentication_header?(request)
           header = request.authorization
           return false if header.blank?
 
-          !header.match?(/\A[ \t]*Bearer[ \t]+/i)
+          !header.match?(/\A[ \t]*Bearer[ \t]+\S/i)
         end
         private_class_method :client_authentication_header?
 

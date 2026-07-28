@@ -67,6 +67,18 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::None do
       expect(described_class.matches_request?(request)).not_to be true
     end
 
+    it "doesn't match a Bearer scheme with no token" do
+      # RFC 6750 §2.1: a bearer credential carries at least one token
+      # character after the scheme, so a bare "Bearer " is not a bearer
+      # token and must not be exempted.
+      request = mock_request(
+        request_parameters: { client_id: "1234" },
+        authorization: "Bearer ",
+      )
+
+      expect(described_class.matches_request?(request)).not_to be true
+    end
+
     it "doesn't match if the request has a non-Bearer Authorization header (e.g. Digest)" do
       request = mock_request(
         request_parameters: { client_id: "1234" },
