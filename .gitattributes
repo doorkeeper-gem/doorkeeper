@@ -1,0 +1,8 @@
+# Changelog entries are always appended in the same place — the line just above
+# "Please add here" — so any two pull requests that each add one conflict when
+# the second is merged, even though the changes are entirely independent. The
+# union driver keeps both sides instead of reporting a conflict.
+#
+# Entries added in parallel end up ordered by how the merge ran rather than by
+# pull request number; reordering them afterwards is an ordinary edit.
+CHANGELOG.md merge=union
