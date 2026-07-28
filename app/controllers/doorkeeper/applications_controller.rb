@@ -5,6 +5,7 @@ module Doorkeeper
     layout "doorkeeper/admin" unless Doorkeeper.configuration.api_only
 
     before_action :authenticate_admin!
+    before_action :force_json_format, if: :api_only?
     before_action :set_application, only: %i[show edit update destroy]
 
     def index
@@ -31,11 +32,13 @@ module Doorkeeper
       @application = Doorkeeper.config.application_model.new(application_params)
 
       if @application.save
-        flash[:notice] = I18n.t(:notice, scope: %i[doorkeeper flash applications create])
-        flash[:application_secret] = @application.plaintext_secret
-
         respond_to do |format|
-          format.html { redirect_to oauth_application_url(@application) }
+          format.html do
+            flash[:notice] = I18n.t(:notice, scope: %i[doorkeeper flash applications create])
+            flash[:application_secret] = @application.plaintext_secret
+
+            redirect_to oauth_application_url(@application)
+          end
           format.json { render json: @application, as_owner: true }
         end
       else
@@ -54,10 +57,12 @@ module Doorkeeper
 
     def update
       if @application.update(application_params)
-        flash[:notice] = I18n.t(:notice, scope: i18n_scope(:update))
-
         respond_to do |format|
-          format.html { redirect_to oauth_application_url(@application) }
+          format.html do
+            flash[:notice] = I18n.t(:notice, scope: i18n_scope(:update))
+
+            redirect_to oauth_application_url(@application)
+          end
           format.json { render json: @application, as_owner: true }
         end
       else
@@ -73,10 +78,14 @@ module Doorkeeper
     end
 
     def destroy
-      flash[:notice] = I18n.t(:notice, scope: i18n_scope(:destroy)) if @application.destroy
+      destroyed = @application.destroy
 
       respond_to do |format|
-        format.html { redirect_to oauth_applications_url }
+        format.html do
+          flash[:notice] = I18n.t(:notice, scope: i18n_scope(:destroy)) if destroyed
+
+          redirect_to oauth_applications_url
+        end
         format.json { head :no_content }
       end
     end
@@ -94,6 +103,26 @@ module Doorkeeper
 
     def i18n_scope(action)
       %i[doorkeeper flash applications] << action
+    end
+
+    def api_only?
+      Doorkeeper.config.api_only
+    end
+
+    # In api_only mode this controller descends from ActionController::API,
+    # which has no flash and renders no views — but Rails still negotiates a
+    # format from the request, and only a client that names JSON explicitly
+    # lands on the json branch. Measured on Rails 8.0: an absent Accept header
+    # and a browser-like list such as "application/json, text/plain, */*"
+    # (axios's default) both resolve to text/html, while a bare "*/*" (curl,
+    # Net::HTTP, python-requests) resolves to Mime::ALL, which respond_to
+    # answers with the first registered format — html in every action here.
+    # Those requests therefore ran the html branch and raised on flash, after
+    # create had already persisted the record and destroy had already deleted
+    # it. Nothing needs negotiating when only JSON can be served, so pin the
+    # format rather than leaving a branch registered that cannot run.
+    def force_json_format
+      request.format = :json
     end
   end
 end
