@@ -32,10 +32,12 @@ module Doorkeeper
         # bearer token authorizes the endpoint rather than the client. Every
         # other non-blank scheme (Basic, etc.) is header-based client
         # authentication. The pattern tolerates the optional whitespace HTTP
-        # allows around a field value (spaces and tabs only, RFC 9110 §5.6.3)
-        # so a well-formed Bearer header is not misclassified, while a value
-        # carrying a line break — never legal in a header — is not treated as
-        # a bearer token. A bearer credential also carries at least one token
+        # allows before the scheme and requires whitespace between the scheme
+        # and the token, accepting in both places only the spaces and tabs
+        # that OWS is made of (RFC 9110 §5.6.3): a well-formed Bearer header
+        # is therefore not misclassified, while a value that relies on any
+        # other character in those positions is not taken for a bearer
+        # credential. A bearer credential also carries at least one token
         # character after the scheme (RFC 6750 §2.1), so a scheme-only value
         # such as "Bearer " is not exempted either.
         def self.client_authentication_header?(request)

@@ -47,9 +47,9 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::None do
       expect(described_class.matches_request?(request)).to be true
     end
 
-    it "doesn't treat a line break as the whitespace HTTP allows around a field value" do
-      # A header value can never contain a line break, so a value that only
-      # looks like a bearer token across lines must not be exempted.
+    it "doesn't accept a line break between the scheme and the token" do
+      # Only spaces and tabs stand between the scheme and the token, so a
+      # line break in that position doesn't make a bearer credential.
       request = mock_request(
         request_parameters: { client_id: "1234" },
         authorization: "Bearer\nBasic dXNlcjpwYXNzd29yZA==",
