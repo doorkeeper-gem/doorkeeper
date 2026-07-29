@@ -123,9 +123,13 @@ module Doorkeeper
     def revocable_token
       return @revocable_token if defined? @revocable_token
 
+      # The hint is a lookup-order optimization, not a filter: a client is
+      # explicitly allowed to guess it wrong, so when the lookup by the hinted
+      # type finds nothing, RFC 7009 §2.1 and RFC 7662 §2.1 require the search
+      # to extend across the other supported token type.
       @revocable_token =
         if params[:token_type_hint] == "refresh_token"
-          refresh_token
+          refresh_token || access_token
         else
           access_token || refresh_token
         end

@@ -226,7 +226,9 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
         expect(response.status).to eq 200
       end
 
-      it "does not revoke the access token when token_type_hint == refresh_token" do
+      # RFC 7009 §2.1: the hint is allowed to be wrong — when the lookup by
+      # the hinted type finds nothing, the search extends to the other type.
+      it "revokes the access token even when token_type_hint == refresh_token" do
         post :revoke, params: {
           client_id: client.uid,
           token: access_token.token,
@@ -235,7 +237,29 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
 
         expect(response.status).to eq 200
 
-        expect(access_token.reload).to have_attributes(revoked?: false)
+        expect(access_token.reload).to have_attributes(revoked?: true)
+      end
+
+      it "revokes the refresh token even when token_type_hint == access_token" do
+        post :revoke, params: {
+          client_id: client.uid,
+          token: access_token.refresh_token,
+          token_type_hint: "access_token",
+        }
+
+        expect(response.status).to eq 200
+
+        expect(access_token.reload).to have_attributes(revoked?: true)
+      end
+
+      it "responds with 200 when the token does not exist and token_type_hint == refresh_token" do
+        post :revoke, params: {
+          client_id: client.uid,
+          token: SecureRandom.hex(16),
+          token_type_hint: "refresh_token",
+        }
+
+        expect(response.status).to eq 200
       end
 
       it "revokes the refresh token when token_type_hint == refresh_token" do
@@ -656,6 +680,17 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
 
           expect(json_response).to match("active" => false)
         end
+
+        it "responds with only active state when token_type_hint is refresh_token" do
+          request.headers["Authorization"] = basic_auth_header_for_client(client)
+
+          post :introspect, params: {
+            token: SecureRandom.hex(16),
+            token_type_hint: "refresh_token",
+          }
+
+          expect(json_response).to match("active" => false)
+        end
       end
 
       context "when authorized using valid Bearer token" do
@@ -754,6 +789,37 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
         post :introspect, params: { token: token_for_introspection.refresh_token }
 
         expect(json_response).to match("active" => false)
+      end
+    end
+
+    # RFC 7662 §2.1: the hint is allowed to be wrong — when the lookup by the
+    # hinted type finds nothing, the search MUST extend across the other
+    # supported token types.
+    context "when the token_type_hint does not match the token's type" do
+      let(:token_for_introspection) do
+        FactoryBot.create(:access_token, application: client, use_refresh_token: true)
+      end
+
+      before do
+        request.headers["Authorization"] = basic_auth_header_for_client(client)
+      end
+
+      it "responds with the state of the access token when token_type_hint is refresh_token" do
+        post :introspect, params: {
+          token: token_for_introspection.token,
+          token_type_hint: "refresh_token",
+        }
+
+        expect(json_response).to include("active" => true, "client_id" => client.uid)
+      end
+
+      it "responds with the state of the refresh token when token_type_hint is access_token" do
+        post :introspect, params: {
+          token: token_for_introspection.refresh_token,
+          token_type_hint: "access_token",
+        }
+
+        expect(json_response).to include("active" => true, "client_id" => client.uid)
       end
     end
 
