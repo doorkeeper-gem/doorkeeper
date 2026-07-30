@@ -467,5 +467,78 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
         end.not_to(change { Doorkeeper::AccessToken.count })
       end
     end
+
+    context "with resource indicators (RFC 8707)" do
+      context "when resource_indicator_validator accepts the resource" do
+        before do
+          config_is_set(:resource_indicator_validator, ->(_indicators, _client) { true })
+        end
+
+        it "issues a token with the resource persisted" do
+          expect do
+            post token_endpoint_url, params: password_token_endpoint_params(
+              client: @client,
+              resource_owner: @resource_owner,
+            ).merge("resource" => ["https://api.example.com/"])
+          end.to change { Doorkeeper::AccessToken.count }.by(1)
+
+          token = Doorkeeper::AccessToken.last
+          expect(token.resource).to eq("https://api.example.com/")
+          expect(json_response).to include("access_token" => token.token)
+        end
+
+        it "persists multiple resource indicators space-separated" do
+          expect do
+            post token_endpoint_url, params: password_token_endpoint_params(
+              client: @client,
+              resource_owner: @resource_owner,
+            ).merge("resource" => ["https://api.example.com/", "https://calendar.example.com/"])
+          end.to change { Doorkeeper::AccessToken.count }.by(1)
+
+          token = Doorkeeper::AccessToken.last
+          expect(token.resource).to eq("https://api.example.com/ https://calendar.example.com/")
+        end
+
+        it "issues a token without resource when resource is not provided" do
+          expect do
+            post token_endpoint_url, params: password_token_endpoint_params(
+              client: @client,
+              resource_owner: @resource_owner,
+            )
+          end.to change { Doorkeeper::AccessToken.count }.by(1)
+
+          token = Doorkeeper::AccessToken.last
+          expect(token.resource).to be_nil
+        end
+      end
+
+      context "when resource_indicator_validator rejects the resource" do
+        before do
+          config_is_set(:resource_indicator_validator, ->(_indicators, _client) { false })
+        end
+
+        it "does not issue a token" do
+          expect do
+            post token_endpoint_url, params: password_token_endpoint_params(
+              client: @client,
+              resource_owner: @resource_owner,
+            ).merge("resource" => ["https://api.example.com/"])
+          end.not_to(change { Doorkeeper::AccessToken.count })
+        end
+
+        it "returns invalid_target error" do
+          post token_endpoint_url, params: password_token_endpoint_params(
+            client: @client,
+            resource_owner: @resource_owner,
+          ).merge("resource" => ["https://api.example.com/"])
+
+          expect(response.status).to eq(400)
+          expect(json_response).to match(
+            "error" => "invalid_target",
+            "error_description" => an_instance_of(String),
+          )
+        end
+      end
+    end
   end
 end

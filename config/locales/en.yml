@@ -70,6 +70,7 @@ en:
         title: 'Authorization required'
         prompt: 'Authorize %{client_name} to use your account?'
         able_to: 'This application will be able to:'
+        resources: 'Resources'
       show:
         title: 'Authorization code:'
       form_post:
@@ -108,6 +109,7 @@ en:
           other: 'The code_challenge_method must be one of %{challenge_methods}.'
         server_error: 'The authorization server encountered an unexpected condition which prevented it from fulfilling the request.'
         temporarily_unavailable: 'The authorization server is currently unable to handle the request due to a temporary overloading or maintenance of the server.'
+        invalid_target: 'The requested resource is invalid, missing, unknown, or malformed.'
 
         # Configuration error messages
         credential_flow_not_configured: 'Resource Owner Password Credentials flow failed due to Doorkeeper.configure.resource_owner_from_credentials being unconfigured.'

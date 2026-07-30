@@ -59,13 +59,24 @@ module Doorkeeper
             resource_owner,
           )
 
-          @token = Doorkeeper.config.access_token_model.find_or_create_for(
+          token_attributes = {
             application: application,
             resource_owner: resource_owner,
             scopes: pre_auth.scopes,
             expires_in: self.class.access_token_expires_in(Doorkeeper.config, context),
             use_refresh_token: false,
-          )
+          }
+
+          # RFC 8707: carry resource indicators to the access token
+          if pre_auth.respond_to?(:resource_indicators) && pre_auth.resource_indicators.present?
+            unless Doorkeeper.config.access_token_model.resource_indicators_supported?
+              raise Doorkeeper::Errors::MissingResourceColumn, "oauth_access_tokens"
+            end
+
+            token_attributes[:resource] = pre_auth.resource_indicators.join(" ")
+          end
+
+          @token = Doorkeeper.config.access_token_model.find_or_create_for(**token_attributes)
         end
 
         def application

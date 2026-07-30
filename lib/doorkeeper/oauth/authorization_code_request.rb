@@ -12,6 +12,7 @@ module Doorkeeper
       # Runs last, so the single-use enforcement it performs only acts once
       # the caller has proven possession of the code (redirect_uri + PKCE).
       validate :grant_accessible, error: Errors::InvalidGrant
+      validate :resource_indicators, error: Errors::InvalidTarget
 
       attr_reader :grant, :client, :redirect_uri, :access_token, :code_verifier,
                   :invalid_request_reason, :missing_param
@@ -27,6 +28,7 @@ module Doorkeeper
         @grant_type = Doorkeeper::OAuth::AUTHORIZATION_CODE
         @redirect_uri = parameters[:redirect_uri]
         @code_verifier = parameters[:code_verifier]
+        @raw_resource_indicators = parameters[:resource]
       end
 
       private
@@ -42,11 +44,26 @@ module Doorkeeper
 
           grant.revoke
 
+          token_attributes = custom_token_attributes_with_data
+          # RFC 8707 §2.2: audience-restrict the access token to the resources
+          # bound to the grant. When the token request specifies a (valid)
+          # subset, use that subset; when it omits `resource`, inherit the
+          # grant's full resource set so the token is never issued without an
+          # audience restriction.
+          effective_resources = resolved_resource_indicators.presence || grant_resource_indicators
+          if effective_resources.present?
+            unless Doorkeeper.config.access_token_model.resource_indicators_supported?
+              raise Errors::MissingResourceColumn, "oauth_access_tokens"
+            end
+
+            token_attributes[:resource] = effective_resources.join(" ")
+          end
+
           find_or_create_access_token(
             client,
             resource_owner,
             grant.scopes,
-            custom_token_attributes_with_data,
+            token_attributes,
             server,
           )
 
@@ -139,6 +156,44 @@ module Doorkeeper
           .with_indifferent_access
           .slice(*Doorkeeper.config.custom_access_token_attributes)
           .symbolize_keys
+      end
+
+      # RFC 8707: validate resource indicators on the token request.
+      # If the grant carries resource indicators, the token request's resource
+      # parameter must be a subset. If no grant resource is present, the
+      # validator checks the request resource against server policy.
+      #
+      # Subset and syntax enforcement run even when no validator is configured
+      # as long as the grant is already audience-restricted: a grant bound to
+      # resources must never be exchanged for a token whose audience widens
+      # beyond it. Only when the feature is disabled AND the grant has no
+      # stored resources is the `resource` parameter ignored entirely.
+      def validate_resource_indicators
+        @grant_resource_indicators = grant&.try(:resource)&.split
+
+        validator = Doorkeeper.config.resource_indicator_validator
+
+        # Feature effectively off: no validator and nothing already bound to
+        # enforce against. Ignore the `resource` parameter.
+        return true if validator.nil? && @grant_resource_indicators.blank?
+
+        @resolved_resource_indicators = ResourceIndicatorValidator.validate!(
+          @raw_resource_indicators,
+          config_validator: validator,
+          client: client,
+          grant_resource_indicators: @grant_resource_indicators,
+        )
+        true
+      rescue Errors::InvalidTarget
+        false
+      end
+
+      def resolved_resource_indicators
+        @resolved_resource_indicators || []
+      end
+
+      def grant_resource_indicators
+        @grant_resource_indicators || []
       end
 
       def revoke_previous_tokens(application, resource_owner)

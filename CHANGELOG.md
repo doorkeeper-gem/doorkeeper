@@ -20,6 +20,7 @@ User-visible changes worth mentioning.
 - [#1887] [test] Pin that a requested non-default scope reaches the authorization grant and the exchanged token, and that the authorization strategy shares the controller's pre-authorization — the mismatch reported in [#1576] does not reproduce. Test-only change, closes [#1576].
 - [#1888] Document custom grant flow registration (`Doorkeeper::GrantFlow.register`) in the README with a SAML 2.0 bearer assertion (RFC 7522) walkthrough, and pin URN-shaped custom grant types with an end-to-end request spec. Docs/test-only change, closes [#764].
 - [#1890] [test] Pin that the authorization endpoint answers `invalid_redirect_uri` for a client registered without a redirect URI (`allow_blank_redirect_uri`), whether or not the request supplies one — the behavior required by RFC 6749 §3.1.2.3. Test-only change, closes [#1682].
+- [#1886] Add support for Resource Indicators for OAuth 2.0 (RFC 8707). Clients can include a `resource` parameter in authorization and token requests to indicate the target protected resource(s). The authorization server validates resource URIs, enforces audience restriction on tokens, and includes `aud` in introspection responses. Enable by configuring `resource_indicator_validator` with a callable. Requires new `resource` columns on access grants and tokens — run `rails generate doorkeeper:resource_indicators` to add the migration.
 - Please add here
 
 ## 6.0.0.beta1

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20260716000000) do
+ActiveRecord::Schema.define(version: 20260730000000) do
 
   create_table "oauth_access_grants", force: :cascade do |t|
     t.integer "resource_owner_id", null: false
@@ -22,6 +22,7 @@ ActiveRecord::Schema.define(version: 20260716000000) do
     t.datetime "created_at", null: false
     t.datetime "revoked_at"
     t.string "scopes"
+    t.text "resource"
     t.string "tenant_name"
     t.bigint "access_token_id"
     unless ENV["WITHOUT_PKCE"]
@@ -42,6 +43,7 @@ ActiveRecord::Schema.define(version: 20260716000000) do
     t.datetime "revoked_at"
     t.datetime "created_at", null: false
     t.string "scopes"
+    t.text "resource"
     t.string "previous_refresh_token", default: "", null: false
     t.string "tenant_name"
     t.index ["refresh_token"], name: "index_oauth_access_tokens_on_refresh_token", unique: true

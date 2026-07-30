@@ -58,6 +58,7 @@ module Doorkeeper
     autoload :PasswordAccessTokenRequest, "doorkeeper/oauth/password_access_token_request"
     autoload :PreAuthorization, "doorkeeper/oauth/pre_authorization"
     autoload :RefreshTokenRequest, "doorkeeper/oauth/refresh_token_request"
+    autoload :ResourceIndicatorValidator, "doorkeeper/oauth/resource_indicator_validator"
     autoload :Scopes, "doorkeeper/oauth/scopes"
     autoload :Token, "doorkeeper/oauth/token"
     autoload :TokenIntrospection, "doorkeeper/oauth/token_introspection"

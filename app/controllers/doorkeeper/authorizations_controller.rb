@@ -65,7 +65,12 @@ module Doorkeeper
         pre_auth.client,
         current_resource_owner,
         pre_auth.scopes,
-      )
+      ) do |token|
+        # RFC 8707: a token for a different audience must not satisfy the match.
+        Doorkeeper.config.access_token_model.resource_indicators_match?(
+          token, pre_auth.resource_indicators&.join(" ").presence,
+        )
+      end
     end
 
     def redirect_or_render(auth)
@@ -101,11 +106,20 @@ module Doorkeeper
     end
 
     def pre_auth_params
-      params.slice(*pre_auth_param_fields).permit(*pre_auth_param_fields)
+      # RFC 8707: `resource` may appear as a single value (?resource=…) or as
+      # a Rails-style array (?resource[]=…&resource[]=…). Both scalar and array
+      # forms are permitted through strong parameters.
+      #
+      # NOTE: The RFC wire format uses repeated keys (?resource=…&resource=…),
+      # but Rack collapses those into the last value. Clients targeting this
+      # endpoint must use the resource[] bracket syntax for multiple values.
+      params
+        .slice(*pre_auth_param_fields, :resource)
+        .permit(*pre_auth_param_fields, :resource, resource: [])
     end
 
     def pre_auth_param_fields
-      custom_access_token_attributes + %i[
+      @pre_auth_param_fields ||= custom_access_token_attributes + %i[
         client_id
         code_challenge
         code_challenge_method

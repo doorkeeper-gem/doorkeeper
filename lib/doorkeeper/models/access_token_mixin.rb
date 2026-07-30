@@ -229,6 +229,39 @@ module Doorkeeper
         end
       end
 
+      # RFC 8707: checks whether an existing token's audience matches the
+      # requested resource indicators. Used during token reuse to prevent
+      # returning a token audience-restricted to one resource for a request
+      # targeting a different resource.
+      #
+      # The comparison runs whenever either side carries a resource, even when
+      # no validator is configured: a grant bound to resources still restricts
+      # the token's audience (see AuthorizationCodeRequest), so reuse must not
+      # silently widen it by matching an unrestricted or differently-scoped
+      # token. When both sides are blank the tokens are unrestricted and match.
+      #
+      # @param token [Doorkeeper::AccessToken] existing token
+      # @param requested_resource [String, nil] space-delimited resource URIs
+      # @return [Boolean]
+      def resource_indicators_match?(token, requested_resource)
+        token_resource = token.try(:resource)
+
+        # Both blank — neither is audience-restricted, match.
+        return true if token_resource.blank? && requested_resource.blank?
+        # One blank, the other not — mismatch.
+        return false if token_resource.blank? || requested_resource.blank?
+
+        # Both present — compare as sorted sets.
+        token_resource.split.sort == requested_resource.split.sort
+      end
+
+      # RFC 8707: resource indicators are supported only when the
+      # `resource` column exists (added by the
+      # `doorkeeper:resource_indicators` generator).
+      def resource_indicators_supported?
+        column_names.include?("resource")
+      end
+
       # Looking for not expired AccessToken record with a matching set of
       # scopes that belongs to specific Application and Resource Owner.
       # If it doesn't exists - then creates it.
@@ -261,9 +294,17 @@ module Doorkeeper
           # matching token may carry the wrong refresh token presence (e.g. it
           # was issued through a grant with a different `use_refresh_token`)
           # while an older token satisfies the request and can still be reused.
+          #
+          # RFC 8707: resource indicators must also match so that a token
+          # audience-restricted to one resource is never reused for another.
+          requested_resource = token_attributes[:resource]
+
           access_token = matching_token_for(
             application, resource_owner, scopes, custom_attributes: custom_attributes, include_expired: false,
-          ) { |token| refresh_token_matches?(token, token_attributes) }
+          ) do |token|
+            refresh_token_matches?(token, token_attributes) &&
+              resource_indicators_match?(token, requested_resource)
+          end
 
           return access_token if access_token&.reusable?
         end

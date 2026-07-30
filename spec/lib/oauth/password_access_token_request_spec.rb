@@ -175,6 +175,102 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
     end
   end
 
+  describe "with resource indicators (RFC 8707)" do
+    let(:resource_uri) { "https://api.example.com/" }
+
+    context "when resource_indicator_validator is configured" do
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          resource_indicator_validator ->(_indicators, _client) { true }
+        end
+      end
+
+      context "with a valid resource indicator" do
+        subject(:request) do
+          described_class.new(server, client, credentials, owner, resource: [resource_uri])
+        end
+
+        it "issues a token with the resource persisted" do
+          expect { request.authorize }.to change { Doorkeeper::AccessToken.count }.by(1)
+
+          token = Doorkeeper::AccessToken.last
+          expect(token.resource).to eq(resource_uri)
+        end
+      end
+
+      context "with multiple valid resource indicators" do
+        subject(:request) do
+          described_class.new(server, client, credentials, owner, resource: [resource_uri, second_resource_uri])
+        end
+
+        let(:second_resource_uri) { "https://calendar.example.com/" }
+
+        it "persists all resource indicators space-separated" do
+          expect { request.authorize }.to change { Doorkeeper::AccessToken.count }.by(1)
+
+          token = Doorkeeper::AccessToken.last
+          expect(token.resource).to eq("#{resource_uri} #{second_resource_uri}")
+        end
+      end
+
+      context "without resource indicator" do
+        subject(:request) do
+          described_class.new(server, client, credentials, owner)
+        end
+
+        it "issues a token without resource constraint" do
+          expect { request.authorize }.to change { Doorkeeper::AccessToken.count }.by(1)
+
+          token = Doorkeeper::AccessToken.last
+          expect(token.resource).to be_nil
+        end
+      end
+    end
+
+    context "when resource_indicator_validator rejects the resource" do
+      subject(:request) do
+        described_class.new(server, client, credentials, owner, resource: [resource_uri])
+      end
+
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          resource_indicator_validator ->(_indicators, _client) { false }
+        end
+      end
+
+      it "rejects the request with invalid_target" do
+        response = request.authorize
+        expect(response).to be_a(Doorkeeper::OAuth::ErrorResponse)
+        expect(response.body[:error]).to eq(:invalid_target)
+      end
+
+      it "does not issue a token" do
+        expect { request.authorize }.not_to(change { Doorkeeper::AccessToken.count })
+      end
+    end
+
+    context "when resource_indicator_validator is not configured" do
+      subject(:request) do
+        described_class.new(server, client, credentials, owner, resource: [resource_uri])
+      end
+
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+        end
+      end
+
+      it "ignores resource indicators and issues a token without resource" do
+        expect { request.authorize }.to change { Doorkeeper::AccessToken.count }.by(1)
+
+        token = Doorkeeper::AccessToken.last
+        expect(token.resource).to be_nil
+      end
+    end
+  end
+
   describe "with custom expiry" do
     let(:server) do
       double(

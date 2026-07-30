@@ -100,6 +100,13 @@ module Doorkeeper
         column_names.include?("code_challenge")
       end
 
+      # RFC 8707: resource indicators are supported only when the
+      # `resource` column exists (added by the
+      # `doorkeeper:resource_indicators` generator).
+      def resource_indicators_supported?
+        column_names.include?("resource")
+      end
+
       # Replay protection for authorization codes (RFC 6749 §4.1.2, §10.5)
       # is active only when the `access_token_id` column exists (added by
       # the `doorkeeper:grant_reuse_revocation` generator): the column
