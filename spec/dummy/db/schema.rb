@@ -28,6 +28,7 @@ ActiveRecord::Schema.define(version: 20260716000000) do
       t.string   "code_challenge"
       t.string   "code_challenge_method"
     end
+    t.index ["access_token_id"], name: "index_oauth_access_grants_on_access_token_id"
     t.index ["token"], name: "index_oauth_access_grants_on_token", unique: true
   end
 

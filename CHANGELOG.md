@@ -16,6 +16,7 @@ User-visible changes worth mentioning.
 - [#1881] Fix: `Doorkeeper::ApplicationsController` no longer 500s on `create`/`update`/`destroy` in `api_only` mode, where `ActionController::API` provides no `flash`. Confining `flash` to the HTML path is not sufficient on its own, because a client that does not name JSON explicitly still negotiates its way into that path — an absent `Accept` header and a browser-like list such as `application/json, text/plain, */*` both resolve to `text/html`, and a bare `*/*` resolves to the first registered format — so `api_only` mode now pins the response format to JSON.
 - [#1883] Internal: merge `CHANGELOG.md` with git's `union` driver, so two pull requests that each add an entry no longer conflict on the line above "Please add here".
 - [#1884] Fix: `/oauth/introspect` and `/oauth/revoke` extend the token lookup across both token types when the lookup by `token_type_hint` finds nothing (RFC 7662 §2.1 / RFC 7009 §2.1), so a wrong hint no longer hides a token the server knows about ([#1882])
+- [#1885] Index `oauth_access_grants.access_token_id` in the migration templates: since [#1879] the code-replay revocation filters access grants by that column, the "never used to filter queries" premise behind `index: false` no longer holds.
 - Please add here
 
 ## 6.0.0.beta1
