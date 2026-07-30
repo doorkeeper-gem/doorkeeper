@@ -37,9 +37,10 @@ class CreateDoorkeeperTables < ActiveRecord::Migration<%= migration_version %>
       # Comment out this line if you don't want a reused authorization code
       # to revoke the tokens already issued for it.
       #
-      # No index: the column is only read back from an already-loaded grant,
-      # never used to filter queries.
-      t.references :access_token,    index: false
+      # Indexed: when a code is replayed, the revocation checks whether the
+      # issued token is still referenced by another grant, which filters
+      # this table by access_token_id.
+      t.references :access_token,    index: true
     end
 
     add_index :oauth_access_grants, :token, unique: true

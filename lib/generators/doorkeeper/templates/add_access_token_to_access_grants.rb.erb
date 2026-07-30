@@ -2,8 +2,9 @@
 
 class AddAccessTokenToAccessGrants < ActiveRecord::Migration<%= migration_version %>
   def change
-    # No index: the column is only read back from an already-loaded grant,
-    # never used to filter queries.
-    add_reference :oauth_access_grants, :access_token, index: false
+    # Indexed: when a code is replayed, the revocation checks whether the
+    # issued token is still referenced by another grant, which filters
+    # oauth_access_grants by access_token_id.
+    add_reference :oauth_access_grants, :access_token, index: true
   end
 end

@@ -2,6 +2,6 @@
 
 class AddAccessTokenToAccessGrants < ActiveRecord::Migration[6.1]
   def change
-    add_reference :oauth_access_grants, :access_token, index: false
+    add_reference :oauth_access_grants, :access_token, index: true
   end
 end
