@@ -38,6 +38,7 @@ Supported features:
   - [Grape](#grape)
 - [ORMs](#orms)
 - [Extensions](#extensions)
+- [Custom Grant Flows](#custom-grant-flows)
 - [Example Applications](#example-applications)
 - [Sponsors](#sponsors)
 - [Development](#development)
@@ -106,6 +107,111 @@ Extensions that are not included by default and can be installed separately.
 | I18n translations | [doorkeeper-gem/doorkeeper-i18n](https://github.com/doorkeeper-gem/doorkeeper-i18n) |
 | CIBA - Client Initiated Backchannel Authentication Flow extension | [doorkeeper-ciba](https://github.com/autoseg/doorkeeper-ciba) |
 | Device Authorization Grant | [doorkeeper-device_authorization_grant](https://github.com/exop-group/doorkeeper-device_authorization_grant) |
+
+## Custom Grant Flows
+
+Besides the built-in OAuth 2 flows, Doorkeeper can recognize and process any custom grant type through its grant flow registry — including grant types whose names are URNs or URIs, such as the SAML 2.0 bearer assertion grant defined by [RFC 7522](https://www.rfc-editor.org/rfc/rfc7522).
+
+A grant flow bundles a matcher for the `grant_type` parameter with a strategy class that processes the token request. Register it before `Doorkeeper.configure` and enable it by adding its registered name to `grant_flows`:
+
+```ruby
+# config/initializers/doorkeeper.rb
+Doorkeeper::GrantFlow.register(
+  :saml2_bearer,
+  grant_type_matches: "urn:ietf:params:oauth:grant-type:saml2-bearer",
+  grant_type_strategy: SamlBearer::Strategy,
+)
+
+Doorkeeper.configure do
+  grant_flows %w[authorization_code saml2_bearer]
+  # ...
+end
+```
+
+Note that `grant_flows` lists the *registered flow name* (`saml2_bearer`), while `grant_type_matches` — a `String` or a `Regexp` — is what the request's `grant_type` parameter is matched against.
+
+The strategy class receives the authorization server as `server` and builds the request object handling the grant:
+
+```ruby
+module SamlBearer
+  class Strategy < Doorkeeper::Request::Strategy
+    delegate :client, :parameters, to: :server
+
+    def request
+      @request ||= TokenRequest.new(Doorkeeper.config, client, parameters)
+    end
+  end
+end
+```
+
+The request object validates the grant and issues the token. Subclassing `Doorkeeper::OAuth::BaseRequest` provides the response handling, scope calculation and token creation, so only the grant-specific parts remain (per RFC 7522 §2.1 the `assertion` parameter carries a single SAML assertion, base64url-encoded without padding):
+
+```ruby
+module SamlBearer
+  class TokenRequest < Doorkeeper::OAuth::BaseRequest
+    validate :client, error: Doorkeeper::Errors::InvalidClient
+    validate :client_supports_grant_flow, error: Doorkeeper::Errors::UnauthorizedClient
+    validate :assertion, error: Doorkeeper::Errors::InvalidGrant
+    validate :scopes, error: Doorkeeper::Errors::InvalidScope
+
+    attr_reader :client, :parameters, :access_token
+
+    def initialize(server, client, parameters = {})
+      @server          = server
+      @client          = client
+      @parameters      = parameters
+      @original_scopes = parameters[:scope]
+      @grant_type      = "urn:ietf:params:oauth:grant-type:saml2-bearer"
+    end
+
+    private
+
+    def before_successful_response
+      find_or_create_access_token(client, resource_owner, scopes, {}, server)
+      super
+    end
+
+    def assertion
+      # Decode and verify the SAML assertion — signature, audience, validity
+      # window, etc. — e.g. with the ruby-saml gem. Skipping verification
+      # turns the endpoint into a token vending machine for anyone.
+      @assertion ||= decode_and_verify_saml(parameters[:assertion])
+    end
+
+    def resource_owner
+      # Map the assertion's subject to a resource owner.
+      @resource_owner ||= User.find_by(email: assertion.name_id)
+    end
+
+    def validate_client
+      client.present?
+    end
+
+    def validate_client_supports_grant_flow
+      Doorkeeper.config.allow_grant_flow_for_client?(grant_type, client&.application)
+    end
+
+    def validate_assertion
+      assertion.present? && resource_owner.present?
+    end
+
+    def validate_scopes
+      return true if scopes.blank?
+
+      Doorkeeper::OAuth::Helpers::ScopeChecker.valid?(
+        scope_str: scopes.to_s,
+        server_scopes: server.scopes,
+        app_scopes: client&.scopes,
+        grant_type: grant_type,
+      )
+    end
+  end
+end
+```
+
+The `client_supports_grant_flow` validation keeps the custom grant subject to the `allow_grant_flow_for_client` configuration option (per-client grant restrictions), just like the built-in flows.
+
+Flows can also handle custom `response_type` values on the authorization endpoint via the `response_type_matches` / `response_type_strategy` options — see the built-in registrations in [`lib/doorkeeper/grant_flow.rb`](lib/doorkeeper/grant_flow.rb) for reference. An extension can also group several flows under one configuration name with `Doorkeeper::GrantFlow.register_alias` (e.g. the OpenID Connect extension registers `implicit_oidc` to expand to multiple response types).
 
 ## Example Applications
 
