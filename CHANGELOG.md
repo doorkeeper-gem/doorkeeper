@@ -18,6 +18,7 @@ User-visible changes worth mentioning.
 - [#1884] Fix: `/oauth/introspect` and `/oauth/revoke` extend the token lookup across both token types when the lookup by `token_type_hint` finds nothing (RFC 7662 §2.1 / RFC 7009 §2.1), so a wrong hint no longer hides a token the server knows about ([#1882])
 - [#1885] Index `oauth_access_grants.access_token_id` in the migration templates: since [#1879] the code-replay revocation filters access grants by that column, the "never used to filter queries" premise behind `index: false` no longer holds.
 - [#1887] [test] Pin that a requested non-default scope reaches the authorization grant and the exchanged token, and that the authorization strategy shares the controller's pre-authorization — the mismatch reported in [#1576] does not reproduce. Test-only change, closes [#1576].
+- [#1888] Document custom grant flow registration (`Doorkeeper::GrantFlow.register`) in the README with a SAML 2.0 bearer assertion (RFC 7522) walkthrough, and pin URN-shaped custom grant types with an end-to-end request spec. Docs/test-only change, closes [#764].
 - Please add here
 
 ## 6.0.0.beta1
