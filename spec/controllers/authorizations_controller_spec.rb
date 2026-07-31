@@ -588,6 +588,48 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
     end
   end
 
+  # Regression coverage for #1576, which reported `strategy.pre_auth` and
+  # `strategy.request.pre_auth` disagreeing on the requested scopes. The
+  # controller memoizes a single PreAuthorization that the strategy and its
+  # request both read, so the two references cannot diverge.
+  describe "POST #create with a non-default scope requested (#1576)" do
+    before do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        default_scopes :read
+        optional_scopes :write
+        enforce_configured_scopes
+      end
+
+      allow(Doorkeeper.config).to receive_messages(
+        grant_flows: ["authorization_code"],
+        authenticate_resource_owner: ->(_) { authenticator_method },
+      )
+      allow(subject).to receive(:authenticator_method).and_return(user)
+
+      post :create, params: {
+        client_id: client.uid,
+        response_type: "code",
+        redirect_uri: client.redirect_uri,
+        scope: "write",
+      }
+    end
+
+    it "shares one pre_auth between the controller, the strategy and its request" do
+      strategy = subject.send(:strategy)
+
+      expect(strategy.pre_auth.scopes.to_s).to eq(strategy.request.pre_auth.scopes.to_s)
+      expect(strategy.pre_auth.scopes.to_s).to eq(subject.send(:pre_auth).scopes.to_s)
+    end
+
+    it "keeps the requested scope on the pre_auth and the issued grant" do
+      strategy = subject.send(:strategy)
+
+      expect(strategy.request.pre_auth.scopes.to_s).to eq("write")
+      expect(Doorkeeper::AccessGrant.last.scopes.to_s).to eq("write")
+    end
+  end
+
   describe "POST #create with callbacks" do
     after do
       client.update_attribute :redirect_uri, "urn:ietf:wg:oauth:2.0:oob"
