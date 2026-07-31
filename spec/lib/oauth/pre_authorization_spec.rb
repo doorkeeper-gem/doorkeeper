@@ -257,6 +257,32 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
     expect(pre_auth).not_to be_authorizable
   end
 
+  context "when the application has no registered redirect_uri" do
+    before do
+      allow(Doorkeeper.config).to receive(:allow_blank_redirect_uri?).and_return(true)
+    end
+
+    let(:application) { FactoryBot.create(:application, redirect_uri: "") }
+
+    # RFC 6749 §3.1.2.3: when no redirection URI has been registered, the
+    # client MUST include one in the authorization request, and a provided
+    # value must still match a registered URI — so an application registered
+    # without a redirect_uri cannot use redirect-based flows at all.
+    it "is not authorizable when the request omits the redirect_uri" do
+      attributes[:redirect_uri] = nil
+
+      expect(pre_auth).not_to be_authorizable
+      expect(pre_auth.error).to eq(Doorkeeper::Errors::InvalidRedirectUri)
+    end
+
+    it "is not authorizable when the request provides a redirect_uri" do
+      attributes[:redirect_uri] = "https://app.com/callback"
+
+      expect(pre_auth).not_to be_authorizable
+      expect(pre_auth.error).to eq(Doorkeeper::Errors::InvalidRedirectUri)
+    end
+  end
+
   context "when resource_owner cannot access client application" do
     before { allow(Doorkeeper.configuration).to receive(:authorize_resource_owner_for_client).and_return(->(*_) { false }) }
 

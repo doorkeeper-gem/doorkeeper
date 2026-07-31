@@ -69,6 +69,32 @@ feature "Authorization Code Flow Errors" do
       url_should_not_have_param "iss"
     end
   end
+
+  # RFC 6749 §3.1.2.3: when no redirection URI has been registered, the client
+  # MUST include one in the authorization request, and a provided value must
+  # still match a registered URI. `allow_blank_redirect_uri` only lifts the
+  # registration-time validation for URI-less grant flows; it does not make the
+  # authorization endpoint usable without a registered redirect URI.
+  context "when the client has no registered redirect URI" do
+    background do
+      config_is_set(:allow_blank_redirect_uri, true)
+      @client.update!(redirect_uri: "")
+    end
+
+    scenario "displays invalid_redirect_uri error when redirect_uri is missing" do
+      visit authorization_endpoint_url(client: @client)
+
+      i_should_not_see "Authorize"
+      i_should_see_translated_error_message :invalid_redirect_uri
+    end
+
+    scenario "displays invalid_redirect_uri error when redirect_uri is provided" do
+      visit authorization_endpoint_url(client: @client, redirect_uri: "https://app.example.com/callback")
+
+      i_should_not_see "Authorize"
+      i_should_see_translated_error_message :invalid_redirect_uri
+    end
+  end
 end
 
 RSpec.describe "Authorization Code Flow Errors after authorization" do
