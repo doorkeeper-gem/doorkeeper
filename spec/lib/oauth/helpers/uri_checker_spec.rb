@@ -287,6 +287,13 @@ describe Doorkeeper::OAuth::Helpers::URIChecker do
       expect(described_class).not_to be_valid_for_authorization(uri, client_uri)
     end
 
+    it "is false if the client has no registered redirect uri" do
+      uri = "http://app.co/aaa"
+
+      expect(described_class.valid_for_authorization?(uri, nil)).to be false
+      expect(described_class.valid_for_authorization?(uri, "")).to be false
+    end
+
     it "is false if queries does not match" do
       uri = "http://app.co/aaa?pankcakes=abc"
       client_uri = "http://app.co/aaa?waffles=abc"

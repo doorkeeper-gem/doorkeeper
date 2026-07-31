@@ -60,7 +60,10 @@ module Doorkeeper
         end
 
         def self.valid_for_authorization?(url, client_url)
-          valid?(url) && client_url.split.any? { |other_url| matches?(url, other_url) }
+          # client_url is nil when the application was registered without a
+          # redirect URI (allow_blank_redirect_uri) — no possible match, not
+          # an error.
+          valid?(url) && client_url.to_s.split.any? { |other_url| matches?(url, other_url) }
         end
 
         def self.as_uri(url)

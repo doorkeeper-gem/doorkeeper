@@ -1039,6 +1039,33 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
         expect(Doorkeeper::AccessToken.count).to eq 0
       end
     end
+
+    # The registered redirect_uri is nil (not "") when the application was
+    # created outside the HTML form, e.g. over console or API, under
+    # allow_blank_redirect_uri.
+    context "when a redirect_uri is provided but the client registered none" do
+      before do
+        allow(Doorkeeper.config).to receive(:allow_blank_redirect_uri?).and_return(true)
+        client.update!(redirect_uri: nil)
+
+        get :new, params: {
+          client_id: client.uid,
+          response_type: "token",
+          redirect_uri: "https://app.example.com/callback",
+        }
+      end
+
+      it "answers invalid_redirect_uri" do
+        expect(response).not_to be_redirect
+        expect(response).to have_http_status(:bad_request)
+        expect(response.body).to include(ERB::Util.html_escape(translated_error_message(:invalid_redirect_uri)))
+      end
+
+      it "does not issue any token" do
+        expect(Doorkeeper::AccessGrant.count).to eq 0
+        expect(Doorkeeper::AccessToken.count).to eq 0
+      end
+    end
   end
 
   describe "GET #new in API mode with errors" do
