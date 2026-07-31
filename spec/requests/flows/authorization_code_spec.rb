@@ -620,6 +620,31 @@ feature "Authorization Code Flow" do
     end
   end
 
+  # Regression coverage for #1576, which reported a requested non-default
+  # scope being replaced by the configured default scopes. Reproduces the
+  # reported configuration: several default scopes, an optional scope
+  # requested explicitly, and enforce_configured_scopes enabled.
+  context "when a non-default optional scope is requested (#1576)" do
+    background do
+      default_scopes_exist :read_databases, :read_user, :read_organization
+      optional_scopes_exist :write_organization
+      config_is_set(:enforce_configured_scopes, true)
+    end
+
+    scenario "the grant and the exchanged token carry the requested scope, not the defaults" do
+      visit authorization_endpoint_url(client: @client, scope: "write_organization")
+      click_on "Authorize"
+
+      access_grant_should_have_scopes :write_organization
+
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      create_access_token authorization_code, @client
+
+      access_token_should_exist_for(@client, @resource_owner)
+      access_token_should_have_scopes :write_organization
+    end
+  end
+
   context "when two requests sent" do
     before do
       Doorkeeper.configure do
