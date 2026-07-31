@@ -6,6 +6,10 @@
 require "spec_helper"
 
 module SamlBearerExample
+  # `name_id` mirrors the SAML assertion's subject <NameID>. The dummy app's
+  # User model only has a `name` column, so `resource_owner` below maps the
+  # NameID onto it; the README example maps it onto `email`, as a real
+  # application typically would.
   Assertion = Struct.new(:name_id)
 
   class TokenRequest < Doorkeeper::OAuth::BaseRequest
