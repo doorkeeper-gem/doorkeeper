@@ -61,8 +61,8 @@ module Doorkeeper
 
         def self.valid_for_authorization?(url, client_url)
           # client_url is blank when the application was registered without a
-          # redirect URI (allow_blank_redirect_uri) — no possible match, not
-          # an error.
+          # redirect URI (allow_blank_redirect_uri) — no possible match for
+          # redirection based OAuth flows, not an error.
           return false if client_url.blank?
 
           valid?(url) && client_url.split.any? { |other_url| matches?(url, other_url) }
