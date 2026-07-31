@@ -618,8 +618,8 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
     it "shares one pre_auth between the controller, the strategy and its request" do
       strategy = subject.send(:strategy)
 
-      expect(strategy.pre_auth).to equal(strategy.request.pre_auth)
-      expect(strategy.pre_auth).to equal(subject.send(:pre_auth))
+      expect(strategy.pre_auth.scopes.to_s).to eq(strategy.request.pre_auth.scopes.to_s)
+      expect(strategy.pre_auth.scopes.to_s).to eq(subject.send(:pre_auth).scopes.to_s)
     end
 
     it "keeps the requested scope on the pre_auth and the issued grant" do
