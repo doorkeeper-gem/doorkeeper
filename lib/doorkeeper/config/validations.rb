@@ -18,9 +18,87 @@ module Doorkeeper
         validate_refresh_token_flow
         validate_issuer_format
         validate_issuer_metadata_discoverability
+        validate_client_id_metadata_documents_identity
+        validate_client_id_metadata_documents_ownership
       end
 
       private
+
+      # A Client ID Metadata Document client authenticating with
+      # private_key_jwt has its assertions audience-checked against this
+      # server's own identity, which RFC 7523 Section 3 requires and which
+      # cannot be derived from the request: a document client_id resolves to
+      # the same client, and the same keys, at every server implementing the
+      # draft, so an assertion whose audience came from the Host header would
+      # be replayable across all of them. PrivateKeyJwt therefore refuses such
+      # an assertion outright when the server identifies itself nowhere, and
+      # that refusal reaches the client as a bare invalid_client — so the
+      # reason has to reach the operator here instead.
+      def validate_client_id_metadata_documents_identity
+        return unless client_id_metadata_documents?
+        return unless private_key_jwt_configured?
+        return if issuer.present?
+        return if rails_default_url_host.present?
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] use_client_id_metadata_documents is enabled together with the " \
+          "private_key_jwt client authentication method, but this server identifies itself " \
+          "nowhere: neither the issuer option nor Rails' default_url_options[:host] is set. " \
+          "A document client's assertion is checked against this server's own identity " \
+          "(RFC 7523 Section 3), which must not be taken from the request's Host header, so " \
+          "those assertions are refused until one of the two is configured. Registered " \
+          "applications are unaffected.",
+        )
+      end
+
+      # A Client ID Metadata Document client is registered by no one: it
+      # exists because a URL serves a document. So the application row it is
+      # materialized as has no owner, and where ownership is enforced that row
+      # never saves — leaving every document client refused as invalid_client,
+      # with nothing in the response to say why. The two options are
+      # incompatible; say so once at boot rather than never.
+      def validate_client_id_metadata_documents_ownership
+        return unless client_id_metadata_documents?
+        return unless confirm_application_owner?
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] use_client_id_metadata_documents is enabled together with " \
+          "enable_application_owner confirmation: true, which are incompatible: a document " \
+          "client is registered by no one, so the application row it is materialized as has " \
+          "no owner and fails that validation. Every Client ID Metadata Document client will " \
+          "be refused as invalid_client until one of the two options is turned off. " \
+          "Pre-registered applications are unaffected.",
+        )
+      end
+
+      # The raw configured names are looked up in the registry one by one
+      # rather than through +client_authentication_methods+, so this validation
+      # does not memoise that resolution while configuration is still being
+      # assembled. What each entry is matched on is the IANA name its strategy
+      # declares, not the key it is registered under: a host application is
+      # free to register the method under another key, and it is the method —
+      # not the key — whose assertions the warning below is about. Legacy
+      # callable adapters are already Method objects and declare no name, so
+      # they never match.
+      def private_key_jwt_configured?
+        client_authentication.any? do |name|
+          method = if name.is_a?(Doorkeeper::ClientAuthentication::Method)
+                     name
+                   else
+                     Doorkeeper::ClientAuthentication.get(name)
+                   end
+
+          method&.auth_method_name == Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::AUTH_METHOD_NAME
+        end
+      end
+
+      # Read defensively: Doorkeeper is configured from an initializer, and a
+      # host application may not have routes (or an application object) yet.
+      def rails_default_url_host
+        ::Rails.application&.routes&.default_url_options&.[](:host)
+      rescue StandardError
+        nil
+      end
 
       # Warn once, at configuration time, when both the deprecated
       # +client_credentials+ and the new +client_authentication+ options are

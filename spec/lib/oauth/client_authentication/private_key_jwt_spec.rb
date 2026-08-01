@@ -17,10 +17,24 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
     config_is_set(:issuer, issuer)
     allow(Doorkeeper::OAuth::Client).to receive(:find).and_return(nil)
     allow(Doorkeeper::OAuth::Client).to receive(:find).with(client_id).and_return(client)
-    described_class::ReplayGuard.instance.clear
-    # The jwks memo outlives a single example and is keyed by URL only, so a
-    # jwks_uri reused across examples would otherwise serve stale keys.
-    described_class::KeyResolver.jwks_cache.clear
+  end
+
+  # JWT.encode refuses to build a token whose exp is not a NumericDate, so an
+  # assertion carrying one has to be signed by hand.
+  def sign_raw(payload, key: rsa_key)
+    sign_raw_json(payload.to_json, key: key)
+  end
+
+  # A payload no JSON generator would emit — an overflowing exponent, say —
+  # has to be handed over as raw JSON rather than as a Ruby Hash.
+  def sign_raw_json(payload_json, key: rsa_key)
+    segments = [
+      Base64.urlsafe_encode64({ "alg" => "RS256", "typ" => "JWT", "kid" => kid }.to_json, padding: false),
+      Base64.urlsafe_encode64(payload_json, padding: false),
+    ]
+    signature = key.sign(OpenSSL::Digest.new("SHA256"), segments.join("."))
+
+    (segments << Base64.urlsafe_encode64(signature, padding: false)).join(".")
   end
 
   def build_assertion(claims: {}, key: rsa_key, alg: "RS256", header_kid: kid)
@@ -36,8 +50,9 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
     JWT.encode(claims, key, alg, headers)
   end
 
-  def request_with(assertion, extra_params = {})
+  def request_with(assertion, extra_params = {}, path: "/oauth/token")
     mock_request(
+      path: path,
       request_parameters: {
         client_assertion: assertion,
         client_assertion_type: described_class::CLIENT_ASSERTION_TYPE,
@@ -139,14 +154,23 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(credentials).not_to be_nil
     end
 
+    # An endpoint other than the token endpoint, so this genuinely exercises
+    # the request-path audience rather than passing on the issuer or the
+    # token endpoint URL that the examples above already accept.
     it "accepts the called endpoint's URL as audience" do
-      request = request_with(build_assertion)
-
       credentials = described_class.authenticate(
-        request_with(build_assertion(claims: { "aud" => "#{issuer}#{request.path}" })),
+        request_with(build_assertion(claims: { "aud" => "#{issuer}/oauth/revoke" }), path: "/oauth/revoke"),
       )
 
       expect(credentials).not_to be_nil
+    end
+
+    it "rejects an assertion minted for a different endpoint of this server" do
+      credentials = described_class.authenticate(
+        request_with(build_assertion(claims: { "aud" => "#{issuer}/oauth/authorize" }), path: "/oauth/revoke"),
+      )
+
+      expect(credentials).to be_nil
     end
 
     # The audience is what stops an assertion minted for another authorization
@@ -175,13 +199,13 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
     end
 
     it "accepts a matching client_id parameter next to the assertion" do
-      credentials = described_class.authenticate(request_with(build_assertion, client_id: client_id))
+      credentials = described_class.authenticate(request_with(build_assertion, { client_id: client_id }))
 
       expect(credentials).not_to be_nil
     end
 
     it "rejects a client_id parameter that contradicts the assertion issuer" do
-      credentials = described_class.authenticate(request_with(build_assertion, client_id: "someone-else"))
+      credentials = described_class.authenticate(request_with(build_assertion, { client_id: "someone-else" }))
 
       expect(credentials).to be_nil
     end
@@ -216,6 +240,18 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       )
 
       expect(credentials).to be_nil
+    end
+
+    # Verifying an assertion needs no private parameter, so a key set that
+    # publishes one belongs to a client that has disclosed its own credential.
+    # A model storing what JWT::JWK#export returns hands the Hash back keyed
+    # by symbols, so the filter has to look for both spellings.
+    it "rejects an assertion verified by a key published with its private parameters" do
+      allow(application).to receive(:jwks).and_return(
+        keys: [JWT::JWK.new(rsa_key, { kid: kid }).export(include_private: true)],
+      )
+
+      expect(described_class.authenticate(request_with(build_assertion))).to be_nil
     end
 
     it "rejects unsigned assertions" do
@@ -279,6 +315,25 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(described_class.authenticate(request_with(assertion))).to be_nil
     end
 
+    # The jwt gem casts exp and nbf with to_i while verifying, which raises
+    # NoMethodError — not a JWT::DecodeError — for any other JSON type, so
+    # such an assertion would escape the rescue around that decode and reach
+    # the endpoint as a 500. The signature is valid, which under Client ID
+    # Metadata Documents anyone can arrange.
+    %w[exp nbf].each do |claim|
+      [{}, [1], true].each do |value|
+        it "rejects a validly signed assertion whose #{claim} is #{value.class} without raising" do
+          payload = {
+            "iss" => client_id, "sub" => client_id, "aud" => issuer,
+            "exp" => Time.now.to_i + 300, "jti" => SecureRandom.hex(8),
+          }.merge(claim => value)
+
+          expect { expect(described_class.authenticate(request_with(sign_raw(payload)))).to be_nil }
+            .not_to raise_error
+        end
+      end
+    end
+
     it "rejects an assertion whose exp is an absurdly large integer" do
       credentials = described_class.authenticate(request_with(build_assertion(claims: { "exp" => 10**100 })))
 
@@ -295,6 +350,25 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
 
       expect { expect(described_class.authenticate(request_with(assertion))).to be_nil }
         .not_to raise_error
+    end
+
+    # An Infinity literal is not valid JSON, but an exponent too large for a
+    # Float is: JSON.parse turns 1e400 into Float::INFINITY, which is Numeric.
+    # The jwt gem then casts exp and nbf with to_i, raising FloatDomainError —
+    # a RangeError, so not covered by the rescue around the verifying decode.
+    # The signature is valid, which under Client ID Metadata Documents anyone
+    # who can host a document can arrange.
+    { "exp" => "1e400", "nbf" => "-1e400" }.each do |claim, literal|
+      it "rejects a validly signed assertion whose #{claim} overflows to Infinity" do
+        claims = {
+          "iss" => client_id, "sub" => client_id, "aud" => issuer,
+          "exp" => Time.now.to_i + 300, "jti" => SecureRandom.hex(8),
+        }.merge(claim => "OVERFLOW")
+        payload = claims.to_json.sub('"OVERFLOW"', literal)
+
+        expect { expect(described_class.authenticate(request_with(sign_raw_json(payload)))).to be_nil }
+          .not_to raise_error
+      end
     end
 
     it "accepts an assertion whose exp is a finite float NumericDate" do
@@ -341,6 +415,20 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(credentials).to be_nil
     end
 
+    # The replay guard holds an entry per assertion for up to MAX_LIFETIME, so
+    # an unbounded jti would let a client choose what each of those costs.
+    it "rejects an assertion whose jti is longer than the guard will remember" do
+      jti = "a" * (described_class::MAX_JTI_LENGTH + 1)
+
+      expect(described_class.authenticate(request_with(build_assertion(claims: { "jti" => jti })))).to be_nil
+    end
+
+    it "accepts an assertion whose jti is exactly at the limit" do
+      jti = "a" * described_class::MAX_JTI_LENGTH
+
+      expect(described_class.authenticate(request_with(build_assertion(claims: { "jti" => jti })))).not_to be_nil
+    end
+
     it "rejects a replayed assertion" do
       assertion = build_assertion
 
@@ -351,7 +439,7 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
     it "tracks jti replay through a configured custom replay guard" do
       guard = double("replay guard")
       expect(guard).to receive(:first_use?)
-        .with(a_string_starting_with("#{client_id}:"), expires_at: kind_of(Integer))
+        .with(a_string_including(client_id), expires_at: kind_of(Integer))
         .twice
         .and_return(true, false)
       config_is_set(:private_key_jwt_replay_guard, guard)
@@ -360,6 +448,21 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
 
       expect(described_class.authenticate(request_with(assertion))).not_to be_nil
       expect(described_class.authenticate(request_with(assertion))).to be_nil
+    end
+
+    # A guard keyed by a bare "client_id:jti" cannot tell those two apart, so
+    # one client could burn the jti of another whose id it is a prefix of —
+    # different tenants, on a host that serves several clients.
+    it "keeps one client from burning the jti of a client sharing its prefix" do
+      other_id = "#{client_id}:suffix"
+      other = instance_double(Doorkeeper::OAuth::Client, application: application)
+      allow(Doorkeeper::OAuth::Client).to receive(:find).with(other_id).and_return(other)
+
+      first = build_assertion(claims: { "jti" => "suffix:shared" })
+      second = build_assertion(claims: { "iss" => other_id, "sub" => other_id, "jti" => "shared" })
+
+      expect(described_class.authenticate(request_with(first))).not_to be_nil
+      expect(described_class.authenticate(request_with(second))).not_to be_nil
     end
 
     it "resolves a jwks_uri through a configured custom jwks cache" do
@@ -406,6 +509,17 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(described_class.authenticate(request_with(build_assertion))).to be_nil
     end
 
+    # A JWK Set may carry members that are not strings: "ext" is a boolean in
+    # anything WebCrypto exports, which is what a browser client publishes.
+    # Hardening against the member types the jwt gem chokes on must not be
+    # done by dropping such keys.
+    it "accepts a WebCrypto-style key carrying non-string members" do
+      allow(application).to receive(:jwks)
+        .and_return({ "keys" => [jwk.export.merge("ext" => true, "key_ops" => ["verify"])] })
+
+      expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+    end
+
     it "reads a JSON string jwks attribute" do
       allow(application).to receive(:jwks).and_return({ "keys" => [jwk.export] }.to_json)
 
@@ -431,12 +545,258 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
        { "keys" => [{ "kty" => "EC", "crv" => "P-256", "x" => "AA", "y" => "AA" }] },],
       ["a kid-bearing EC point that is not on the curve",
        { "keys" => [{ "kty" => "EC", "crv" => "P-256", "kid" => "test-key", "x" => "AA", "y" => "AA" }] },],
+      # RFC 7517 gives every JWK member a string (or array of strings) value.
+      # The jwt gem indexes into them as such, so any other JSON type raises
+      # NoMethodError — neither a JWT error nor an OpenSSL one.
+      ["a key whose member is a number", { "keys" => [{ "kty" => "RSA", "n" => 123, "e" => "AQAB" }] }],
+      ["a key whose member is an object", { "keys" => [{ "kty" => "RSA", "n" => { "a" => 1 }, "e" => "AQAB" }] }],
+      ["a key whose member is an array", { "keys" => [{ "kty" => "RSA", "n" => ["AA"], "e" => "AQAB" }] }],
+      ["a key whose member is null", { "keys" => [{ "kty" => "RSA", "n" => nil, "e" => "AQAB" }] }],
+      ["a kid-bearing key whose member is a number",
+       { "keys" => [{ "kty" => "RSA", "kid" => "test-key", "n" => 123, "e" => "AQAB" }] },],
+      ["only symmetric keys", { "keys" => [{ "kty" => "oct", "k" => "AA" }] }],
+      # Verifying an assertion needs no private parameter, so a key set that
+      # publishes one is a client that has disclosed its own credential.
+      ["only keys carrying private material", { "keys" => [{ "kty" => "RSA", "n" => "AA", "e" => "AQAB", "d" => "AA" }] }],
+      ["an empty keys array", { "keys" => [] }],
+      ["an unparseable JSON string", "{not json"],
     ].each do |description, value|
       it "returns nil when the application's jwks is #{description}" do
         allow(application).to receive(:jwks).and_return(value)
 
         expect { expect(described_class.authenticate(request_with(build_assertion))).to be_nil }
           .not_to raise_error
+      end
+    end
+
+    context "with a client ID metadata document client" do
+      let(:client_id) { "https://client.example.com/oauth-client" }
+
+      before do
+        config_is_set(:client_id_metadata_documents, true)
+        config_is_set(:client_authentication, %i[client_secret_basic client_secret_post none private_key_jwt])
+        allow(Resolv).to receive(:getaddresses).and_return(["93.184.216.34"])
+        allow(Doorkeeper::OAuth::Client).to receive(:find).and_call_original
+      end
+
+      def stub_document(document_attributes)
+        stub_request(:get, client_id).to_return(
+          status: 200,
+          body: {
+            "client_id" => client_id,
+            "redirect_uris" => ["https://app.example.com/callback"],
+            "token_endpoint_auth_method" => "private_key_jwt",
+          }.merge(document_attributes).to_json,
+        )
+      end
+
+      it "verifies against the document's inline jwks" do
+        stub_document("jwks" => jwks)
+
+        credentials = described_class.authenticate(request_with(build_assertion))
+
+        expect(credentials).not_to be_nil
+        expect(credentials.uid).to eq(client_id)
+      end
+
+      # RFC 7523 Section 3 has the server reject any assertion that does not
+      # name "its own identity" as the audience. A document client_id resolves
+      # to the same client, and the same keys, at every server implementing the
+      # draft, so a Host header standing in for that identity would make an
+      # assertion sent to one of them replayable at all the others — by
+      # whoever received it. A registered client keeps the fallback (see the
+      # "when the server identifies itself nowhere" context above), since its
+      # uid is this server's own and would have to be registered elsewhere too.
+      context "when the server identifies itself nowhere" do
+        before { config_is_set(:issuer, nil) }
+
+        it "refuses the assertion rather than accepting a Host-derived audience" do
+          stub_document("jwks" => jwks)
+          request = request_with(build_assertion)
+          audience = request.base_url + request.path
+
+          credentials = described_class.authenticate(
+            request_with(build_assertion(claims: { "aud" => audience })),
+          )
+
+          expect(credentials).to be_nil
+        end
+
+        it "accepts the assertion once an issuer is configured" do
+          config_is_set(:issuer, issuer)
+          stub_document("jwks" => jwks)
+
+          credentials = described_class.authenticate(request_with(build_assertion))
+
+          expect(credentials).not_to be_nil
+        end
+      end
+
+      # Section 4.1 permits public keys only. An inline jwks publishing
+      # private material is refused with the document itself; a set fetched
+      # from a jwks_uri is not part of the document, so its keys are dropped
+      # instead and the assertion simply verifies against nothing.
+      it "refuses a document whose inline jwks publishes private key material" do
+        stub_document("jwks" => { "keys" => [JWT::JWK.new(rsa_key, { kid: kid }).export(include_private: true)] })
+
+        expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+      end
+
+      it "does not verify against private key material fetched from the document's jwks_uri" do
+        jwks_uri = "https://client.example.com/jwks.json"
+        stub_document("jwks_uri" => jwks_uri)
+        stub_request(:get, jwks_uri).to_return(
+          status: 200,
+          body: { "keys" => [JWT::JWK.new(rsa_key, { kid: kid }).export(include_private: true)] }.to_json,
+        )
+
+        expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+      end
+
+      it "verifies against keys fetched from the document's jwks_uri" do
+        jwks_uri = "https://client.example.com/jwks.json"
+        stub_document("jwks_uri" => jwks_uri)
+        stub_request(:get, jwks_uri).to_return(status: 200, body: jwks.to_json)
+
+        expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+      end
+
+      it "fetches the jwks_uri once across several authentications" do
+        jwks_uri = "https://client.example.com/jwks.json"
+        stub_document("jwks_uri" => jwks_uri)
+        stub_request(:get, jwks_uri).to_return(status: 200, body: jwks.to_json)
+
+        2.times { expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil }
+
+        expect(a_request(:get, jwks_uri)).to have_been_made.once
+      end
+
+      it "does not cache a malformed jwks_uri response" do
+        jwks_uri = "https://client.example.com/jwks.json"
+        stub_document("jwks_uri" => jwks_uri)
+        stub_request(:get, jwks_uri).to_return(status: 200, body: "[]")
+
+        expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+        expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+
+        expect(a_request(:get, jwks_uri)).to have_been_made.twice
+      end
+
+      # Resolving a URL client_id materializes an application row, so it must
+      # not happen for a request that fails to authenticate.
+      it "does not create an application row when the assertion does not verify" do
+        stub_document("jwks" => jwks)
+        assertion = build_assertion(key: OpenSSL::PKey::RSA.generate(2048))
+
+        expect { expect(described_class.authenticate(request_with(assertion))).to be_nil }
+          .not_to change(Doorkeeper::Application, :count).from(0)
+      end
+
+      it "does not create an application row for an unsigned assertion" do
+        stub_document("jwks" => jwks)
+        assertion = JWT.encode(
+          {
+            "iss" => client_id,
+            "sub" => client_id,
+            "aud" => issuer,
+            "exp" => Time.now.to_i + 300,
+            "jti" => SecureRandom.hex(8),
+          },
+          nil,
+          "none",
+        )
+
+        expect { expect(described_class.authenticate(request_with(assertion))).to be_nil }
+          .not_to change(Doorkeeper::Application, :count).from(0)
+      end
+
+      it "returns nil without raising when the document's jwks_uri serves a JSON array" do
+        jwks_uri = "https://client.example.com/jwks.json"
+        stub_document("jwks_uri" => jwks_uri)
+        stub_request(:get, jwks_uri).to_return(status: 200, body: [jwk.export].to_json)
+
+        expect { expect(described_class.authenticate(request_with(build_assertion))).to be_nil }
+          .not_to raise_error
+      end
+
+      it "rejects the assertion when the jwks_uri is not https" do
+        stub_document("jwks_uri" => "http://client.example.com/jwks.json")
+
+        expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+      end
+
+      it "rejects the assertion when the document has no keys" do
+        stub_document({})
+
+        expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+      end
+
+      # A document with an empty keys array is valid, so unlike the case above
+      # this one reaches the key resolver rather than failing validation.
+      it "rejects the assertion when the document publishes an empty key set" do
+        stub_document("jwks" => { "keys" => [] })
+
+        expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+      end
+
+      # The keys are attacker-supplied here, so the member types the jwt gem
+      # trusts must fail authentication rather than reach the endpoint as a
+      # 500 — and no signature is needed to get this far.
+      it "rejects a document key whose member is not a string without raising" do
+        stub_document("jwks" => { "keys" => [{ "kty" => "RSA", "n" => 123, "e" => "AQAB" }] })
+
+        expect { expect(described_class.authenticate(request_with(build_assertion))).to be_nil }
+          .not_to raise_error
+      end
+
+      it "rejects a document jwks_uri whose port could never be connected to" do
+        stub_document("jwks_uri" => "https://client.example.com:99999999999999999999/jwks.json")
+
+        expect { expect(described_class.authenticate(request_with(build_assertion))).to be_nil }
+          .not_to raise_error
+      end
+
+      # Keys named by a document are cached apart from those of registered
+      # applications, so unauthenticated traffic cannot evict the entries
+      # registered clients depend on.
+      it "caches document keys separately from registered application keys" do
+        jwks_uri = "https://client.example.com/jwks.json"
+        stub_document("jwks_uri" => jwks_uri)
+        stub_request(:get, jwks_uri).to_return(status: 200, body: jwks.to_json)
+
+        expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+
+        # A hit answers from the cache without running the block; a miss runs
+        # it, so the sentinel tells the two apart.
+        miss = "not cached"
+        expect(described_class::KeyResolver.document_jwks_cache.fetch(jwks_uri) { miss }).not_to eq(miss)
+        expect(described_class::KeyResolver.jwks_cache.fetch(jwks_uri) { miss }).to eq(miss)
+      end
+
+      # The separation must survive a configured private_key_jwt_jwks_cache:
+      # that cache belongs to registered clients, and a document client must
+      # not be able to insert entries into it or evict entries from it. The
+      # double answers nothing, so any call on it fails the example.
+      it "keeps document keys out of a configured custom jwks cache" do
+        jwks_uri = "https://client.example.com/jwks.json"
+        stub_document("jwks_uri" => jwks_uri)
+        stub_request(:get, jwks_uri).to_return(status: 200, body: jwks.to_json)
+        config_is_set(:private_key_jwt_jwks_cache, double("registered clients' cache"))
+
+        expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+
+        miss = "not cached"
+        expect(described_class::KeyResolver.document_jwks_cache.fetch(jwks_uri) { miss }).not_to eq(miss)
+      end
+
+      # Draft Section 8.2: client authentication must be "of the registered
+      # type" — a document that selected "none" must not authenticate with
+      # private_key_jwt just because it also publishes a JWK Set.
+      it "rejects the assertion when the document selects an authentication method other than private_key_jwt" do
+        stub_document("token_endpoint_auth_method" => "none", "jwks" => jwks)
+
+        expect { expect(described_class.authenticate(request_with(build_assertion))).to be_nil }
+          .not_to change(Doorkeeper::Application, :count).from(0)
       end
     end
   end
