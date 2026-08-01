@@ -90,6 +90,28 @@ module Doorkeeper
         !enabled? && materialized_row?(application)
       end
 
+      # Whether this client is one nobody registered: a public ("none")
+      # client resolved through a metadata document. Such a client_id is
+      # minted by publishing a document at a URL, so a check that only asks
+      # "is a client authenticated?" proves nothing about who is asking —
+      # which is what the client gates on the introspection endpoint (RFC
+      # 7662 Section 4, "to prevent token scanning attacks"), the
+      # client_credentials grant (RFC 6749 Section 4.4) and the password grant
+      # are there for. A confidential document client is different: it holds a
+      # key its document published, and only its holder can present one.
+      def public_document_client?(client)
+        # Asked before anything is read off the client, so the predicate is a
+        # true no-op while the feature is off: the callers sit on the token,
+        # introspection and password-grant paths, and the object they hand
+        # over is public API.
+        return false unless enabled?
+
+        application = client&.application
+        return false if application.nil?
+
+        resolves_through_document?(application.uid, application) && !application.confidential?
+      end
+
       # The validated metadata document for a client_id URL, or nil. Also
       # used by client authentication methods that need document contents
       # (e.g. jwks) rather than the materialized application.
