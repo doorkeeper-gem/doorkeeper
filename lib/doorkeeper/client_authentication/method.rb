@@ -24,16 +24,16 @@ module Doorkeeper
       # can have been established with the client — can ask the registry
       # instead of keeping a hard-coded list of method names.
       #
-      # Strategies may declare this themselves by defining
-      # +uses_shared_secret?+; for strategies that don't, the registration
-      # name is checked for "client_secret" as a conservative fallback, so an
-      # undeclared method errs on the side of being treated as secret-based.
+      # Only a strategy that declares +uses_shared_secret?+ and answers
+      # exactly +false+ is treated as secret-free. A strategy that declares
+      # nothing, or answers anything else, is treated as secret-based: the
+      # callers asking are deciding whether to admit a client that was never
+      # registered, so an undeclared method has to fail closed rather than be
+      # guessed at from its name.
       def uses_shared_secret?
-        if strategy.respond_to?(:uses_shared_secret?)
-          strategy.uses_shared_secret?
-        else
-          name.to_s.include?("client_secret")
-        end
+        return true unless strategy.respond_to?(:uses_shared_secret?)
+
+        strategy.uses_shared_secret? != false
       end
     end
   end
