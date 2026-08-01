@@ -11,8 +11,10 @@ module Doorkeeper
       # "private_key_jwt" client authentication (RFC 7523 / OIDC Core §9):
       # the client authenticates with a JWT assertion signed by its private
       # key; the server verifies it against the client's published public
-      # keys (a jwks attribute on the application model, or keys fetched
-      # from its jwks_uri). No shared secret is involved.
+      # keys (inline jwks, a jwks_uri, or the client's Client ID Metadata
+      # Document). No shared secret is involved, which is what makes this
+      # method usable by Client ID Metadata Document clients (draft
+      # Section 8.2) — but it works for registered applications too.
       #
       # The "jwt" gem is required only when an assertion is actually
       # authenticated, so servers that don't enable this method don't need
@@ -31,8 +33,9 @@ module Doorkeeper
           AUTH_METHOD_NAME
         end
 
-        # Assertions are verified against the client's published public
-        # keys; no shared secret is involved.
+        # Assertions are verified against the client's published public keys;
+        # no shared secret is involved, which is what makes this method
+        # available to Client ID Metadata Document clients.
         def self.uses_shared_secret?
           false
         end
@@ -86,7 +89,10 @@ module Doorkeeper
           # than after the client has been looked up and its keys resolved —
           # which, for a client published through a jwks_uri, would mean an
           # outbound request on every cache miss for an authentication that
-          # cannot succeed.
+          # cannot succeed, and for a Client ID Metadata Document client the
+          # fetch of its document and possibly of a jwks_uri besides: two
+          # outbound requests an unauthenticated caller could otherwise
+          # trigger at will on the way to a refusal.
           audiences = acceptable_audiences(request)
           return if audiences.empty?
 
@@ -99,10 +105,15 @@ module Doorkeeper
           # must agree with the assertion's issuer.
           return if params[:client_id].present? && params[:client_id] != client_id
 
-          application = OAuth::Client.find(client_id)&.application
-          return unless application
+          # Which client this is, and therefore where its keys come from, is
+          # decided the way Client.find decides what a client_id resolves to:
+          # by the application table, not by the shape of the uid
+          # (ClientIdMetadata.resolves_through_document?).
+          registered = Doorkeeper.config.application_model.by_uid(client_id)
+          document_client = Doorkeeper::ClientIdMetadata.resolves_through_document?(client_id, registered)
+          return unless document_client || registered_client?(registered)
 
-          jwk_set = KeyResolver.jwk_set_for(application)
+          jwk_set = keys_for(client_id, registered, document_client: document_client)
           return unless jwk_set
 
           claims = verified_claims(assertion, client_id, jwk_set, audiences)
@@ -115,6 +126,23 @@ module Doorkeeper
           Doorkeeper::ClientAuthentication::VerifiedCredentials.new(client_id, authenticated_with: AUTH_METHOD_NAME)
         end
 
+        # A registered application holding an https:// uid — a pre-registered
+        # Client Identifier URL, draft Section 7.2 — is verified against the
+        # keys registered for it, and its URL is never fetched: verified
+        # against whatever that URL serves, whoever controls it could sign as
+        # the registered client with keys of their own. A document client's
+        # keys come from its document, and the row it materializes is
+        # deliberately not created here but once the assertion has been
+        # verified, which Client.authenticate does when handed the
+        # VerifiedCredentials: an unauthenticated request must not persist
+        # anything.
+        def self.keys_for(client_id, registered, document_client:)
+          return KeyResolver.document_jwk_set_for(client_id) if document_client
+
+          KeyResolver.jwk_set_for(registered)
+        end
+        private_class_method :keys_for
+
         # A jti is single-use per client, so the guard is keyed by both. The
         # client_id is length-prefixed to keep that pair unambiguous: a bare
         # "#{client_id}:#{jti}" lets a client whose id ends in ":x" burn the
@@ -126,6 +154,14 @@ module Doorkeeper
           "#{client_id.length}:#{client_id}:#{jti}"
         end
         private_class_method :replay_key
+
+        # A registered client is an application row the feature did not
+        # materialize. As in Client.find, a stamped row outliving the feature
+        # is no registered client, whatever its uid looks like.
+        def self.registered_client?(application)
+          !application.nil? && !Doorkeeper::ClientIdMetadata.orphaned_materialized_row?(application)
+        end
+        private_class_method :registered_client?
 
         # The built-in guard is process-local; a multi-process deployment can
         # supply a shared store through the private_key_jwt_replay_guard
@@ -280,6 +316,14 @@ module Doorkeeper
         # sends the assertion choose the audience it is checked against. A
         # server that identifies itself nowhere therefore accepts no audience
         # at all, and is warned about that at boot.
+        #
+        # For a Client ID Metadata Document client that rule counts twice
+        # over. RFC 7523 Section 3 requires the server to "reject any JWT that
+        # does not contain its own identity as the intended audience", and a
+        # document client_id is a URL that resolves to the same client, and
+        # the same keys, at every server implementing the draft: an assertion
+        # accepted on the caller's word about the audience would be replayable
+        # at every one of them, by whoever received it.
         def self.acceptable_audiences(request)
           endpoints = configured_url_option_sets.flat_map do |options|
             ["#{base_url(options)}#{request.path}", token_endpoint_url(options)]
