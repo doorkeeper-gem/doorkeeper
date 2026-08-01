@@ -37,6 +37,12 @@ module Doorkeeper
 
       def self.authenticate(credentials, method = Doorkeeper.config.application_model.method(:by_uid_and_secret))
         return if credentials.blank?
+
+        # Credentials that were fully authenticated by their client
+        # authentication method (e.g. a verified private_key_jwt assertion)
+        # carry no secret to compare — resolve the client by uid alone.
+        return find(credentials.uid) if credentials.respond_to?(:pre_authenticated?) && credentials.pre_authenticated?
+
         return unless (application = method.call(credentials.uid, credentials.secret))
 
         new(application)

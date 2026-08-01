@@ -45,6 +45,25 @@ jobs:
         timeout-minutes: 10
         run: bundle exec rake spec
 
+  # The jwt gem is an optional dependency of the private_key_jwt client
+  # authentication method, and the matrix above always resolves its newest
+  # release. This job pins it to the oldest version the gemspec allows, so the
+  # declared lower bound is actually exercised.
+  jwt_lower_bound:
+    runs-on: ubuntu-latest
+    env:
+      BUNDLE_GEMFILE: gemfiles/rails_8_0_jwt_2.gemfile
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+      - name: Run tests
+        timeout-minutes: 10
+        run: bundle exec rake spec
+
   rails_edge:
     runs-on: ubuntu-latest
     env:

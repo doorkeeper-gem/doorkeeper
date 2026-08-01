@@ -20,6 +20,10 @@ require "rspec/rails"
 require "capybara/rspec"
 require "database_cleaner"
 require "generator_spec/test_case"
+require "webmock/rspec"
+
+# Coveralls posts its results over HTTP from an at_exit hook in CI.
+WebMock.disable_net_connect!(allow: "coveralls.io")
 
 # Load JRuby SQLite3 if in that platform
 if defined? JRUBY_VERSION

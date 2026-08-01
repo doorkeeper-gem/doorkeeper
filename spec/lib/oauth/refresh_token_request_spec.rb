@@ -113,6 +113,17 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
     expect(request.error).to eq(Doorkeeper::Errors::InvalidGrant)
   end
 
+  context "with credentials already authenticated by their client authentication method" do
+    let(:credentials) { Doorkeeper::ClientAuthentication::VerifiedCredentials.new(client.uid) }
+
+    it "resolves the client by uid alone" do
+      expect(client).to be_confidential
+
+      expect { request.authorize }.to change { client.reload.access_tokens.count }.by(1)
+      expect(request.error).to be_nil
+    end
+  end
+
   it "rejects revoked tokens" do
     refresh_token.revoke
     request.validate

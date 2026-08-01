@@ -3,6 +3,10 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::ClientAuthentication::None do
+  it "declares that it uses no shared secret" do
+    expect(described_class.uses_shared_secret?).to be false
+  end
+
   describe ".matches_request?" do
     it "matches if the request body has a client_id but no client_secret" do
       request = mock_request(request_parameters: { client_id: "1234" })
@@ -83,6 +87,18 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::None do
       request = mock_request(
         request_parameters: { client_id: "1234" },
         authorization: "Digest username=\"a\"",
+      )
+
+      expect(described_class.matches_request?(request)).not_to be true
+    end
+
+    it "doesn't match if the request carries a client_assertion (RFC 7521 §4.2)" do
+      request = mock_request(
+        request_parameters: {
+          client_id: "1234",
+          client_assertion: "some.jwt.assertion",
+          client_assertion_type: "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
+        },
       )
 
       expect(described_class.matches_request?(request)).not_to be true

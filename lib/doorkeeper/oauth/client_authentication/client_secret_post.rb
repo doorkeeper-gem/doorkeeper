@@ -7,6 +7,10 @@ module Doorkeeper
       # the request body. The query string is intentionally ignored so that
       # credentials must be supplied in the body as the spec requires.
       class ClientSecretPost
+        def self.uses_shared_secret?
+          true
+        end
+
         def self.matches_request?(request)
           params = request.request_parameters.with_indifferent_access
 
