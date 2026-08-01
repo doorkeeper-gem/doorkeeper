@@ -17,10 +17,6 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
     config_is_set(:issuer, issuer)
     allow(Doorkeeper::OAuth::Client).to receive(:find).and_return(nil)
     allow(Doorkeeper::OAuth::Client).to receive(:find).with(client_id).and_return(client)
-    described_class::ReplayGuard.instance.clear
-    # The jwks memo outlives a single example and is keyed by URL only, so a
-    # jwks_uri reused across examples would otherwise serve stale keys.
-    described_class::KeyResolver.jwks_cache.clear
   end
 
   def build_assertion(claims: {}, key: rsa_key, alg: "RS256", header_kid: kid)
