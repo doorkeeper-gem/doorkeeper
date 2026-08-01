@@ -41,6 +41,9 @@ module Doorkeeper
             # client authentication method is advertised. Absent (and legal)
             # otherwise, which data.compact! below takes care of.
             token_endpoint_auth_signing_alg_values_supported: token_endpoint_auth_signing_alg_values_supported,
+            # Client ID Metadata Document draft, Section 6. Like the RFC 9207
+            # field above, false is advertised explicitly.
+            client_id_metadata_document_supported: config.client_id_metadata_documents?,
           }
           data.compact!
 
