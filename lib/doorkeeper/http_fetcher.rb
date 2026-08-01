@@ -51,8 +51,10 @@ module Doorkeeper
     # in the caller.
     JSON_MEDIA_TYPE = %r{\Aapplication/([\w.+-]+\+)?json\z}i
 
-    # RFC 6890 special-purpose IPv4/IPv6 registries, plus multicast ranges
-    # (224.0.0.0/4, ff00::/8), which are equally unfit as a document origin.
+    # Every non-globally-reachable range in the IANA special-purpose address
+    # registries RFC 6890 established (including the ranges registered
+    # after it: RFC 8215, RFC 9602, RFC 9637, RFC 9780), plus multicast
+    # (224.0.0.0/4, ff00::/8), which is equally unfit as a document origin.
     SPECIAL_USE_RANGES = [
       "0.0.0.0/8",          # "this host on this network"
       "10.0.0.0/8",         # private-use
@@ -78,10 +80,14 @@ module Doorkeeper
       # range also covers the two entries above.
       "::/96",
       "64:ff9b::/96",       # IPv4-IPv6 translation
+      "64:ff9b:1::/48",     # local-use IPv4-IPv6 translation (RFC 8215)
       "100::/64",           # discard-only
+      "100:0:0:1::/64",     # dummy prefix (RFC 9780)
       "2001::/23",          # IETF protocol assignments (TEREDO, ORCHID, ...)
       "2001:db8::/32",      # documentation
       "2002::/16",          # 6to4
+      "3fff::/20",          # documentation (RFC 9637)
+      "5f00::/16",          # SRv6 segment identifiers (RFC 9602)
       "fc00::/7",           # unique-local
       "fe80::/10",          # link-local
       "ff00::/8",           # multicast
