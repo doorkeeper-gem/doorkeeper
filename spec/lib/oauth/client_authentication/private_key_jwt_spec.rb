@@ -528,6 +528,17 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(described_class.authenticate(request_with(build_assertion))).to be_nil
     end
 
+    # A JWK Set may carry members that are not strings: "ext" is a boolean in
+    # anything WebCrypto exports, which is what a browser client publishes.
+    # Hardening against the member types the jwt gem chokes on must not be
+    # done by dropping such keys.
+    it "accepts a WebCrypto-style key carrying non-string members" do
+      allow(application).to receive(:jwks)
+        .and_return({ "keys" => [jwk.export.merge("ext" => true, "key_ops" => ["verify"])] })
+
+      expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+    end
+
     it "reads a JSON string jwks attribute" do
       allow(application).to receive(:jwks).and_return({ "keys" => [jwk.export] }.to_json)
 
@@ -553,6 +564,17 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
        { "keys" => [{ "kty" => "EC", "crv" => "P-256", "x" => "AA", "y" => "AA" }] },],
       ["a kid-bearing EC point that is not on the curve",
        { "keys" => [{ "kty" => "EC", "crv" => "P-256", "kid" => "test-key", "x" => "AA", "y" => "AA" }] },],
+      # RFC 7517 gives every JWK member a string (or array of strings) value.
+      # The jwt gem indexes into them as such, so any other JSON type raises
+      # NoMethodError — neither a JWT error nor an OpenSSL one.
+      ["a key whose member is a number", { "keys" => [{ "kty" => "RSA", "n" => 123, "e" => "AQAB" }] }],
+      ["a key whose member is an object", { "keys" => [{ "kty" => "RSA", "n" => { "a" => 1 }, "e" => "AQAB" }] }],
+      ["a key whose member is an array", { "keys" => [{ "kty" => "RSA", "n" => ["AA"], "e" => "AQAB" }] }],
+      ["a key whose member is null", { "keys" => [{ "kty" => "RSA", "n" => nil, "e" => "AQAB" }] }],
+      ["a kid-bearing key whose member is a number",
+       { "keys" => [{ "kty" => "RSA", "kid" => "test-key", "n" => 123, "e" => "AQAB" }] },],
+      ["an empty keys array", { "keys" => [] }],
+      ["an unparseable JSON string", "{not json"],
     ].each do |description, value|
       it "returns nil when the application's jwks is #{description}" do
         allow(application).to receive(:jwks).and_return(value)
@@ -572,6 +594,45 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
 
       expect(described_class.authenticate(request_with(build_assertion))).to be_nil
       expect(request_stub).not_to have_been_requested
+    end
+
+    # RFC 7517 Section 5: a JWK Set member an implementation does not
+    # understand is ignored, not fatal. The jwt gem knows RSA, EC and oct
+    # only, and builds every member in the Set constructor, so one key it
+    # cannot build would otherwise cost the client the keys that are fine —
+    # publishing an Ed25519 key beside a working RSA one would stop
+    # authentication altogether.
+    [
+      ["an OKP key the gem cannot build",
+       { "kty" => "OKP", "crv" => "Ed25519", "kid" => "ed", "x" => "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo" },],
+      ["a key with no kty", { "kid" => "no-kty", "n" => "AA", "e" => "AQAB" }],
+      ["a key with an unknown kty", { "kty" => "MADEUP", "kid" => "unknown" }],
+      ["a key with a malformed base64url member", { "kty" => "RSA", "kid" => "bad", "n" => "!!!", "e" => "AQAB" }],
+    ].each do |description, unusable|
+      it "keeps verifying against a usable key published beside #{description}" do
+        allow(application).to receive(:jwks).and_return({ "keys" => [unusable, jwk.export] })
+
+        expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+      end
+    end
+
+    # A key member whose bytes are not valid UTF-8 raises ArgumentError out
+    # of the base64url decoder — lazily, inside the verifying decode, when
+    # the header's kid names the key, and eagerly, while the set is built,
+    # when the key has no kid. A registered application's jwks is the
+    # host's to fill; either way it is a failure to verify, not a 500.
+    it "rejects the assertion without raising when the registered key named by kid is not valid UTF-8" do
+      allow(application).to receive(:jwks).and_return({ "keys" => [jwk.export.merge("n" => "AQ\xffAB")] })
+
+      expect { expect(described_class.authenticate(request_with(build_assertion))).to be_nil }
+        .not_to raise_error
+    end
+
+    it "rejects the assertion without raising when a registered key without a kid is not valid UTF-8" do
+      allow(application).to receive(:jwks).and_return({ "keys" => [jwk.export.except(:kid).merge("n" => "AQ\xffAB")] })
+
+      expect { expect(described_class.authenticate(request_with(build_assertion(header_kid: nil)))).to be_nil }
+        .not_to raise_error
     end
   end
 end
