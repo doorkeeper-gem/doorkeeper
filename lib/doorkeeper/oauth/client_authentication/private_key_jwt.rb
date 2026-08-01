@@ -123,7 +123,17 @@ module Doorkeeper
             expires_at: claims["exp"].to_i + decode_leeway,
           )
 
-          Doorkeeper::ClientAuthentication::VerifiedCredentials.new(client_id, authenticated_with: AUTH_METHOD_NAME)
+          Doorkeeper::ClientAuthentication::VerifiedCredentials.new(
+            client_id,
+            authenticated_with: AUTH_METHOD_NAME,
+            # Which keys the assertion was verified against travels with the
+            # credentials: Client.authenticate resolves the uid to a row of
+            # its own, and between that resolution and the lookup above an
+            # application row can be registered, removed, or have its
+            # materialized stamp cleared — a gap the outbound document fetch
+            # widens, and whose width whoever serves the document decides.
+            from_metadata_document: document_client,
+          )
         end
 
         # A registered application holding an https:// uid — a pre-registered
