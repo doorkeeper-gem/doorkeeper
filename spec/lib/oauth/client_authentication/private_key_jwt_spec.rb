@@ -420,6 +420,96 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       end
     end
 
+    # Reading Rails' default host may raise — a host application need not
+    # have routes yet — and that must not take the authentication path down
+    # with it: the issuer still identifies the server.
+    context "when Rails' default host cannot be read" do
+      it "falls back to the issuer" do
+        allow(Rails.application).to receive(:routes).and_raise(RuntimeError)
+
+        credentials = described_class.authenticate(
+          request_with(build_assertion(claims: { "aud" => issuer })),
+        )
+
+        expect(credentials).not_to be_nil
+      end
+    end
+
+    # A host application commonly sets both — Rails' default_url_options for
+    # its own URL helpers, and an issuer — and the two need not name the same
+    # host. A client derives the token endpoint URL (OIDC Core §9) from
+    # whichever it was told about, so both are offered rather than the first.
+    context "when the issuer and Rails' default host name different hosts" do
+      before do
+        config_is_set(:issuer, "https://issuer.example.com")
+        allow(Rails.application.routes)
+          .to receive(:default_url_options).and_return({ protocol: "https://", host: "canonical.example.com" })
+      end
+
+      it "accepts the token endpoint URL built from the issuer" do
+        credentials = described_class.authenticate(
+          request_with(build_assertion(claims: { "aud" => "https://issuer.example.com/oauth/token" })),
+        )
+
+        expect(credentials).not_to be_nil
+      end
+
+      it "accepts the token endpoint URL built from Rails' default host" do
+        credentials = described_class.authenticate(
+          request_with(build_assertion(claims: { "aud" => "https://canonical.example.com/oauth/token" })),
+        )
+
+        expect(credentials).not_to be_nil
+      end
+
+      it "still refuses a host neither of them names" do
+        credentials = described_class.authenticate(
+          request_with(build_assertion(claims: { "aud" => "https://elsewhere.example.com/oauth/token" })),
+        )
+
+        expect(credentials).to be_nil
+      end
+    end
+
+    # A server reachable on a port of its own has that port in the endpoint
+    # URL its clients were told about, so the audience is only this server's
+    # with the port on it.
+    context "when the issuer names a port" do
+      before { config_is_set(:issuer, "https://as.example.com:8443") }
+
+      it "accepts the token endpoint URL built from the issuer" do
+        credentials = described_class.authenticate(
+          request_with(build_assertion(claims: { "aud" => "https://as.example.com:8443/oauth/token" })),
+        )
+
+        expect(credentials).not_to be_nil
+      end
+
+      it "refuses the same URL without the port" do
+        credentials = described_class.authenticate(
+          request_with(build_assertion(claims: { "aud" => "https://as.example.com/oauth/token" })),
+        )
+
+        expect(credentials).to be_nil
+      end
+    end
+
+    context "when Rails' default_url_options names a port" do
+      before do
+        config_is_set(:issuer, nil)
+        allow(Rails.application.routes).to receive(:default_url_options)
+          .and_return({ protocol: "https://", host: "as.example.com", port: 8443 })
+      end
+
+      it "accepts the token endpoint URL built with that port" do
+        credentials = described_class.authenticate(
+          request_with(build_assertion(claims: { "aud" => "https://as.example.com:8443/oauth/token" })),
+        )
+
+        expect(credentials).not_to be_nil
+      end
+    end
+
     it "accepts a matching client_id parameter next to the assertion" do
       credentials = described_class.authenticate(request_with(build_assertion, { client_id: client_id }))
 
