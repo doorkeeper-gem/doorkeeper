@@ -381,6 +381,23 @@ feature "private_key_jwt client authentication" do
       expect(Doorkeeper::AccessToken.last.application.uid).to eq(client_id_url)
     end
 
+    # The other side of the client_credentials rule: a document naming
+    # private_key_jwt describes a confidential client, which RFC 6749 Section
+    # 4.4 allows the grant, and it holds a key only its owner can present.
+    scenario "a confidential URL client keeps the client credentials grant" do
+      config_is_set(:grant_flows, %w[client_credentials])
+
+      page.driver.post token_endpoint_url, {
+        grant_type: "client_credentials",
+        client_assertion: client_assertion,
+        client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
+      }
+
+      expect(page.driver.response.status).to eq(200)
+      expect(json_response).to have_key("access_token")
+      expect(Doorkeeper::AccessToken.last.application.uid).to eq(client_id_url)
+    end
+
     # No client gets a Host-derived audience (see the context of the same name
     # above); for a document client that is what keeps an assertion sent to
     # one server implementing the draft from being replayable at all of them,
