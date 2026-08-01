@@ -60,13 +60,7 @@ module Doorkeeper
         return if credentials.blank?
 
         url_client_id = document_client_id?(credentials.uid)
-        # Shared-secret authentication is forbidden for URL client_ids (draft
-        # Section 4.1): no secret is ever established with such a client, so a
-        # presented secret is refused outright — never compared against the
-        # materialized row's auto-generated (or a pre-existing row's) secret,
-        # and before the document is looked at, since no document could change
-        # the answer and looking is a fetch.
-        return if url_client_id && credentials.secret.present?
+        return if url_client_id && refused_as_document_client?(credentials)
 
         # Credentials that were fully authenticated by their client
         # authentication method (e.g. a verified private_key_jwt assertion)
@@ -91,6 +85,20 @@ module Doorkeeper
       end
       private_class_method :pre_authenticated?
 
+      # The two rules every metadata document client is held to, whatever
+      # else authenticate goes on to check, in the order that costs least.
+      # Shared-secret authentication is forbidden for URL client_ids (draft
+      # Section 4.1): no secret is ever established with such a client, so a
+      # presented secret is refused outright — never compared against the
+      # materialized row's auto-generated (or a pre-existing row's) secret,
+      # and before the document is looked at, since no document could change
+      # the answer and looking is a fetch. And a document client is only ever
+      # authenticated by the one method its document names.
+      def self.refused_as_document_client?(credentials)
+        credentials.secret.present? || !authenticated_as_document_declares?(credentials)
+      end
+      private_class_method :refused_as_document_client?
+
       # The lookup resolves_through_document? needs, made only for URL-shaped
       # uids so that opaque ones cost no extra query.
       def self.document_client_id?(uid)
@@ -100,6 +108,38 @@ module Doorkeeper
         Doorkeeper::ClientIdMetadata.resolves_through_document?(uid, registered)
       end
       private_class_method :document_client_id?
+
+      # A metadata document names the one method it authenticates with, and
+      # Section 8.2 requires client authentication "of the registered type",
+      # so a method the document did not select must not stand in for the one
+      # it did — on every path into this method, not only the pre-authenticated
+      # one. A document naming "none" would otherwise also be satisfied by
+      # client_secret_basic with an empty password, which by_uid_and_secret
+      # resolves as public-client authentication: harmless in itself, since a
+      # public client is exactly the one no secret protects, but it is the
+      # guarantee that would be uneven, and unevenness is what a host
+      # application's own strategy would find.
+      #
+      # On the request path Doorkeeper::Server records the method that
+      # produced the credentials, overwriting whatever the strategy set for
+      # itself, so what is compared here is the server's own record of which
+      # strategy ran. Credentials assembled outside that path carry whatever
+      # name their maker chose — PrivateKeyJwt names itself when called
+      # directly, and VerifiedCredentials takes the name as public API — so
+      # this check is only as strong as that record: a caller building
+      # credentials by hand is trusted to name the method honestly.
+      #
+      # Credentials naming no method are refused before the document is
+      # looked at: it could not change the answer, and looking is a fetch.
+      def self.authenticated_as_document_declares?(credentials)
+        used = credentials.authenticated_with if credentials.respond_to?(:authenticated_with)
+        return false if used.blank?
+
+        document = Doorkeeper::ClientIdMetadata.document_for(credentials.uid)
+
+        !document.nil? && document.token_endpoint_auth_method == used.to_s
+      end
+      private_class_method :authenticated_as_document_declares?
     end
   end
 end

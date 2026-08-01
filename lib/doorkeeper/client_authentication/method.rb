@@ -45,12 +45,13 @@ module Doorkeeper
       #
       # A strategy that declares none answers +nil+, which no such name can
       # match: Doorkeeper::Server stamps this same value onto the credentials,
-      # so a nameless strategy could never satisfy a check that holds a client
-      # to the method it registered.
+      # so a nameless strategy could never satisfy the check a document client
+      # is held to anyway.
       #
       # Answered as a String whatever the strategy declared it as — a Symbol
       # comes naturally to a strategy registered under one — so that every
-      # comparison made against it sees the one shape.
+      # comparison made against it (the metadata endpoint's, a document's,
+      # Client.authenticate's) sees the one shape.
       def auth_method_name
         strategy.auth_method_name&.to_s if strategy.respond_to?(:auth_method_name)
       end
