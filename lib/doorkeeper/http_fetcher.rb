@@ -132,9 +132,14 @@ module Doorkeeper
       # URI.parse("https:foo") yields a URI::HTTPS whose host is nil, so a
       # caller's is_a?(URI::HTTPS) validation does not guarantee a host —
       # and Resolv raises ArgumentError, not ResolvError, when handed nil.
-      raise FetchError, "#{url.inspect} has no host" if uri.host.blank?
+      # #hostname, not #host: the two differ for an IPv6 literal, where
+      # #host keeps the brackets the URL wrote it in ("[::1]") and nothing
+      # downstream — neither the resolver nor the special-use check — reads
+      # that as an address. UrlValidator accepts such a URL, so the fetcher
+      # has to agree with it about what is fetchable.
+      raise FetchError, "#{url.inspect} has no host" if uri.hostname.blank?
 
-      addresses = vetted_addresses_for(uri.host)
+      addresses = vetted_addresses_for(uri.hostname)
       # One deadline covers connection attempts to all addresses in aggregate.
       deadline = monotonic_now + MAX_TOTAL_TIME
       # If we attempt to connect to multiple addresses and all of them fail,
@@ -150,7 +155,7 @@ module Doorkeeper
         last_error = e
       end
 
-      raise FetchError, "could not connect to #{uri.host}: #{last_error.message}"
+      raise FetchError, "could not connect to #{uri.hostname}: #{last_error.message}"
     rescue *TRANSPORT_ERRORS => e
       raise FetchError, "#{e.class}: #{e.message}"
     end
@@ -187,7 +192,7 @@ module Doorkeeper
       remaining = remaining_until(deadline)
       raise ConnectError, "no time left to connect to #{address}" if remaining <= 0
 
-      Net::HTTP.new(uri.host, uri.port).tap do |http|
+      Net::HTTP.new(uri.hostname, uri.port).tap do |http|
         http.use_ssl = true
         http.ipaddr = address
         # Net::HTTP can use up to the whole `open_timeout` establishing the TCP
@@ -227,10 +232,10 @@ module Doorkeeper
         # Net::HTTP never follows redirects on its own; a 3xx just fails
         # the status check below.
         connection.request(request) do |response|
-          raise FetchError, "expected 200 OK from #{uri.host}, got #{response.code}" unless response.is_a?(Net::HTTPOK)
+          raise FetchError, "expected 200 OK from #{uri.hostname}, got #{response.code}" unless response.is_a?(Net::HTTPOK)
 
-          verify_media_type!(response, uri.host)
-          body = bounded_body(response, connection, uri.host, deadline)
+          verify_media_type!(response, uri.hostname)
+          body = bounded_body(response, connection, uri.hostname, deadline)
         end
       end
 
