@@ -7,9 +7,12 @@ module Doorkeeper
   module OAuth
     module ClientAuthentication
       class PrivateKeyJwt
-        # Resolves the JWK Set a client's assertion must verify against:
-        # the +jwks+ / +jwks_uri+ attributes of its application, when the
-        # application model provides them (Doorkeeper defines no such
+        # Resolves the JWK Set a client's assertion must verify against.
+        #
+        # For a Client ID Metadata Document client the keys come from its
+        # (memoized) document — inline +jwks+ or a fetched +jwks_uri+. For a
+        # registered application they come from +jwks+ / +jwks_uri+ attributes
+        # when the application model provides them (Doorkeeper defines no such
         # columns itself).
         #
         # Keys that are not public are dropped: a symmetric ("oct") key in a
@@ -31,12 +34,36 @@ module Doorkeeper
           # An "oct" key is symmetric whether or not it carries its "k".
           SYMMETRIC_KEY_TYPE = "oct"
 
-          # A published JWK Set is remote, client-controlled input, so each
-          # level is type-checked before it is indexed into: a JWK Set that
-          # is not an object of objects must fail authentication, never
-          # raise out of the token endpoint.
+          # The JWK Set of a registered application: its +jwks+ / +jwks_uri+
+          # attributes, when the application model provides them.
           def self.jwk_set_for(application)
-            raw = raw_jwks(application)
+            key_set(application_jwks(application) || fetch_jwks(application_jwks_uri(application)))
+          end
+
+          # The JWK Set of a Client ID Metadata Document client: the +jwks+
+          # its (memoized) document carries inline, or the set fetched from
+          # the +jwks_uri+ it names. Which of the two kinds a client_id is
+          # was decided by the caller (see PrivateKeyJwt.authenticate), from
+          # the application table; nothing here judges it by its shape, so a
+          # registered application's URL is never fetched by mistake.
+          def self.document_jwk_set_for(client_id)
+            document = Doorkeeper::ClientIdMetadata.document_for(client_id)
+            return unless document
+
+            # Section 8.2: client authentication must be "of the registered
+            # type". A document that selected another method (such as
+            # "none") may still publish a JWK Set, but those keys register
+            # no authentication method and must not verify an assertion.
+            return unless document.token_endpoint_auth_method == PrivateKeyJwt::AUTH_METHOD_NAME
+
+            key_set(document.jwks || fetch_jwks(document.jwks_uri, cache: document_jwks_cache))
+          end
+
+          # Everything here is attacker-supplied for a metadata document
+          # client, so each level is type-checked before it is indexed into:
+          # a JWK Set that is not an object of objects must fail
+          # authentication, never raise out of the token endpoint.
+          def self.key_set(raw)
             return unless raw.is_a?(Hash)
 
             keys = raw["keys"] || raw[:keys]
@@ -47,20 +74,22 @@ module Doorkeeper
 
             build_key_set(usable)
           end
-
-          def self.raw_jwks(application)
-            application_jwks(application) || fetch_jwks(application_jwks_uri(application))
-          end
-          private_class_method :raw_jwks
+          private_class_method :key_set
 
           # Verifying an assertion needs no private parameter, so a key
-          # carrying one verifies nothing here: a registered application's
-          # key set is used for verification only, so nothing correctly
-          # published there carries private material either.
+          # carrying one verifies nothing here. For a Client ID Metadata
+          # Document the draft says as much (Section 4.1: "only public keys
+          # ... are permitted"); an inline jwks publishing such a key is
+          # rejected with the document, while a set fetched from a jwks_uri
+          # — which is not part of the document — is filtered here instead.
+          # A registered application's key set is held to the same rule: it
+          # is used for verification only, so nothing correctly published
+          # there carries private material either.
           #
-          # Judged on the value: a key serialized with nulls for the private
-          # parameters it does not have publishes none of them, and the jwt
-          # gem reads it as the public key it is.
+          # Judged on the value, the way a document's optional members are: a
+          # key serialized with nulls for the private parameters it does not
+          # have publishes none of them, and the jwt gem reads it as the
+          # public key it is.
           def self.public_key?(key)
             return false if member(key, "kty").to_s == SYMMETRIC_KEY_TYPE
 
@@ -73,9 +102,9 @@ module Doorkeeper
           # on "kid" alone — so a client that publishes a JWE encryption key
           # beside its signing key would have that restriction ignored here.
           #
-          # Deliberately not folded into public_key?, which refuses a key
-          # outright: publishing an encryption key is legitimate, verifying an
-          # assertion with it is not.
+          # Deliberately not folded into public_key?, which Document uses to
+          # refuse a whole document: publishing an encryption key in a metadata
+          # document is legitimate, verifying an assertion with it is not.
           def self.verification_key?(key)
             use = member(key, "use")
             return false if use.is_a?(String) && use != "sig"
@@ -165,21 +194,25 @@ module Doorkeeper
           end
           private_class_method :application_jwks_uri
 
-          # The jwks_uri is fetched with a hardened HTTP client: https only,
-          # no redirects, 200 OK only, and RFC 6890 special-use addresses
-          # refused.
+          # The jwks_uri is fetched with the same hardened HTTP client used
+          # for metadata documents: https only, no redirects, 200 OK only,
+          # and RFC 6890 special-use addresses refused.
           #
           # The result is memoized, since otherwise every single authenticated
-          # request would fetch it again; a rotated key is picked up once the
-          # memo expires. Only JSON objects are stored, so a malformed
-          # response is not cached.
-          def self.fetch_jwks(jwks_uri)
+          # request would fetch it again. By default the memo expires on the
+          # same 60-second TTL as a metadata document, so a rotated key is
+          # picked up within the same window as any other metadata change
+          # (Section 8.4.1); a configured private_key_jwt_jwks_cache brings
+          # its own TTL for registered applications, while document keys stay
+          # on the built-in cache (see document_jwks_cache). Only JSON objects
+          # are stored, so a malformed response is not cached.
+          def self.fetch_jwks(jwks_uri, cache: jwks_cache)
             return if jwks_uri.blank?
 
             url = jwks_uri.to_s
             return unless URI.parse(url).is_a?(URI::HTTPS)
 
-            jwks_cache.fetch(url) do
+            cache.fetch(url) do
               parsed = JSON.parse(Doorkeeper::HttpFetcher.new.fetch(url))
               parsed if parsed.is_a?(Hash)
             end
@@ -199,6 +232,21 @@ module Doorkeeper
             @default_jwks_cache ||= Doorkeeper::DocumentCache.new
           end
           private_class_method :default_jwks_cache
+
+          # Keys named by a metadata document are cached apart from those of
+          # registered applications. The built-in cache holds a fixed number
+          # of entries and evicts the oldest, and which URLs go into this one
+          # is chosen by whoever hosts a client_id — an unauthenticated
+          # request is enough, since the keys have to be fetched before the
+          # assertion they verify can be checked. Sharing one cache would let
+          # that traffic evict the entries registered clients depend on, so
+          # a configured private_key_jwt_jwks_cache is deliberately not
+          # consulted here: it serves registered clients, and routing
+          # unauthenticated document traffic into it would reopen the
+          # eviction — or the unbounded growth — this separation prevents.
+          def self.document_jwks_cache
+            @document_jwks_cache ||= Doorkeeper::DocumentCache.new
+          end
         end
       end
     end

@@ -439,12 +439,16 @@ module Doorkeeper
     #
     option :private_key_jwt_replay_guard, default: nil
 
-    # Cache for JWK Sets fetched from a client's `jwks_uri` during
-    # `private_key_jwt` authentication. Defaults to a process-local
-    # Doorkeeper::DocumentCache with a 60 second TTL; supply your own
-    # instance to change the TTL, or any object answering
+    # Cache for JWK Sets fetched from a registered application's
+    # `jwks_uri` during `private_key_jwt` authentication. Defaults to a
+    # process-local Doorkeeper::DocumentCache with a 60 second TTL; supply
+    # your own instance to change the TTL, or any object answering
     # `fetch(url) { ... }` (returning the cached document or storing and
     # returning the block's result) to share the cache across processes.
+    # Keys named by a Client ID Metadata Document always stay on a
+    # separate built-in cache: which URLs enter that one is decided by
+    # unauthenticated traffic, which must not evict — or grow — the
+    # entries registered clients depend on.
     #
     # @example
     #   private_key_jwt_jwks_cache Doorkeeper::DocumentCache.new(ttl: 300)

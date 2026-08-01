@@ -11,12 +11,11 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
   let(:jwk) { JWT::JWK.new(rsa_key.public_key, { kid: kid }) }
   let(:jwks) { { "keys" => [jwk.export] } }
   let(:application) { double("application", jwks: jwks, jwks_uri: nil) }
-  let(:client) { instance_double(Doorkeeper::OAuth::Client, application: application) }
 
   before do
     config_is_set(:issuer, issuer)
-    allow(Doorkeeper::OAuth::Client).to receive(:find).and_return(nil)
-    allow(Doorkeeper::OAuth::Client).to receive(:find).with(client_id).and_return(client)
+    allow(Doorkeeper::Application).to receive(:by_uid).and_return(nil)
+    allow(Doorkeeper::Application).to receive(:by_uid).with(client_id).and_return(application)
   end
 
   # JWT.encode refuses to build a token whose exp is not a NumericDate, so an
@@ -705,7 +704,7 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
     # different tenants, on a host that serves several clients.
     it "keeps one client from burning the jti of a client sharing its prefix" do
       other_id = "#{client_id}:suffix"
-      allow(Doorkeeper::OAuth::Client).to receive(:find).with(other_id).and_return(client)
+      allow(Doorkeeper::Application).to receive(:by_uid).with(other_id).and_return(application)
 
       first = build_assertion(claims: { "jti" => "suffix:shared" })
       second = build_assertion(claims: { "iss" => other_id, "sub" => other_id, "jti" => "shared" })
@@ -753,7 +752,7 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
 
     it "returns nil when the client publishes no keys" do
       keyless = double("application")
-      allow(client).to receive(:application).and_return(keyless)
+      allow(Doorkeeper::Application).to receive(:by_uid).with(client_id).and_return(keyless)
 
       expect(described_class.authenticate(request_with(build_assertion))).to be_nil
     end
@@ -1015,6 +1014,335 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
 
         expect(described_class.authenticate(request_with(build_assertion(claims: { "exp" => exp })))).not_to be_nil
         expect(guard.calls.last[:expires_at]).to eq(exp + 1)
+      end
+    end
+
+    context "with a client ID metadata document client" do
+      let(:client_id) { "https://client.example.com/oauth-client" }
+
+      before do
+        config_is_set(:client_id_metadata_documents, true)
+        config_is_set(:client_authentication, %i[client_secret_basic client_secret_post none private_key_jwt])
+        allow(Resolv).to receive(:getaddresses).and_return(["93.184.216.34"])
+        allow(Doorkeeper::Application).to receive(:by_uid).and_call_original
+      end
+
+      def stub_document(document_attributes)
+        stub_request(:get, client_id).to_return(
+          status: 200,
+          body: {
+            "client_id" => client_id,
+            "redirect_uris" => ["https://app.example.com/callback"],
+            "token_endpoint_auth_method" => "private_key_jwt",
+          }.merge(document_attributes).to_json,
+        )
+      end
+
+      it "verifies against the document's inline jwks" do
+        stub_document("jwks" => jwks)
+
+        credentials = described_class.authenticate(request_with(build_assertion))
+
+        expect(credentials).not_to be_nil
+        expect(credentials.uid).to eq(client_id)
+      end
+
+      # RFC 7523 Section 3 has the server reject any assertion that does not
+      # name "its own identity" as the audience, which is why no client gets a
+      # Host-derived one (see the context of the same name above). For a
+      # document client the stakes are higher: its client_id resolves to the
+      # same client, and the same keys, at every server implementing the
+      # draft, so a Host header standing in for that identity would make an
+      # assertion sent to one of them replayable at all the others — by
+      # whoever received it.
+      context "when the server identifies itself nowhere" do
+        before { config_is_set(:issuer, nil) }
+
+        it "refuses the assertion rather than accepting a Host-derived audience" do
+          stub_document("jwks" => jwks)
+          request = request_with(build_assertion)
+          audience = request.base_url + request.path
+
+          credentials = described_class.authenticate(
+            request_with(build_assertion(claims: { "aud" => audience })),
+          )
+
+          expect(credentials).to be_nil
+        end
+
+        it "accepts the assertion once an issuer is configured" do
+          config_is_set(:issuer, issuer)
+          stub_document("jwks" => jwks)
+
+          credentials = described_class.authenticate(request_with(build_assertion))
+
+          expect(credentials).not_to be_nil
+        end
+
+        # No assertion can be accepted in this configuration, so answering an
+        # unauthenticated request with an outbound fetch of an
+        # attacker-chosen URL — and possibly a second one for its jwks_uri —
+        # is work done to say no.
+        it "fetches nothing on the way to refusing" do
+          request_stub = stub_document("jwks" => jwks)
+
+          expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+          expect(request_stub).not_to have_been_requested
+        end
+      end
+
+      # Section 4.1 permits public keys only. An inline jwks publishing
+      # private material is refused with the document itself; a set fetched
+      # from a jwks_uri is not part of the document, so its keys are dropped
+      # instead and the assertion simply verifies against nothing.
+      it "refuses a document whose inline jwks publishes private key material" do
+        stub_document("jwks" => { "keys" => [JWT::JWK.new(rsa_key, { kid: kid }).export(include_private: true)] })
+
+        expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+      end
+
+      it "does not verify against private key material fetched from the document's jwks_uri" do
+        jwks_uri = "https://client.example.com/jwks.json"
+        stub_document("jwks_uri" => jwks_uri)
+        stub_request(:get, jwks_uri).to_return(
+          status: 200,
+          body: { "keys" => [JWT::JWK.new(rsa_key, { kid: kid }).export(include_private: true)] }.to_json,
+        )
+
+        expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+      end
+
+      it "verifies against keys fetched from the document's jwks_uri" do
+        jwks_uri = "https://client.example.com/jwks.json"
+        stub_document("jwks_uri" => jwks_uri)
+        stub_request(:get, jwks_uri).to_return(status: 200, body: jwks.to_json)
+
+        expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+      end
+
+      it "fetches the jwks_uri once across several authentications" do
+        jwks_uri = "https://client.example.com/jwks.json"
+        stub_document("jwks_uri" => jwks_uri)
+        stub_request(:get, jwks_uri).to_return(status: 200, body: jwks.to_json)
+
+        2.times { expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil }
+
+        expect(a_request(:get, jwks_uri)).to have_been_made.once
+      end
+
+      it "does not cache a malformed jwks_uri response" do
+        jwks_uri = "https://client.example.com/jwks.json"
+        stub_document("jwks_uri" => jwks_uri)
+        stub_request(:get, jwks_uri).to_return(status: 200, body: "[]")
+
+        expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+        expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+
+        expect(a_request(:get, jwks_uri)).to have_been_made.twice
+      end
+
+      # Resolving a URL client_id materializes an application row, so it must
+      # not happen for a request that fails to authenticate.
+      it "does not create an application row when the assertion does not verify" do
+        stub_document("jwks" => jwks)
+        assertion = build_assertion(key: OpenSSL::PKey::RSA.generate(2048))
+
+        expect { expect(described_class.authenticate(request_with(assertion))).to be_nil }
+          .not_to change(Doorkeeper::Application, :count).from(0)
+      end
+
+      it "does not create an application row for an unsigned assertion" do
+        stub_document("jwks" => jwks)
+        assertion = JWT.encode(
+          {
+            "iss" => client_id,
+            "sub" => client_id,
+            "aud" => issuer,
+            "exp" => Time.now.to_i + 300,
+            "jti" => SecureRandom.hex(8),
+          },
+          nil,
+          "none",
+        )
+
+        expect { expect(described_class.authenticate(request_with(assertion))).to be_nil }
+          .not_to change(Doorkeeper::Application, :count).from(0)
+      end
+
+      it "returns nil without raising when the document's jwks_uri serves a JSON array" do
+        jwks_uri = "https://client.example.com/jwks.json"
+        stub_document("jwks_uri" => jwks_uri)
+        stub_request(:get, jwks_uri).to_return(status: 200, body: [jwk.export].to_json)
+
+        expect { expect(described_class.authenticate(request_with(build_assertion))).to be_nil }
+          .not_to raise_error
+      end
+
+      it "refuses a document naming an http jwks_uri" do
+        stub_document("jwks_uri" => "http://client.example.com/jwks.json")
+
+        expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+      end
+
+      it "rejects the assertion when the document has no keys" do
+        stub_document({})
+
+        expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+      end
+
+      # A document with an empty keys array is valid, so unlike the case above
+      # this one reaches the key resolver rather than failing validation.
+      it "rejects the assertion when the document publishes an empty key set" do
+        stub_document("jwks" => { "keys" => [] })
+
+        expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+      end
+
+      # The keys are attacker-supplied here, so the member types the jwt gem
+      # trusts must fail authentication rather than reach the endpoint as a
+      # 500 — and no signature is needed to get this far.
+      it "rejects a document key whose member is not a string without raising" do
+        stub_document("jwks" => { "keys" => [{ "kty" => "RSA", "n" => 123, "e" => "AQAB" }] })
+
+        expect { expect(described_class.authenticate(request_with(build_assertion))).to be_nil }
+          .not_to raise_error
+      end
+
+      it "rejects a document jwks_uri whose port could never be connected to" do
+        stub_document("jwks_uri" => "https://client.example.com:99999999999999999999/jwks.json")
+
+        expect { expect(described_class.authenticate(request_with(build_assertion))).to be_nil }
+          .not_to raise_error
+      end
+
+      # Keys named by a document are cached apart from those of registered
+      # applications, so unauthenticated traffic cannot evict the entries
+      # registered clients depend on.
+      it "caches document keys separately from registered application keys" do
+        jwks_uri = "https://client.example.com/jwks.json"
+        stub_document("jwks_uri" => jwks_uri)
+        stub_request(:get, jwks_uri).to_return(status: 200, body: jwks.to_json)
+
+        expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+
+        # A hit answers from the cache without running the block; a miss runs
+        # it, so the sentinel tells the two apart.
+        miss = "not cached"
+        expect(described_class::KeyResolver.document_jwks_cache.fetch(jwks_uri) { miss }).not_to eq(miss)
+        expect(described_class::KeyResolver.jwks_cache.fetch(jwks_uri) { miss }).to eq(miss)
+      end
+
+      # The separation must survive a configured private_key_jwt_jwks_cache:
+      # that cache belongs to registered clients, and a document client must
+      # not be able to insert entries into it or evict entries from it. The
+      # double answers nothing, so any call on it fails the example.
+      it "keeps document keys out of a configured custom jwks cache" do
+        jwks_uri = "https://client.example.com/jwks.json"
+        stub_document("jwks_uri" => jwks_uri)
+        stub_request(:get, jwks_uri).to_return(status: 200, body: jwks.to_json)
+        config_is_set(:private_key_jwt_jwks_cache, double("registered clients' cache"))
+
+        expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+
+        miss = "not cached"
+        expect(described_class::KeyResolver.document_jwks_cache.fetch(jwks_uri) { miss }).not_to eq(miss)
+      end
+
+      # Draft Section 8.2: client authentication must be "of the registered
+      # type" — a document that selected "none" must not authenticate with
+      # private_key_jwt just because it also publishes a JWK Set.
+      it "rejects the assertion when the document selects an authentication method other than private_key_jwt" do
+        stub_document("token_endpoint_auth_method" => "none", "jwks" => jwks)
+
+        expect { expect(described_class.authenticate(request_with(build_assertion))).to be_nil }
+          .not_to change(Doorkeeper::Application, :count).from(0)
+      end
+
+      # RFC 8259 Section 8.1: a document (or jwks_uri body) that is not valid
+      # UTF-8 is refused by the fetcher, before its bytes can reach a regex or
+      # the base64url decoder a key member goes through.
+      it "rejects the assertion without raising when the document's inline key is not valid UTF-8" do
+        body = %({"client_id":"#{client_id}","token_endpoint_auth_method":"private_key_jwt",) +
+               %("jwks":{"keys":[{"kty":"RSA","kid":"#{kid}","n":"AQ\xffAB","e":"AQAB"}]}}).b
+        stub_request(:get, client_id).to_return(status: 200, body: body)
+
+        expect { expect(described_class.authenticate(request_with(build_assertion))).to be_nil }
+          .not_to raise_error
+      end
+
+      # The other way this server may identify itself for a document client's
+      # audience: Rails' default_url_options host, from which the token
+      # endpoint URL is built. The Host header stays out of it either way.
+      context "when the server identifies itself through Rails' default_url_options host" do
+        around do |example|
+          original = Rails.application.routes.default_url_options
+          Rails.application.routes.default_url_options = { host: "as.example.com" }
+          example.run
+        ensure
+          Rails.application.routes.default_url_options = original
+        end
+
+        before { config_is_set(:issuer, nil) }
+
+        it "accepts the token endpoint URL built from that host as audience" do
+          stub_document("jwks" => jwks)
+          assertion = build_assertion(claims: { "aud" => "https://as.example.com/oauth/token" })
+
+          expect(described_class.authenticate(request_with(assertion))).not_to be_nil
+        end
+
+        it "still refuses a Host-derived audience" do
+          stub_document("jwks" => jwks)
+          request = request_with(build_assertion)
+          audience = request.base_url + request.path
+
+          expect(described_class.authenticate(request_with(build_assertion(claims: { "aud" => audience })))).to be_nil
+        end
+      end
+
+      # Draft Section 7.2 permits pre-registering a Client Identifier URL, and
+      # Section 7.1 says the https:// prefix alone cannot tell such a
+      # registration from a document client — the application table can. A
+      # registered application holding the URL is verified against the keys
+      # registered for it, and its URL is never fetched: verified against
+      # whatever the URL serves instead, whoever controls it could sign as
+      # the registered client with keys of their own.
+      context "when a registered application holds the URL" do
+        let(:document_key) { OpenSSL::PKey::RSA.generate(2048) }
+
+        before do
+          FactoryBot.create(:application, uid: client_id, jwks: jwks.to_json)
+          stub_document("jwks" => { "keys" => [JWT::JWK.new(document_key.public_key, { kid: kid }).export] })
+        end
+
+        it "verifies against the registered keys without fetching the document" do
+          expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+          expect(a_request(:get, client_id)).not_to have_been_made
+        end
+
+        it "does not verify against the keys the URL serves" do
+          expect(described_class.authenticate(request_with(build_assertion(key: document_key)))).to be_nil
+          expect(a_request(:get, client_id)).not_to have_been_made
+        end
+
+        # A stamped row outliving the feature is no registered client, so its
+        # assertion is refused before any key is resolved and no jti is spent.
+        it "refuses a stamped row once the feature is disabled" do
+          Doorkeeper::Application.find_by(uid: client_id).update!(client_id_metadata_materialized_at: Time.now.utc)
+          config_is_set(:client_id_metadata_documents, false)
+
+          expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+          expect(a_request(:get, client_id)).not_to have_been_made
+        end
+
+        # The stamp, not the uid, is what makes a row the feature's: once the
+        # row carries one, the document is the client's source of keys again.
+        it "verifies a stamped row against its document" do
+          Doorkeeper::Application.find_by(uid: client_id).update!(client_id_metadata_materialized_at: Time.now.utc)
+
+          expect(described_class.authenticate(request_with(build_assertion(key: document_key)))).not_to be_nil
+          expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+        end
       end
     end
   end

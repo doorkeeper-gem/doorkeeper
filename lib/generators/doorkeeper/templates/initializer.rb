@@ -314,9 +314,10 @@ Doorkeeper.configure do
   # A `private_key_jwt` method (RFC 7523 / OIDC Core §9) is also registered
   # but not enabled by default — add it to the list above to accept it. It
   # requires the `jwt` gem (>= 2.7) in your bundle, and verifies assertions
-  # against the client's published public keys: `jwks` / `jwks_uri`
-  # attributes you define on your Application model (Doorkeeper does not add
-  # these columns itself). Assertions must carry iss = sub =
+  # against the client's published public keys: the `jwks` / `jwks_uri` of a
+  # Client ID Metadata Document client, or `jwks` / `jwks_uri` attributes you
+  # define on your Application model for registered clients (Doorkeeper does
+  # not add these columns itself). Assertions must carry iss = sub =
   # client_id, an aud of your `issuer` (or the token endpoint URL), a bounded
   # exp (at most 1 hour ahead), a kid header, and a single-use jti of at most
   # 255 characters. exp, nbf and iat must be JSON numbers where present, and
@@ -338,6 +339,11 @@ Doorkeeper.configure do
   #
   # private_key_jwt_jwks_cache Doorkeeper::DocumentCache.new(ttl: 300)
   #
+  # This cache serves registered applications only. Keys named by a Client
+  # ID Metadata Document are kept on a separate built-in cache, so the
+  # unauthenticated traffic that drives those fetches cannot evict entries
+  # registered clients depend on.
+  #
   # The accepted audiences are built from your `issuer` or from Rails'
   # `default_url_options`, never from the request's Host header - the audience
   # is what tells your server apart from another one, so it cannot come from a
@@ -345,11 +351,10 @@ Doorkeeper.configure do
   # configured no audience is acceptable and every assertion is refused
   # (Doorkeeper says so in the log at boot).
   #
-  # A client's `jwks_uri` is fetched with a hardened HTTP client (HTTPS
-  # only, no redirects, hosts resolving to RFC 6890 special-use addresses
-  # refused), so a jwks_uri on a private network or on localhost is refused
-  # even though you configured it yourself; inline `jwks` has no such
-  # restriction.
+  # A registered client's `jwks_uri` is fetched with the same hardened HTTP
+  # client as a metadata document, so a jwks_uri on a private network or on
+  # localhost is refused even though you configured it yourself; inline `jwks`
+  # has no such restriction.
   #
   # client_authentication %i[client_secret_basic client_secret_post none private_key_jwt]
 
