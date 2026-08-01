@@ -59,15 +59,47 @@ module Doorkeeper
       def self.authenticate(credentials, method = Doorkeeper.config.application_model.method(:by_uid_and_secret))
         return if credentials.blank?
 
+        url_client_id = document_client_id?(credentials.uid)
+        # Shared-secret authentication is forbidden for URL client_ids (draft
+        # Section 4.1): no secret is ever established with such a client, so a
+        # presented secret is refused outright — never compared against the
+        # materialized row's auto-generated (or a pre-existing row's) secret,
+        # and before the document is looked at, since no document could change
+        # the answer and looking is a fetch.
+        return if url_client_id && credentials.secret.present?
+
         # Credentials that were fully authenticated by their client
         # authentication method (e.g. a verified private_key_jwt assertion)
         # carry no secret to compare — resolve the client by uid alone.
-        return find(credentials.uid) if credentials.respond_to?(:pre_authenticated?) && credentials.pre_authenticated?
+        return find(credentials.uid) if pre_authenticated?(credentials)
+
+        # A document client's document is resolved before the regular lookup
+        # so the application row exists and reflects the current document;
+        # the lookup below still applies the public-client check against it.
+        return if url_client_id && Doorkeeper::ClientIdMetadata.resolve(credentials.uid).nil?
 
         return unless (application = method.call(credentials.uid, credentials.secret))
+        # As in find: a stamped row outliving the feature is no registered
+        # client, whatever credentials were presented for it.
+        return if Doorkeeper::ClientIdMetadata.orphaned_materialized_row?(application)
 
         new(application)
       end
+
+      def self.pre_authenticated?(credentials)
+        credentials.respond_to?(:pre_authenticated?) && credentials.pre_authenticated?
+      end
+      private_class_method :pre_authenticated?
+
+      # The lookup resolves_through_document? needs, made only for URL-shaped
+      # uids so that opaque ones cost no extra query.
+      def self.document_client_id?(uid)
+        return false unless Doorkeeper::ClientIdMetadata.url_client_id?(uid)
+
+        registered = Doorkeeper.config.application_model.by_uid(uid)
+        Doorkeeper::ClientIdMetadata.resolves_through_document?(uid, registered)
+      end
+      private_class_method :document_client_id?
     end
   end
 end
