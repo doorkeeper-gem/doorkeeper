@@ -104,4 +104,21 @@ RSpec.describe "Custom client authentication method (README example)" do
 
     expect(json_response["token_endpoint_auth_methods_supported"]).to include("partner_headers")
   end
+
+  # One strategy under two keys is one method: both entries answer the same
+  # matches_request? about the same payload, so counting them separately would
+  # read the client as having used two methods and refuse (RFC 6749 §2.3) a
+  # request made with the very method the document above advertises.
+  it "authenticates a client with a method registered under two names" do
+    Doorkeeper::ClientAuthentication.register(:corporate_headers, PartnerHeadersExample::Authentication)
+
+    post "/oauth/token",
+         params: { grant_type: "client_credentials" },
+         headers: partner_headers(client.uid, client.plaintext_secret)
+
+    expect(response).to have_http_status(:ok)
+    expect(json_response).to have_key("access_token")
+  ensure
+    Doorkeeper::ClientAuthentication.registered_methods.delete(:corporate_headers)
+  end
 end
