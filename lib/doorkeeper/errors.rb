@@ -94,12 +94,43 @@ module Doorkeeper
     NoOrmCleaner = Class.new(DoorkeeperError)
     MissingConfigurationBuilderClass = Class.new(DoorkeeperError)
 
+    # Raised when resource_indicator_validator is configured but the required
+    # `resource` column has not been added to the database. Provides an
+    # actionable message pointing to the generator.
+    #
+    # `#type` returns `:server_error` so the token endpoint (which rescues
+    # DoorkeeperError and builds an OAuth error response from `#type`) emits a
+    # spec-compliant error code; the actionable message is retained on the
+    # exception for logs rather than being sent as the `error` value.
+    class MissingResourceColumn < DoorkeeperError
+      def initialize(table)
+        super(
+          "resource_indicator_validator is configured but the `resource` column is missing from " \
+          "the #{table} table. Run `rails generate doorkeeper:resource_indicators` and apply the migration.",
+        )
+      end
+
+      def type
+        :server_error
+      end
+    end
+
     InvalidRequest = Class.new(BaseResponseError)
     InvalidToken = Class.new(BaseResponseError)
     InvalidClient = Class.new(BaseResponseError)
     InvalidScope = Class.new(BaseResponseError)
     InvalidRedirectUri = Class.new(BaseResponseError)
     InvalidGrant = Class.new(BaseResponseError)
+    # RFC 8707 error: the requested resource is invalid, missing, unknown, or malformed.
+    # Raised bare (no arguments) as a signal inside ResourceIndicatorValidator,
+    # then rescued and surfaced through the validation framework. Also raised
+    # with a response by ErrorResponse#raise_exception! so that controller
+    # rescue handlers can extract #response for translated error descriptions.
+    class InvalidTarget < BaseResponseError
+      def initialize(response = nil)
+        super
+      end
+    end
 
     UnauthorizedClient = Class.new(BaseResponseError)
     UnsupportedResponseType = Class.new(BaseResponseError)

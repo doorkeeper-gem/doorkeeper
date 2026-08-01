@@ -10,6 +10,7 @@ module Doorkeeper
       validate :client,       error: Errors::InvalidClient
       validate :client_match, error: Errors::InvalidGrant
       validate :scope,        error: Errors::InvalidScope
+      validate :resource_indicators, error: Errors::InvalidTarget
 
       attr_reader :access_token, :client, :credentials, :refresh_token
       attr_reader :missing_param
@@ -21,6 +22,7 @@ module Doorkeeper
         @grant_type = Doorkeeper::OAuth::REFRESH_TOKEN
         @original_scopes = parameters[:scope] || parameters[:scopes]
         @refresh_token_parameter = parameters[:refresh_token]
+        @raw_resource_indicators = parameters[:resource]
         @client = load_client(credentials) if credentials
       end
 
@@ -72,6 +74,19 @@ module Doorkeeper
 
         if refresh_token_revoked_on_use?
           attributes[:previous_refresh_token] = refresh_token.refresh_token
+        end
+
+        # RFC 8707: carry resource indicators to the new access token.
+        # If the refresh request specified a (subset of) resource(s), use those;
+        # otherwise inherit from the refresh token itself.
+        if @resolved_resource_indicators.present?
+          unless Doorkeeper.config.access_token_model.resource_indicators_supported?
+            raise Errors::MissingResourceColumn, "oauth_access_tokens"
+          end
+
+          attributes[:resource] = @resolved_resource_indicators.join(" ")
+        elsif refresh_token.try(:resource).present?
+          attributes[:resource] = refresh_token.resource
         end
 
         # RFC6749
@@ -130,6 +145,34 @@ module Doorkeeper
         else
           true
         end
+      end
+
+      # RFC 8707: resource indicators on refresh must be a subset of those
+      # bound to the original refresh token (which inherited from the grant).
+      #
+      # Subset and syntax enforcement run even when no validator is configured
+      # as long as the original token is already audience-restricted: a refresh
+      # must never widen the audience beyond what the original token carried.
+      # Only when the feature is disabled AND the original token has no stored
+      # resources is the `resource` parameter ignored entirely.
+      def validate_resource_indicators
+        original_resources = refresh_token.try(:resource)&.split
+
+        validator = Doorkeeper.config.resource_indicator_validator
+
+        # Feature effectively off: no validator and nothing already bound to
+        # enforce against. Ignore the `resource` parameter.
+        return true if validator.nil? && original_resources.blank?
+
+        @resolved_resource_indicators = ResourceIndicatorValidator.validate!(
+          @raw_resource_indicators,
+          config_validator: validator,
+          client: client,
+          grant_resource_indicators: original_resources,
+        )
+        true
+      rescue Errors::InvalidTarget
+        false
       end
 
       def custom_token_attributes_with_data

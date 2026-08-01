@@ -19,6 +19,18 @@
     </div>
   <% end %>
 
+  <% if Array(@pre_auth.resource_indicators).any? %>
+    <div id="oauth-resources">
+      <h3><%= t('.resources') %></h3>
+
+      <ul class="text-info">
+        <% Array(@pre_auth.resource_indicators).each do |resource| %>
+          <li><%= resource %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
   <div class="actions">
     <%= form_tag oauth_authorization_path, method: :post do %>
       <%= hidden_field_tag :client_id, @pre_auth.client.uid, id: nil %>
@@ -31,6 +43,9 @@
       <%= hidden_field_tag :code_challenge_method, @pre_auth.code_challenge_method, id: nil %>
       <% @pre_auth.custom_access_token_attributes.each do |attribute_name, attribute_value| %>
         <%= hidden_field_tag attribute_name, attribute_value, id: nil %>
+      <% end %>
+      <% Array.wrap(@pre_auth.resource_indicators).each do |resource_value| %>
+        <%= hidden_field_tag "resource[]", resource_value, id: nil %>
       <% end %>
       <%= submit_tag t('doorkeeper.authorizations.buttons.authorize'), class: "btn btn-success btn-lg btn-block" %>
     <% end %>
@@ -45,6 +60,9 @@
       <%= hidden_field_tag :code_challenge_method, @pre_auth.code_challenge_method, id: nil %>
       <% @pre_auth.custom_access_token_attributes.each do |attribute_name, attribute_value| %>
         <%= hidden_field_tag attribute_name, attribute_value, id: nil %>
+      <% end %>
+      <% Array.wrap(@pre_auth.resource_indicators).each do |resource_value| %>
+        <%= hidden_field_tag "resource[]", resource_value, id: nil %>
       <% end %>
       <%= submit_tag t('doorkeeper.authorizations.buttons.deny'), class: "btn btn-danger btn-lg btn-block" %>
     <% end %>

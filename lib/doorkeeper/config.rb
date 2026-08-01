@@ -385,6 +385,24 @@ module Doorkeeper
     # (RFC 8414). When nil, the request base URL is used instead.
     option :issuer,                         default: nil
 
+    # Resource Indicators for OAuth 2.0 (RFC 8707).
+    #
+    # When set to a callable (lambda/proc), enables RFC 8707 support. The callable
+    # receives the array of resource indicator URIs and the client, and must return
+    # true if the resource(s) are acceptable, or false to reject with `invalid_target`.
+    #
+    # When nil (default), the `resource` parameter is ignored and RFC 8707 is disabled.
+    #
+    # @example
+    #   resource_indicator_validator ->(resource_indicators, client) {
+    #     resource_indicators.all? { |r| allowed_resources.include?(r) }
+    #   }
+    #
+    # @param validator [Proc, nil] A callable that validates resource indicators
+    # @see https://datatracker.ietf.org/doc/html/rfc8707
+    #
+    option :resource_indicator_validator, default: nil
+
     # Forces the usage of the HTTPS protocol in non-native redirect uris
     # (enabled by default in non-development environments). OAuth2
     # delegates security in communication to the HTTPS protocol so it is

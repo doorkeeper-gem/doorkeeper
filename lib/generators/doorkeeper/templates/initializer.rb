@@ -604,4 +604,32 @@ Doorkeeper.configure do
   # custom_metadata(
   #   userinfo_endpoint: "https://auth.example.com/oauth/userinfo",
   # )
+
+  # Resource Indicators for OAuth 2.0 (RFC 8707)
+  #
+  # When configured with a callable, enables RFC 8707 support. The callable
+  # receives an array of resource indicator URIs and the OAuth client, and must
+  # return true if the resources are acceptable, or false to reject with
+  # `invalid_target`.
+  #
+  # Clients may then include one or more `resource` parameters in authorization
+  # and token requests to signal which protected resource(s) they intend to
+  # access. The authorization server will:
+  #   - Validate resource URIs (must be absolute, no fragment)
+  #   - Store resource indicators on grants and tokens
+  #   - Enforce subset restrictions on token/refresh requests
+  #   - Include `aud` in token introspection responses
+  #
+  # NOTE: RFC 8707 specifies repeated query parameters (?resource=…&resource=…)
+  # for multiple values, but Rack collapses repeated keys to the last value.
+  # Clients must use the Rails bracket syntax (resource[]=…&resource[]=…) to
+  # send multiple resource indicators. A single resource=… works as-is.
+  #
+  # To use this feature, first run `rails generate doorkeeper:resource_indicators`
+  # to add the required `resource` column to the access grants and tokens tables.
+  #
+  # resource_indicator_validator ->(resource_indicators, client) {
+  #   allowed = %w[https://api.example.com/ https://calendar.example.com/]
+  #   resource_indicators.all? { |r| allowed.include?(r) }
+  # }
 end

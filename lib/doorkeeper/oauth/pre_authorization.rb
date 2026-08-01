@@ -16,11 +16,12 @@ module Doorkeeper
       validate :scopes, error: Errors::InvalidScope
       validate :code_challenge, error: Errors::InvalidRequest
       validate :code_challenge_method, error: Errors::InvalidCodeChallengeMethod
+      validate :resource_indicators, error: Errors::InvalidTarget
 
       attr_reader :client, :code_challenge, :code_challenge_method, :missing_param,
                   :redirect_uri, :resource_owner, :response_type, :state,
                   :authorization_response_flow, :response_mode, :custom_access_token_attributes,
-                  :invalid_request_reason
+                  :invalid_request_reason, :resource_indicators
 
       def initialize(server, parameters = {}, resource_owner = nil)
         @server = server
@@ -34,6 +35,7 @@ module Doorkeeper
         @code_challenge_method = parameters[:code_challenge_method]
         @resource_owner = resource_owner
         @custom_access_token_attributes = parameters.slice(*Doorkeeper.config.custom_access_token_attributes).to_h
+        @raw_resource_indicators = parameters[:resource]
       end
 
       def authorizable?
@@ -180,6 +182,21 @@ module Doorkeeper
 
         code_challenge.blank? ||
           (code_challenge_method.present? && Doorkeeper.config.pkce_code_challenge_methods_supported.include?(code_challenge_method))
+      end
+
+      def validate_resource_indicators
+        validator = Doorkeeper.config.resource_indicator_validator
+        # When no validator is configured, resource indicators are ignored (feature disabled)
+        return true unless validator
+
+        @resource_indicators = ResourceIndicatorValidator.validate!(
+          @raw_resource_indicators,
+          config_validator: validator,
+          client: client,
+        )
+        true
+      rescue Errors::InvalidTarget
+        false
       end
 
       def response_on_fragment?

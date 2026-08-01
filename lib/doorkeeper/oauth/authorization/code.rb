@@ -47,6 +47,16 @@ module Doorkeeper
             attributes[:resource_owner_id] = resource_owner.id
           end
 
+          # RFC 8707: persist resource indicators so they can be enforced at
+          # the token endpoint (subset validation) and carried to the token.
+          if pre_auth.respond_to?(:resource_indicators) && pre_auth.resource_indicators.present?
+            unless Doorkeeper.config.access_grant_model.resource_indicators_supported?
+              raise Doorkeeper::Errors::MissingResourceColumn, "oauth_access_grants"
+            end
+
+            attributes[:resource] = pre_auth.resource_indicators.join(" ")
+          end
+
           pkce_attributes.merge(attributes).merge(custom_attributes)
         end
 

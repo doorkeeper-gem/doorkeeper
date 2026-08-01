@@ -35,6 +35,8 @@ module Doorkeeper
             # condition under which the iss parameter is emitted. false survives
             # the compaction below, so it is advertised explicitly.
             authorization_response_iss_parameter_supported: config.issuer.present?,
+            # RFC 8707: advertise resource indicator support when configured.
+            resource_indicators_supported: resource_indicators_supported?,
           }
           data.compact!
 
@@ -151,6 +153,12 @@ module Doorkeeper
 
       def code_challenge_methods_supported
         config.pkce_code_challenge_methods_supported
+      end
+
+      def resource_indicators_supported?
+        config.resource_indicator_validator.present? &&
+          Doorkeeper.config.access_grant_model.resource_indicators_supported? &&
+          Doorkeeper.config.access_token_model.resource_indicators_supported?
       end
     end
   end

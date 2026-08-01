@@ -257,6 +257,25 @@ RSpec.describe "Client Credentials Request" do
     end
   end
 
+  context "when resource column is missing from the access token table" do
+    before do
+      config_is_set(:resource_indicator_validator, ->(_indicators, _client) { true })
+      allow(Doorkeeper.config.access_token_model).to receive(:resource_indicators_supported?).and_return(false)
+    end
+
+    it "returns a spec-compliant server_error instead of the exception message" do
+      headers = authorization client.uid, client.secret
+      params  = { grant_type: "client_credentials", resource: "https://api.example.com/" }
+
+      post token_endpoint_url, params: params, headers: headers
+
+      expect(response.status).to eq(400)
+      expect(json_response["error"]).to eq("server_error")
+      expect(json_response["error_description"]).to eq(translated_error_message(:server_error))
+      expect(json_response["error"]).not_to include("resource_indicator_validator")
+    end
+  end
+
   def authorization(username, password)
     credentials = ActionController::HttpAuthentication::Basic.encode_credentials username, password
     { "HTTP_AUTHORIZATION" => credentials }

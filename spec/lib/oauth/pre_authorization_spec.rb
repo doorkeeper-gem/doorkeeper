@@ -41,6 +41,7 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
       scopes
       code_challenge
       code_challenge_method
+      resource_indicators
     ])
   end
 

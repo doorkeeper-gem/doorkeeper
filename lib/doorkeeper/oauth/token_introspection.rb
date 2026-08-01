@@ -113,6 +113,12 @@ module Doorkeeper
           iat: @token.created_at.to_i,
         }
 
+        # RFC 8707: include audience restriction when resource indicators are present
+        if @token.try(:resource).present?
+          aud = @token.resource.split
+          response[:aud] = aud.length == 1 ? aud.first : aud
+        end
+
         # `token_type` (RFC 6749 §7.1) and `exp` describe the access token:
         # a refresh token is not a Bearer credential and has no expiry of its
         # own, so both are omitted (they are OPTIONAL per RFC 7662 §2.2) when

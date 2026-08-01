@@ -7,19 +7,23 @@ module Doorkeeper
 
       alias error_response response
 
-      delegate :error, to: :issuer
-
       def initialize(server, client, parameters = {})
+        super()
         @client = client
         @server = server
         @response = nil
         @grant_type = Doorkeeper::OAuth::CLIENT_CREDENTIALS
         @original_scopes = parameters[:scope]
-        @parameters = parameters.except(:scope)
+        @raw_resource_indicators = parameters[:resource]
+        @parameters = parameters.except(:scope, :resource)
       end
 
       def access_token
         issuer.token
+      end
+
+      def error
+        @resource_indicator_error || issuer.error
       end
 
       def issuer
@@ -32,14 +36,41 @@ module Doorkeeper
       private
 
       def valid?
-        issuer.create(client, scopes, custom_token_attributes_with_data)
+        validate_resource_indicators && issuer.create(client, scopes, custom_token_attributes_with_data)
+      end
+
+      def validate_resource_indicators
+        validator = Doorkeeper.config.resource_indicator_validator
+        return true unless validator
+        return true if @raw_resource_indicators.blank?
+
+        @resolved_resource_indicators = ResourceIndicatorValidator.validate!(
+          @raw_resource_indicators,
+          config_validator: validator,
+          client: client,
+        )
+        true
+      rescue Errors::InvalidTarget
+        @resource_indicator_error = Errors::InvalidTarget
+        false
       end
 
       def custom_token_attributes_with_data
-        parameters
+        attrs = parameters
           .with_indifferent_access
           .slice(*Doorkeeper.config.custom_access_token_attributes)
           .symbolize_keys
+
+        # RFC 8707: attach validated resource indicators to token attributes
+        if @resolved_resource_indicators.present?
+          unless Doorkeeper.config.access_token_model.resource_indicators_supported?
+            raise Errors::MissingResourceColumn, "oauth_access_tokens"
+          end
+
+          attrs[:resource] = @resolved_resource_indicators.join(" ")
+        end
+
+        attrs
       end
     end
   end

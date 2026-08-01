@@ -61,6 +61,7 @@ BUNDLE_GEMFILE=gemfiles/rails_7_2.gemfile bundle exec rake spec
 
 ## Change guidance
 
+- Preserve backward compatibility.
 - Make surgical changes with specs close to the behavior you changed.
 - When changing engine behavior, check whether the impact also reaches host-app integration through `spec/dummy`.
 - When changing protocol or token behavior, look for nearby request, controller, and model specs that should move together.

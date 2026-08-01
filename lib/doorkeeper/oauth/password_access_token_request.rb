@@ -9,10 +9,12 @@ module Doorkeeper
       validate :client_supports_grant_flow, error: Errors::UnauthorizedClient
       validate :resource_owner, error: Errors::InvalidGrant
       validate :scopes, error: Errors::InvalidScope
+      validate :resource_indicators, error: Errors::InvalidTarget
 
       attr_reader :client, :credentials, :resource_owner, :parameters, :access_token
 
       def initialize(server, client, credentials, resource_owner, parameters = {})
+        super()
         @server          = server
         @resource_owner  = resource_owner
         @client          = client
@@ -20,12 +22,21 @@ module Doorkeeper
         @parameters      = parameters
         @original_scopes = parameters[:scope]
         @grant_type      = Doorkeeper::OAuth::PASSWORD
+        @raw_resource_indicators = parameters[:resource]
       end
 
       private
 
       def before_successful_response
-        find_or_create_access_token(client, resource_owner, scopes, {}, server)
+        token_attributes = {}
+        if @resolved_resource_indicators.present?
+          unless Doorkeeper.config.access_token_model.resource_indicators_supported?
+            raise Errors::MissingResourceColumn, "oauth_access_tokens"
+          end
+
+          token_attributes[:resource] = @resolved_resource_indicators.join(" ")
+        end
+        find_or_create_access_token(client, resource_owner, scopes, token_attributes, server)
         super
       end
 
@@ -69,6 +80,21 @@ module Doorkeeper
 
       def validate_client_supports_grant_flow
         Doorkeeper.config.allow_grant_flow_for_client?(grant_type, client&.application)
+      end
+
+      # RFC 8707: validate resource indicators against server policy.
+      def validate_resource_indicators
+        validator = Doorkeeper.config.resource_indicator_validator
+        return true unless validator
+
+        @resolved_resource_indicators = ResourceIndicatorValidator.validate!(
+          @raw_resource_indicators,
+          config_validator: validator,
+          client: client,
+        )
+        true
+      rescue Errors::InvalidTarget
+        false
       end
     end
   end
