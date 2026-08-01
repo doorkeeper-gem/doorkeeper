@@ -65,6 +65,7 @@ RSpec.configure do |config|
     # one file's leftovers are another file's inexplicable failure.
     Doorkeeper::ClientIdMetadata.document_cache.clear
     Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::KeyResolver.jwks_cache.clear
+    Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::KeyResolver.document_jwks_cache.clear
     Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::ReplayGuard.instance.clear
   end
 
