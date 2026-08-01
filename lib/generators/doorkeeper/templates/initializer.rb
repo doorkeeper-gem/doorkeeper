@@ -900,6 +900,12 @@ Doorkeeper.configure do
   #   one through your applications admin UI does not hold: the next
   #   resolution writes the document's values back over it. Delete the row,
   #   or clear its stamp to adopt it as a registered application, instead.
+  #   With Active Record the write re-checks the stamp under a row lock, so
+  #   an adoption racing a resolution wins. The Sequel and Mongoid
+  #   extensions keep their plain save, so clear the stamp while no
+  #   resolution of that client is in flight: one racing the adoption can
+  #   write the document's values over the row once more, and Sequel, which
+  #   writes every column, puts the stamp back.
   # - A document may only name scopes this server configures; one naming
   #   anything else is rejected rather than granted it, since an
   #   application's own scopes stand in for the server's when a token is
