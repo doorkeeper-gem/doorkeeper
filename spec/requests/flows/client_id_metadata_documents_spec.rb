@@ -219,6 +219,19 @@ feature "Client ID Metadata Documents" do
     expect(Doorkeeper::AccessToken.last.application.uid).to eq(client_id_url)
   end
 
+  # The every-time consent rule lives in the engine's matching_token?, which
+  # skip_authorization is asked before: a host that has decided a client
+  # needs no screen keeps that answer for document clients too.
+  scenario "skip_authorization applies to a document client like any other" do
+    stub_metadata_document
+    config_is_set(:skip_authorization) { true }
+
+    visit authorization_endpoint_url(client_id: client_id_url, redirect_uri: redirect_uri)
+
+    expect(current_uri.host).to eq("app.example.com")
+    expect(current_params["code"]).to eq(Doorkeeper::AccessGrant.first.token)
+  end
+
   # RFC 7662 Section 4 has the introspection endpoint authorize its caller
   # "to prevent token scanning attacks". A public document client is minted by
   # publishing a document, so accepting it as that caller would let anyone
@@ -487,5 +500,28 @@ feature "Client ID Metadata Documents" do
     expect(json_response).to include("access_token")
     expect(Doorkeeper::AccessToken.last.application_id).to eq(legacy.id)
     expect(request_stub).not_to have_been_requested
+  end
+
+  # Draft Sections 8.3 / 8.4: a document client's redirect URIs and keys are
+  # whatever its URL serves today, so an earlier authorization does not
+  # excuse it from the consent screen the way it does a registered
+  # confidential client - a redirect URI the document took up since must not
+  # receive a code the user never saw issued.
+  scenario "a confidential document client is asked for consent again despite an earlier authorization" do
+    stub_metadata_document(
+      metadata.merge(
+        "token_endpoint_auth_method" => "private_key_jwt",
+        "jwks" => { "keys" => [{ "kty" => "RSA", "kid" => "k", "n" => "AA", "e" => "AQAB" }] },
+      ).to_json,
+    )
+    config_is_set(:client_authentication, %i[client_secret_basic client_secret_post none private_key_jwt])
+    application = Doorkeeper::ClientIdMetadata.resolve(client_id_url)
+    FactoryBot.create(:access_token, application: application, resource_owner_id: @resource_owner.id, scopes: "default")
+
+    visit authorization_endpoint_url(client_id: client_id_url, redirect_uri: redirect_uri)
+
+    expect(current_uri.host).not_to eq("app.example.com")
+    i_should_see "Example App"
+    expect(page).to have_button("Authorize")
   end
 end
