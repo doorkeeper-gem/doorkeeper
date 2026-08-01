@@ -28,8 +28,6 @@ feature "private_key_jwt client authentication" do
       jwks: jwks.to_json,
     )
 
-    Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::KeyResolver.jwks_cache.clear
-    Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::ReplayGuard.instance.clear
     allow(Resolv).to receive(:getaddresses).and_return(["93.184.216.34"])
   end
 
