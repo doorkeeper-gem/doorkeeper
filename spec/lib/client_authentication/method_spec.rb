@@ -43,6 +43,27 @@ RSpec.describe Doorkeeper::ClientAuthentication::Method do
     end
   end
 
+  describe "#auth_signing_alg_values" do
+    it "answers the values the strategy declares, as Strings whatever it declared them as" do
+      method = described_class.new(:assertion, double(auth_signing_alg_values: %i[HS256 RS256]))
+
+      expect(method.auth_signing_alg_values).to eq(%w[HS256 RS256])
+    end
+
+    # RFC 8414 Section 2 wants the entry only where an assertion method is
+    # advertised, so a strategy with nothing to say leaves it off rather than
+    # publishing an empty list.
+    it "answers nil for a strategy that declares none" do
+      expect(described_class.new(:mtls, double).auth_signing_alg_values).to be_nil
+    end
+
+    it "answers nil for a strategy declaring an empty list" do
+      method = described_class.new(:mtls, double(auth_signing_alg_values: []))
+
+      expect(method.auth_signing_alg_values).to be_nil
+    end
+  end
+
   describe "#uses_shared_secret?" do
     it "trusts a strategy that declares it" do
       declared = described_class.new(:client_secret_sounding, double(uses_shared_secret?: false))

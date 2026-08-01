@@ -54,6 +54,24 @@ module Doorkeeper
       def auth_method_name
         strategy.auth_method_name&.to_s if strategy.respond_to?(:auth_method_name)
       end
+
+      # The JWS "alg" values the wrapped strategy accepts on the assertion it
+      # authenticates a client with. RFC 8414 Section 2 has
+      # token_endpoint_auth_signing_alg_values_supported published whenever an
+      # assertion-based method — private_key_jwt, client_secret_jwt — is
+      # advertised, and the strategy is the only thing that knows what it
+      # verifies, so the metadata endpoint asks rather than keeping a list of
+      # its own.
+      #
+      # A strategy that authenticates no assertion declares nothing and answers
+      # nil, which is what leaves the entry off a server advertising no such
+      # method. Answered as Strings whatever the strategy declared them as, for
+      # the same reason +auth_method_name+ is.
+      def auth_signing_alg_values
+        return unless strategy.respond_to?(:auth_signing_alg_values)
+
+        Array(strategy.auth_signing_alg_values).map(&:to_s).presence
+      end
     end
   end
 end
