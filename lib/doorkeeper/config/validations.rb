@@ -5,6 +5,12 @@ module Doorkeeper
     # Doorkeeper configuration validator.
     #
     module Validations
+      # The two token endpoint authentication methods RFC 8414 Section 2 names
+      # as needing token_endpoint_auth_signing_alg_values_supported alongside
+      # them. Matched on the IANA name a strategy declares, since that is what
+      # the metadata document publishes.
+      ASSERTION_AUTH_METHOD_NAMES = %w[private_key_jwt client_secret_jwt].freeze
+
       # Validates configuration options to be set properly.
       #
       def validate!
@@ -20,9 +26,48 @@ module Doorkeeper
         validate_deprecated_grant_flows
         validate_issuer_format
         validate_issuer_metadata_discoverability
+        validate_assertion_method_signing_algs
       end
 
       private
+
+      # RFC 8414 Section 2 has token_endpoint_auth_signing_alg_values_supported
+      # published whenever an assertion-based method is advertised, and defines
+      # no default for it, so the metadata document is non-compliant when a
+      # strategy declares one of those names without declaring what it accepts.
+      # Doorkeeper's own private_key_jwt declares its algorithms; this is about
+      # a host application's strategy, whose metadata entry it would otherwise
+      # be silently missing.
+      #
+      # Warned about rather than raised on, and the method is still advertised:
+      # it authenticates clients perfectly well, and withholding it from
+      # discovery would hide a working method to fix a missing one.
+      #
+      # Matched on the name the metadata endpoint will publish, which is the
+      # declared one or, for a strategy declaring none, its registration key
+      # (MetadataResponse reads `auth_method_name || name`). A host that
+      # registers its strategy as :client_secret_jwt and declares nothing
+      # advertises that method just the same, and would otherwise be the one
+      # configuration this warning missed.
+      def validate_assertion_method_signing_algs
+        undeclared = client_authentication.filter_map do |name|
+          method = Doorkeeper::ClientAuthentication.get(name)
+          next unless method
+          next unless ASSERTION_AUTH_METHOD_NAMES.include?((method.auth_method_name || method.name).to_s)
+
+          name if method.auth_signing_alg_values.nil?
+        end
+        return if undeclared.empty?
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] #{undeclared.map(&:to_s).join(", ")} declares an assertion-based " \
+          "token endpoint authentication method but no auth_signing_alg_values. RFC 8414 " \
+          "Section 2 requires token_endpoint_auth_signing_alg_values_supported whenever " \
+          "private_key_jwt or client_secret_jwt is advertised, and defines no default, so " \
+          "the authorization server metadata is published without it. Declare the JWS \"alg\" " \
+          "values the strategy accepts.",
+        )
+      end
 
       # Warn once, at configuration time, when both the deprecated
       # +client_credentials+ and the new +client_authentication+ options are
