@@ -573,7 +573,7 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
     it "tracks jti replay through a configured custom replay guard" do
       guard = double("replay guard")
       expect(guard).to receive(:first_use?)
-        .with(a_string_starting_with("#{client_id}:"), expires_at: kind_of(Integer))
+        .with(a_string_including(client_id), expires_at: kind_of(Integer))
         .twice
         .and_return(true, false)
       config_is_set(:private_key_jwt_replay_guard, guard)
@@ -596,6 +596,20 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
 
       expect(described_class.authenticate(request_with(build_assertion(claims: { "exp" => exp })))).not_to be_nil
       expect(guard.calls.last[:expires_at]).to eq(exp.to_i)
+    end
+
+    # A guard keyed by a bare "client_id:jti" cannot tell those two apart, so
+    # one client could burn the jti of another whose id it is a prefix of —
+    # different tenants, on a host that serves several clients.
+    it "keeps one client from burning the jti of a client sharing its prefix" do
+      other_id = "#{client_id}:suffix"
+      allow(Doorkeeper::OAuth::Client).to receive(:find).with(other_id).and_return(client)
+
+      first = build_assertion(claims: { "jti" => "suffix:shared" })
+      second = build_assertion(claims: { "iss" => other_id, "sub" => other_id, "jti" => "shared" })
+
+      expect(described_class.authenticate(request_with(first))).not_to be_nil
+      expect(described_class.authenticate(request_with(second))).not_to be_nil
     end
 
     it "resolves a jwks_uri through a configured custom jwks cache" do

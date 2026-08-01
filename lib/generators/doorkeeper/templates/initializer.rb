@@ -331,6 +331,8 @@ Doorkeeper.configure do
   #
   # private_key_jwt_replay_guard MyRedisReplayGuard.new
   #
+  # It is handed keys shaped "<length>:<client_id>:<jti>".
+  #
   # JWK Sets fetched from a `jwks_uri` are cached in process-local memory
   # for 60 seconds; to change the TTL or share the cache across processes:
   #
