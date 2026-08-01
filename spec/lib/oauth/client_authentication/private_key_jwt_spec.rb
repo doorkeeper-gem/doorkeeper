@@ -853,6 +853,20 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
     end
 
+    # An unverified decode skips the gem's check that the JOSE header is an
+    # object, so a header of any other JSON type is indexed into as one —
+    # TypeError or NoMethodError, neither a JWT::DecodeError — from an
+    # assertion no key, signature or client was needed to build.
+    ["[1]", "42", "null", "true"].each do |header|
+      it "rejects an assertion whose JOSE header is #{header} without raising" do
+        segments = [header, { "iss" => client_id, "sub" => client_id }.to_json, "signature"]
+        assertion = segments.map { |segment| Base64.urlsafe_encode64(segment, padding: false) }.join(".")
+
+        expect { expect(described_class.authenticate(request_with(assertion))).to be_nil }
+          .not_to raise_error
+      end
+    end
+
     # A key member whose bytes are not valid UTF-8 raises ArgumentError out
     # of the base64url decoder — lazily, inside the verifying decode, when
     # the header's kid names the key, and eagerly, while the set is built,

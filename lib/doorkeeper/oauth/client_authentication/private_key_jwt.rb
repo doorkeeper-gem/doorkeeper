@@ -123,7 +123,13 @@ module Doorkeeper
           issuer = claims["iss"]
 
           issuer if issuer.is_a?(String) && issuer == claims["sub"]
-        rescue ::JWT::DecodeError
+        rescue ::JWT::DecodeError, TypeError, NoMethodError
+          # An unverified decode skips the gem's check that the JOSE header is
+          # an object, so a header that is a JSON array, number, null or
+          # boolean is indexed into as one while the b64 parameter is read —
+          # TypeError or NoMethodError, neither a JWT::DecodeError. A
+          # malformed assertion must fail authentication, never raise out of
+          # the endpoint.
           nil
         end
         private_class_method :unverified_client_id
