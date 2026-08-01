@@ -203,7 +203,10 @@ module Doorkeeper
           if client&.confidential
             dpop_proof.present? ? dpop_proof.valid? : true
           else
-            dpop_proof.valid? && refresh_token.dpop_binding_matches?(dpop_proof.jkt)
+            # Same reason as `BaseRequest#validate_dpop_proof`: a caller that
+            # builds this request itself never gets a proof injected, so nil
+            # must fail the validation rather than raise.
+            !!dpop_proof&.valid? && refresh_token.dpop_binding_matches?(dpop_proof.jkt)
           end
         else
           super
