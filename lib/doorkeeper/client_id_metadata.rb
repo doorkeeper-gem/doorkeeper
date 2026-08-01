@@ -112,6 +112,16 @@ module Doorkeeper
         resolves_through_document?(application.uid, application) && !application.confidential?
       end
 
+      # Whether the resource owner is asked to consent to this client on every
+      # authorization, rather than having an earlier authorization stand in.
+      # True for a row this feature materialized: everything behind its URL —
+      # the redirect URIs and keys included — is whatever it serves today
+      # (draft Sections 8.3 / 8.4). Read by the engine's own consent gate and
+      # exposed for the extensions that have gates of their own.
+      def consent_required_every_time?(application)
+        materialized_row?(application)
+      end
+
       # The validated metadata document for a client_id URL, or nil. Also
       # used by client authentication methods that need document contents
       # (e.g. jwks) rather than the materialized application.
