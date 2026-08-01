@@ -26,10 +26,31 @@ module Doorkeeper
         validate_deprecated_grant_flows
         validate_issuer_format
         validate_issuer_metadata_discoverability
+        validate_client_id_metadata_documents_ownership
         validate_assertion_method_signing_algs
       end
 
       private
+
+      # A Client ID Metadata Document client is registered by no one: it
+      # exists because a URL serves a document. So the application row it is
+      # materialized as has no owner, and where ownership is enforced that row
+      # never saves — leaving every document client refused as invalid_client,
+      # with nothing in the response to say why. The two options are
+      # incompatible; say so once at boot rather than never.
+      def validate_client_id_metadata_documents_ownership
+        return unless client_id_metadata_documents?
+        return unless confirm_application_owner?
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] use_client_id_metadata_documents is enabled together with " \
+          "enable_application_owner confirmation: true, which are incompatible: a document " \
+          "client is registered by no one, so the application row it is materialized as has " \
+          "no owner and fails that validation. Every Client ID Metadata Document client will " \
+          "be refused as invalid_client until one of the two options is turned off. " \
+          "Pre-registered applications are unaffected.",
+        )
+      end
 
       # RFC 8414 Section 2 has token_endpoint_auth_signing_alg_values_supported
       # published whenever an assertion-based method is advertised, and defines
