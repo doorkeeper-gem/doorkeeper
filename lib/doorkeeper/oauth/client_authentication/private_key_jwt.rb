@@ -122,7 +122,12 @@ module Doorkeeper
 
           issuer = claims["iss"]
 
-          issuer if issuer.is_a?(String) && issuer == claims["sub"]
+          # JSON.parse tags a payload's bytes as UTF-8 without checking them,
+          # and the issuer is compared, looked up and keyed on from here on:
+          # a claim carrying invalid bytes would raise ArgumentError out of
+          # the first regex to touch it (String#blank?, for one) — before
+          # anything is verified.
+          issuer if issuer.is_a?(String) && issuer.valid_encoding? && issuer == claims["sub"]
         rescue ::JWT::DecodeError, TypeError, NoMethodError
           # An unverified decode skips the gem's check that the JOSE header is
           # an object, so a header that is a JSON array, number, null or
@@ -172,10 +177,15 @@ module Doorkeeper
           exp = claims["exp"]
           return unless numeric_date?(exp)
           return unless exp <= Time.now.to_i + MAX_LIFETIME
-          return unless claims["jti"].is_a?(String) && claims["jti"].present?
+
+          # Checked for its encoding before anything asks it a regex question
+          # (present? does): the jti is keyed on by the replay guard, and the
+          # bytes came straight out of the assertion.
+          jti = claims["jti"]
+          return unless jti.is_a?(String) && jti.valid_encoding? && jti.present?
 
           claims
-        rescue ::JWT::DecodeError, OpenSSL::OpenSSLError, TypeError, NoMethodError
+        rescue ::JWT::DecodeError, OpenSSL::OpenSSLError, TypeError, NoMethodError, ArgumentError
           # A published key is only parsed far enough to be usable when it is
           # actually needed to verify a signature, so a structurally valid but
           # mathematically nonsensical key (an EC point that is not on the
@@ -184,6 +194,10 @@ module Doorkeeper
           # reaches for String and Integer methods on claim values it never
           # type-checks; the claims this server requires are pinned before
           # this decode, but a failure to verify must never become a 500.
+          # ArgumentError is what a key member whose bytes are not valid UTF-8
+          # raises out of the base64url decoder when the key named by the
+          # header's kid is parsed here, lazily: the fetcher refuses such a
+          # body, but a registered application's jwks is the host's to fill.
           nil
         end
         private_class_method :verified_claims
