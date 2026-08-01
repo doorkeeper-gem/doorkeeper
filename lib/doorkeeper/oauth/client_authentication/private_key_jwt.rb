@@ -41,6 +41,15 @@ module Doorkeeper
         # shared-secret/unauthenticated and must never verify an assertion.
         ALLOWED_ALGORITHMS = %w[RS256 RS384 RS512 PS256 PS384 PS512 ES256 ES384 ES512].freeze
 
+        # RFC 8414 Section 2 has an authorization server publish the algorithms
+        # it accepts on a client assertion whenever an assertion-based method is
+        # advertised. Declared here rather than read off this class by the
+        # metadata endpoint, so a host application's own assertion method — a
+        # client_secret_jwt, say — publishes its algorithms the same way.
+        def self.auth_signing_alg_values
+          ALLOWED_ALGORITHMS
+        end
+
         # iss/sub identify the client, aud prevents cross-server replay,
         # exp bounds the assertion lifetime and jti makes it single-use
         # (OIDC Core §9 requires all of these for private_key_jwt).

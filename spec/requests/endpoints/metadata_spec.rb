@@ -40,6 +40,24 @@ RSpec.describe "Authorization Server Metadata endpoint" do
     expect(json_response["code_challenge_methods_supported"]).to be_a(Array)
   end
 
+  # RFC 8414 Section 2: the entry MUST be present when private_key_jwt (or
+  # client_secret_jwt) is advertised, and must not be there otherwise.
+  it "omits the assertion signing algorithms while no assertion method is enabled" do
+    get "/.well-known/oauth-authorization-server"
+
+    expect(json_response).not_to have_key("token_endpoint_auth_signing_alg_values_supported")
+  end
+
+  it "advertises the assertion signing algorithms once private_key_jwt is enabled" do
+    config_is_set(:client_authentication, %i[client_secret_basic private_key_jwt])
+
+    get "/.well-known/oauth-authorization-server"
+
+    expect(json_response["token_endpoint_auth_methods_supported"]).to include("private_key_jwt")
+    expect(json_response["token_endpoint_auth_signing_alg_values_supported"])
+      .to eq(Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::ALLOWED_ALGORITHMS)
+  end
+
   it "omits client authentication methods that are not registered" do
     unregistered = double(name: :made_up_method)
     allow(Doorkeeper.config).to receive(:client_authentication_methods).and_return([unregistered])
