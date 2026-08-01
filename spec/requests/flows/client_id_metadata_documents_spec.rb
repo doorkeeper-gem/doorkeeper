@@ -28,12 +28,24 @@ feature "Client ID Metadata Documents" do
     stub_request(:get, client_id_url).to_return(status: status, body: body, headers: headers)
   end
 
+  scenario "a registered client's consent screen shows no client_id host" do
+    registered = FactoryBot.create(:application, redirect_uri: redirect_uri)
+
+    visit authorization_endpoint_url(client_id: registered.uid, redirect_uri: redirect_uri)
+
+    i_should_see registered.name
+    expect(page).to have_no_css("#oauth-client-id-host")
+  end
+
   scenario "a URL client completes the authorization code flow without pre-registration" do
     stub_metadata_document
 
     visit authorization_endpoint_url(client_id: client_id_url, redirect_uri: redirect_uri)
 
     i_should_see "Example App"
+    # Draft Section 8.5: nothing in the document is verified, so the host the
+    # client demonstrably controls is shown next to the name it chose.
+    expect(page).to have_css("#oauth-client-id-host", text: "client.example.com")
     click_on "Authorize"
 
     grant = Doorkeeper::AccessGrant.first
@@ -466,6 +478,9 @@ feature "Client ID Metadata Documents" do
     visit authorization_endpoint_url(client_id: client_id_url, redirect_uri: redirect_uri)
 
     i_should_see "Legacy"
+    # Nothing was fetched from the URL, so its host vouches for nothing and is
+    # not shown as though it had been (Section 8.5 speaks of document clients).
+    expect(page).to have_no_css("#oauth-client-id-host")
     expect(request_stub).not_to have_been_requested
     expect(legacy.reload.name).to eq("Legacy")
 

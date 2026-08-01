@@ -70,6 +70,7 @@ en:
         title: 'Authorization required'
         prompt: 'Authorize %{client_name} to use your account?'
         able_to: 'This application will be able to:'
+        client_id_host_html: 'This application identifies itself as %{host}.'
         resources: 'Resources'
       show:
         title: 'Authorization code:'
