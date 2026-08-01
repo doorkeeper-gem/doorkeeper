@@ -19,6 +19,24 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
     allow(Doorkeeper::OAuth::Client).to receive(:find).with(client_id).and_return(client)
   end
 
+  # JWT.encode refuses to build a token whose exp is not a NumericDate, so an
+  # assertion carrying one has to be signed by hand.
+  def sign_raw(payload, key: rsa_key)
+    sign_raw_json(payload.to_json, key: key)
+  end
+
+  # A payload no JSON generator would emit — an overflowing exponent, say —
+  # has to be handed over as raw JSON rather than as a Ruby Hash.
+  def sign_raw_json(payload_json, key: rsa_key)
+    segments = [
+      Base64.urlsafe_encode64({ "alg" => "RS256", "typ" => "JWT", "kid" => kid }.to_json, padding: false),
+      Base64.urlsafe_encode64(payload_json, padding: false),
+    ]
+    signature = key.sign(OpenSSL::Digest.new("SHA256"), segments.join("."))
+
+    (segments << Base64.urlsafe_encode64(signature, padding: false)).join(".")
+  end
+
   def build_assertion(claims: {}, key: rsa_key, alg: "RS256", header_kid: kid)
     claims = {
       "iss" => client_id,
@@ -489,6 +507,25 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(described_class.authenticate(request_with(assertion))).to be_nil
     end
 
+    # The jwt gem casts exp and nbf with to_i while verifying, which raises
+    # NoMethodError — not a JWT::DecodeError — for any other JSON type, so
+    # such an assertion would escape the rescue around that decode and reach
+    # the endpoint as a 500. The signature is valid, which under Client ID
+    # Metadata Documents anyone can arrange.
+    %w[exp nbf].each do |claim|
+      [{}, [1], true].each do |value|
+        it "rejects a validly signed assertion whose #{claim} is #{value.class} without raising" do
+          payload = {
+            "iss" => client_id, "sub" => client_id, "aud" => issuer,
+            "exp" => Time.now.to_i + 300, "jti" => SecureRandom.hex(8),
+          }.merge(claim => value)
+
+          expect { expect(described_class.authenticate(request_with(sign_raw(payload)))).to be_nil }
+            .not_to raise_error
+        end
+      end
+    end
+
     it "rejects an assertion whose exp is an absurdly large integer" do
       credentials = described_class.authenticate(request_with(build_assertion(claims: { "exp" => 10**100 })))
 
@@ -505,6 +542,25 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
 
       expect { expect(described_class.authenticate(request_with(assertion))).to be_nil }
         .not_to raise_error
+    end
+
+    # An Infinity literal is not valid JSON, but an exponent too large for a
+    # Float is: JSON.parse turns 1e400 into Float::INFINITY, which is Numeric.
+    # The jwt gem then casts exp and nbf with to_i, raising FloatDomainError —
+    # a RangeError, so not covered by the rescue around the verifying decode.
+    # The signature is valid, which under Client ID Metadata Documents anyone
+    # who can host a document can arrange.
+    { "exp" => "1e400", "nbf" => "-1e400" }.each do |claim, literal|
+      it "rejects a validly signed assertion whose #{claim} overflows to Infinity" do
+        claims = {
+          "iss" => client_id, "sub" => client_id, "aud" => issuer,
+          "exp" => Time.now.to_i + 300, "jti" => SecureRandom.hex(8),
+        }.merge(claim => "OVERFLOW")
+        payload = claims.to_json.sub('"OVERFLOW"', literal)
+
+        expect { expect(described_class.authenticate(request_with(sign_raw_json(payload)))).to be_nil }
+          .not_to raise_error
+      end
     end
 
     it "accepts an assertion whose exp is a finite float NumericDate" do
