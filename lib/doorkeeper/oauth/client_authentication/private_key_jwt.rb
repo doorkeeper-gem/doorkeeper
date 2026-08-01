@@ -281,24 +281,45 @@ module Doorkeeper
         # server that identifies itself nowhere therefore accepts no audience
         # at all, and is warned about that at boot.
         def self.acceptable_audiences(request)
-          audiences = [Doorkeeper.config.issuer.presence]
-          options = configured_url_options
-
-          if options
-            audiences << "#{base_url(options)}#{request.path}"
-            audiences << token_endpoint_url(options)
+          endpoints = configured_url_option_sets.flat_map do |options|
+            ["#{base_url(options)}#{request.path}", token_endpoint_url(options)]
           end
 
-          audiences.compact.uniq
+          [
+            # An explicitly configured issuer is the operator's own statement
+            # of this server's identity, so it is offered whatever it looks
+            # like — Doorkeeper allows any string here, and clients configured
+            # out of band (RFC 7523 Section 5) use it verbatim.
+            Doorkeeper.config.issuer.presence,
+            *endpoints,
+          ].compact.uniq
         end
         private_class_method :acceptable_audiences
 
-        # An explicitly configured canonical host wins; failing that, the
-        # issuer, when it is an absolute URL (Doorkeeper allows any string).
-        def self.configured_url_options
-          default = ::Rails.application&.routes&.default_url_options || {}
-          return url_options_from(default) if default[:host].present?
+        # Every identity the operator configured, not the first of them: a
+        # host application commonly sets Rails' default_url_options for its
+        # own URL helpers *and* an issuer, and the two need not name the same
+        # host. A client deriving the token endpoint URL (OIDC Core §9) does
+        # so from whichever of them it was told about, and both are the
+        # operator's own statement of who this server is.
+        def self.configured_url_option_sets
+          [rails_url_options, issuer_url_options].compact
+        end
+        private_class_method :configured_url_option_sets
 
+        def self.rails_url_options
+          default = ::Rails.application&.routes&.default_url_options || {}
+          return if default[:host].blank?
+
+          url_options_from(default)
+        rescue StandardError
+          nil
+        end
+        private_class_method :rails_url_options
+
+        # The issuer, when it is an absolute URL (Doorkeeper allows any
+        # string there).
+        def self.issuer_url_options
           issuer = URI.parse(Doorkeeper.config.issuer.to_s)
           return unless issuer.is_a?(URI::HTTP) && issuer.host.present?
 
@@ -310,7 +331,7 @@ module Doorkeeper
         rescue URI::InvalidURIError
           nil
         end
-        private_class_method :configured_url_options
+        private_class_method :issuer_url_options
 
         def self.url_options_from(default)
           { protocol: default[:protocol] || "https://", host: default[:host], port: default[:port] }
