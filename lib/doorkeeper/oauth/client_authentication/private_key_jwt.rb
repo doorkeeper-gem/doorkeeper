@@ -22,6 +22,15 @@ module Doorkeeper
       class PrivateKeyJwt
         CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 
+        # The IANA token endpoint authentication method name this implements,
+        # which is how a client naming it in metadata writes it. Independent
+        # of the key this strategy happens to be registered under.
+        AUTH_METHOD_NAME = "private_key_jwt"
+
+        def self.auth_method_name
+          AUTH_METHOD_NAME
+        end
+
         # Assertions are verified against the client's published public
         # keys; no shared secret is involved.
         def self.uses_shared_secret?
