@@ -219,6 +219,37 @@ feature "Client ID Metadata Documents" do
     expect(Doorkeeper::AccessToken.last.application.uid).to eq(client_id_url)
   end
 
+  # RFC 7662 Section 4 has the introspection endpoint authorize its caller
+  # "to prevent token scanning attacks". A public document client is minted by
+  # publishing a document, so accepting it as that caller would let anyone
+  # introspect any token.
+  scenario "a public document client is refused as an introspection caller" do
+    stub_metadata_document
+    client_exists
+    token = FactoryBot.create(:access_token, application: @client, resource_owner_id: @resource_owner.id)
+
+    page.driver.post "/oauth/introspect", token: token.token, client_id: client_id_url
+
+    expect(page.driver.response.status).to eq(401)
+    expect(json_response).not_to include("active" => true)
+    expect(json_response).to include("error" => "invalid_client")
+  end
+
+  # Same principle as the client credentials grant above: "a client is
+  # present" says only that someone published a document at a URL.
+  scenario "a public document client is refused the password grant" do
+    config_is_set(:grant_flows, %w[authorization_code password])
+    config_is_set(:resource_owner_from_credentials) { User.first }
+    stub_metadata_document
+
+    page.driver.post token_endpoint_url,
+                     grant_type: "password", username: "user", password: "secret",
+                     client_id: client_id_url
+
+    expect(json_response).to include("error" => "invalid_client")
+    expect(Doorkeeper::AccessToken.count).to eq(0)
+  end
+
   scenario "pre-registered clients keep working while the feature is enabled" do
     client_exists
 
