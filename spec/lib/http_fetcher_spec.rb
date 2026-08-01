@@ -413,6 +413,100 @@ RSpec.describe Doorkeeper::HttpFetcher do
 
       expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError)
     end
+
+    # WebMock replaces Net::HTTP#request, so nothing stubbed ever reaches the
+    # socket. These examples serve a real one on the loopback interface and
+    # skip TLS and address vetting (the loopback address is special-use) to
+    # reach the read path under test.
+    context "when reading from a real socket" do
+      let(:server) { TCPServer.new("127.0.0.1", 0) }
+      let(:loopback_url) { "https://localhost:#{server.addr[1]}/document" }
+      let(:resolver) { class_double(Resolv, getaddresses: ["127.0.0.1"]) }
+
+      around do |example|
+        WebMock.disable_net_connect!(allow_localhost: true)
+        example.run
+      ensure
+        WebMock.disable_net_connect!
+      end
+
+      before do
+        allow(described_class).to receive(:special_use?).and_return(false)
+        allow(Net::HTTP).to receive(:new).and_wrap_original do |original, *args|
+          original.call(*args).tap { |connection| allow(connection).to receive(:use_ssl=) }
+        end
+      end
+
+      after do
+        @serving&.join(1)
+        server.close
+      end
+
+      # Answers the one connection the fetch opens once its request headers
+      # are in; the block writes the response.
+      def serve
+        @serving = Thread.new do
+          client = server.accept
+          begin
+            while (line = client.gets) && line != "\r\n"; end
+            yield client
+          rescue IOError, SystemCallError
+            # The fetcher hung up, which is the point of half of these examples.
+          ensure
+            client.close unless client.closed?
+          end
+        end
+      end
+
+      it "returns a document served with ordinary headers" do
+        body = '{"client_id":"x"}'
+        serve do |client|
+          client.write("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: #{body.bytesize}\r\n\r\n#{body}")
+        end
+
+        expect(fetcher.fetch(loopback_url)).to eq(body)
+      end
+
+      it "returns a document served in chunks" do
+        serve do |client|
+          client.write("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n11\r\n{\"client_id\":\"x\"}\r\n0\r\n\r\n")
+        end
+
+        expect(fetcher.fetch(loopback_url)).to eq('{"client_id":"x"}')
+      end
+
+      # Net::HTTP reads the status line and every header line with no limit
+      # of its own, and before the response - and the body checks - exist.
+      # Left to the wall clock alone, a host streaming headers would have
+      # this process buffer whatever it could push in MAX_TOTAL_TIME.
+      it "abandons a response whose headers never end" do
+        serve do |client|
+          client.write("HTTP/1.1 200 OK\r\n")
+          loop { client.write("X-Filler: #{"a" * 1000}\r\n") }
+        end
+
+        expect { fetcher.fetch(loopback_url) }
+          .to raise_error(described_class::FetchError, /exceeds #{described_class::MAX_EXCHANGE_SIZE} bytes, headers included/)
+      end
+
+      it "abandons a status line that never ends" do
+        serve do |client|
+          loop { client.write("HTTP/1.1 200 OK #{"a" * 1000}") }
+        end
+
+        expect { fetcher.fetch(loopback_url) }.to raise_error(described_class::FetchError, /headers included/)
+      end
+
+      # The size line of each chunk of a chunked body is read the same way.
+      it "abandons a chunked body whose chunk-size line never ends" do
+        serve do |client|
+          client.write("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n")
+          loop { client.write("0" * 1000) }
+        end
+
+        expect { fetcher.fetch(loopback_url) }.to raise_error(described_class::FetchError, /headers included/)
+      end
+    end
   end
 
   describe ".special_use?" do
