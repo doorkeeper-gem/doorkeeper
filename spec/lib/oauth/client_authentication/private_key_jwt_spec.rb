@@ -764,6 +764,39 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       end
     end
 
+    # RFC 7517 Sections 4.2 and 4.3: the publisher may say what a key is for.
+    # The jwt gem's key finder matches on kid alone, so the restriction has to
+    # be honoured here — a client publishing a JWE encryption key beside its
+    # signing key means exactly "do not verify signatures with this one".
+    [
+      ["use is enc", { "use" => "enc" }],
+      ["key_ops excludes verify", { "key_ops" => %w[encrypt wrapKey] }],
+    ].each do |description, restriction|
+      it "does not verify an assertion with a key whose #{description}" do
+        allow(application).to receive(:jwks).and_return({ "keys" => [jwk.export.merge(restriction)] })
+
+        expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+      end
+    end
+
+    [
+      ["use is sig", { "use" => "sig" }],
+      ["key_ops includes verify", { "key_ops" => %w[verify] }],
+    ].each do |description, permission|
+      it "verifies an assertion with a key whose #{description}" do
+        allow(application).to receive(:jwks).and_return({ "keys" => [jwk.export.merge(permission)] })
+
+        expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+      end
+    end
+
+    it "verifies against the signing key when an encryption key is published beside it" do
+      encryption_key = jwk.export.merge("kid" => "enc-key", "use" => "enc")
+      allow(application).to receive(:jwks).and_return({ "keys" => [encryption_key, jwk.export] })
+
+      expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+    end
+
     # A key member whose bytes are not valid UTF-8 raises ArgumentError out
     # of the base64url decoder — lazily, inside the verifying decode, when
     # the header's kid names the key, and eagerly, while the set is built,
