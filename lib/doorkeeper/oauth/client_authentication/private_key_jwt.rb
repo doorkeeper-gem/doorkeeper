@@ -90,12 +90,22 @@ module Doorkeeper
           claims = verified_claims(assertion, client_id, jwk_set, audiences)
           return unless claims
           return unless replay_guard.first_use?(
-            "#{client_id}:#{claims["jti"]}",
+            replay_key(client_id, claims["jti"]),
             expires_at: claims["exp"].to_i + decode_leeway,
           )
 
           Doorkeeper::ClientAuthentication::VerifiedCredentials.new(client_id)
         end
+
+        # A jti is single-use per client, so the guard is keyed by both. The
+        # client_id is length-prefixed to keep that pair unambiguous: a bare
+        # "#{client_id}:#{jti}" lets a client whose id ends in ":x" burn the
+        # jti "x:y" of a client whose id it is a prefix of, which on a host
+        # serving several clients under one origin is another tenant's.
+        def self.replay_key(client_id, jti)
+          "#{client_id.length}:#{client_id}:#{jti}"
+        end
+        private_class_method :replay_key
 
         # The built-in guard is process-local; a multi-process deployment can
         # supply a shared store through the private_key_jwt_replay_guard
