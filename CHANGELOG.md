@@ -22,6 +22,7 @@ User-visible changes worth mentioning.
 - [#1888] Document custom grant flow registration (`Doorkeeper::GrantFlow.register`) in the README with a SAML 2.0 bearer assertion (RFC 7522) walkthrough, and pin URN-shaped custom grant types with an end-to-end request spec. Docs/test-only change, closes [#764].
 - [#1890] [test] Pin that the authorization endpoint answers `invalid_redirect_uri` for a client registered without a redirect URI (`allow_blank_redirect_uri`), whether or not the request supplies one — the behavior required by RFC 6749 §3.1.2.3. Test-only change, closes [#1682].
 - [#1898] Fix: with `reuse_access_token` enabled, the `client_credentials` grant no longer reuses a token whose `resource` differs from the one requested (RFC 8707), so the audience restriction the client asked for is always applied. Follow-up to [#1886].
+- [#1899] Document the client authentication methods registry (`Doorkeeper::ClientAuthentication.register`) in the README with a walkthrough for registering a custom method, and pin it with an end-to-end request spec. Docs/test-only change, closes [#1894].
 - Please add here
 
 ## 6.0.0.beta1
