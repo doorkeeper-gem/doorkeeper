@@ -42,7 +42,7 @@ module Doorkeeper
             keys = raw["keys"] || raw[:keys]
             return unless keys.is_a?(Array)
 
-            usable = keys.grep(Hash).select { |key| public_key?(key) }
+            usable = keys.grep(Hash).select { |key| public_key?(key) && verification_key?(key) }
             return if usable.empty?
 
             build_key_set(usable)
@@ -66,6 +66,26 @@ module Doorkeeper
 
             NON_PUBLIC_MEMBERS.none? { |name| !member(key, name).nil? }
           end
+
+          # Whether the publisher allows this key to verify a signature. RFC
+          # 7517 Sections 4.2 and 4.3 let them say otherwise with "use" or
+          # "key_ops", and the jwt gem honours neither — its key finder matches
+          # on "kid" alone — so a client that publishes a JWE encryption key
+          # beside its signing key would have that restriction ignored here.
+          #
+          # Deliberately not folded into public_key?, which refuses a key
+          # outright: publishing an encryption key is legitimate, verifying an
+          # assertion with it is not.
+          def self.verification_key?(key)
+            use = member(key, "use")
+            return false if use.is_a?(String) && use != "sig"
+
+            ops = member(key, "key_ops")
+            return true unless ops.is_a?(Array)
+
+            ops.include?("verify")
+          end
+          private_class_method :verification_key?
 
           # A JWK reaches here parsed from JSON (string members) or straight
           # from an application model, where a Ruby Hash may well be keyed by
