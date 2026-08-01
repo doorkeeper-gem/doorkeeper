@@ -323,9 +323,11 @@ Doorkeeper.configure do
   # nbf is always honoured.
   #
   # jti replay is tracked in process-local memory by default (bounded at
-  # 10 000 entries, each held at most 1 hour), so an assertion replayed to a
-  # different server process is not caught. To share the tracking across
-  # processes, supply your own store (e.g. backed by Redis):
+  # 10 000 entries, each held until the assertion's own exp, so at most 1 hour
+  # plus any global JWT.configuration.decode.leeway you have set), so an
+  # assertion replayed to a different server process is not caught. To share
+  # the tracking across processes, supply your own store (e.g. backed by
+  # Redis):
   #
   # private_key_jwt_replay_guard MyRedisReplayGuard.new
   #

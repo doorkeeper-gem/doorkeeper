@@ -50,6 +50,24 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
     JWT.encode(claims, key, alg, headers)
   end
 
+  # Stands in for a host application's own guard: it lets every assertion
+  # through and records what it was handed, so the key and the expiry can be
+  # read off it afterwards.
+  def recording_replay_guard
+    Class.new do
+      attr_reader :calls
+
+      def initialize
+        @calls = []
+      end
+
+      def first_use?(key, expires_at:)
+        @calls << { key: key, expires_at: expires_at }
+        true
+      end
+    end.new
+  end
+
   def request_with(assertion, extra_params = {})
     mock_request(
       request_parameters: {
@@ -566,6 +584,20 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(described_class.authenticate(request_with(assertion))).to be_nil
     end
 
+    # The entry has to outlast the assertion, and an exp is a NumericDate: it
+    # may be fractional. The guard is anchored to the truncated value because
+    # that is the value the jwt gem compares against (`exp.to_i <=
+    # Time.now.to_i - leeway`), so the two windows close in the same second
+    # rather than leaving the assertion acceptable past the entry.
+    it "anchors the entry to the exp the gem compares against" do
+      guard = recording_replay_guard
+      config_is_set(:private_key_jwt_replay_guard, guard)
+      exp = Time.now.to_i + 60.9
+
+      expect(described_class.authenticate(request_with(build_assertion(claims: { "exp" => exp })))).not_to be_nil
+      expect(guard.calls.last[:expires_at]).to eq(exp.to_i)
+    end
+
     it "resolves a jwks_uri through a configured custom jwks cache" do
       jwks_uri = "https://client.example.com/jwks.json"
       allow(application).to receive_messages(jwks: nil, jwks_uri: jwks_uri)
@@ -815,6 +847,58 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
         )
 
         expect(credentials).to be_nil
+      end
+    end
+
+    # The gem merges the host application's global decode settings under the
+    # options passed to decode, and a leeway is a common one: the assertion
+    # is then accepted for that long past its exp, which is the host's call
+    # — but the guard has to remember the jti for exactly as long. Remembered
+    # until exp alone, the assertion was accepted again once the guard had
+    # swept its entry.
+    context "when the host application configured a global JWT leeway" do
+      around do |example|
+        original = JWT.configuration.decode.leeway
+        JWT.configuration.decode.leeway = 300
+        example.run
+      ensure
+        JWT.configuration.decode.leeway = original
+      end
+
+      it "does not accept an assertion a second time within the leeway" do
+        now = Time.now.to_i
+        assertion = build_assertion(claims: { "exp" => now - 10 })
+
+        expect(described_class.authenticate(request_with(assertion))).not_to be_nil
+
+        # Past the sweep interval, at which the guard drops entries whose
+        # expiry has passed.
+        allow(Time).to receive(:now).and_return(Time.at(now + described_class::ReplayGuard::SWEEP_INTERVAL + 1).utc)
+
+        expect(described_class.authenticate(request_with(assertion))).to be_nil
+      end
+    end
+
+    # The gem compares against a fractional leeway as it stands, so the
+    # guard rounds one up rather than truncating it: truncated, it would
+    # forget the jti during the second the gem still accepts the assertion
+    # in.
+    context "when the configured global JWT leeway is fractional" do
+      around do |example|
+        original = JWT.configuration.decode.leeway
+        JWT.configuration.decode.leeway = 0.5
+        example.run
+      ensure
+        JWT.configuration.decode.leeway = original
+      end
+
+      it "remembers the jti through the whole second the assertion is still accepted in" do
+        guard = recording_replay_guard
+        config_is_set(:private_key_jwt_replay_guard, guard)
+        exp = Time.now.to_i + 60
+
+        expect(described_class.authenticate(request_with(build_assertion(claims: { "exp" => exp })))).not_to be_nil
+        expect(guard.calls.last[:expires_at]).to eq(exp + 1)
       end
     end
   end
