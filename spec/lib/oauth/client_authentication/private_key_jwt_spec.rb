@@ -565,5 +565,17 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
           .not_to raise_error
       end
     end
+
+    # The keys of a registered application are fetched over https only, the
+    # same as a document's: a jwks_uri column left on http would otherwise
+    # have this server take a client's verification keys off the wire.
+    it "does not fetch a registered application's jwks_uri over http" do
+      jwks_uri = "http://client.example.com/jwks.json"
+      allow(application).to receive_messages(jwks: nil, jwks_uri: jwks_uri)
+      request_stub = stub_request(:get, jwks_uri)
+
+      expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+      expect(request_stub).not_to have_been_requested
+    end
   end
 end
