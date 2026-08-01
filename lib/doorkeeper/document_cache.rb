@@ -53,7 +53,7 @@ module Doorkeeper
     def write(url, document)
       @mutex.synchronize do
         # Deleted first so a rewritten entry moves to the end of the hash's
-        # insertion order, which is the end #prune evicts from. #read
+        # insertion order, away from the front #prune evicts from. #read
         # already drops an entry when it finds it expired, so this only
         # matters when two threads resolve the same URL at once.
         @store.delete(url)
