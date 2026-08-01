@@ -28,6 +28,32 @@ feature "Client ID Metadata Documents" do
     stub_request(:get, client_id_url).to_return(status: status, body: body, headers: headers)
   end
 
+  scenario "a URL client completes the authorization code flow without pre-registration" do
+    stub_metadata_document
+
+    visit authorization_endpoint_url(client_id: client_id_url, redirect_uri: redirect_uri)
+
+    i_should_see "Example App"
+    click_on "Authorize"
+
+    grant = Doorkeeper::AccessGrant.first
+    expect(grant).not_to be_nil
+    expect(grant.application.uid).to eq(client_id_url)
+
+    expect(current_uri.host).to eq("app.example.com")
+    code = current_params["code"]
+    expect(code).to eq(grant.token)
+
+    page.driver.post token_endpoint_url,
+                     token_endpoint_params(code: code, client_id: client_id_url, redirect_uri: redirect_uri)
+
+    expect(json_response).to include(
+      "access_token" => Doorkeeper::AccessToken.first.token,
+      "token_type" => "Bearer",
+    )
+    expect(Doorkeeper::AccessToken.first.application.uid).to eq(client_id_url)
+  end
+
   scenario "the materialized application reflects the latest document" do
     stub_metadata_document
 
@@ -58,6 +84,99 @@ feature "Client ID Metadata Documents" do
 
     i_should_see_translated_error_message("invalid_client")
     expect(Doorkeeper::Application.count).to eq(0)
+  end
+
+  # Every entry point tests the feature flag for itself, so the token endpoint
+  # needs its own pin: a disabled server must not fetch an attacker's URL.
+  scenario "the token endpoint does not resolve URL client_ids while the feature is disabled" do
+    config_is_set(:client_id_metadata_documents, false)
+    request_stub = stub_metadata_document
+
+    page.driver.post token_endpoint_url,
+                     grant_type: "client_credentials", client_id: client_id_url
+
+    expect(page.driver.response.status).to eq(401)
+    expect(json_response).to include("error" => "invalid_client")
+    expect(json_response).not_to have_key("access_token")
+    expect(request_stub).not_to have_been_requested
+  end
+
+  # URI.parse accepts any integer as a port; Net::HTTP raises TypeError on one
+  # too large to be a port, which no fetch is prepared for.
+  scenario "a client_id whose port could never be connected to is rejected without a crash" do
+    page.driver.post token_endpoint_url,
+                     grant_type: "client_credentials",
+                     client_id: "https://client.example.com:99999999999999999999/app"
+
+    expect(json_response).to include("error" => "invalid_client")
+  end
+
+  # The document is re-resolved at the token endpoint too, not only at the
+  # authorization endpoint: a row that no longer materializes must not keep
+  # authenticating on the metadata it was created from.
+  scenario "a document that no longer materializes refuses the token request" do
+    stub_metadata_document
+    visit authorization_endpoint_url(client_id: client_id_url, redirect_uri: redirect_uri)
+    click_on "Authorize"
+    code = current_params["code"]
+
+    Doorkeeper::ClientIdMetadata.document_cache.clear
+    stub_metadata_document(metadata.merge("client_id" => "https://someone.else.example/x").to_json)
+
+    page.driver.post token_endpoint_url,
+                     grant_type: "authorization_code", code: code,
+                     redirect_uri: redirect_uri, client_id: client_id_url
+
+    expect(json_response).to include("error" => "invalid_client")
+    expect(Doorkeeper::AccessToken.count).to eq(0)
+  end
+
+  # The other way a resolution can fail at the token endpoint: the document
+  # is valid, and its row is the one that is refused. The first request's
+  # code was issued while the redirect URI still passed the model's
+  # validation.
+  scenario "a document whose row no longer validates refuses the token request" do
+    stub_metadata_document
+    visit authorization_endpoint_url(client_id: client_id_url, redirect_uri: redirect_uri)
+    click_on "Authorize"
+    code = current_params["code"]
+
+    Doorkeeper::ClientIdMetadata.document_cache.clear
+    config_is_set(:force_ssl_in_redirect_uri, true)
+    stub_metadata_document(metadata.merge("redirect_uris" => ["http://app.example.com/callback"]).to_json)
+    allow(Rails.logger).to receive(:warn)
+
+    page.driver.post token_endpoint_url,
+                     grant_type: "authorization_code", code: code,
+                     redirect_uri: redirect_uri, client_id: client_id_url
+
+    expect(page.driver.response.status).to eq(401)
+    expect(json_response).to include("error" => "invalid_client")
+    expect(Doorkeeper::AccessToken.count).to eq(0)
+  end
+
+  # RefreshTokenRequest resolves its client the same way the other endpoints
+  # do, so a public document client refreshes with its client_id alone.
+  scenario "a public document client refreshes its token" do
+    config_is_set(:refresh_token_enabled, true)
+    stub_metadata_document
+    visit authorization_endpoint_url(client_id: client_id_url, redirect_uri: redirect_uri)
+    click_on "Authorize"
+
+    page.driver.post token_endpoint_url,
+                     token_endpoint_params(
+                       code: current_params["code"],
+                       client_id: client_id_url,
+                       redirect_uri: redirect_uri,
+                     )
+    refresh_token = json_response["refresh_token"]
+    expect(refresh_token).not_to be_nil
+
+    page.driver.post token_endpoint_url,
+                     grant_type: "refresh_token", refresh_token: refresh_token, client_id: client_id_url
+
+    expect(json_response).to include("access_token")
+    expect(Doorkeeper::AccessToken.last.application.uid).to eq(client_id_url)
   end
 
   scenario "pre-registered clients keep working while the feature is enabled" do
@@ -209,6 +328,25 @@ feature "Client ID Metadata Documents" do
     visit authorization_endpoint_url(client_id: client_id_url, redirect_uri: "https://evil.example.com/cb")
 
     i_should_see_translated_error_message("invalid_redirect_uri")
+  end
+
+  scenario "token requests with a client_secret cannot authenticate a URL client" do
+    stub_metadata_document
+
+    visit authorization_endpoint_url(client_id: client_id_url, redirect_uri: redirect_uri)
+    click_on "Authorize"
+    code = current_params["code"]
+
+    page.driver.post token_endpoint_url,
+                     token_endpoint_params(
+                       code: code,
+                       client_id: client_id_url,
+                       client_secret: "guessed",
+                       redirect_uri: redirect_uri,
+                     )
+
+    expect(page.driver.response.status).to eq(401)
+    expect(json_response["error"]).to eq("invalid_client")
   end
 
   scenario "disabling the feature also disables the clients it materialized" do

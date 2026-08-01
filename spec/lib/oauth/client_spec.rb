@@ -58,6 +58,14 @@ RSpec.describe Doorkeeper::OAuth::Client do
       expect(described_class.find(application.uid)).to be_nil
     end
 
+    it "does not authenticate a stamped row" do
+      application.update!(client_id_metadata_materialized_at: Time.now.utc)
+      credentials = Doorkeeper::ClientAuthentication::Credentials
+        .new(application.uid, application.plaintext_secret)
+
+      expect(described_class.authenticate(credentials)).to be_nil
+    end
+
     # The stamp, not the uid's shape, is what marks a row as the feature's:
     # an application someone registered with a URL-shaped uid stays a
     # registered application.
@@ -82,6 +90,15 @@ RSpec.describe Doorkeeper::OAuth::Client do
       fetch = stub_request(:get, url)
 
       expect(described_class.find(application.uid).application).to eq(application)
+      expect(fetch).not_to have_been_requested
+    end
+
+    it "authenticates a registered application holding the URL by its secret" do
+      fetch = stub_request(:get, url)
+      credentials = Doorkeeper::ClientAuthentication::Credentials
+        .new(application.uid, application.plaintext_secret)
+
+      expect(described_class.authenticate(credentials).application).to eq(application)
       expect(fetch).not_to have_been_requested
     end
 
