@@ -414,6 +414,30 @@ RSpec.describe Doorkeeper::HttpFetcher do
       expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError)
     end
 
+    # RFC 8259 Section 8.1: JSON exchanged between systems is UTF-8, and
+    # JSON.parse would otherwise pass invalid bytes on, tagged as UTF-8, into
+    # the first regex or base64url decoder to touch them.
+    it "raises when the body is not valid UTF-8" do
+      stub_request(:get, url).to_return(status: 200, body: "{\"client_id\":\"\xff\"}".b)
+
+      expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /not valid UTF-8/)
+    end
+
+    # Same section: a sender must not add one, but a reader may ignore it.
+    # Editors write it onto static files unasked, and JSON.parse reads it as
+    # an unexpected character.
+    it "strips a leading byte order mark" do
+      stub_request(:get, url).to_return(status: 200, body: "\uFEFF{\"client_id\":\"x\"}")
+
+      expect(fetcher.fetch(url)).to eq('{"client_id":"x"}')
+    end
+
+    it "returns the body tagged as UTF-8" do
+      stub_request(:get, url).to_return(status: 200, body: "{\"client_name\":\"caf\u00e9\"}".b)
+
+      expect(fetcher.fetch(url).encoding).to eq(Encoding::UTF_8)
+    end
+
     # WebMock replaces Net::HTTP#request, so nothing stubbed ever reaches the
     # socket. These examples serve a real one on the loopback interface and
     # skip TLS and address vetting (the loopback address is special-use) to
