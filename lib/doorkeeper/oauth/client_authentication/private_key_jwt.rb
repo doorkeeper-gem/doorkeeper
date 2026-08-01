@@ -91,7 +91,7 @@ module Doorkeeper
           return unless claims
           return unless replay_guard.first_use?(
             "#{client_id}:#{claims["jti"]}",
-            expires_at: claims["exp"].to_i,
+            expires_at: claims["exp"].to_i + decode_leeway,
           )
 
           Doorkeeper::ClientAuthentication::VerifiedCredentials.new(client_id)
@@ -104,6 +104,30 @@ module Doorkeeper
           Doorkeeper.config.private_key_jwt_replay_guard || ReplayGuard.instance
         end
         private_class_method :replay_guard
+
+        # The jwt gem merges the host application's global decode settings
+        # under the options passed to decode, and one of them is a leeway: an
+        # assertion is then accepted for that many seconds past its exp. The
+        # guard has to remember a jti for as long as the assertion would be
+        # accepted, so the same leeway extends its entry — forgotten at exp
+        # alone, the assertion would be accepted again, once per sweep, until
+        # exp + leeway.
+        # Rounded up rather than truncated: the gem compares against a
+        # fractional leeway as it is, so a leeway of half a second keeps an
+        # assertion acceptable through the whole second the guard would
+        # otherwise have stopped remembering it in.
+        #
+        # The exp the entry is anchored to is truncated rather than rounded up,
+        # which is right because the gem truncates it too — `exp.to_i <=
+        # Time.now.to_i - leeway` is the comparison it makes, in every version
+        # this gem supports. A fractional exp therefore buys an assertion no
+        # acceptance past the second the guard stops remembering it in: both
+        # windows close together.
+        def self.decode_leeway
+          config = ::JWT.configuration.decode
+          config.respond_to?(:leeway) ? config.leeway.to_f.ceil : 0
+        end
+        private_class_method :decode_leeway
 
         # The issuer read without verifying the signature — only used to
         # locate the client (and thereby its keys); every claim is verified
@@ -172,7 +196,9 @@ module Doorkeeper
             # Passed explicitly so a host application that globally disabled
             # expiration or not-before checking for its own tokens
             # (JWT.configuration.decode) cannot silently turn off assertion
-            # verification of either — RFC 7523 Section 3 requires both.
+            # verification of either — RFC 7523 Section 3 requires both. The
+            # leeway that configuration may carry is honoured, and the replay
+            # guard's memory extended by it (see decode_leeway).
             verify_expiration: true,
             verify_not_before: true,
           )
