@@ -26,6 +26,7 @@ Supported features:
 - [Proof Key for Code Exchange by OAuth Public Clients](https://datatracker.ietf.org/doc/html/rfc7636)
 - [OAuth 2.0 Authorization Server Issuer Identification](https://datatracker.ietf.org/doc/html/rfc9207) — opt-in by setting `issuer`; adds the `iss` parameter to authorization redirects returned to the client
 - [Resource Indicators for OAuth 2.0](https://datatracker.ietf.org/doc/html/rfc8707)
+- [OAuth Client ID Metadata Documents](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document) — experimental, opt-in by setting `use_client_id_metadata_documents`; lets a client identify itself with an `https://` URL Doorkeeper fetches its metadata from instead of pre-registering. See the option's notes in the generated initializer before enabling it: the feature needs one extra column on the applications table (a declared field, with the Mongoid extension), and the notes list its current limitations.
 
 ## Table of Contents
 
@@ -339,6 +340,16 @@ def self.auth_method_name
   "tls_client_auth"
 end
 ```
+
+This matters when `use_client_id_metadata_documents` is enabled. Such a client's document names the one method it authenticates with, and the draft requires client authentication "of the registered type", so Doorkeeper refuses to authenticate it by any other — including a strategy that declares no name at all. Such clients are also forbidden every method built on a shared secret, and a strategy is taken to be one unless it says otherwise — so a method that verifies the client without a shared secret (mTLS, a signed assertion) has to declare that too before a document may select it:
+
+```ruby
+def self.uses_shared_secret?
+  false
+end
+```
+
+Servers that do not enable that option authenticate clients exactly as before; what the metadata endpoint advertises does follow the declared name, as described next.
 
 Enabled methods are advertised in the authorization server metadata, so a registered method appears in `token_endpoint_auth_methods_supported` at `/.well-known/oauth-authorization-server` once `client_authentication` lists it — under the `auth_method_name` it declares, or under its registration key when it declares none.
 
