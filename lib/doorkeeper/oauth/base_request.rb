@@ -85,7 +85,10 @@ module Doorkeeper
 
         return true unless Doorkeeper.config.force_dpop? || dpop_proof.present?
 
-        dpop_proof.valid?
+        # A third-party grant flow subclassing BaseRequest inherits this
+        # validation but never gets a proof injected, so `dpop_proof` can be nil
+        # under `force_dpop`. That's an invalid request, not a 500.
+        !!dpop_proof&.valid?
       end
     end
   end
