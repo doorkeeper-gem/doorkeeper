@@ -303,7 +303,42 @@ RSpec.describe Doorkeeper::HttpFetcher do
       # connecting and the check after the first chunk (past the deadline).
       allow(Process).to receive(:clock_gettime).and_return(0, 0, 0, described_class::MAX_TOTAL_TIME + 1)
 
-      expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /too long/)
+      expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /took too long/)
+    end
+
+    # Net::HTTP has no total-time setting of its own: read_timeout starts
+    # over on every successful read, so a host answering a byte at a time —
+    # in the status line and headers as much as in the body — never trips it,
+    # and the deadline above is only consulted between body chunks. Only a
+    # wall clock around the whole exchange bounds that.
+    it "raises when the exchange outlives the total time budget" do
+      stub_const("Doorkeeper::HttpFetcher::MAX_TOTAL_TIME", 0.05)
+      # The ceiling interrupts the sleep, so the example costs its 0.05
+      # seconds rather than the full second the stub would otherwise take.
+      stub_request(:get, url).to_return do
+        sleep 1
+        { status: 200, body: "{}" }
+      end
+
+      expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /took too long/)
+    end
+
+    # Net::HTTP retries an idempotent request once by default, and the branch
+    # that decides so catches Timeout::Error: the ceiling above would be
+    # swallowed while the status line or headers are read, and the retry run
+    # with the timer already spent. WebMock replaces #request rather than
+    # #transport_request, so no stubbed exchange reaches that branch and the
+    # setting is pinned directly instead.
+    it "does not let Net::HTTP retry a request" do
+      stub_request(:get, url).to_return(status: 200, body: "{}")
+      connections = []
+      allow(Net::HTTP).to receive(:new).and_wrap_original do |original, *args|
+        original.call(*args).tap { |connection| connections << connection }
+      end
+
+      fetcher.fetch(url)
+
+      expect(connections.map(&:max_retries)).to eq([0])
     end
 
     it "requests an identity encoding so that no body is ever inflated" do
