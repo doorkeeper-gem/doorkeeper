@@ -682,6 +682,19 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       end
     end
 
+    # The unverified read refuses such an exp first, but the verifying decode
+    # pins the type itself rather than relying on that: the jwt gem casts exp
+    # with to_i, so a numeric string would pass its expiration check.
+    it "rejects a numeric string exp at the verifying decode as well" do
+      allow(described_class).to receive(:unverified_client_id).and_return(client_id)
+      payload = {
+        "iss" => client_id, "sub" => client_id, "aud" => issuer,
+        "exp" => (Time.now.to_i + 300).to_s, "jti" => SecureRandom.hex(8),
+      }
+
+      expect(described_class.authenticate(request_with(sign_raw(payload)))).to be_nil
+    end
+
     it "accepts an assertion whose exp is a finite float NumericDate" do
       credentials = described_class.authenticate(
         request_with(build_assertion(claims: { "exp" => Time.now.to_f.floor + 300.5 })),
@@ -1148,6 +1161,14 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
         expect(described_class.authenticate(request_with(build_assertion(claims: { "exp" => exp })))).not_to be_nil
         expect(guard.calls.last[:expires_at]).to eq(exp + 1)
       end
+    end
+
+    # A jwt gem whose decode configuration carries no leeway at all extends
+    # nothing: the guard remembers the jti until exp.
+    it "reads no leeway off a decode configuration that has none" do
+      allow(JWT.configuration).to receive(:decode).and_return(Object.new)
+
+      expect(described_class.send(:decode_leeway)).to eq(0)
     end
 
     context "with a client ID metadata document client" do

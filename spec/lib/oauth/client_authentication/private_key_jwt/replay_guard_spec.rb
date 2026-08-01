@@ -339,6 +339,20 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::ReplayGua
     end
   end
 
+  # A pool that is full yet holds nothing to evict can only be one with no
+  # room at all; the arrival is refused rather than another pool drained.
+  context "when the pool has no room at all" do
+    before { stub_const("#{described_class}::MAX_ENTRIES", 0) }
+
+    it "refuses the key rather than evicting from another pool" do
+      expect(guard.first_use?(key_for("client", "a"), expires_at: far_future)).to be false
+    end
+  end
+
+  it "forgets a key it never held without raising" do
+    expect { guard.send(:forget, key_for("client", "never-seen")) }.not_to raise_error
+  end
+
   # Keys in no client's shape are each their own partition, so the guard
   # treats them as plain FIFO.
   context "with opaque keys" do

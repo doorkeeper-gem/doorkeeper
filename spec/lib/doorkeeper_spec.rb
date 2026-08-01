@@ -202,6 +202,17 @@ RSpec.describe Doorkeeper do
       described_class.warn_missing_client_id_metadata_column
     end
 
+    it "stays quiet before Doorkeeper has been configured" do
+      described_class.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+      end
+      allow(described_class).to receive(:configured?).and_return(false)
+      expect(described_class.config.application_model).not_to receive(:new)
+
+      described_class.warn_missing_client_id_metadata_column
+    end
+
     # Run from to_prepare, where a model that cannot be instantiated at all
     # (no database yet) is not this check's business.
     it "says nothing when the model cannot be instantiated" do

@@ -344,6 +344,23 @@ RSpec.describe Doorkeeper::OAuth::Client do
                  Doorkeeper::ClientAuthentication::Credentials.new(client_id), authenticator,
                )).to be_nil
       end
+
+      # Credentials are duck typed: a host strategy may hand back an object
+      # that has no notion of which method produced it at all.
+      it "refuses credentials that cannot say how they authenticated, without fetching the document" do
+        expect(Doorkeeper::ClientIdMetadata).not_to receive(:document_for)
+        authenticator = ->(*) { double }
+        credentials = Struct.new(:uid, :secret).new(client_id, nil)
+
+        expect(described_class.authenticate(credentials, authenticator)).to be_nil
+      end
+    end
+
+    it "returns nil for pre-authenticated credentials no application holds" do
+      credentials = Doorkeeper::ClientAuthentication::VerifiedCredentials.new("unknown-uid")
+      allow(Doorkeeper.config.application_model).to receive(:by_uid).with("unknown-uid").and_return(nil)
+
+      expect(described_class.authenticate(credentials)).to be_nil
     end
 
     it "leaves opaque client_ids unaffected by the document check" do
