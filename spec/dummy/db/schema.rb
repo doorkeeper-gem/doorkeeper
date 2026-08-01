@@ -65,6 +65,7 @@ ActiveRecord::Schema.define(version: 20260911000000) do
     t.boolean "confidential", default: true, null: false
     t.text "jwks"
     t.string "jwks_uri"
+    t.datetime "client_id_metadata_materialized_at"
     t.index ["owner_id", "owner_type"], name: "index_oauth_applications_on_owner_id_and_owner_type"
     t.index ["uid"], name: "index_oauth_applications_on_uid", unique: true
   end
