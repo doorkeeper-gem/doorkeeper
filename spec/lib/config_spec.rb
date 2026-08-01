@@ -1924,6 +1924,41 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
+  # A document client is registered by no one, so the row it is materialized
+  # as has no owner: where ownership is enforced that row never saves and the
+  # client is refused as invalid_client, with nothing in the response saying
+  # why.
+  describe "client ID metadata documents with enforced application ownership" do
+    it "warns when application ownership is enforced" do
+      expect(Rails.logger).to receive(:warn).with(/incompatible/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+        enable_application_owner confirmation: true
+      end
+    end
+
+    it "stays quiet when ownership is enabled without confirmation" do
+      expect(Rails.logger).not_to receive(:warn).with(/incompatible/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+        enable_application_owner
+      end
+    end
+
+    it "stays quiet when client ID metadata documents are not enabled" do
+      expect(Rails.logger).not_to receive(:warn).with(/incompatible/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enable_application_owner confirmation: true
+      end
+    end
+  end
+
   describe "issuer that cannot be parsed as a URI" do
     it "warns about the non-compliant issuer" do
       expect(Rails.logger).to receive(:warn).with(/is not RFC-compliant/)
