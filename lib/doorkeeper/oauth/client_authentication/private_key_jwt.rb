@@ -101,7 +101,9 @@ module Doorkeeper
         # client_id is length-prefixed to keep that pair unambiguous: a bare
         # "#{client_id}:#{jti}" lets a client whose id ends in ":x" burn the
         # jti "x:y" of a client whose id it is a prefix of, which on a host
-        # serving several clients under one origin is another tenant's.
+        # serving several clients under one origin is another tenant's. The
+        # same prefix is what lets the built-in ReplayGuard read the client
+        # back out of a key and account for its entries separately.
         def self.replay_key(client_id, jti)
           "#{client_id.length}:#{client_id}:#{jti}"
         end
