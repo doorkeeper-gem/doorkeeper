@@ -189,6 +189,17 @@ module Doorkeeper
         @config.instance_variable_set(:@validate_client_before_resource_owner_authentication, true)
       end
 
+      # Accept https:// client_ids and resolve their metadata from the URL as
+      # described by the OAuth Client ID Metadata Document draft
+      # (draft-ietf-oauth-client-id-metadata-document). Disabled by default.
+      # Requires a `client_id_metadata_materialized_at` datetime column on
+      # the applications table, which tells the rows this feature
+      # materializes apart from registered applications; see the generated
+      # initializer's notes on the option.
+      def use_client_id_metadata_documents
+        @config.instance_variable_set(:@client_id_metadata_documents, true)
+      end
+
       # Use an API mode for applications generated with --api argument
       # It will skip applications controller, disable forgery protection
       def api_only
@@ -646,6 +657,10 @@ module Doorkeeper
 
     def validate_client_before_resource_owner_authentication?
       option_set? :validate_client_before_resource_owner_authentication
+    end
+
+    def client_id_metadata_documents?
+      option_set? :client_id_metadata_documents
     end
 
     def enforce_configured_scopes?
