@@ -108,6 +108,26 @@ RSpec.describe Doorkeeper::HttpFetcher do
       expect(request_stub).not_to have_been_requested
     end
 
+    # The other half of the SSRF guard: vetting the resolved addresses is
+    # worth nothing if the connection then resolves the name again, so the
+    # request is pinned to the address that was vetted (DNS rebinding).
+    it "pins the connection to the vetted address" do
+      stub_request(:get, url).to_return(status: 200, body: "{}")
+      pinned = nil
+      allow(Net::HTTP).to receive(:new).and_wrap_original do |original, *args|
+        original.call(*args).tap do |http|
+          allow(http).to receive(:ipaddr=).and_wrap_original do |setter, value|
+            pinned = value
+            setter.call(value)
+          end
+        end
+      end
+
+      fetcher.fetch(url)
+
+      expect(pinned).to eq(public_address)
+    end
+
     it "raises when any of several resolved addresses is special-use" do
       allow(resolver).to receive(:getaddresses).and_return([public_address, "10.0.0.5"])
       request_stub = stub_request(:get, url)
