@@ -1704,6 +1704,23 @@ RSpec.describe Doorkeeper::Config do
       expect(config.validate_client_before_resource_owner_authentication?).to be(true)
     end
 
+    it "enables use_client_id_metadata_documents" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+      end
+
+      expect(config.client_id_metadata_documents?).to be(true)
+    end
+
+    it "disables client ID metadata documents by default" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+
+      expect(config.client_id_metadata_documents?).to be(false)
+    end
+
     it "enables use_polymorphic_resource_owner" do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
