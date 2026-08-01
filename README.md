@@ -358,6 +358,16 @@ end
 
 Enabled methods are advertised in the authorization server metadata, so a registered method appears in `token_endpoint_auth_methods_supported` at `/.well-known/oauth-authorization-server` once `client_authentication` lists it — under the `auth_method_name` it declares, or under its registration key when it declares none.
 
+**Declare the signing algorithms if your method authenticates an assertion.** RFC 8414 Section 2 requires `token_endpoint_auth_signing_alg_values_supported` in the authorization server metadata whenever an assertion-based method — `private_key_jwt` or `client_secret_jwt` — is advertised. Doorkeeper publishes what the advertised strategies declare, so a `client_secret_jwt` of your own says what it accepts:
+
+```ruby
+def self.auth_signing_alg_values
+  %w[HS256]
+end
+```
+
+A strategy that authenticates no assertion declares none, and the entry stays off a server that advertises no such method.
+
 ## Example Applications
 
 These applications show how Doorkeeper works and how to integrate with it. Start with the oAuth2 server and use the clients to connect with the server.

@@ -167,4 +167,51 @@ RSpec.describe "Custom client authentication method (README example)" do
   ensure
     Doorkeeper::ClientAuthentication.registered_methods.delete(:corporate_headers)
   end
+
+  # RFC 8414 Section 2 has token_endpoint_auth_signing_alg_values_supported
+  # published whenever an assertion-based method is advertised, and a host
+  # application's own client_secret_jwt is one: the algorithms come from the
+  # strategy, so Doorkeeper's own method need not be enabled for the entry to
+  # be there.
+  it "publishes the signing algorithms a custom assertion method declares" do
+    strategy = Class.new(PartnerHeadersExample::Authentication) do
+      def self.auth_method_name = "client_secret_jwt"
+
+      def self.auth_signing_alg_values = %w[HS256 HS384]
+    end
+    Doorkeeper::ClientAuthentication.register(:partner_assertion, strategy)
+    Doorkeeper.configure do
+      orm DOORKEEPER_ORM
+      grant_flows %w[client_credentials]
+      client_authentication %i[partner_assertion none]
+    end
+
+    get "/.well-known/oauth-authorization-server"
+
+    expect(json_response["token_endpoint_auth_methods_supported"]).to include("client_secret_jwt")
+    expect(json_response["token_endpoint_auth_signing_alg_values_supported"]).to eq(%w[HS256 HS384])
+  ensure
+    Doorkeeper::ClientAuthentication.registered_methods.delete(:partner_assertion)
+  end
+
+  it "publishes the algorithms of every advertised assertion method, once each" do
+    strategy = Class.new(PartnerHeadersExample::Authentication) do
+      def self.auth_method_name = "client_secret_jwt"
+
+      def self.auth_signing_alg_values = %w[HS256 RS256]
+    end
+    Doorkeeper::ClientAuthentication.register(:partner_assertion, strategy)
+    Doorkeeper.configure do
+      orm DOORKEEPER_ORM
+      grant_flows %w[client_credentials]
+      client_authentication %i[partner_assertion private_key_jwt none]
+    end
+
+    get "/.well-known/oauth-authorization-server"
+
+    expect(json_response["token_endpoint_auth_signing_alg_values_supported"])
+      .to eq(%w[HS256] + Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::ALLOWED_ALGORITHMS)
+  ensure
+    Doorkeeper::ClientAuthentication.registered_methods.delete(:partner_assertion)
+  end
 end
