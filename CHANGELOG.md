@@ -19,6 +19,7 @@ User-visible changes worth mentioning.
 - [#1885] Index `oauth_access_grants.access_token_id` in the migration templates: since [#1879] the code-replay revocation filters access grants by that column, the "never used to filter queries" premise behind `index: false` no longer holds.
 - [#1887] [test] Pin that a requested non-default scope reaches the authorization grant and the exchanged token, and that the authorization strategy shares the controller's pre-authorization — the mismatch reported in [#1576] does not reproduce. Test-only change, closes [#1576].
 - [#1888] Document custom grant flow registration (`Doorkeeper::GrantFlow.register`) in the README with a SAML 2.0 bearer assertion (RFC 7522) walkthrough, and pin URN-shaped custom grant types with an end-to-end request spec. Docs/test-only change, closes [#764].
+- [#1890] [test] Pin that the authorization endpoint answers `invalid_redirect_uri` for a client registered without a redirect URI (`allow_blank_redirect_uri`), whether or not the request supplies one — the behavior required by RFC 6749 §3.1.2.3. Test-only change, closes [#1682].
 - Please add here
 
 ## 6.0.0.beta1

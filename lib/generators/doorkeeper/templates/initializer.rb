@@ -333,6 +333,9 @@ Doorkeeper.configure do
   # types, but you **need** to manually drop `NOT NULL` constraint from `redirect_uri`
   # column for `oauth_applications` database table.
   #
+  # You almost certainly do not want to change this. There are very, very few cases
+  # where you want to change this configuration value.
+  #
   # You can completely disable this feature with:
   #
   # allow_blank_redirect_uri false
