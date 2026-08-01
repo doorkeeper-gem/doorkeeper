@@ -42,6 +42,19 @@ module Doorkeeper
         enabled? && client_id.to_s[0, CLIENT_ID_SCHEME_PREFIX.length].casecmp?(CLIENT_ID_SCHEME_PREFIX)
       end
 
+      # Whether a client_id is resolved through its metadata document rather
+      # than through the application table. Being URL-shaped (with the
+      # feature enabled) is necessary but not sufficient: draft Section 7.2
+      # permits pre-registering Client Identifier URLs, and Section 7.1 says
+      # the https:// prefix cannot tell such a registration from a document
+      # client — the stamp can. A URL an un-stamped application holds keeps
+      # resolving as that registered application, and is never fetched, the
+      # same as while the feature is off. +registered+ is the application
+      # table's answer for the uid, nil when no application holds it.
+      def resolves_through_document?(client_id, registered)
+        url_client_id?(client_id) && (registered.nil? || materialized_row?(registered))
+      end
+
       # Resolves a client_id URL to an application, fetching and validating
       # the metadata document when it is not memoized. Returns nil on any
       # failure (invalid URL, fetch error, invalid document, or a uid held by
@@ -62,6 +75,19 @@ module Doorkeeper
       def materialized_row?(application)
         application.respond_to?(:client_id_metadata_materialized_at) &&
           application.client_id_metadata_materialized_at.present?
+      end
+
+      # Whether the application is a row the factory materialized while the
+      # feature has since been disabled. Such a row must not fall through to
+      # opaque resolution as if someone had registered it: nothing refreshes
+      # it any more, so its redirect URIs, scopes and keys are whatever its
+      # URL last served, vouched for by no one — and no one registered it in
+      # the first place. Registered applications, URL-shaped uid or not,
+      # carry no stamp and are untouched. A deployment that means to keep
+      # such a client for good can clear its stamp and own it as a
+      # registered application from then on.
+      def orphaned_materialized_row?(application)
+        !enabled? && materialized_row?(application)
       end
 
       # The validated metadata document for a client_id URL, or nil. Also
