@@ -918,5 +918,26 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect { expect(described_class.authenticate(request_with(build_assertion(header_kid: nil)))).to be_nil }
         .not_to raise_error
     end
+
+    # RFC 7523 Section 3 requires nbf to be honoured when present, so it is
+    # pinned the way exp is: a host application that disabled it globally
+    # for its own tokens does not disable it for assertions.
+    context "when the host application globally disabled not-before checking" do
+      around do |example|
+        original = JWT.configuration.decode.verify_not_before
+        JWT.configuration.decode.verify_not_before = false
+        example.run
+      ensure
+        JWT.configuration.decode.verify_not_before = original
+      end
+
+      it "still rejects an assertion that is not yet valid" do
+        credentials = described_class.authenticate(
+          request_with(build_assertion(claims: { "nbf" => Time.now.to_i + 600 })),
+        )
+
+        expect(credentials).to be_nil
+      end
+    end
   end
 end

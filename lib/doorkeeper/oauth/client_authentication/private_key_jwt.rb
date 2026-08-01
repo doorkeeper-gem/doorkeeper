@@ -170,9 +170,11 @@ module Doorkeeper
             aud: audiences,
             verify_aud: true,
             # Passed explicitly so a host application that globally disabled
-            # expiration checking for its own tokens (JWT.configuration.decode)
-            # cannot silently turn off assertion expiry verification.
+            # expiration or not-before checking for its own tokens
+            # (JWT.configuration.decode) cannot silently turn off assertion
+            # verification of either — RFC 7523 Section 3 requires both.
             verify_expiration: true,
+            verify_not_before: true,
           )
 
           # RFC 7519 §4.1.4: exp is a NumericDate — a number. The jwt gem's
