@@ -37,6 +37,9 @@ module Doorkeeper
         # (OIDC Core §9 requires all of these for private_key_jwt).
         REQUIRED_CLAIMS = %w[iss sub aud exp jti].freeze
 
+        # Claims RFC 7519 §4.1 defines as NumericDates.
+        NUMERIC_DATE_CLAIMS = %w[exp nbf iat].freeze
+
         # Upper bound on how far in the future an assertion may expire. This
         # both rejects sloppily long-lived assertions and bounds the replay
         # guard's memory.
@@ -107,6 +110,16 @@ module Doorkeeper
           # type-checked before being indexed into.
           return unless claims.is_a?(Hash)
 
+          # RFC 7519 §4.1: exp, nbf and iat are NumericDates, so a value of any
+          # other JSON type describes no assertion this server could accept.
+          # They are pinned here, before the assertion is decoded for real,
+          # because the jwt gem casts them with to_i while verifying — which
+          # raises NoMethodError rather than a JWT::DecodeError, escaping the
+          # rescue around that decode and surfacing as a 500.
+          return unless NUMERIC_DATE_CLAIMS.all? do |claim|
+            !claims.key?(claim) || numeric_date?(claims[claim])
+          end
+
           issuer = claims["iss"]
 
           issuer if issuer.is_a?(String) && issuer == claims["sub"]
@@ -114,6 +127,17 @@ module Doorkeeper
           nil
         end
         private_class_method :unverified_client_id
+
+        # A NumericDate has to be a number this server can do arithmetic on,
+        # which is narrower than Numeric: JSON has no Infinity literal, but an
+        # exponent too large for a Float — 1e400 — parses as Float::INFINITY,
+        # whose to_i raises FloatDomainError. That is a RangeError, not one of
+        # the errors the verifying decode rescues, so an infinite value has to
+        # be refused here as well.
+        def self.numeric_date?(value)
+          value.is_a?(Numeric) && value.finite?
+        end
+        private_class_method :numeric_date?
 
         def self.verified_claims(assertion, client_id, jwk_set, audiences)
           claims, = ::JWT.decode(
@@ -140,17 +164,20 @@ module Doorkeeper
           # string through (and read a non-numeric one as 0), so the type is
           # pinned before the value is compared or handed to the replay guard.
           exp = claims["exp"]
-          return unless exp.is_a?(Numeric) && exp.finite?
+          return unless numeric_date?(exp)
           return unless exp <= Time.now.to_i + MAX_LIFETIME
           return unless claims["jti"].is_a?(String) && claims["jti"].present?
 
           claims
-        rescue ::JWT::DecodeError, OpenSSL::OpenSSLError
+        rescue ::JWT::DecodeError, OpenSSL::OpenSSLError, TypeError, NoMethodError
           # A published key is only parsed far enough to be usable when it is
           # actually needed to verify a signature, so a structurally valid but
           # mathematically nonsensical key (an EC point that is not on the
           # curve, say) surfaces here as a bare OpenSSL error rather than a
-          # JWT one. Both mean the same thing: this assertion does not verify.
+          # JWT one. TypeError and NoMethodError are listed because the gem
+          # reaches for String and Integer methods on claim values it never
+          # type-checks; the claims this server requires are pinned before
+          # this decode, but a failure to verify must never become a 500.
           nil
         end
         private_class_method :verified_claims
