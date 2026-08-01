@@ -4,6 +4,7 @@ require "uri"
 
 require "doorkeeper/client_id_metadata/url_validator"
 require "doorkeeper/client_id_metadata/document"
+require "doorkeeper/client_id_metadata/application_factory"
 
 module Doorkeeper
   # Client ID Metadata Documents (draft-ietf-oauth-client-id-metadata-document):
