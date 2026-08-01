@@ -54,10 +54,11 @@ RSpec.configure do |config|
     end
     Doorkeeper.configure { orm DOORKEEPER_ORM }
 
-    # The JWKS and replay memos are process-wide and outlive an example by
-    # their own TTL, so they are reset centrally rather than left to each file
-    # that happens to touch them: with random ordering, one file's leftovers
-    # are another file's inexplicable failure.
+    # The metadata document, JWKS and replay memos are process-wide and
+    # outlive an example by their own TTL, so they are reset centrally rather
+    # than left to each file that happens to touch them: with random ordering,
+    # one file's leftovers are another file's inexplicable failure.
+    Doorkeeper::ClientIdMetadata.document_cache.clear
     Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::KeyResolver.jwks_cache.clear
     Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::ReplayGuard.instance.clear
   end
