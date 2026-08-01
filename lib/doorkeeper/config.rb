@@ -433,9 +433,14 @@ module Doorkeeper
     # shared store instead — any object answering
     # `first_use?(key, expires_at:)`, returning true when the key was never
     # seen before and remembering it until the unix time `expires_at`.
-    # Keys are strings shaped `"<length>:<client_id>:<jti>"`. A guard that
-    # stores the keys will find entries written by 6.0.0.beta2
-    # (`"<client_id>:<jti>"`) no longer match after upgrading.
+    # Keys are strings shaped `"<length>:<client_id>:<jti>"`, prefixed with
+    # `url:` for a Client ID Metadata Document client. That prefix marks
+    # which pool the built-in guard accounts an entry in, not which
+    # assertion it is: a client_id can change provenance while an assertion
+    # is still alive, and a jti is single-use per client either way, so a
+    # guard must decide first use on the key with any leading `url:` taken
+    # off. A guard that stores the keys will also find entries written by
+    # 6.0.0.beta2 (`"<client_id>:<jti>"`) no longer match after upgrading.
     #
     # @example
     #   private_key_jwt_replay_guard RedisReplayGuard.new

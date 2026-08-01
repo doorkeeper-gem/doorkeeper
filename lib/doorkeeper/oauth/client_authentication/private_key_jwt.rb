@@ -119,7 +119,7 @@ module Doorkeeper
           claims = verified_claims(assertion, client_id, jwk_set, audiences)
           return unless claims
           return unless replay_guard.first_use?(
-            replay_key(client_id, claims["jti"]),
+            replay_key(client_id, claims["jti"], document_client: document_client),
             expires_at: claims["exp"].to_i + decode_leeway,
           )
 
@@ -149,9 +149,14 @@ module Doorkeeper
         # jti "x:y" of a client whose id it is a prefix of, which on a host
         # serving several clients under one origin is another tenant's. The
         # same prefix is what lets the built-in ReplayGuard read the client
-        # back out of a key and account for its entries separately.
-        def self.replay_key(client_id, jti)
-          "#{client_id.length}:#{client_id}:#{jti}"
+        # back out of a key and account for its entries separately. A
+        # document client's key is marked as such ahead of it: the guard
+        # keeps URL clients' entries in a pool of their own, and which pool a
+        # client belongs in is a matter of provenance — decided here, where
+        # it has just been established — not of what its uid looks like.
+        def self.replay_key(client_id, jti, document_client: false)
+          key = "#{client_id.length}:#{client_id}:#{jti}"
+          document_client ? "#{ReplayGuard::URL_POOL_PREFIX}#{key}" : key
         end
         private_class_method :replay_key
 

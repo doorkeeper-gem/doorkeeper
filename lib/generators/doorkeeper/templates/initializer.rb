@@ -358,15 +358,21 @@ Doorkeeper.configure do
   # nbf is always honoured.
   #
   # jti replay is tracked in process-local memory by default (bounded at
-  # 10 000 entries, each held until the assertion's own exp, so at most 1 hour
-  # plus any global JWT.configuration.decode.leeway you have set), so an
-  # assertion replayed to a different server process is not caught. To share
-  # the tracking across processes, supply your own store (e.g. backed by
-  # Redis):
+  # 10 000 entries per pool - document clients are accounted apart from
+  # registered ones, so neither can crowd the other out - each held until the
+  # assertion's own exp, so at most 1 hour plus any global
+  # JWT.configuration.decode.leeway you have set), so an assertion replayed to
+  # a different server process is not caught. To share the tracking across
+  # processes, supply your own store (e.g. backed by Redis):
   #
   # private_key_jwt_replay_guard MyRedisReplayGuard.new
   #
-  # It is handed keys shaped "<length>:<client_id>:<jti>".
+  # It is handed keys shaped "<length>:<client_id>:<jti>", marked with a
+  # leading `url:` for a Client ID Metadata Document client. The mark says
+  # which pool the built-in guard accounts the entry in, not which assertion
+  # it is: a client_id can change provenance while an assertion is still
+  # alive, and a jti is single-use per client either way, so decide single use
+  # on the key with any leading `url:` taken off.
   #
   # JWK Sets fetched from a `jwks_uri` are cached in process-local memory
   # for 60 seconds; to change the TTL or share the cache across processes:

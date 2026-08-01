@@ -775,6 +775,17 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(described_class.authenticate(request_with(assertion))).to be_nil
     end
 
+    # The built-in guard keeps URL clients' entries in a pool of their own,
+    # and which pool a client is in is decided here, from provenance, and
+    # carried on the key: a registered client's carries no URL-pool mark.
+    it "hands the replay guard a key outside the URL pool" do
+      guard = recording_replay_guard
+      config_is_set(:private_key_jwt_replay_guard, guard)
+
+      expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+      expect(guard.calls.last[:key]).to start_with("#{client_id.length}:#{client_id}:")
+    end
+
     # The entry has to outlast the assertion, and an exp is a NumericDate: it
     # may be fractional. The guard is anchored to the truncated value because
     # that is the value the jwt gem compares against (`exp.to_i <=
@@ -1380,6 +1391,15 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
           .not_to change(Doorkeeper::Application, :count).from(0)
       end
 
+      it "hands the replay guard a key in the URL pool" do
+        stub_document("jwks" => jwks)
+        guard = recording_replay_guard
+        config_is_set(:private_key_jwt_replay_guard, guard)
+
+        expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+        expect(guard.calls.last[:key]).to start_with(described_class::ReplayGuard::URL_POOL_PREFIX)
+      end
+
       # RFC 8259 Section 8.1: a document (or jwks_uri body) that is not valid
       # UTF-8 is refused by the fetcher, before its bytes can reach a regex or
       # the base64url decoder a key member goes through.
@@ -1445,6 +1465,14 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
         it "does not verify against the keys the URL serves" do
           expect(described_class.authenticate(request_with(build_assertion(key: document_key)))).to be_nil
           expect(a_request(:get, client_id)).not_to have_been_made
+        end
+
+        it "hands the replay guard a key outside the URL pool" do
+          guard = recording_replay_guard
+          config_is_set(:private_key_jwt_replay_guard, guard)
+
+          expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+          expect(guard.calls.last[:key]).to start_with("#{client_id.length}:#{client_id}:")
         end
 
         # A stamped row outliving the feature is no registered client, so its
