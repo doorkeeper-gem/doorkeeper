@@ -74,7 +74,13 @@ module Doorkeeper
       end
 
       def jwk
-        @jwk ||= headers["jwk"] && JWT::JWK.import(headers["jwk"])
+        return @jwk if defined?(@jwk)
+
+        @jwk = headers["jwk"] && JWT::JWK.import(headers["jwk"])
+      rescue JWT::JWKError, TypeError
+        # `jwk` is attacker-controlled: anything that isn't an importable key
+        # is an invalid proof, not an exception.
+        @jwk = nil
       end
 
       def validate_presence
@@ -102,7 +108,7 @@ module Doorkeeper
       end
 
       def validate_iat
-        claims["iat"].present? &&
+        claims["iat"].is_a?(Numeric) &&
           (claims["iat"] - Time.now.to_i).abs <= Doorkeeper.config.dpop_iat_leeway
       end
 
