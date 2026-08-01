@@ -21,7 +21,7 @@ module Doorkeeper
   # in turn. An exception for authorization servers themselves running on a
   # loopback interface is intentionally not implemented. These rules follow
   # the fetch hardening of draft-ietf-oauth-client-id-metadata-document
-  # (Sections 6.5 / 6.6), which fetches documents from the same kind of
+  # (Sections 8.6 / 8.7), which fetches documents from the same kind of
   # client-chosen URL.
   #
   # The response is bounded in size — headers and body alike — and so is
@@ -35,7 +35,7 @@ module Doorkeeper
     OPEN_TIMEOUT = 5
     READ_TIMEOUT = 5
 
-    # draft-ietf-oauth-client-id-metadata-document Section 6.6 recommends a
+    # draft-ietf-oauth-client-id-metadata-document Section 8.7 recommends a
     # maximum response size of 5 kilobytes for a document like this.
     MAX_RESPONSE_SIZE = 5 * 1024
 
