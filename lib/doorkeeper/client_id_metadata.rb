@@ -40,6 +40,15 @@ module Doorkeeper
       def url_client_id?(client_id)
         enabled? && client_id.to_s[0, CLIENT_ID_SCHEME_PREFIX.length].casecmp?(CLIENT_ID_SCHEME_PREFIX)
       end
+
+      # Whether the application is a row ApplicationFactory materialized,
+      # read off the stamp the factory puts on every row it creates. What
+      # the stamp says about a row's origin holds whether or not the feature
+      # is currently enabled.
+      def materialized_row?(application)
+        application.respond_to?(:client_id_metadata_materialized_at) &&
+          application.client_id_metadata_materialized_at.present?
+      end
     end
   end
 end

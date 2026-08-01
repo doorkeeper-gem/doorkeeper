@@ -1934,4 +1934,45 @@ RSpec.describe Doorkeeper::Config do
       end
     end
   end
+
+  # Decided in the predicate rather than in a validator because the ORM
+  # extensions validate redirect URIs with code of their own (doorkeeper-sequel
+  # ships its own validator) that consults nothing but this predicate.
+  describe "allow_blank_redirect_uri?" do
+    let(:application) { FactoryBot.build(:application, redirect_uri: "") }
+
+    before do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        grant_flows %w[authorization_code]
+      end
+    end
+
+    it "refuses a blank redirect URI for a registered application under redirect-based grant flows" do
+      expect(config.allow_blank_redirect_uri?(application)).to be false
+    end
+
+    it "keeps answering for no application at all" do
+      expect(config.allow_blank_redirect_uri?).to be false
+    end
+
+    # A Client ID Metadata Document may omit redirect_uris — the draft
+    # requires registering them only for grants that redirect — so the row it
+    # materializes may store none even where registered applications must.
+    it "allows a blank redirect URI on a row materialized from a Client ID Metadata Document" do
+      application.client_id_metadata_materialized_at = Time.now.utc
+
+      expect(config.allow_blank_redirect_uri?(application)).to be true
+    end
+
+    it "allows it on a materialized row even where the configured callable refuses" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        allow_blank_redirect_uri { |_grant_flows, _application| false }
+      end
+      application.client_id_metadata_materialized_at = Time.now.utc
+
+      expect(config.allow_blank_redirect_uri?(application)).to be true
+    end
+  end
 end
