@@ -319,7 +319,18 @@ Two things are worth keeping in mind when writing one.
 
 **Keep `matches_request?` as narrow as possible.** RFC 6749 §2.3 forbids a client from using more than one authentication method in a single request, and Doorkeeper enforces that across the whole registry rather than only the enabled methods. A method that matches too broadly therefore collides with a built-in one and the request is answered with `invalid_request`. What is counted is the strategy and not the key, so registering one strategy under several names — renaming a method while keeping the old key working — stays a single method.
 
-**The returned credentials are resolved with `by_uid_and_secret`.** A blank secret resolves only a public (non-confidential) client — that is what the built-in `none` method relies on — while a confidential client is resolved only when the secret matches the registered one. A method that establishes the client's identity by some other proof, such as a client certificate or a signed assertion, therefore still has to produce the registered secret for a confidential client.
+**The returned credentials are resolved with `by_uid_and_secret`.** A blank secret resolves only a public (non-confidential) client — that is what the built-in `none` method relies on — while a confidential client is resolved only when the secret matches the registered one.
+
+A method that establishes the client's identity by some other proof, such as a client certificate or a signed assertion, has no registered secret to produce. Return a `VerifiedCredentials` instead: it carries the uid alone and skips the secret comparison, since the proof has already been checked.
+
+```ruby
+def self.authenticate(request)
+  uid = uid_from_verified_certificate(request)
+  return if uid.blank?
+
+  Doorkeeper::ClientAuthentication::VerifiedCredentials.new(uid)
+end
+```
 
 Enabled methods are advertised in the authorization server metadata, so a registered method appears in `token_endpoint_auth_methods_supported` at `/.well-known/oauth-authorization-server` once `client_authentication` lists it.
 
