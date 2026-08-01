@@ -73,6 +73,10 @@ module Doorkeeper
     # in the caller.
     JSON_MEDIA_TYPE = %r{\Aapplication/([\w.+-]+\+)?json\z}i
 
+    # U+FEFF, which RFC 8259 Section 8.1 lets a reader ignore at the start of
+    # a JSON text.
+    BYTE_ORDER_MARK = "\uFEFF"
+
     # Every non-globally-reachable range in the IANA special-purpose address
     # registries RFC 6890 established (including the ranges registered
     # after it: RFC 8215, RFC 9602, RFC 9637, RFC 9780), plus multicast
@@ -390,7 +394,20 @@ module Doorkeeper
         connection.read_timeout = [connection.read_timeout, remaining_until(deadline)].min
       end
 
-      body
+      # RFC 8259 Section 8.1: JSON exchanged between systems is UTF-8. A body
+      # that is not is no document, and its bytes would otherwise travel on
+      # tagged as UTF-8 — JSON.parse does not check — into every String
+      # method that does: ArgumentError out of a regex, or out of the
+      # base64url decoder a JWK member goes through.
+      body.force_encoding(Encoding::UTF_8)
+      raise FetchError, "the document from #{host} is not valid UTF-8" unless body.valid_encoding?
+
+      # Same section: a sender must not add a byte order mark, but a reader
+      # may ignore one. Editors put them on static files without asking, and
+      # JSON.parse reads a leading BOM as an unexpected character, which
+      # would refuse an otherwise well-formed document over a byte its author
+      # never typed.
+      body.delete_prefix(BYTE_ORDER_MARK)
     end
 
     def monotonic_now
