@@ -42,6 +42,40 @@ module Doorkeeper
         enabled? && client_id.to_s[0, CLIENT_ID_SCHEME_PREFIX.length].casecmp?(CLIENT_ID_SCHEME_PREFIX)
       end
 
+      # The host of a document client's client_id URL, for the consent
+      # screen: draft Section 8.5 has the server display it alongside
+      # whatever the document said about itself, since nothing in the
+      # document (client_name included) is verified and the host is the one
+      # part of the identity the client demonstrably controls. nil for a
+      # registered application — one with an opaque uid, and equally one
+      # pre-registered under a URL-shaped uid (Section 7.2): nothing was
+      # fetched from that URL, so its host vouches for nothing.
+      # A non-default port is kept: two client_ids differing only in it are
+      # two clients (the draft compares the URLs as strings), and dropping it
+      # would show them under one name.
+      #
+      # Asked of the row's provenance alone, not of the option: a row this
+      # feature materialized keeps its host after the option is turned off,
+      # where it still appears on the authorized applications page and its
+      # already-issued tokens are still live. That page is where a resource
+      # owner decides what to revoke, and leaving the document's unverified
+      # client_name standing there by itself is the opposite of what Section
+      # 8.5 asks for. The uid of such a row is an https:// URL the factory
+      # validated before writing it; anything else parses to no host and is
+      # answered nil below.
+      def display_host(application)
+        return unless materialized_row?(application)
+
+        uri = URI.parse(application.uid)
+        host = uri.host.presence
+        return unless host
+        return host if uri.port.nil? || uri.port == uri.default_port
+
+        "#{host}:#{uri.port}"
+      rescue URI::InvalidURIError
+        nil
+      end
+
       # Whether a client_id is resolved through its metadata document rather
       # than through the application table. Being URL-shaped (with the
       # feature enabled) is necessary but not sufficient: draft Section 7.2
