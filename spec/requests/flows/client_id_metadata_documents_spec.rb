@@ -135,6 +135,22 @@ feature "Client ID Metadata Documents" do
     expect(json_response).to include("error" => "invalid_client")
   end
 
+  # RFC 6749 Section 4.4: the client credentials grant is for confidential
+  # clients. A document naming "none" describes a public one, and nobody
+  # registered it, so honouring the grant would hand a token to whoever can
+  # host that document.
+  scenario "a public document client is refused the client credentials grant" do
+    config_is_set(:grant_flows, %w[authorization_code client_credentials])
+    stub_metadata_document
+
+    page.driver.post token_endpoint_url,
+                     grant_type: "client_credentials", client_id: client_id_url
+
+    expect(json_response).to include("error" => "invalid_client")
+    expect(json_response).not_to have_key("access_token")
+    expect(Doorkeeper::AccessToken.count).to eq(0)
+  end
+
   # The document is re-resolved at the token endpoint too, not only at the
   # authorization endpoint: a row that no longer materializes must not keep
   # authenticating on the metadata it was created from.
@@ -417,6 +433,28 @@ feature "Client ID Metadata Documents" do
                      client_secret: "legacy-secret"
 
     expect(json_response).to include("access_token")
+    expect(request_stub).not_to have_been_requested
+  end
+
+  # A registered public client keeps the client credentials grant Doorkeeper
+  # has long allowed it (see ClientCredentials::Validator), whatever its uid
+  # looks like: the confidentiality rule for document clients goes by
+  # provenance, not by the https:// prefix.
+  scenario "a pre-registered public application holding a URL uid keeps the client credentials grant" do
+    legacy = Doorkeeper::Application.create!(
+      name: "Legacy public",
+      uid: client_id_url,
+      confidential: false,
+      redirect_uri: redirect_uri,
+    )
+    request_stub = stub_metadata_document
+
+    page.driver.post token_endpoint_url,
+                     grant_type: "client_credentials",
+                     client_id: client_id_url
+
+    expect(json_response).to include("access_token")
+    expect(Doorkeeper::AccessToken.last.application_id).to eq(legacy.id)
     expect(request_stub).not_to have_been_requested
   end
 end
