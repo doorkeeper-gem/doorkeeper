@@ -130,6 +130,22 @@ RSpec.describe Doorkeeper::Server do
       expect(server.credentials.authenticated_with).to be_nil
     end
 
+    it "clears a name set by a strategy that declares its name as nil" do
+      strategy = Class.new do
+        def self.matches_request?(_request) = true
+
+        def self.auth_method_name = nil
+
+        def self.authenticate(_request)
+          Doorkeeper::ClientAuthentication::VerifiedCredentials.new("uid", authenticated_with: "private_key_jwt")
+        end
+      end
+      allow(Doorkeeper::Request).to receive(:client_authentication_method).and_return(strategy)
+      server = described_class.new(double(:context, request: mock_request))
+
+      expect(server.credentials.authenticated_with).to be_nil
+    end
+
     it "leaves the name nil when the strategy declares none" do
       strategy = Class.new do
         def self.matches_request?(_request) = true

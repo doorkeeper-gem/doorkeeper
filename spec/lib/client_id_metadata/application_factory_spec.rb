@@ -101,6 +101,12 @@ RSpec.describe Doorkeeper::ClientIdMetadata::ApplicationFactory do
       described_class.send(:log_invalid_row, document, application)
     end
 
+    it "logs a row's refusal when the row has no errors to read" do
+      expect(Rails.logger).to receive(:warn).with(/fails validation \(nil\)/)
+
+      described_class.send(:log_invalid_row, document, Object.new)
+    end
+
     it "leaves a confidential row alone when the model cannot renew a secret" do
       application = double("application", confidential: true, secret: nil)
 

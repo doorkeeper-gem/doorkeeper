@@ -163,4 +163,28 @@ RSpec.describe Doorkeeper::ClientIdMetadata do
       expect(described_class.resolve(url)).not_to be_nil
     end
   end
+
+  describe ".document_for" do
+    before { config_is_set(:client_id_metadata_documents, true) }
+
+    it "is nil for an opaque client_id, without fetching anything" do
+      expect(Doorkeeper::HttpFetcher).not_to receive(:new)
+
+      expect(described_class.document_for("abc123")).to be_nil
+    end
+  end
+
+  # The callers hand over whatever the request resolved, which may be no
+  # client at all, or a client object whose application is gone.
+  describe ".public_document_client?" do
+    before { config_is_set(:client_id_metadata_documents, true) }
+
+    it "is false when there is no client" do
+      expect(described_class.public_document_client?(nil)).to be false
+    end
+
+    it "is false for a client with no application" do
+      expect(described_class.public_document_client?(double(application: nil))).to be false
+    end
+  end
 end

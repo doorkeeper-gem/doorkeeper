@@ -41,6 +41,10 @@ RSpec.describe Doorkeeper::ClientAuthentication::Method do
     it "answers nil for a strategy that declares none" do
       expect(described_class.new(:mtls, double).auth_method_name).to be_nil
     end
+
+    it "answers nil for a strategy that declares its name as nil" do
+      expect(described_class.new(:mtls, double(auth_method_name: nil)).auth_method_name).to be_nil
+    end
   end
 
   describe "#auth_signing_alg_values" do
