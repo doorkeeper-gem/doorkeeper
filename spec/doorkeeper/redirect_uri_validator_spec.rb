@@ -185,5 +185,18 @@ RSpec.describe Doorkeeper::RedirectUriValidator do
       client.name = "admin app"
       expect(client).to be_valid
     end
+
+    # A Client ID Metadata Document may omit redirect_uris — the draft
+    # requires registering them only for grants that redirect — so the row
+    # it materializes may store none even where registered applications
+    # must. An empty registration never matches at authorization time, so
+    # this closes only the redirect-based flows for that client.
+    it "permits a blank redirect uri on a row materialized from a metadata document" do
+      client.redirect_uri = ""
+      expect(client).to be_invalid
+
+      client.client_id_metadata_materialized_at = Time.now.utc
+      expect(client).to be_valid
+    end
   end
 end
