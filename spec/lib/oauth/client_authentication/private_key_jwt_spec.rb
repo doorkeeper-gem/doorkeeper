@@ -340,6 +340,18 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(credentials).to be_nil
     end
 
+    # Verifying an assertion needs no private parameter, so a key set that
+    # publishes one belongs to a client that has disclosed its own credential.
+    # A model storing what JWT::JWK#export returns hands the Hash back keyed
+    # by symbols, so the filter has to look for both spellings.
+    it "rejects an assertion verified by a key published with its private parameters" do
+      allow(application).to receive(:jwks).and_return(
+        keys: [JWT::JWK.new(rsa_key, { kid: kid }).export(include_private: true)],
+      )
+
+      expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+    end
+
     it "rejects unsigned assertions" do
       credentials = described_class.authenticate(
         request_with(build_assertion(key: nil, alg: "none", header_kid: nil)),
@@ -573,6 +585,10 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       ["a key whose member is null", { "keys" => [{ "kty" => "RSA", "n" => nil, "e" => "AQAB" }] }],
       ["a kid-bearing key whose member is a number",
        { "keys" => [{ "kty" => "RSA", "kid" => "test-key", "n" => 123, "e" => "AQAB" }] },],
+      ["only symmetric keys", { "keys" => [{ "kty" => "oct", "k" => "AA" }] }],
+      # Verifying an assertion needs no private parameter, so a key set that
+      # publishes one is a client that has disclosed its own credential.
+      ["only keys carrying private material", { "keys" => [{ "kty" => "RSA", "n" => "AA", "e" => "AQAB", "d" => "AA" }] }],
       ["an empty keys array", { "keys" => [] }],
       ["an unparseable JSON string", "{not json"],
     ].each do |description, value|
@@ -582,6 +598,16 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
         expect { expect(described_class.authenticate(request_with(build_assertion))).to be_nil }
           .not_to raise_error
       end
+    end
+
+    # A key serialized with nulls for the private parameters it does not
+    # have publishes no private material, and the jwt gem reads it as the
+    # public key it is.
+    it "verifies against a key whose private members are null" do
+      exported = JWT::JWK.new(rsa_key, { kid: kid }).export
+      allow(application).to receive(:jwks).and_return("keys" => [exported.merge("d" => nil, "p" => nil)])
+
+      expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
     end
 
     # The keys of a registered application are fetched over https only, the
