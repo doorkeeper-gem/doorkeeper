@@ -408,9 +408,18 @@ RSpec.describe Doorkeeper::HttpFetcher do
       ::ffff:127.0.0.1
       ::ffff:192.168.0.1
       64:ff9b::1
+      64:ff9b:1::1
+      64:ff9b:1:ffff::1
       100::1
+      100:0:0:1::1
+      2001::1
+      2001:1ff:ffff:ffff:ffff:ffff:ffff:ffff
       2001:db8::1
       2002::1
+      3fff::1
+      3fff:fff::1
+      5f00::1
+      5f00:ffff::1
       fc00::1
       fdff::1
       fe80::1
@@ -430,6 +439,9 @@ RSpec.describe Doorkeeper::HttpFetcher do
       172.32.0.1
       198.17.255.255
       2606:2800:220:1:248:1893:25c8:1946
+      64:ff9b:2::1
+      4000::1
+      6000::1
       ::ffff:8.8.8.8
       ::ffff:93.184.216.34
     ]
