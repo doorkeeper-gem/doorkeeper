@@ -2,6 +2,8 @@
 
 require "uri"
 
+require "doorkeeper/client_id_metadata/url_validator"
+
 module Doorkeeper
   # Client ID Metadata Documents (draft-ietf-oauth-client-id-metadata-document):
   # clients identify themselves with an https:// client_id from which the
