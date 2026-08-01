@@ -39,9 +39,17 @@ RSpec.describe Doorkeeper::ClientAuthentication::Method do
       expect(declared.uses_shared_secret?).to be false
     end
 
-    it "falls back to the registration name when undeclared" do
+    # Whatever the name suggests: the callers asking are about to admit an
+    # unregistered client, so a strategy that has not said it is secret-free
+    # is not.
+    it "treats an undeclared strategy as secret-based" do
       expect(described_class.new(:my_client_secret_thing, double).uses_shared_secret?).to be true
-      expect(described_class.new(:tls_client_auth, double).uses_shared_secret?).to be false
+      expect(described_class.new(:tls_client_auth, double).uses_shared_secret?).to be true
+    end
+
+    it "treats anything but an explicit false as secret-based" do
+      expect(described_class.new(:tls_client_auth, double(uses_shared_secret?: nil)).uses_shared_secret?).to be true
+      expect(described_class.new(:tls_client_auth, double(uses_shared_secret?: "no")).uses_shared_secret?).to be true
     end
   end
 end
