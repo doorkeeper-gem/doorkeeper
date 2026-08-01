@@ -42,6 +42,19 @@ module Doorkeeper
         enabled? && client_id.to_s[0, CLIENT_ID_SCHEME_PREFIX.length].casecmp?(CLIENT_ID_SCHEME_PREFIX)
       end
 
+      # Resolves a client_id URL to an application, fetching and validating
+      # the metadata document when it is not memoized. Returns nil on any
+      # failure (invalid URL, fetch error, invalid document, or a uid held by
+      # a registered application — see resolves_through_document? for the
+      # check callers make before fetching), which callers surface as the
+      # usual invalid_client error.
+      def resolve(client_id)
+        document = document_for(client_id)
+        return unless document
+
+        ApplicationFactory.upsert(document)
+      end
+
       # Whether the application is a row ApplicationFactory materialized,
       # read off the stamp the factory puts on every row it creates. What
       # the stamp says about a row's origin holds whether or not the feature
@@ -49,6 +62,24 @@ module Doorkeeper
       def materialized_row?(application)
         application.respond_to?(:client_id_metadata_materialized_at) &&
           application.client_id_metadata_materialized_at.present?
+      end
+
+      # The validated metadata document for a client_id URL, or nil. Also
+      # used by client authentication methods that need document contents
+      # (e.g. jwks) rather than the materialized application.
+      def document_for(client_id)
+        return unless url_client_id?(client_id)
+        return unless UrlValidator.valid?(client_id)
+
+        document_cache.fetch(client_id) do
+          Document.parse!(client_id, HttpFetcher.new.fetch(client_id))
+        end
+      rescue HttpFetcher::FetchError, Document::ValidationError
+        nil
+      end
+
+      def document_cache
+        @document_cache ||= DocumentCache.new
       end
     end
   end
