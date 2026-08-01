@@ -322,6 +322,12 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
         expect(response).to be_a(Doorkeeper::OAuth::ErrorResponse)
         expect(response.body[:error]).to eq(:invalid_target)
       end
+
+      # A rejected request must not reach the issuer: the error response is
+      # returned either way, so a token minted here would be an invisible leak.
+      it "does not mint a token for the rejected request" do
+        expect { request.authorize }.not_to(change { Doorkeeper::AccessToken.count })
+      end
     end
 
     context "without resource indicator" do
