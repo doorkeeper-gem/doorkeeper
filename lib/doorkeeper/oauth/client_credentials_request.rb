@@ -35,8 +35,14 @@ module Doorkeeper
         )
       end
 
+      # The declared validations (DPoP proof, resource indicators) run first and
+      # short-circuit issuance: a request that fails one of them must never
+      # reach the creator.
       def validate
-        super && issuer.create(client, scopes, dpop_token_attributes.merge(custom_token_attributes_with_data))
+        super
+        return if @error
+
+        issuer.create(client, scopes, dpop_token_attributes.merge(custom_token_attributes_with_data))
       end
 
       private
