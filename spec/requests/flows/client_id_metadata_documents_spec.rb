@@ -74,6 +74,30 @@ feature "Client ID Metadata Documents" do
     expect(Doorkeeper::Application.where(uid: client_id_url).count).to eq(1)
   end
 
+  # The document names both the authentication method and the keys, so a
+  # request carrying only a client_id — which authenticates as "none" — is
+  # refused for not being the method the document selected, before the row
+  # it materialized is consulted at all.
+  scenario "a confidential document client cannot get a token without authenticating" do
+    stub_metadata_document(
+      metadata.merge(
+        "token_endpoint_auth_method" => "private_key_jwt",
+        "jwks" => { "keys" => [{ "kty" => "RSA", "kid" => "k", "n" => "AA", "e" => "AQAB" }] },
+      ).to_json,
+    )
+    config_is_set(:client_authentication, %i[client_secret_basic client_secret_post none private_key_jwt])
+
+    visit authorization_endpoint_url(client_id: client_id_url, redirect_uri: redirect_uri)
+    click_on "Authorize"
+    code = current_params["code"]
+
+    page.driver.post token_endpoint_url,
+                     token_endpoint_params(code: code, client_id: client_id_url, redirect_uri: redirect_uri)
+
+    expect(json_response).to include("error" => "invalid_client")
+    expect(Doorkeeper::AccessToken.count).to eq(0)
+  end
+
   # A client's own scopes replace the server's as the allow-list, so a
   # document naming a scope this server never configured must not resolve at
   # all — otherwise hosting a JSON file is enough to be issued a token for it.
