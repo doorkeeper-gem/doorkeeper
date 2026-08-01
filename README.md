@@ -331,7 +331,7 @@ module PartnerHeaders
 end
 ```
 
-Two things are worth keeping in mind when writing one.
+Three things are worth keeping in mind when writing one.
 
 **Keep `matches_request?` as narrow as possible.** RFC 6749 §2.3 forbids a client from using more than one authentication method in a single request, and Doorkeeper enforces that across the whole registry rather than only the enabled methods. A method that matches too broadly therefore collides with a built-in one and the request is answered with `invalid_request`. What is counted is the strategy and not the key, so registering one strategy under several names — renaming a method while keeping the old key working — stays a single method.
 
@@ -345,6 +345,14 @@ def self.authenticate(request)
   return if uid.blank?
 
   Doorkeeper::ClientAuthentication::VerifiedCredentials.new(uid)
+end
+```
+
+**Declare the IANA name of the method you implement.** Doorkeeper records which method authenticated a request, so that a caller needing to know *how* a client authenticated does not have to trust each strategy to say so. Expose it as `auth_method_name` — the name as registered with [IANA](https://www.iana.org/assignments/oauth-parameters/oauth-parameters.xhtml#token-endpoint-auth-method), which is how a client naming the method in its metadata would write it, and which need not match the key you registered the strategy under:
+
+```ruby
+def self.auth_method_name
+  "tls_client_auth"
 end
 ```
 
