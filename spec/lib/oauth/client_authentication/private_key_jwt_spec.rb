@@ -68,8 +68,9 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
     end.new
   end
 
-  def request_with(assertion, extra_params = {})
+  def request_with(assertion, extra_params = {}, path: "/oauth/token")
     mock_request(
+      path: path,
       request_parameters: {
         client_assertion: assertion,
         client_assertion_type: described_class::CLIENT_ASSERTION_TYPE,
@@ -171,11 +172,12 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(credentials).not_to be_nil
     end
 
+    # An endpoint other than the token endpoint, so this genuinely exercises
+    # the request-path audience rather than passing on the issuer or the
+    # token endpoint URL that the examples above already accept.
     it "accepts the called endpoint's URL as audience" do
-      request = request_with(build_assertion)
-
       credentials = described_class.authenticate(
-        request_with(build_assertion(claims: { "aud" => "#{issuer}#{request.path}" })),
+        request_with(build_assertion(claims: { "aud" => "#{issuer}/oauth/revoke" }), path: "/oauth/revoke"),
       )
 
       expect(credentials).not_to be_nil
@@ -186,6 +188,14 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
     it "rejects the URL of another endpoint on the server as audience" do
       credentials = described_class.authenticate(
         request_with(build_assertion(claims: { "aud" => "#{issuer}/other" })),
+      )
+
+      expect(credentials).to be_nil
+    end
+
+    it "rejects an assertion minted for a different endpoint of this server" do
+      credentials = described_class.authenticate(
+        request_with(build_assertion(claims: { "aud" => "#{issuer}/oauth/authorize" }), path: "/oauth/revoke"),
       )
 
       expect(credentials).to be_nil
@@ -399,9 +409,11 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
         expect(credentials).not_to be_nil
       end
 
+      # Called at another endpoint, so the token endpoint URL is not also the
+      # called endpoint's URL, which is always accepted.
       it "no longer accepts the token endpoint URL as audience" do
         credentials = described_class.authenticate(
-          request_with(build_assertion(claims: { "aud" => "#{issuer}/oauth/token" })),
+          request_with(build_assertion(claims: { "aud" => "#{issuer}/oauth/token" }), path: "/oauth/revoke"),
         )
 
         expect(credentials).to be_nil
@@ -409,13 +421,13 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
     end
 
     it "accepts a matching client_id parameter next to the assertion" do
-      credentials = described_class.authenticate(request_with(build_assertion, client_id: client_id))
+      credentials = described_class.authenticate(request_with(build_assertion, { client_id: client_id }))
 
       expect(credentials).not_to be_nil
     end
 
     it "rejects a client_id parameter that contradicts the assertion issuer" do
-      credentials = described_class.authenticate(request_with(build_assertion, client_id: "someone-else"))
+      credentials = described_class.authenticate(request_with(build_assertion, { client_id: "someone-else" }))
 
       expect(credentials).to be_nil
     end
