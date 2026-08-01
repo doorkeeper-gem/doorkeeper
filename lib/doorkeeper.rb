@@ -8,6 +8,7 @@ require "doorkeeper/engine"
 module Doorkeeper
   autoload :Errors, "doorkeeper/errors"
   autoload :ClientAuthentication, "doorkeeper/client_authentication"
+  autoload :ClientIdMetadata, "doorkeeper/client_id_metadata"
   autoload :DocumentCache, "doorkeeper/document_cache"
   autoload :GrantFlow, "doorkeeper/grant_flow"
   autoload :HttpFetcher, "doorkeeper/http_fetcher"
