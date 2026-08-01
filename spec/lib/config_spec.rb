@@ -1830,6 +1830,83 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
+  # RFC 8414 Section 2 requires token_endpoint_auth_signing_alg_values_supported
+  # whenever an assertion-based method is advertised and defines no default, so
+  # a strategy declaring one of those names without saying what it accepts
+  # leaves the metadata document non-compliant with nothing in it to say so.
+  describe "an assertion method that declares no signing algorithms" do
+    def register(key, name, algs)
+      strategy = double(matches_request?: false, authenticate: nil, auth_method_name: name)
+      allow(strategy).to receive(:auth_signing_alg_values).and_return(algs) unless algs == :undeclared
+      Doorkeeper::ClientAuthentication.register(key, strategy)
+    end
+
+    after { Doorkeeper::ClientAuthentication.registered_methods.delete(:partner_assertion) }
+
+    it "warns when the strategy declares none" do
+      register(:partner_assertion, "client_secret_jwt", :undeclared)
+
+      expect(Rails.logger).to receive(:warn).with(/auth_signing_alg_values/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication %i[client_secret_basic partner_assertion]
+      end
+    end
+
+    it "stays quiet when the strategy declares them" do
+      register(:partner_assertion, "client_secret_jwt", %w[HS256])
+
+      expect(Rails.logger).not_to receive(:warn).with(/auth_signing_alg_values/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication %i[client_secret_basic partner_assertion]
+      end
+    end
+
+    # The warning is about the two names RFC 8414 attaches the requirement to,
+    # not about every method that declares nothing.
+    it "stays quiet for a method the requirement does not name" do
+      register(:partner_assertion, "tls_client_auth", :undeclared)
+
+      expect(Rails.logger).not_to receive(:warn).with(/auth_signing_alg_values/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication %i[client_secret_basic partner_assertion]
+      end
+    end
+
+    # A strategy declaring no IANA name is advertised under its registration
+    # key, so a host registering one as :client_secret_jwt advertises that
+    # method just the same — and needs the same warning.
+    it "warns for a strategy registered under the name it declares nothing about" do
+      Doorkeeper::ClientAuthentication.register(
+        :client_secret_jwt,
+        double(matches_request?: false, authenticate: nil),
+      )
+
+      expect(Rails.logger).to receive(:warn).with(/auth_signing_alg_values/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication %i[client_secret_basic client_secret_jwt]
+      end
+    ensure
+      Doorkeeper::ClientAuthentication.registered_methods.delete(:client_secret_jwt)
+    end
+
+    it "stays quiet for Doorkeeper's own private_key_jwt" do
+      expect(Rails.logger).not_to receive(:warn).with(/auth_signing_alg_values/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication %i[client_secret_basic private_key_jwt]
+      end
+    end
+  end
+
   describe "issuer that cannot be parsed as a URI" do
     it "warns about the non-compliant issuer" do
       expect(Rails.logger).to receive(:warn).with(/is not RFC-compliant/)
