@@ -352,8 +352,8 @@ Doorkeeper.configure do
   # attributes you define on your Application model (Doorkeeper does not add
   # these columns itself). Assertions must carry iss = sub =
   # client_id, an aud of your `issuer` (or the token endpoint URL), a bounded
-  # exp (at most 1 hour ahead), a kid header, and a single-use jti. exp, nbf
-  # and iat must be JSON numbers where present.
+  # exp (at most 1 hour ahead), a kid header, and a single-use jti of at most
+  # 255 characters. exp, nbf and iat must be JSON numbers where present.
   #
   # jti replay is tracked in process-local memory by default (bounded at
   # 10 000 entries, each held at most 1 hour), so an assertion replayed to a
