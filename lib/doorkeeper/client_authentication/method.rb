@@ -35,6 +35,23 @@ module Doorkeeper
 
         strategy.uses_shared_secret? != false
       end
+
+      # The IANA token endpoint authentication method name the wrapped
+      # strategy implements, which is the strategy's own knowledge — unlike
+      # +name+, the registration key a host application chooses freely and
+      # which the two need not share. Callers matching a name a client wrote
+      # down (a metadata document's token_endpoint_auth_method) must compare
+      # against this one.
+      #
+      # A strategy that declares none answers +nil+, which no such name can
+      # match.
+      #
+      # Answered as a String whatever the strategy declared it as — a Symbol
+      # comes naturally to a strategy registered under one — so that every
+      # comparison made against it sees the one shape.
+      def auth_method_name
+        strategy.auth_method_name&.to_s if strategy.respond_to?(:auth_method_name)
+      end
     end
   end
 end

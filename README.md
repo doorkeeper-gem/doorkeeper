@@ -348,7 +348,7 @@ def self.authenticate(request)
 end
 ```
 
-Enabled methods are advertised in the authorization server metadata, so a registered method appears in `token_endpoint_auth_methods_supported` at `/.well-known/oauth-authorization-server` once `client_authentication` lists it.
+Enabled methods are advertised in the authorization server metadata, so a registered method appears in `token_endpoint_auth_methods_supported` at `/.well-known/oauth-authorization-server` once `client_authentication` lists it — under the `auth_method_name` it declares, or under its registration key when it declares none.
 
 ## Example Applications
 

@@ -32,6 +32,17 @@ RSpec.describe Doorkeeper::ClientAuthentication::Method do
     method.authenticate(example: true)
   end
 
+  describe "#auth_method_name" do
+    it "answers the name the strategy declares, as a String whatever it declared it as" do
+      expect(described_class.new(:mtls, double(auth_method_name: :tls_client_auth)).auth_method_name)
+        .to eq("tls_client_auth")
+    end
+
+    it "answers nil for a strategy that declares none" do
+      expect(described_class.new(:mtls, double).auth_method_name).to be_nil
+    end
+  end
+
   describe "#uses_shared_secret?" do
     it "trusts a strategy that declares it" do
       declared = described_class.new(:client_secret_sounding, double(uses_shared_secret?: false))

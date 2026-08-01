@@ -145,9 +145,25 @@ module Doorkeeper
       # configuration is honored as the source of truth. Legacy callable
       # extractors have no registered method name a client could use, so they
       # are not advertised.
+      #
+      # What is advertised is the IANA name the strategy declares, which is
+      # the name a client writes down (in a request, or in a metadata
+      # document's token_endpoint_auth_method) — not the key the host
+      # application registered it under, which it chooses freely and which the
+      # two need not share. A strategy declaring no name has only its
+      # registration key to offer, so that is still what is published for it.
       def token_endpoint_auth_methods_supported
-        config.client_authentication_methods.filter_map do |method|
-          method.name.to_s if Doorkeeper::ClientAuthentication.get(method.name)
+        advertised_client_authentication_methods.map do |method|
+          (method.auth_method_name || method.name).to_s
+        end.uniq
+      end
+
+      # The configured methods that are still registered. An entry naming a
+      # method the registry does not know cannot authenticate anyone, so it is
+      # not advertised.
+      def advertised_client_authentication_methods
+        config.client_authentication_methods.select do |method|
+          Doorkeeper::ClientAuthentication.get(method.name)
         end
       end
 
