@@ -869,7 +869,17 @@ module Doorkeeper
       flows.flatten.uniq
     end
 
+    # Besides the configured allowance, a row materialized from a Client ID
+    # Metadata Document may store no redirect URI even where registered
+    # applications must have one: the draft requires registering redirect
+    # URIs only for grants that redirect, and an empty registration never
+    # matches at authorization time (URIChecker.valid_for_authorization?),
+    # so this closes only the redirect-based flows for that client. Decided
+    # here rather than in a validator because the ORM extensions validate
+    # redirect URIs with code of their own that consults this predicate.
     def allow_blank_redirect_uri?(application = nil)
+      return true if ClientIdMetadata.materialized_row?(application)
+
       if allow_blank_redirect_uri.respond_to?(:call)
         allow_blank_redirect_uri.call(grant_flows, application)
       else

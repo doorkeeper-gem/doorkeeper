@@ -411,6 +411,11 @@ Doorkeeper.configure do
   #
   # allow_blank_redirect_uri false
   #
+  # Rows materialized from a Client ID Metadata Document are exempt from this
+  # check whatever it is set to (see use_client_id_metadata_documents below):
+  # a document need only publish redirect URIs for the grants that redirect,
+  # and an empty registration never matches at authorization time.
+  #
   # Or you can define your custom check:
   #
   # allow_blank_redirect_uri do |grant_flows, client|
