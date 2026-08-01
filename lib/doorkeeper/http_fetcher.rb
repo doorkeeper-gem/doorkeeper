@@ -24,9 +24,9 @@ module Doorkeeper
   # (Sections 6.5 / 6.6), which fetches documents from the same kind of
   # client-chosen URL.
   #
-  # The response body is bounded and so is the time the whole exchange may
-  # take: a per-read timeout alone does not stop a server that dribbles
-  # bytes out indefinitely.
+  # The response is bounded in size — headers and body alike — and so is
+  # the time the whole exchange may take: a per-read timeout alone does not
+  # stop a server that dribbles bytes out indefinitely.
   #
   # Everything about the response is chosen by whoever hosts the document —
   # which is whoever supplied the URL — so no failure mode here may escape
@@ -38,6 +38,17 @@ module Doorkeeper
     # draft-ietf-oauth-client-id-metadata-document Section 6.6 recommends a
     # maximum response size of 5 kilobytes for a document like this.
     MAX_RESPONSE_SIZE = 5 * 1024
+
+    # Net::HTTP reads the status line, every header line and every chunk-size
+    # line of a chunked body through its buffered socket with no limit on
+    # their length — and before the response object exists, so before
+    # anything below could look at it. What a host could push in that phase
+    # would be bounded by nothing but its bandwidth and MAX_TOTAL_TIME. The
+    # budget is therefore enforced at the socket: every byte read for the
+    # exchange counts, and the exchange is abandoned once it has read more
+    # than a document and the headers around it could legitimately need.
+    MAX_HEADER_SIZE = 8 * 1024
+    MAX_EXCHANGE_SIZE = MAX_RESPONSE_SIZE + MAX_HEADER_SIZE
 
     # Ceiling on the HTTP exchange — connect, headers and body — so a host
     # answering a byte at a time cannot hold the connection (and the thread
@@ -117,6 +128,57 @@ module Doorkeeper
     # TCP connection such as failing to complete a TLS handshake.
     ConnectError = Class.new(StandardError)
     private_constant :ConnectError
+
+    # The buffered socket Net::HTTP reads through, counting what it reads.
+    # Only the fill is overridden: net-protocol has kept the buffer's shape
+    # across its versions (a fill appends to the unread bytes, a consume
+    # advances past them), so the count is taken as the growth of the unread
+    # buffer around each fill.
+    class BoundedBufferedIO < Net::BufferedIO
+      attr_accessor :byte_budget, :host
+
+      private
+
+      def rbuf_fill
+        before = unread_bytes
+        super
+        @bytes_read = (@bytes_read || 0) + [unread_bytes - before, 0].max
+        return if byte_budget.nil? || @bytes_read <= byte_budget
+
+        raise FetchError, "the response from #{host} exceeds #{byte_budget} bytes, headers included"
+      end
+
+      def unread_bytes
+        @rbuf.bytesize - (@rbuf_offset || 0)
+      end
+    end
+    private_constant :BoundedBufferedIO
+
+    # Swaps the socket for the counting one as soon as the connection (TLS
+    # handshake included) is up: on_connect is the hook Net::HTTP calls right
+    # after wrapping the socket and before reading anything from it. Mixed
+    # into the one Net::HTTP instance rather than subclassing Net::HTTP, so
+    # that whatever Net::HTTP resolves to when a fetch is made — a test
+    # double's subclass included — is what gets extended.
+    module BoundedExchange
+      attr_accessor :byte_budget
+
+      private
+
+      def on_connect
+        @socket = BoundedBufferedIO.new(
+          @socket.io,
+          read_timeout: @socket.read_timeout,
+          write_timeout: @socket.write_timeout,
+          continue_timeout: @socket.continue_timeout,
+          debug_output: @socket.debug_output,
+        )
+        @socket.byte_budget = byte_budget
+        @socket.host = address
+        super
+      end
+    end
+    private_constant :BoundedExchange
 
     # Everything a host can fail at while answering, so that it surfaces as
     # a rejected client rather than an exception out of the endpoint.
@@ -229,6 +291,8 @@ module Doorkeeper
       raise ConnectError, "no time left to connect to #{address}" if remaining <= 0
 
       Net::HTTP.new(uri.hostname, uri.port).tap do |http|
+        http.extend(BoundedExchange)
+        http.byte_budget = MAX_EXCHANGE_SIZE
         http.use_ssl = true
         http.ipaddr = address
         # Net::HTTP can use up to the whole `open_timeout` establishing the TCP
@@ -299,7 +363,9 @@ module Doorkeeper
 
     # Reads the response in chunks so an oversized (or endlessly dribbled)
     # body is abandoned instead of buffered in full. Raising here unwinds
-    # out of Net::HTTP#start, which closes the connection.
+    # out of Net::HTTP#start, which closes the connection. (The socket's own
+    # budget, MAX_EXCHANGE_SIZE, would catch an oversized body too, headers
+    # permitting; this check is the one that names the body.)
     def bounded_body(response, connection, host, deadline)
       declared = response["Content-Length"]
       if declared && declared.to_i > MAX_RESPONSE_SIZE
