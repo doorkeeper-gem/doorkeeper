@@ -40,6 +40,11 @@ module Doorkeeper
         # Claims RFC 7519 §4.1 defines as NumericDates.
         NUMERIC_DATE_CLAIMS = %w[exp nbf iat].freeze
 
+        # Upper bound on a remembered jti. The replay guard holds one entry per
+        # assertion for up to MAX_LIFETIME, so an unbounded jti would let a
+        # client choose how much memory each of those entries costs.
+        MAX_JTI_LENGTH = 255
+
         # Upper bound on how far in the future an assertion may expire. This
         # both rejects sloppily long-lived assertions and bounds the replay
         # guard's memory.
@@ -182,7 +187,7 @@ module Doorkeeper
           # (present? does): the jti is keyed on by the replay guard, and the
           # bytes came straight out of the assertion.
           jti = claims["jti"]
-          return unless jti.is_a?(String) && jti.valid_encoding? && jti.present?
+          return unless jti.is_a?(String) && jti.valid_encoding? && jti.present? && jti.length <= MAX_JTI_LENGTH
 
           claims
         rescue ::JWT::DecodeError, OpenSSL::OpenSSLError, TypeError, NoMethodError, ArgumentError
