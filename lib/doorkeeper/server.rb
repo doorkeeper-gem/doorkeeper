@@ -41,7 +41,30 @@ module Doorkeeper
     end
 
     def credentials
-      @credentials ||= client_authentication_method_for_request.authenticate(context.request)
+      return @credentials if defined?(@credentials)
+
+      strategy = client_authentication_method_for_request
+      credentials = strategy.authenticate(context.request)
+
+      # Record which method produced them, so a caller that must know *how* a
+      # client authenticated — Client.authenticate holding a metadata document
+      # client to the one method its document names — reads it from the
+      # credentials rather than trusting each strategy to volunteer it. A
+      # strategy that already named the method it implements keeps its answer;
+      # one declaring no IANA name leaves this nil.
+      if credentials.respond_to?(:authenticated_with) && credentials.authenticated_with.blank?
+        credentials.authenticated_with = auth_method_name_for(strategy)
+      end
+
+      @credentials = credentials
     end
+
+    # A strategy declares the IANA name of the method it implements, which is
+    # its own knowledge — unlike its registration key, which a host
+    # application chooses freely.
+    def auth_method_name_for(strategy)
+      strategy.auth_method_name if strategy.respond_to?(:auth_method_name)
+    end
+    private :auth_method_name_for
   end
 end

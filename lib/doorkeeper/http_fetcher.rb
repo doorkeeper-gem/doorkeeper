@@ -85,6 +85,9 @@ module Doorkeeper
       "ff00::/8",           # multicast
     ].map { |cidr| IPAddr.new(cidr) }.freeze
 
+    # The range a TCP port can occupy; anything else was never connectable.
+    PORT_RANGE = (1..65_535)
+
     FetchError = Class.new(StandardError)
 
     # Everything a host can fail at while answering, so that it surfaces as
@@ -122,6 +125,12 @@ module Doorkeeper
       # caller's is_a?(URI::HTTPS) validation does not guarantee a host —
       # and Resolv raises ArgumentError, not ResolvError, when handed nil.
       raise FetchError, "#{url.inspect} has no host" if uri.host.blank?
+      # URI.parse accepts any integer as a port, but Net::HTTP builds the
+      # connection address out of it, where a value too large to be a port
+      # raises TypeError — not one of the TRANSPORT_ERRORS below. Refusing it
+      # here keeps every caller's URL, however it was validated, from turning
+      # into an exception out of the endpoint.
+      raise FetchError, "#{url.inspect} has an out-of-range port" unless PORT_RANGE.cover?(uri.port)
 
       address = vetted_address_for(uri.host)
 

@@ -1557,6 +1557,23 @@ RSpec.describe Doorkeeper::Config do
       expect(config.force_pkce?).to be(true)
     end
 
+    it "enables use_client_id_metadata_documents" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+      end
+
+      expect(config.client_id_metadata_documents?).to be(true)
+    end
+
+    it "disables client ID metadata documents by default" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+
+      expect(config.client_id_metadata_documents?).to be(false)
+    end
+
     it "enables use_polymorphic_resource_owner" do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
@@ -1564,6 +1581,60 @@ RSpec.describe Doorkeeper::Config do
       end
 
       expect(config.polymorphic_resource_owner?).to be(true)
+    end
+  end
+
+  # A document client's assertions are audience-checked against this server's
+  # own identity and never against the request, so without one they cannot be
+  # verified at all. The refusal reaches the client as a bare invalid_client,
+  # which is why the reason has to reach the operator at boot.
+  describe "client ID metadata documents without a server identity" do
+    around do |example|
+      default_url_options = Rails.application.routes.default_url_options
+      Rails.application.routes.default_url_options = {}
+      example.run
+      Rails.application.routes.default_url_options = default_url_options
+    end
+
+    it "warns when private_key_jwt is configured and the server identifies itself nowhere" do
+      expect(Rails.logger).to receive(:warn).with(/identifies itself nowhere/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+        client_authentication %i[client_secret_basic private_key_jwt]
+      end
+    end
+
+    it "stays quiet when an issuer is configured" do
+      expect(Rails.logger).not_to receive(:warn).with(/identifies itself nowhere/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+        client_authentication %i[client_secret_basic private_key_jwt]
+        issuer "https://as.example.com"
+      end
+    end
+
+    it "stays quiet when Rails supplies a default host" do
+      Rails.application.routes.default_url_options = { host: "as.example.com" }
+      expect(Rails.logger).not_to receive(:warn).with(/identifies itself nowhere/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+        client_authentication %i[client_secret_basic private_key_jwt]
+      end
+    end
+
+    it "stays quiet when private_key_jwt is not a configured method" do
+      expect(Rails.logger).not_to receive(:warn).with(/identifies itself nowhere/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+      end
     end
   end
 

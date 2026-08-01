@@ -16,6 +16,16 @@ RSpec.describe Doorkeeper::HttpFetcher do
       expect(fetcher.fetch(url)).to eq('{"client_id":"x"}')
     end
 
+    # Net::HTTP formats the port into the connection address, where a value
+    # too large to be a port raises TypeError — not one of the transport
+    # errors #fetch converts into a FetchError. Callers validate their URLs,
+    # but a jwks_uri comes from a document or a column rather than from
+    # UrlValidator, so the guard belongs here too.
+    it "raises rather than passing an out-of-range port to Net::HTTP" do
+      expect { fetcher.fetch("https://client.example.com:99999999999999999999/app") }
+        .to raise_error(described_class::FetchError, /out-of-range port/)
+    end
+
     it "raises on a non-200 response" do
       stub_request(:get, url).to_return(status: 404, body: "not found")
 

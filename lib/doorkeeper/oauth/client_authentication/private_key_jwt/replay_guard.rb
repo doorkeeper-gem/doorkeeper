@@ -10,7 +10,10 @@ module Doorkeeper
         # (OIDC Core §9: an assertion may only be used once). Entries live
         # until the assertion's own exp, which PrivateKeyJwt caps at
         # MAX_LIFETIME, so the memory held here is bounded: at most
-        # MAX_ENTRIES entries, each for at most MAX_LIFETIME seconds.
+        # MAX_ENTRIES entries, each for at most MAX_LIFETIME seconds and of a
+        # bounded size: PrivateKeyJwt caps the jti at MAX_JTI_LENGTH, and the
+        # client_id it is keyed with is by then either a validated URL or the
+        # uid of an application this server registered.
         #
         # Being process-local this cannot catch a replay delivered to a
         # different server process (separate Puma workers, separate hosts).

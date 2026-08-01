@@ -182,6 +182,13 @@ module Doorkeeper
         @config.instance_variable_set(:@force_pkce, true)
       end
 
+      # Accept https:// client_ids and resolve their metadata from the URL as
+      # described by the OAuth Client ID Metadata Document draft
+      # (draft-ietf-oauth-client-id-metadata-document). Disabled by default.
+      def use_client_id_metadata_documents
+        @config.instance_variable_set(:@client_id_metadata_documents, true)
+      end
+
       # Use an API mode for applications generated with --api argument
       # It will skip applications controller, disable forgery protection
       def api_only
@@ -418,12 +425,16 @@ module Doorkeeper
     #
     option :private_key_jwt_replay_guard, default: nil
 
-    # Cache for JWK Sets fetched from a client's `jwks_uri` during
-    # `private_key_jwt` authentication. Defaults to a process-local
-    # Doorkeeper::DocumentCache with a 60 second TTL; supply your own
-    # instance to change the TTL, or any object answering
+    # Cache for JWK Sets fetched from a registered application's
+    # `jwks_uri` during `private_key_jwt` authentication. Defaults to a
+    # process-local Doorkeeper::DocumentCache with a 60 second TTL; supply
+    # your own instance to change the TTL, or any object answering
     # `fetch(url) { ... }` (returning the cached document or storing and
     # returning the block's result) to share the cache across processes.
+    # Keys named by a Client ID Metadata Document always stay on a
+    # separate built-in cache: which URLs enter that one is decided by
+    # unauthenticated traffic, which must not evict — or grow — the
+    # entries registered clients depend on.
     #
     # @example
     #   private_key_jwt_jwks_cache Doorkeeper::DocumentCache.new(ttl: 300)
@@ -627,6 +638,10 @@ module Doorkeeper
 
     def force_pkce?
       option_set? :force_pkce
+    end
+
+    def client_id_metadata_documents?
+      option_set? :client_id_metadata_documents
     end
 
     def enforce_configured_scopes?

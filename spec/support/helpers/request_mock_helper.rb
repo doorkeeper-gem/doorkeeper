@@ -10,8 +10,14 @@ module RequestMockHelper
   # hand back from +request_parameters+ (string keys), so specs genuinely
   # exercise the strategies' indifferent-access handling instead of silently
   # passing on the symbol keys they were written with.
-  def mock_request(request_parameters: {}, query_parameters: {}, authorization: nil, request_method: "POST")
+  # +path+ is set explicitly because strategies that build an audience out of
+  # it (private_key_jwt) would otherwise be handed "", which collapses the
+  # endpoint URL onto the issuer and lets an example pass without the audience
+  # it names ever being the one accepted.
+  def mock_request(request_parameters: {}, query_parameters: {}, authorization: nil, request_method: "POST",
+                   path: "/oauth/token")
     request = ActionDispatch::Request.new(
+      "PATH_INFO" => path,
       "REQUEST_METHOD" => request_method,
       "SERVER_NAME" => "example.org",
       "SERVER_PORT" => "80",
