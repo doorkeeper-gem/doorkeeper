@@ -12,13 +12,25 @@ module Doorkeeper
         # application model provides them (Doorkeeper defines no such
         # columns itself).
         #
-        # Symmetric ("oct") keys are dropped: a symmetric key in a JWK Set is
-        # a shared secret, which this method must never verify against.
+        # Keys that are not public are dropped: a symmetric ("oct") key in a
+        # JWK Set is a shared secret, which this method must never verify
+        # against, and a key carrying private parameters is one whose owner
+        # has published its own credential.
         #
         # The jwt gem is always referenced as ::JWT: doorkeeper-jwt defines
         # Doorkeeper::JWT, which would otherwise shadow the gem everywhere
         # inside this module.
         module KeyResolver
+          # The JWK members that carry private key material: "d" for EC
+          # (RFC 7518 Section 6.2.2), RSA (Section 6.3.2) and OKP (RFC 8037
+          # Section 2) keys, the remaining RSA CRT parameters
+          # (Section 6.3.2), and "k", the value of a symmetric key
+          # (Section 6.4.1).
+          NON_PUBLIC_MEMBERS = %w[d p q dp dq qi oth k].freeze
+
+          # An "oct" key is symmetric whether or not it carries its "k".
+          SYMMETRIC_KEY_TYPE = "oct"
+
           # A published JWK Set is remote, client-controlled input, so each
           # level is type-checked before it is indexed into: a JWK Set that
           # is not an object of objects must fail authentication, never
@@ -30,16 +42,38 @@ module Doorkeeper
             keys = raw["keys"] || raw[:keys]
             return unless keys.is_a?(Array)
 
-            asymmetric = keys.grep(Hash).reject { |key| (key["kty"] || key[:kty]).to_s == "oct" }
-            return if asymmetric.empty?
+            usable = keys.grep(Hash).select { |key| public_key?(key) }
+            return if usable.empty?
 
-            build_key_set(asymmetric)
+            build_key_set(usable)
           end
 
           def self.raw_jwks(application)
             application_jwks(application) || fetch_jwks(application_jwks_uri(application))
           end
           private_class_method :raw_jwks
+
+          # Verifying an assertion needs no private parameter, so a key
+          # carrying one verifies nothing here: a registered application's
+          # key set is used for verification only, so nothing correctly
+          # published there carries private material either.
+          #
+          # Judged on the value: a key serialized with nulls for the private
+          # parameters it does not have publishes none of them, and the jwt
+          # gem reads it as the public key it is.
+          def self.public_key?(key)
+            return false if member(key, "kty").to_s == SYMMETRIC_KEY_TYPE
+
+            NON_PUBLIC_MEMBERS.none? { |name| !member(key, name).nil? }
+          end
+
+          # A JWK reaches here parsed from JSON (string members) or straight
+          # from an application model, where a Ruby Hash may well be keyed by
+          # symbols.
+          def self.member(key, name)
+            key[name] || key[name.to_sym]
+          end
+          private_class_method :member
 
           # RFC 7517 gives the members the jwt gem parses a string value, and
           # the gem trusts that: a member carrying a JSON number, object or
