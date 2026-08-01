@@ -60,12 +60,13 @@ module Doorkeeper
         return if credentials.blank?
 
         url_client_id = document_client_id?(credentials.uid)
+        return if provenance_disagrees?(credentials, url_client_id)
         return if url_client_id && refused_as_document_client?(credentials)
 
         # Credentials that were fully authenticated by their client
         # authentication method (e.g. a verified private_key_jwt assertion)
         # carry no secret to compare — resolve the client by uid alone.
-        return find(credentials.uid) if pre_authenticated?(credentials)
+        return resolved_for(credentials) if pre_authenticated?(credentials)
 
         # A document client's document is resolved before the regular lookup
         # so the application row exists and reflects the current document;
@@ -84,6 +85,48 @@ module Doorkeeper
         credentials.respond_to?(:pre_authenticated?) && credentials.pre_authenticated?
       end
       private_class_method :pre_authenticated?
+
+      # A method that authenticated the client already decided where the keys
+      # it verified against came from — a metadata document's, or a registered
+      # application's — and that decision is the one this lookup honours. The
+      # uid is resolved again here, and what it resolves to can have changed in
+      # between: an application row holding the URL can be registered or
+      # removed, and a materialized row's stamp can be cleared to adopt it.
+      # The window is not instantaneous either, since a document client's keys
+      # are fetched over the network. Resolving the other way round would hand
+      # an assertion verified against whatever a URL serves the registered
+      # application that now holds that URL — whose keys the signer never had
+      # — so a provenance that no longer agrees refuses the credentials rather
+      # than resolving them. Credentials stating none (every method that does
+      # not make the distinction) are resolved as before.
+      # The provenance check above was made against a lookup of its own, and
+      # +find+ makes another: a row holding the URL can be registered, or have
+      # been removed, in between. So what +find+ resolved is held to the same
+      # answer, read off the row this time — the stamp is what says which kind
+      # of client a row is — and a resolution that came out the other kind is
+      # no client at all rather than the one the assertion was not verified
+      # against.
+      def self.resolved_for(credentials)
+        client = find(credentials.uid)
+        return unless client
+        return if provenance_disagrees?(
+          credentials,
+          Doorkeeper::ClientIdMetadata.materialized_row?(client.application),
+        )
+
+        client
+      end
+      private_class_method :resolved_for
+
+      def self.provenance_disagrees?(credentials, url_client_id)
+        return false unless credentials.respond_to?(:from_metadata_document?)
+
+        stated = credentials.from_metadata_document?
+        return false if stated.nil?
+
+        stated != url_client_id
+      end
+      private_class_method :provenance_disagrees?
 
       # The two rules every metadata document client is held to, whatever
       # else authenticate goes on to check, in the order that costs least.

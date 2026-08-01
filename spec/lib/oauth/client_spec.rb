@@ -193,6 +193,92 @@ RSpec.describe Doorkeeper::OAuth::Client do
       end
     end
 
+    # The method that verified the assertion decided which keys to verify it
+    # against, and this lookup resolves the same uid a second time. Between the
+    # two an application row can be registered, removed, or have its
+    # materialized stamp cleared — and the gap holds an outbound document fetch
+    # whose duration whoever serves the document decides. A provenance that no
+    # longer agrees is refused rather than resolved the other way round.
+    context "with a pre-authenticated credential stating which keys verified it" do
+      let(:url) { "https://client.example.com/oauth-client" }
+
+      def verified(from_metadata_document)
+        Doorkeeper::ClientAuthentication::VerifiedCredentials.new(
+          url,
+          authenticated_with: "private_key_jwt",
+          from_metadata_document: from_metadata_document,
+        )
+      end
+
+      before do
+        config_is_set(:client_id_metadata_documents, true)
+        document = Doorkeeper::ClientIdMetadata::Document.new(
+          url,
+          { "client_id" => url, "token_endpoint_auth_method" => "private_key_jwt" },
+        )
+        allow(Doorkeeper::ClientIdMetadata).to receive(:document_for).with(url).and_return(document)
+        # Stamped, as every row the factory materializes is: what a resolution
+        # hands back is what the provenance recheck below reads.
+        allow(Doorkeeper::ClientIdMetadata).to receive(:resolve).with(url).and_return(
+          FactoryBot.build(:application, uid: url, client_id_metadata_materialized_at: Time.now.utc),
+        )
+      end
+
+      it "resolves the client while the provenance still agrees" do
+        expect(described_class.authenticate(verified(true))).to be_a(described_class)
+      end
+
+      # The assertion was verified against whatever the URL serves, and the URL
+      # is now a registered application whose keys the signer never had.
+      it "refuses a document-verified credential once an application holds the URL" do
+        FactoryBot.create(:application, uid: url)
+
+        expect(described_class.authenticate(verified(true))).to be_nil
+      end
+
+      # The other way round: verified against a registered application's keys,
+      # resolving now would materialize a row from a document instead.
+      it "refuses a registration-verified credential once the URL resolves through a document" do
+        expect(described_class.authenticate(verified(false))).to be_nil
+      end
+
+      # The disagreement is decided from the row alone, so it costs no fetch —
+      # an unauthenticated caller must not be able to trigger one at will.
+      it "refuses without fetching the document" do
+        expect(Doorkeeper::ClientIdMetadata).not_to receive(:document_for)
+
+        expect(described_class.authenticate(verified(false))).to be_nil
+      end
+
+      # The provenance check above is made against a lookup of its own, and
+      # find makes another one: a row holding the URL can be registered, or
+      # removed, in between those two queries. What find resolved is therefore
+      # held to the same answer, read off the row it handed back.
+      it "refuses when an application comes to hold the URL between the two lookups" do
+        FactoryBot.create(:application, uid: url)
+        allow(Doorkeeper::ClientIdMetadata).to receive(:resolves_through_document?).and_return(true, false)
+
+        expect(described_class.authenticate(verified(true))).to be_nil
+      end
+
+      it "refuses when the URL starts resolving through a document between the two lookups" do
+        allow(Doorkeeper::ClientIdMetadata).to receive(:resolves_through_document?).and_return(false, true)
+
+        expect(described_class.authenticate(verified(false))).to be_nil
+      end
+
+      # Every other method leaves this unanswered, and the resolution is the
+      # one it always was.
+      it "resolves a credential that states no provenance" do
+        credentials = Doorkeeper::ClientAuthentication::VerifiedCredentials.new(
+          url,
+          authenticated_with: "private_key_jwt",
+        )
+
+        expect(described_class.authenticate(credentials)).to be_a(described_class)
+      end
+    end
+
     # The same rule holds for credentials carrying a secret, not only for
     # pre-authenticated ones: a document naming "none" would otherwise also be
     # satisfied by client_secret_basic with an empty password, which
