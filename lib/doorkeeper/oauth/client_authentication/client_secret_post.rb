@@ -11,6 +11,14 @@ module Doorkeeper
           true
         end
 
+        # The IANA token endpoint authentication method name this
+        # implements — see Credentials#authenticated_with.
+        AUTH_METHOD_NAME = "client_secret_post"
+
+        def self.auth_method_name
+          AUTH_METHOD_NAME
+        end
+
         def self.matches_request?(request)
           params = request.request_parameters.with_indifferent_access
 
