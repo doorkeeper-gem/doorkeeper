@@ -103,7 +103,7 @@ module Doorkeeper
             expires_at: claims["exp"].to_i + decode_leeway,
           )
 
-          Doorkeeper::ClientAuthentication::VerifiedCredentials.new(client_id)
+          Doorkeeper::ClientAuthentication::VerifiedCredentials.new(client_id, authenticated_with: AUTH_METHOD_NAME)
         end
 
         # A jti is single-use per client, so the guard is keyed by both. The

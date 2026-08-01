@@ -44,7 +44,9 @@ module Doorkeeper
       # against this one.
       #
       # A strategy that declares none answers +nil+, which no such name can
-      # match.
+      # match: Doorkeeper::Server stamps this same value onto the credentials,
+      # so a nameless strategy could never satisfy a check that holds a client
+      # to the method it registered.
       #
       # Answered as a String whatever the strategy declared it as — a Symbol
       # comes naturally to a strategy registered under one — so that every
