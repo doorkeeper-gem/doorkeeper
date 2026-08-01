@@ -745,6 +745,25 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       end
     end
 
+    # JSON.parse tags a payload's bytes as UTF-8 without checking them, and
+    # the first regex to touch a claim carrying invalid bytes raises
+    # ArgumentError (String#blank? is one): out of the unverified issuer
+    # check for anyone, and out of the jti check for a signed assertion.
+    it "rejects an assertion whose issuer is not valid UTF-8 without raising" do
+      assertion = sign_raw_json(%({"iss":"\xff","sub":"\xff"}).b)
+
+      expect { expect(described_class.authenticate(request_with(assertion))).to be_nil }
+        .not_to raise_error
+    end
+
+    it "rejects a signed assertion whose jti is not valid UTF-8 without raising" do
+      payload = %({"iss":"#{client_id}","sub":"#{client_id}","aud":"#{issuer}",) +
+                %("exp":#{Time.now.to_i + 300},"jti":"a\xff"}).b
+
+      expect { expect(described_class.authenticate(request_with(sign_raw_json(payload)))).to be_nil }
+        .not_to raise_error
+    end
+
     # A key member whose bytes are not valid UTF-8 raises ArgumentError out
     # of the base64url decoder — lazily, inside the verifying decode, when
     # the header's kid names the key, and eagerly, while the set is built,
