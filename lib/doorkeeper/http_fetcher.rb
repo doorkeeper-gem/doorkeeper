@@ -3,6 +3,7 @@
 require "ipaddr"
 require "net/http"
 require "resolv"
+require "timeout"
 require "uri"
 
 module Doorkeeper
@@ -23,9 +24,9 @@ module Doorkeeper
   # (Sections 6.5 / 6.6), which fetches documents from the same kind of
   # client-chosen URL.
   #
-  # The response body is bounded and so is the total time spent reading it:
-  # a per-read timeout alone does not stop a server that dribbles bytes out
-  # indefinitely.
+  # The response body is bounded and so is the time the whole exchange may
+  # take: a per-read timeout alone does not stop a server that dribbles
+  # bytes out indefinitely.
   #
   # Everything about the response is chosen by whoever hosts the document —
   # which is whoever supplied the URL — so no failure mode here may escape
@@ -38,8 +39,18 @@ module Doorkeeper
     # maximum response size of 5 kilobytes for a document like this.
     MAX_RESPONSE_SIZE = 5 * 1024
 
-    # Ceiling on the whole exchange, so a body delivered one byte per
-    # READ_TIMEOUT cannot hold the connection (and the thread) for hours.
+    # Ceiling on the HTTP exchange — connect, headers and body — so a host
+    # answering a byte at a time cannot hold the connection (and the thread
+    # reading it) for hours. Net::HTTP has no such setting of its own: its
+    # timeouts are per phase, and read_timeout starts over on every
+    # successful read, so neither a dribbled header block nor a dribbled body
+    # ever trips one. The ceiling is therefore held twice over: the per-phase
+    # timeouts are trimmed to what is left of it as the exchange goes on, and
+    # a wall clock around the whole exchange catches the phases those
+    # timeouts cannot see. The ceiling starts once the host's addresses have
+    # been vetted: resolution has to happen first, and is bounded by whatever
+    # timeouts the deployment's resolver applies rather than by this
+    # constant.
     MAX_TOTAL_TIME = 10
 
     # The document is served as JSON, either "application/json" or an
@@ -162,12 +173,22 @@ module Doorkeeper
       # equally valid.
       last_error = nil
 
-      addresses.each do |address|
-        break if last_error && monotonic_now >= deadline
+      # The deadline trims Net::HTTP's per-phase timeouts, but those only
+      # cover the phases Net::HTTP times at all: a status line or header
+      # block dribbled a byte at a time keeps resetting read_timeout and
+      # never trips it. So the same ceiling is also held as a wall clock
+      # around everything from the first connection attempt to the last body
+      # byte. The Timeout::Error it raises is one of the TRANSPORT_ERRORS
+      # below — or, while no connection is up yet, a ConnectError that ends
+      # the loop, the deadline having passed by then.
+      Timeout.timeout(MAX_TOTAL_TIME, Timeout::Error, "the exchange with #{uri.hostname} took too long") do
+        addresses.each do |address|
+          break if last_error && monotonic_now >= deadline
 
-        return perform_request(uri, address, deadline)
-      rescue ConnectError => e
-        last_error = e
+          return perform_request(uri, address, deadline)
+        rescue ConnectError => e
+          last_error = e
+        end
       end
 
       raise FetchError, "could not connect to #{uri.hostname}: #{last_error.message}"
@@ -221,7 +242,12 @@ module Doorkeeper
         http.read_timeout = READ_TIMEOUT
         # Disable Net::HTTP internal retries to prevent re-attempting reads
         # which will reuse the same timeout params and may exceed the overall
-        # timeout we're aiming for.
+        # timeout we're aiming for. The branch that decides to retry an
+        # idempotent request also catches Timeout::Error, so the wall clock
+        # in #fetch would be swallowed while the status line or headers are
+        # read, and the retry run with the timer already spent. Nothing is
+        # lost by turning it off: the connection is never reused, so there is
+        # no stale socket for a retry to recover from.
         http.max_retries = 0
       end
     end
