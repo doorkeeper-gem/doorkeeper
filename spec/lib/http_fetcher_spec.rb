@@ -128,6 +128,21 @@ RSpec.describe Doorkeeper::HttpFetcher do
       expect(pinned).to eq(public_address)
     end
 
+    # URI#host keeps the brackets an IPv6 literal is written with, which
+    # neither the resolver nor the special-use check reads as an address —
+    # while UrlValidator accepts such a URL, so the two must agree.
+    it "refuses an IPv6 literal that names a special-use address" do
+      # The brackets never reach the resolver: with URI#host they would, and
+      # "[::1]" resolves to nothing, so the URL would die as "could not
+      # resolve" rather than as the loopback address it plainly is.
+      allow(resolver).to receive(:getaddresses).with("::1").and_return(["::1"])
+      request_stub = stub_request(:get, "https://[::1]/oauth-client")
+
+      expect { fetcher.fetch("https://[::1]/oauth-client") }
+        .to raise_error(described_class::FetchError, /special-use/)
+      expect(request_stub).not_to have_been_requested
+    end
+
     it "raises when any of several resolved addresses is special-use" do
       allow(resolver).to receive(:getaddresses).and_return([public_address, "10.0.0.5"])
       request_stub = stub_request(:get, url)
