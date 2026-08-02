@@ -1024,6 +1024,193 @@ RSpec.describe "client secret rotation" do
         expect(app.secret_matches?(old_plaintext)).to be(true)
       end
     end
+
+    # A secret written before `hash_application_secrets` was enabled is stored
+    # in the fallback format. Carried into `old_secret` as it stands, its
+    # plain text would outlive the very rotation that replaced it, and the
+    # retained value would cost a different comparison from the current one --
+    # which is what ApplicationMixin#old_secret_matches? equalises by
+    # comparing against `secret` when there is nothing retained.
+    context "with a secret the fallback strategy wrote" do
+      let!(:legacy) { FactoryBot.create(:application) }
+      # Read before any example rotates: afterwards `legacy.secret` is the
+      # new digest, which a `fallback: :plain` comparison would accept as
+      # the *current* secret and pass an example that never consulted
+      # `old_secret` at all.
+      let!(:legacy_plaintext) { legacy.secret }
+
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          hash_application_secrets fallback: :plain
+          enable_secret_rotation
+        end
+      end
+
+      it "retains it re-derived under the active strategy" do
+        expected = Doorkeeper::SecretStoring::Sha256Hash.transform_secret(legacy_plaintext)
+
+        legacy.rotate_secret!
+
+        expect(legacy.reload.old_secret).to eq(expected)
+      end
+
+      it "leaves no plain text behind" do
+        legacy.rotate_secret!
+
+        expect(legacy.reload.old_secret).not_to eq(legacy_plaintext)
+      end
+
+      it "keeps the superseded secret authenticating" do
+        legacy.rotate_secret!
+
+        expect(legacy.reload.secret_matches?(legacy_plaintext)).to be(true)
+      end
+
+      # The comparison a rotated application makes against `old_secret` costs
+      # what the dummy comparison against `secret` costs only while both are
+      # in the active strategy's format. Under bcrypt the difference is the
+      # whole work factor: a value bcrypt did not write is refused for its
+      # shape, so a rotated application would answer measurably faster than an
+      # unrotated one -- to a caller holding no secret at all.
+      context "with bcrypt application secrets" do
+        before do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            hash_application_secrets using: "::Doorkeeper::SecretStoring::BCrypt", fallback: :plain
+            enable_secret_rotation
+          end
+        end
+
+        it "retains a digest bcrypt recognises as its own" do
+          legacy.rotate_secret!
+
+          retained = legacy.reload.old_secret
+
+          expect(retained).not_to eq(legacy_plaintext)
+          expect(Doorkeeper::SecretStoring::BCrypt.recognizes_stored_secret?(retained)).to be(true)
+        end
+
+        it "keeps the superseded secret authenticating" do
+          legacy.rotate_secret!
+
+          expect(legacy.reload.secret_matches?(legacy_plaintext)).to be(true)
+        end
+      end
+
+      # A strategy may override `store_secret` to wrap what it stores — a
+      # version prefix here — and its `secret_matches?` then expects the
+      # wrapping. The re-derivation goes through `store_secret`, as every
+      # other write of a secret does; assigning `transform_secret`'s return
+      # value instead would retain a form the strategy does not authenticate.
+      context "with a strategy whose store_secret wraps the stored value" do
+        let(:strategy) do
+          Class.new(Doorkeeper::SecretStoring::Base) do
+            def self.transform_secret(plain_secret) = "custom:#{plain_secret}"
+
+            def self.store_secret(resource, attribute, plain_secret)
+              "v1|#{transform_secret(plain_secret)}".tap do |value|
+                resource.public_send(:"#{attribute}=", value)
+              end
+            end
+
+            def self.secret_matches?(input, stored) = stored == "v1|#{transform_secret(input)}"
+
+            def self.recognizes_stored_secret?(stored) = stored.to_s.start_with?("v1|")
+          end
+        end
+
+        before do
+          stub_const("EnvelopeSecretStrategy", strategy)
+          allow(Doorkeeper.config).to receive(:application_secret_strategy)
+            .and_return(EnvelopeSecretStrategy)
+        end
+
+        it "retains the secret in the form store_secret writes" do
+          legacy.rotate_secret!
+
+          expect(legacy.reload.old_secret).to eq("v1|custom:#{legacy_plaintext}")
+        end
+
+        it "keeps the superseded secret authenticating" do
+          legacy.rotate_secret!
+
+          expect(legacy.reload.secret_matches?(legacy_plaintext)).to be(true)
+        end
+      end
+
+      # Re-deriving needs the plain text, and a fallback strategy that hashes
+      # has none to give back. The value is carried over as stored, as it
+      # always was.
+      # `recognizes_stored_secret?` is new, and a secret strategy is duck typed
+      # everywhere else it is used, so one that does not subclass
+      # SecretStoring::Base has never had to define it. Answered the way Base
+      # answers rather than raising: the value is retained as stored, which is
+      # what a rotation did before the predicate existed.
+      context "when the active strategy does not implement recognizes_stored_secret?" do
+        let(:strategy) do
+          Class.new do
+            def self.transform_secret(plain_secret) = "custom:#{plain_secret}"
+
+            def self.store_secret(resource, attribute, plain_secret)
+              transform_secret(plain_secret).tap do |value|
+                resource.public_send(:"#{attribute}=", value)
+              end
+            end
+
+            def self.restore_secret(_resource, _attribute) = raise(NotImplementedError)
+
+            def self.allows_restoring_secrets? = false
+
+            def self.validate_for(_model) = true
+
+            def self.secret_matches?(input, stored) = transform_secret(input) == stored
+          end
+        end
+
+        before do
+          stub_const("CustomSecretStrategy", strategy)
+          enable_rotation
+          allow(Doorkeeper.config).to receive(:application_secret_strategy)
+            .and_return(CustomSecretStrategy)
+        end
+
+        it "retains the stored secret rather than raising" do
+          stored = app.secret
+
+          expect { app.rotate_secret! }.not_to raise_error
+
+          expect(app.reload.old_secret).to eq(stored)
+        end
+      end
+
+      context "when the fallback strategy cannot restore it" do
+        let!(:legacy) do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            hash_application_secrets
+          end
+          FactoryBot.create(:application)
+        end
+
+        before do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            hash_application_secrets using: "::Doorkeeper::SecretStoring::BCrypt",
+                                     fallback: "::Doorkeeper::SecretStoring::Sha256Hash"
+            enable_secret_rotation
+          end
+        end
+
+        it "carries the stored secret over verbatim" do
+          stored = legacy.secret
+
+          legacy.rotate_secret!
+
+          expect(legacy.reload.old_secret).to eq(stored)
+        end
+      end
+    end
   end
 
   # `with_lock` joins an open transaction, and the row lock then outlives
