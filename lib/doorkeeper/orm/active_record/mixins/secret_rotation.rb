@@ -11,9 +11,11 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
   #
   # Kept in a file of its own rather than in the application mixin: what is
   # written here is a read-modify-write on a live credential under a row
-  # lock, with a rollback repair on the way out. Those invariants are easier
-  # to hold in view — and to change — when they are not interleaved with the
-  # model's validations, associations and serialization.
+  # lock, with a rollback repair on the way out and a revocation sweep that
+  # has to run after the commit for the lock order to stay consistent with
+  # the one token requests take. Those invariants are easier to hold in view
+  # — and to change — when they are not interleaved with the model's
+  # validations, associations and serialization.
   #
   # The comparison side of the feature is not here: it lives in
   # +Doorkeeper::ApplicationMixin+, which every ORM shares, because a stored
@@ -47,14 +49,40 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
     #   drop the current secret instead of retaining it. For a secret
     #   believed to be compromised, which has to stop working now rather
     #   than at the end of a grace period.
+    # @param revoke_tokens [Boolean]
+    #   additionally revoke this application's unredeemed authorization
+    #   codes, which the current secret is enough to redeem, and the access
+    #   tokens already issued to it. Revoking those tokens is precautionary
+    #   — a secret does not hand out a token issued to someone else — except
+    #   under +reuse_access_token+, where a client_credentials request made
+    #   with that secret is answered with the token the grant already holds.
+    #   The revocation runs once the rotation has committed; should it
+    #   fail, the error is raised with the new secret already stored and
+    #   still readable through +#plaintext_secret+ on this instance, and
+    #   +#revoke_issued_credentials!+ can be retried on its own. Refused
+    #   inside an open transaction (+Errors::SecretRotationInTransaction+),
+    #   which would hold the rotation's row lock past this method: rotate
+    #   without it there and revoke once the transaction has committed.
     #
     # @return [String] new plain text secret value
     #
-    def rotate_secret!(revoke_old: false)
+    def rotate_secret!(revoke_old: false, revoke_tokens: false)
       # Captured before the guard so that the rescue below restores it even
       # when nothing was attempted: a bare `raise` from the guard must not
       # cost an application the plaintext of the secret it already has.
       previous_raw_secret = @raw_secret
+
+      # The secret as stored by `save!`, kept so that the rescue below can
+      # tell which side of the commit a failure fell on. A host
+      # `after_commit` callback raising lands there with the rotation
+      # committed, and with revoke_tokens: the credentials the superseded
+      # secret can still be exchanged for have to go with it, error or no
+      # error. A COMMIT that fails lands there too, with the rotation rolled
+      # back — and the sweep must not run then, or a rotation that never
+      # happened would cost the client every token it holds. Which of the
+      # two it was is read off the instance once #undo_failed_rotation has
+      # put it back: see #rotation_committed?.
+      stored_secret = nil
 
       # Set once the lock block is entered. Failures before that point —
       # the feature guard, `with_lock` refusing a record that carries
@@ -68,6 +96,12 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
         ensure_lockable!
 
         self.class.with_primary_role do
+          # Asked here, once the writer is the selected connection: the
+          # transaction that matters is the one `with_lock` below would
+          # join, and before the role switch the selected connection may be
+          # a replica's, with no transaction open on it at all.
+          ensure_revocation_can_follow_commit! if revoke_tokens
+
           # Read-modify-write on the row: the secret being retained is the
           # one currently stored, so two rotations racing without a lock
           # would let the later one overwrite a secret the earlier one had
@@ -98,12 +132,29 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
 
             renew_secret
             save!
+            stored_secret = secret
           end
         end
       rescue StandardError
         undo_failed_rotation(locked, previous_raw_secret)
+        # Runs before the re-raise so that a rotation that committed does
+        # not keep its tokens. If the sweep itself fails, that failure is
+        # what the caller sees, with the error that got us here as its
+        # `cause` — neither is worth hiding.
+        revoke_issued_credentials! if revoke_tokens && rotation_committed?(stored_secret)
         raise
       end
+
+      # Runs once the rotation has committed and the row lock is released —
+      # see #revoke_issued_credentials! for why it cannot run under the lock.
+      # That holds because `with_lock` opened the transaction: one it would
+      # have joined was refused above, since the lock would then outlive
+      # this method.
+      # Outside the rescue above on purpose: the new secret is stored by
+      # now, so a failure here must not roll the instance back to the old
+      # one or discard the plaintext the caller still has to hand out —
+      # `#plaintext_secret` keeps it through the raise.
+      revoke_issued_credentials! if revoke_tokens
 
       plaintext_secret
     end
@@ -220,6 +271,40 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       raise
     end
 
+    # Revokes what a secret of this application could still be exchanged
+    # for: its unrevoked access tokens and unredeemed authorization codes.
+    # What +#rotate_secret!+ runs for +revoke_tokens: true+, kept separate
+    # so that it can be retried on its own if that step fails — it is
+    # idempotent, and a failure there leaves the rotation committed with
+    # the new secret still readable through +#plaintext_secret+.
+    # Access grants are included because an unredeemed authorization code is
+    # exchanged with the client secret (RFC 6749 §4.1.3): leaving the codes
+    # alive would hand back an access token minted after the revocation.
+    #
+    # Already-revoked records are left untouched so their original
+    # `revoked_at` survives.
+    #
+    # Deliberately not run inside the rotation's row lock. A token request
+    # locks its grant or refresh token first and then inserts a token, and
+    # that insert takes a share lock on the application row for the foreign
+    # key check. Revoking child rows while holding `FOR UPDATE` on the
+    # application reverses that order, and the two deadlock — aborting
+    # either the rotation or the token request. Running after the commit
+    # keeps the lock order consistent, at the cost of a request that
+    # authenticated before the rotation committed possibly finishing after
+    # this sweep: a token it minted then is not revoked.
+    #
+    # @return [void]
+    #
+    def revoke_issued_credentials!
+      now = Time.now.utc
+
+      self.class.with_primary_role do
+        revoke_unrevoked(access_tokens, now)
+        revoke_unrevoked(access_grants, now)
+      end
+    end
+
     private
 
     # +retained_at+ is the `old_secret_created_at` the caller read off a row,
@@ -259,6 +344,43 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       return if self.class.secret_rotation_columns?
 
       raise Doorkeeper::Errors::SecretRotationNotEnabled, self.class.table_name
+    end
+
+    # `with_lock` joins a joinable transaction that is already open, and the
+    # row lock it takes is then held until that transaction commits — past
+    # the point where #revoke_issued_credentials! would run, recreating the
+    # lock-order inversion it is kept out of the lock to avoid. So the
+    # combination is refused up front, before anything is written. Meant to
+    # be called with the writing role selected (see the call in
+    # #rotate_secret!), so that the connection consulted is the one the
+    # lock would be taken on.
+    #
+    # Deferring the sweep to that commit instead would be the other answer,
+    # and it is not available: `ActiveRecord.after_all_transactions_commit`
+    # arrived in Rails 7.2, and Doorkeeper supports 7.0. It would also not
+    # be the answer it looks like — a transactional test rolls its outer
+    # transaction back rather than committing it, so a deferred sweep would
+    # silently never run there, which is worse than saying so.
+    #
+    # A non-joinable transaction is deliberately let through, even though
+    # it is not harmless — `with_lock` nests in a savepoint there, and on
+    # PostgreSQL the row lock still lives until the outer commit, sweep
+    # included. Refusing it (asking `transaction_open?` rather than
+    # `joinable?`) is worse: Rails' transactional tests and DatabaseCleaner's
+    # transaction strategy wrap every example in exactly such a transaction,
+    # so this method would raise in every example that rotates with
+    # `revoke_tokens:` — this gem's own included, and every host
+    # application's. `joinable: false` is the option Rails opens its own
+    # fixture and `console --sandbox` transactions with, and a caller
+    # passing it has said that nothing may join theirs — sweep timing
+    # included. One that has not can rotate without `revoke_tokens:` and
+    # call #revoke_issued_credentials! after its own commit, which is what
+    # SecretRotationInTransaction says.
+    #
+    def ensure_revocation_can_follow_commit!
+      return unless self.class.connection.current_transaction.joinable?
+
+      raise Doorkeeper::Errors::SecretRotationInTransaction
     end
 
     # `with_lock` gates both of its guarantees on +persisted?+ (Active
@@ -327,6 +449,18 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
                     restorable_raw_secret(previous_raw_secret)
     end
 
+    # Whether the rotation that stored +stored_secret+ is the one the row
+    # holds, asked in the rescue once #undo_failed_rotation has run. On a
+    # rollback Active Record puts the pre-transaction snapshot back and the
+    # restore leaves `secret` at the value the row still has, which is not
+    # this one; after a commit the record is clean, the restore is a no-op,
+    # and `secret` is what was stored. The same bookkeeping the restore
+    # itself relies on, so no second read of the row is needed to answer.
+    # Nil means `save!` never ran.
+    def rotation_committed?(stored_secret)
+      !stored_secret.nil? && secret == stored_secret
+    end
+
     # The plaintext to keep after a failed rotation. `with_lock` reloads, so
     # the attributes restored on the way out are what was committed by then
     # — which a rotation racing this one may have replaced the secret in.
@@ -353,6 +487,21 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       return raw if fallback_secret_strategy&.secret_matches?(raw, secret)
 
       nil
+    end
+
+    # Everything that still authenticates, which is not the same as
+    # everything whose `revoked_at` is NULL: +Revocable#revoked?+ reads a
+    # timestamp in the future as not revoked yet, so a host scheduling a
+    # revocation ahead of time holds rows that are live and dated. A
+    # rotation asked to revoke has to reach those too. Rows already revoked
+    # keep the timestamp they have — moving it forward would rewrite when
+    # they stopped working.
+    def revoke_unrevoked(relation, now)
+      table = relation.arel_table
+
+      unrevoked = table[:revoked_at].eq(nil).or(table[:revoked_at].gt(now))
+
+      relation.where(unrevoked).update_all(revoked_at: now)
     end
   end
 end
