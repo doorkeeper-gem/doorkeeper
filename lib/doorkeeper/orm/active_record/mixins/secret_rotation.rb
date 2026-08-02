@@ -104,8 +104,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       # error. A COMMIT that fails lands there too, with the rotation rolled
       # back — and the sweep must not run then, or a rotation that never
       # happened would cost the client every token it holds. Which of the
-      # two it was is read off the instance once #undo_failed_rotation has
-      # put it back: see #rotation_committed?.
+      # two it was is read off the row: see #rotation_committed?.
       stored_secret = nil
 
       # Set once the lock block is entered. Failures before that point —
@@ -160,12 +159,12 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
           end
         end
       rescue StandardError
-        undo_failed_rotation(locked, previous_raw_secret)
+        committed = undo_failed_rotation(locked, previous_raw_secret, stored_secret)
         # Runs before the re-raise so that a rotation that committed does
         # not keep its tokens. If the sweep itself fails, that failure is
         # what the caller sees, with the error that got us here as its
         # `cause` — neither is worth hiding.
-        revoke_issued_credentials! if revoke_tokens && rotation_committed?(stored_secret)
+        revoke_issued_credentials! if revoke_tokens && committed
         raise
       end
 
@@ -477,20 +476,36 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
     # whichever side of the commit the failure fell on, the plaintext that
     # survives is the one describing the row.
     #
+    # A COMMIT lost to +ActiveRecord::ConnectionFailed+ is neither side:
+    # since Rails 7.1 Active Record invalidates the transaction without
+    # rolling the records back, so the record comes out clean, holding what
+    # `save!` wrote and the row never took, and the restore has nothing to
+    # restore. That is the one case where the instance says this rotation
+    # is stored (`secret` is still +stored_secret+) while the row says it is
+    # not (+committed+ is false, read off the row by #rotation_committed?),
+    # and the row is what the instance has to describe: it is reloaded from
+    # the primary, and the plaintext filtered against that.
+    #
     # None of that applies before the lock block runs: nothing was written,
     # the plaintext the caller came in with still describes the row, and
     # filtering it would compare it against whatever they had assigned to
     # `secret` and never saved — throwing away a good plaintext over a
     # value the row does not hold.
-    def undo_failed_rotation(locked, previous_raw_secret)
+    #
+    # @return [Boolean] whether the rotation that stored +stored_secret+ is
+    #   the one the row holds (see #rotation_committed?)
+    def undo_failed_rotation(locked, previous_raw_secret, stored_secret)
       unless locked
         @raw_secret = previous_raw_secret
-        return
+        return false
       end
 
+      committed = rotation_committed?(stored_secret)
       restore_attributes
+      self.class.with_primary_role { reload } if !committed && !stored_secret.nil? && secret == stored_secret
       @raw_secret = restorable_raw_secret(@raw_secret) ||
                     restorable_raw_secret(previous_raw_secret)
+      committed
     end
 
     # Carries the stored secret into `old_secret`: as it is, unless it was
@@ -552,15 +567,35 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
     end
 
     # Whether the rotation that stored +stored_secret+ is the one the row
-    # holds, asked in the rescue once #undo_failed_rotation has run. On a
-    # rollback Active Record puts the pre-transaction snapshot back and the
-    # restore leaves `secret` at the value the row still has, which is not
-    # this one; after a commit the record is clean, the restore is a no-op,
-    # and `secret` is what was stored. The same bookkeeping the restore
-    # itself relies on, so no second read of the row is needed to answer.
-    # Nil means `save!` never ran.
+    # holds, asked in the rescue. Nil means `save!` never ran.
+    #
+    # Read off the row rather than off the instance. Active Record's
+    # bookkeeping would answer for a rollback (the pre-transaction snapshot
+    # is put back, so `secret` is not this value) and for a commit (the
+    # record is clean holding it), but not for a COMMIT lost to
+    # +ActiveRecord::ConnectionFailed+: since Rails 7.1 that invalidates the
+    # transaction without rolling the records back, so the instance then
+    # looks exactly like a committed one while the row most likely still
+    # holds the previous secret. The row settles it either way — and where
+    # the COMMIT did reach the server and only its acknowledgement was
+    # lost, it says so, and the sweep runs as it should.
+    #
+    # One SELECT on a failure path, read through the reader so that an
+    # `encrypts :secret` column compares decrypted, and on the writer: after
+    # a lost connection the row is on the primary before it is anywhere
+    # else. The row is found by its primary key through `.find`, which
+    # spells out a composite key as well; a row gone in the meantime answers
+    # false, as one holding another secret does. Should the read itself
+    # fail, that failure is what the caller sees, with the error that got us
+    # here as its `cause`.
     def rotation_committed?(stored_secret)
-      !stored_secret.nil? && secret == stored_secret
+      return false if stored_secret.nil?
+
+      self.class.with_primary_role do
+        self.class.unscoped.find(id).secret == stored_secret
+      end
+    rescue ActiveRecord::RecordNotFound
+      false
     end
 
     # Whether the active strategy claims the stored value as its own.
