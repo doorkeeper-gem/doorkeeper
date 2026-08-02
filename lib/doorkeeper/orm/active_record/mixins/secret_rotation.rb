@@ -386,7 +386,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
     def ensure_secret_rotation_columns!
       return if self.class.secret_rotation_columns?
 
-      raise Doorkeeper::Errors::SecretRotationNotEnabled, self.class.table_name
+      raise Doorkeeper::Errors::SecretRotationNotEnabled.new(self.class.table_name, columns_only: true)
     end
 
     # `with_lock` joins a joinable transaction that is already open, and the

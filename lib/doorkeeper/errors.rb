@@ -160,16 +160,30 @@ module Doorkeeper
     # once the option is off, since turning it off leaves the retained secret
     # in the row, ready to authenticate again the moment the option returns.
     class SecretRotationNotEnabled < DoorkeeperError
-      def initialize(table)
-        super(
-          "Client secret rotation is not enabled. Add `enable_secret_rotation` to your Doorkeeper " \
+      # `columns_only:` is the `#clear_old_secret!` trigger: that path reads
+      # the columns and not the option, so telling its caller to add the
+      # option would send them the wrong way.
+      def initialize(table, columns_only: false)
+        super(columns_only ? self.class.columns_message(table) : self.class.rotation_message(table))
+      end
+
+      def self.rotation_message(table)
+        "Client secret rotation is not enabled. Add `enable_secret_rotation` to your Doorkeeper " \
           "initializer and make sure the `old_secret` and `old_secret_created_at` columns exist " \
           "on the #{table} table (`rails generate doorkeeper:secret_rotation`), then replace a " \
           "secret without a grace period with `#rotate_secret!(revoke_old: true)`. Not with " \
           "`#renew_secret`, which writes the current secret alone: where an earlier rotation left " \
           "an `old_secret` on this row, that credential is still there, and authenticates again " \
-          "the moment rotation is available.",
-        )
+          "the moment rotation is available. To drop it without turning the option back on, " \
+          "call `#clear_old_secret!`, which needs the columns alone."
+      end
+
+      def self.columns_message(table)
+        "Client secret rotation columns are missing: `#clear_old_secret!` needs the `old_secret` " \
+          "and `old_secret_created_at` columns on the #{table} table " \
+          "(`rails generate doorkeeper:secret_rotation`). It does not need the " \
+          "`enable_secret_rotation` option, so a grace period an earlier rotation opened can be " \
+          "ended with the option off."
       end
     end
 
