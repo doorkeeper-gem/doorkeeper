@@ -158,7 +158,34 @@ module Doorkeeper
 
       input = input.to_s
 
-      stored_secret_matches?(input, :secret)
+      return stored_secret_matches?(input, :secret) unless self.class.secret_rotation_enabled?
+
+      stored_secret_matches?(input, :secret) || old_secret_matches?(input)
+    end
+
+    # Check whether the given plain text secret matches the secret superseded
+    # by the last rotation (see +#rotate_secret!+).
+    #
+    # @param input [#to_s] Plain secret provided by user
+    #        (any object that responds to `#to_s`)
+    #
+    # @return [Boolean] Whether the given secret matches the old secret
+    #                of this application.
+    #
+    def old_secret_matches?(input)
+      return false if input.nil? || !self.class.secret_rotation_enabled?
+
+      # Nothing to compare against, and nothing to hide either: an application
+      # with no secret at all is a public client, whose secret is never
+      # checked. Asked of the current secret and not of `old_secret`, so that
+      # this half answers what +#secret_matches?+ answers: that one refuses a
+      # nil `secret` before it ever consults the retained one, and a host
+      # calling this predicate to learn which secret a client presented would
+      # otherwise be told the old one authenticated a request Doorkeeper had
+      # rejected.
+      return false if secret.nil? || old_secret.blank?
+
+      stored_secret_matches?(input.to_s, :old_secret)
     end
 
     private

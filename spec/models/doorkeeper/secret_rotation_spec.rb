@@ -132,6 +132,25 @@ RSpec.describe "client secret rotation" do
           .to raise_error(Doorkeeper::Errors::SecretRotationNotEnabled, /rotate_secret!\(revoke_old: true\)/)
       end
 
+      # Why the message says what it says: turning the option off stops the
+      # retained secret authenticating but does not remove it, and #renew_secret
+      # does not either — so it is live again as soon as rotation is available.
+      it "leaves a retained secret to authenticate again once rotation returns" do
+        enable_rotation
+        old_plaintext = app.plaintext_secret
+        app.rotate_secret!
+        Doorkeeper.configure { orm DOORKEEPER_ORM }
+
+        expect(app.reload.secret_matches?(old_plaintext)).to be(false)
+
+        app.renew_secret
+        app.save!
+        enable_rotation
+
+        expect(app.reload.read_attribute(:old_secret)).to be_present
+        expect(app.secret_matches?(old_plaintext)).to be(true)
+      end
+
       it "leaves the secret untouched when it raises" do
         expect { app.rotate_secret! }.to raise_error(Doorkeeper::Errors::SecretRotationNotEnabled)
 
@@ -204,6 +223,20 @@ RSpec.describe "client secret rotation" do
         expect(ActiveRecord::Base).to receive(:connected_to).with(role: :writing).and_yield
 
         app.rotate_secret!
+      end
+
+      # Two rotations racing on the same row: without the lock the later one
+      # retains a stale `secret` and overwrites a secret the earlier one had
+      # already handed to a client, which would then never authenticate.
+      it "reads the row back under a lock so a concurrent rotation is not lost" do
+        stale = Doorkeeper::Application.find(app.id)
+        first_secret = app.rotate_secret!
+
+        second_secret = stale.rotate_secret!
+
+        reloaded = Doorkeeper::Application.find(app.id)
+        expect(reloaded.secret_matches?(second_secret)).to be(true)
+        expect(reloaded.old_secret_matches?(first_secret)).to be(true)
       end
 
       it "takes the lock" do
@@ -572,6 +605,38 @@ RSpec.describe "client secret rotation" do
 
         expect(app.reload.old_secret).to eq(stored)
       end
+
+      it "keeps both secrets usable through the hashing strategy" do
+        old_plaintext = app.plaintext_secret
+
+        new_plaintext = app.rotate_secret!
+
+        expect(app.reload.secret_matches?(old_plaintext)).to be(true)
+        expect(app.secret_matches?(new_plaintext)).to be(true)
+      end
+    end
+
+    context "with bcrypt application secrets" do
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          hash_application_secrets using: "Doorkeeper::SecretStoring::BCrypt"
+          enable_secret_rotation
+        end
+      end
+
+      # bcrypt draws a fresh salt on every write, so the old secret can only
+      # be retained by copying the stored digest — there is no plaintext left
+      # to hash again.
+      it "keeps the retained digest verifiable" do
+        old_plaintext = app.plaintext_secret
+        stored = app.secret
+
+        app.rotate_secret!
+
+        expect(app.reload.old_secret).to eq(stored)
+        expect(app.secret_matches?(old_plaintext)).to be(true)
+      end
     end
   end
 
@@ -599,6 +664,31 @@ RSpec.describe "client secret rotation" do
       reloaded = Doorkeeper::Application.find(app.id)
       expect(reloaded.secret).to eq(stored)
       expect(reloaded.secret_matches?(returned)).to be(false)
+    end
+  end
+
+  describe "replacing a secret with no grace period" do
+    before { enable_rotation }
+
+    it "is #rotate_secret!(revoke_old: true), which drops what was retained" do
+      first = app.plaintext_secret
+      app.rotate_secret!
+
+      app.rotate_secret!(revoke_old: true)
+
+      expect(app.reload.old_secret).to be_nil
+      expect(app.secret_matches?(first)).to be(false)
+    end
+
+    it "is not #renew_secret, which leaves an open grace period open" do
+      first = app.plaintext_secret
+      app.rotate_secret!
+
+      app.renew_secret
+      app.save!
+
+      expect(app.reload.old_secret).to be_present
+      expect(app.secret_matches?(first)).to be(true)
     end
   end
 
@@ -918,6 +1008,183 @@ RSpec.describe "client secret rotation" do
           expect(app.old_secret_created_at).to be_present
         end
       end
+    end
+  end
+
+  describe "#old_secret_matches?" do
+    it "is false while rotation is disabled, even with an old secret stored" do
+      app.update_column(:old_secret, "retained")
+
+      expect(app.old_secret_matches?("retained")).to be(false)
+    end
+
+    context "when rotation is enabled" do
+      before { enable_rotation }
+
+      it "is false when nothing has been rotated" do
+        expect(app.old_secret_matches?(app.plaintext_secret)).to be(false)
+      end
+
+      it "is true for the secret the last rotation superseded" do
+        old_plaintext = app.plaintext_secret
+        app.rotate_secret!
+
+        expect(app.old_secret_matches?(old_plaintext)).to be(true)
+      end
+
+      it "is false for the current secret" do
+        new_plaintext = app.rotate_secret!
+
+        expect(app.old_secret_matches?(new_plaintext)).to be(false)
+      end
+
+      it "is false for a nil input" do
+        app.rotate_secret!
+
+        expect(app.old_secret_matches?(nil)).to be(false)
+      end
+
+      it "is false for an application with no secret at all" do
+        public_app = FactoryBot.create(:application, confidential: false)
+        public_app.update_column(:secret, nil)
+
+        expect(public_app.old_secret_matches?("anything")).to be(false)
+      end
+
+      # The two halves of `#secret_matches?` have to agree: that one refuses a
+      # nil `secret` before it consults the retained one, so a host asking
+      # this predicate which secret a client presented must not be told the
+      # old one authenticated a request Doorkeeper rejected.
+      it "is false once the current secret is gone, as #secret_matches? is" do
+        old_plaintext = app.plaintext_secret
+        app.rotate_secret!
+        app.update_columns(secret: nil, confidential: false)
+        app.reload
+
+        expect(app.old_secret_matches?(old_plaintext)).to be(false)
+        expect(app.secret_matches?(old_plaintext)).to be(false)
+      end
+    end
+  end
+
+  describe "#secret_matches?" do
+    context "when rotation is disabled" do
+      # The feature costs nothing when it is off: the comparison is the same
+      # single comparison it has always been.
+      it "compares the current secret only" do
+        app.update_column(:old_secret, "retained")
+
+        expect(app).not_to receive(:old_secret_matches?)
+        expect(app.secret_matches?(app.plaintext_secret)).to be(true)
+        expect(app.secret_matches?("retained")).to be(false)
+      end
+    end
+
+    context "when rotation is enabled" do
+      before { enable_rotation }
+
+      it "accepts the current secret" do
+        new_plaintext = app.rotate_secret!
+
+        expect(app.secret_matches?(new_plaintext)).to be(true)
+      end
+
+      it "accepts the superseded secret" do
+        old_plaintext = app.plaintext_secret
+        app.rotate_secret!
+
+        expect(app.secret_matches?(old_plaintext)).to be(true)
+      end
+
+      it "rejects an unrelated secret" do
+        app.rotate_secret!
+
+        expect(app.secret_matches?("nope")).to be(false)
+      end
+
+      it "rejects a nil secret" do
+        app.rotate_secret!
+
+        expect(app.secret_matches?(nil)).to be(false)
+      end
+
+      # README: a `by_uid` override that narrows the columns loaded has to
+      # include the rotation columns — the comparison reads them, and a
+      # record loaded without them raises rather than compare against
+      # nothing.
+      it "raises when the record was loaded without the rotation columns" do
+        narrowed = Doorkeeper::Application.select(:id, :uid, :secret, :confidential).find(app.id)
+
+        expect { narrowed.secret_matches?("nope") }.to raise_error(ActiveModel::MissingAttributeError)
+      end
+
+      it "stops accepting the superseded secret once the grace period ends" do
+        old_plaintext = app.plaintext_secret
+        app.rotate_secret!
+        app.clear_old_secret!
+
+        expect(app.secret_matches?(old_plaintext)).to be(false)
+      end
+    end
+
+    context "with the fallback strategy and rotation enabled" do
+      let(:plain_old_secret) { "plain text old secret" }
+
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          hash_application_secrets fallback: :plain
+          enable_secret_rotation
+        end
+
+        # An application rotated while its secrets were still stored in plain
+        # text: the retained value is in the fallback format.
+        app.update_columns(old_secret: plain_old_secret, old_secret_created_at: Time.now.utc)
+      end
+
+      it "matches an old secret stored in the fallback format" do
+        expect(app.secret_matches?(plain_old_secret)).to be(true)
+      end
+
+      it "upgrades the old secret to the active strategy on a match" do
+        expect(Doorkeeper::Application).to receive(:upgrade_fallback_value).and_call_original
+
+        expect(app.secret_matches?(plain_old_secret)).to be(true)
+
+        expect(app.reload.old_secret)
+          .to eq(Doorkeeper::SecretStoring::Sha256Hash.transform_secret(plain_old_secret))
+      end
+
+      it "still matches the old secret after the upgrade" do
+        app.secret_matches?(plain_old_secret)
+
+        expect(app.reload.secret_matches?(plain_old_secret)).to be(true)
+      end
+    end
+  end
+
+  describe ".by_uid_and_secret" do
+    before { enable_rotation }
+
+    it "finds the application by its superseded secret" do
+      old_plaintext = app.plaintext_secret
+      app.rotate_secret!
+
+      expect(Doorkeeper::Application.by_uid_and_secret(app.uid, old_plaintext)).to eq(app)
+    end
+
+    it "finds the application by its current secret" do
+      new_plaintext = app.rotate_secret!
+
+      expect(Doorkeeper::Application.by_uid_and_secret(app.uid, new_plaintext)).to eq(app)
+    end
+
+    it "does not find it by a cleared secret" do
+      old_plaintext = app.plaintext_secret
+      app.rotate_secret!
+      app.clear_old_secret!
+
+      expect(Doorkeeper::Application.by_uid_and_secret(app.uid, old_plaintext)).to be_nil
     end
   end
 end
