@@ -32,6 +32,16 @@ module Doorkeeper
       end
 
       ##
+      # A hash this strategy did not write is refused by +::BCrypt::Password+
+      # before any comparison runs, which is the same question this asks.
+      def self.recognizes_stored_secret?(stored)
+        ::BCrypt::Password.new(stored.to_s)
+        true
+      rescue ::BCrypt::Errors::InvalidHash
+        false
+      end
+
+      ##
       # Determines what secrets this strategy is applicable for
       def self.validate_for(model)
         unless model.to_sym == :application
