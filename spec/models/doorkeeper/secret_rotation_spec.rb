@@ -16,6 +16,17 @@ RSpec.describe "client secret rotation" do
     end
   end
 
+  # The missing-columns warning is said once per process, remembered on the
+  # model class itself. Stubbing `column_names` on the real model trips it,
+  # and the stub is undone per example while the flag is not, so it is reset
+  # here or the first such example would silence the warning for the rest
+  # of the run.
+  after do
+    if Doorkeeper::Application.instance_variable_defined?(:@secret_rotation_columns_warned)
+      Doorkeeper::Application.remove_instance_variable(:@secret_rotation_columns_warned)
+    end
+  end
+
   describe "Doorkeeper.config#enable_secret_rotation?" do
     it "is disabled by default" do
       expect(Doorkeeper.config.enable_secret_rotation?).to be(false)
@@ -115,13 +126,25 @@ RSpec.describe "client secret rotation" do
 
     # Both options are read only from behind `enable_secret_rotation`, so
     # setting either without it is a deadline that never arrives and a hook
-    # that never fires, with nothing to say so.
+    # that never fires, with nothing to say so. Each is set on its own: the
+    # validation has one condition per option, and configuring both at once
+    # would let either condition go missing unnoticed.
     it "warns when it is configured without enable_secret_rotation" do
       expect(Rails.logger).to receive(:warn).with(/without enable_secret_rotation/)
 
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
         secret_rotation_grace_period 7.days
+      end
+    end
+
+    # `after_old_secret_used` has a default, so the validation detects it by
+    # whether it was assigned rather than by its value.
+    it "warns when after_old_secret_used is configured without enable_secret_rotation" do
+      expect(Rails.logger).to receive(:warn).with(/without enable_secret_rotation/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
         after_old_secret_used ->(_application) {}
       end
     end
@@ -275,6 +298,21 @@ RSpec.describe "client secret rotation" do
       expect(Doorkeeper::Application.filter_attributes)
         .to include(*ActiveRecord::Base.filter_attributes)
     end
+
+    # Composed from the base class once, when the model loads, as any
+    # per-model declaration is. Before the columns were named here the model
+    # had no list of its own and read the base class's live, so this is a
+    # difference a host could notice; pinned so that a change to it is a
+    # deliberate one.
+    it "composes the host-wide entries once, when the model loads" do
+      original = ActiveRecord::Base.filter_attributes
+      ActiveRecord::Base.filter_attributes += [:redirect_uri]
+
+      expect(Doorkeeper::AccessToken.filter_attributes).to include(:redirect_uri)
+      expect(Doorkeeper::Application.filter_attributes).not_to include(:redirect_uri)
+    ensure
+      ActiveRecord::Base.filter_attributes = original
+    end
   end
 
   # Enabling the option without running the migration leaves authentication
@@ -319,6 +357,17 @@ RSpec.describe "client secret rotation" do
       expect(Rails.logger).not_to receive(:warn).with(/enable_secret_rotation is set/)
 
       expect(Doorkeeper.config.application_model.secret_rotation_enabled?).to be(true)
+    end
+
+    # On the real model and not only the throwaway one above: the examples
+    # earlier in this file that stub `column_names` on it would otherwise
+    # leave it already warned by the time this runs.
+    it "warns once on the real application model" do
+      allow(Doorkeeper::Application).to receive(:column_names)
+        .and_return(Doorkeeper::Application.column_names - ["old_secret"])
+      expect(Rails.logger).to receive(:warn).with(/enable_secret_rotation is set/).once
+
+      2.times { Doorkeeper::Application.secret_rotation_enabled? }
     end
   end
 
@@ -987,6 +1036,18 @@ RSpec.describe "client secret rotation" do
           expect(other.reload).not_to be_revoked
         end
 
+        # The two flags are independent: the sweep does not imply giving up
+        # the grace period.
+        it "still retains the superseded secret when revoke_old is not asked for" do
+          old_plaintext = app.plaintext_secret
+
+          app.rotate_secret!(revoke_tokens: true)
+
+          expect(app.reload.secret_matches?(old_plaintext)).to be(true)
+          expect(token.reload).to be_revoked
+          expect(grant.reload).to be_revoked
+        end
+
         it "revokes nothing unless asked" do
           app.rotate_secret!
 
@@ -1230,9 +1291,6 @@ RSpec.describe "client secret rotation" do
         end
       end
 
-      # Re-deriving needs the plain text, and a fallback strategy that hashes
-      # has none to give back. The value is carried over as stored, as it
-      # always was.
       # `recognizes_stored_secret?` is new, and a secret strategy is duck typed
       # everywhere else it is used, so one that does not subclass
       # SecretStoring::Base has never had to define it. Answered the way Base
@@ -1261,20 +1319,25 @@ RSpec.describe "client secret rotation" do
 
         before do
           stub_const("CustomSecretStrategy", strategy)
-          enable_rotation
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            hash_application_secrets fallback: :plain
+            enable_secret_rotation
+          end
           allow(Doorkeeper.config).to receive(:application_secret_strategy)
             .and_return(CustomSecretStrategy)
         end
 
-        it "retains the stored secret rather than raising" do
-          stored = app.secret
+        it "retains the fallback-written secret as stored rather than re-deriving or raising" do
+          expect { legacy.rotate_secret! }.not_to raise_error
 
-          expect { app.rotate_secret! }.not_to raise_error
-
-          expect(app.reload.old_secret).to eq(stored)
+          expect(legacy.reload.old_secret).to eq(legacy_plaintext)
         end
       end
 
+      # Re-deriving needs the plain text, and a fallback strategy that hashes
+      # has none to give back. The value is carried over as stored, as it
+      # always was.
       context "when the fallback strategy cannot restore it" do
         let!(:legacy) do
           Doorkeeper.configure do
