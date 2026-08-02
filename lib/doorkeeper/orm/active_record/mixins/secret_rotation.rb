@@ -23,6 +23,24 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
   module SecretRotation
     extend ActiveSupport::Concern
 
+    included do
+      # A retained secret is a live credential — it authenticates the client
+      # exactly as `secret` does — and plain text under the default strategy,
+      # and the timestamp beside it says a client is midway through a
+      # rotation. Named on the model, which is what Active Record matches
+      # against column names, so both read as [FILTERED] from `#inspect`.
+      # That is as far as a model's own list reaches: ActiveRecord's log
+      # subscriber filters the bind values it logs through
+      # `ActiveRecord::Base.inspection_filter` and never the model's, so
+      # redacting those is the host application's to ask for -- README says
+      # how. Not added to
+      # `config.filter_parameters`, which reaches every model and every log
+      # line in the host application: neither is the name of a request
+      # parameter Doorkeeper accepts, and `token` was in that list once and
+      # was taken back out for exactly that reason (#792).
+      self.filter_attributes += %i[old_secret old_secret_created_at]
+    end
+
     # Replaces this application's secret, retaining the superseded one so
     # that clients still presenting it keep authenticating until the
     # application ends the grace period with +#clear_old_secret!+. Requires
