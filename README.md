@@ -41,6 +41,7 @@ Supported features:
 - [Extensions](#extensions)
 - [Resource Indicators](#resource-indicators)
 - [Custom Grant Flows](#custom-grant-flows)
+- [Custom Client Authentication Methods](#custom-client-authentication-methods)
 - [Example Applications](#example-applications)
 - [Sponsors](#sponsors)
 - [Development](#development)
@@ -259,6 +260,55 @@ end
 The `client_supports_grant_flow` validation keeps the custom grant subject to the `allow_grant_flow_for_client` configuration option (per-client grant restrictions), just like the built-in flows.
 
 Flows can also handle custom `response_type` values on the authorization endpoint via the `response_type_matches` / `response_type_strategy` options — see the built-in registrations in [`lib/doorkeeper/grant_flow.rb`](lib/doorkeeper/grant_flow.rb) for reference. An extension can also group several flows under one configuration name with `Doorkeeper::GrantFlow.register_alias` (e.g. the OpenID Connect extension registers `implicit_oidc` to expand to multiple response types).
+
+## Custom Client Authentication Methods
+
+Doorkeeper authenticates clients (RFC 6749 §2.3) through a registry of named methods. `client_secret_basic`, `client_secret_post` and `none` are built in, and an application or extension can register additional ones — for instance to keep accepting credentials that a partner integration sends in its own headers.
+
+A method is any object that responds to `matches_request?` and `authenticate`. Register it before `Doorkeeper.configure` and enable it by listing its registered name in `client_authentication`:
+
+```ruby
+# config/initializers/doorkeeper.rb
+Doorkeeper::ClientAuthentication.register(
+  :partner_headers,
+  PartnerHeaders::Authentication,
+)
+
+Doorkeeper.configure do
+  client_authentication %i[client_secret_basic client_secret_post partner_headers none]
+  # ...
+end
+```
+
+The order of `client_authentication` is the order the methods are tried in: the first one whose `matches_request?` returns true handles the request.
+
+`matches_request?` decides whether the request carries this method's credentials, and `authenticate` extracts them into a `Doorkeeper::ClientAuthentication::Credentials` pair (or `nil`):
+
+```ruby
+module PartnerHeaders
+  class Authentication
+    def self.matches_request?(request)
+      request.get_header("HTTP_X_CLIENT_ID").present? &&
+        request.get_header("HTTP_X_CLIENT_SECRET").present?
+    end
+
+    def self.authenticate(request)
+      Doorkeeper::ClientAuthentication::Credentials.new(
+        request.get_header("HTTP_X_CLIENT_ID"),
+        request.get_header("HTTP_X_CLIENT_SECRET"),
+      )
+    end
+  end
+end
+```
+
+Two things are worth keeping in mind when writing one.
+
+**Keep `matches_request?` as narrow as possible.** RFC 6749 §2.3 forbids a client from using more than one authentication method in a single request, and Doorkeeper enforces that across the whole registry rather than only the enabled methods. A method that matches too broadly therefore collides with a built-in one and the request is answered with `invalid_request`.
+
+**The returned credentials are resolved with `by_uid_and_secret`.** A blank secret resolves only a public (non-confidential) client — that is what the built-in `none` method relies on — while a confidential client is resolved only when the secret matches the registered one. A method that establishes the client's identity by some other proof, such as a client certificate or a signed assertion, therefore still has to produce the registered secret for a confidential client.
+
+Enabled methods are advertised in the authorization server metadata, so a registered method appears in `token_endpoint_auth_methods_supported` at `/.well-known/oauth-authorization-server` once `client_authentication` lists it.
 
 ## Example Applications
 
