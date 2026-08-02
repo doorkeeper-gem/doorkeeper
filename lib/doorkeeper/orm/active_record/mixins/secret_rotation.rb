@@ -133,10 +133,29 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
     # directions. As with a rotation, taking the lock requires a record free
     # of unsaved changes.
     #
+    # Pass +retained_at:+ to make the clear conditional on the grace period
+    # still being the one the caller looked at. A job selecting rows by an
+    # expired +old_secret_created_at+ — which this feature invites, since
+    # that column is what such a job has to go on — can otherwise be raced
+    # by a fresh +#rotate_secret!+ between its query and this lock, and the
+    # reload below would then hand it the *new* grace period to end,
+    # cutting off the clients that rotation was opened for. With the
+    # timestamp it observed, a row whose grace period changed underneath is
+    # left alone and answers false. Omitted, the clear is unconditional:
+    # what an admin ending a grace period by hand means is "whatever is
+    # there now".
+    #
+    # @param retained_at [Time, nil] the +old_secret_created_at+ the caller
+    #   decided on, or nil to clear whatever the row holds. Anything that is
+    #   not a time raises +ArgumentError+ rather than answering false, which
+    #   would be indistinguishable from another process having got there
+    #   first.
+    #
     # @return [Boolean] whether a grace period was there to end
     #
-    def clear_old_secret!
+    def clear_old_secret!(retained_at: nil)
       ensure_secret_rotation_columns!
+      ensure_comparable_retained_at!(retained_at)
       ensure_lockable!
 
       cleared = false
@@ -167,6 +186,14 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
           # cleanup job driven by `old_secret_created_at` reselecting it
           # without ever clearing it.
           next if old_secret.blank? && old_secret_created_at.blank?
+          # Read under the lock, so the comparison is against what is
+          # committed rather than what this instance was loaded with, and
+          # compared as a time rather than as whatever the caller happened to
+          # be holding: a `retained_at` that arrived through a job payload or
+          # a form is a String, and comparing it as one answers false without
+          # saying why — which the caller cannot tell apart from another
+          # process having ended the grace period first.
+          next if retained_at && old_secret_created_at != retained_at
 
           # Assignment and `save!`, the shape +#rotate_secret!+ uses, rather
           # than `update!`: `update!` wraps the assignment in a transaction
@@ -194,6 +221,26 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
     end
 
     private
+
+    # +retained_at+ is the `old_secret_created_at` the caller read off a row,
+    # so anything that is not a time is their mistake rather than a grace
+    # period that moved. Said out loud instead of compared: a String — which
+    # is what the value becomes on its way through a job payload or a form —
+    # is never equal to a time, so the clear would answer false, and false is
+    # what this method says when another process has already ended the grace
+    # period. The caller cannot tell those apart.
+    #
+    # Coercing it instead would be worse than either: `#to_s` on a timestamp
+    # drops the sub-second digits the column keeps, so the round trip
+    # compares unequal and answers false all the same, only now with a
+    # plausible-looking value to explain it.
+    def ensure_comparable_retained_at!(retained_at)
+      return if retained_at.nil? || retained_at.acts_like?(:time)
+
+      raise ArgumentError,
+            "retained_at must be the `old_secret_created_at` you decided on, " \
+            "got #{retained_at.inspect}."
+    end
 
     def ensure_secret_rotation_enabled!
       return if self.class.secret_rotation_enabled?
