@@ -115,6 +115,43 @@ module Doorkeeper
       end
     end
 
+    # Raised when `Application#rotate_secret!(revoke_tokens: true)` is called
+    # inside a transaction the rotation would join. The revocation of the
+    # application's tokens and grants must run after the rotation's row lock
+    # has been released — under it, the lock order is the reverse of the one
+    # token requests take, and the two deadlock — and inside a joined
+    # transaction that lock is held until the caller's commit, which the
+    # rotation cannot wait for. The caller commits first, then revokes
+    # through `#revoke_issued_credentials!`.
+    class SecretRotationInTransaction < DoorkeeperError
+      def initialize
+        super(
+          "`rotate_secret!(revoke_tokens: true)` cannot run inside an open transaction: the " \
+          "revocation must wait for the rotation's row lock to be released, and a transaction " \
+          "it joined holds that lock until its own commit. Rotate without `revoke_tokens`, " \
+          "then call `#revoke_issued_credentials!` once the transaction has committed.",
+        )
+      end
+    end
+
+    # Raised when `Application#rotate_secret!` or `#clear_old_secret!` is
+    # called without client secret rotation being available — either the
+    # `enable_secret_rotation` option is off or the rotation columns have not
+    # been added. Rotating under those conditions would drop the superseded
+    # secret rather than retain it, cutting off every client the caller meant
+    # to give a grace period, so it fails loudly instead of silently doing the
+    # opposite of what was asked.
+    class SecretRotationNotEnabled < DoorkeeperError
+      def initialize(table)
+        super(
+          "Client secret rotation is not enabled. Add `enable_secret_rotation` to your Doorkeeper " \
+          "initializer and make sure the `old_secret` and `old_secret_created_at` columns exist " \
+          "on the #{table} table (`rails generate doorkeeper:secret_rotation`). " \
+          "Use `#renew_secret` to replace a secret without a grace period.",
+        )
+      end
+    end
+
     InvalidRequest = Class.new(BaseResponseError)
     InvalidToken = Class.new(BaseResponseError)
     InvalidClient = Class.new(BaseResponseError)
