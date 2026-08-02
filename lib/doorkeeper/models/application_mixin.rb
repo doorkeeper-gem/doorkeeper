@@ -158,14 +158,32 @@ module Doorkeeper
 
       input = input.to_s
 
+      stored_secret_matches?(input, :secret)
+    end
+
+    private
+
+    # Compare +input+ against the secret stored in +attribute+, honouring the
+    # configured fallback strategy the same way the primary secret always has.
+    #
+    # @param input [String] Plain secret provided by user
+    # @param attribute [Symbol] the secret attribute to compare against
+    #
+    # @return [Boolean]
+    #
+    def stored_secret_matches?(input, attribute)
+      # Read through the reader named, spelled out rather than dispatched on
+      # the name, so a host's own `secret` or `old_secret` reader is honoured.
+      stored = attribute == :old_secret ? old_secret : secret
+
       # When matching the secret by comparer function, all is well.
-      return true if secret_strategy.secret_matches?(input, secret)
+      return true if secret_strategy.secret_matches?(input, stored)
 
       # When fallback lookup is enabled, ensure applications with plain secrets
       # can still be found, upgrading the stored secret to the active strategy
       # on a successful match.
-      if fallback_secret_strategy&.secret_matches?(input, secret)
-        self.class.upgrade_fallback_value(self, :secret, input)
+      if fallback_secret_strategy&.secret_matches?(input, stored)
+        self.class.upgrade_fallback_value(self, attribute, input)
         true
       else
         false
