@@ -247,6 +247,36 @@ RSpec.describe "client secret rotation" do
     end
   end
 
+  # Naming the columns on the model is only half the guarantee: it is
+  # +filter_attributes+ that #inspect consults, and it consults it through the
+  # inheritance the mixin is included into. Asserted end to end here rather
+  # than on the attribute list alone, so the retained secret is pinned as
+  # absent from an inspected record rather than inferred to be.
+  describe "an inspected application record" do
+    it "withholds the retained secret and the timestamp that says a rotation is under way" do
+      enable_rotation
+      app.rotate_secret!
+      app.reload
+
+      inspected = app.inspect
+
+      expect(inspected).to include("old_secret: [FILTERED]")
+      expect(inspected).to include("old_secret_created_at: [FILTERED]")
+      expect(inspected).not_to include(app.read_attribute(:old_secret))
+    end
+
+    # Named on the model, which is what Active Record matches against column
+    # names, rather than added to the host application's own
+    # `config.filter_parameters` — and composed onto whatever that list
+    # contributes rather than replacing it.
+    it "names the columns on the model without dropping the host-wide entries" do
+      expect(Doorkeeper::Application.filter_attributes)
+        .to include(:old_secret, :old_secret_created_at)
+      expect(Doorkeeper::Application.filter_attributes)
+        .to include(*ActiveRecord::Base.filter_attributes)
+    end
+  end
+
   # Enabling the option without running the migration leaves authentication
   # exactly as it was, which is silent — so the reason is said once, the first
   # time the columns are looked for. Looked for and not asked at boot: reading
