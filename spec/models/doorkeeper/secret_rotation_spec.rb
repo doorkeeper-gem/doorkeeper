@@ -1376,6 +1376,50 @@ RSpec.describe "client secret rotation" do
 
       expect(token.reload).to be_revoked
     end
+
+    # The guard must not go through `connection`, the permanent-checkout API
+    # Rails 7.2 soft-deprecated: under `permanent_connection_checkout =
+    # :disallowed` it raises whenever nothing has leased the thread's
+    # connection yet, which is how every request and job starts. The suite
+    # cannot see that as it stands — DatabaseCleaner leases the connection
+    # (sticky) before each example — so the lease is put back into its fresh
+    # state here — inside the example, after DatabaseCleaner's `before` has
+    # run (an `around` would be undone by it).
+    context "with permanent_connection_checkout = :disallowed" do
+      def with_disallowed_permanent_checkout
+        skip "Rails < 7.2 has no permanent_connection_checkout" unless ActiveRecord.respond_to?(:permanent_connection_checkout=)
+
+        lease = Doorkeeper::Application.connection_pool.send(:connection_lease)
+        sticky_was = lease.sticky
+        setting_was = ActiveRecord.permanent_connection_checkout
+        lease.sticky = nil
+        ActiveRecord.permanent_connection_checkout = :disallowed
+        yield
+      ensure
+        ActiveRecord.permanent_connection_checkout = setting_was if setting_was
+        lease.sticky = sticky_was if lease
+      end
+
+      it "rotates and revokes outside a transaction" do
+        with_disallowed_permanent_checkout do
+          expect { app.rotate_secret!(revoke_old: true, revoke_tokens: true) }.not_to raise_error
+        end
+
+        expect(token.reload).to be_revoked
+      end
+
+      it "is still refused inside a joinable transaction" do
+        with_disallowed_permanent_checkout do
+          expect do
+            Doorkeeper::Application.transaction do
+              app.rotate_secret!(revoke_old: true, revoke_tokens: true)
+            end
+          end.to raise_error(Doorkeeper::Errors::SecretRotationInTransaction)
+        end
+
+        expect(token.reload).not_to be_revoked
+      end
+    end
   end
 
   # What the docs point at for "replace the secret with no grace period at
