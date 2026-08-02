@@ -10,6 +10,12 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
 
       include ::Doorkeeper::ApplicationMixin
       include ::Doorkeeper::Orm::ActiveRecord::Mixins::SecretStorable
+      # `#rotate_secret!`, `#clear_old_secret!` and `#revoke_issued_credentials!`,
+      # kept apart because the row lock and the post-commit revocation sweep
+      # they coordinate carry invariants of their own. Included whether or not
+      # `enable_secret_rotation` is set: the option is read per call, so that
+      # turning it on does not require redefining the model.
+      include ::Doorkeeper::Orm::ActiveRecord::Mixins::SecretRotation
       # `enable_application_owner?` is read once, at parent-class autoload
       # time (#1831): with the feature off the model exposes no `:owner`
       # association — avoiding a misleading reflection on schemas that lack
