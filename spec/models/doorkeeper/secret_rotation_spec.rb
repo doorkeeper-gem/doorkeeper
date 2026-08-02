@@ -28,6 +28,78 @@ RSpec.describe "client secret rotation" do
     end
   end
 
+  # The grace period is consumed as `old_secret_created_at + grace_period`,
+  # so a value that cannot be added to a time would boot fine and start
+  # raising TypeError on the first client authentication after a rotation.
+  # It is refused at configuration time instead.
+  describe "Doorkeeper.config#secret_rotation_grace_period" do
+    it "accepts a duration" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enable_secret_rotation
+        secret_rotation_grace_period 7.days
+      end
+
+      expect(Doorkeeper.config.secret_rotation_grace_period).to eq(7.days)
+    end
+
+    it "accepts a number of seconds" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enable_secret_rotation
+        secret_rotation_grace_period 3600
+      end
+
+      expect(Doorkeeper.config.secret_rotation_grace_period).to eq(3600)
+    end
+
+    it "refuses a value that cannot be added to a time" do
+      expect do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          enable_secret_rotation
+          secret_rotation_grace_period "7 days"
+        end
+      end.to raise_error(ArgumentError, /secret_rotation_grace_period.*"7 days"/)
+    end
+
+    it "refuses a deadline that is never in the future" do
+      [0, -1.day].each do |period|
+        expect do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            enable_secret_rotation
+            secret_rotation_grace_period period
+          end
+        end.to raise_error(ArgumentError, /secret_rotation_grace_period/)
+      end
+    end
+
+    # A positive Numeric that still cannot be added to a time — an endless
+    # grace period is what the nil default already says.
+    it "refuses an infinite grace period" do
+      expect do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          enable_secret_rotation
+          secret_rotation_grace_period Float::INFINITY
+        end
+      end.to raise_error(ArgumentError, /secret_rotation_grace_period/)
+    end
+
+    # Complex is a Numeric too, one with no ordering: asking whether it is
+    # positive raises rather than answers, so it is sorted out before that.
+    it "refuses a complex number" do
+      expect do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          enable_secret_rotation
+          secret_rotation_grace_period Complex(1, 0)
+        end
+      end.to raise_error(ArgumentError, /secret_rotation_grace_period/)
+    end
+  end
+
   describe ".secret_rotation_enabled?" do
     it "is false while the option is off, even though the column exists" do
       expect(Doorkeeper::Application.column_names).to include("old_secret")
@@ -1160,6 +1232,31 @@ RSpec.describe "client secret rotation" do
 
         expect(app.reload.secret_matches?(plain_old_secret)).to be(true)
       end
+
+      # The crossing of the two features: the retained secret is in the
+      # fallback format *and* its grace period has ended. Expiry is read
+      # before the comparison, so the dead credential is neither honoured nor
+      # re-encoded — a rejected authentication must not write the row.
+      context "when the grace period has already expired" do
+        before do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            hash_application_secrets fallback: :plain
+            enable_secret_rotation
+            secret_rotation_grace_period 7 * 24 * 60 * 60
+          end
+          app.update_columns(old_secret: plain_old_secret, old_secret_created_at: 8.days.ago)
+        end
+
+        it "rejects the expired old secret" do
+          expect(app.secret_matches?(plain_old_secret)).to be(false)
+        end
+
+        it "does not rewrite a credential it has already expired" do
+          expect { app.secret_matches?(plain_old_secret) }
+            .not_to(change { app.reload.attributes.values_at("old_secret", "updated_at") })
+        end
+      end
     end
   end
 
@@ -1185,6 +1282,153 @@ RSpec.describe "client secret rotation" do
       app.clear_old_secret!
 
       expect(Doorkeeper::Application.by_uid_and_secret(app.uid, old_plaintext)).to be_nil
+    end
+  end
+
+  describe "secret_rotation_grace_period" do
+    let(:old_plaintext) { app.plaintext_secret }
+
+    def enable_rotation_with_grace_period(period)
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enable_secret_rotation
+        secret_rotation_grace_period period
+      end
+    end
+
+    # #old_secret_expired? returns false at the nil-grace-period guard before
+    # it ever reaches the undated-secret branch, so a retained secret written
+    # without a timestamp outlives every deadline that is not configured —
+    # while #clear_old_secret! will still clear it.
+    it "keeps an undated retained secret alive while no deadline is configured" do
+      enable_rotation
+      old_plaintext = app.plaintext_secret
+      app.rotate_secret!
+      app.update_column(:old_secret_created_at, nil)
+
+      expect(app.old_secret_expired?).to be(false)
+      expect(app.reload.secret_matches?(old_plaintext)).to be(true)
+    end
+
+    it "is unset by default, so an old secret never expires on its own" do
+      expect(Doorkeeper.config.secret_rotation_grace_period).to be_nil
+
+      enable_rotation
+      old_plaintext
+      app.rotate_secret!
+      app.update_column(:old_secret_created_at, 10.years.ago)
+
+      expect(app.old_secret_expired?).to be(false)
+      expect(app.secret_matches?(old_plaintext)).to be(true)
+    end
+
+    it "keeps accepting the old secret inside the grace period" do
+      enable_rotation_with_grace_period(7 * 24 * 60 * 60)
+      old_plaintext
+      app.rotate_secret!
+      app.update_column(:old_secret_created_at, 6.days.ago)
+
+      expect(app.old_secret_expired?).to be(false)
+      expect(app.secret_matches?(old_plaintext)).to be(true)
+    end
+
+    # Written the way the README and the initializer write it, so that a
+    # duration is exercised through the deadline itself and not only through
+    # the config reader.
+    it "stops accepting it past the grace period" do
+      enable_rotation_with_grace_period(7.days)
+      old_plaintext
+      app.rotate_secret!
+      app.update_column(:old_secret_created_at, 8.days.ago)
+
+      expect(app.old_secret_expired?).to be(true)
+      expect(app.secret_matches?(old_plaintext)).to be(false)
+    end
+
+    # Expiring is not clearing: the deadline decides what authenticates, and
+    # the row keeps the value until #clear_old_secret! drops it.
+    it "leaves the expired secret in the row until it is cleared" do
+      enable_rotation_with_grace_period(7.days)
+      old_plaintext
+      app.rotate_secret!
+      app.update_column(:old_secret_created_at, 8.days.ago)
+
+      expect(app.reload.read_attribute(:old_secret)).to be_present
+
+      app.clear_old_secret!
+
+      expect(app.reload.read_attribute(:old_secret)).to be_nil
+    end
+
+    it "leaves the current secret unaffected" do
+      enable_rotation_with_grace_period(7 * 24 * 60 * 60)
+      new_plaintext = app.rotate_secret!
+      app.update_column(:old_secret_created_at, 8.days.ago)
+
+      expect(app.secret_matches?(new_plaintext)).to be(true)
+    end
+
+    # Expiry stops the old secret authenticating; removing it is a separate
+    # decision, so that an operator can still see that a rotation happened.
+    it "does not remove the expired secret" do
+      enable_rotation_with_grace_period(7 * 24 * 60 * 60)
+      old_plaintext
+      app.rotate_secret!
+      app.update_column(:old_secret_created_at, 8.days.ago)
+
+      app.secret_matches?(old_plaintext)
+
+      expect(app.reload.old_secret).to be_present
+    end
+
+    # A deadline nobody can date would leave exactly the indefinitely-valid
+    # secret the option was configured to prevent.
+    it "treats an undated old secret as expired" do
+      enable_rotation_with_grace_period(7 * 24 * 60 * 60)
+      old_plaintext
+      app.rotate_secret!
+      app.update_column(:old_secret_created_at, nil)
+
+      expect(app.old_secret_expired?).to be(true)
+      expect(app.secret_matches?(old_plaintext)).to be(false)
+    end
+
+    # An undated *retained* secret is expired; an application that never
+    # rotated has nothing retained, and so no grace period to outlive.
+    it "reports an application that never rotated as not expired" do
+      enable_rotation_with_grace_period(7 * 24 * 60 * 60)
+
+      expect(app.old_secret).to be_nil
+      expect(app.old_secret_expired?).to be(false)
+    end
+
+    it "reports nothing as expired while rotation is disabled" do
+      # Configuring the deadline alone is what Validations warns about; here
+      # it is only the setup for the question being asked.
+      allow(Rails.logger).to receive(:warn)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        secret_rotation_grace_period 7 * 24 * 60 * 60
+      end
+      app.update_columns(old_secret: "retained", old_secret_created_at: 8.days.ago)
+
+      # Asked directly as well: a value left in the column by a rotation that
+      # ran before the option was turned off is not this feature's business
+      # while the feature is off.
+      expect(app.old_secret_expired?).to be(false)
+      expect(app.secret_matches?(app.plaintext_secret)).to be(true)
+    end
+
+    # Same guard as `#old_secret_matches?`, so the public predicate answers
+    # instead of raising on the `old_secret` a missing migration never added.
+    it "reports nothing as expired with the option on but the column missing" do
+      enable_rotation_with_grace_period(7 * 24 * 60 * 60)
+      app.update_columns(old_secret: "retained", old_secret_created_at: 8.days.ago)
+      allow(Doorkeeper::Application).to receive(:column_names)
+        .and_return(Doorkeeper::Application.column_names - ["old_secret"])
+
+      expect(app.old_secret_expired?).to be(false)
     end
   end
 end
