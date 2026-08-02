@@ -188,15 +188,18 @@ module Doorkeeper
     # cannot be read off how long the endpoint took to answer. The dummy
     # comparison is deliberately made against a real stored secret rather than
     # a constant, so that it costs what a genuine comparison costs — which it
-    # does whenever both columns were written by the same strategy.
+    # does whenever both columns were written by the same strategy. A rotation
+    # sees to that: it re-derives a secret the fallback strategy wrote before
+    # retaining it, so that the two columns do not end up in different formats
+    # (see the Active Record mixin's #retain_secret).
     #
-    # What it cannot equalise is two columns held in different formats: a
-    # `secret` and an `old_secret` written by different strategies cost
-    # different comparisons, and the difference is measurable by anyone —
-    # under bcrypt an `InvalidHash` is refused for its shape before any work
-    # factor applies. A secret the fallback strategy wrote is retained in
-    # that format, so rotating under a `fallback:` strategy leaves exactly
-    # such a pair behind.
+    # What it cannot equalise is a format a rotation had no way to re-derive
+    # from — a fallback strategy that hashes, so that no plaintext survives
+    # to hash again under the active one. A `secret` and an `old_secret`
+    # written by different strategies then cost different comparisons, and the
+    # difference is measurable by anyone: under bcrypt an `InvalidHash` is
+    # refused for its shape before any work factor applies. Retire such a
+    # fallback — which is what a fallback is for — before rotating under it.
     #
     # What remains once the formats agree is the *active* strategy's work.
     # With a fallback strategy configured, a rotated application costs one

@@ -53,7 +53,13 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
     # The superseded secret is carried over as *stored*: hashing strategies
     # draw a fresh salt on every write, so the plaintext is not available to
     # store again — and does not need to be, since both columns are written
-    # and read back through the same strategy.
+    # and read back through the same strategy. The exception is a value the
+    # active strategy does not recognise as its own, which is to say one a
+    # `fallback:` strategy wrote: where that fallback can restore the
+    # plaintext, the secret is re-derived under the active strategy as it is
+    # retained, so that a rotation does not leave the plain text of a
+    # `fallback: :plain` secret sitting in `old_secret`. See
+    # +#retain_secret+.
     #
     # Only one generation is retained, mirroring how `previous_refresh_token`
     # keeps a single generation of refresh tokens. Rotating twice in a row
@@ -144,7 +150,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
               self.old_secret = nil
               self.old_secret_created_at = nil
             else
-              self.old_secret = secret
+              retain_secret
               self.old_secret_created_at = Time.now.utc
             end
 
@@ -487,6 +493,64 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
                     restorable_raw_secret(previous_raw_secret)
     end
 
+    # Carries the stored secret into `old_secret`: as it is, unless it was
+    # written by the fallback strategy rather than the active one, in which
+    # case it is re-derived under the active strategy on the way.
+    #
+    # A fallback strategy exists so that secrets stored under a previous
+    # strategy keep working until something rewrites them, and until this
+    # they were carried into `old_secret` in that previous format. Two
+    # things followed from that. The plaintext of a `fallback: :plain`
+    # secret outlived the very rotation that replaced it, sitting in
+    # `old_secret` for the length of the grace period on a row whose
+    # `secret` is now hashed. And the retained secret cost a different
+    # comparison from the current one, which is what
+    # ApplicationMixin#old_secret_matches? equalises by comparing against
+    # `secret` when there is nothing retained: a bcrypt comparison against a
+    # plain `old_secret` is refused for its shape before any work factor
+    # applies, so a rotated application answered measurably faster than an
+    # unrotated one -- to anyone, holding no secret at all.
+    #
+    # Re-deriving needs the plaintext, which only a restorable fallback
+    # strategy has (`:plain` is the one Doorkeeper ships). Against a
+    # fallback that hashes, there is nothing to re-derive from and the value
+    # is carried over as stored, as it always was.
+    #
+    # +recognizes_stored_secret?+ answers +true+ by default, so a custom
+    # strategy that does not override it retains as stored as well: only a
+    # strategy that can tell its own output apart from the fallback's takes
+    # this path, and misreading a value it did write would replace a working
+    # retained secret with the hash of its own hash.
+    #
+    # Re-derived through the strategy's +store_secret+, the way every other
+    # secret this model writes is (+#renew_secret+, the fallback upgrade),
+    # and not by assigning +transform_secret+'s return value: a strategy may
+    # override +store_secret+ to wrap what it stores — a version prefix, an
+    # attribute-specific encoding — and its +secret_matches?+ then expects
+    # that wrapping. Written past it, the retained secret would be in a form
+    # the strategy itself does not authenticate, and the grace period would
+    # silently admit nobody.
+    def retain_secret
+      plain_secret = fallback_plaintext_to_re_derive
+
+      if plain_secret
+        secret_strategy.store_secret(self, :old_secret, plain_secret)
+      else
+        self.old_secret = secret
+      end
+    end
+
+    # The plaintext of a fallback-written secret, when there is one to
+    # re-derive from; nil when the stored value is to be carried over as it
+    # is — because the active strategy claims it, or because the fallback
+    # strategy cannot give the plaintext back.
+    def fallback_plaintext_to_re_derive
+      return if recognized_by_active_strategy?(secret)
+      return unless fallback_secret_strategy&.allows_restoring_secrets?
+
+      fallback_secret_strategy.restore_secret(self, :secret).presence
+    end
+
     # Whether the rotation that stored +stored_secret+ is the one the row
     # holds, asked in the rescue once #undo_failed_rotation has run. On a
     # rollback Active Record puts the pre-transaction snapshot back and the
@@ -497,6 +561,22 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
     # Nil means `save!` never ran.
     def rotation_committed?(stored_secret)
       !stored_secret.nil? && secret == stored_secret
+    end
+
+    # Whether the active strategy claims the stored value as its own.
+    #
+    # +recognizes_stored_secret?+ is new, and a secret strategy is duck typed
+    # everywhere else it is used: +Validations#validate_secret_strategies+
+    # asks a configured one for +validate_for+ and nothing more, so a strategy
+    # that does not subclass +SecretStoring::Base+ has never had to define
+    # anything it did not choose to. One is answered here the way Base answers
+    # — true — which is the answer that changes nothing: the stored value is
+    # retained as it is, exactly as a rotation retained it before this
+    # predicate existed.
+    def recognized_by_active_strategy?(stored)
+      return true unless secret_strategy.respond_to?(:recognizes_stored_secret?)
+
+      secret_strategy.recognizes_stored_secret?(stored)
     end
 
     # The plaintext to keep after a failed rotation. `with_lock` reloads, so
