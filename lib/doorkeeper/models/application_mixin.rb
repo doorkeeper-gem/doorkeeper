@@ -168,6 +168,13 @@ module Doorkeeper
       match = stored_secret_matches?(input, :secret)
       old_match = old_secret_matches?(input)
 
+      # Reported only when the old secret is what actually let the client in,
+      # so that an application can tell whether anyone still depends on it
+      # before ending the grace period. This runs on a successful
+      # authentication only — a caller that cannot produce either secret never
+      # reaches it, so it adds no signal an attacker can measure.
+      Doorkeeper.config.after_old_secret_used.call(self) if old_match && !match
+
       match || old_match
     end
 

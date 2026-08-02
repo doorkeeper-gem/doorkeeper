@@ -21,6 +21,7 @@ module Doorkeeper
         validate_issuer_format
         validate_issuer_metadata_discoverability
         validate_secret_rotation_grace_period
+        validate_after_old_secret_used
       end
 
       private
@@ -290,6 +291,32 @@ module Doorkeeper
         raise ArgumentError,
               "secret_rotation_grace_period must be a finite positive number of " \
               "seconds or a duration (e.g. 7.days), got #{grace_period.inspect}."
+      end
+
+      # Called with the application on every authentication the superseded
+      # secret let in, and nowhere else — so a value that cannot be called
+      # boots fine and fails exactly the requests the grace period exists to
+      # keep working, while requests made with the new secret carry on as if
+      # nothing were wrong. Refused here instead, like the grace period
+      # above. A lambda or a Method is held to its arity as well: `-> {}`
+      # raises ArgumentError the moment it is handed the application, where
+      # a plain proc or block takes whatever it is given.
+      def validate_after_old_secret_used
+        return unless instance_variable_defined?(:@after_old_secret_used)
+
+        hook = after_old_secret_used
+        return if hook.respond_to?(:call) && callable_with_application?(hook)
+
+        raise ArgumentError,
+              "after_old_secret_used must be callable with the application " \
+              "(e.g. ->(application) { ... }), got #{hook.inspect}."
+      end
+
+      def callable_with_application?(hook)
+        return true if hook.is_a?(Proc) && !hook.lambda?
+        return true unless hook.respond_to?(:arity)
+
+        hook.arity == 1 || hook.arity.negative?
       end
 
       # Redact any userinfo (e.g. a misconfigured user:pass@host) before the
