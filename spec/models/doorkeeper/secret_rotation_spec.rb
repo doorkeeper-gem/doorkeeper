@@ -2221,6 +2221,17 @@ RSpec.describe "client secret rotation" do
       expect(json.keys).to include("secret")
     end
 
+    # ActiveModel converts `only`/`except` with `Array()`, which takes any
+    # enumerable (a Set included); the withholding must not narrow that.
+    it "accepts only: and except: given as a Set" do
+      expect(app.serializable_hash(only: Set[:id, :old_secret]).keys).to eq(["id"])
+
+      keys = app.serializable_hash(except: Set[:scopes]).keys
+
+      expect(keys).not_to include("scopes", "old_secret", "old_secret_created_at")
+      expect(keys).to include("secret")
+    end
+
     # ActiveModel's public #serializable_hash is the boundary the
     # withholding is applied at — #as_json runs through it, but it is also
     # an entry point of its own, and by default it dumps every attribute.
