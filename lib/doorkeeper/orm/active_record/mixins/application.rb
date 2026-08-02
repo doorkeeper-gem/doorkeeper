@@ -90,7 +90,9 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
         # the one passed in the options or check if we render the client as an owner
         if (respond_to?(:owner) && owner && owner == options[:current_resource_owner]) ||
            options[:as_owner]
-          # Owners can see all the client attributes, fallback to ActiveModel serialization
+          # Owners can see all the client attributes, fallback to ActiveModel
+          # serialization — which runs through #serializable_hash below, where
+          # the columns a rotation writes are withheld for everyone.
           super
         else
           # if application has no owner or it's owner doesn't match one from the options
