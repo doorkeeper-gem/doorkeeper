@@ -8,9 +8,9 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
   #
   # Kept in a file of its own rather than in the application mixin: what is
   # written here is a read-modify-write on a live credential under a row
-  # lock. Its invariants are easier to hold in view — and to change — when
-  # they are not interleaved with the model's validations, associations and
-  # serialization.
+  # lock, with a rollback repair on the way out. Those invariants are easier
+  # to hold in view — and to change — when they are not interleaved with the
+  # model's validations, associations and serialization.
   #
   # The comparison side of the feature — honouring the retained secret when
   # a client authenticates — belongs in +Doorkeeper::ApplicationMixin+, which
@@ -49,38 +49,57 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
     # @return [String] new plain text secret value
     #
     def rotate_secret!(revoke_old: false)
-      ensure_secret_rotation_enabled!
-      ensure_lockable!
+      # Captured before the guard so that the rescue below restores it even
+      # when nothing was attempted: a bare `raise` from the guard must not
+      # cost an application the plaintext of the secret it already has.
+      previous_raw_secret = @raw_secret
 
-      self.class.with_primary_role do
-        # Read-modify-write on the row: the secret being retained is the
-        # one currently stored, so two rotations racing without a lock
-        # would let the later one overwrite a secret the earlier one had
-        # already handed to a client — which would then never
-        # authenticate. `with_lock` reloads under the lock, so the retained
-        # value is the committed one even if this instance was loaded
-        # before the other rotation.
-        with_lock do
-          # A blank `secret` joins `revoke_old` because there is
-          # nothing to retain either way: a host schema that relaxed the
-          # install migration's `null: false` can hold a public client
-          # with no secret at all (see +#secret_required?+). Stamping the
-          # timestamp regardless would open a grace period over an empty
-          # `old_secret`, leaving the row saying a rotation is midway
-          # through when nothing was carried over.
-          # `renew_secret` below still writes one, as it always has, so
-          # such a client comes out of a rotation holding a secret.
-          if revoke_old || secret.blank?
-            self.old_secret = nil
-            self.old_secret_created_at = nil
-          else
-            self.old_secret = secret
-            self.old_secret_created_at = Time.now.utc
+      # Set once the lock block is entered. Failures before that point —
+      # the feature guard, `with_lock` refusing a record that carries
+      # unsaved changes — happen before this method has written anything,
+      # so there is nothing to roll back, and restoring anyway would
+      # discard values the caller had assigned to these columns.
+      locked = false
+
+      begin
+        ensure_secret_rotation_enabled!
+        ensure_lockable!
+
+        self.class.with_primary_role do
+          # Read-modify-write on the row: the secret being retained is the
+          # one currently stored, so two rotations racing without a lock
+          # would let the later one overwrite a secret the earlier one had
+          # already handed to a client — which would then never
+          # authenticate. `with_lock` reloads under the lock, so the retained
+          # value is the committed one even if this instance was loaded
+          # before the other rotation.
+          with_lock do
+            locked = true
+
+            # A blank `secret` joins `revoke_old` because there is
+            # nothing to retain either way: a host schema that relaxed the
+            # install migration's `null: false` can hold a public client
+            # with no secret at all (see +#secret_required?+). Stamping the
+            # timestamp regardless would open a grace period over an empty
+            # `old_secret`, leaving the row saying a rotation is midway
+            # through when nothing was carried over.
+            # `renew_secret` below still writes one, as it always has, so
+            # such a client comes out of a rotation holding a secret.
+            if revoke_old || secret.blank?
+              self.old_secret = nil
+              self.old_secret_created_at = nil
+            else
+              self.old_secret = secret
+              self.old_secret_created_at = Time.now.utc
+            end
+
+            renew_secret
+            save!
           end
-
-          renew_secret
-          save!
         end
+      rescue StandardError
+        undo_failed_rotation(locked, previous_raw_secret)
+        raise
       end
 
       plaintext_secret
@@ -114,6 +133,78 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
         "client secret rotation needs a persisted #{self.class.name}; #{remedy}",
         self,
       )
+    end
+
+    # Puts the instance back after a rotation that did not complete.
+    #
+    # The row is rolled back, but Active Record leaves the in-memory
+    # attributes as the failed write left them — an instance still holding
+    # a secret that was never stored is a trap for any caller that rescues
+    # and carries on. Everything the write dirtied is restored, and only
+    # when the lock block actually ran. Naming the three secret columns was
+    # too narrow: a failure landing after validation — a host `after_save`
+    # raising, a deadlock, a value too long — has `save!` stamp `updated_at`
+    # first, and Active Record's rollback marks it dirty against the
+    # pre-transaction snapshot. Left behind, that one attribute makes every
+    # later `with_lock` on this instance raise over unsaved changes, so
+    # neither +#rotate_secret!+ nor +#clear_old_secret!+ could be retried on
+    # it. Nothing of the caller's is discarded by restoring all of it:
+    # +ensure_lockable!+ has refused an unpersisted record, and `lock!`
+    # reloads a persisted one, so the instance was clean on the way in.
+    #
+    # Which plaintext still describes the stored secret depends on where
+    # the failure happened. A rolled-back write leaves the previous secret
+    # stored, and the previous plaintext describes it. But an exception
+    # arriving after the commit — a host application's `after_commit`
+    # callback raising — leaves the rotation written, the restore above a
+    # no-op, and the plaintext this rotation generated as the only copy of
+    # the committed secret; putting the previous one back would discard it.
+    # Each candidate is kept only while it matches what is stored, so
+    # whichever side of the commit the failure fell on, the plaintext that
+    # survives is the one describing the row.
+    #
+    # None of that applies before the lock block runs: nothing was written,
+    # the plaintext the caller came in with still describes the row, and
+    # filtering it would compare it against whatever they had assigned to
+    # `secret` and never saved — throwing away a good plaintext over a
+    # value the row does not hold.
+    def undo_failed_rotation(locked, previous_raw_secret)
+      unless locked
+        @raw_secret = previous_raw_secret
+        return
+      end
+
+      restore_attributes
+      @raw_secret = restorable_raw_secret(@raw_secret) ||
+                    restorable_raw_secret(previous_raw_secret)
+    end
+
+    # The plaintext to keep after a failed rotation. `with_lock` reloads, so
+    # the attributes restored on the way out are what was committed by then
+    # — which a rotation racing this one may have replaced the secret in.
+    # Putting the pre-lock plaintext back over that would have
+    # +#plaintext_secret+ describe a secret the row no longer holds, so it
+    # is kept only while it still matches what is stored. Otherwise nothing
+    # here describes that secret, and an unknown plaintext is the honest
+    # answer.
+    #
+    # The comparison honours the fallback strategy the way every other
+    # comparison here does (see ApplicationMixin#stored_secret_matches?): a
+    # restored legacy value the fallback still matches is the stored
+    # credential, and the plaintext describing it survives with it.
+    #
+    # A row restored to no secret at all — a public client whose `secret`
+    # column is nullable — leaves nothing for a plaintext to describe, and
+    # nothing the strategies may be handed: their comparison raises on a
+    # nil stored value, which would mask the error being raised through
+    # here.
+    def restorable_raw_secret(raw)
+      return raw if raw.nil?
+      return if secret.nil?
+      return raw if secret_strategy.secret_matches?(raw, secret)
+      return raw if fallback_secret_strategy&.secret_matches?(raw, secret)
+
+      nil
     end
   end
 end
