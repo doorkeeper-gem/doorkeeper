@@ -654,9 +654,9 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       withheld = %w[old_secret old_secret_created_at]
 
       if opts[:only]
-        opts[:only] = Array.wrap(opts[:only]).map(&:to_s) - withheld
+        opts[:only] = Array(opts[:only]).map(&:to_s) - withheld
       else
-        opts[:except] = Array.wrap(opts[:except]).map(&:to_s) | withheld
+        opts[:except] = Array(opts[:except]).map(&:to_s) | withheld
       end
 
       opts
