@@ -874,6 +874,38 @@ RSpec.describe "client secret rotation" do
           expect(token.reload).not_to be_revoked
         end
 
+        # The same read-back reached from the other side of the commit: a
+        # host `after_commit` callback that deletes the row and then raises
+        # lands in the rescue with the rotation committed and no row left to
+        # confirm it. It answers as an uncommitted rotation does — nothing
+        # is swept, and the reload fails on the missing row with the
+        # callback's error as its cause. Unlike the lost COMMIT above this
+        # needs nothing Rails 7.1 added, so the rescue is pinned on every
+        # Rails Doorkeeper supports.
+        it "does not sweep when the row is gone by the time a host after_commit callback raises" do
+          stub_const("VanishingApp", build_application_model)
+          boom = false
+          VanishingApp.after_commit do |app|
+            next unless boom
+
+            VanishingApp.where(id: app.id).delete_all
+            raise "boom"
+          end
+          record = VanishingApp.create!(FactoryBot.attributes_for(:application))
+          token = FactoryBot.create(:access_token, application_id: record.id)
+          grant = FactoryBot.create(:access_grant, application_id: record.id)
+          boom = true
+
+          expect { record.rotate_secret!(revoke_old: true, revoke_tokens: true) }
+            .to raise_error(::ActiveRecord::RecordNotFound) { |error|
+              expect(error.cause).to be_a(RuntimeError)
+              expect(error.cause.message).to eq("boom")
+            }
+
+          expect(token.reload).not_to be_revoked
+          expect(grant.reload).not_to be_revoked
+        end
+
         # A host `after_commit` callback raising reaches the rescue on the
         # other side of the commit: the rotation is already written, the
         # restore is a no-op, and the plaintext this rotation generated is
