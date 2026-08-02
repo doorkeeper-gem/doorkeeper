@@ -184,8 +184,44 @@ module Doorkeeper
       # otherwise be told the old one authenticated a request Doorkeeper had
       # rejected.
       return false if secret.nil? || old_secret.blank?
+      return false if old_secret_expired?
 
       stored_secret_matches?(input.to_s, :old_secret)
+    end
+
+    # Whether the retained secret has outlived the configured
+    # `secret_rotation_grace_period`. Always false when no grace period is
+    # configured, which is the default: the grace period then ends only when
+    # the application calls +#clear_old_secret!+. Also false when nothing is
+    # retained — an application that never rotated has no grace period to
+    # outlive.
+    #
+    # An old secret with no +old_secret_created_at+ is treated as expired
+    # rather than as ageless. Every rotation records the timestamp, so a
+    # missing one means the column was written by something other than
+    # +#rotate_secret!+ — and honouring a deadline nobody can date would leave
+    # exactly the indefinitely-valid secret the option was configured to
+    # prevent.
+    #
+    # Expiring an old secret stops it authenticating; it does not remove it.
+    # Use +#clear_old_secret!+ for that.
+    #
+    # Guarded like +#old_secret_matches?+, and for the same reason: without
+    # the migration there is no +old_secret+ to read, and a rotation feature
+    # that was never enabled should answer rather than raise. The mutating
+    # APIs raise +SecretRotationNotEnabled+ instead, because a caller asking
+    # to rotate a secret the server cannot store needs to be told why.
+    #
+    # @return [Boolean]
+    #
+    def old_secret_expired?
+      return false unless self.class.secret_rotation_enabled?
+
+      grace_period = Doorkeeper.config.secret_rotation_grace_period
+      return false if grace_period.nil? || old_secret.blank?
+      return true if old_secret_created_at.blank?
+
+      old_secret_created_at + grace_period < Time.now.utc
     end
 
     private

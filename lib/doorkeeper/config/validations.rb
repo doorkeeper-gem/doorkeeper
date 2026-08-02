@@ -21,6 +21,7 @@ module Doorkeeper
         validate_deprecated_grant_flows
         validate_issuer_format
         validate_issuer_metadata_discoverability
+        validate_secret_rotation_grace_period
       end
 
       private
@@ -305,6 +306,31 @@ module Doorkeeper
           "document. Use a host-only issuer, or route the derived well-known path " \
           "to Doorkeeper.",
         )
+      end
+
+      # A grace period is consumed as `old_secret_created_at + grace_period`
+      # during client authentication (ApplicationMixin#old_secret_expired?),
+      # so an invalid value boots fine and starts raising TypeError on the
+      # first authentication after a rotation. Refused here instead, the way
+      # an unusable secret strategy is. Zero and negative values are refused
+      # too: such a deadline is already past when a rotation writes it, so
+      # every old secret would expire on arrival — retaining nothing is what
+      # `rotate_secret!(revoke_old: true)` says explicitly. And a finite one:
+      # `Float::INFINITY` is a positive Numeric, but adding it to a time
+      # raises FloatDomainError — an endless grace period is already what the
+      # nil default says. And a real one: `Complex` is a Numeric too, one
+      # with no ordering, so asking whether it is positive would raise
+      # NoMethodError here in place of the ArgumentError below.
+      def validate_secret_rotation_grace_period
+        grace_period = secret_rotation_grace_period
+        return if grace_period.nil?
+        # ActiveSupport::Duration delegates #is_a? and the predicates, so a
+        # duration passes as the numeric it wraps.
+        return if grace_period.is_a?(Numeric) && grace_period.real? && grace_period.finite? && grace_period.positive?
+
+        raise ArgumentError,
+              "secret_rotation_grace_period must be a finite positive number of " \
+              "seconds or a duration (e.g. 7.days), got #{grace_period.inspect}."
       end
 
       # Redact any userinfo (e.g. a misconfigured user:pass@host) before the
