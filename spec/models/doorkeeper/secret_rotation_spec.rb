@@ -210,6 +210,101 @@ RSpec.describe "client secret rotation" do
         end
       end.to raise_error(ArgumentError, /after_old_secret_used/)
     end
+
+    # Ruby counts a required keyword toward a lambda's arity, and a plain
+    # proc is otherwise held to nothing — but nothing positional ever
+    # satisfies a required keyword, so each of these would raise on the
+    # first old-secret authentication instead of at boot.
+    it "refuses a lambda that takes the application as a keyword" do
+      expect do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          enable_secret_rotation
+          after_old_secret_used ->(application:) {}
+        end
+      end.to raise_error(ArgumentError, /after_old_secret_used/)
+    end
+
+    it "refuses a proc with a required keyword" do
+      expect do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          enable_secret_rotation
+          after_old_secret_used proc { |application:| }
+        end
+      end.to raise_error(ArgumentError, /after_old_secret_used/)
+    end
+
+    it "refuses a lambda needing two positionals before a splat" do
+      expect do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          enable_secret_rotation
+          after_old_secret_used ->(_application, _other, *_rest) {}
+        end
+      end.to raise_error(ArgumentError, /after_old_secret_used/)
+    end
+
+    it "accepts a lambda with optional arguments after the application" do
+      hook = ->(_application, _detail = nil, **_options) {}
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enable_secret_rotation
+        after_old_secret_used hook
+      end
+
+      expect(Doorkeeper.config.after_old_secret_used).to eq(hook)
+    end
+
+    it "accepts a lambda taking a splat" do
+      hook = ->(*_args) {}
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enable_secret_rotation
+        after_old_secret_used hook
+      end
+
+      expect(Doorkeeper.config.after_old_secret_used).to eq(hook)
+    end
+
+    it "accepts a Method object taking the application" do
+      reporter = Object.new
+      def reporter.report(_application); end
+      hook = reporter.method(:report)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enable_secret_rotation
+        after_old_secret_used hook
+      end
+
+      expect(Doorkeeper.config.after_old_secret_used).to eq(hook)
+    end
+
+    it "accepts a callable that does not report an arity" do
+      hook = Object.new
+      def hook.call(_application); end
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enable_secret_rotation
+        after_old_secret_used hook
+      end
+
+      expect(Doorkeeper.config.after_old_secret_used).to eq(hook)
+    end
+
+    it "refuses a lambda that wants more than the application" do
+      expect do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          enable_secret_rotation
+          after_old_secret_used ->(_application, _extra) {}
+        end
+      end.to raise_error(ArgumentError, /after_old_secret_used/)
+    end
   end
 
   describe ".secret_rotation_enabled?" do

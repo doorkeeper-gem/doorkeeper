@@ -341,9 +341,10 @@ module Doorkeeper
       # boots fine and fails exactly the requests the grace period exists to
       # keep working, while requests made with the new secret carry on as if
       # nothing were wrong. Refused here instead, like the grace period
-      # above. A lambda or a Method is held to its arity as well: `-> {}`
+      # above. A lambda or a Method is held to its signature as well: `-> {}`
       # raises ArgumentError the moment it is handed the application, where
-      # a plain proc or block takes whatever it is given.
+      # a plain proc or block takes whatever it is given — except a required
+      # keyword, which nothing positional ever satisfies.
       def validate_after_old_secret_used
         return unless instance_variable_defined?(:@after_old_secret_used)
 
@@ -355,11 +356,18 @@ module Doorkeeper
               "(e.g. ->(application) { ... }), got #{hook.inspect}."
       end
 
+      # `parameters` rather than `arity`: a required keyword counts toward
+      # the arity of a lambda (`->(application:) {}` reports 1), and a
+      # negative arity only says "optional arguments follow", not how many
+      # positionals must come first (`->(a, b, *c) {}` reports -3).
       def callable_with_application?(hook)
-        return true if hook.is_a?(Proc) && !hook.lambda?
-        return true unless hook.respond_to?(:arity)
+        return true unless hook.respond_to?(:parameters)
 
-        hook.arity == 1 || hook.arity.negative?
+        types = hook.parameters.map(&:first)
+        return false if types.include?(:keyreq)
+        return true if hook.is_a?(Proc) && !hook.lambda?
+
+        types.count(:req) <= 1 && types.intersect?(%i[req opt rest])
       end
 
       # Same shape as validate_refresh_token_flow: the deadline and the hook
