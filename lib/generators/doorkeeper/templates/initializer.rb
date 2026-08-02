@@ -301,9 +301,9 @@ Doorkeeper.configure do
   # The deadline is a comparison made when a client authenticates, not a mark
   # on the row, so removing or lengthening it later puts a secret it had
   # expired back into service — as does turning this option off and on again.
-  # `#clear_old_secret!` is the only thing that removes one for good, and it
-  # needs the columns rather than this option, so it keeps working if you turn
-  # rotation off.
+  # Only `#clear_old_secret!` (or a `#rotate_secret!(revoke_old: true)`)
+  # removes one for good. `#clear_old_secret!` needs the columns rather than
+  # this option, so it keeps working if you turn rotation off.
   #
   # For a secret believed to be compromised there is no grace period to give:
   #
@@ -312,9 +312,11 @@ Doorkeeper.configure do
   #
   # The second form also revokes the application's unredeemed authorization
   # codes, which the leaked secret is enough to redeem, and the access tokens
-  # already issued to it — precautionary for the tokens, since a secret does
-  # not hand out a token issued to someone else, except under
-  # reuse_access_token.
+  # already issued to it. Pass it whenever the secret may already have been
+  # used: any access token or refresh token minted with it before the
+  # rotation stays valid until it expires, and whoever holds one no longer
+  # needs the secret. A secret does not hand out a token issued to someone
+  # else, except under reuse_access_token.
   #
   # While enabled, every client secret comparison evaluates both the current
   # and the old secret, so that a rotation in progress is not observable in
