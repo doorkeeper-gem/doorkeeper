@@ -284,6 +284,17 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
       end
     end
 
+    def issue_token(resource: nil)
+      parameters = { scope: "public" }
+      parameters[:resource] = resource if resource
+
+      request = Doorkeeper::OAuth::ClientCredentialsRequest.new(
+        Doorkeeper.config, client, **parameters,
+      )
+      request.authorize
+      request.access_token
+    end
+
     context "with valid resource indicator" do
       let(:request) do
         Doorkeeper::OAuth::ClientCredentialsRequest.new(
@@ -340,6 +351,85 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
         expect(response).to be_a(Doorkeeper::OAuth::TokenResponse)
         token = Doorkeeper::AccessToken.last
         expect(token.resource).to be_nil
+      end
+    end
+
+    context "with token reuse enabled" do
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          default_scopes :public
+          reuse_access_token
+          resource_indicator_validator ->(_indicators, _client) { true }
+        end
+      end
+
+      it "does not reuse an unrestricted token when a resource is requested" do
+        unrestricted_token = issue_token
+
+        token = issue_token(resource: [resource_uri])
+
+        expect(token.id).not_to eq(unrestricted_token.id)
+        expect(token.resource).to eq(resource_uri)
+      end
+
+      it "does not reuse a token bound to a different resource" do
+        existing_token = issue_token(resource: [resource_uri])
+
+        token = issue_token(resource: [second_resource_uri])
+
+        expect(token.id).not_to eq(existing_token.id)
+        expect(token.resource).to eq(second_resource_uri)
+      end
+
+      it "reuses a token bound to the same resource" do
+        existing_token = issue_token(resource: [resource_uri])
+
+        token = issue_token(resource: [resource_uri])
+
+        expect(token.id).to eq(existing_token.id)
+      end
+
+      it "reuses an unrestricted token when no resource is requested" do
+        existing_token = issue_token
+
+        token = issue_token
+
+        expect(token.id).to eq(existing_token.id)
+      end
+
+      # The lookup returns only the newest match, so the resource has to be
+      # part of it: a client alternating between two resources would otherwise
+      # never reuse, since the newest token is always for the other one.
+      it "reuses the token bound to the requested resource when a newer one exists for another" do
+        existing_token = issue_token(resource: [resource_uri])
+        issue_token(resource: [second_resource_uri])
+
+        token = issue_token(resource: [resource_uri])
+
+        expect(token.id).to eq(existing_token.id)
+      end
+    end
+
+    context "with revoke_previous_client_credentials_token enabled" do
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          default_scopes :public
+          revoke_previous_client_credentials_token
+          resource_indicator_validator ->(_indicators, _client) { true }
+        end
+      end
+
+      # Existing behaviour, pinned here so the reuse fix above is seen not to
+      # change it: this option keeps only one token per client, regardless of
+      # the audience the previous one was issued for.
+      it "still revokes a token issued for a different resource" do
+        existing_token = issue_token(resource: [resource_uri])
+
+        issue_token(resource: [second_resource_uri])
+
+        expect(existing_token.reload).to be_revoked
       end
     end
   end
