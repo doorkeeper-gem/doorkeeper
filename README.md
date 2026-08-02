@@ -208,41 +208,13 @@ Doorkeeper.configure do
 end
 ```
 
-`old_secret` and `old_secret_created_at` are named on the application model's
-`filter_attributes`, so the retained secret — and the timestamp that says a
-rotation is under way — read as `[FILTERED]` from `#inspect`. They are named
-there rather than added to your `config.filter_parameters`, which reaches every
-model and every log line in your application: neither is the name of a request
-parameter Doorkeeper accepts, and the entries it does add to that list are
-filtered as before.
+`old_secret` and `old_secret_created_at` are named on the application model's `filter_attributes`, so the retained secret — and the timestamp that says a rotation is under way — read as `[FILTERED]` from `#inspect`. They are named there rather than added to your `config.filter_parameters`, which reaches every model and every log line in your application: neither is the name of a request parameter Doorkeeper accepts, and the entries it does add to that list are filtered as before. Because the columns are declared on the model, `Doorkeeper::Application.filter_attributes` is fixed when the model loads: entries you add to `ActiveRecord::Base.filter_attributes` afterwards (rather than to `config.filter_parameters` before boot completes) do not reach the application model's `#inspect`, as with any per-model `filter_attributes` declaration.
 
-That is the model's own list, and it covers `#inspect`. Active Record filters
-the bind values it logs through `ActiveRecord::Base.inspection_filter` — the
-base class's list rather than the model's — so if you log SQL at `debug` level
-and want a rotation's `UPDATE` binds redacted as well, name the columns in your
-own `config.filter_parameters`, which Rails copies into
-`ActiveRecord::Base.filter_attributes` for you. The `:secret` entry in the
-`filter_parameter_logging` initializer Rails generates already does, since that
-list matches substrings, so both columns read as `[FILTERED]` there unless you
-removed it. Serialization is a separate matter, covered below.
+That is the model's own list, and it covers `#inspect`. Active Record filters the bind values it logs through `ActiveRecord::Base.inspection_filter` — the base class's list rather than the model's — so if you log SQL at `debug` level and want a rotation's `UPDATE` binds redacted as well, name the columns in your own `config.filter_parameters`, which Rails copies into `ActiveRecord::Base.filter_attributes` for you. The `:secret` entry in the `filter_parameter_logging` initializer Rails generates already does, since that list matches substrings, so both columns read as `[FILTERED]` there unless you removed it. Serialization is a separate matter, covered below.
 
-If your application model declares `secret` with Active Record Encryption
-(`encrypts :secret`), declare `encrypts :old_secret` as well: a rotation copies
-the value through the attribute reader, which is to say decrypted.
+If your application model declares `secret` with Active Record Encryption (`encrypts :secret`), declare `encrypts :old_secret` as well: a rotation copies the value through the attribute reader, which is to say decrypted.
 
-The generated migration and the model API below are Active Record's, and so is
-the behavior around them: the comparison that lets an old secret authenticate,
-its grace-period expiry, the `after_old_secret_used` hook, and the
-serialization that withholds `old_secret` / `old_secret_created_at` by
-default — including from `only:`, so no view hands them out by asking for
-every attribute. It is a default and not a guarantee: `methods:` appends a
-reader after that filtering, as ActiveModel documents, so
-`serializable_hash(methods: [:old_secret])` still returns the retained secret
-to a caller that names it. Other ORM adapters define their own secret
-comparison and serialization,
-so adding the columns and implementing `#rotate_secret!` /
-`#clear_old_secret!` is not enough — an adapter needs an equivalent of the
-full rotation surface before the option can be used with it.
+The generated migration and the model API below are Active Record's, and so is the behavior around them: the comparison that lets an old secret authenticate, its grace-period expiry, the `after_old_secret_used` hook, and the serialization that withholds `old_secret` / `old_secret_created_at` by default — including from `only:`, so no view hands them out by asking for every attribute. It is a default and not a guarantee: `methods:` appends a reader after that filtering, as ActiveModel documents, so `serializable_hash(methods: [:old_secret])` still returns the retained secret to a caller that names it. Other ORM adapters define their own secret comparison and serialization, so adding the columns and implementing `#rotate_secret!` / `#clear_old_secret!` is not enough — an adapter needs an equivalent of the full rotation surface before the option can be used with it.
 
 ### Rotating
 
@@ -298,7 +270,7 @@ end
 
 Called without it, `#clear_old_secret!` ends whatever grace period the row holds, which is what an admin ending one by hand means. It needs the columns, not the option: a server that has turned `enable_secret_rotation` off can still end a grace period its last rotation opened, without re-arming the feature for every other client first.
 
-A deadline is a comparison made when a client authenticates, not something stamped on the row: `old_secret_created_at + secret_rotation_grace_period` is evaluated against the configuration in force at the time. Shortening the period does not remove what is already retained, and lengthening or removing it later puts that secret back into service — as does turning `enable_secret_rotation` off and on again, since neither clears the column. `#clear_old_secret!` is the only thing that does, so run it rather than relying on a deadline to have retired anything permanently.
+A deadline is a comparison made when a client authenticates, not something stamped on the row: `old_secret_created_at + secret_rotation_grace_period` is evaluated against the configuration in force at the time. Shortening the period does not remove what is already retained, and lengthening or removing it later puts that secret back into service — as does turning `enable_secret_rotation` off and on again, since neither clears the column. Only `#clear_old_secret!` — or `#rotate_secret!(revoke_old: true)`, which rotates as it drops it — clears the column, so run one of them rather than relying on a deadline to have retired anything permanently.
 
 ### Compromised secrets
 
@@ -309,7 +281,7 @@ application.rotate_secret!(revoke_old: true)
 application.rotate_secret!(revoke_old: true, revoke_tokens: true)
 ```
 
-The second form also revokes the application's unredeemed authorization codes, which the leaked secret is enough to redeem, and the access tokens already issued to it. Revoking those tokens is precautionary — a secret does not hand out a token that was issued to someone else — except under `reuse_access_token`, where a `client_credentials` request made with the leaked secret is answered with the token that grant already holds.
+The second form also revokes the application's unredeemed authorization codes, which the leaked secret is enough to redeem, and the access tokens already issued to it. Pass it whenever the secret may already have been used: rotating stops the secret from authenticating, but any access token or refresh token minted with it before the rotation stays valid until it expires, and whoever holds one no longer needs the secret. A secret does not hand out a token that was issued to someone else — except under `reuse_access_token`, where a `client_credentials` request made with the leaked secret is answered with the token that grant already holds.
 
 The revocation runs after the rotation has been committed. If it fails, the new secret is already stored and still readable through `application.plaintext_secret`; the revocation itself is idempotent and can be retried with `application.revoke_issued_credentials!`. For the same reason `revoke_tokens: true` is refused inside an open transaction that `with_lock` would join, which would keep the rotation's row lock held past the method (a `joinable: false` transaction — what Rails' transactional tests and DatabaseCleaner wrap every example in — is let through, since a caller passing that has taken transaction boundaries into their own hands) — rotate without it there, and call `revoke_issued_credentials!` once the transaction has committed. Hand the returned secret to the client only after that commit too: if your transaction rolls back, the row still holds the previous secret, the secret you were returned authenticates nothing, and the instance keeps the undone rotation as unsaved changes until it is reloaded.
 

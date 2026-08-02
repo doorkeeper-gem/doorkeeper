@@ -68,8 +68,9 @@ module Doorkeeper
       # migration leaves authentication behaving exactly as it did before,
       # instead of raising on every token request. Both are checked because a
       # rotation writes both: a half-applied migration is no more usable than
-      # none at all, and failing the check is how it stays a no-op rather
-      # than an error on the first `#rotate_secret!`.
+      # none at all, so authentication stays exactly as it was and the first
+      # `#rotate_secret!` raises +SecretRotationNotEnabled+ instead of
+      # writing one column and failing on the other.
       #
       # @return [Boolean]
       #
@@ -140,16 +141,20 @@ module Doorkeeper
     end
 
     # Check whether the given plain text secret matches our stored secret
+    # — or, with `enable_secret_rotation` on, the secret retained by the last
+    # rotation while its grace period lasts (see +#old_secret_matches?+).
     #
     # @param input [#to_s] Plain secret provided by user
     #        (any object that responds to `#to_s`)
     #
     # @return [Boolean] Whether the given secret matches the stored secret
-    #                of this application.
+    #                of this application, or its retained old secret.
     #
     # @note When the secret matches only via the fallback strategy, the stored
     #       secret is upgraded to the active strategy as a side-effect (mirrors
     #       the find_by_plaintext_token -> find_by_fallback_token pattern).
+    # @note When only the retained old secret matches, the configured
+    #       +after_old_secret_used+ hook is called with this application.
     #
     def secret_matches?(input)
       # return false if either is nil, since secure_compare depends on strings

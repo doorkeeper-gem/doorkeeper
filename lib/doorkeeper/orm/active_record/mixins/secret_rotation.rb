@@ -38,6 +38,14 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       # line in the host application: neither is the name of a request
       # parameter Doorkeeper accepts, and `token` was in that list once and
       # was taken back out for exactly that reason (#792).
+      #
+      # Declared on the model, the list is composed from the base class once,
+      # here, as any per-model declaration is: entries the host adds to
+      # `ActiveRecord::Base.filter_attributes` after this model has loaded
+      # (from `after_initialize`, say, which in production runs after eager
+      # loading) do not reach this model's `#inspect`, though they keep
+      # reaching the token and grant models, which declare no list of their
+      # own. README says so.
       self.filter_attributes += %i[old_secret old_secret_created_at]
     end
 
@@ -45,8 +53,8 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
     # that clients still presenting it keep authenticating until the
     # application ends the grace period with +#clear_old_secret!+. Requires
     # the `enable_secret_rotation` option and the columns it needs. For a
-    # replacement with no grace period, pass +revoke_old: true+ below: with
-    # the feature on that is the only call that ends one, since
+    # replacement with no grace period, pass +revoke_old: true+ below: that
+    # and +#clear_old_secret!+ are the two calls that end one, since
     # +#renew_secret+ writes the current secret alone and leaves whatever an
     # earlier rotation retained still authenticating.
     #
@@ -76,10 +84,14 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
     # @param revoke_tokens [Boolean]
     #   additionally revoke this application's unredeemed authorization
     #   codes, which the current secret is enough to redeem, and the access
-    #   tokens already issued to it. Revoking those tokens is precautionary
-    #   — a secret does not hand out a token issued to someone else — except
-    #   under +reuse_access_token+, where a client_credentials request made
-    #   with that secret is answered with the token the grant already holds.
+    #   tokens already issued to it. Pass it whenever the secret may already
+    #   have been used: the rotation stops the secret from authenticating,
+    #   but any access token or refresh token minted with it beforehand
+    #   stays valid until it expires, and whoever holds one no longer needs
+    #   the secret. A secret does not hand out a token issued to someone
+    #   else — except under +reuse_access_token+, where a client_credentials
+    #   request made with that secret is answered with the token the grant
+    #   already holds.
     #   The revocation runs once the rotation has committed; should it
     #   fail, the error is raised with the new secret already stored and
     #   still readable through +#plaintext_secret+ on this instance, and
@@ -195,10 +207,10 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
     # option off, and for the same reason this method asks only for the
     # columns: expiry is a comparison made when a client authenticates, so
     # lengthening the deadline, removing it, or setting `enable_secret_rotation`
-    # again puts a retained secret straight back into service. Nothing but this
-    # retires one for good, and needing the option to run it would mean
-    # re-arming the feature for every application on the server in order to
-    # clean up after one.
+    # again puts a retained secret straight back into service. Only this and
+    # +#rotate_secret!(revoke_old: true)+ retire one for good, and needing the
+    # option to run this one would mean re-arming the feature for every
+    # application on the server in order to clean up after one.
     #
     # Takes the row lock for the same reason +#rotate_secret!+ does, and
     # decides whether there is anything to clear under it: read outside the
