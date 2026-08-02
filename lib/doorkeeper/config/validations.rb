@@ -22,6 +22,7 @@ module Doorkeeper
         validate_issuer_metadata_discoverability
         validate_secret_rotation_grace_period
         validate_after_old_secret_used
+        validate_secret_rotation_options_without_rotation
       end
 
       private
@@ -317,6 +318,27 @@ module Doorkeeper
         return true unless hook.respond_to?(:arity)
 
         hook.arity == 1 || hook.arity.negative?
+      end
+
+      # Same shape as validate_refresh_token_flow: the deadline and the hook
+      # are read only from behind `enable_secret_rotation`, so configuring
+      # either without it leaves an operator with a grace period they believe
+      # is bounded, or a signal they believe is being watched for, and no way
+      # to tell from the running server that neither is true.
+      #
+      # `after_old_secret_used` defaults to a lambda, so whether it was
+      # configured is the ivar rather than the value (as
+      # validate_pkce_code_challenge_methods asks it of its own option).
+      def validate_secret_rotation_options_without_rotation
+        return if enable_secret_rotation?
+        return if secret_rotation_grace_period.nil? &&
+                  !instance_variable_defined?(:@after_old_secret_used)
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] secret_rotation_grace_period / after_old_secret_used are configured " \
+          "without enable_secret_rotation, so they have no effect. Add enable_secret_rotation " \
+          "(and run `rails generate doorkeeper:secret_rotation`) to use them.",
+        )
       end
 
       # Redact any userinfo (e.g. a misconfigured user:pass@host) before the
