@@ -535,6 +535,56 @@ RSpec.describe "client secret rotation" do
           expect(Doorkeeper::Application.find(fresh.id).secret).to eq(stored)
         end
 
+        # The rotation is committed by the time such a callback raises, so a
+        # rotation asked to revoke has to revoke: the new secret is live and
+        # the credentials the superseded one could still be exchanged for are
+        # exactly what revoke_tokens: was for. The error still reaches the
+        # caller.
+        it "still revokes the issued credentials when a host after_commit callback raises" do
+          # Named, because the associations the sweep goes through read the
+          # class name to derive their inverse.
+          stub_const("CommittingApp", build_application_model)
+          boom = false
+          CommittingApp.after_commit { raise "boom" if boom }
+          committed = CommittingApp.create!(FactoryBot.attributes_for(:application))
+          token = FactoryBot.create(:access_token, application_id: committed.id)
+          grant = FactoryBot.create(:access_grant, application_id: committed.id)
+          boom = true
+
+          expect { committed.rotate_secret!(revoke_old: true, revoke_tokens: true) }
+            .to raise_error(RuntimeError, "boom")
+
+          boom = false
+          expect(token.reload).to be_revoked
+          expect(grant.reload).to be_revoked
+        end
+
+        # The other side of the same boundary: a COMMIT that fails — a
+        # `before_commit` callback raising here, a deferred constraint or a
+        # serialization failure in production — reaches the rescue with the
+        # rotation rolled back. The sweep must not run for a rotation the row
+        # does not hold: the secret the caller asked to revoke is still the
+        # current one, and the client would lose every token it holds over a
+        # rotation that never happened.
+        it "does not revoke the issued credentials when the commit itself fails" do
+          stub_const("RefusingCommitApp", build_application_model)
+          boom = false
+          RefusingCommitApp.before_commit { raise "boom" if boom }
+          record = RefusingCommitApp.create!(FactoryBot.attributes_for(:application))
+          token = FactoryBot.create(:access_token, application_id: record.id)
+          grant = FactoryBot.create(:access_grant, application_id: record.id)
+          stored = record.secret
+          boom = true
+
+          expect { record.rotate_secret!(revoke_old: true, revoke_tokens: true) }
+            .to raise_error(RuntimeError, "boom")
+
+          boom = false
+          expect(RefusingCommitApp.find(record.id).secret).to eq(stored)
+          expect(token.reload).not_to be_revoked
+          expect(grant.reload).not_to be_revoked
+        end
+
         # A host `after_commit` callback raising reaches the rescue on the
         # other side of the commit: the rotation is already written, the
         # restore is a no-op, and the plaintext this rotation generated is
@@ -740,6 +790,127 @@ RSpec.describe "client secret rotation" do
         # "replacing a secret with no grace period" below, which also checks
         # that the discarded one stops authenticating.
       end
+
+      context "with revoke_tokens: true" do
+        let!(:token) { FactoryBot.create(:access_token, application: app) }
+        let!(:grant) { FactoryBot.create(:access_grant, application: app) }
+
+        it "revokes the access tokens already issued" do
+          app.rotate_secret!(revoke_old: true, revoke_tokens: true)
+
+          expect(token.reload).to be_revoked
+        end
+
+        # An unredeemed authorization code is exchanged with the client
+        # secret, so leaving it alive would hand out a token minted after the
+        # revocation.
+        it "revokes the unredeemed authorization codes" do
+          app.rotate_secret!(revoke_old: true, revoke_tokens: true)
+
+          expect(grant.reload).to be_revoked
+        end
+
+        # Revocable#revoked? reads a timestamp in the future as not revoked
+        # yet, so a host that scheduled a revocation still holds a live
+        # credential — and a compromise rotation has to reach it.
+        it "revokes a credential whose revocation was only scheduled" do
+          scheduled = FactoryBot.create(:access_token, application: app, revoked_at: 1.hour.from_now)
+          scheduled_grant = FactoryBot.create(:access_grant, application: app, revoked_at: 1.hour.from_now)
+
+          expect(scheduled).not_to be_revoked
+
+          app.rotate_secret!(revoke_old: true, revoke_tokens: true)
+
+          expect(scheduled.reload).to be_revoked
+          expect(scheduled_grant.reload).to be_revoked
+        end
+
+        it "leaves an already revoked token's revoked_at alone" do
+          token.revoke
+          revoked_at = token.reload.revoked_at
+
+          app.rotate_secret!(revoke_old: true, revoke_tokens: true)
+
+          expect(token.reload.revoked_at).to eq(revoked_at)
+        end
+
+        it "does not touch another application's tokens" do
+          other = FactoryBot.create(:access_token)
+
+          app.rotate_secret!(revoke_old: true, revoke_tokens: true)
+
+          expect(other.reload).not_to be_revoked
+        end
+
+        it "revokes nothing unless asked" do
+          app.rotate_secret!
+
+          expect(token.reload).not_to be_revoked
+          expect(grant.reload).not_to be_revoked
+        end
+
+        # A token request locks its grant or refresh token and then inserts a
+        # token, which share-locks the application row for the foreign key
+        # check. Revoking the child rows while the rotation still holds
+        # `FOR UPDATE` on the application reverses that order and the two
+        # deadlock, so the sweep has to wait for the lock to be released.
+        it "revokes only after the rotation has been committed" do
+          connection = app.class.connection
+          depth_outside = connection.open_transactions
+          depth_during_sweep = nil
+
+          allow(app).to receive(:revoke_issued_credentials!).and_wrap_original do |m, *args|
+            depth_during_sweep = connection.open_transactions
+            m.call(*args)
+          end
+
+          app.rotate_secret!(revoke_old: true, revoke_tokens: true)
+
+          expect(depth_during_sweep).to eq(depth_outside)
+          expect(token.reload).to be_revoked
+        end
+
+        # The rotation is already stored by the time the sweep runs, so a
+        # failure there must not leave the instance describing the old secret.
+        it "keeps the committed rotation when the revocation fails" do
+          allow(app).to receive(:revoke_issued_credentials!).and_raise(ActiveRecord::StatementInvalid)
+          stored = app.secret
+
+          expect do
+            app.rotate_secret!(revoke_old: true, revoke_tokens: true)
+          end.to raise_error(ActiveRecord::StatementInvalid)
+
+          expect(Doorkeeper::Application.find(app.id).secret).not_to eq(stored)
+          expect(app.secret).to eq(Doorkeeper::Application.find(app.id).secret)
+          expect(app.secret_matches?(app.plaintext_secret)).to be(true)
+          expect(token.reload).not_to be_revoked
+        end
+
+        # The plaintext only ever leaves through the return value, which a
+        # raise skips — so it has to stay readable on the instance, and the
+        # sweep has to be retryable on its own.
+        it "keeps the new plaintext readable and lets the revocation be retried" do
+          calls = 0
+          allow(app).to receive(:revoke_issued_credentials!).and_wrap_original do |m, *args|
+            calls += 1
+            raise ActiveRecord::StatementInvalid if calls == 1
+
+            m.call(*args)
+          end
+
+          expect do
+            app.rotate_secret!(revoke_old: true, revoke_tokens: true)
+          end.to raise_error(ActiveRecord::StatementInvalid)
+
+          plaintext = app.plaintext_secret
+          expect(Doorkeeper::Application.find(app.id).secret_matches?(plaintext)).to be(true)
+
+          app.revoke_issued_credentials!
+
+          expect(token.reload).to be_revoked
+          expect(grant.reload).to be_revoked
+        end
+      end
     end
 
     context "with hashed application secrets" do
@@ -801,6 +972,80 @@ RSpec.describe "client secret rotation" do
     end
   end
 
+  # `with_lock` joins an open transaction, and the row lock then outlives
+  # the method — past the point the revocation runs, recreating the lock
+  # order inversion it is kept out of the lock to avoid.
+  describe "#rotate_secret!(revoke_tokens: true) inside a transaction" do
+    before { enable_rotation }
+
+    let!(:token) { FactoryBot.create(:access_token, application: app) }
+
+    it "is refused before anything is written" do
+      stored = app.secret
+      plaintext = app.plaintext_secret
+
+      expect do
+        Doorkeeper::Application.transaction do
+          app.rotate_secret!(revoke_old: true, revoke_tokens: true)
+        end
+      end.to raise_error(Doorkeeper::Errors::SecretRotationInTransaction, /revoke_issued_credentials!/)
+
+      expect(Doorkeeper::Application.find(app.id).secret).to eq(stored)
+      expect(app.secret).to eq(stored)
+      expect(app.plaintext_secret).to eq(plaintext)
+      expect(app).not_to be_changed
+      expect(token.reload).not_to be_revoked
+    end
+
+    # The transaction that matters is the one `with_lock` would join, on the
+    # writer; before `with_primary_role` selects that role, the selected
+    # connection may be a replica's, with nothing open on it.
+    it "consults the connection selected by with_primary_role" do
+      primary_role_selected = false
+      allow(Doorkeeper::Application).to receive(:with_primary_role).and_wrap_original do |original, &block|
+        primary_role_selected = true
+        original.call(&block)
+      ensure
+        primary_role_selected = false
+      end
+
+      checked_under_primary_role = nil
+      allow(app).to receive(:ensure_revocation_can_follow_commit!).and_wrap_original do |original|
+        checked_under_primary_role = primary_role_selected
+        original.call
+      end
+
+      app.rotate_secret!(revoke_old: true, revoke_tokens: true)
+
+      expect(checked_under_primary_role).to be true
+    end
+
+    it "lets the caller rotate and revoke around their commit instead" do
+      stored = app.secret
+
+      Doorkeeper::Application.transaction do
+        app.rotate_secret!(revoke_old: true)
+      end
+      app.revoke_issued_credentials!
+
+      expect(Doorkeeper::Application.find(app.id).secret).not_to eq(stored)
+      expect(token.reload).to be_revoked
+    end
+
+    # Guards the guard's discrimination, not lock release: Rails'
+    # transactional tests and DatabaseCleaner's transaction strategy wrap
+    # every example in a non-joinable transaction, so refusing one would
+    # refuse every transactional host test suite (see the note on
+    # #ensure_revocation_can_follow_commit!).
+    it "is not refused by a transaction the rotation does not join" do
+      Doorkeeper::Application.transaction(joinable: false) do
+        app.rotate_secret!(revoke_old: true, revoke_tokens: true)
+      end
+
+      expect(token.reload).to be_revoked
+    end
+  end
+
   # What the docs point at for "replace the secret with no grace period at
   # all". #renew_secret is not that call once the feature is on: it writes the
   # current secret alone, so an old_secret an earlier rotation retained keeps
@@ -850,6 +1095,32 @@ RSpec.describe "client secret rotation" do
 
       expect(app.reload.old_secret).to be_present
       expect(app.secret_matches?(first)).to be(true)
+    end
+  end
+
+  describe "#revoke_issued_credentials!" do
+    before { enable_rotation }
+
+    let!(:token) { FactoryBot.create(:access_token, application: app) }
+    let!(:grant) { FactoryBot.create(:access_grant, application: app) }
+
+    it "revokes the tokens and grants without touching the secret" do
+      stored = app.secret
+
+      app.revoke_issued_credentials!
+
+      expect(token.reload).to be_revoked
+      expect(grant.reload).to be_revoked
+      expect(app.reload.secret).to eq(stored)
+    end
+
+    it "is idempotent" do
+      app.revoke_issued_credentials!
+      revoked_at = token.reload.revoked_at
+
+      app.revoke_issued_credentials!
+
+      expect(token.reload.revoked_at).to eq(revoked_at)
     end
   end
 
