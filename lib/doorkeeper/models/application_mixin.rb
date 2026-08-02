@@ -56,6 +56,77 @@ module Doorkeeper
       def fallback_secret_strategy
         ::Doorkeeper.config.application_secret_fallback_strategy
       end
+
+      # Whether a superseded client secret is retained and keeps
+      # authenticating the client for a grace period.
+      #
+      # Both halves are required: the `enable_secret_rotation` option opts the
+      # server in, and the `old_secret` / `old_secret_created_at` columns are
+      # where the superseded secret and the date it was retained live. Reading
+      # the columns rather than assuming them (as `pkce_supported?` does for
+      # `code_challenge`) means enabling the option without running the
+      # migration leaves authentication behaving exactly as it did before,
+      # instead of raising on every token request. Both are checked because a
+      # rotation writes both: a half-applied migration is no more usable than
+      # none at all, and failing the check is how it stays a no-op rather
+      # than an error on the first `#rotate_secret!`.
+      #
+      # @return [Boolean]
+      #
+      def secret_rotation_enabled?
+        return false unless Doorkeeper.config.enable_secret_rotation?
+        return true if secret_rotation_columns?
+
+        warn_missing_secret_rotation_columns
+        false
+      end
+
+      # Whether the columns a rotation writes are there, without asking
+      # whether the option that writes them is on.
+      #
+      # The half of the check that ending a grace period goes on: turning
+      # `enable_secret_rotation` off stops a retained secret authenticating
+      # but does not remove it, so the row goes on holding a live credential
+      # that comes back into service the moment the option does. Dropping it
+      # must not require re-arming the feature for every application on the
+      # server first, so +#clear_old_secret!+ asks this and +#rotate_secret!+
+      # asks the one above.
+      #
+      # @return [Boolean]
+      #
+      def secret_rotation_columns?
+        column_names.include?("old_secret") && column_names.include?("old_secret_created_at")
+      end
+
+      private
+
+      # Enabling the option without running the migration is deliberately not
+      # an error: client authentication carries on exactly as it did before.
+      # But it is also entirely silent, so the first sign of it would be a
+      # `SecretRotationNotEnabled` from whichever console session or job first
+      # calls `#rotate_secret!`. Said once per process instead, here rather
+      # than from a boot hook: the columns are read off the schema, which is a
+      # database read, and a boot hook asking for them would open a connection
+      # during tasks that have no database to open one to (`assets:precompile`
+      # and friends) and wait through its retries before finding that out.
+      # Here the schema has already been loaded by the caller's own lookup.
+      #
+      # Set before the write so that a logger raising cannot turn the warning
+      # into one per authentication, and not synchronised: two threads racing
+      # the first lookup cost a duplicate line, which is cheaper than a lock on
+      # a path every client authentication takes.
+      def warn_missing_secret_rotation_columns
+        return if @secret_rotation_columns_warned
+        return unless defined?(::Rails) && ::Rails.logger
+
+        @secret_rotation_columns_warned = true
+        ::Rails.logger.warn(
+          "[DOORKEEPER] enable_secret_rotation is set, but #{name} has no " \
+          "old_secret / old_secret_created_at columns: client authentication is unchanged and " \
+          "Application#rotate_secret! raises SecretRotationNotEnabled. Run " \
+          "`rails generate doorkeeper:secret_rotation` and apply the migration.",
+        )
+      end
     end
 
     # Set an application's valid redirect URIs.
