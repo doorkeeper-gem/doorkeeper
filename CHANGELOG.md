@@ -29,6 +29,7 @@ User-visible changes worth mentioning.
 - [#1901] [test] Pin the answered behaviors behind [#984], [#1554], [#1600], [#1663], [#1759] and [#1787] with regression specs — the built-in client authentication methods, the unmodified echo of long `state` values, DB persistence with custom token generators, refresh token rotation/expiry semantics and the introspection asymmetry. Test-only change, closes those issues along with [#1291], [#1756] and [#1764].
 - [#1902] Fix: requests that omit `scope` now compute the same default scopes at the authorization and token endpoints (`Scopes#common`, symmetric). With dynamic scopes enabled, a scope pattern in either `default_scopes` or the application's scopes grants the matching concrete scope at both endpoints, closes [#1889].
 - [#1903] Fix: `revoke_previous_client_credentials_token` no longer revokes a client's live access token issued for a different `resource` ([#1886]), so a client can keep one audience-restricted token per resource server.
+- [#1905] [test] Cover `private_key_jwt` client authentication on the `client_credentials` grant, the one flow where an assertion is the client's only credential end to end. Test-only change.
 - Please add here
 
 ## 6.0.0.beta1

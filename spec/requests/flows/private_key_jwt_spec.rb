@@ -77,6 +77,41 @@ feature "private_key_jwt client authentication" do
     expect(Doorkeeper::AccessToken.first.application.uid).to eq(@client.uid)
   end
 
+  # RFC 7523 §2.2 is what private_key_jwt implements, and client_credentials
+  # is the shortest end-to-end demonstration of it: no resource owner, no
+  # browser step, so the assertion is the only thing standing in for the
+  # client secret the client never has.
+  context "when the client uses the client_credentials grant" do
+    background do
+      config_is_set(:grant_flows, %w[client_credentials])
+    end
+
+    def post_client_credentials(assertion)
+      page.driver.post token_endpoint_url, {
+        grant_type: "client_credentials",
+        client_assertion: assertion,
+        client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
+      }
+    end
+
+    scenario "a signed assertion authenticates the request with no client secret sent" do
+      post_client_credentials(client_assertion)
+
+      expect(page.driver.response.status).to eq(200)
+      token = Doorkeeper::AccessToken.first
+      expect(json_response).to include("access_token" => token.token)
+      expect(token.application_id).to eq(@client.id)
+    end
+
+    scenario "an assertion signed with a key the client did not publish is rejected" do
+      post_client_credentials(client_assertion(key: OpenSSL::PKey::RSA.generate(2048)))
+
+      expect(page.driver.response.status).to eq(401)
+      expect(json_response).to include("error" => "invalid_client")
+      expect(Doorkeeper::AccessToken.count).to eq(0)
+    end
+  end
+
   context "when the refresh token grant is enabled" do
     background do
       config_is_set(:refresh_token_enabled, true)
