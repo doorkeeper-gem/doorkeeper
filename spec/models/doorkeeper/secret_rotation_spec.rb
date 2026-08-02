@@ -454,6 +454,12 @@ RSpec.describe "client secret rotation" do
       expect(Doorkeeper.config.application_model.secret_rotation_enabled?).to be(true)
     end
 
+    it "answers without a logger to warn through" do
+      allow(Rails).to receive(:logger).and_return(nil)
+
+      expect(model.secret_rotation_enabled?).to be(false)
+    end
+
     # On the real model and not only the throwaway one above: the examples
     # earlier in this file that stub `column_names` on it would otherwise
     # leave it already warned by the time this runs.
@@ -1489,6 +1495,25 @@ RSpec.describe "client secret rotation" do
           legacy.rotate_secret!
 
           expect(legacy.reload.old_secret).to eq(stored)
+        end
+      end
+
+      # Without a fallback there is no strategy to restore the plain text
+      # from, so a value the active strategy does not recognise is carried
+      # over as stored rather than re-derived.
+      context "when no fallback strategy is configured" do
+        before do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            hash_application_secrets
+            enable_secret_rotation
+          end
+        end
+
+        it "carries the stored secret over verbatim" do
+          legacy.rotate_secret!
+
+          expect(legacy.reload.old_secret).to eq(legacy_plaintext)
         end
       end
     end
