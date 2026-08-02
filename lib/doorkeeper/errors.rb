@@ -135,6 +135,11 @@ module Doorkeeper
     # conditions would drop the superseded secret rather than retain it,
     # cutting off every client the caller meant to give a grace period, so it
     # fails loudly instead of silently doing the opposite of what was asked.
+    #
+    # `#clear_old_secret!` raises it too, but only for the missing columns:
+    # ending a grace period a previous rotation opened has to keep working
+    # once the option is off, since turning it off leaves the retained secret
+    # in the row, ready to authenticate again the moment the option returns.
     class SecretRotationNotEnabled < DoorkeeperError
       def initialize(table)
         super(

@@ -2,9 +2,12 @@
 
 module Doorkeeper::Orm::ActiveRecord::Mixins
   # Client secret rotation: the secret superseded by +#rotate_secret!+ is
-  # retained in `old_secret` so that it can keep authenticating the client
-  # for a grace period. Opening one requires the `enable_secret_rotation`
-  # option and the columns the `doorkeeper:secret_rotation` generator adds.
+  # retained in `old_secret` and keeps authenticating the client until
+  # +#clear_old_secret!+ ends the grace period. Opening one requires the
+  # `enable_secret_rotation` option and the columns the
+  # `doorkeeper:secret_rotation` generator adds; ending one requires only the
+  # columns, so that a server which has since turned the option off can still
+  # drop what its last rotation retained.
   #
   # Kept in a file of its own rather than in the application mixin: what is
   # written here is a read-modify-write on a live credential under a row
@@ -105,10 +108,108 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       plaintext_secret
     end
 
+    # Ends the grace period opened by the last rotation, dropping the
+    # superseded secret. When that happens is left to the application — a
+    # console, an admin action, a rake task, or a job driven by
+    # +old_secret_created_at+: with no +secret_rotation_grace_period+
+    # configured Doorkeeper expires nothing on its own, so an old secret
+    # that is never cleared stays valid indefinitely.
+    #
+    # A configured deadline stops it authenticating when it passes
+    # (+#old_secret_expired?+) but leaves the value where it is: dropping it
+    # from the row is this method's, deadline or not. So does turning the
+    # option off, and for the same reason this method asks only for the
+    # columns: expiry is a comparison made when a client authenticates, so
+    # lengthening the deadline, removing it, or setting `enable_secret_rotation`
+    # again puts a retained secret straight back into service. Nothing but this
+    # retires one for good, and needing the option to run it would mean
+    # re-arming the feature for every application on the server in order to
+    # clean up after one.
+    #
+    # Takes the row lock for the same reason +#rotate_secret!+ does, and
+    # decides whether there is anything to clear under it: read outside the
+    # lock, the answer describes whatever this instance was loaded with,
+    # which a rotation committed since then has already made wrong in both
+    # directions. As with a rotation, taking the lock requires a record free
+    # of unsaved changes.
+    #
+    # @return [Boolean] whether a grace period was there to end
+    #
+    def clear_old_secret!
+      ensure_secret_rotation_columns!
+      ensure_lockable!
+
+      cleared = false
+
+      # Same boundary as in #rotate_secret!: nothing is written before the
+      # lock block runs, so a failure ahead of it leaves nothing to restore.
+      locked = false
+
+      self.class.with_primary_role do
+        with_lock do
+          locked = true
+
+          # `with_lock` reloads, so `secret` is what is committed — which a
+          # rotation running since this instance was loaded has already
+          # replaced. The volatile plaintext is not reloaded with it, and
+          # left alone it would have +#plaintext_secret+ hand out a secret
+          # the row has moved on from — one this method is about to stop
+          # authenticating altogether, since a superseded secret is exactly
+          # what `old_secret` holds. Kept only while it still describes the
+          # stored secret, the filter +#undo_failed_rotation+ applies after
+          # its own reload and for the same reason.
+          @raw_secret = restorable_raw_secret(@raw_secret)
+
+          # Both columns decide, not `old_secret` alone: a row carrying a
+          # timestamp with nothing behind it — written by something other
+          # than +#rotate_secret!+ — reports a rotation midway through, and
+          # keying the no-op on the secret would leave every run of a
+          # cleanup job driven by `old_secret_created_at` reselecting it
+          # without ever clearing it.
+          next if old_secret.blank? && old_secret_created_at.blank?
+
+          # Assignment and `save!`, the shape +#rotate_secret!+ uses, rather
+          # than `update!`: `update!` wraps the assignment in a transaction
+          # of its own, so the record is snapshotted while still clean and a
+          # rollback that arrives after the write leaves it clean holding
+          # the new values — the rescue below would then have nothing to put
+          # back, and the instance would report a grace period the row still
+          # has. Same statement, same validations, same callbacks; only the
+          # nesting differs.
+          self.old_secret = nil
+          self.old_secret_created_at = nil
+          save!
+          cleared = true
+        end
+      end
+
+      cleared
+    rescue StandardError
+      # Symmetric with #rotate_secret!: the row is rolled back, so the
+      # instance must not be left claiming a grace period it still has, and
+      # everything the write dirtied — `updated_at` included — goes back
+      # with it. See that method's rescue for why the list is not named.
+      restore_attributes if locked
+      raise
+    end
+
     private
 
     def ensure_secret_rotation_enabled!
       return if self.class.secret_rotation_enabled?
+
+      raise Doorkeeper::Errors::SecretRotationNotEnabled, self.class.table_name
+    end
+
+    # The columns, without asking whether the option that writes them is on.
+    # What #clear_old_secret! is gated on, because turning `enable_secret_rotation`
+    # off does not clear what the last rotation retained: the row goes on
+    # holding a live credential, one that authenticates again the moment the
+    # option comes back. Ending that grace period is exactly the thing a
+    # server must not have to re-arm the feature — for every application on
+    # it, not just this one — in order to do.
+    def ensure_secret_rotation_columns!
+      return if self.class.secret_rotation_columns?
 
       raise Doorkeeper::Errors::SecretRotationNotEnabled, self.class.table_name
     end
