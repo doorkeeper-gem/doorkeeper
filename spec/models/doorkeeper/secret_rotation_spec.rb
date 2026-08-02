@@ -212,6 +212,164 @@ RSpec.describe "client secret rotation" do
         app.rotate_secret!
       end
 
+      context "when the write fails" do
+        # Invalidated in the database rather than on the instance: the record
+        # has to be free of unsaved changes for the lock to be taken at all
+        # (pinned below). A row holding a scope that the server later stopped
+        # configuring is how a stored application comes to fail validation in
+        # practice.
+        def invalidate_stored_row(record)
+          record.update_column(:scopes, "never_configured")
+          config_is_set(:enforce_configured_scopes, true)
+        end
+
+        before { invalidate_stored_row(app) }
+
+        it "leaves the stored secret alone" do
+          stored = app.secret
+
+          expect { app.rotate_secret! }.to raise_error(ActiveRecord::RecordInvalid)
+
+          expect(Doorkeeper::Application.find(app.id).secret).to eq(stored)
+          expect(Doorkeeper::Application.find(app.id).old_secret).to be_nil
+        end
+
+        # An instance still holding a secret that was never stored is a trap
+        # for any caller that rescues and carries on.
+        it "puts the in-memory attributes back" do
+          stored = app.secret
+
+          expect { app.rotate_secret! }.to raise_error(ActiveRecord::RecordInvalid)
+
+          expect(app.secret).to eq(stored)
+          expect(app.old_secret).to be_nil
+          expect(app.old_secret_created_at).to be_nil
+        end
+
+        # A public client may store no secret at all (the column is nullable
+        # in the generated schema). Restoring the row puts that nil back, and
+        # nothing may then be compared against it: the strategies raise on a
+        # nil stored value, which would mask the error the rotation raises.
+        it "raises the write's own error for an application storing no secret" do
+          public_app = FactoryBot.create(:application, confidential: false)
+          public_app.update_column(:secret, nil)
+          invalidate_stored_row(public_app)
+
+          expect { public_app.rotate_secret! }.to raise_error(ActiveRecord::RecordInvalid)
+
+          expect(public_app.secret).to be_nil
+          expect(public_app.plaintext_secret).to be_nil
+        end
+
+        it "puts the volatile plaintext back" do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            hash_application_secrets
+            enable_secret_rotation
+          end
+          fresh = FactoryBot.create(:application)
+          plaintext = fresh.plaintext_secret
+          invalidate_stored_row(fresh)
+
+          expect { fresh.rotate_secret! }.to raise_error(ActiveRecord::RecordInvalid)
+
+          expect(fresh.plaintext_secret).to eq(plaintext)
+        end
+
+        # An application created before hashing was enabled stores its secret
+        # plain, which is what `fallback: :plain` exists to keep serving. The
+        # failed rotation restores that legacy value, so the plaintext still
+        # describes what is stored — the restore check has to consult the
+        # fallback strategy the way every other comparison does.
+        it "puts the volatile plaintext of a legacy plain secret back under fallback: :plain" do
+          fresh = FactoryBot.create(:application)
+          plaintext = fresh.plaintext_secret
+
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            hash_application_secrets fallback: :plain
+            enable_secret_rotation
+          end
+          invalidate_stored_row(fresh)
+
+          expect { fresh.rotate_secret! }.to raise_error(ActiveRecord::RecordInvalid)
+
+          expect(fresh.plaintext_secret).to eq(plaintext)
+        end
+
+        # Under Plain, #plaintext_secret reads the column and never looks at
+        # @raw_secret, so the guard's post-condition is only observable under
+        # a hashing strategy: there a guard answering `raw` would leave the
+        # instance handing out a plaintext for a secret the row does not hold.
+        it "drops the plaintext for an application storing no secret, under hashing" do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            hash_application_secrets
+            enable_secret_rotation
+          end
+          public_app = FactoryBot.create(:application, confidential: false)
+          public_app.update_column(:secret, nil)
+          invalidate_stored_row(public_app)
+
+          expect { public_app.rotate_secret! }.to raise_error(ActiveRecord::RecordInvalid)
+
+          expect(public_app.secret).to be_nil
+          expect(public_app.plaintext_secret).to be_nil
+        end
+
+        # Taking the lock reloads, so a rotation that raced this one has
+        # already replaced the secret the pre-lock plaintext described. Putting
+        # that plaintext back over the reloaded value would leave a rescuing
+        # caller holding a secret the row no longer has.
+        it "does not put a plaintext back over a secret another rotation stored" do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            hash_application_secrets
+            enable_secret_rotation
+          end
+          fresh = FactoryBot.create(:application)
+          plaintext = fresh.plaintext_secret
+
+          Doorkeeper::Application.find(fresh.id).rotate_secret!
+          stored = Doorkeeper::Application.find(fresh.id).secret
+          invalidate_stored_row(fresh)
+
+          expect { fresh.rotate_secret! }.to raise_error(ActiveRecord::RecordInvalid)
+
+          expect(fresh.plaintext_secret).not_to eq(plaintext)
+          expect(fresh.plaintext_secret).to be_nil
+          expect(Doorkeeper::Application.find(fresh.id).secret).to eq(stored)
+        end
+
+        # A host `after_commit` callback raising reaches the rescue on the
+        # other side of the commit: the rotation is already written, the
+        # restore is a no-op, and the plaintext this rotation generated is
+        # the only copy of the committed secret — it must survive the raise
+        # rather than be swapped for the pre-rotation one (which no longer
+        # matches anything stored).
+        it "keeps the committed plaintext when a host after_commit callback raises" do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            hash_application_secrets
+            enable_secret_rotation
+          end
+
+          klass = build_application_model
+          boom = false
+          klass.after_commit { raise "boom" if boom }
+          committed = klass.create!(FactoryBot.attributes_for(:application))
+          boom = true
+
+          expect { committed.rotate_secret! }.to raise_error(RuntimeError, "boom")
+
+          boom = false
+          stored = klass.find(committed.id)
+          expect(stored.old_secret).to be_present
+          expect(committed.plaintext_secret).to be_present
+          expect(stored.secret_matches?(committed.plaintext_secret)).to be(true)
+        end
+      end
+
       # `with_lock` gates both of its guarantees on `persisted?`, so on a new
       # record it takes no row lock and does not refuse unsaved changes: the
       # rotation would INSERT whatever the caller had assigned and retain a
@@ -267,6 +425,54 @@ RSpec.describe "client secret rotation" do
 
           expect(app.secret).to eq("pending")
         end
+      end
+
+      # The guard raises before anything is attempted, so it must not cost the
+      # caller the plaintext of the secret the application already has.
+      it "keeps the volatile plaintext when the guard raises" do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          hash_application_secrets
+        end
+        fresh = FactoryBot.create(:application)
+        plaintext = fresh.plaintext_secret
+
+        expect { fresh.rotate_secret! }.to raise_error(Doorkeeper::Errors::SecretRotationNotEnabled)
+
+        expect(fresh.plaintext_secret).to eq(plaintext)
+      end
+
+      # The plaintext is only filtered against the stored secret where the
+      # rotation wrote something. A guard raising before the lock block wrote
+      # nothing, so an unsaved `secret` the caller had assigned must not cost
+      # them the plaintext of the secret the row still holds.
+      it "keeps the volatile plaintext when the feature is off and a secret was assigned" do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          hash_application_secrets
+        end
+        fresh = FactoryBot.create(:application)
+        plaintext = fresh.plaintext_secret
+        fresh.secret = "pending"
+
+        expect { fresh.rotate_secret! }.to raise_error(Doorkeeper::Errors::SecretRotationNotEnabled)
+
+        expect(fresh.plaintext_secret).to eq(plaintext)
+      end
+
+      it "keeps the volatile plaintext when the lock is refused and a secret was assigned" do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          hash_application_secrets
+          enable_secret_rotation
+        end
+        fresh = FactoryBot.create(:application)
+        plaintext = fresh.plaintext_secret
+        fresh.secret = "pending"
+
+        expect { fresh.rotate_secret! }.to raise_error(RuntimeError, /unpersisted changes/)
+
+        expect(fresh.plaintext_secret).to eq(plaintext)
       end
 
       # A host schema that relaxed the install migration's `null: false` can
