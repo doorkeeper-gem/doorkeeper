@@ -330,6 +330,12 @@ module Doorkeeper
     # Allows to customize Token Introspection response
     option :custom_introspection_response,        default: ->(_token, _context) { {} }
 
+    # Called with the application whenever a client authenticates with the
+    # secret a rotation superseded rather than its current one. The signal an
+    # application needs to tell whether anyone still depends on the old secret
+    # before ending the grace period with `#clear_old_secret!`.
+    option :after_old_secret_used,          default: ->(_application) {}
+
     # How long a superseded client secret keeps authenticating, as a positive
     # duration or number of seconds — anything else is refused at
     # configuration time (Validations#validate_secret_rotation_grace_period).

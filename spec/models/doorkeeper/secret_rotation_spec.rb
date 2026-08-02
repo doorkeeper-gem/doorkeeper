@@ -100,6 +100,57 @@ RSpec.describe "client secret rotation" do
     end
   end
 
+  # The hook is called only on an authentication the superseded secret let
+  # in, so a value that cannot be called boots fine and fails exactly the
+  # requests the grace period exists to keep working. Refused at
+  # configuration time, like the grace period.
+  describe "Doorkeeper.config#after_old_secret_used" do
+    it "accepts a lambda taking the application" do
+      hook = ->(_application) {}
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enable_secret_rotation
+        after_old_secret_used hook
+      end
+
+      expect(Doorkeeper.config.after_old_secret_used).to eq(hook)
+    end
+
+    it "accepts a block" do
+      seen = []
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enable_secret_rotation
+        after_old_secret_used { |application| seen << application.uid }
+      end
+
+      Doorkeeper.config.after_old_secret_used.call(app)
+      expect(seen).to eq([app.uid])
+    end
+
+    it "refuses a value that cannot be called" do
+      expect do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          enable_secret_rotation
+          after_old_secret_used :nope
+        end
+      end.to raise_error(ArgumentError, /after_old_secret_used.*:nope/)
+    end
+
+    it "refuses a lambda that does not take the application" do
+      expect do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          enable_secret_rotation
+          after_old_secret_used -> {}
+        end
+      end.to raise_error(ArgumentError, /after_old_secret_used/)
+    end
+  end
+
   describe ".secret_rotation_enabled?" do
     it "is false while the option is off, even though the column exists" do
       expect(Doorkeeper::Application.column_names).to include("old_secret")
@@ -1331,6 +1382,68 @@ RSpec.describe "client secret rotation" do
       app.clear_old_secret!
 
       expect(Doorkeeper::Application.by_uid_and_secret(app.uid, old_plaintext)).to be_nil
+    end
+  end
+
+  describe "after_old_secret_used" do
+    let(:reported) { [] }
+
+    before do
+      hook = ->(application) { reported << application }
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enable_secret_rotation
+        after_old_secret_used hook
+      end
+    end
+
+    it "reports the client that authenticated with the superseded secret" do
+      old_plaintext = app.plaintext_secret
+      app.rotate_secret!
+
+      app.secret_matches?(old_plaintext)
+
+      expect(reported).to eq([app])
+    end
+
+    it "stays quiet when the client has moved to the new secret" do
+      new_plaintext = app.rotate_secret!
+
+      app.secret_matches?(new_plaintext)
+
+      expect(reported).to be_empty
+    end
+
+    it "stays quiet for a secret that matches neither" do
+      app.rotate_secret!
+
+      app.secret_matches?("nope")
+
+      expect(reported).to be_empty
+    end
+
+    it "stays quiet once the grace period has been ended" do
+      old_plaintext = app.plaintext_secret
+      app.rotate_secret!
+      app.clear_old_secret!
+
+      app.secret_matches?(old_plaintext)
+
+      expect(reported).to be_empty
+    end
+
+    it "fires through the full lookup path" do
+      old_plaintext = app.plaintext_secret
+      app.rotate_secret!
+
+      Doorkeeper::Application.by_uid_and_secret(app.uid, old_plaintext)
+
+      expect(reported).to eq([app])
+    end
+
+    it "is a no-op by default" do
+      expect(Doorkeeper::Config.new.after_old_secret_used.call(app)).to be_nil
     end
   end
 
