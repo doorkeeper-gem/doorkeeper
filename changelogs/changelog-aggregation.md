@@ -1,0 +1,1 @@
+- [#1900] Internal: changelog entries are now added as files under `changelogs/` instead of editing `CHANGELOG.md` directly; after merge, a workflow collects them into the `## main` section through an auto-generated pull request.

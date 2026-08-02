@@ -29,7 +29,8 @@ Run the tests with: `docker run -it --rm doorkeeper:test`
 
       rake spec
 
-* Add notes about your changes to the `CHANGELOG.md` file.
+* Add notes about your changes as a new file under [`changelogs/`](changelogs/README.md)
+  (don't edit `CHANGELOG.md` directly — a workflow collects the entries after merge).
 
 * Write a [good commit message][commit].
 * Push to your fork.

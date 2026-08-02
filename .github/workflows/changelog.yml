@@ -29,10 +29,20 @@ jobs:
               - 'Gemfile'
               - 'Gemfile.lock'
               - 'ext/**'
+            # Matches exactly the files the aggregation script collects, so
+            # editing changelogs/README.md alone does not pass the check.
+            # An excluding "!changelogs/README.md" line would not work here:
+            # filter rules are OR-ed, so it would match every other path too.
+            changelog_entry:
+              - 'changelogs/!(README).md'
 
+      # A pending entry file under changelogs/ satisfies the requirement; the
+      # enforcer below only runs as a fallback, still accepting a direct
+      # CHANGELOG.md edit.
       - name: Enforce changelog
         if: |
           steps.changes.outputs.gem_changes == 'true'
+            && steps.changes.outputs.changelog_entry != 'true'
         uses: dangoslen/changelog-enforcer@v3.7.0
         with:
           changeLogPath: CHANGELOG.md
