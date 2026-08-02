@@ -305,6 +305,26 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       end
     end
 
+    # Serializes the application attributes minus the ones a rotation
+    # writes (see #withhold_rotation_attributes). This is the boundary
+    # every ActiveModel serialization path shares — #as_json and #to_json
+    # run through it — and a public entry point of its own, which would
+    # otherwise hand out every attribute by default.
+    #
+    # It is the default that is changed, not a guarantee that is added:
+    # +methods:+ appends a reader after +only+/+except+ have been applied,
+    # as ActiveModel documents, so a caller naming +old_secret+ there is
+    # answered. What this stops is every view that does not name it — the
+    # ones that ask for all attributes, +only:+ included.
+    #
+    # @param options [Hash, nil] serialization options
+    #
+    # @return [Hash] entity attributes
+    #
+    def serializable_hash(options = nil)
+      super(withhold_rotation_attributes(options))
+    end
+
     private
 
     # +retained_at+ is the `old_secret_created_at` the caller read off a row,
@@ -502,6 +522,46 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       unrevoked = table[:revoked_at].eq(nil).or(table[:revoked_at].gt(now))
 
       relation.where(unrevoked).update_all(revoked_at: now)
+    end
+
+    # Removes the columns a rotation writes from serialization options.
+    #
+    # The retained secret is a live credential — it authenticates the client
+    # exactly as `secret` does — so it must not be handed out anywhere, and
+    # #serializable_hash (the owner view of #as_json included) would
+    # otherwise serialize every attribute. `secret` is surfaced there
+    # deliberately, through #read_attribute_for_serialization; nothing
+    # surfaces this one.
+    # `old_secret_created_at` goes with it: on its own it still reports that
+    # a client is midway through a rotation.
+    #
+    # Expressed against `only` as well as `except` because ActiveModel
+    # honours one or the other and never both — an explicit
+    # `only: [:old_secret]` would walk straight past an exclusion written
+    # only as `except`. The `only` branch mirrors ActiveModel's own test
+    # (any non-nil value selects that path, including an empty array).
+    #
+    # An explicit `methods:` option still appends whatever the caller
+    # names — ActiveModel applies it after the `only`/`except` filtering.
+    # That escape hatch is left alone on purpose: both branches already
+    # honour it for `secret` itself, and a host app naming an attribute
+    # there is asking for the value, same as calling the reader directly.
+    #
+    # @param options [Hash] serialization options
+    #
+    # @return [Hash] the options with the rotation columns removed
+    #
+    def withhold_rotation_attributes(options)
+      opts = options.try(:dup) || {}
+      withheld = %w[old_secret old_secret_created_at]
+
+      if opts[:only]
+        opts[:only] = Array.wrap(opts[:only]).map(&:to_s) - withheld
+      else
+        opts[:except] = Array.wrap(opts[:except]).map(&:to_s) | withheld
+      end
+
+      opts
     end
   end
 end
