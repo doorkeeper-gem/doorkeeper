@@ -26,6 +26,20 @@ RSpec.describe "client secret rotation" do
 
       expect(Doorkeeper.config.enable_secret_rotation?).to be(true)
     end
+
+    # The comparison and the rotation are Active Record's; the other ORM
+    # adapters ship application models that include neither, so under them
+    # the option is a no-op — with no columns to miss, so nothing else would
+    # say so.
+    it "warns when the ORM is not Active Record" do
+      allow(Doorkeeper).to receive(:setup)
+      expect(Rails.logger).to receive(:warn).with(/implemented for the active_record ORM/)
+
+      Doorkeeper.configure do
+        orm :mongoid
+        enable_secret_rotation
+      end
+    end
   end
 
   # The grace period is consumed as `old_secret_created_at + grace_period`,
