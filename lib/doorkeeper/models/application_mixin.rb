@@ -160,11 +160,49 @@ module Doorkeeper
 
       return stored_secret_matches?(input, :secret) unless self.class.secret_rotation_enabled?
 
-      stored_secret_matches?(input, :secret) || old_secret_matches?(input)
+      # Both comparisons are performed and only then combined. Returning as
+      # soon as the current secret matches would make a successful
+      # authentication measurably cheaper than a failed one by exactly the cost
+      # of one comparison — which under bcrypt is the dominant cost of the
+      # request — so the shape of the work stays the same either way.
+      match = stored_secret_matches?(input, :secret)
+      old_match = old_secret_matches?(input)
+
+      match || old_match
     end
 
     # Check whether the given plain text secret matches the secret superseded
     # by the last rotation (see +#rotate_secret!+).
+    #
+    # A comparison runs even when there is no retained secret to compare
+    # against — because none is stored, or because the one that is has
+    # outlived its grace period — against the current secret, with the result
+    # discarded, so that whether this client is midway through a rotation
+    # cannot be read off how long the endpoint took to answer. The dummy
+    # comparison is deliberately made against a real stored secret rather than
+    # a constant, so that it costs what a genuine comparison costs — which it
+    # does whenever both columns were written by the same strategy.
+    #
+    # What it cannot equalise is two columns held in different formats: a
+    # `secret` and an `old_secret` written by different strategies cost
+    # different comparisons, and the difference is measurable by anyone —
+    # under bcrypt an `InvalidHash` is refused for its shape before any work
+    # factor applies. A secret the fallback strategy wrote is retained in
+    # that format, so rotating under a `fallback:` strategy leaves exactly
+    # such a pair behind.
+    #
+    # What remains once the formats agree is the *active* strategy's work.
+    # With a fallback strategy configured, a rotated application costs one
+    # comparison more than an unrotated one on a **successful**
+    # authentication: the dummy comparison matches on the active strategy and
+    # stops there, while the genuine comparison against a stored `old_secret`
+    # the request does not hold misses it and goes on to the fallback. Both
+    # built-in fallbacks make that comparison cheap — `Plain` is a
+    # `secure_compare`, and `BCrypt` raises `InvalidHash` on a value it did
+    # not write, before any work factor is applied — and only a caller
+    # already holding a valid secret gets to measure it. A custom fallback
+    # with a real work factor that does not refuse foreign formats outright
+    # would make the difference visible to such a caller.
     #
     # @param input [#to_s] Plain secret provided by user
     #        (any object that responds to `#to_s`)
@@ -175,6 +213,7 @@ module Doorkeeper
     def old_secret_matches?(input)
       return false if input.nil? || !self.class.secret_rotation_enabled?
 
+      rotated = old_secret.present?
       # Nothing to compare against, and nothing to hide either: an application
       # with no secret at all is a public client, whose secret is never
       # checked. Asked of the current secret and not of `old_secret`, so that
@@ -182,11 +221,36 @@ module Doorkeeper
       # nil `secret` before it ever consults the retained one, and a host
       # calling this predicate to learn which secret a client presented would
       # otherwise be told the old one authenticated a request Doorkeeper had
-      # rejected.
-      return false if secret.nil? || old_secret.blank?
-      return false if old_secret_expired?
+      # rejected. No timing to equalise on the way out: +#secret_matches?+
+      # never reaches here for such an application, so the only caller is a
+      # host asking directly.
+      return false if secret.nil?
 
-      stored_secret_matches?(input.to_s, :old_secret)
+      # Read before the comparison rather than after it, so the comparison can
+      # be pointed away from a credential this server has already declared
+      # dead. Expiry reads two columns the caller cannot influence, so nothing
+      # about it is measurable.
+      expired = old_secret_expired?
+
+      matched =
+        if rotated && !expired
+          stored_secret_matches?(input.to_s, :old_secret)
+        else
+          # The dummy comparison, made with the fallback upgrade suppressed:
+          # it is asked only to cost what a real comparison costs, and must
+          # write nothing. Letting it keep the upgrade would have a question
+          # about the *superseded* secret rewrite the current one, would
+          # re-encode a secret whose grace period has already ended on an
+          # authentication that is about to be rejected, and — inside
+          # +#secret_matches?+, where the genuine comparison has already
+          # upgraded — would issue a second write whenever the first lost the
+          # conditional-write race.
+          stored_secret_matches?(input.to_s, :secret, upgrade: false)
+        end
+
+      # Exactly one comparison has run on every path, so combining the three
+      # here costs the same whichever one it was.
+      rotated && matched && !expired
     end
 
     # Whether the retained secret has outlived the configured
@@ -231,10 +295,14 @@ module Doorkeeper
     #
     # @param input [String] Plain secret provided by user
     # @param attribute [Symbol] the secret attribute to compare against
+    # @param upgrade [Boolean] whether a fallback match rewrites the stored
+    #        value in the active strategy's format. Off for a comparison whose
+    #        result is discarded (see +#old_secret_matches?+), which must cost
+    #        what a real one costs without writing anything.
     #
     # @return [Boolean]
     #
-    def stored_secret_matches?(input, attribute)
+    def stored_secret_matches?(input, attribute, upgrade: true)
       # Read through the reader named, spelled out rather than dispatched on
       # the name, so a host's own `secret` or `old_secret` reader is honoured.
       stored = attribute == :old_secret ? old_secret : secret
@@ -246,7 +314,7 @@ module Doorkeeper
       # can still be found, upgrading the stored secret to the active strategy
       # on a successful match.
       if fallback_secret_strategy&.secret_matches?(input, stored)
-        self.class.upgrade_fallback_value(self, attribute, input)
+        self.class.upgrade_fallback_value(self, attribute, input) if upgrade
         true
       else
         false
