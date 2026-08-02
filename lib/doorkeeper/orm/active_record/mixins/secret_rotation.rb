@@ -83,8 +83,9 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
             # install migration's `null: false` can hold a public client
             # with no secret at all (see +#secret_required?+). Stamping the
             # timestamp regardless would open a grace period over an empty
-            # `old_secret`, leaving the row saying a rotation is midway
-            # through when nothing was carried over.
+            # `old_secret` — one +#old_secret_expired?+ never expires and
+            # +#old_secret_matches?+ never honours — leaving the row saying
+            # a rotation is midway through when nothing was carried over.
             # `renew_secret` below still writes one, as it always has, so
             # such a client comes out of a rotation holding a secret.
             if revoke_old || secret.blank?
