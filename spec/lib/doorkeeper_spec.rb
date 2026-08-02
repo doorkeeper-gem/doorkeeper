@@ -58,6 +58,44 @@ RSpec.describe Doorkeeper do
       )
     end
 
+    # The secret a rotation retains is a live credential like `secret`, and
+    # Active Record copies filter_parameters into filter_attributes, so the
+    # entry keeps it out of a logged or inspected application record. The
+    # timestamp says a client is mid-rotation, which serialization withholds
+    # for the same reason, and the anchored filter needs its own entry for it.
+    it "adds the columns a secret rotation writes to filter_parameters" do
+      Rails.application.config.filter_parameters.clear
+
+      described_class.configure do
+        orm DOORKEEPER_ORM
+        resource_owner_authenticator { nil }
+        enable_secret_rotation
+      end
+      described_class.setup_filter_parameters
+
+      expect(Rails.application.config.filter_parameters).to include(
+        a_kind_of(Regexp).and(match("old_secret")).and(match("old_secret_created_at")),
+      )
+    end
+
+    # Disabling rotation does not clear the column: a server that rotated a
+    # secret once and then turned the option off still holds a live credential
+    # there, so the filter has to outlive the option rather than be recomputed
+    # from it at the next boot.
+    it "keeps the secret rotation columns filtered while the option is off" do
+      Rails.application.config.filter_parameters.clear
+
+      described_class.configure do
+        orm DOORKEEPER_ORM
+        resource_owner_authenticator { nil }
+      end
+      described_class.setup_filter_parameters
+
+      expect(Rails.application.config.filter_parameters).to include(
+        a_kind_of(Regexp).and(match("old_secret")).and(match("old_secret_created_at")),
+      )
+    end
+
     it "includes code parameter when authorization_code flow is enabled" do
       Rails.application.config.filter_parameters.clear
 

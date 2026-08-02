@@ -21,6 +21,16 @@ module Doorkeeper
       def self.allows_restoring_secrets?
         false
       end
+
+      ##
+      # +Digest::SHA256.hexdigest+ writes 64 lower case hex characters and
+      # nothing else. A plain secret that happens to look like one is read as
+      # this strategy's own, which is the harmless direction: the value is
+      # then left as it is stored, exactly as it was before this predicate
+      # existed.
+      def self.recognizes_stored_secret?(stored)
+        /\A[0-9a-f]{64}\z/.match?(stored.to_s)
+      end
     end
   end
 end
