@@ -1197,6 +1197,43 @@ RSpec.describe "client secret rotation" do
 
         expect(app.secret_matches?(old_plaintext)).to be(false)
       end
+
+      # Whether this client is midway through a rotation must not be readable
+      # from how much work the comparison did, so a comparison runs either
+      # way — against the current secret when there is no old one to check.
+      it "compares twice even when nothing has been rotated" do
+        expect(Doorkeeper::SecretStoring::Plain)
+          .to receive(:secret_matches?).twice.and_call_original
+
+        app.secret_matches?("nope")
+      end
+
+      it "compares twice when an old secret is stored" do
+        app.rotate_secret!
+
+        expect(Doorkeeper::SecretStoring::Plain)
+          .to receive(:secret_matches?).twice.and_call_original
+
+        app.secret_matches?("nope")
+      end
+
+      it "compares twice even when the current secret already matched" do
+        new_plaintext = app.rotate_secret!
+
+        expect(Doorkeeper::SecretStoring::Plain)
+          .to receive(:secret_matches?).twice.and_call_original
+
+        expect(app.secret_matches?(new_plaintext)).to be(true)
+      end
+
+      # The dummy comparison is made against a real stored secret, so under
+      # bcrypt it costs the same work factor a genuine one would.
+      it "performs the dummy comparison against a stored secret" do
+        expect(Doorkeeper::SecretStoring::Plain)
+          .to receive(:secret_matches?).with("nope", app.secret).twice.and_call_original
+
+        app.secret_matches?("nope")
+      end
     end
 
     context "with the fallback strategy and rotation enabled" do
@@ -1256,6 +1293,18 @@ RSpec.describe "client secret rotation" do
           expect { app.secret_matches?(plain_old_secret) }
             .not_to(change { app.reload.attributes.values_at("old_secret", "updated_at") })
         end
+      end
+
+      # The predicate answers a question about the *superseded* secret; asked
+      # of an application that never rotated, the comparison it makes to keep
+      # the timing even must not rewrite the current one.
+      it "writes nothing when asked of an application that never rotated" do
+        app.update_columns(old_secret: nil, old_secret_created_at: nil)
+        app.update_column(:secret, "legacy plain secret")
+        fresh = Doorkeeper::Application.find(app.id)
+
+        expect(fresh.old_secret_matches?("legacy plain secret")).to be(false)
+        expect(Doorkeeper::Application.find(app.id).secret).to eq("legacy plain secret")
       end
     end
   end
@@ -1429,6 +1478,19 @@ RSpec.describe "client secret rotation" do
         .and_return(Doorkeeper::Application.column_names - ["old_secret"])
 
       expect(app.old_secret_expired?).to be(false)
+    end
+
+    # Expiry is decided after the comparison has run, so it cannot shorten the
+    # work an expired old secret costs.
+    it "still compares twice for an expired old secret" do
+      enable_rotation_with_grace_period(7 * 24 * 60 * 60)
+      app.rotate_secret!
+      app.update_column(:old_secret_created_at, 8.days.ago)
+
+      expect(Doorkeeper::SecretStoring::Plain)
+        .to receive(:secret_matches?).twice.and_call_original
+
+      app.secret_matches?("nope")
     end
   end
 end
