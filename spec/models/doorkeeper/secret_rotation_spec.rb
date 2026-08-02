@@ -639,6 +639,97 @@ RSpec.describe "client secret rotation" do
           expect(grant.reload).not_to be_revoked
         end
 
+        # A COMMIT lost to the connection dropping is the one commit failure
+        # Active Record (7.1+) does not roll the records back from: the
+        # transaction is invalidated, the record stays clean holding what
+        # `save!` wrote, and the instance looks exactly like a committed
+        # one. The sweep has to be gated on the row, not on that.
+        #
+        # Under the suite's non-joinable transaction `with_lock` opens a
+        # savepoint, so its COMMIT is `release_savepoint`: the savepoint is
+        # rolled back first, as a server that never received the COMMIT
+        # would have it, and the connection is kept — Active Record throws
+        # away one whose transaction it could not complete, which on a
+        # :memory: database would throw away the rows with it.
+        def lose_commit(connection)
+          allow(connection).to receive(:release_savepoint).and_wrap_original do |_original, name|
+            connection.rollback_to_savepoint(name)
+            raise ::ActiveRecord::ConnectionFailed, "lost during COMMIT"
+          end
+          allow(connection).to receive(:throw_away!)
+        end
+
+        it "does not revoke the issued credentials when the COMMIT is lost with the connection" do
+          skip "ActiveRecord::ConnectionFailed arrived in Rails 7.1" unless defined?(::ActiveRecord::ConnectionFailed)
+
+          stub_const("LostCommitApp", build_application_model)
+          record = LostCommitApp.create!(FactoryBot.attributes_for(:application))
+          token = FactoryBot.create(:access_token, application_id: record.id)
+          grant = FactoryBot.create(:access_grant, application_id: record.id)
+          stored = record.secret
+          lose_commit(LostCommitApp.connection)
+
+          expect { record.rotate_secret!(revoke_old: true, revoke_tokens: true) }
+            .to raise_error(::ActiveRecord::ConnectionFailed, "lost during COMMIT")
+
+          expect(LostCommitApp.find(record.id).secret).to eq(stored)
+          expect(token.reload).not_to be_revoked
+          expect(grant.reload).not_to be_revoked
+        end
+
+        it "puts the instance back to the stored secret when the COMMIT is lost with the connection" do
+          skip "ActiveRecord::ConnectionFailed arrived in Rails 7.1" unless defined?(::ActiveRecord::ConnectionFailed)
+
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            hash_application_secrets
+            enable_secret_rotation
+          end
+
+          stub_const("LostCommitApp", build_application_model)
+          record = LostCommitApp.create!(FactoryBot.attributes_for(:application))
+          stored = record.secret
+          plaintext = record.plaintext_secret
+          lose_commit(LostCommitApp.connection)
+
+          expect { record.rotate_secret!(revoke_old: true, revoke_tokens: true) }
+            .to raise_error(::ActiveRecord::ConnectionFailed)
+
+          expect(record.secret).to eq(stored)
+          expect(record.old_secret_created_at).to be_nil
+          expect(record).not_to be_changed
+          expect(record.plaintext_secret).to eq(plaintext)
+          expect(LostCommitApp.find(record.id).secret_matches?(record.plaintext_secret)).to be(true)
+        end
+
+        # The row is read back by primary key, and one that is gone by then
+        # — deleted while the COMMIT was in flight, say — answers as an
+        # uncommitted rotation does: nothing is swept, and the reload that
+        # follows fails the way any read of a missing row does, with the
+        # lost COMMIT as its cause, rather than the instance being left
+        # claiming a secret no row holds.
+        it "does not sweep when the row is gone by the time it is read back" do
+          skip "ActiveRecord::ConnectionFailed arrived in Rails 7.1" unless defined?(::ActiveRecord::ConnectionFailed)
+
+          stub_const("LostCommitApp", build_application_model)
+          record = LostCommitApp.create!(FactoryBot.attributes_for(:application))
+          token = FactoryBot.create(:access_token, application_id: record.id)
+          connection = LostCommitApp.connection
+          allow(connection).to receive(:release_savepoint).and_wrap_original do |_original, name|
+            connection.rollback_to_savepoint(name)
+            LostCommitApp.where(id: record.id).delete_all
+            raise ::ActiveRecord::ConnectionFailed, "lost during COMMIT"
+          end
+          allow(connection).to receive(:throw_away!)
+
+          expect { record.rotate_secret!(revoke_old: true, revoke_tokens: true) }
+            .to raise_error(::ActiveRecord::RecordNotFound) { |error|
+              expect(error.cause).to be_a(::ActiveRecord::ConnectionFailed)
+            }
+
+          expect(token.reload).not_to be_revoked
+        end
+
         # A host `after_commit` callback raising reaches the rescue on the
         # other side of the commit: the rotation is already written, the
         # restore is a no-op, and the plaintext this rotation generated is
