@@ -223,6 +223,30 @@ RSpec.describe "client secret rotation" do
     end
   end
 
+  # The withholding is a default, not a guarantee: ActiveModel appends a
+  # +methods:+ reader after +only+/+except+ filtering, so a caller naming the
+  # column is answered. Pinned in both directions so the README's wording keeps
+  # matching what serialization does.
+  describe "serializing an application mid-rotation" do
+    before do
+      enable_rotation
+      app.rotate_secret!
+      app.reload
+    end
+
+    it "withholds the rotation columns from every view that does not name them" do
+      expect(app.serializable_hash).not_to have_key("old_secret")
+      expect(app.as_json).not_to have_key("old_secret_created_at")
+      expect(app.serializable_hash(only: %i[old_secret old_secret_created_at])).to be_empty
+    end
+
+    it "answers a caller that names one through methods:" do
+      serialized = app.serializable_hash(methods: [:old_secret])
+
+      expect(serialized["old_secret"]).to eq(app.read_attribute(:old_secret))
+    end
+  end
+
   # Enabling the option without running the migration leaves authentication
   # exactly as it was, which is silent — so the reason is said once, the first
   # time the columns are looked for. Looked for and not asked at boot: reading
@@ -1913,6 +1937,95 @@ RSpec.describe "client secret rotation" do
         .to receive(:secret_matches?).twice.and_call_original
 
       app.secret_matches?("nope")
+    end
+  end
+
+  # The retained secret authenticates the client exactly as `secret` does, so
+  # it is withheld from every serialization — including the owner view, which
+  # otherwise dumps every attribute.
+  describe "serialization" do
+    before do
+      enable_rotation
+      app.rotate_secret!
+    end
+
+    it "does not expose the retained secret to the public" do
+      expect(app.as_json.keys).not_to include("old_secret", "old_secret_created_at")
+    end
+
+    it "does not expose it to the owner either" do
+      expect(app.as_json(as_owner: true).keys).not_to include("old_secret", "old_secret_created_at")
+    end
+
+    it "still gives the owner the attributes they came for" do
+      json = app.as_json(as_owner: true)
+
+      expect(json.keys).to include("id", "name", "uid", "secret", "scopes")
+    end
+
+    # The other half of the owner branch. `enable_application_owner` is a
+    # load-time switch (#1831), so the owner association only exists on a
+    # model class defined after it was turned on.
+    it "does not expose it to a matching current_resource_owner" do
+      owner = FactoryBot.create(:doorkeeper_testing_user)
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enable_application_owner confirmation: false
+        enable_secret_rotation
+      end
+
+      owned = build_application_model.new(FactoryBot.attributes_for(:application))
+      owned.owner = owner
+      owned.save!
+      owned.rotate_secret!
+
+      json = owned.as_json(current_resource_owner: owner)
+
+      expect(json.keys).to include("secret", "redirect_uri")
+      expect(json.keys).not_to include("old_secret", "old_secret_created_at")
+    end
+
+    # ActiveModel honours `only` or `except` but never both, so an exclusion
+    # written only as `except` would be skipped whenever `only` is given.
+    it "withholds it even when asked for by name" do
+      json = app.as_json(as_owner: true, only: %i[id old_secret old_secret_created_at])
+
+      expect(json.keys).to eq(["id"])
+    end
+
+    it "withholds it when asked for by name alone" do
+      expect(app.as_json(as_owner: true, only: [:old_secret])).to eq({})
+    end
+
+    it "keeps an explicit except of the caller's own" do
+      json = app.as_json(as_owner: true, except: [:scopes])
+
+      expect(json.keys).not_to include("scopes", "old_secret", "old_secret_created_at")
+      expect(json.keys).to include("secret")
+    end
+
+    # ActiveModel's public #serializable_hash is the boundary the
+    # withholding is applied at — #as_json runs through it, but it is also
+    # an entry point of its own, and by default it dumps every attribute.
+    it "does not expose it through a direct #serializable_hash" do
+      hash = app.serializable_hash
+
+      expect(hash.keys).to include("id", "secret")
+      expect(hash.keys).not_to include("old_secret", "old_secret_created_at")
+    end
+
+    it "withholds it from #serializable_hash even when asked for by name" do
+      hash = app.serializable_hash(only: %i[id old_secret old_secret_created_at])
+
+      expect(hash.keys).to eq(["id"])
+    end
+
+    it "does not mutate the options it was given" do
+      options = { as_owner: true }
+
+      app.as_json(options)
+
+      expect(options).to eq({ as_owner: true })
     end
   end
 end
