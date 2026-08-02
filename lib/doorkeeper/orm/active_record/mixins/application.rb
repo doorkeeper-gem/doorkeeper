@@ -56,6 +56,122 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
         secret_strategy.store_secret(self, :secret, @raw_secret)
       end
 
+      # Replaces this application's secret, retaining the superseded one so
+      # that clients still presenting it keep authenticating until the
+      # application ends the grace period with +#clear_old_secret!+. Requires
+      # the `enable_secret_rotation` option and the columns it needs; use
+      # +#renew_secret+ for a replacement with no grace period.
+      #
+      # The superseded secret is carried over as *stored*, not re-derived:
+      # hashing strategies draw a fresh salt on every write, so the plaintext
+      # is not available to store again — and does not need to be, since both
+      # columns are written and read back through the same strategy.
+      #
+      # Only one generation is retained, mirroring how `previous_refresh_token`
+      # keeps a single generation of refresh tokens. Rotating twice in a row
+      # therefore ends the first rotation's grace period early: the secret it
+      # retained is replaced by the one the second rotation supersedes, and
+      # clients that had not yet moved off it stop authenticating. A rotation
+      # is meant to be followed by `#clear_old_secret!`, not by another
+      # rotation.
+      #
+      # @param revoke_old [Boolean]
+      #   drop the current secret instead of retaining it. For a secret
+      #   believed to be compromised, which has to stop working now rather
+      #   than at the end of a grace period.
+      # @param revoke_tokens [Boolean]
+      #   additionally revoke everything the current secret could still be
+      #   exchanged for — the access tokens already issued to this
+      #   application, and its unredeemed authorization codes, which that
+      #   secret is enough to redeem.
+      #
+      # @return [String] new plain text secret value
+      #
+      def rotate_secret!(revoke_old: false, revoke_tokens: false)
+        # Captured before the guard so that the rescue below restores it even
+        # when nothing was attempted: a bare `raise` from the guard must not
+        # cost an application the plaintext of the secret it already has.
+        previous_raw_secret = @raw_secret
+        ensure_secret_rotation_enabled!
+
+        self.class.with_primary_role do
+          # Read-modify-write on the row: the secret being retained is the one
+          # currently stored, so two rotations racing without a lock would let
+          # the later one overwrite a secret the earlier one had already handed
+          # to a client — which would then never authenticate. `with_lock`
+          # reloads under the lock, so the retained value is the committed one
+          # even if this instance was loaded before the other rotation.
+          with_lock do
+            if revoke_old
+              self.old_secret = nil
+              self.old_secret_created_at = nil
+            else
+              self.old_secret = secret
+              self.old_secret_created_at = Time.now.utc
+            end
+
+            renew_secret
+            save!
+
+            revoke_issued_credentials! if revoke_tokens
+          end
+        end
+
+        plaintext_secret
+      rescue StandardError
+        # The row is rolled back, but Active Record leaves the in-memory
+        # attributes as the failed write left them — an instance still holding
+        # a secret that was never stored is a trap for any caller that rescues
+        # and carries on. The volatile plaintext is put back with them, so
+        # `#plaintext_secret` keeps describing the secret that is actually
+        # stored rather than the one the failed rotation would have written.
+        #
+        # Only the columns this method writes are restored: anything else the
+        # caller had changed on the instance is theirs, and a failed rotation
+        # is no reason to discard it.
+        restore_attributes(%w[secret old_secret old_secret_created_at])
+        @raw_secret = previous_raw_secret
+        raise
+      end
+
+      # Ends the grace period opened by the last rotation, dropping the
+      # superseded secret. When that happens is left to the application — a
+      # console, an admin action, a rake task, or a job driven by
+      # +old_secret_created_at+: Doorkeeper expires nothing on its own, so an
+      # old secret that is never cleared stays valid indefinitely.
+      #
+      # Takes the row lock for the same reason +#rotate_secret!+ does, and
+      # decides whether there is anything to clear under it: read outside the
+      # lock, the answer describes whatever this instance was loaded with,
+      # which a rotation committed since then has already made wrong in both
+      # directions. As with a rotation, taking the lock requires a record free
+      # of unsaved changes.
+      #
+      # @return [Boolean] whether an old secret was there to clear
+      #
+      def clear_old_secret!
+        ensure_secret_rotation_enabled!
+
+        cleared = false
+
+        self.class.with_primary_role do
+          with_lock do
+            next if old_secret.blank?
+
+            update!(old_secret: nil, old_secret_created_at: nil)
+            cleared = true
+          end
+        end
+
+        cleared
+      rescue StandardError
+        # Symmetric with #rotate_secret!: the row is rolled back, so the
+        # instance must not be left claiming a grace period it still has.
+        # Only the columns this method writes are restored.
+        restore_attributes(%w[old_secret old_secret_created_at])
+        raise
+      end
+
       # We keep a volatile copy of the raw secret for initial communication
       # The stored refresh_token may be mapped and not available in cleartext.
       #
@@ -83,8 +199,10 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
         # the one passed in the options or check if we render the client as an owner
         if (respond_to?(:owner) && owner && owner == options[:current_resource_owner]) ||
            options[:as_owner]
-          # Owners can see all the client attributes, fallback to ActiveModel serialization
-          super
+          # Owners can see all the client attributes, fallback to ActiveModel
+          # serialization — minus the ones a rotation writes, which are never
+          # serialized for anyone.
+          super(withhold_rotation_attributes(options))
         else
           # if application has no owner or it's owner doesn't match one from the options
           # we render only minimum set of attributes that could be exposed to a public
@@ -109,6 +227,27 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       end
 
       private
+
+      def ensure_secret_rotation_enabled!
+        return if self.class.secret_rotation_enabled?
+
+        raise Doorkeeper::Errors::SecretRotationNotEnabled, self.class.table_name
+      end
+
+      # Revokes what the superseded secret could still be exchanged for.
+      # Access grants are included because an unredeemed authorization code is
+      # exchanged with the client secret (RFC 6749 §4.1.3): leaving the codes
+      # alive would hand back an access token minted after the revocation.
+      #
+      # Already-revoked records are left untouched so their original
+      # `revoked_at` survives.
+      #
+      def revoke_issued_credentials!
+        now = Time.now.utc
+
+        access_tokens.where(revoked_at: nil).update_all(revoked_at: now)
+        access_grants.where(revoked_at: nil).update_all(revoked_at: now)
+      end
 
       def secret_generator
         generator_name = Doorkeeper.config.application_secret_generator
@@ -147,6 +286,39 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       def secret_required?
         confidential? ||
           !self.class.columns.detect { |column| column.name == "secret" }&.null
+      end
+
+      # Removes the columns a rotation writes from serialization options.
+      #
+      # The retained secret is a live credential — it authenticates the client
+      # exactly as `secret` does — so it must not be handed out anywhere, and
+      # the owner view is the one path that would otherwise serialize every
+      # attribute. `secret` is surfaced there deliberately, through
+      # #read_attribute_for_serialization; nothing surfaces this one.
+      # `old_secret_created_at` goes with it: on its own it still reports that
+      # a client is midway through a rotation.
+      #
+      # Expressed against `only` as well as `except` because ActiveModel
+      # honours one or the other and never both — an explicit
+      # `only: [:old_secret]` would walk straight past an exclusion written
+      # only as `except`. The `only` branch mirrors ActiveModel's own test
+      # (any non-nil value selects that path, including an empty array).
+      #
+      # @param options [Hash] serialization options
+      #
+      # @return [Hash] the options with the rotation columns removed
+      #
+      def withhold_rotation_attributes(options)
+        opts = options.try(:dup) || {}
+        withheld = %w[old_secret old_secret_created_at]
+
+        if opts[:only]
+          opts[:only] = Array.wrap(opts[:only]).map(&:to_s) - withheld
+        else
+          opts[:except] = Array.wrap(opts[:except]).map(&:to_s) | withheld
+        end
+
+        opts
       end
 
       # Helper method to extract collection of serializable attribute names

@@ -40,6 +40,7 @@ Supported features:
 - [ORMs](#orms)
 - [Extensions](#extensions)
 - [Resource Indicators](#resource-indicators)
+- [Client Secret Rotation](#client-secret-rotation)
 - [Custom Grant Flows](#custom-grant-flows)
 - [Custom Client Authentication Methods](#custom-client-authentication-methods)
 - [Example Applications](#example-applications)
@@ -155,6 +156,81 @@ RFC 8707 uses repeated query parameters (`?resource=…&resource=…`) for multi
 ```
 
 A single `resource=…` works as-is.
+
+## Client Secret Rotation
+
+Replacing a client secret normally cuts the client off between the moment the new secret is stored and the moment the client is redeployed with it. Doorkeeper can keep the superseded secret working for a grace period so that the two can happen in either order.
+
+### Setup
+
+1. Run the generator to add the required columns:
+
+```bash
+rails generate doorkeeper:secret_rotation
+rails db:migrate
+```
+
+2. Enable the option in your initializer:
+
+```ruby
+# config/initializers/doorkeeper.rb
+Doorkeeper.configure do
+  enable_secret_rotation
+end
+```
+
+### Rotating
+
+```ruby
+secret = application.rotate_secret!  # both secrets now authenticate
+# ... hand `secret` to the client, let it deploy ...
+application.clear_old_secret!        # only the new secret authenticates
+```
+
+`#rotate_secret!` returns the new plain text secret — the only chance to read it when secrets are hashed. Only one generation is retained, so rotating twice in a row ends the first rotation's grace period early: the secret it retained is replaced by the one the second rotation supersedes.
+
+### Knowing when to clear
+
+Ending the grace period means knowing that nobody still depends on the old secret. Doorkeeper reports each time one is used:
+
+```ruby
+Doorkeeper.configure do
+  after_old_secret_used ->(application) {
+    StatsD.increment("oauth.old_secret_used", tags: ["client:#{application.uid}"])
+  }
+end
+```
+
+The hook fires only when the old secret is what actually authenticated the client, so a quiet counter means the rotation is complete.
+
+### Deadlines
+
+Nothing expires an old secret on its own: one that is never cleared keeps authenticating indefinitely. Give the grace period a deadline if you would rather not rely on remembering:
+
+```ruby
+Doorkeeper.configure do
+  secret_rotation_grace_period 7.days
+end
+```
+
+Past it the old secret stops authenticating, though it stays in the column until `#clear_old_secret!` removes it. Left unset (the default), the grace period ends only when your application ends it; `old_secret_created_at` records when it started either way, so you can also drive your own job against it.
+
+### Compromised secrets
+
+A leaked secret has no grace period to give:
+
+```ruby
+application.rotate_secret!(revoke_old: true)
+application.rotate_secret!(revoke_old: true, revoke_tokens: true)
+```
+
+The second form also revokes the access tokens already issued to the application and its unredeemed authorization codes, both of which the leaked secret is enough to exchange.
+
+### Notes
+
+- The feature is opt-in and costs nothing while it is off — the secret comparison is unchanged.
+- While it is on, every comparison evaluates both the current and the old secret so that a rotation in progress is not observable in response times. Under bcrypt that is a second bcrypt comparison per token request.
+- `#renew_secret` remains available for replacing a secret with no grace period at all.
 
 ## Custom Grant Flows
 

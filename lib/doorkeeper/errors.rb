@@ -115,6 +115,24 @@ module Doorkeeper
       end
     end
 
+    # Raised when `Application#rotate_secret!` or `#clear_old_secret!` is
+    # called without client secret rotation being available — either the
+    # `enable_secret_rotation` option is off or the `old_secret` column has not
+    # been added. Rotating under those conditions would drop the superseded
+    # secret rather than retain it, cutting off every client the caller meant
+    # to give a grace period, so it fails loudly instead of silently doing the
+    # opposite of what was asked.
+    class SecretRotationNotEnabled < DoorkeeperError
+      def initialize(table)
+        super(
+          "Client secret rotation is not enabled. Add `enable_secret_rotation` to your Doorkeeper " \
+          "initializer and make sure the `old_secret` column exists on the #{table} table " \
+          "(`rails generate doorkeeper:secret_rotation`). Use `#renew_secret` to replace a secret " \
+          "without a grace period.",
+        )
+      end
+    end
+
     InvalidRequest = Class.new(BaseResponseError)
     InvalidToken = Class.new(BaseResponseError)
     InvalidClient = Class.new(BaseResponseError)
