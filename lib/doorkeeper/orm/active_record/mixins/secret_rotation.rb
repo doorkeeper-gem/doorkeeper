@@ -420,8 +420,19 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
     # call #revoke_issued_credentials! after its own commit, which is what
     # SecretRotationInTransaction says.
     #
+    # Asked through the pool rather than `connection`: the pool yields the
+    # connection this thread already holds — the one any open transaction
+    # lives on — and, when it holds none, a throwaway one with nothing open,
+    # which is the right answer either way. `connection` is the
+    # permanent-checkout API Rails 7.2 soft-deprecated; it raises under
+    # `permanent_connection_checkout = :disallowed` whenever nothing has
+    # leased the thread's connection yet, which is how a request or job
+    # starts.
     def ensure_revocation_can_follow_commit!
-      return unless self.class.connection.current_transaction.joinable?
+      joinable = self.class.connection_pool.with_connection do |connection|
+        connection.current_transaction.joinable?
+      end
+      return unless joinable
 
       raise Doorkeeper::Errors::SecretRotationInTransaction
     end
