@@ -370,6 +370,31 @@ RSpec.describe "client secret rotation" do
         end
       end
 
+      # A failure landing after validation has `save!` stamp `updated_at`
+      # before the UPDATE, and Active Record's rollback marks it dirty against
+      # the pre-transaction snapshot. Restoring only the three secret columns
+      # left it behind, and one dirty attribute is enough to make every later
+      # `with_lock` on the instance raise — so neither API could be retried on
+      # it, which is the opposite of what #revoke_issued_credentials!'s
+      # documentation promises.
+      context "when the failure lands after validation" do
+        it "leaves the instance clean enough to retry" do
+          enable_rotation
+          klass = build_application_model
+          boom = false
+          klass.after_save { raise "boom" if boom }
+          record = klass.create!(FactoryBot.attributes_for(:application))
+          boom = true
+
+          expect { record.rotate_secret! }.to raise_error(RuntimeError, "boom")
+          expect(record.changed).to be_empty
+
+          boom = false
+          expect { record.rotate_secret! }.not_to raise_error
+          expect { record.clear_old_secret! }.not_to raise_error
+        end
+      end
+
       # `with_lock` gates both of its guarantees on `persisted?`, so on a new
       # record it takes no row lock and does not refuse unsaved changes: the
       # rotation would INSERT whatever the caller had assigned and retain a
@@ -384,6 +409,13 @@ RSpec.describe "client secret rotation" do
 
           expect { record.rotate_secret! }.to raise_error(ActiveRecord::RecordNotSaved, /needs a persisted/)
           expect(record).not_to be_persisted
+        end
+
+        it "refuses to clear" do
+          enable_rotation
+
+          expect { Doorkeeper::Application.new.clear_old_secret! }
+            .to raise_error(ActiveRecord::RecordNotSaved, /needs a persisted/)
         end
       end
 
@@ -490,6 +522,13 @@ RSpec.describe "client secret rotation" do
           expect(public_app.old_secret_created_at).to be_nil
           expect(public_app.secret).to be_present
         end
+
+        it "leaves no grace period for #clear_old_secret! to chase" do
+          public_app.rotate_secret!
+
+          expect(public_app.clear_old_secret!).to be(false)
+          expect(public_app.reload.old_secret_created_at).to be_nil
+        end
       end
 
       context "with revoke_old: true" do
@@ -560,6 +599,268 @@ RSpec.describe "client secret rotation" do
       reloaded = Doorkeeper::Application.find(app.id)
       expect(reloaded.secret).to eq(stored)
       expect(reloaded.secret_matches?(returned)).to be(false)
+    end
+  end
+
+  describe "#clear_old_secret!" do
+    context "when rotation is not available" do
+      it "raises when the columns are missing" do
+        enable_rotation
+        allow(Doorkeeper::Application).to receive(:column_names)
+          .and_return(Doorkeeper::Application.column_names - ["old_secret"])
+
+        expect { app.clear_old_secret! }
+          .to raise_error(Doorkeeper::Errors::SecretRotationNotEnabled)
+      end
+
+      # Gated on the columns and not on the option, unlike #rotate_secret!.
+      # Turning `enable_secret_rotation` off stops a retained secret
+      # authenticating but leaves it in the row, where it comes back into
+      # service the moment the option does — so dropping it must not require
+      # re-arming the feature for every application on the server first.
+      it "still ends a grace period left behind by a server that turned the option off" do
+        enable_rotation
+        old_plaintext = app.plaintext_secret
+        app.rotate_secret!
+
+        Doorkeeper.configure { orm DOORKEEPER_ORM }
+        expect(Doorkeeper::Application.secret_rotation_enabled?).to be(false)
+
+        expect(app.clear_old_secret!).to be(true)
+        expect(app.reload.old_secret).to be_nil
+        expect(app.old_secret_created_at).to be_nil
+
+        enable_rotation
+        expect(app.secret_matches?(old_plaintext)).to be(false)
+      end
+    end
+
+    context "when rotation is enabled" do
+      before { enable_rotation }
+
+      it "ends the grace period" do
+        old_plaintext = app.plaintext_secret
+        app.rotate_secret!
+
+        expect(app.clear_old_secret!).to be(true)
+
+        expect(app.reload.old_secret).to be_nil
+        expect(app.old_secret_created_at).to be_nil
+        expect(app.secret_matches?(old_plaintext)).to be(false)
+      end
+
+      it "leaves the current secret alone" do
+        new_plaintext = app.rotate_secret!
+
+        app.clear_old_secret!
+
+        expect(app.reload.secret_matches?(new_plaintext)).to be(true)
+      end
+
+      it "reports that there was nothing to clear" do
+        expect(app.clear_old_secret!).to be(false)
+      end
+
+      # A timestamp with nothing behind it still says the application is
+      # midway through a rotation, so clearing has something to do: a cleanup
+      # job driven by `old_secret_created_at` would otherwise reselect the row
+      # on every run without ever converging.
+      it "clears a timestamp left behind with no old secret" do
+        app.update_columns(old_secret: nil, old_secret_created_at: Time.now.utc)
+
+        expect(app.clear_old_secret!).to be(true)
+        expect(app.reload.old_secret_created_at).to be_nil
+      end
+
+      it "writes through the primary database role" do
+        app.rotate_secret!
+        config_is_set(:enable_multiple_database_roles, true)
+        expect(ActiveRecord::Base).to receive(:connected_to).with(role: :writing).and_yield
+
+        app.clear_old_secret!
+      end
+
+      it "takes the lock" do
+        app.rotate_secret!
+
+        expect(app).to receive(:with_lock).and_call_original
+
+        app.clear_old_secret!
+      end
+
+      # The mirror of the timestamp-with-no-secret row below: a retained
+      # secret with no date. #old_secret_expired? singles that state out and,
+      # with no deadline configured, keeps such a secret alive forever — so
+      # clearing has to reach it.
+      it "clears a retained secret left behind with no timestamp" do
+        app.update_columns(old_secret: "undated", old_secret_created_at: nil)
+
+        expect(app.clear_old_secret!).to be(true)
+        expect(app.reload.old_secret).to be_nil
+      end
+
+      # Read outside the lock, "is there anything to clear?" describes whatever
+      # this instance was loaded with, which a rotation committed since then
+      # has already made wrong.
+      it "clears a rotation this instance had not seen" do
+        stale = Doorkeeper::Application.find(app.id)
+        old_plaintext = app.plaintext_secret
+        app.rotate_secret!
+
+        expect(stale.clear_old_secret!).to be(true)
+
+        expect(app.reload.old_secret).to be_nil
+        expect(app.secret_matches?(old_plaintext)).to be(false)
+      end
+
+      it "reports nothing to clear when another process got there first" do
+        app.rotate_secret!
+        stale = Doorkeeper::Application.find(app.id)
+        app.clear_old_secret!
+
+        expect(stale.clear_old_secret!).to be(false)
+      end
+
+      # Taking the lock reloads the row, and under hashing the volatile
+      # plaintext is the only copy of the secret this instance generated. A
+      # rotation that ran since has superseded it — and this call is what
+      # stops a superseded secret authenticating — so it must not stay behind
+      # as this instance's answer for a secret the row no longer holds.
+      it "drops a plaintext another rotation has superseded" do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          hash_application_secrets
+          enable_secret_rotation
+        end
+        fresh = FactoryBot.create(:application)
+        plaintext = fresh.plaintext_secret
+        Doorkeeper::Application.find(fresh.id).rotate_secret!
+
+        expect(fresh.clear_old_secret!).to be(true)
+
+        expect(fresh.plaintext_secret).to be_nil
+        expect(fresh.secret_matches?(plaintext)).to be(false)
+      end
+
+      # The reload happens whether or not there is anything to clear, so the
+      # plaintext is reconciled ahead of that decision rather than with the
+      # write.
+      it "drops it even when there was nothing left to clear" do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          hash_application_secrets
+          enable_secret_rotation
+        end
+        fresh = FactoryBot.create(:application)
+        elsewhere = Doorkeeper::Application.find(fresh.id)
+        elsewhere.rotate_secret!
+        elsewhere.clear_old_secret!
+
+        expect(fresh.clear_old_secret!).to be(false)
+
+        expect(fresh.plaintext_secret).to be_nil
+      end
+
+      # The other direction: nothing raced this instance, so the plaintext it
+      # holds is still the stored secret's and clearing a grace period is no
+      # reason to take it away.
+      it "keeps the plaintext that still describes the stored secret" do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          hash_application_secrets
+          enable_secret_rotation
+        end
+        fresh = FactoryBot.create(:application)
+        plaintext = fresh.rotate_secret!
+
+        expect(fresh.clear_old_secret!).to be(true)
+
+        expect(fresh.plaintext_secret).to eq(plaintext)
+        expect(fresh.secret_matches?(plaintext)).to be(true)
+      end
+
+      # Symmetric with #rotate_secret!: taking the lock reloads the row, which
+      # Active Record refuses to do over unsaved changes.
+      context "when the record carries unsaved changes" do
+        before do
+          app.rotate_secret!
+          app.name = "renamed but not saved"
+        end
+
+        it "refuses to clear" do
+          expect { app.clear_old_secret! }.to raise_error(RuntimeError, /unpersisted changes/)
+        end
+
+        it "keeps the caller's own changes" do
+          expect { app.clear_old_secret! }.to raise_error(RuntimeError)
+
+          expect(app.name).to eq("renamed but not saved")
+        end
+
+        # Symmetric with #rotate_secret!: the lock was refused, so nothing
+        # was written and the restored columns must be left alone too.
+        it "keeps the caller's value on the cleared columns" do
+          app.old_secret = "caller-assigned"
+
+          expect { app.clear_old_secret! }.to raise_error(RuntimeError)
+
+          expect(app.old_secret).to eq("caller-assigned")
+        end
+
+        it "leaves the grace period open" do
+          expect { app.clear_old_secret! }.to raise_error(RuntimeError)
+
+          expect(app.reload.old_secret).to be_present
+        end
+      end
+
+      # The validation failure below raises before the write; this one raises
+      # after it. `update!` would snapshot the record while still clean, so
+      # the rollback left it clean holding the cleared values — reporting a
+      # grace period the row still has, and clean enough that a later `save`
+      # writes nothing.
+      context "when the failure lands after the write" do
+        it "puts the retained secret back on the instance" do
+          enable_rotation
+          klass = build_application_model
+          boom = false
+          klass.after_save { raise "boom" if boom }
+          record = klass.create!(FactoryBot.attributes_for(:application))
+          record.rotate_secret!
+          record.reload
+          boom = true
+
+          expect { record.clear_old_secret! }.to raise_error(RuntimeError, "boom")
+
+          boom = false
+          expect(record.old_secret).to be_present
+          expect(record.old_secret).to eq(klass.find(record.id).old_secret)
+          expect(record.changed).to be_empty
+        end
+      end
+
+      context "when the write fails" do
+        before do
+          app.rotate_secret!
+          app.update_column(:scopes, "never_configured")
+          config_is_set(:enforce_configured_scopes, true)
+        end
+
+        it "leaves the grace period open in the database" do
+          expect { app.clear_old_secret! }.to raise_error(ActiveRecord::RecordInvalid)
+
+          expect(Doorkeeper::Application.find(app.id).old_secret).to be_present
+        end
+
+        # An instance claiming a grace period it no longer has is the same
+        # trap #rotate_secret! avoids.
+        it "puts the in-memory attributes back" do
+          expect { app.clear_old_secret! }.to raise_error(ActiveRecord::RecordInvalid)
+
+          expect(app.old_secret).to be_present
+          expect(app.old_secret_created_at).to be_present
+        end
+      end
     end
   end
 end
