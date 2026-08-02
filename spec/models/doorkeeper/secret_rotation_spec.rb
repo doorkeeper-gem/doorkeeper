@@ -602,6 +602,63 @@ RSpec.describe "client secret rotation" do
     end
   end
 
+  # A job selecting rows by an expired old_secret_created_at is the pattern the
+  # README points at, and it reads that column before it takes the lock — a
+  # rotation committing in between would otherwise have the job end a grace
+  # period that had just been opened.
+  describe "#clear_old_secret!(retained_at:)" do
+    before { enable_rotation }
+
+    it "clears the grace period the caller decided on" do
+      app.rotate_secret!
+      observed = app.reload.old_secret_created_at
+
+      expect(app.clear_old_secret!(retained_at: observed)).to be(true)
+      expect(app.reload.old_secret).to be_nil
+    end
+
+    it "leaves a grace period opened since the caller looked" do
+      app.rotate_secret!
+      observed = app.reload.old_secret_created_at
+      # The race: another rotation commits between the caller's query and its
+      # call, retaining a secret of its own.
+      Doorkeeper::Application.find(app.id).rotate_secret!
+      retained = Doorkeeper::Application.find(app.id).old_secret
+
+      expect(app.clear_old_secret!(retained_at: observed)).to be(false)
+      expect(Doorkeeper::Application.find(app.id).old_secret).to eq(retained)
+    end
+
+    it "clears whatever is there when no timestamp is named" do
+      app.rotate_secret!
+      Doorkeeper::Application.find(app.id).rotate_secret!
+
+      expect(app.clear_old_secret!).to be(true)
+      expect(Doorkeeper::Application.find(app.id).old_secret).to be_nil
+    end
+
+    # A `retained_at` that came back from a job payload or a form is a String,
+    # which is never equal to a time — so comparing it would answer false, and
+    # false is what this method says when another process ended the grace
+    # period first. Said out loud instead, before the lock is taken.
+    it "refuses a retained_at that is not a time rather than reporting nothing to clear" do
+      app.rotate_secret!
+      observed = Doorkeeper::Application.find(app.id).old_secret_created_at
+
+      expect { app.clear_old_secret!(retained_at: observed.to_s) }
+        .to raise_error(ArgumentError, /retained_at must be/)
+
+      expect(Doorkeeper::Application.find(app.id).old_secret).to be_present
+    end
+
+    it "takes the timestamp back in whichever time class the caller holds it" do
+      app.rotate_secret!
+      observed = Doorkeeper::Application.find(app.id).old_secret_created_at
+
+      expect(app.clear_old_secret!(retained_at: observed.to_time)).to be(true)
+    end
+  end
+
   describe "#clear_old_secret!" do
     context "when rotation is not available" do
       it "raises when the columns are missing" do
