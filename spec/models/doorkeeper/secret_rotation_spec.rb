@@ -98,6 +98,30 @@ RSpec.describe "client secret rotation" do
         end
       end.to raise_error(ArgumentError, /secret_rotation_grace_period/)
     end
+
+    # Both options are read only from behind `enable_secret_rotation`, so
+    # setting either without it is a deadline that never arrives and a hook
+    # that never fires, with nothing to say so.
+    it "warns when it is configured without enable_secret_rotation" do
+      expect(Rails.logger).to receive(:warn).with(/without enable_secret_rotation/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        secret_rotation_grace_period 7.days
+        after_old_secret_used ->(_application) {}
+      end
+    end
+
+    it "does not warn once enable_secret_rotation is set" do
+      expect(Rails.logger).not_to receive(:warn).with(/without enable_secret_rotation/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enable_secret_rotation
+        secret_rotation_grace_period 7.days
+        after_old_secret_used ->(_application) {}
+      end
+    end
   end
 
   # The hook is called only on an authentication the superseded secret let
