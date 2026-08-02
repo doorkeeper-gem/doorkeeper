@@ -47,6 +47,54 @@ class Doorkeeper::OAuth::Client
         expect(credentials.uid).to    eq("uid")
         expect(credentials.secret).to eq("secret")
       end
+
+      context "when the request authenticates the client more than once" do
+        let(:request) do
+          double(
+            authorization: "Basic #{Base64.encode64("basic-uid:basic-secret")}",
+            parameters: { client_id: "param-uid", client_secret: "param-secret" },
+          )
+        end
+
+        it "raises MultipleClientAuthMethods (RFC 6749 §2.3)" do
+          expect { described_class.from_request(request, :from_basic, :from_params) }
+            .to raise_error(Doorkeeper::Errors::MultipleClientAuthMethods)
+        end
+
+        it "raises it even when both methods carry the same credentials" do
+          request = double(
+            authorization: "Basic #{Base64.encode64("uid:secret")}",
+            parameters: { client_id: "uid", client_secret: "secret" },
+          )
+
+          expect { described_class.from_request(request, :from_basic, :from_params) }
+            .to raise_error(Doorkeeper::Errors::MultipleClientAuthMethods)
+        end
+
+        it "does not raise when a callable extractor is configured" do
+          expect(described_class.from_request(request, :from_basic, method).uid).to eq("basic-uid")
+        end
+      end
+
+      context "when only one of the methods authenticates the client" do
+        it "returns the params credentials of a public client sending a Basic header" do
+          request = double(
+            authorization: "Basic #{Base64.encode64("basic-uid:basic-secret")}",
+            parameters: { client_id: "param-uid" },
+          )
+
+          expect(described_class.from_request(request, :from_basic, :from_params).uid).to eq("basic-uid")
+        end
+
+        it "keeps returning the first credentials when the Basic header carries no secret" do
+          request = double(
+            authorization: "Basic #{Base64.encode64("basic-uid")}",
+            parameters: { client_id: "param-uid", client_secret: "param-secret" },
+          )
+
+          expect(described_class.from_request(request, :from_basic, :from_params).uid).to eq("basic-uid")
+        end
+      end
     end
 
     describe ".from_params" do

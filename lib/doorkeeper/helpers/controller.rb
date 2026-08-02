@@ -56,7 +56,8 @@ module Doorkeeper
           OAuth::InvalidRequestResponse.new(
             name: exception.type,
             state: params[:state],
-            missing_param: exception.missing_param,
+            missing_param: exception.try(:missing_param),
+            reason: exception.try(:reason),
           )
         else
           OAuth::ErrorResponse.new(name: exception.type, state: params[:state])

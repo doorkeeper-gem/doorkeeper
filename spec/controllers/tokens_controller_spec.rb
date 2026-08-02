@@ -611,6 +611,26 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
       end
     end
 
+    context "when the request uses more than one client authentication method" do
+      it "responds with invalid_request error (RFC 6749 §2.3)" do
+        request.headers["Authorization"] = basic_auth_header_for_client(client)
+
+        post :introspect, params: {
+          client_id: client.uid,
+          client_secret: client.secret,
+          token: token_for_introspection.token,
+        }
+
+        expect(response).not_to be_successful
+        response_status_should_be 400
+
+        expect(json_response).to match(
+          "error" => "invalid_request",
+          "error_description" => translated_invalid_request_error_message(:multiple_client_auth_methods, nil),
+        )
+      end
+    end
+
     context "when invalid credentials used to authorize" do
       let(:client) { double(uid: "123123", secret: "666999") }
       let(:access_token) { FactoryBot.create(:access_token) }
