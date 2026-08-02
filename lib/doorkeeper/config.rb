@@ -330,6 +330,13 @@ module Doorkeeper
     # Allows to customize Token Introspection response
     option :custom_introspection_response,        default: ->(_token, _context) { {} }
 
+    # How long a superseded client secret keeps authenticating, as a positive
+    # duration or number of seconds — anything else is refused at
+    # configuration time (Validations#validate_secret_rotation_grace_period).
+    # Nil (the default) means indefinitely — the grace period then ends only
+    # when the application calls `#clear_old_secret!`.
+    option :secret_rotation_grace_period,   default: nil
+
     option :skip_authorization,             default: ->(_routes) {}
     option :access_token_expires_in,        default: 7200
     option :custom_access_token_expires_in, default: ->(_context) { nil }
