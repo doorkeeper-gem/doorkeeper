@@ -24,6 +24,7 @@ module Doorkeeper
         validate_secret_rotation_grace_period
         validate_after_old_secret_used
         validate_secret_rotation_options_without_rotation
+        validate_secret_rotation_orm
       end
 
       private
@@ -379,6 +380,23 @@ module Doorkeeper
           "[DOORKEEPER] secret_rotation_grace_period / after_old_secret_used are configured " \
           "without enable_secret_rotation, so they have no effect. Add enable_secret_rotation " \
           "(and run `rails generate doorkeeper:secret_rotation`) to use them.",
+        )
+      end
+
+      # Everything the option changes lives in Doorkeeper::ApplicationMixin
+      # and in the Active Record application mixin. The other ORM adapters
+      # ship application models that include neither, so under them the
+      # option is a no-op — and one nothing else would report: the warning
+      # the Active Record model gives for missing columns never fires where
+      # there is no column to miss.
+      def validate_secret_rotation_orm
+        return unless enable_secret_rotation?
+        return if orm.to_s == "active_record"
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] enable_secret_rotation is implemented for the active_record ORM. With " \
+          "orm #{orm.inspect} it takes effect only if that adapter's application model implements " \
+          "the rotation surface itself (see the Client Secret Rotation section of the README).",
         )
       end
 
