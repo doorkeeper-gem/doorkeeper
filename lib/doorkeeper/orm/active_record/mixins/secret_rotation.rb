@@ -15,10 +15,9 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
   # to hold in view — and to change — when they are not interleaved with the
   # model's validations, associations and serialization.
   #
-  # The comparison side of the feature — honouring the retained secret when
-  # a client authenticates — belongs in +Doorkeeper::ApplicationMixin+, which
-  # every ORM shares, because a stored secret is compared the same way
-  # whichever one wrote it.
+  # The comparison side of the feature is not here: it lives in
+  # +Doorkeeper::ApplicationMixin+, which every ORM shares, because a stored
+  # secret is compared the same way whichever one wrote it.
   module SecretRotation
     extend ActiveSupport::Concern
 
