@@ -239,6 +239,70 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(credentials).to be_nil
     end
 
+    # RFC 7519 §4.1.4 defines exp as a NumericDate — a number. The jwt gem
+    # validates the type when encoding but not when decoding, where its
+    # expiration check casts with to_i — so without an explicit type check a
+    # string exp would authenticate. Signed by hand because JWT.encode
+    # refuses to mint such an assertion.
+    it "rejects a validly signed assertion whose exp is a numeric string" do
+      claims = {
+        "iss" => client_id, "sub" => client_id, "aud" => issuer,
+        "exp" => (Time.now.to_i + 300).to_s, "jti" => "string-exp",
+      }
+      segments = [{ "alg" => "RS256", "kid" => kid }.to_json, claims.to_json].map do |segment|
+        Base64.urlsafe_encode64(segment).delete("=")
+      end
+      signing_input = segments.join(".")
+      signature = rsa_key.sign(OpenSSL::Digest.new("SHA256"), signing_input)
+      assertion = "#{signing_input}.#{Base64.urlsafe_encode64(signature).delete("=")}"
+
+      expect(described_class.authenticate(request_with(assertion))).to be_nil
+    end
+
+    it "rejects an assertion whose exp is an absurdly large integer" do
+      credentials = described_class.authenticate(request_with(build_assertion(claims: { "exp" => 10**100 })))
+
+      expect(credentials).to be_nil
+    end
+
+    # Infinity is not valid JSON, so such a payload already fails to decode —
+    # pinned here so a laxer JSON parser in a future jwt gem cannot let it
+    # reach the arithmetic on exp.
+    it "rejects an assertion whose payload smuggles exp: Infinity" do
+      payload = %({"iss":"#{client_id}","sub":"#{client_id}","aud":"#{issuer}","exp":Infinity,"jti":"x"})
+      segments = [{ "alg" => "RS256", "kid" => kid }.to_json, payload, "signature"]
+      assertion = segments.map { |segment| Base64.urlsafe_encode64(segment).delete("=") }.join(".")
+
+      expect { expect(described_class.authenticate(request_with(assertion))).to be_nil }
+        .not_to raise_error
+    end
+
+    it "accepts an assertion whose exp is a finite float NumericDate" do
+      credentials = described_class.authenticate(
+        request_with(build_assertion(claims: { "exp" => Time.now.to_f.floor + 300.5 })),
+      )
+
+      expect(credentials).not_to be_nil
+    end
+
+    context "when the host application globally disabled expiration checking" do
+      around do |example|
+        original = JWT.configuration.decode.verify_expiration
+        JWT.configuration.decode.verify_expiration = false
+        example.run
+      ensure
+        JWT.configuration.decode.verify_expiration = original
+      end
+
+      it "still rejects an expired assertion" do
+        credentials = described_class.authenticate(
+          request_with(build_assertion(claims: { "exp" => Time.now.to_i - 10 })),
+        )
+
+        expect(credentials).to be_nil
+      end
+    end
+
     it "rejects an assertion without an audience" do
       credentials = described_class.authenticate(request_with(build_assertion(claims: { "aud" => nil })))
 

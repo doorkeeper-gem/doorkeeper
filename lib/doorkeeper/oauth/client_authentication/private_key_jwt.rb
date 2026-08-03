@@ -108,9 +108,19 @@ module Doorkeeper
             verify_sub: true,
             aud: acceptable_audiences(request),
             verify_aud: true,
+            # Passed explicitly so a host application that globally disabled
+            # expiration checking for its own tokens (JWT.configuration.decode)
+            # cannot silently turn off assertion expiry verification.
+            verify_expiration: true,
           )
 
-          return unless claims["exp"].to_i <= Time.now.to_i + MAX_LIFETIME
+          # RFC 7519 §4.1.4: exp is a NumericDate — a number. The jwt gem's
+          # own expiration check casts it with to_i, which would let a numeric
+          # string through (and read a non-numeric one as 0), so the type is
+          # pinned before the value is compared or handed to the replay guard.
+          exp = claims["exp"]
+          return unless exp.is_a?(Numeric) && exp.finite?
+          return unless exp <= Time.now.to_i + MAX_LIFETIME
           return unless claims["jti"].is_a?(String) && claims["jti"].present?
 
           claims
