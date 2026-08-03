@@ -13,6 +13,20 @@ module Doorkeeper
         def dpop_supported?
           column_names.include?("dpop_jkt")
         end
+
+        # RFC 9449: a reused token must carry the same sender constraint the
+        # request asked for. Handing a DPoP-bound token to a request with a
+        # different key makes it unusable, and handing an unbound one to a
+        # request that presented a proof silently drops the binding.
+        #
+        # @param token [Doorkeeper::AccessToken] existing token
+        # @param requested_jkt [String, nil] JWK SHA-256 thumbprint
+        # @return [Boolean]
+        def dpop_bindings_match?(token, requested_jkt)
+          return true unless dpop_supported?
+
+          token.dpop_jkt == requested_jkt
+        end
       end
 
       # Checks whether the token has been sender-constrained using DPoP. The token
