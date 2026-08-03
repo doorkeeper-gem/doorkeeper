@@ -10,9 +10,10 @@ describe "DPoP proof with unexpected value types", type: :request do
   let(:jwk) { JWT::JWK.new(signing_key).export }
 
   def handcrafted_proof(claims:, headers: {})
-    merged = { "typ" => "dpop+jwt", "alg" => "ES256", "jwk" => jwk }.merge(headers)
+    base = { "typ" => "dpop+jwt", "alg" => "ES256", "jwk" => jwk }
+    header = headers.is_a?(Hash) ? base.merge(headers) : headers
     b64 = ->(h) { Base64.urlsafe_encode64(JSON.generate(h), padding: false) }
-    signing_input = "#{b64.call(merged)}.#{b64.call(claims)}"
+    signing_input = "#{b64.call(header)}.#{b64.call(claims)}"
     signature = JWT::JWA.resolve("ES256").sign(data: signing_input, signing_key: signing_key)
 
     "#{signing_input}.#{Base64.urlsafe_encode64(signature, padding: false)}"
@@ -54,6 +55,30 @@ describe "DPoP proof with unexpected value types", type: :request do
   it "rejects an Array jwk with 400, not 500" do
     post_token(handcrafted_proof(claims: { "jti" => "x", "iat" => Time.now.to_i },
                                  headers: { "jwk" => %w[a b] },))
+
+    expect(response.status).to eq(400)
+  end
+
+  it "rejects an Array payload segment with 400, not 500" do
+    post_token(handcrafted_proof(claims: [1, 2, 3]))
+
+    expect(response.status).to eq(400)
+  end
+
+  it "rejects a numeric payload segment with 400, not 500" do
+    post_token(handcrafted_proof(claims: 42))
+
+    expect(response.status).to eq(400)
+  end
+
+  it "rejects an Array header segment with 400, not 500" do
+    post_token(handcrafted_proof(claims: { "jti" => "x", "iat" => Time.now.to_i }, headers: [1, 2]))
+
+    expect(response.status).to eq(400)
+  end
+
+  it "rejects a numeric header segment with 400, not 500" do
+    post_token(handcrafted_proof(claims: { "jti" => "x", "iat" => Time.now.to_i }, headers: 42))
 
     expect(response.status).to eq(400)
   end
