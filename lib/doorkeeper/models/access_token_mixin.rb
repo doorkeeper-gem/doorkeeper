@@ -229,6 +229,20 @@ module Doorkeeper
         end
       end
 
+      # RFC 9449: a reused token must carry the same sender constraint the
+      # request asked for. Handing a DPoP-bound token to a request with a
+      # different key makes it unusable, and handing an unbound one to a
+      # request that presented a proof silently drops the binding.
+      #
+      # @param token [Doorkeeper::AccessToken] existing token
+      # @param requested_jkt [String, nil] JWK SHA-256 thumbprint
+      # @return [Boolean]
+      def dpop_bindings_match?(token, requested_jkt)
+        return true unless dpop_supported?
+
+        token.dpop_jkt == requested_jkt
+      end
+
       # RFC 8707: checks whether an existing token's audience matches the
       # requested resource indicators. Used during token reuse to prevent
       # returning a token audience-restricted to one resource for a request
@@ -303,7 +317,8 @@ module Doorkeeper
             application, resource_owner, scopes, custom_attributes: custom_attributes, include_expired: false,
           ) do |token|
             refresh_token_matches?(token, token_attributes) &&
-              resource_indicators_match?(token, requested_resource)
+              resource_indicators_match?(token, requested_resource) &&
+              dpop_bindings_match?(token, token_attributes[:dpop_jkt])
           end
 
           return access_token if access_token&.reusable?
