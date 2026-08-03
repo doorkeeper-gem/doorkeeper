@@ -304,7 +304,8 @@ module Doorkeeper
             application, resource_owner, scopes, custom_attributes: custom_attributes, include_expired: false,
           ) do |token|
             refresh_token_matches?(token, token_attributes) &&
-              resource_indicators_match?(token, requested_resource)
+              resource_indicators_match?(token, requested_resource) &&
+              dpop_bindings_match?(token, token_attributes[:dpop_jkt])
           end
 
           return access_token if access_token&.reusable?
