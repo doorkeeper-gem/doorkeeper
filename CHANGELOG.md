@@ -45,6 +45,7 @@ and changelog below before the update since this version includes breaking chang
 - [#1902] Fix: requests that omit `scope` now compute the same default scopes at the authorization and token endpoints (`Scopes#common`, symmetric). With dynamic scopes enabled, a scope pattern in either `default_scopes` or the application's scopes grants the matching concrete scope at both endpoints, closes [#1889].
 - [#1903] Fix: `revoke_previous_client_credentials_token` no longer revokes a client's live access token issued for a different `resource` ([#1886]), so a client can keep one audience-restricted token per resource server.
 - [#1905] [test] Cover `private_key_jwt` client authentication on the `client_credentials` grant, the one flow where an assertion is the client's only credential end to end. Test-only change.
+- [#1794] Add a minimally spec-compliant implementation of OAuth 2.0 Demonstrating Proof of Possession (DPoP, RFC 9449). DPoP is a sender-constraining mechanism that binds access tokens to a client's cryptographic key pair so an intercepted token is useless without the corresponding private key. Covers both halves of doorkeeper: issuing DPoP-bound access tokens (authorization server) and enforcing the key binding when authenticating (resource server). Fully opt-in — nothing changes for existing installations unless you run `rails generate doorkeeper:dpop` and migrate. Closes [#1655].
 - Please add here
 
 ## 6.0.0.beta1
