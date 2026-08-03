@@ -15,11 +15,14 @@ RSpec.describe Doorkeeper::OAuth::DPoPProof do
   end
 
   # JWT.encode refuses to emit a non-Numeric `iat`, but nothing stops an
-  # attacker from assembling the compact serialization by hand.
+  # attacker from assembling the compact serialization by hand. Also, a JWT
+  # segment only has to be valid JSON, so `claims` and `headers` may be an
+  # Array or scalar rather than the expected Hash.
   def handcrafted_proof(claims:, headers: {})
-    merged = { "typ" => "dpop+jwt", "alg" => "ES256", "jwk" => jwk }.merge(headers)
+    base = { "typ" => "dpop+jwt", "alg" => "ES256", "jwk" => jwk }
+    header = headers.is_a?(Hash) ? base.merge(headers) : headers
     b64 = ->(h) { Base64.urlsafe_encode64(JSON.generate(h), padding: false) }
-    signing_input = "#{b64.call(merged)}.#{b64.call(claims)}"
+    signing_input = "#{b64.call(header)}.#{b64.call(claims)}"
     signature = JWT::JWA.resolve("ES256").sign(data: signing_input, signing_key: signing_key)
 
     "#{signing_input}.#{Base64.urlsafe_encode64(signature, padding: false)}"
@@ -80,6 +83,32 @@ RSpec.describe Doorkeeper::OAuth::DPoPProof do
                         headers: { "jwk" => { "kty" => "bogus" } },)
 
       expect { validate!(token) }.not_to raise_error
+    end
+  end
+
+  describe "non-Hash jwt segments" do
+    it "returns false rather than raising for an Array payload" do
+      token = handcrafted_proof(claims: [1, 2, 3])
+
+      expect(validate!(token)).to be false
+    end
+
+    it "returns false rather than raising for a numeric payload" do
+      token = handcrafted_proof(claims: 42)
+
+      expect(validate!(token)).to be false
+    end
+
+    it "returns false rather than raising for an Array header" do
+      token = handcrafted_proof(claims: { "jti" => "x", "iat" => Time.now.to_i }, headers: [1, 2])
+
+      expect(validate!(token)).to be false
+    end
+
+    it "returns false rather than raising for a numeric header" do
+      token = handcrafted_proof(claims: { "jti" => "x", "iat" => Time.now.to_i }, headers: 42)
+
+      expect(validate!(token)).to be false
     end
   end
 
