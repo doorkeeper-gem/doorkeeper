@@ -306,7 +306,19 @@ Doorkeeper.configure do
   # attributes you define on your Application model (Doorkeeper does not add
   # these columns itself). Assertions must carry iss = sub =
   # client_id, an aud of your `issuer` (or the token endpoint URL), a bounded
-  # exp, a kid header, and a single-use jti (replay is tracked per process).
+  # exp (at most 1 hour ahead), a kid header, and a single-use jti.
+  #
+  # jti replay is tracked in process-local memory by default (bounded at
+  # 10 000 entries, each held at most 1 hour), so an assertion replayed to a
+  # different server process is not caught. To share the tracking across
+  # processes, supply your own store (e.g. backed by Redis):
+  #
+  # private_key_jwt_replay_guard MyRedisReplayGuard.new
+  #
+  # JWK Sets fetched from a `jwks_uri` are cached in process-local memory
+  # for 60 seconds; to change the TTL or share the cache across processes:
+  #
+  # private_key_jwt_jwks_cache Doorkeeper::DocumentCache.new(ttl: 300)
   #
   # The accepted audiences are built from your `issuer` or from Rails'
   # `default_url_options`; set at least one of them, otherwise Doorkeeper has

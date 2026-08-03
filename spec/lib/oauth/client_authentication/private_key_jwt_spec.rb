@@ -328,6 +328,30 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(described_class.authenticate(request_with(assertion))).to be_nil
     end
 
+    it "tracks jti replay through a configured custom replay guard" do
+      guard = double("replay guard")
+      expect(guard).to receive(:first_use?)
+        .with(a_string_starting_with("#{client_id}:"), expires_at: kind_of(Integer))
+        .twice
+        .and_return(true, false)
+      config_is_set(:private_key_jwt_replay_guard, guard)
+
+      assertion = build_assertion
+
+      expect(described_class.authenticate(request_with(assertion))).not_to be_nil
+      expect(described_class.authenticate(request_with(assertion))).to be_nil
+    end
+
+    it "resolves a jwks_uri through a configured custom jwks cache" do
+      jwks_uri = "https://client.example.com/jwks.json"
+      allow(application).to receive_messages(jwks: nil, jwks_uri: jwks_uri)
+      cache = double("jwks cache")
+      allow(cache).to receive(:fetch).with(jwks_uri).and_return(jwks)
+      config_is_set(:private_key_jwt_jwks_cache, cache)
+
+      expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+    end
+
     it "rejects garbage assertions" do
       expect(described_class.authenticate(request_with("not.a.jwt"))).to be_nil
     end

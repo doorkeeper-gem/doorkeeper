@@ -82,9 +82,17 @@ module Doorkeeper
           end
           private_class_method :fetch_jwks
 
+          # The built-in cache is process-local with a fixed TTL; the
+          # private_key_jwt_jwks_cache config option replaces it with any
+          # object answering fetch(url) { ... }.
           def self.jwks_cache
-            @jwks_cache ||= Doorkeeper::DocumentCache.new
+            Doorkeeper.config.private_key_jwt_jwks_cache || default_jwks_cache
           end
+
+          def self.default_jwks_cache
+            @default_jwks_cache ||= Doorkeeper::DocumentCache.new
+          end
+          private_class_method :default_jwks_cache
         end
       end
     end

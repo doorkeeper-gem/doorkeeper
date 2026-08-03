@@ -9,14 +9,23 @@ module Doorkeeper
         # In-memory, process-local single-use guard for assertion jti values
         # (OIDC Core §9: an assertion may only be used once). Entries live
         # until the assertion's own exp, which PrivateKeyJwt caps at
-        # MAX_LIFETIME, so the memory held here is bounded.
+        # MAX_LIFETIME, so the memory held here is bounded: at most
+        # MAX_ENTRIES entries, each for at most MAX_LIFETIME seconds.
         #
-        # Being process-local this cannot catch a replay against a different
-        # server process; a shared store is deliberately left as a follow-up
-        # for the prototype.
+        # Being process-local this cannot catch a replay delivered to a
+        # different server process (separate Puma workers, separate hosts).
+        # Whether that matters depends on the deployment: the replay window
+        # is at most MAX_LIFETIME anyway, and an attacker who can capture an
+        # assertion in transit usually defeats TLS first. A deployment that
+        # wants cross-process replay protection supplies a shared store
+        # (backed by Redis or the like) through the
+        # private_key_jwt_replay_guard config option.
         class ReplayGuard
           include Singleton
 
+          # Upper bound on remembered jti values. When the guard is full even
+          # after expired entries are pruned, the oldest entries are evicted
+          # rather than new assertions rejected — see first_use?.
           MAX_ENTRIES = 10_000
 
           # Expired entries are swept periodically rather than on every

@@ -68,13 +68,21 @@ module Doorkeeper
 
           claims = verified_claims(assertion, client_id, jwk_set, request)
           return unless claims
-          return unless ReplayGuard.instance.first_use?(
+          return unless replay_guard.first_use?(
             "#{client_id}:#{claims["jti"]}",
             expires_at: claims["exp"].to_i,
           )
 
           Doorkeeper::ClientAuthentication::VerifiedCredentials.new(client_id)
         end
+
+        # The built-in guard is process-local; a multi-process deployment can
+        # supply a shared store through the private_key_jwt_replay_guard
+        # config option.
+        def self.replay_guard
+          Doorkeeper.config.private_key_jwt_replay_guard || ReplayGuard.instance
+        end
+        private_class_method :replay_guard
 
         # The issuer read without verifying the signature — only used to
         # locate the client (and thereby its keys); every claim is verified
