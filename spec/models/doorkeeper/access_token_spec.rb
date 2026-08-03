@@ -920,6 +920,72 @@ RSpec.describe Doorkeeper::AccessToken do
         end.not_to(change { described_class.count })
       end
     end
+
+    context "when the request is DPoP-bound" do
+      it "reuses a matching token bound to the same key" do
+        existing = FactoryBot.create :access_token, default_attributes.merge(dpop_jkt: "jkt_abc")
+
+        expect do
+          token = described_class.find_or_create_for(
+            application: application,
+            resource_owner: resource_owner,
+            scopes: scopes,
+            dpop_jkt: "jkt_abc",
+          )
+          expect(token).to eq(existing)
+        end.not_to(change { described_class.count })
+      end
+
+      it "does not reuse a token bound to a different key" do
+        existing = FactoryBot.create :access_token, default_attributes.merge(dpop_jkt: "jkt_abc")
+
+        token = nil
+        expect do
+          token = described_class.find_or_create_for(
+            application: application,
+            resource_owner: resource_owner,
+            scopes: scopes,
+            dpop_jkt: "jkt_xyz",
+          )
+        end.to(change { described_class.count }.by(1))
+
+        expect(token).not_to eq(existing)
+        expect(token.dpop_jkt).to eq("jkt_xyz")
+      end
+
+      it "does not reuse a bound token when the request presents no proof" do
+        existing = FactoryBot.create :access_token, default_attributes.merge(dpop_jkt: "jkt_abc")
+
+        token = nil
+        expect do
+          token = described_class.find_or_create_for(
+            application: application,
+            resource_owner: resource_owner,
+            scopes: scopes,
+          )
+        end.to(change { described_class.count }.by(1))
+
+        expect(token).not_to eq(existing)
+        expect(token.dpop_jkt).to be_nil
+      end
+
+      it "does not reuse an unbound token when the request presents a proof" do
+        existing = FactoryBot.create :access_token, default_attributes
+
+        token = nil
+        expect do
+          token = described_class.find_or_create_for(
+            application: application,
+            resource_owner: resource_owner,
+            scopes: scopes,
+            dpop_jkt: "jkt_abc",
+          )
+        end.to(change { described_class.count }.by(1))
+
+        expect(token).not_to eq(existing)
+        expect(token.dpop_jkt).to eq("jkt_abc")
+      end
+    end
   end
 
   describe "#as_json" do
