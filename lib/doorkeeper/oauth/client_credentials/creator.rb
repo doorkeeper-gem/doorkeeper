@@ -67,7 +67,10 @@ module Doorkeeper
             # because only the newest match is returned.
             Doorkeeper.config.access_token_model.resource_indicators_match?(
               token, attributes[:resource],
-            )
+            ) &&
+              Doorkeeper.config.access_token_model.dpop_bindings_match?(
+                token, attributes[:dpop_jkt],
+              )
           end
         end
       end

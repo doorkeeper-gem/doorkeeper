@@ -130,6 +130,47 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Creator do
         expect(result).to eq(existing_token)
       end
     end
+
+    context "when the request is DPoP-bound" do
+      it "returns a token bound to the same key" do
+        existing_token = creator.call(client, scopes, dpop_jkt: "jkt_abc")
+
+        result = creator.call(client, scopes, dpop_jkt: "jkt_abc")
+
+        expect(Doorkeeper::AccessToken.count).to eq(1)
+        expect(result).to eq(existing_token)
+      end
+
+      it "does not return a token bound to a different key" do
+        existing_token = creator.call(client, scopes, dpop_jkt: "jkt_abc")
+
+        result = creator.call(client, scopes, dpop_jkt: "jkt_xyz")
+
+        expect(Doorkeeper::AccessToken.count).to eq(2)
+        expect(result).not_to eq(existing_token)
+        expect(result.dpop_jkt).to eq("jkt_xyz")
+      end
+
+      it "does not return a bound token when the request presents no proof" do
+        existing_token = creator.call(client, scopes, dpop_jkt: "jkt_abc")
+
+        result = creator.call(client, scopes)
+
+        expect(Doorkeeper::AccessToken.count).to eq(2)
+        expect(result).not_to eq(existing_token)
+        expect(result.dpop_jkt).to be_nil
+      end
+
+      it "does not return an unbound token when the request presents a proof" do
+        existing_token = creator.call(client, scopes)
+
+        result = creator.call(client, scopes, dpop_jkt: "jkt_abc")
+
+        expect(Doorkeeper::AccessToken.count).to eq(2)
+        expect(result).not_to eq(existing_token)
+        expect(result.dpop_jkt).to eq("jkt_abc")
+      end
+    end
   end
 
   context "when reuse_access_token is false" do
