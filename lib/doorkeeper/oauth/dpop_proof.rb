@@ -67,8 +67,14 @@ module Doorkeeper
       end
 
       def decode_without_verifying_signature
-        @claims, @headers = JWT.decode(dpop, nil, false)
-      rescue JWT::DecodeError
+        claims, headers = JWT.decode(dpop, nil, false)
+
+        # A JWT segment only has to be valid JSON, so either half can decode to
+        # an Array or a scalar. Anything but a Hash carries no claims we can
+        # read, and indexing it would raise.
+        @claims = claims.is_a?(Hash) ? claims : {}
+        @headers = headers.is_a?(Hash) ? headers : {}
+      rescue JWT::DecodeError, TypeError
         @claims = {}
         @headers = {}
       end
