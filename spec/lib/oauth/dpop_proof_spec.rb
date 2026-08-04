@@ -221,4 +221,27 @@ RSpec.describe Doorkeeper::OAuth::DPoPProof do
       end
     end
   end
+
+  # doorkeeper-jwt defines Doorkeeper::JWT, which shadows the jwt gem for any
+  # bare JWT reference made inside the Doorkeeper module — every gem reference
+  # in DPoPProof must be written ::JWT to survive that.
+  context "when doorkeeper-jwt's Doorkeeper::JWT module is defined" do
+    before do
+      stub_const("Doorkeeper::JWT", Module.new)
+    end
+
+    it "still validates a valid proof and computes its thumbprint" do
+      dpop_proof.validate
+
+      expect(dpop_proof).to be_valid
+      expected_jwk = JWT::JWK.import(jwt_headers.fetch("jwk"))
+      expect(dpop_proof.jkt).to eq(JWT::JWK::Thumbprint.new(expected_jwk).generate)
+    end
+
+    context "with a malformed proof value" do
+      let(:dpop_header) { "not-jwt" }
+
+      include_examples "invalid because", :invalid_type
+    end
+  end
 end
