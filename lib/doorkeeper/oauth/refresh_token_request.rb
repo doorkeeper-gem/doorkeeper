@@ -28,8 +28,15 @@ module Doorkeeper
 
       private
 
+      # Resolved through +OAuth::Client+ rather than by looking the row up
+      # directly, so this grant applies the same rules the other token
+      # endpoint grants do: credentials that carry no secret because their
+      # authentication method already proved the client's identity
+      # (private_key_jwt) resolve by uid alone. The application record is
+      # what is returned, since that is what +#client+ has always exposed
+      # here.
       def load_client(credentials)
-        Doorkeeper.config.application_model.by_uid_and_secret(credentials.uid, credentials.secret)
+        Doorkeeper::OAuth::Client.authenticate(credentials)&.application
       end
 
       def before_successful_response

@@ -29,8 +29,10 @@ gem "bcrypt", "~> 3.1", require: false
 gem "activerecord-jdbcsqlite3-adapter", platform: :jruby
 gem "sqlite3", "~> 2.3", platform: %i[ruby mswin mingw x64_mingw]
 
+gem "jwt", ">= 2.7"
 gem "timecop"
 gem "tzinfo-data", platforms: %i[mingw mswin x64_mingw]
+gem "webmock"
 
 gem "irb", "~> 1.8"
 

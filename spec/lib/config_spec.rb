@@ -921,6 +921,44 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
+  describe "private_key_jwt_replay_guard" do
+    it "defaults to nil, which selects the built-in process-local guard" do
+      Doorkeeper.configure { orm DOORKEEPER_ORM }
+
+      expect(config.private_key_jwt_replay_guard).to be_nil
+    end
+
+    it "accepts a custom store" do
+      guard = double("replay guard")
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        private_key_jwt_replay_guard guard
+      end
+
+      expect(config.private_key_jwt_replay_guard).to be(guard)
+    end
+  end
+
+  describe "private_key_jwt_jwks_cache" do
+    it "defaults to nil, which selects the built-in process-local cache" do
+      Doorkeeper.configure { orm DOORKEEPER_ORM }
+
+      expect(config.private_key_jwt_jwks_cache).to be_nil
+    end
+
+    it "accepts a custom cache" do
+      cache = Doorkeeper::DocumentCache.new(ttl: 300)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        private_key_jwt_jwks_cache cache
+      end
+
+      expect(config.private_key_jwt_jwks_cache).to be(cache)
+    end
+  end
+
   describe "issuer format validation" do
     def configure_issuer(value)
       Doorkeeper.configure do

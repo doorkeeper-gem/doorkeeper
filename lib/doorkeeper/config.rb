@@ -403,6 +403,35 @@ module Doorkeeper
     #
     option :resource_indicator_validator, default: nil
 
+    # Replay guard for `private_key_jwt` client assertions (jti single-use
+    # tracking, OIDC Core §9). The default guard remembers jti values in
+    # process-local memory, so it cannot see a replay delivered to a
+    # different server process; a multi-process deployment can supply a
+    # shared store instead — any object answering
+    # `first_use?(key, expires_at:)`, returning true when the key was never
+    # seen before and remembering it until the unix time `expires_at`.
+    #
+    # @example
+    #   private_key_jwt_replay_guard RedisReplayGuard.new
+    #
+    # @param guard [#first_use?, nil] nil uses the built-in process-local guard
+    #
+    option :private_key_jwt_replay_guard, default: nil
+
+    # Cache for JWK Sets fetched from a client's `jwks_uri` during
+    # `private_key_jwt` authentication. Defaults to a process-local
+    # Doorkeeper::DocumentCache with a 60 second TTL; supply your own
+    # instance to change the TTL, or any object answering
+    # `fetch(url) { ... }` (returning the cached document or storing and
+    # returning the block's result) to share the cache across processes.
+    #
+    # @example
+    #   private_key_jwt_jwks_cache Doorkeeper::DocumentCache.new(ttl: 300)
+    #
+    # @param cache [#fetch, nil] nil uses a built-in process-local cache
+    #
+    option :private_key_jwt_jwks_cache, default: nil
+
     # Forces the usage of the HTTPS protocol in non-native redirect uris
     # (enabled by default in non-development environments). OAuth2
     # delegates security in communication to the HTTPS protocol so it is

@@ -13,6 +13,10 @@ module Doorkeeper
       # decoding now would break every existing client whose credentials
       # contain URL-encodable characters.
       class ClientSecretBasic
+        def self.uses_shared_secret?
+          true
+        end
+
         # Match whenever the header decodes to a non-blank +client_id+ — i.e.
         # whenever a Basic authentication *attempt* is present. The secret may
         # be empty (public clients) or missing; those are still Basic auth

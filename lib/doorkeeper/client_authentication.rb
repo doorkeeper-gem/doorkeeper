@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "doorkeeper/client_authentication/credentials"
+require "doorkeeper/client_authentication/verified_credentials"
 require "doorkeeper/client_authentication/fallback_method"
 require "doorkeeper/client_authentication/legacy_callable"
 require "doorkeeper/client_authentication/method"
@@ -48,6 +49,14 @@ module Doorkeeper
     register(
       :client_secret_basic,
       Doorkeeper::OAuth::ClientAuthentication::ClientSecretBasic,
+    )
+
+    # Registered but not part of DEFAULT_METHODS: servers opt in through the
+    # +client_authentication+ config option. Requires the "jwt" gem at the
+    # moment an assertion is authenticated.
+    register(
+      :private_key_jwt,
+      Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt,
     )
 
     # Converts a deprecated +client_credentials+ configuration into the client

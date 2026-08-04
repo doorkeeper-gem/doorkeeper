@@ -3,6 +3,10 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::ClientAuthentication::ClientSecretBasic do
+  it "declares that it uses a shared secret" do
+    expect(described_class.uses_shared_secret?).to be true
+  end
+
   describe ".matches_request?" do
     it "matches if the request has basic authorization" do
       request = mock_request(

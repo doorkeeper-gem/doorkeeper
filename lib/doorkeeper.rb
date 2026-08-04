@@ -8,7 +8,9 @@ require "doorkeeper/engine"
 module Doorkeeper
   autoload :Errors, "doorkeeper/errors"
   autoload :ClientAuthentication, "doorkeeper/client_authentication"
+  autoload :DocumentCache, "doorkeeper/document_cache"
   autoload :GrantFlow, "doorkeeper/grant_flow"
+  autoload :HttpFetcher, "doorkeeper/http_fetcher"
   autoload :OAuth, "doorkeeper/oauth"
   autoload :Rake, "doorkeeper/rake"
   autoload :Request, "doorkeeper/request"
@@ -69,6 +71,7 @@ module Doorkeeper
       autoload :None, "doorkeeper/oauth/client_authentication/none"
       autoload :ClientSecretBasic, "doorkeeper/oauth/client_authentication/client_secret_basic"
       autoload :ClientSecretPost, "doorkeeper/oauth/client_authentication/client_secret_post"
+      autoload :PrivateKeyJwt, "doorkeeper/oauth/client_authentication/private_key_jwt"
     end
 
     module Authorization

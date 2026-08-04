@@ -6,6 +6,11 @@ module Doorkeeper
       # RFC 6749 §2.3 "none": a public client that authenticates with only a
       # client_id and no secret (in the request body, not the query string).
       class None
+        # The absence of client authentication involves no secret at all.
+        def self.uses_shared_secret?
+          false
+        end
+
         # Rejects a request that carries header-based client authentication (a
         # +Basic+ credential, or any non-blank Authorization header that is not
         # a bearer token): such a request must not be silently treated as an
@@ -19,13 +24,20 @@ module Doorkeeper
         # authenticating the client, so it must not suppress the +none+
         # strategy for a public client that identifies itself with a body
         # +client_id+.
+        #
+        # A request carrying a client_assertion is likewise attempting real
+        # client authentication (RFC 7521 allows a bare client_id next to the
+        # assertion), so it must not be picked up as an unauthenticated
+        # public client no matter where this method sits in the configured
+        # order.
         def self.matches_request?(request)
           params = request.request_parameters.with_indifferent_access
 
           request.post? &&
             !client_authentication_header?(request) &&
             params[:client_id].present? &&
-            params[:client_secret].blank?
+            params[:client_secret].blank? &&
+            params[:client_assertion].blank?
         end
 
         # A blank Authorization header carries no client authentication; a
