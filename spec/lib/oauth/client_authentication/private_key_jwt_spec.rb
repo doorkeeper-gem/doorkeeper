@@ -376,6 +376,16 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(described_class.authenticate(request_with("not.a.jwt"))).to be_nil
     end
 
+    # URI.parse("https:foo") is a URI::HTTPS with a nil host: it passes the
+    # scheme check yet must fail authentication, not raise an ArgumentError
+    # out of the token endpoint when the nil host reaches the resolver.
+    it "rejects the assertion when the jwks_uri has no host" do
+      allow(application).to receive_messages(jwks: nil, jwks_uri: "https:foo")
+
+      expect { expect(described_class.authenticate(request_with(build_assertion))).to be_nil }
+        .not_to raise_error
+    end
+
     # A JWT payload is any JSON value, and the issuer is read before anything
     # is verified — so a payload that is not an object must fail
     # authentication rather than raise out of the token endpoint.

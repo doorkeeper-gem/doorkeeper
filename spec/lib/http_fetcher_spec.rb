@@ -45,6 +45,16 @@ RSpec.describe Doorkeeper::HttpFetcher do
       expect(request_stub).not_to have_been_requested
     end
 
+    # URI.parse("https:foo") is a URI::HTTPS with a nil host, so a hostless
+    # URL can reach the fetcher despite an is_a?(URI::HTTPS) check upstream;
+    # handing that nil to Resolv would raise ArgumentError, not FetchError.
+    it "raises a FetchError without resolving when the URL has no host" do
+      expect(resolver).not_to receive(:getaddresses)
+
+      expect { fetcher.fetch("https:foo") }.to raise_error(described_class::FetchError, /no host/)
+      expect { fetcher.fetch("https://") }.to raise_error(described_class::FetchError, /no host/)
+    end
+
     it "raises without connecting when the host resolves to a special-use address" do
       allow(resolver).to receive(:getaddresses).and_return(["127.0.0.1"])
       request_stub = stub_request(:get, url)

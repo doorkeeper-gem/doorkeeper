@@ -118,6 +118,11 @@ module Doorkeeper
     # @raise [FetchError] on resolution, transport or non-200 failures
     def fetch(url)
       uri = URI.parse(url)
+      # URI.parse("https:foo") yields a URI::HTTPS whose host is nil, so a
+      # caller's is_a?(URI::HTTPS) validation does not guarantee a host —
+      # and Resolv raises ArgumentError, not ResolvError, when handed nil.
+      raise FetchError, "#{url.inspect} has no host" if uri.host.blank?
+
       address = vetted_address_for(uri.host)
 
       perform_request(uri, address)
