@@ -23,9 +23,20 @@ RSpec.describe Doorkeeper::OAuth::DPoPProof do
     header = headers.is_a?(Hash) ? base.merge(headers) : headers
     b64 = ->(h) { Base64.urlsafe_encode64(JSON.generate(h), padding: false) }
     signing_input = "#{b64.call(header)}.#{b64.call(claims)}"
-    signature = JWT::JWA.resolve("ES256").sign(data: signing_input, signing_key: signing_key)
 
-    "#{signing_input}.#{Base64.urlsafe_encode64(signature, padding: false)}"
+    "#{signing_input}.#{Base64.urlsafe_encode64(es256_raw_signature(signing_input), padding: false)}"
+  end
+
+  # jwt 2.7 (the gemspec lower bound) has no public API to sign a hand-built
+  # signing input (JWT::JWA appeared in later releases), so produce the JWS
+  # ES256 signature directly with OpenSSL: an ECDSA DER signature unpacked
+  # into the raw 64-byte r || s form JWS requires (RFC 7518 3.4).
+  def es256_raw_signature(signing_input)
+    der = signing_key.sign(OpenSSL::Digest.new("SHA256"), signing_input)
+
+    OpenSSL::ASN1.decode(der).value.map do |int|
+      [int.value.to_i.to_s(16).rjust(64, "0")].pack("H*")
+    end.join
   end
 
   def request_double(token)
