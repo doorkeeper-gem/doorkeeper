@@ -45,7 +45,7 @@ module Doorkeeper
       def jkt
         return nil unless valid?
 
-        @jkt ||= JWT::JWK::Thumbprint.new(jwk).generate
+        @jkt ||= ::JWT::JWK::Thumbprint.new(jwk).generate
       end
 
       private
@@ -67,14 +67,14 @@ module Doorkeeper
       end
 
       def decode_without_verifying_signature
-        claims, headers = JWT.decode(dpop, nil, false)
+        claims, headers = ::JWT.decode(dpop, nil, false)
 
         # A JWT segment only has to be valid JSON, so either half can decode to
         # an Array or a scalar. Anything but a Hash carries no claims we can
         # read, and indexing it would raise.
         @claims = claims.is_a?(Hash) ? claims : {}
         @headers = headers.is_a?(Hash) ? headers : {}
-      rescue JWT::DecodeError, TypeError
+      rescue ::JWT::DecodeError, TypeError
         @claims = {}
         @headers = {}
       end
@@ -82,8 +82,8 @@ module Doorkeeper
       def jwk
         return @jwk if defined?(@jwk)
 
-        @jwk = headers["jwk"] && JWT::JWK.import(headers["jwk"])
-      rescue JWT::JWKError, TypeError
+        @jwk = headers["jwk"] && ::JWT::JWK.import(headers["jwk"])
+      rescue ::JWT::JWKError, TypeError
         # `jwk` is attacker-controlled: anything that isn't an importable key
         # is an invalid proof, not an exception.
         @jwk = nil
@@ -133,8 +133,8 @@ module Doorkeeper
       end
 
       def validate_signature
-        JWT.decode(dpop, jwk.keypair, true, algorithms: [headers["alg"]])
-      rescue JWT::DecodeError, JWT::JWKError
+        ::JWT.decode(dpop, jwk.keypair, true, algorithms: [headers["alg"]])
+      rescue ::JWT::DecodeError, ::JWT::JWKError
         false
       end
     end
