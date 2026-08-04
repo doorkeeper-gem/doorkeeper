@@ -232,6 +232,40 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
         expect(pre_auth).not_to be_authorizable
       end
     end
+
+    context "when dynamic scopes are enabled" do
+      before do
+        Doorkeeper.configure do
+          enable_dynamic_scopes
+        end
+      end
+
+      context "when the server default scope holds the pattern" do
+        let(:application) do
+          FactoryBot.create(:application, redirect_uri: "https://app.com/callback", scopes: "user:1")
+        end
+
+        it "grants the application scope matched by the pattern" do
+          allow(server).to receive(:default_scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("user:*"))
+
+          expect(pre_auth).to be_authorizable
+          expect(pre_auth.scope).to eq("user:1")
+        end
+      end
+
+      context "when the application scope holds the pattern" do
+        let(:application) do
+          FactoryBot.create(:application, redirect_uri: "https://app.com/callback", scopes: "user:*")
+        end
+
+        it "grants the default scope matched by the pattern" do
+          allow(server).to receive(:default_scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("user:1"))
+
+          expect(pre_auth).to be_authorizable
+          expect(pre_auth.scope).to eq("user:1")
+        end
+      end
+    end
   end
 
   it "matches the redirect uri against client's one" do

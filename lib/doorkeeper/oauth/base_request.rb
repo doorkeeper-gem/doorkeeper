@@ -59,8 +59,7 @@ module Doorkeeper
           client_scopes = @client&.scopes
           return default_scopes if client_scopes.blank?
 
-          # Avoid using Scope#& for dynamic scopes
-          client_scopes.allowed(default_scopes)
+          client_scopes.common(default_scopes)
         end
       end
     end

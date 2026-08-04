@@ -138,6 +138,20 @@ RSpec.describe Doorkeeper::OAuth::Scopes do
     end
   end
 
+  describe "#common" do
+    it "can get intersection with another scope object" do
+      scopes = described_class.from_string("public admin").common(described_class.from_string("write admin"))
+      expect(scopes.all).to eq(%w[admin])
+    end
+
+    it "returns the same set regardless of the receiver" do
+      first = described_class.from_string("public admin")
+      second = described_class.from_string("write admin")
+
+      expect(first.common(second)).to eq(second.common(first))
+    end
+  end
+
   describe "#has_scopes?" do
     subject(:scopes) { described_class.from_string("public admin") }
 
@@ -249,6 +263,23 @@ RSpec.describe Doorkeeper::OAuth::Scopes do
 
           it "does not allow user:* scope" do
             scopes = described_class.from_string("public user:1").allowed(described_class.from_string("public user:*"))
+            expect(scopes.all).to eq(%w[public])
+          end
+        end
+
+        describe "#common" do
+          it "allows user:1 when the receiver holds the pattern" do
+            scopes = described_class.from_string("public user:*").common(described_class.from_string("public user:1"))
+            expect(scopes.all).to eq(%w[public user:1])
+          end
+
+          it "allows user:1 when the argument holds the pattern" do
+            scopes = described_class.from_string("public user:1").common(described_class.from_string("public user:*"))
+            expect(scopes.all).to eq(%w[public user:1])
+          end
+
+          it "does not allow user:2 scope" do
+            scopes = described_class.from_string("public user:1").common(described_class.from_string("public user:2"))
             expect(scopes.all).to eq(%w[public])
           end
         end
