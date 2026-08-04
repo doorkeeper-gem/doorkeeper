@@ -100,6 +100,26 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(credentials).to be_pre_authenticated
     end
 
+    # doorkeeper-jwt defines Doorkeeper::JWT, which shadows the jwt gem for
+    # any bare JWT reference made inside the Doorkeeper module — every gem
+    # reference in this class must be written ::JWT to survive that.
+    context "when doorkeeper-jwt's Doorkeeper::JWT module is defined" do
+      before do
+        stub_const("Doorkeeper::JWT", Module.new)
+      end
+
+      it "still authenticates a valid assertion" do
+        credentials = described_class.authenticate(request_with(build_assertion))
+
+        expect(credentials).to be_a(Doorkeeper::ClientAuthentication::VerifiedCredentials)
+        expect(credentials.uid).to eq(client_id)
+      end
+
+      it "still rejects a malformed assertion without raising" do
+        expect(described_class.authenticate(request_with("not-a-jwt"))).to be_nil
+      end
+    end
+
     # A missing dependency is the operator's problem, not the client's, so it
     # must not travel back as an OAuth error: raising outside the
     # Doorkeeper::Errors::DoorkeeperError hierarchy the endpoints translate into

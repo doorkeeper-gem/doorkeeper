@@ -16,7 +16,9 @@ module Doorkeeper
       #
       # The "jwt" gem is required only when an assertion is actually
       # authenticated, so servers that don't enable this method don't need
-      # the dependency.
+      # the dependency. Its constants are always referenced as ::JWT:
+      # doorkeeper-jwt defines Doorkeeper::JWT, which would otherwise shadow
+      # the gem everywhere inside this class.
       class PrivateKeyJwt
         CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 
@@ -88,7 +90,7 @@ module Doorkeeper
         # locate the client (and thereby its keys); every claim is verified
         # against those keys before the assertion authenticates anyone.
         def self.unverified_client_id(assertion)
-          claims, = JWT.decode(assertion, nil, false)
+          claims, = ::JWT.decode(assertion, nil, false)
           # A JWT payload is any JSON value, not necessarily an object, and
           # nothing is verified at this point — so the decoded claims are
           # type-checked before being indexed into.
@@ -97,13 +99,13 @@ module Doorkeeper
           issuer = claims["iss"]
 
           issuer if issuer.is_a?(String) && issuer == claims["sub"]
-        rescue JWT::DecodeError
+        rescue ::JWT::DecodeError
           nil
         end
         private_class_method :unverified_client_id
 
         def self.verified_claims(assertion, client_id, jwk_set, request)
-          claims, = JWT.decode(
+          claims, = ::JWT.decode(
             assertion,
             nil,
             true,
@@ -132,7 +134,7 @@ module Doorkeeper
           return unless claims["jti"].is_a?(String) && claims["jti"].present?
 
           claims
-        rescue JWT::DecodeError, OpenSSL::OpenSSLError
+        rescue ::JWT::DecodeError, OpenSSL::OpenSSLError
           # A published key is only parsed far enough to be usable when it is
           # actually needed to verify a signature, so a structurally valid but
           # mathematically nonsensical key (an EC point that is not on the

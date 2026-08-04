@@ -14,6 +14,10 @@ module Doorkeeper
         #
         # Symmetric ("oct") keys are dropped: a symmetric key in a JWK Set is
         # a shared secret, which this method must never verify against.
+        #
+        # The jwt gem is always referenced as ::JWT: doorkeeper-jwt defines
+        # Doorkeeper::JWT, which would otherwise shadow the gem everywhere
+        # inside this module.
         module KeyResolver
           # A published JWK Set is remote, client-controlled input, so each
           # level is type-checked before it is indexed into: a JWK Set that
@@ -29,8 +33,8 @@ module Doorkeeper
             asymmetric = keys.grep(Hash).reject { |key| (key["kty"] || key[:kty]).to_s == "oct" }
             return if asymmetric.empty?
 
-            JWT::JWK::Set.new({ "keys" => asymmetric })
-          rescue JWT::DecodeError, OpenSSL::OpenSSLError
+            ::JWT::JWK::Set.new({ "keys" => asymmetric })
+          rescue ::JWT::DecodeError, OpenSSL::OpenSSLError
             # A hostile key can fail to parse in more ways than JWT::JWKError:
             # a member that is not valid base64url raises JWT::Base64DecodeError
             # (a sibling of JWT::JWKError under JWT::DecodeError, not a
