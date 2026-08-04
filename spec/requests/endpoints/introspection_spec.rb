@@ -75,6 +75,58 @@ RSpec.describe "Introspection endpoint" do
     end
   end
 
+  # Regression specs for https://github.com/doorkeeper-gem/doorkeeper/issues/1759
+  #
+  # With refresh_token_revoked_on_use? the previous refresh token is revoked
+  # when the rotated access token is first *used* — i.e. when it authenticates
+  # a protected resource request (Doorkeeper::OAuth::Token.authenticate).
+  # Introspection (RFC 7662) reports token state; it is not token use, so it
+  # must not finalize the rotation. Both sides of the asymmetry are pinned.
+  context "when the introspected token still references a previous refresh token" do
+    before do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_refresh_token
+      end
+    end
+
+    let!(:old_token) do
+      FactoryBot.create(:access_token, application: client, use_refresh_token: true)
+    end
+
+    let!(:rotated_token) do
+      FactoryBot.create(
+        :access_token,
+        application: client,
+        use_refresh_token: true,
+        previous_refresh_token: old_token.refresh_token,
+      )
+    end
+
+    it "does not revoke the previous refresh token" do
+      post introspection_endpoint_url,
+           params: {
+             client_id: client.uid,
+             client_secret: client.secret,
+             token: rotated_token.token,
+           }
+
+      expect(response).to be_successful
+      expect(json_response).to include("active" => true)
+      expect(old_token.reload).not_to be_revoked
+      expect(rotated_token.reload.previous_refresh_token).to eq(old_token.refresh_token)
+    end
+
+    it "revokes the previous refresh token when the token authenticates a protected resource request" do
+      get "/full_protected_resources",
+          headers: { "HTTP_AUTHORIZATION" => "Bearer #{rotated_token.token}" }
+
+      expect(response).to be_successful
+      expect(old_token.reload).to be_revoked
+      expect(rotated_token.reload.previous_refresh_token).to be_blank
+    end
+  end
+
   it "rejects the request when it uses more than one client authentication method (RFC 6749 §2.3)" do
     post introspection_endpoint_url,
          params: {

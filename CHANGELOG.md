@@ -25,6 +25,7 @@ User-visible changes worth mentioning.
 - [#1899] Document the client authentication methods registry (`Doorkeeper::ClientAuthentication.register`) in the README with a walkthrough for registering a custom method, and pin it with an end-to-end request spec. Docs/test-only change, closes [#1894].
 - [#1891] Fix: an authorization request carrying a `redirect_uri` for a client registered without one (`redirect_uri` is `nil` under `allow_blank_redirect_uri`) now answers `invalid_redirect_uri` instead of crashing with an unhandled 500.
 - [#1896] Add an opt-in `private_key_jwt` client authentication method (RFC 7523 / OIDC Core §9, requires the `jwt` gem >= 2.7) that verifies assertions against the client's published public keys — `jwks` / `jwks_uri` attributes you define on your Application model, the latter fetched with an SSRF-hardened HTTP client. The jti replay guard and the fetched-JWKS cache are process-local by default and can be replaced with shared stores via the `private_key_jwt_replay_guard` / `private_key_jwt_jwks_cache` config options. Part of [#1875].
+- [#1901] [test] Pin the answered behaviors behind [#984], [#1554], [#1600], [#1663], [#1759] and [#1787] with regression specs — the built-in client authentication methods, the unmodified echo of long `state` values, DB persistence with custom token generators, refresh token rotation/expiry semantics and the introspection asymmetry. Test-only change, closes those issues along with [#1291], [#1756] and [#1764].
 - Please add here
 
 ## 6.0.0.beta1

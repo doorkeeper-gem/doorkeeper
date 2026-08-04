@@ -148,6 +148,20 @@ feature "Authorization Code Flow" do
     url_should_not_have_param("code_challenge_method")
   end
 
+  # Regression spec for https://github.com/doorkeeper-gem/doorkeeper/issues/1554
+  #
+  # RFC 6749 §4.1.2 requires the authorization response to carry the state
+  # parameter back to the client exactly as received, however long it is. The
+  # resulting Location header size is a reverse-proxy buffer concern (e.g.
+  # nginx large_client_header_buffers), not something the authorization server
+  # may fix by trimming or re-encoding the value.
+  scenario "resource owner authorizes the client with a long state parameter" do
+    state = "return-me-#{"x" * 2048}"
+    visit authorization_endpoint_url(client: @client, state: state)
+    click_on "Authorize"
+    url_should_have_param("state", state)
+  end
+
   scenario "resource owner requests an access token without authorization code" do
     create_access_token "", @client
 
