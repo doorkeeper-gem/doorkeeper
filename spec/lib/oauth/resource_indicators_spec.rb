@@ -421,13 +421,26 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
         end
       end
 
-      # Existing behaviour, pinned here so the reuse fix above is seen not to
-      # change it: this option keeps only one token per client, regardless of
-      # the audience the previous one was issued for.
-      it "still revokes a token issued for a different resource" do
+      it "does not revoke a token issued for a different resource" do
         existing_token = issue_token(resource: [resource_uri])
 
         issue_token(resource: [second_resource_uri])
+
+        expect(existing_token.reload).not_to be_revoked
+      end
+
+      it "revokes the previous token issued for the same resource" do
+        existing_token = issue_token(resource: [resource_uri])
+
+        issue_token(resource: [resource_uri])
+
+        expect(existing_token.reload).to be_revoked
+      end
+
+      it "revokes the previous token when no resource is involved" do
+        existing_token = issue_token
+
+        issue_token
 
         expect(existing_token.reload).to be_revoked
       end
