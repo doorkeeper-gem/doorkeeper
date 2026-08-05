@@ -62,4 +62,22 @@ RSpec.describe Doorkeeper::ClientAuthentication do
       expect(described_class.get(nil)).to be_nil
     end
   end
+
+  # Regression specs for https://github.com/doorkeeper-gem/doorkeeper/issues/984
+  #
+  # The IANA "OAuth Token Endpoint Authentication Methods" registry defines no
+  # HTTP Digest based method, so Doorkeeper ships without one. A deployment
+  # that needs another scheme registers it through ClientAuthentication.register.
+  describe "built-in methods" do
+    it "enables only the RFC 6749 secret methods and none by default" do
+      expect(described_class::DEFAULT_METHODS).to eq(%i[client_secret_basic client_secret_post none])
+      expect(Doorkeeper::ClientAuthentication::Registry.registered_methods.keys)
+        .to include(*described_class::DEFAULT_METHODS)
+    end
+
+    it "does not include a digest authentication method" do
+      expect(described_class.get(:digest)).to be_nil
+      expect(described_class.get(:client_secret_digest)).to be_nil
+    end
+  end
 end

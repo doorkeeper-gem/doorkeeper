@@ -57,6 +57,29 @@ RSpec.describe "Refresh Token Flow" do
       )
     end
 
+    # Regression spec for https://github.com/doorkeeper-gem/doorkeeper/issues/1663
+    #
+    # reuse_access_token applies to token issuance (e.g. client_credentials,
+    # password), not to the refresh grant. Reusing a matching live token here
+    # would return the soon-to-expire token the client is refreshing away
+    # from, and a matching token from another rotation chain (another
+    # device's session) would hand this client that chain's refresh token —
+    # revoking one session would then collaterally break the other.
+    it "issues a new access token even when reuse_access_token is enabled" do
+      config_is_set :reuse_access_token, true
+
+      post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
+        client: @client, refresh_token: @token.refresh_token,
+      )
+
+      new_token = Doorkeeper::AccessToken.last
+      expect(new_token).not_to eq(@token)
+      expect(json_response).to include(
+        "access_token" => new_token.token,
+        "refresh_token" => new_token.refresh_token,
+      )
+    end
+
     context "when refresh_token revoked on use" do
       it "client requests a token with refresh token" do
         post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
@@ -77,6 +100,44 @@ RSpec.describe "Refresh Token Flow" do
           "refresh_token" => Doorkeeper::AccessToken.last.refresh_token,
         )
         expect(@token.reload).not_to be_revoked
+      end
+
+      # Regression specs for https://github.com/doorkeeper-gem/doorkeeper/issues/1787
+      #
+      # Rotation deliberately leaves the previous refresh token usable until
+      # the rotated access token is first used at a protected resource
+      # (AccessToken#revoke_previous_refresh_token!, pinned from the other
+      # side in spec/requests/endpoints/introspection_spec.rb). The grace
+      # period lets a client retry a refresh whose response was lost in
+      # transit; revoking on the second request would lock such clients out.
+      it "accepts the same refresh token again while the rotated access token is unused" do
+        post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
+          client: @client, refresh_token: @token.refresh_token,
+        )
+        first_rotation = Doorkeeper::AccessToken.last
+
+        post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
+          client: @client, refresh_token: @token.refresh_token,
+        )
+
+        expect(json_response).to include(
+          "refresh_token" => Doorkeeper::AccessToken.last.refresh_token,
+        )
+        expect(Doorkeeper::AccessToken.last).not_to eq(first_rotation)
+        expect(@token.reload).not_to be_revoked
+      end
+
+      # Refresh tokens carry no expiry of their own: expires_in bounds only
+      # the access token, so an unused, unrevoked refresh token stays
+      # exchangeable no matter how long ago its access token expired.
+      it "accepts a refresh token whose access token expired long ago" do
+        @token.update_attribute :created_at, 5.years.ago
+        post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
+          client: @client, refresh_token: @token.refresh_token,
+        )
+        expect(json_response).to include(
+          "refresh_token" => Doorkeeper::AccessToken.last.refresh_token,
+        )
       end
     end
 
