@@ -100,6 +100,23 @@ module Doorkeeper
         self.class.from_array(filtered_scopes)
       end
 
+      # Returns the scopes present in both sets, taking dynamic scopes
+      # into account: a dynamic scope pattern (e.g. `user:*`) on either
+      # side matches the concrete scope (e.g. `user:1`) on the other,
+      # and the concrete scope is what ends up in the result. Unlike
+      # #allowed, the same scopes are returned regardless of which set is
+      # the receiver, though the order may differ: scopes matched from the
+      # argument come first, followed by any scope only the receiver
+      # contributes (a concrete scope matched by a pattern in the argument).
+      #
+      # @param other The set of scopes to intersect with
+      def common(other)
+        other = self.class.from_array(to_array(other))
+        matched = other.select { |scope| exists?(scope) } +
+                  select { |scope| other.exists?(scope) }
+        self.class.from_array(matched)
+      end
+
       private
 
       def dynamic_scopes_enabled?

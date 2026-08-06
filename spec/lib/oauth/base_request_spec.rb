@@ -206,5 +206,36 @@ RSpec.describe Doorkeeper::OAuth::BaseRequest do
         expect(result).to eq(scopes_array)
       end
     end
+
+    context "when @original_scopes is blank and dynamic scopes are enabled" do
+      before do
+        Doorkeeper.configure do
+          enable_dynamic_scopes
+        end
+
+        request.instance_variable_set(:@original_scopes, nil)
+        request.instance_variable_set(:@client, client)
+        allow(request).to receive(:server).and_return(server)
+        allow(server).to receive(:default_scopes).and_return(default_scopes)
+      end
+
+      context "when the server default scope holds the pattern" do
+        let(:client) { Doorkeeper::Application.new(id: "1", scopes: "user:1") }
+        let(:default_scopes) { Doorkeeper::OAuth::Scopes.from_string("user:*") }
+
+        it "grants the application scope matched by the pattern" do
+          expect(request.scopes.to_s).to eq("user:1")
+        end
+      end
+
+      context "when the application scope holds the pattern" do
+        let(:client) { Doorkeeper::Application.new(id: "1", scopes: "user:*") }
+        let(:default_scopes) { Doorkeeper::OAuth::Scopes.from_string("user:1") }
+
+        it "grants the default scope matched by the pattern" do
+          expect(request.scopes.to_s).to eq("user:1")
+        end
+      end
+    end
   end
 end
