@@ -39,39 +39,36 @@ module Doorkeeper
           end
         end
 
-        # RFC 8707: a token audience-restricted to one resource must not be
-        # handed out for a request targeting another, so the resource takes
-        # part in the lookup itself. Filtering the result afterwards would miss
-        # a reusable token whenever a newer one exists for a different
-        # resource, since the lookup returns only the newest match.
         def find_reusable_token_for(client, scopes, attributes)
-          token = find_active_existing_token_for(client, scopes, attributes) do |candidate|
-            Doorkeeper.config.access_token_model.resource_indicators_match?(
-              candidate, attributes[:resource],
-            )
-          end
+          token = find_active_existing_token_for(client, scopes, attributes)
 
           token if token&.reusable?
         end
 
-        # `revoke_previous_client_credentials_token` keeps a single token per
-        # client whatever audience it was issued for, so this lookup stays
-        # audience-agnostic.
         def find_revocable_token_for(client, scopes, attributes)
           return unless Doorkeeper.config.revoke_previous_client_credentials_token?
 
           find_active_existing_token_for(client, scopes, attributes)
         end
 
-        def find_active_existing_token_for(client, scopes, attributes, &filter)
+        def find_active_existing_token_for(client, scopes, attributes)
           # An empty hash must stay distinct from nil here: nil ignores custom
           # attributes when matching, while an empty hash only matches tokens
           # that have no custom attributes set.
           custom_attributes = Doorkeeper.config.access_token_model
             .extract_custom_attributes(attributes)
           Doorkeeper.config.access_token_model.matching_token_for(
-            client, nil, scopes, custom_attributes: custom_attributes, include_expired: false, &filter
-          )
+            client, nil, scopes, custom_attributes: custom_attributes, include_expired: false,
+          ) do |token|
+            # RFC 8707: a token bound to another audience is a different token.
+            # It must neither be reused for this request nor revoked on its
+            # behalf, so the resource takes part in the lookup both callers use.
+            # It has to be part of the lookup rather than a check on its result,
+            # because only the newest match is returned.
+            Doorkeeper.config.access_token_model.resource_indicators_match?(
+              token, attributes[:resource],
+            )
+          end
         end
       end
     end
