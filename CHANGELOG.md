@@ -70,6 +70,11 @@ and changelog below before the update since this version includes breaking chang
 - [#1869] Improve test coverage
 - [#1870] Fix: raise the intended `Doorkeeper::Errors::TokenGeneratorNotFound` / `UnableToGenerateToken` (instead of a confusing `NameError`) when `application_secret_generator` is misconfigured.
 
+## 5.9.5
+
+- [#1901] Reject requests that authenticate the client with more than one method (RFC 6749 §2.3) with an `invalid_request` error, instead of silently authenticating with the first method that matched and discarding the other credentials.
+- [#1853] Fix `reuse_access_token` reusing a token that was created with `custom_access_token_attributes` values when the new request doesn't specify any custom attributes. Such requests now only match tokens without custom attributes.
+
 ## 5.9.3
 
 - [#1834] Fix default `allow_token_introspection` returning `false` when a custom `application_class` is configured. The default proc compared application objects with `==`, which fails when the authorized client and the introspected token's application are resolved as different classes (e.g. a base `Doorkeeper::Application` vs. a configured subclass) even though they reference the same record. It now compares application ids instead.
