@@ -229,6 +229,20 @@ module Doorkeeper
         end
       end
 
+      # RFC 9449: a reused token must carry the same sender constraint the
+      # request asked for. Handing a DPoP-bound token to a request with a
+      # different key makes it unusable, and handing an unbound one to a
+      # request that presented a proof silently drops the binding.
+      #
+      # @param token [Doorkeeper::AccessToken] existing token
+      # @param requested_jkt [String, nil] JWK SHA-256 thumbprint
+      # @return [Boolean]
+      def dpop_bindings_match?(token, requested_jkt)
+        return true unless dpop_supported?
+
+        token.dpop_jkt == requested_jkt
+      end
+
       # RFC 8707: checks whether an existing token's audience matches the
       # requested resource indicators. Used during token reuse to prevent
       # returning a token audience-restricted to one resource for a request
@@ -303,7 +317,8 @@ module Doorkeeper
             application, resource_owner, scopes, custom_attributes: custom_attributes, include_expired: false,
           ) do |token|
             refresh_token_matches?(token, token_attributes) &&
-              resource_indicators_match?(token, requested_resource)
+              resource_indicators_match?(token, requested_resource) &&
+              dpop_bindings_match?(token, token_attributes[:dpop_jkt])
           end
 
           return access_token if access_token&.reusable?
@@ -414,14 +429,24 @@ module Doorkeeper
           *Doorkeeper.configuration.custom_access_token_attributes,
         )
       end
+
+      # Checks whether the token can be sender-constrained using DPoP.
+      #
+      # @see https://datatracker.ietf.org/doc/html/rfc9449
+      #   OAuth 2.0 Demonstrating Proof of Possession (DPoP)
+      def dpop_supported?
+        column_names.include?("dpop_jkt")
+      end
     end
 
-    # Access Token type: Bearer.
+    # Access Token type: Bearer or DPoP
+    #
     # @see https://datatracker.ietf.org/doc/html/rfc6750
     #   The OAuth 2.0 Authorization Framework: Bearer Token Usage
-    #
+    # @see https://datatracker.ietf.org/doc/html/rfc9449
+    #   OAuth 2.0 Demonstrating Proof of Possession (DPoP)
     def token_type
-      "Bearer"
+      uses_dpop? ? "DPoP" : "Bearer"
     end
 
     def use_refresh_token?
@@ -529,6 +554,30 @@ module Doorkeeper
       else
         update_attribute(:previous_refresh_token, "")
       end
+    end
+
+    # Checks whether the token has been sender-constrained using DPoP. The token
+    # is never considered sender-constrained if the DPoP migration was not run.
+    #
+    # @see https://datatracker.ietf.org/doc/html/rfc9449
+    #   OAuth 2.0 Demonstrating Proof of Possession (DPoP)
+    def uses_dpop?
+      self.class.dpop_supported? && dpop_jkt.present?
+    end
+
+    # Checks whether the token is bound to the given DPoP key thumbprint (`jkt`).
+    #
+    # DPoP-bound (sender-constrained) access tokens are bound to a public key by its JWK
+    # SHA-256 thumbprint (`dpop_jkt`). This method returns `false` if the token is not DPoP-bound,
+    # otherwise it returns whether the token's stored thumbprint matches the provided `jkt`.
+    #
+    # @param jkt [String] The JWK SHA-256 thumbprint of the DPoP public key jkt
+    # @return [Boolean] True if the token is DPoP-bound and bound to the given `jkt`
+    def dpop_binding_matches?(jkt)
+      return false unless uses_dpop?
+      return false if jkt.blank?
+
+      ActiveSupport::SecurityUtils.secure_compare(dpop_jkt, jkt)
     end
 
     private

@@ -15,7 +15,8 @@ module Doorkeeper
       attr_reader :access_token, :client, :credentials, :refresh_token
       attr_reader :missing_param
 
-      def initialize(server, refresh_token, credentials, parameters = {})
+      def initialize(server, refresh_token, credentials, parameters = {}, dpop_proof: nil)
+        super(dpop_proof: dpop_proof)
         @server = server
         @refresh_token = refresh_token
         @credentials = credentials
@@ -70,7 +71,7 @@ module Doorkeeper
       end
 
       def create_access_token
-        attributes = {}.merge(custom_token_attributes_with_data)
+        attributes = dpop_token_attributes.merge(custom_token_attributes_with_data)
 
         resource_owner =
           if Doorkeeper.config.polymorphic_resource_owner?
@@ -188,6 +189,29 @@ module Doorkeeper
           .with_indifferent_access
           .slice(*Doorkeeper.config.custom_access_token_attributes)
           .symbolize_keys
+      end
+
+      def dpop_token_attributes
+        if client&.confidential && refresh_token.uses_dpop?
+          { dpop_jkt: refresh_token.dpop_jkt }.merge(super)
+        else
+          super
+        end
+      end
+
+      def validate_dpop_proof
+        if refresh_token&.uses_dpop?
+          if client&.confidential
+            dpop_proof.present? ? dpop_proof.valid? : true
+          else
+            # Same reason as `BaseRequest#validate_dpop_proof`: a caller that
+            # builds this request itself never gets a proof injected, so nil
+            # must fail the validation rather than raise.
+            !!dpop_proof&.valid? && refresh_token.dpop_binding_matches?(dpop_proof.jkt)
+          end
+        else
+          super
+        end
       end
     end
   end

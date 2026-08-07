@@ -3,7 +3,7 @@
 module Doorkeeper
   module Request
     class RefreshToken < Strategy
-      delegate :credentials, :parameters, to: :server
+      delegate :credentials, :dpop_proof, :parameters, to: :server
 
       def refresh_token
         Doorkeeper.config.access_token_model.by_refresh_token(parameters[:refresh_token])
@@ -15,6 +15,7 @@ module Doorkeeper
           refresh_token,
           credentials,
           parameters,
+          dpop_proof:,
         )
       end
     end

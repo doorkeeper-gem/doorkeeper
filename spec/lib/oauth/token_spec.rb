@@ -152,5 +152,57 @@ RSpec.describe Doorkeeper::OAuth::Token do
         described_class.authenticate double, token
       end
     end
+
+    context "when multiple methods are given" do
+      it "uses the first method that yields a token and ignores later ones" do
+        first  = ->(_r) { "first-token" }
+        second = double
+        expect(second).not_to receive(:call)
+
+        access_token = double("access token")
+        allow(Doorkeeper::AccessToken)
+          .to receive(:by_token).with("first-token").and_return(access_token)
+
+        expect(described_class.authenticate(double, first, second)).to eq(access_token)
+      end
+
+      it "skips methods that return a blank token" do
+        blank = ->(_r) { nil }
+        found = ->(_r) { "token" }
+
+        access_token = double("access token")
+        allow(Doorkeeper::AccessToken)
+          .to receive(:by_token).with("token").and_return(access_token)
+
+        expect(described_class.authenticate(double, blank, found)).to eq(access_token)
+      end
+
+      it "returns nil and does not query for a token when no method yields one" do
+        blank = ->(_r) { nil }
+        expect(Doorkeeper::AccessToken).not_to receive(:by_token)
+
+        expect(described_class.authenticate(double, blank)).to be_nil
+      end
+    end
+  end
+
+  describe ".authenticate3" do
+    it "returns the [method, token, access_token] triplet when a token is found" do
+      found        = ->(_r) { "token" }
+
+      access_token = double("access token")
+      allow(Doorkeeper::AccessToken)
+        .to receive(:by_token).with("token").and_return(access_token)
+
+      expect(described_class.authenticate3(double, found))
+        .to eq([found, "token", access_token])
+    end
+
+    it "returns a nil triplet when no method yields a token" do
+      blank = ->(_r) { nil }
+      expect(Doorkeeper::AccessToken).not_to receive(:by_token)
+
+      expect(described_class.authenticate3(double, blank)).to eq([nil, nil, nil])
+    end
   end
 end

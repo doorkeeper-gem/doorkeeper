@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
-  subject(:request) { described_class.new(server, refresh_token, credentials) }
+  subject(:request) { described_class.new(server, refresh_token, credentials, dpop_proof:) }
 
   let(:server) do
     double :server, access_token_expires_in: 2.minutes
@@ -15,6 +15,7 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
 
   let(:client) { refresh_token.application }
   let(:credentials) { Doorkeeper::ClientAuthentication::Credentials.new(client.uid, client.secret) }
+  let(:dpop_proof) { nil }
 
   before do
     allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
@@ -291,4 +292,20 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
       expect(Doorkeeper::AccessToken.last.scopes).to eq(%i[public])
     end
   end
+
+  context "when a public client refreshes a DPoP-bound token without a proof" do
+    let(:client) { FactoryBot.create(:application, confidential: false) }
+    let(:credentials) { Doorkeeper::ClientAuthentication::Credentials.new(client.uid, client.secret) }
+    let(:refresh_token) do
+      FactoryBot.create(:access_token, application: client, use_refresh_token: true, dpop_jkt: "secret")
+    end
+    let(:dpop_proof) { nil }
+
+    it "fails validation instead of raising" do
+      expect { request.validate }.not_to raise_error
+      expect(request.error).to eq(Doorkeeper::Errors::InvalidDPoPProof)
+    end
+  end
+
+  include_examples "sender-constraining access_token using dpop"
 end
