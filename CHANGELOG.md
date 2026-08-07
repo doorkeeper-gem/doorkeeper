@@ -9,7 +9,7 @@ User-visible changes worth mentioning.
 
 - Please add here
 
-## 5.9.4
+## 5.9.5
 
 - [#1901] Reject requests that authenticate the client with more than one method (RFC 6749 §2.3) with an `invalid_request` error, instead of silently authenticating with the first method that matched and discarding the other credentials.
 - [#1853] Fix `reuse_access_token` reusing a token that was created with `custom_access_token_attributes` values when the new request doesn't specify any custom attributes. Such requests now only match tokens without custom attributes.
