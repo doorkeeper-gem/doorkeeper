@@ -48,5 +48,27 @@ RSpec.describe Doorkeeper::TokenInfoController, type: :controller do
         )
       end
     end
+
+    # RFC 6750 §2 forbids transmitting the token by more than one method. On
+    # this stable branch such a request fails closed as carrying no usable
+    # token (401 invalid_token); the strict invalid_request (400) of §3.1
+    # ships with 6.0.
+    describe "multiple transmission methods" do
+      it "responds with 401 when two methods present different tokens" do
+        request.env["HTTP_AUTHORIZATION"] = "Bearer #{doorkeeper_token.token}"
+        get :show, params: { access_token: "another-token" }
+
+        expect(response.status).to eq 401
+        expect(response.headers["WWW-Authenticate"]).to match(/^Bearer/)
+      end
+
+      it "responds with 401 when the same token is repeated across methods" do
+        request.env["HTTP_AUTHORIZATION"] = "Bearer #{doorkeeper_token.token}"
+        get :show, params: { access_token: doorkeeper_token.token }
+
+        expect(response.status).to eq 401
+        expect(response.headers["WWW-Authenticate"]).to match(/^Bearer/)
+      end
+    end
   end
 end
