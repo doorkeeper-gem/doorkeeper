@@ -302,9 +302,10 @@ Doorkeeper.configure do
   # A `private_key_jwt` method (RFC 7523 / OIDC Core §9) is also registered
   # but not enabled by default — add it to the list above to accept it. It
   # requires the `jwt` gem (>= 2.7) in your bundle, and verifies assertions
-  # against the client's published public keys: `jwks` / `jwks_uri`
-  # attributes you define on your Application model (Doorkeeper does not add
-  # these columns itself). Assertions must carry iss = sub =
+  # against the client's published public keys: the `jwks` / `jwks_uri` of a
+  # Client ID Metadata Document client, or `jwks` / `jwks_uri` attributes you
+  # define on your Application model for registered clients (Doorkeeper does
+  # not add these columns itself). Assertions must carry iss = sub =
   # client_id, an aud of your `issuer` (or the token endpoint URL), a bounded
   # exp (at most 1 hour ahead), a kid header, and a single-use jti.
   #
@@ -320,16 +321,20 @@ Doorkeeper.configure do
   #
   # private_key_jwt_jwks_cache Doorkeeper::DocumentCache.new(ttl: 300)
   #
+  # This cache serves registered applications only. Keys named by a Client
+  # ID Metadata Document are kept on a separate built-in cache, so the
+  # unauthenticated traffic that drives those fetches cannot evict entries
+  # registered clients depend on.
+  #
   # The accepted audiences are built from your `issuer` or from Rails'
   # `default_url_options`; set at least one of them, otherwise Doorkeeper has
   # nothing but the request's Host header to identify itself with and the
   # audience check cannot tell your server apart from another one.
   #
-  # A client's `jwks_uri` is fetched with a hardened HTTP client (HTTPS
-  # only, no redirects, hosts resolving to RFC 6890 special-use addresses
-  # refused), so a jwks_uri on a private network or on localhost is refused
-  # even though you configured it yourself; inline `jwks` has no such
-  # restriction.
+  # A registered client's `jwks_uri` is fetched with the same hardened HTTP
+  # client as a metadata document, so a jwks_uri on a private network or on
+  # localhost is refused even though you configured it yourself; inline `jwks`
+  # has no such restriction.
   #
   # client_authentication %i[client_secret_basic client_secret_post none private_key_jwt]
 
@@ -666,4 +671,74 @@ Doorkeeper.configure do
   #   allowed = %w[https://api.example.com/ https://calendar.example.com/]
   #   resource_indicators.all? { |r| allowed.include?(r) }
   # }
+
+  # Client ID Metadata Documents (draft-ietf-oauth-client-id-metadata-document).
+  #
+  # When enabled, clients may identify themselves with an https:// client_id
+  # pointing at a metadata document (JSON) that Doorkeeper fetches and
+  # validates instead of requiring pre-registration. Only URL-shaped
+  # client_ids take this path; opaque client_ids keep resolving against
+  # registered applications, and Doorkeeper-generated uids never start with
+  # "https://". Caveat: a pre-existing application whose uid was manually
+  # set to an https:// URL is treated as a metadata document client once
+  # the feature is enabled, and its attributes (name, redirect uris,
+  # scopes, confidential flag) are refreshed from the fetched document,
+  # while the grants and tokens already issued to it stay attached to the
+  # row - whoever controls that URL inherits them. Audit existing uids
+  # before enabling this on an existing installation.
+  #
+  # Notes and current limitations:
+  # - Metadata is fetched over HTTPS only, redirects are not followed, and
+  #   hosts resolving to RFC 6890 special-use addresses (loopback, private
+  #   ranges, link-local, ...) are refused, so local development targets
+  #   cannot be fetched by design.
+  # - Responses larger than 5 KB are refused, and the whole fetch is bounded
+  #   in time, so a slow or oversized document cannot tie up a request.
+  # - Each successfully validated client is materialized as an application
+  #   row (uid = the client_id URL) so grants and tokens can reference it;
+  #   rows are refreshed from the document on every resolution. Consider the
+  #   growth of this table before enabling the feature on a public server,
+  #   and note that an unauthenticated authorization request is enough to
+  #   trigger a fetch (rate limiting is left to the host application).
+  # - Documents must not use shared-secret authentication methods; such
+  #   clients are rejected. Public clients ("none") should be combined with
+  #   force_pkce.
+  # - Using `private_key_jwt` with document clients requires this server to
+  #   identify itself, through `issuer` below or Rails'
+  #   `default_url_options[:host]`. A document client_id resolves to the same
+  #   client, and the same keys, at every server implementing the draft, so
+  #   the audience its assertions are checked against (RFC 7523 Section 3)
+  #   must not come from the request's Host header - otherwise an assertion
+  #   sent to one such server would be replayable at all the others by
+  #   whoever received it. Without either setting, those assertions are
+  #   refused and a warning is logged at boot. Registered applications are
+  #   unaffected.
+  # - A document served with a media type that is not JSON is refused (one
+  #   declaring no media type at all is tolerated), and a client_id URL,
+  #   client_name or scope longer than 255 characters is rejected: those
+  #   values go into columns the generated migration declares as strings,
+  #   which MySQL sizes at 255 characters.
+  # - A document may only name scopes this server configures; one naming
+  #   anything else is rejected rather than granted it, since an
+  #   application's own scopes stand in for the server's when a token is
+  #   issued.
+  # - Of the client metadata, only client_name, redirect_uris, scope,
+  #   token_endpoint_auth_method and jwks/jwks_uri are honoured. In
+  #   particular grant_types and response_types are not enforced, so a
+  #   document client may use any grant flow you have enabled - review
+  #   `grant_flows` before enabling this, and note that with
+  #   `client_credentials` enabled anyone able to host a document can obtain
+  #   a token for their own client.
+  # - Documents are memoized for 60 seconds. The HTTP cache headers the draft
+  #   recommends respecting (Section 4.4) are not honoured yet, and no
+  #   development metadata document service (Section 4.2) is provided.
+  # - Only documents that resolve are memoized, and one document answers
+  #   every case variant of its URL (client_ids are compared as strings, as
+  #   the draft requires), so a caller choosing URLs freely can drive one
+  #   outbound fetch, and one application row, per request. Rate limit the
+  #   authorization and token endpoints accordingly.
+  # - A change of client keys does not revoke previously issued tokens
+  #   (Section 6.3.1), and logo_uri is never prefetched (Section 6.7).
+  #
+  # use_client_id_metadata_documents
 end

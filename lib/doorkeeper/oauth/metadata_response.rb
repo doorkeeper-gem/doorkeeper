@@ -37,6 +37,9 @@ module Doorkeeper
             authorization_response_iss_parameter_supported: config.issuer.present?,
             # RFC 8707: advertise resource indicator support when configured.
             resource_indicators_supported: resource_indicators_supported?,
+            # Client ID Metadata Document draft, Section 5. Like the RFC 9207
+            # field above, false is advertised explicitly.
+            client_id_metadata_document_supported: config.client_id_metadata_documents?,
           }
           data.compact!
 
