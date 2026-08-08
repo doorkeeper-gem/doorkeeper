@@ -28,6 +28,37 @@ feature "Private API" do
     response_status_should_be 401
   end
 
+  # RFC 6750 §2 forbids transmitting the token by more than one method, and
+  # §3.1 answers it with invalid_request (400), not invalid_token (401).
+  scenario "client attempts to transmit tokens by more than one method" do
+    with_access_token_header @token.token
+    visit "/full_protected_resources?access_token=another-token"
+    response_status_should_be 400
+  end
+
+  # §2 forbids using more than one method, not presenting two different
+  # tokens, so repeating one token across two methods is refused as well.
+  scenario "client repeats the same token across two transmission methods" do
+    with_access_token_header @token.token
+    visit "/full_protected_resources?access_token=#{@token.token}"
+    response_status_should_be 400
+  end
+
+  # The form-encoded body (§2.2) and the URI query (§2.3) are two methods, but
+  # ActionDispatch merges them into one parameter hash and lets the query win,
+  # so the body token would otherwise be discarded without a word.
+  scenario "client attempts to transmit tokens in both the body and the query" do
+    page.driver.post "/full_protected_resources?access_token=another-token",
+                     { access_token: @token.token }
+    response_status_should_be 400
+  end
+
+  scenario "client repeats the same token in both the body and the query" do
+    page.driver.post "/full_protected_resources?access_token=#{@token.token}",
+                     { access_token: @token.token }
+    response_status_should_be 400
+  end
+
   scenario "client attempts to request protected resource with expired token" do
     @token.update_attribute :expires_in, -100 # expires token
     with_access_token_header @token.token

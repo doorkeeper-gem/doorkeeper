@@ -353,6 +353,23 @@ Doorkeeper.configure do
   # Check out https://github.com/doorkeeper-gem/doorkeeper/wiki/Changing-how-clients-are-authenticated
   # for more information on customization
   #
+  # RFC 6750 §2 defines three transmission methods and forbids a client from
+  # using more than one of them per request, so a request presenting a token
+  # through two of the built-in methods is refused with `invalid_request`
+  # (400). What §2 forbids is the second method, not a disagreement between
+  # the two, so repeating the same token across methods is refused as well.
+  # The form-encoded body (§2.2) and the URI query (§2.3) count as two methods
+  # even though Rails and Rack merge them into a single `params` hash, so
+  # `access_token` carried by both is refused too.
+  #
+  # A custom callable extractor sits outside that check and keeps the
+  # historical first-wins selection — the same boundary client authentication
+  # draws around the legacy `client_credentials` callable extractors. If you
+  # configure one, a request presenting one token through it and a different
+  # token through a built-in method is served under whichever comes first in
+  # this list, and the other is discarded, so make sure the layers in front of
+  # Doorkeeper agree with this list about which one authorizes the request.
+  #
   # access_token_methods :from_bearer_authorization, :from_access_token_param, :from_bearer_param
 
   # Forces the usage of the HTTPS protocol in non-native redirect uris (enabled
@@ -404,6 +421,17 @@ Doorkeeper.configure do
   #
   #   Doorkeeper::Errors::TokenForbidden, Doorkeeper::Errors::TokenExpired,
   #   Doorkeeper::Errors::TokenRevoked, Doorkeeper::Errors::TokenUnknown
+  #
+  # One more can reach your rescue: a request that transmits an access token by
+  # more than one method (RFC 6750 §2 forbids it) is refused as invalid_request
+  # rather than invalid_token, and raises
+  #
+  #   Doorkeeper::Errors::InvalidRequest
+  #
+  # That one is a sibling of Doorkeeper::Errors::InvalidToken, not a subclass,
+  # so an existing `rescue Doorkeeper::Errors::InvalidToken` does not cover it.
+  # Rescue it explicitly, or rescue their common parent
+  # Doorkeeper::Errors::BaseResponseError, to handle both.
   #
   # handle_auth_errors :raise
   #

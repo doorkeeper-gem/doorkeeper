@@ -23,6 +23,39 @@ RSpec.describe Doorkeeper do
 
       described_class.authenticate(request, token_strategies)
     end
+
+    # RFC 6750 §2 forbids transmitting the token by more than one method, and
+    # OAuth::Token.from_request raises so callers can answer invalid_request
+    # (400). This entry point is what host applications call, so it keeps its
+    # token-or-nil contract: a refused request has no authorizing token and
+    # answers nil, the same as a request that carried none.
+    context "when the request transmits a token by more than one method" do
+      let(:request) do
+        double(parameters: { access_token: "token-A" }, authorization: "Bearer token-B")
+      end
+
+      it "answers nil instead of propagating the error" do
+        expect { @result = described_class.authenticate(request) }.not_to raise_error
+        expect(@result).to be_nil
+      end
+
+      it "still raises from OAuth::Token.authenticate, which the helpers rescue" do
+        expect { Doorkeeper::OAuth::Token.authenticate(request, *described_class.config.access_token_methods) }
+          .to raise_error(Doorkeeper::Errors::MultipleAccessTokenMethods)
+      end
+
+      it "answers nil for custom token strategies too" do
+        expect(described_class.authenticate(request, %i[from_access_token_param from_bearer_authorization]))
+          .to be_nil
+      end
+    end
+
+    it "answers the access token for a request that names a single token" do
+      access_token = FactoryBot.create(:access_token)
+      request = double(parameters: { access_token: access_token.token }, authorization: nil)
+
+      expect(described_class.authenticate(request)).to eq(access_token)
+    end
   end
 
   describe "#setup_filter_parameters" do

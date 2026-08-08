@@ -39,10 +39,22 @@ module Doorkeeper
       end
 
       # :doc:
+      #
+      # Answers nil (not a raise) when the request transmits an access token
+      # by more than one method (RFC 6750 §2), the same token-or-nil contract
+      # Rails::Helpers#doorkeeper_token keeps. This is the doorkeeper_token a
+      # subclass of Doorkeeper::ApplicationController or
+      # Doorkeeper::ApplicationMetalController resolves to, so a raise here
+      # would turn doorkeeper_authorize! in such a controller into an
+      # unhandled 500. The error is kept so the response can still be the
+      # invalid_request (400) RFC 6750 §3.1 prescribes.
       def doorkeeper_token
         return @doorkeeper_token if defined?(@doorkeeper_token)
 
         @doorkeeper_token ||= OAuth::Token.authenticate(request, *config_methods)
+      rescue Errors::MultipleAccessTokenMethods => e
+        @_doorkeeper_multiple_token_methods_error = e
+        @doorkeeper_token = nil
       end
 
       def config_methods
