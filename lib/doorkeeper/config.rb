@@ -10,7 +10,7 @@ module Doorkeeper
   # that returns configuration Builder class. This exception raises when they don't
   # define it.
   #
-  class Config
+  class Config # rubocop:disable Metrics/ClassLength
     # Default Doorkeeper configuration builder
     class Builder < AbstractBuilder
       # Provide support for an owner to be assigned to each registered
