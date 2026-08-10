@@ -5,13 +5,13 @@ upgrade guides.
 
 User-visible changes worth mentioning.
 
-## main
+## 5.9.6
 
-- Please add here
+- Reject requests that present more than one client identity (e.g. an `Authorization: Basic` header for one client and a `client_id` parameter naming another) with an `invalid_request` error, instead of authenticating the first extracted identity and silently discarding the other one. A `client_id` sent alongside another authentication method keeps working when it identifies the same client (RFC 7521 §4.2).
 
 ## 5.9.5
 
-- [#1901] Reject requests that authenticate the client with more than one method (RFC 6749 §2.3) with an `invalid_request` error, instead of silently authenticating with the first method that matched and discarding the other credentials.
+- Reject requests that authenticate the client with more than one method (RFC 6749 §2.3) with an `invalid_request` error, instead of silently authenticating with the first method that matched and discarding the other credentials.
 - [#1853] Fix `reuse_access_token` reusing a token that was created with `custom_access_token_attributes` values when the new request doesn't specify any custom attributes. Such requests now only match tokens without custom attributes.
 
 ## 5.9.3

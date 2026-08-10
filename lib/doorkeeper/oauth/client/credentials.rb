@@ -10,9 +10,10 @@ module Doorkeeper
           # credentials wins, as it always has.
           #
           # Raises Errors::MultipleClientAuthMethods when the request
-          # authenticates the client with more than one method, which RFC 6749
-          # §2.3 forbids ("The client MUST NOT use more than one authentication
-          # method in each request").
+          # authenticates the client with more than one method, or presents
+          # more than one client identity, which RFC 6749 §2.3 forbids ("The
+          # client MUST NOT use more than one authentication method in each
+          # request").
           def from_request(request, *credentials_methods)
             # Callable extractors are opaque: they may legitimately overlap the
             # built-in methods they are configured with, and evaluating all of
@@ -30,6 +31,15 @@ module Doorkeeper
             # explicitly allows a client_id next to another authentication
             # method.
             raise Errors::MultipleClientAuthMethods if credentials.count { |c| c.secret.present? } > 1
+
+            # §4.2 allows that bare client_id because it identifies the *same*
+            # client as the authentication method it accompanies. Credentials
+            # naming two different clients are two client identities in one
+            # request and authenticate neither: without this check the first
+            # extracted uid would win and the other identity would be silently
+            # discarded, so the caller could authenticate as one client while
+            # the request asks to act as another.
+            raise Errors::MultipleClientAuthMethods if credentials.uniq(&:uid).size > 1
 
             credentials.first
           end

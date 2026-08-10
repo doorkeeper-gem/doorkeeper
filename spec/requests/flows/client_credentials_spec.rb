@@ -230,6 +230,48 @@ RSpec.describe "Client Credentials Request" do
     end
   end
 
+  context "when the request presents more than one client identity" do
+    let(:other_client) { FactoryBot.create :application }
+
+    it "does not authenticate as the Basic client when the body names another client" do
+      headers = authorization client.uid, client.secret
+      params  = {
+        grant_type: "client_credentials",
+        client_id: other_client.uid,
+      }
+
+      expect do
+        post "/oauth/token", params: params, headers: headers
+      end.not_to change(Doorkeeper::AccessToken, :count)
+
+      expect(response.status).to eq(400)
+      expect(json_response).to match(
+        "error" => "invalid_request",
+        "error_description" => translated_invalid_request_error_message(:multiple_client_auth_methods, nil),
+      )
+    end
+
+    it "does not authenticate as the public client a secretless Basic header names" do
+      public_client = FactoryBot.create :application, confidential: false
+      headers = { "HTTP_AUTHORIZATION" => "Basic #{Base64.strict_encode64(public_client.uid)}" }
+      params  = {
+        grant_type: "client_credentials",
+        client_id: other_client.uid,
+        client_secret: other_client.secret,
+      }
+
+      expect do
+        post "/oauth/token", params: params, headers: headers
+      end.not_to change(Doorkeeper::AccessToken, :count)
+
+      expect(response.status).to eq(400)
+      expect(json_response).to match(
+        "error" => "invalid_request",
+        "error_description" => translated_invalid_request_error_message(:multiple_client_auth_methods, nil),
+      )
+    end
+  end
+
   context "when revoke_previous_client_credentials_token is true" do
     before do
       allow(Doorkeeper.config).to receive_messages(reuse_access_token: false, revoke_previous_client_credentials_token?: true)
