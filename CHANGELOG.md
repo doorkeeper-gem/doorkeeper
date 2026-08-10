@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#1906] Internal: exempt `Doorkeeper::Config` from `Metrics/ClassLength` with a directive on the class itself instead of raising the cop's global ceiling, so adding a configuration option no longer trips the limit.
+- Fix: the `client_secret_basic` strategy now requires a `client_id` sent in the request body to name the same client as the `Authorization: Basic` header — the RFC 7521 §4.2 agreement check `private_key_jwt` already applies to an assertion's issuer. A request presenting Basic credentials for one client and a `client_id` for another was authenticated as the Basic client, silently discarding the other identity. A bare `client_id` is not a client authentication method of its own, so the RFC 6749 §2.3 multiple-methods check does not (and should not) count it.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.beta2
