@@ -42,6 +42,7 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
       code_challenge
       code_challenge_method
       resource_indicators
+      resource_indicator_storage
     ])
   end
 
@@ -323,6 +324,51 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
 
     it "is not authorizable" do
       expect(pre_auth).not_to be_authorizable
+    end
+  end
+
+  # resource_indicator_validator is configured but the generator that adds the
+  # `resource` column was never run, so there is nowhere to record the audience
+  # the client is asking for. Issuing the grant raised MissingResourceColumn
+  # out of Authorization::Code, which the authorization endpoint does not
+  # rescue.
+  context "when a resource is requested but the resource column is missing" do
+    let(:attributes) do
+      {
+        client_id: client.uid,
+        response_type: "code",
+        redirect_uri: "https://app.com/callback",
+        resource: "https://api.example.com/",
+      }
+    end
+
+    before do
+      config_is_set(:resource_indicator_validator, ->(_indicators, _client) { true })
+      allow(Doorkeeper.config.access_grant_model).to receive(:resource_indicators_supported?).and_return(false)
+      allow(Doorkeeper.config.access_token_model).to receive(:resource_indicators_supported?).and_return(false)
+    end
+
+    it "is not authorizable" do
+      expect(pre_auth).not_to be_authorizable
+    end
+
+    it "answers server_error rather than raising out of the endpoint" do
+      pre_auth.authorizable?
+
+      expect(pre_auth.error).to eq(Doorkeeper::Errors::ServerError)
+    end
+
+    it "still answers invalid_target when the requested resource is malformed" do
+      pre_auth = described_class.new(server, attributes.merge(resource: "not-an-absolute-uri"))
+      pre_auth.authorizable?
+
+      expect(pre_auth.error).to eq(Doorkeeper::Errors::InvalidTarget)
+    end
+
+    it "authorizes a request that asks for no resource at all" do
+      pre_auth = described_class.new(server, attributes.except(:resource))
+
+      expect(pre_auth).to be_authorizable
     end
   end
 

@@ -17,6 +17,9 @@ module Doorkeeper
       validate :code_challenge, error: Errors::InvalidRequest
       validate :code_challenge_method, error: Errors::InvalidCodeChallengeMethod
       validate :resource_indicators, error: Errors::InvalidTarget
+      # Runs after :resource_indicators so a malformed target is still answered
+      # as the client's error rather than the server's.
+      validate :resource_indicator_storage, error: Errors::ServerError
 
       attr_reader :client, :code_challenge, :code_challenge_method, :missing_param,
                   :redirect_uri, :resource_owner, :response_type, :state,
@@ -205,6 +208,25 @@ module Doorkeeper
         true
       rescue Errors::InvalidTarget
         false
+      end
+
+      # A client asking for a resource this server cannot record the audience
+      # of is a misconfiguration — resource_indicator_validator is set, but the
+      # `resource` column the doorkeeper:resource_indicators generator adds is
+      # not there. Issuing the grant would raise MissingResourceColumn out of
+      # Authorization::Code, which the authorization endpoint does not rescue,
+      # so the misconfiguration reached the client as a 500. Answering
+      # server_error here instead matches what the token endpoint already makes
+      # of the same exception, and RFC 6749 Section 4.1.2.1 lists server_error
+      # among the errors returned through the redirection URI.
+      #
+      # Only requests that actually ask for a resource are refused: without the
+      # parameter there is nothing to record, and a misconfigured server would
+      # otherwise stop authorizing anyone at all.
+      def validate_resource_indicator_storage
+        return true if @resource_indicators.blank?
+
+        ResourceIndicatorValidator.storage_ready?
       end
 
       def response_on_fragment?

@@ -155,10 +155,11 @@ module Doorkeeper
         config.pkce_code_challenge_methods_supported
       end
 
+      # The same predicate the endpoints gate on, so the document cannot
+      # advertise a `resource` parameter they would refuse, or stay silent
+      # about one they honour.
       def resource_indicators_supported?
-        config.resource_indicator_validator.present? &&
-          Doorkeeper.config.access_grant_model.resource_indicators_supported? &&
-          Doorkeeper.config.access_token_model.resource_indicators_supported?
+        config.resource_indicator_validator.present? && ResourceIndicatorValidator.storage_ready?
       end
     end
   end
