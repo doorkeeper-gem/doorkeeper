@@ -30,6 +30,7 @@ jobs:
           - gemfiles/rails_7_1.gemfile
           - gemfiles/rails_7_2.gemfile
           - gemfiles/rails_8_0.gemfile
+          - gemfiles/rails_8_1.gemfile
     steps:
       - name: Repo checkout
         uses: actions/checkout@v7.0.1
@@ -85,6 +86,7 @@ jobs:
           - gemfiles/rails_7_1.gemfile
           - gemfiles/rails_7_2.gemfile
           - gemfiles/rails_8_0.gemfile
+          - gemfiles/rails_8_1.gemfile
     runs-on: ubuntu-latest
     env:
       BUNDLE_GEMFILE: ${{ matrix.gemfile }}
