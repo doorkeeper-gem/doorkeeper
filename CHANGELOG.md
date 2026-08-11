@@ -80,6 +80,10 @@ and changelog below before the update since this version includes breaking chang
 - [#1869] Improve test coverage
 - [#1870] Fix: raise the intended `Doorkeeper::Errors::TokenGeneratorNotFound` / `UnableToGenerateToken` (instead of a confusing `NameError`) when `application_secret_generator` is misconfigured.
 
+## 5.9.6
+
+- Reject requests that present more than one client identity (e.g. an `Authorization: Basic` header for one client and a `client_id` parameter naming another) with an `invalid_request` error, instead of authenticating the first extracted identity and silently discarding the other one. A `client_id` sent alongside another authentication method keeps working when it identifies the same client (RFC 7521 §4.2). Like the RFC 6749 §2.3 check released in 5.9.5, this validation does not apply when `client_credentials` is configured with a callable extractor, since the credentials the remaining extractors would return are never evaluated — the `client_credentials` option documents that now.
+
 ## 5.9.5
 
 - [#1901] Reject requests that authenticate the client with more than one method (RFC 6749 §2.3) with an `invalid_request` error, instead of silently authenticating with the first method that matched and discarding the other credentials.
