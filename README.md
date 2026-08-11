@@ -39,6 +39,7 @@ Supported features:
   - [Grape](#grape)
 - [ORMs](#orms)
 - [Extensions](#extensions)
+- [Database maintenance](#database-maintenance)
 - [Resource Indicators](#resource-indicators)
 - [Custom Grant Flows](#custom-grant-flows)
 - [Custom Client Authentication Methods](#custom-client-authentication-methods)
@@ -111,7 +112,7 @@ Extensions that are not included by default and can be installed separately.
 | CIBA - Client Initiated Backchannel Authentication Flow extension | [doorkeeper-ciba](https://github.com/autoseg/doorkeeper-ciba) |
 | Device Authorization Grant | [doorkeeper-device_authorization_grant](https://github.com/exop-group/doorkeeper-device_authorization_grant) |
 
-### Database maintenance
+## Database maintenance
 
 Doorkeeper does **not** automatically remove expired or revoked tokens and grants. The `oauth_access_tokens` and `oauth_access_grants` tables grow indefinitely and can reach millions of rows if left unmanaged.
 
