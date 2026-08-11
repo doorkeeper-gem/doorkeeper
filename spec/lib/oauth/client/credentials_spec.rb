@@ -111,6 +111,18 @@ class Doorkeeper::OAuth::Client
           expect(credentials.secret).to eq("basic-secret")
         end
 
+        it "ignores a blank client_id in the params (RFC 6749 §3.1: sent without a value == omitted)" do
+          request = double(
+            authorization: "Basic #{Base64.encode64("uid:basic-secret")}",
+            parameters: { client_id: "" },
+          )
+
+          credentials = described_class.from_request(request, :from_basic, :from_params)
+
+          expect(credentials.uid).to    eq("uid")
+          expect(credentials.secret).to eq("basic-secret")
+        end
+
         it "returns the params credentials of a public client sending no Basic header" do
           request = double(
             authorization: nil,
