@@ -214,6 +214,34 @@ RSpec.describe "Client Credentials Request" do
     end
   end
 
+  context "when the request presents more than one client identity" do
+    it "does not authenticate as the Basic client when the body names another client" do
+      other_client = FactoryBot.create :application
+      headers = authorization client.uid, client.secret
+      params  = { grant_type: "client_credentials", client_id: other_client.uid }
+
+      expect do
+        post token_endpoint_url, params: params, headers: headers
+      end.not_to change(Doorkeeper::AccessToken, :count)
+
+      expect(response.status).to eq(401)
+      expect(json_response).to match(
+        "error" => "invalid_client",
+        "error_description" => translated_error_message(:invalid_client),
+      )
+    end
+
+    it "authorizes the client that identifies itself with the same client_id (RFC 7521 §4.2)" do
+      headers = authorization client.uid, client.secret
+      params  = { grant_type: "client_credentials", client_id: client.uid }
+
+      post token_endpoint_url, params: params, headers: headers
+
+      expect(response.status).to eq(200)
+      expect(json_response).to include("access_token" => Doorkeeper::AccessToken.first.token)
+    end
+  end
+
   context "when revoke_previous_client_credentials_token is true" do
     before do
       allow(Doorkeeper.config).to receive_messages(reuse_access_token: false, revoke_previous_client_credentials_token?: true)

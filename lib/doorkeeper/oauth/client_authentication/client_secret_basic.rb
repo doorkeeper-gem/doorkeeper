@@ -32,6 +32,19 @@ module Doorkeeper
           client_id, client_secret = credentials_from(request)
           return unless client_id
 
+          # RFC 7521 §4.2: a client_id parameter sent alongside another
+          # authentication method must agree with the identity that method
+          # establishes — the same check PrivateKeyJwt applies to an
+          # assertion's issuer. A request carrying credentials for one client
+          # and a client_id naming another presents two client identities and
+          # authenticates neither: without this it would be authenticated as
+          # the Basic client while the body asked to act as a different one,
+          # with nothing signalling the mismatch. A bare client_id is not an
+          # authentication method of its own, so +validate_client_authentication!+
+          # deliberately doesn't count it and cannot catch this.
+          request_client_id = request.request_parameters["client_id"] || request.request_parameters[:client_id]
+          return if request_client_id.present? && request_client_id != client_id
+
           Doorkeeper::ClientAuthentication::Credentials.new(client_id, client_secret)
         end
 
