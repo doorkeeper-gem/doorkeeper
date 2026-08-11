@@ -283,6 +283,14 @@ Doorkeeper.configure do
   # Check out https://github.com/doorkeeper-gem/doorkeeper/wiki/Changing-how-clients-are-authenticated
   # for more information on customization
   #
+  # NOTE: configuring a callable extractor opts the request out of the RFC 6749
+  # §2.3 checks that reject a request authenticating the client with more than
+  # one method, or presenting more than one client identity. A callable may
+  # legitimately overlap the built-in extractors, and the extractors after the
+  # matching one are never called, so what they would have returned is unknown.
+  # Prefer the symbol extractors unless you need something they cannot express;
+  # a callable has to reject such a request itself.
+  #
   # client_credentials :from_basic, :from_params
 
   # Change the way access token is authenticated from the request object.

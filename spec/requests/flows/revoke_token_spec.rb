@@ -102,6 +102,24 @@ RSpec.describe "Revoke Token Flow" do
       end
     end
 
+    context "when the request presents more than one client identity" do
+      it "does not revoke the token of the client the Basic header authenticates" do
+        post revocation_token_endpoint_url,
+             params: {
+               client_id: public_client_application.uid,
+               token: access_token.token,
+             },
+             headers: headers
+
+        expect(response).to have_http_status(:bad_request)
+        expect(json_response).to include(
+          "error" => "invalid_request",
+          "error_description" => translated_invalid_request_error_message(:multiple_client_auth_methods, nil),
+        )
+        expect(access_token.reload).not_to be_revoked
+      end
+    end
+
     context "with valid token for another client application" do
       let(:other_client_application) { FactoryBot.create :application }
       let(:headers) do

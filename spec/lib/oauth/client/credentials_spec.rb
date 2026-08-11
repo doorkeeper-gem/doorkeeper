@@ -76,23 +76,70 @@ class Doorkeeper::OAuth::Client
         end
       end
 
-      context "when only one of the methods authenticates the client" do
-        it "returns the params credentials of a public client sending a Basic header" do
+      context "when the request presents more than one client identity" do
+        it "raises when a bare client_id names another client than the Basic header" do
           request = double(
             authorization: "Basic #{Base64.encode64("basic-uid:basic-secret")}",
             parameters: { client_id: "param-uid" },
           )
 
-          expect(described_class.from_request(request, :from_basic, :from_params).uid).to eq("basic-uid")
+          expect { described_class.from_request(request, :from_basic, :from_params) }
+            .to raise_error(Doorkeeper::Errors::MultipleClientAuthMethods)
         end
 
-        it "keeps returning the first credentials when the Basic header carries no secret" do
+        it "does not raise when a callable extractor is configured" do
+          request = double(
+            authorization: "Basic #{Base64.encode64("basic-uid:basic-secret")}",
+            parameters: { client_id: "param-uid" },
+          )
+          extractor = ->(req) { req.parameters.values_at(:client_id, :client_secret) }
+
+          expect(described_class.from_request(request, :from_basic, extractor).uid).to eq("basic-uid")
+        end
+
+        it "raises when the Basic header carries a bare uid and the params another client" do
           request = double(
             authorization: "Basic #{Base64.encode64("basic-uid")}",
             parameters: { client_id: "param-uid", client_secret: "param-secret" },
           )
 
-          expect(described_class.from_request(request, :from_basic, :from_params).uid).to eq("basic-uid")
+          expect { described_class.from_request(request, :from_basic, :from_params) }
+            .to raise_error(Doorkeeper::Errors::MultipleClientAuthMethods)
+        end
+      end
+
+      context "when only one of the methods authenticates the client" do
+        it "returns the credentials of a client that also identifies itself in the params" do
+          request = double(
+            authorization: "Basic #{Base64.encode64("uid:basic-secret")}",
+            parameters: { client_id: "uid" },
+          )
+
+          credentials = described_class.from_request(request, :from_basic, :from_params)
+
+          expect(credentials.uid).to    eq("uid")
+          expect(credentials.secret).to eq("basic-secret")
+        end
+
+        it "ignores a blank client_id in the params (RFC 6749 §3.1: sent without a value == omitted)" do
+          request = double(
+            authorization: "Basic #{Base64.encode64("uid:basic-secret")}",
+            parameters: { client_id: "" },
+          )
+
+          credentials = described_class.from_request(request, :from_basic, :from_params)
+
+          expect(credentials.uid).to    eq("uid")
+          expect(credentials.secret).to eq("basic-secret")
+        end
+
+        it "returns the params credentials of a public client sending no Basic header" do
+          request = double(
+            authorization: nil,
+            parameters: { client_id: "param-uid" },
+          )
+
+          expect(described_class.from_request(request, :from_basic, :from_params).uid).to eq("param-uid")
         end
       end
     end
