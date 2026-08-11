@@ -111,6 +111,18 @@ Extensions that are not included by default and can be installed separately.
 | CIBA - Client Initiated Backchannel Authentication Flow extension | [doorkeeper-ciba](https://github.com/autoseg/doorkeeper-ciba) |
 | Device Authorization Grant | [doorkeeper-device_authorization_grant](https://github.com/exop-group/doorkeeper-device_authorization_grant) |
 
+### Database maintenance
+
+Doorkeeper does **not** automatically remove expired or revoked tokens and grants. The `oauth_access_tokens` and `oauth_access_grants` tables grow indefinitely and can reach millions of rows if left unmanaged.
+
+Prune them periodically with the bundled rake task:
+
+```bash
+bundle exec rake doorkeeper:db:cleanup
+```
+
+This deletes expired and revoked access tokens and grants. See the [Rake tasks guide](https://doorkeeper.gitbook.io/guides/internals/rake) for details.
+
 ## Resource Indicators
 
 Doorkeeper supports [Resource Indicators for OAuth 2.0 (RFC 8707)](https://datatracker.ietf.org/doc/html/rfc8707), allowing clients to signal which protected resource(s) they intend to access. Tokens are then audience-restricted to those resources.
