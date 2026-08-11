@@ -69,6 +69,10 @@ module Doorkeeper
       # falls back to the `:client_id` and `:client_secret` params from the
       # `params` object.
       #
+      # NOTE: a list that includes a callable extractor opts out of the RFC 6749
+      # §2.3 validation applied to the symbol extractors — see
+      # +Doorkeeper::OAuth::Client::Credentials.from_request+.
+      #
       # @param methods [Array] Define client credentials
       def client_credentials(*methods)
         @config.instance_variable_set(:@client_credentials_methods, methods)

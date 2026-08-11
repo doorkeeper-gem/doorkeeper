@@ -19,7 +19,12 @@ module Doorkeeper
             # built-in methods they are configured with, and evaluating all of
             # them would also break the existing contract that the extractors
             # after the matching one are not called. Such configurations keep
-            # the historical behaviour untouched.
+            # the historical behaviour untouched, including the fact that a
+            # request authenticating with more than one method, or presenting
+            # more than one client identity, resolves to the first extracted
+            # credentials instead of being rejected: the extractor that would
+            # have surfaced the second identity is never evaluated. The
+            # +client_credentials+ configuration option documents this.
             return first_from_request(request, credentials_methods) unless credentials_methods.all?(Symbol)
 
             credentials = credentials_methods.filter_map { |method| extract(request, method) }

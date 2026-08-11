@@ -87,6 +87,16 @@ class Doorkeeper::OAuth::Client
             .to raise_error(Doorkeeper::Errors::MultipleClientAuthMethods)
         end
 
+        it "does not raise when a callable extractor is configured" do
+          request = double(
+            authorization: "Basic #{Base64.encode64("basic-uid:basic-secret")}",
+            parameters: { client_id: "param-uid" },
+          )
+          extractor = ->(req) { req.parameters.values_at(:client_id, :client_secret) }
+
+          expect(described_class.from_request(request, :from_basic, extractor).uid).to eq("basic-uid")
+        end
+
         it "raises when the Basic header carries a bare uid and the params another client" do
           request = double(
             authorization: "Basic #{Base64.encode64("basic-uid")}",
