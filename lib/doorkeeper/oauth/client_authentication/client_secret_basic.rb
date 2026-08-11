@@ -42,8 +42,8 @@ module Doorkeeper
           # with nothing signalling the mismatch. A bare client_id is not an
           # authentication method of its own, so +validate_client_authentication!+
           # deliberately doesn't count it and cannot catch this.
-          params = request.request_parameters.with_indifferent_access
-          return if params[:client_id].present? && params[:client_id] != client_id
+          request_client_id = request.request_parameters["client_id"] || request.request_parameters[:client_id]
+          return if request_client_id.present? && request_client_id != client_id
 
           Doorkeeper::ClientAuthentication::Credentials.new(client_id, client_secret)
         end

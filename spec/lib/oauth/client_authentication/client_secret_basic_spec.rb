@@ -104,6 +104,18 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::ClientSecretBasic do
       expect(credentials.secret).to eq("client_secret")
     end
 
+    it "ignores a blank body client_id (RFC 6749 §3.1: sent without a value == omitted)" do
+      request = mock_request(
+        authorization: ActionController::HttpAuthentication::Basic.encode_credentials("client_id", "client_secret"),
+        request_parameters: { client_id: "" },
+      )
+
+      credentials = described_class.authenticate(request)
+
+      expect(credentials.uid).to eq("client_id")
+      expect(credentials.secret).to eq("client_secret")
+    end
+
     it "returns nil when the body client_id names another client" do
       request = mock_request(
         authorization: ActionController::HttpAuthentication::Basic.encode_credentials("client_id", "client_secret"),
