@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1906] Internal: exempt `Doorkeeper::Config` from `Metrics/ClassLength` with a directive on the class itself instead of raising the cop's global ceiling, so adding a configuration option no longer trips the limit.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.beta2

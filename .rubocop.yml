@@ -29,8 +29,6 @@ Metrics/BlockLength:
     - spec/**/*
     - lib/doorkeeper/rake/*
     - doorkeeper.gemspec
-Metrics/ClassLength:
-  Max: 300
 Metrics/MethodLength:
   Exclude:
     - spec/dummy/db/**/*
