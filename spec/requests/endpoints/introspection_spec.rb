@@ -31,6 +31,33 @@ RSpec.describe "Introspection endpoint" do
     expect(json_response).to include("active" => true)
   end
 
+  context "when authenticating the client with an access token" do
+    let(:authorized_token) { FactoryBot.create(:access_token, application: client) }
+
+    it "authorizes the request" do
+      post introspection_endpoint_url,
+           params: { token: access_token.token },
+           headers: { "HTTP_AUTHORIZATION" => "Bearer #{authorized_token.token}" }
+
+      expect(response).to be_successful
+      expect(json_response).to include("active" => true)
+    end
+
+    context "when the authorized token uses dpop" do
+      before { authorized_token.update!(dpop_jkt: "jkt_abc") }
+
+      it "rejects the request" do
+        post introspection_endpoint_url,
+             params: { token: access_token.token },
+             headers: { "HTTP_AUTHORIZATION" => "Bearer #{authorized_token.token}" }
+
+        expect(response).to have_http_status(:unauthorized)
+        expect(json_response).to include("error" => "invalid_token")
+        expect(json_response).not_to include("active")
+      end
+    end
+  end
+
   it "does not read client credentials from the query string (RFC 6749 §2.3.1)" do
     query = build_query(client_id: client.uid, client_secret: client.secret)
 
