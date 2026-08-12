@@ -211,6 +211,7 @@ module Doorkeeper
 
       def valid_authorized_token?
         !authorized_token_matches_introspected? &&
+          !authorized_token.uses_dpop? &&
           authorized_token.accessible? &&
           token_introspection_allowed?(auth_token: authorized_token)
       end
