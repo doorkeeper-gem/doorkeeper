@@ -19,5 +19,16 @@ RSpec.describe Doorkeeper::OAuth::TokenIntrospection do
       expect(introspection.authorized?).to be(true)
       expect(introspection.error_response).to be_nil
     end
+
+    context "when the authorized token uses dpop" do
+      before { allow(authorized_token).to receive(:uses_dpop?).and_return(true) }
+
+      it "returns invalid_token error" do
+        introspection = described_class.new(server, introspected_token)
+
+        expect(introspection.authorized?).to be(false)
+        expect(introspection.error_response).to be_a(Doorkeeper::OAuth::InvalidTokenResponse)
+      end
+    end
   end
 end
