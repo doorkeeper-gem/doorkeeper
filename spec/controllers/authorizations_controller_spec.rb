@@ -1645,4 +1645,78 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
     end
   end
+
+  # A resource_indicator_validator configured without the migration that adds
+  # the `resource` column used to raise MissingResourceColumn out of
+  # Authorization::Code and Authorization::Token, which this controller does
+  # not rescue: an operator's misconfiguration reached the client as a 500,
+  # triggered by a parameter any client can send.
+  describe "POST #create when the resource column is missing" do
+    before do
+      config_is_set(:resource_indicator_validator, ->(_indicators, _client) { true })
+      allow(Doorkeeper.config.access_grant_model).to receive(:resource_indicators_supported?).and_return(false)
+      allow(Doorkeeper.config.access_token_model).to receive(:resource_indicators_supported?).and_return(false)
+    end
+
+    def authorization_code_flow!
+      allow(Doorkeeper.config).to receive_messages(
+        grant_flows: ["authorization_code"],
+        authenticate_resource_owner: ->(_) { authenticator_method },
+      )
+      allow(controller).to receive(:authenticator_method).and_return(user)
+    end
+
+    def query_error
+      Rack::Utils.parse_query(URI.parse(response.location).query)["error"]
+    end
+
+    it "redirects an authorization code request with server_error" do
+      authorization_code_flow!
+
+      expect do
+        post :create, params: {
+          client_id: client.uid, response_type: "code",
+          redirect_uri: client.redirect_uri, resource: "https://api.example.com/",
+        }
+      end.not_to raise_error
+
+      expect(response).to be_redirect
+      expect(query_error).to eq("server_error")
+    end
+
+    it "redirects an implicit request with server_error on the fragment" do
+      expect do
+        post :create, params: {
+          client_id: client.uid, response_type: "token",
+          redirect_uri: client.redirect_uri, resource: "https://api.example.com/",
+        }
+      end.not_to raise_error
+
+      expect(response).to be_redirect
+      expect(response.query_params["error"]).to eq("server_error")
+    end
+
+    it "issues no grant or token" do
+      authorization_code_flow!
+
+      post :create, params: {
+        client_id: client.uid, response_type: "code",
+        redirect_uri: client.redirect_uri, resource: "https://api.example.com/",
+      }
+
+      expect(Doorkeeper::AccessGrant.count).to eq(0)
+      expect(Doorkeeper::AccessToken.count).to eq(0)
+    end
+
+    it "still authorizes a request that asks for no resource" do
+      authorization_code_flow!
+
+      post :create, params: {
+        client_id: client.uid, response_type: "code", redirect_uri: client.redirect_uri,
+      }
+
+      expect(response).to be_redirect
+      expect(Rack::Utils.parse_query(URI.parse(response.location).query)).to have_key("code")
+    end
+  end
 end

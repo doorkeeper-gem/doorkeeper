@@ -13,6 +13,16 @@ module Doorkeeper
     module ResourceIndicatorValidator
       module_function
 
+      # Whether there is anywhere to record the audience a token was restricted
+      # to: the `resource` column the doorkeeper:resource_indicators generator
+      # adds to both tables. RFC 8707 also needs a policy deciding which
+      # resources are acceptable (resource_indicator_validator), so callers
+      # asking whether the extension is usable check both.
+      def storage_ready?
+        Doorkeeper.config.access_grant_model.resource_indicators_supported? &&
+          Doorkeeper.config.access_token_model.resource_indicators_supported?
+      end
+
       # Validates and normalizes an array of resource indicator values.
       #
       # @param resource_indicators [Array<String>, String, nil] One or more resource URIs
