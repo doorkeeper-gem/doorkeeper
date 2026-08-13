@@ -5,10 +5,10 @@ module Doorkeeper
     include Doorkeeper::Rails::Helpers
 
     def show
-      if doorkeeper_token&.accessible?
+      if doorkeeper_token&.accessible? && doorkeeper_token_dpop_binding_satisfied?
         render json: doorkeeper_token_to_json, status: :ok
       else
-        error = OAuth::InvalidTokenResponse.new
+        error = doorkeeper_error
         response.headers.merge!(error.headers)
         render json: error_to_json(error), status: error.status
       end
