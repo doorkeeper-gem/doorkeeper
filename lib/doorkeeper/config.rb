@@ -182,6 +182,13 @@ module Doorkeeper
         @config.instance_variable_set(:@force_pkce, true)
       end
 
+      # Validate the authorization request's client_id and redirect_uri before
+      # authenticating the resource owner, so users are not sent through login
+      # for a request that can only fail (disabled by default)
+      def validate_client_before_resource_owner_authentication
+        @config.instance_variable_set(:@validate_client_before_resource_owner_authentication, true)
+      end
+
       # Use an API mode for applications generated with --api argument
       # It will skip applications controller, disable forgery protection
       def api_only
@@ -627,6 +634,10 @@ module Doorkeeper
 
     def force_pkce?
       option_set? :force_pkce
+    end
+
+    def validate_client_before_resource_owner_authentication?
+      option_set? :validate_client_before_resource_owner_authentication
     end
 
     def enforce_configured_scopes?

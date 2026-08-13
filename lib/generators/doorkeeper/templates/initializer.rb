@@ -202,6 +202,18 @@ Doorkeeper.configure do
   #
   # force_pkce
 
+  # Validate the authorization request's client_id and redirect_uri before
+  # authenticating the resource owner, so users are not sent through login for
+  # a request that can only fail (RFC 6749 Section 4.1.2.1 asks for the
+  # resource owner to be informed of an invalid client_id, Section 3.1.2.4 of
+  # an invalid redirect URI). Disabled by default: enabling it changes when
+  # your `resource_owner_authenticator` block runs, and lets an unauthenticated
+  # party learn whether a client_id is registered (client identifiers are not
+  # confidential per RFC 6749 Section 2.2). To refuse clients on your own terms
+  # as well, override Doorkeeper::AuthorizationsController#validate_client.
+  #
+  # validate_client_before_resource_owner_authentication
+
   # Hash access and refresh tokens before persisting them.
   # This will disable the possibility to use +reuse_access_token+
   # since plain values can no longer be retrieved.

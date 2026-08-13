@@ -327,6 +327,49 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
     end
   end
 
+  describe "#client_valid?" do
+    it "is valid for a registered client with a matching redirect_uri" do
+      expect(pre_auth.client_valid?).to be(true)
+      expect(pre_auth.error).to be_nil
+    end
+
+    it "is invalid with invalid_request when the client_id is missing" do
+      attributes[:client_id] = nil
+
+      expect(pre_auth.client_valid?).to be(false)
+      expect(pre_auth.error).to eq(Doorkeeper::Errors::InvalidRequest)
+      expect(pre_auth.missing_param).to eq(:client_id)
+    end
+
+    it "is invalid with invalid_client when the client is not registered" do
+      attributes[:client_id] = "unknown-client"
+
+      expect(pre_auth.client_valid?).to be(false)
+      expect(pre_auth.error).to eq(Doorkeeper::Errors::InvalidClient)
+    end
+
+    it "is invalid with invalid_redirect_uri when the redirect_uri does not match" do
+      attributes[:redirect_uri] = "https://other.example/callback"
+
+      expect(pre_auth.client_valid?).to be(false)
+      expect(pre_auth.error).to eq(Doorkeeper::Errors::InvalidRedirectUri)
+    end
+
+    it "does not run validations that depend on the resource owner" do
+      allow(Doorkeeper.configuration).to receive(:authorize_resource_owner_for_client).and_return(->(*_) { false })
+
+      expect(pre_auth.client_valid?).to be(true)
+    end
+
+    it "does not validate the remaining request parameters" do
+      attributes[:response_type] = "bogus"
+      attributes[:scope] = "unknown"
+
+      expect(pre_auth.client_valid?).to be(true)
+      expect(pre_auth).not_to be_authorizable
+    end
+  end
+
   # resource_indicator_validator is configured but the generator that adds the
   # `resource` column was never run, so there is nowhere to record the audience
   # the client is asking for. Issuing the grant raised MissingResourceColumn
