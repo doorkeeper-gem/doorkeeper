@@ -43,6 +43,7 @@ and changelog below before the update since this version includes breaking chang
 - [#1903] Fix: `revoke_previous_client_credentials_token` no longer revokes a client's live access token issued for a different `resource` ([#1886]), so a client can keep one audience-restricted token per resource server.
 - [#1905] [test] Cover `private_key_jwt` client authentication on the `client_credentials` grant, the one flow where an assertion is the client's only credential end to end. Test-only change.
 - [#1794] Add a minimally spec-compliant implementation of OAuth 2.0 Demonstrating Proof of Possession (DPoP, RFC 9449). DPoP is a sender-constraining mechanism that binds access tokens to a client's cryptographic key pair so an intercepted token is useless without the corresponding private key. Covers both halves of doorkeeper: issuing DPoP-bound access tokens (authorization server) and enforcing the key binding when authenticating (resource server). Fully opt-in — nothing changes for existing installations unless you run `rails generate doorkeeper:dpop` and migrate. Closes [#1655].
+- [#1794] Remove the private, undocumented `#config_methods` from `Helpers::Controller`. Overriding it in an engine controller (a subclass of `Doorkeeper::ApplicationMetalController` or `Doorkeeper::ApplicationController`) no longer changes the access token methods used by `doorkeeper_token`.
 - Please add here
 
 ## 6.0.0.beta1

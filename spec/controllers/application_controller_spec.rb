@@ -21,4 +21,6 @@ RSpec.describe Doorkeeper::ApplicationController, type: :controller do
       expect(response.body).to include("owner-sentinel")
     end
   end
+
+  include_examples "enforcing proof of possession using dpop"
 end
