@@ -2,6 +2,8 @@
 
 module Doorkeeper
   class TokenInfoController < Doorkeeper::ApplicationMetalController
+    include Doorkeeper::Rails::Helpers
+
     def show
       if doorkeeper_token&.accessible?
         render json: doorkeeper_token_to_json, status: :ok
