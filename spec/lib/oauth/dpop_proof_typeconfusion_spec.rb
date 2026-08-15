@@ -42,7 +42,7 @@ RSpec.describe Doorkeeper::OAuth::DPoPProof do
   def request_double(token)
     instance_double(
       ActionDispatch::Request,
-      headers: { "DPoP" => token },
+      env: { "HTTP_DPOP" => token },
       request_method: "POST",
       base_url: "https://example.com",
       path: "/oauth/token",

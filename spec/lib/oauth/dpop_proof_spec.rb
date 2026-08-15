@@ -6,11 +6,11 @@ RSpec.describe Doorkeeper::OAuth::DPoPProof do
   subject(:dpop_proof) { described_class.new(request, access_token) }
 
   let(:request) do
-    instance_double(ActionDispatch::Request, base_url:, headers: request_headers, path:, request_method:)
+    instance_double(ActionDispatch::Request, base_url:, env:, path:, request_method:)
   end
   let(:base_url) { "https://protected.example.net" }
+  let(:env) { { "HTTP_DPOP" => dpop_header } }
   let(:path) { "/resource" }
-  let(:request_headers) { ActionDispatch::Http::Headers.from_hash("HTTP_DPOP" => dpop_header) }
   let(:request_method) { "GET" }
 
   let(:access_token) { nil }
