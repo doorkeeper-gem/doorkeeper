@@ -21,11 +21,11 @@ module Doorkeeper
         @request = request
         @access_token = access_token
 
-        @dpop = request.headers["DPoP"]
+        @dpop = request.env["HTTP_DPOP"]
       end
 
       def blank?
-        request.headers["DPoP"].nil?
+        !request.env.key?("HTTP_DPOP")
       end
 
       def validate

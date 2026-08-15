@@ -6,11 +6,11 @@ RSpec.describe Doorkeeper::OAuth::DPoPProof do
   subject(:dpop_proof) { described_class.new(request, access_token) }
 
   let(:request) do
-    instance_double(ActionDispatch::Request, base_url:, headers: request_headers, path:, request_method:)
+    instance_double(ActionDispatch::Request, base_url:, env:, path:, request_method:)
   end
   let(:base_url) { "https://protected.example.net" }
+  let(:env) { { "HTTP_DPOP" => dpop_header } }
   let(:path) { "/resource" }
-  let(:request_headers) { ActionDispatch::Http::Headers.from_hash("HTTP_DPOP" => dpop_header) }
   let(:request_method) { "GET" }
 
   let(:access_token) { nil }
@@ -44,6 +44,28 @@ RSpec.describe Doorkeeper::OAuth::DPoPProof do
 
       expect(dpop_proof).not_to be_valid
       expect(dpop_proof.error).to eq(expected_error)
+    end
+  end
+
+  describe "#blank?" do
+    it "is false when the dpop header is presented" do
+      expect(dpop_proof).not_to be_blank
+    end
+
+    context "when dpop header is empty" do
+      let(:dpop_header) { "" }
+
+      it "is false since a presented header must be validated even if it is empty" do
+        expect(dpop_proof).not_to be_blank
+      end
+    end
+
+    context "when dpop header is not presented" do
+      let(:env) { {} }
+
+      it "is true" do
+        expect(dpop_proof).to be_blank
+      end
     end
   end
 
