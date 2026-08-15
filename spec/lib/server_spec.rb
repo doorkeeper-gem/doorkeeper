@@ -7,7 +7,7 @@ RSpec.describe Doorkeeper::Server do
 
   let(:context) { double("controller", request: request) }
   let(:request) do
-    instance_double(ActionDispatch::Request, headers: ActionDispatch::Http::Headers.from_hash({}))
+    instance_double(ActionDispatch::Request, env: {}, headers: ActionDispatch::Http::Headers.from_hash({}))
   end
 
   describe "#dpop_proof" do
