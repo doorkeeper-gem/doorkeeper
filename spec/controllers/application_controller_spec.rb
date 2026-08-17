@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "spec_helper_integration"
+require "spec_helper"
 
 RSpec.describe Doorkeeper::ApplicationController, type: :controller do
   describe "current_resource_owner view helper" do
