@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "spec_helper_integration"
+require "spec_helper"
 
 RSpec.describe Doorkeeper::ApplicationMetalController, type: :controller do
   render_views
