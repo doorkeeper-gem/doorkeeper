@@ -18,6 +18,7 @@ module Doorkeeper
         validate_refresh_token_flow
         validate_issuer_format
         validate_issuer_metadata_discoverability
+        validate_stateless_jwt_tokens
       end
 
       private
@@ -220,6 +221,40 @@ module Doorkeeper
       # issuer is written to the log, so credentials are not leaked there.
       def redacted_issuer
         issuer.to_s.sub(%r{//[^/@]*@}, "//***@")
+      end
+
+      def validate_stateless_jwt_tokens
+        return unless stateless_jwt_tokens?
+
+        if jwt_token_decoder.nil?
+          ::Rails.logger.warn(
+            "[DOORKEEPER] stateless_jwt_tokens is enabled but jwt_token_decoder is not configured. JWT tokens will fail to verify.",
+          )
+        end
+
+        if access_token_generator == "Doorkeeper::OAuth::Helpers::UniqueToken"
+          ::Rails.logger.warn(
+            "[DOORKEEPER] stateless_jwt_tokens is enabled but access_token_generator " \
+            "is the default opaque generator. " \
+            "Configure a JWT generator (e.g. '::Doorkeeper::JWT').",
+          )
+        end
+
+        if refresh_token_enabled?
+          ::Rails.logger.warn(
+            "[DOORKEEPER] stateless_jwt_tokens is enabled but refresh tokens are also enabled. " \
+            "Refresh tokens require database state and are " \
+            "unsupported in stateless mode; disable use_refresh_token.",
+          )
+        end
+
+        return unless reuse_access_token
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] stateless_jwt_tokens is enabled but reuse_access_token is also enabled. " \
+          "Token reuse requires database state and is " \
+          "unsupported in stateless mode; disable reuse_access_token.",
+        )
       end
     end
   end

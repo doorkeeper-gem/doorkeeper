@@ -135,6 +135,19 @@ Doorkeeper.configure do
   #
   # access_token_generator '::Doorkeeper::JWT'
 
+  # Stateless JWT tokens (issue #1600): verify presented JWTs in memory with no
+  # database read, and skip persisting tokens on issuance. Requires a JWT
+  # access_token_generator (above) and a jwt_token_decoder callable.
+  #
+  # stateless_jwt_tokens
+  #   jwt_token_decoder ->(raw) {
+  #     JWT.decode(raw, Rails.application.secrets.jwt_secret, true, algorithm: "HS256")[0]
+  #   }
+  #
+  # Limitations: stateless tokens cannot be revoked or refreshed server-side —
+  # keep access_token_expires_in short. Opaque tokens still use the database
+  # path and coexist with this mode.
+
   # The controller +Doorkeeper::ApplicationController+ inherits from.
   # Defaults to +ActionController::Base+ unless +api_only+ is set, which changes the default to
   # +ActionController::API+. The return value of this option must be a stringified class name.

@@ -14,11 +14,13 @@ module Doorkeeper
 
         def authenticate(request, *methods)
           if (token = from_request(request, *methods))
-            access_token = Doorkeeper.config.access_token_model.by_token(token)
-            if access_token.present? && Doorkeeper.config.refresh_token_enabled?
-              access_token.revoke_previous_refresh_token!
+            if Doorkeeper.config.stateless_jwt_tokens? && jwt?(token)
+              decode_stateless(token)
+            else
+              access_token = Doorkeeper.config.access_token_model.by_token(token)
+              access_token.revoke_previous_refresh_token! if access_token.present? && Doorkeeper.config.refresh_token_enabled?
+              access_token
             end
-            access_token
           end
         end
 
@@ -59,6 +61,37 @@ module Doorkeeper
 
         def match?(header, pattern)
           header&.match(pattern)
+        end
+
+        # Cheap structural check so opaque tokens fall through to the database path
+        # without invoking the decoder. A JWT has exactly three dot-separated segments.
+        def jwt?(token)
+          token.to_s.split(".").length == 3
+        end
+
+        # Decodes and verifies a presented JWT without a database read. Returns a
+        # StatelessToken on success, or nil on any failure (invalid signature,
+        # malformed payload) so the request is treated as unauthenticated.
+        def decode_stateless(raw)
+          decoder = Doorkeeper.config.jwt_token_decoder
+          return nil unless decoder
+
+          claims = decoder.call(raw)
+          return nil unless claims.is_a?(Hash)
+
+          application = resolve_stateless_application(claims)
+          OAuth::StatelessToken.new(claims: claims, application: application, raw_token: raw)
+        rescue StandardError
+          nil
+        end
+
+        def resolve_stateless_application(claims)
+          client_id = claims["client_id"]
+          return nil if client_id.blank?
+
+          Doorkeeper.config.application_model.find_by(uid: client_id)
+        rescue StandardError
+          nil
         end
       end
     end

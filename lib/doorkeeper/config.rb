@@ -182,6 +182,18 @@ module Doorkeeper
         @config.instance_variable_set(:@force_pkce, true)
       end
 
+      # Enables stateless JWT verification: presented Bearer tokens that decode as
+      # valid JWTs are verified in memory without a database lookup, and access
+      # tokens are not persisted on issuance. Requires a JWT access_token_generator
+      # (e.g. the doorkeeper-jwt gem) and a jwt_token_decoder callable.
+      #
+      # Stateless tokens cannot be revoked or refreshed server-side — rely on short
+      # access_token_expires_in for early invalidation. Opaque (non-JWT) tokens still
+      # use the database path and coexist with this mode.
+      def stateless_jwt_tokens
+        @config.instance_variable_set(:@stateless_jwt_tokens, true)
+      end
+
       # Use an API mode for applications generated with --api argument
       # It will skip applications controller, disable forgery protection
       def api_only
@@ -456,6 +468,19 @@ module Doorkeeper
     option :access_token_generator,
            default: "Doorkeeper::OAuth::Helpers::UniqueToken"
 
+    # Callable invoked to decode and verify a presented JWT access token.
+    # Receives the raw token string and must return a claims Hash on success,
+    # raising or returning nil on an invalid/expired signature.
+    #
+    # @example using the jwt gem
+    #   jwt_token_decoder ->(raw) {
+    #     JWT.decode(raw, hmac_secret, true, algorithm: "HS256")[0]
+    #   }
+    #
+    # Required when stateless_jwt_tokens is enabled.
+    option :jwt_token_decoder,
+           default: nil
+
     # Allows additional data to be received when granting access to an Application, and for this
     # additional data to be sent with subsequently generated access tokens. The access grant and
     # access token models will both need to respond to the specified attribute names.
@@ -623,6 +648,10 @@ module Doorkeeper
 
     def revoke_previous_authorization_code_token?
       option_set? :revoke_previous_authorization_code_token
+    end
+
+    def stateless_jwt_tokens?
+      option_set?(:stateless_jwt_tokens)
     end
 
     def force_pkce?

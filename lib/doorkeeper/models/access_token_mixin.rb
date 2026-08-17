@@ -284,6 +284,15 @@ module Doorkeeper
       def find_or_create_for(application:, resource_owner:, scopes:, **token_attributes)
         scopes = Doorkeeper::OAuth::Scopes.from_string(scopes) if scopes.is_a?(String)
 
+        if Doorkeeper.config.stateless_jwt_tokens?
+          return build_stateless_token(
+            application: application,
+            resource_owner: resource_owner,
+            scopes: scopes,
+            **token_attributes,
+          )
+        end
+
         if Doorkeeper.config.reuse_access_token
           # An empty hash must stay distinct from nil here: nil ignores custom
           # attributes when matching, while an empty hash only matches tokens
@@ -413,6 +422,52 @@ module Doorkeeper
         attributes.with_indifferent_access.slice(
           *Doorkeeper.configuration.custom_access_token_attributes,
         )
+      end
+
+      # Builds an in-memory StatelessToken (signed JWT) without persisting it.
+      # Used in stateless_jwt_tokens mode to skip the database write on issuance.
+      def build_stateless_token(application:, resource_owner:, scopes:, **token_attributes)
+        expires_in = token_attributes[:expires_in] || Doorkeeper.config.access_token_expires_in
+        iat = Time.now.utc
+        exp = expires_in ? (iat + expires_in.seconds).to_i : nil
+
+        claims = {
+          "resource_owner_id" => resource_owner_id_for(resource_owner),
+          "scope" => scopes.to_s,
+          "client_id" => application.try(:uid),
+          "iat" => iat.to_i,
+          "expires_in" => expires_in,
+        }
+        claims["exp"] = exp if exp
+        claims["resource_owner_type"] = resource_owner.class.name if Doorkeeper.config.polymorphic_resource_owner?
+        Doorkeeper.config.custom_access_token_attributes.each do |attr|
+          claims[attr.to_s] = token_attributes[attr] if token_attributes.key?(attr)
+        end
+
+        raw = stateless_token_generator.generate(
+          resource_owner_id: claims["resource_owner_id"],
+          scopes: scopes,
+          application: application,
+          expires_in: expires_in,
+          created_at: iat,
+        )
+
+        Doorkeeper::OAuth::StatelessToken.new(claims: claims, application: application, raw_token: raw)
+      end
+
+      private
+
+      # Resolves the configured access_token_generator class, mirroring the instance
+      # method #token_generator but callable from build_stateless_token.
+      def stateless_token_generator
+        generator_name = Doorkeeper.config.access_token_generator
+        generator = generator_name.constantize
+
+        return generator if generator.respond_to?(:generate)
+
+        raise Errors::UnableToGenerateToken, "#{generator} does not respond to `.generate`."
+      rescue NameError
+        raise Errors::TokenGeneratorNotFound, "#{generator_name} not found"
       end
     end
 
