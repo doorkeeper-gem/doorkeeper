@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "uri"
+
 module Doorkeeper
   module OAuth
     class DPoPProof
@@ -132,12 +134,24 @@ module Doorkeeper
       end
 
       def validate_htu
-        claims["htu"] == (request.base_url + request.path)
+        matches_ignoring_query_and_fragment?(request.url, claims["htu"])
       end
 
       def validate_signature
         ::JWT.decode(dpop, jwk.keypair, true, algorithms: [headers["alg"]])
       rescue ::JWT::DecodeError, ::JWT::JWKError
+        false
+      end
+
+      def matches_ignoring_query_and_fragment?(url, other_url)
+        url, other_url =
+          [URI.parse(url), URI.parse(other_url)].each do |u|
+            u.query = nil
+            u.fragment = nil
+          end
+
+        url == other_url
+      rescue URI::InvalidURIError
         false
       end
     end
