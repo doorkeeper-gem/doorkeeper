@@ -15,6 +15,7 @@ module Doorkeeper
         validate_token_reuse_limit
         validate_secret_strategies
         validate_pkce_code_challenge_methods
+        validate_dpop_signature_algorithms
         validate_custom_metadata
         validate_refresh_token_flow
         validate_issuer_format
@@ -150,6 +151,25 @@ module Doorkeeper
         )
 
         @pkce_code_challenge_methods = ["plain", "S256"]
+      end
+
+      def validate_dpop_signature_algorithms
+        return unless instance_variable_defined?(:@dpop_signature_algorithms)
+
+        algorithms = dpop_signature_algorithms.map(&:to_s)
+        allowed = Doorkeeper::OAuth::DPoPProof::ALLOWED_ALGORITHMS
+
+        if algorithms.any? && algorithms.all? { |algorithm| allowed.include?(algorithm) }
+          @dpop_signature_algorithms = algorithms
+          return
+        end
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] You have configured an invalid value for dpop_signature_algorithms option. " \
+          "Supported algorithms are #{allowed.join(", ")}. It will be set to default ['ES256', 'PS256'].",
+        )
+
+        @dpop_signature_algorithms = ["ES256", "PS256"]
       end
 
       def validate_custom_metadata

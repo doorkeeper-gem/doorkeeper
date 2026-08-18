@@ -3,6 +3,8 @@
 module Doorkeeper
   module OAuth
     class DPoPProof
+      ALLOWED_ALGORITHMS = %w[RS256 RS384 RS512 PS256 PS384 PS512 ES256 ES384 ES512].freeze
+
       include Validations
 
       validate :presence,          error: :blank
@@ -103,7 +105,8 @@ module Doorkeeper
       end
 
       def validate_signing_algorithm
-        Doorkeeper.config.dpop_signature_algorithms.include?(headers["alg"])
+        ALLOWED_ALGORITHMS.include?(headers["alg"]) &&
+          Doorkeeper.config.dpop_signature_algorithms.include?(headers["alg"])
       end
 
       def validate_jwk

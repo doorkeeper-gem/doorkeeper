@@ -753,7 +753,9 @@ Doorkeeper.configure do
   # dpop_iat_leeway 300
   #
   # Asymmetric JWS algorithms accepted for DPoP proof signatures.
-  # Defaults to %w[ES256 PS256].
+  # Defaults to %w[ES256 PS256]. Must be a subset of the algorithms supported by
+  # Doorkeeper: RS256/384/512, PS256/384/512, and ES256/384/512. Unsupported
+  # values are rejected and the default is used instead.
   #
   # dpop_signature_algorithms %w[ES256 PS256]
 end

@@ -1688,4 +1688,61 @@ RSpec.describe Doorkeeper::Config do
       end.not_to raise_error
     end
   end
+
+  describe "dpop_signature_algorithms" do
+    it "is ['ES256', 'PS256'] by default" do
+      expect(config.dpop_signature_algorithms).to eq(%w[ES256 PS256])
+    end
+
+    it "can be set to a valid subset of the supported algorithms" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        dpop_signature_algorithms ["ES256"]
+      end
+
+      expect(config.dpop_signature_algorithms).to eq(["ES256"])
+    end
+
+    it "normalizes symbols to strings" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        dpop_signature_algorithms [:ES256]
+      end
+
+      expect(config.dpop_signature_algorithms).to eq(["ES256"])
+    end
+
+    it "leaves the option undefined when it was not explicitly configured" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+
+      # Validation must not flip the "was it explicitly set?" signal that
+      # instance_variable_defined? carries for config options.
+      expect(config.instance_variable_defined?(:@dpop_signature_algorithms)).to be(false)
+      expect(config.dpop_signature_algorithms).to eq(%w[ES256 PS256])
+    end
+
+    it "resets to the default when an unsupported algorithm is configured" do
+      expect(Rails.logger).to receive(:warn).with(/dpop_signature_algorithms/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        dpop_signature_algorithms ["ES256", "none"]
+      end
+
+      expect(config.dpop_signature_algorithms).to eq(%w[ES256 PS256])
+    end
+
+    it "resets to the default when configured empty" do
+      expect(Rails.logger).to receive(:warn).with(/dpop_signature_algorithms/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        dpop_signature_algorithms []
+      end
+
+      expect(config.dpop_signature_algorithms).to eq(%w[ES256 PS256])
+    end
+  end
 end

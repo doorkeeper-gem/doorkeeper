@@ -5,6 +5,8 @@ require "spec_helper"
 RSpec.describe Doorkeeper::OAuth::DPoPProof do
   subject(:dpop_proof) { described_class.new(request, access_token) }
 
+  let(:dpop_signature_algorithms) { ["ES256"] }
+
   let(:request) do
     instance_double(ActionDispatch::Request, base_url:, env:, path:, request_method:)
   end
@@ -30,7 +32,7 @@ RSpec.describe Doorkeeper::OAuth::DPoPProof do
 
   before do
     allow(Doorkeeper).to receive(:config).and_return(
-      instance_double(Doorkeeper::Config, dpop_iat_leeway: 300, dpop_signature_algorithms: ["ES256"]),
+      instance_double(Doorkeeper::Config, dpop_iat_leeway: 300, dpop_signature_algorithms:),
     )
 
     Timecop.freeze(Time.current)
@@ -93,10 +95,20 @@ RSpec.describe Doorkeeper::OAuth::DPoPProof do
     end
 
     describe "alg" do
-      let(:alg) { "RS256" }
-      let(:signing_key) { OpenSSL::PKey::RSA.generate(2048) }
+      context "when the proof alg is not among the configured algorithms" do
+        let(:alg) { "RS256" }
+        let(:signing_key) { OpenSSL::PKey::RSA.generate(2048) }
 
-      include_examples "invalid because", :invalid_signing_algorithm
+        include_examples "invalid because", :invalid_signing_algorithm
+      end
+
+      context "when the configuration allows a disallowed algorithm" do
+        let(:alg) { "none" }
+        let(:dpop_header) { JWT.encode(claims, nil, "none", jwt_headers) }
+        let(:dpop_signature_algorithms) { %w[none] }
+
+        include_examples "invalid because", :invalid_signing_algorithm
+      end
     end
 
     describe "jwk" do
