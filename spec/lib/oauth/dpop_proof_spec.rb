@@ -8,12 +8,11 @@ RSpec.describe Doorkeeper::OAuth::DPoPProof do
   let(:dpop_signature_algorithms) { ["ES256"] }
 
   let(:request) do
-    instance_double(ActionDispatch::Request, base_url:, env:, path:, request_method:)
+    instance_double(ActionDispatch::Request, env:, request_method:, url:)
   end
-  let(:base_url) { "https://protected.example.net" }
   let(:env) { { "HTTP_DPOP" => dpop_header } }
-  let(:path) { "/resource" }
   let(:request_method) { "GET" }
+  let(:url) { "https://protected.example.net/resource" }
 
   let(:access_token) { nil }
 
@@ -21,7 +20,7 @@ RSpec.describe Doorkeeper::OAuth::DPoPProof do
 
   let(:claims) { { "jti" => "jti_01", "iat" => iat, "htm" => htm, "htu" => htu } }
   let(:htm) { request_method }
-  let(:htu) { base_url + path }
+  let(:htu) { url }
   let(:iat) { Time.current.to_i }
 
   let(:jwt_headers) { { "typ" => typ, "alg" => alg, "jwk" => jwk } }
@@ -192,15 +191,59 @@ RSpec.describe Doorkeeper::OAuth::DPoPProof do
 
     describe "htu" do
       context "when htu does not match request URI" do
-        let(:htu) { "#{base_url}/other" }
+        let(:htu) { "#{url}/other" }
 
         include_examples "invalid because", :invalid_htu
       end
 
-      context "when htu includes query string" do
-        let(:htu) { "#{base_url}#{path}?foo=bar" }
+      context "when htu matches the request URI but on a different port" do
+        let(:url) { "https://protected.example.net:8443/resource" }
+        let(:htu) { "https://protected.example.net:443/resource" }
 
         include_examples "invalid because", :invalid_htu
+      end
+
+      context "when htu is not a string" do
+        let(:claims) { super().merge("htu" => { "not" => "a string" }) }
+
+        include_examples "invalid because", :invalid_htu
+      end
+
+      context "when htu is not a parseable URI" do
+        let(:htu) { "http://[invalid" }
+
+        include_examples "invalid because", :invalid_htu
+      end
+
+      context "when htu includes a query string" do
+        let(:htu) { "#{url}?foo=bar" }
+
+        it "is valid" do
+          dpop_proof.validate
+          expect(dpop_proof).to be_valid
+          expect(dpop_proof.error).to be_nil
+        end
+      end
+
+      context "when htu includes a fragment" do
+        let(:htu) { "#{url}#section" }
+
+        it "is valid" do
+          dpop_proof.validate
+          expect(dpop_proof).to be_valid
+          expect(dpop_proof.error).to be_nil
+        end
+      end
+
+      context "when htu includes the default port" do
+        let(:url) { "https://protected.example.net/resource" }
+        let(:htu) { "https://protected.example.net:443/resource" }
+
+        it "is valid" do
+          dpop_proof.validate
+          expect(dpop_proof).to be_valid
+          expect(dpop_proof.error).to be_nil
+        end
       end
     end
 
