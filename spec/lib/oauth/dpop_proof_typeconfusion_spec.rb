@@ -44,8 +44,7 @@ RSpec.describe Doorkeeper::OAuth::DPoPProof do
       ActionDispatch::Request,
       env: { "HTTP_DPOP" => token },
       request_method: "POST",
-      base_url: "https://example.com",
-      path: "/oauth/token",
+      url: "https://example.com/oauth/token",
     )
   end
 
