@@ -1557,6 +1557,15 @@ RSpec.describe Doorkeeper::Config do
       expect(config.force_pkce?).to be(true)
     end
 
+    it "enables validate_client_before_resource_owner_authentication" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        validate_client_before_resource_owner_authentication
+      end
+
+      expect(config.validate_client_before_resource_owner_authentication?).to be(true)
+    end
+
     it "enables use_polymorphic_resource_owner" do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM

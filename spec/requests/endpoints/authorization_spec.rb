@@ -15,6 +15,61 @@ feature "Authorization endpoint" do
     i_should_be_on "/"
   end
 
+  scenario "requires resource owner to be authenticated even for an unknown client by default" do
+    visit authorization_endpoint_url(client_id: "unknown", redirect_uri: "https://app.example/callback")
+    i_should_see "Sign in"
+    i_should_be_on "/"
+  end
+
+  context "when validate_client_before_resource_owner_authentication is enabled" do
+    background do
+      config_is_set(:validate_client_before_resource_owner_authentication, true)
+    end
+
+    scenario "still requires authentication for a valid request" do
+      visit authorization_endpoint_url(client: @client)
+      i_should_see "Sign in"
+      i_should_be_on "/"
+    end
+
+    scenario "displays invalid_client error without requiring sign in" do
+      visit authorization_endpoint_url(client_id: "unknown", redirect_uri: "https://app.example/callback")
+      i_should_be_on "/oauth/authorize"
+      i_should_not_see "Authorize"
+      i_should_see_translated_error_message :invalid_client
+    end
+
+    scenario "displays invalid_request error without requiring sign in when the client_id is missing" do
+      visit authorization_endpoint_url(client: nil, response_type: "code")
+      i_should_be_on "/oauth/authorize"
+      i_should_not_see "Authorize"
+      i_should_see_translated_invalid_request_error_message :missing_param, :client_id
+    end
+
+    scenario "displays invalid_redirect_uri error without requiring sign in" do
+      visit authorization_endpoint_url(client: @client, redirect_uri: "https://mismatch.example/callback")
+      i_should_be_on "/oauth/authorize"
+      i_should_not_see "Authorize"
+      i_should_see_translated_error_message :invalid_redirect_uri
+    end
+
+    context "with handle_auth_errors :redirect" do
+      background do
+        config_is_set(:handle_auth_errors, :redirect)
+      end
+
+      # RFC 6749 §4.1.2.1: with the client_id missing the redirect_uri cannot
+      # be validated, so the error must be shown to the resource owner and
+      # never sent to the unvalidated URI (§3.1.2.4 says the same for a
+      # redirect URI that fails validation on its own).
+      scenario "renders the error instead of redirecting to an unvalidated redirect_uri" do
+        visit authorization_endpoint_url(client_id: nil, redirect_uri: "https://attacker.example/callback", response_type: "code")
+        i_should_be_on "/oauth/authorize"
+        i_should_see_translated_invalid_request_error_message :missing_param, :client_id
+      end
+    end
+  end
+
   context "with authenticated resource owner" do
     background do
       create_resource_owner

@@ -1068,6 +1068,110 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
     end
   end
 
+  describe "GET #new with validate_client_before_resource_owner_authentication" do
+    before do
+      allow(Doorkeeper.config).to receive(:validate_client_before_resource_owner_authentication?).and_return(true)
+    end
+
+    context "when the client is not registered" do
+      it "refuses the request without authenticating the resource owner" do
+        allow(Doorkeeper.config)
+          .to receive(:authenticate_resource_owner)
+          .and_return(->(*) { raise "resource owner authentication must not run" })
+
+        get :new, params: { client_id: "unknown", response_type: "token" }
+
+        expect(response).not_to be_redirect
+        expect(response).to have_http_status(:unauthorized)
+        expect(response.body).to include(ERB::Util.html_escape(translated_error_message(:invalid_client)))
+      end
+
+      it "renders a JSON error in API mode" do
+        allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
+
+        get :new, params: { client_id: "unknown", response_type: "token" }
+
+        expect(response).to have_http_status(:unauthorized)
+        expect(response_json_body["error"]).to eq("invalid_client")
+      end
+
+      it "raises with handle_auth_errors :raise" do
+        allow(Doorkeeper.configuration).to receive(:handle_auth_errors).and_return(:raise)
+
+        expect do
+          get :new, params: { client_id: "unknown", response_type: "token" }
+        end.to raise_error(Doorkeeper::Errors::InvalidClient)
+      end
+    end
+
+    context "when the request is valid" do
+      # Regression: the pre-authentication check builds a PreAuthorization
+      # without a resource owner. It must not leak into @pre_auth, or a
+      # configured authorize_resource_owner_for_client hook would see a nil
+      # owner and refuse the request with access_denied.
+      it "authorizes with an authorize_resource_owner_for_client hook that requires the owner" do
+        allow(Doorkeeper.configuration)
+          .to receive(:authorize_resource_owner_for_client)
+          .and_return(->(_client, owner) { owner == user })
+
+        get :new, params: {
+          client_id: client.uid,
+          response_type: "token",
+          redirect_uri: client.redirect_uri,
+        }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Authorize")
+      end
+    end
+  end
+
+  describe "GET #new with a host application overriding #validate_client" do
+    # A host app that has to refuse clients on its own terms (an allow-list, a
+    # registry lookup) subclasses the controller and calls +super+ first. It is
+    # given #client_pre_auth so it does not have to build a second
+    # PreAuthorization — and so it never touches #pre_auth, which would
+    # authenticate the resource owner and defeat the point of the option.
+    controller(described_class) do
+      private
+
+      def validate_client
+        super
+        return if performed?
+        return if client_pre_auth.client.application.uid == allowed_client_uid
+
+        head :forbidden
+      end
+    end
+
+    before do
+      allow(Doorkeeper.config).to receive_messages(
+        validate_client_before_resource_owner_authentication?: true,
+        authenticate_resource_owner: ->(*) { raise "resource owner authentication must not run" },
+      )
+      allow(controller).to receive(:allowed_client_uid).and_return(client.uid)
+      routes.draw { get "new" => "doorkeeper/authorizations#new" }
+    end
+
+    it "still refuses an unknown client with Doorkeeper's own error" do
+      get :new, params: { client_id: "unknown", response_type: "token" }
+
+      expect(response).to have_http_status(:unauthorized)
+    end
+
+    it "lets the override refuse a registered client before authentication" do
+      allow(controller).to receive(:allowed_client_uid).and_return("something-else")
+
+      get :new, params: {
+        client_id: client.uid,
+        response_type: "token",
+        redirect_uri: client.redirect_uri,
+      }
+
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
+
   describe "GET #new in API mode with errors" do
     before do
       allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)

@@ -2,6 +2,9 @@
 
 module Doorkeeper
   class AuthorizationsController < Doorkeeper::ApplicationController
+    before_action :validate_client,
+                  only: :new,
+                  if: -> { Doorkeeper.config.validate_client_before_resource_owner_authentication? }
     before_action :authenticate_resource_owner!
 
     def new
@@ -45,11 +48,57 @@ module Doorkeeper
 
       if Doorkeeper.configuration.redirect_on_errors? && pre_auth.error_response.redirectable?
         redirect_or_render(pre_auth.error_response)
-      elsif Doorkeeper.configuration.api_only
-        render json: pre_auth.error_response.body, status: pre_auth.error_response.status
       else
-        render :error, locals: { error_response: pre_auth.error_response }, status: pre_auth.error_response.status
+        render_error_response(pre_auth.error_response)
       end
+    end
+
+    def render_error_response(error_response)
+      if Doorkeeper.configuration.api_only
+        render json: error_response.body, status: error_response.status
+      else
+        render :error, locals: { error_response: error_response }, status: error_response.status
+      end
+    end
+
+    # Refuses the request before resource owner authentication when the
+    # client_id or redirect_uri is missing or invalid. Errors are rendered,
+    # never redirected, regardless of `handle_auth_errors :redirect`: no
+    # failure this check can produce leaves a redirect target worth trusting.
+    # Either the client failed first, so the redirect URI was never reached,
+    # or the redirect URI is itself the invalid one — and RFC 6749
+    # Section 3.1.2.4 forbids redirecting the user-agent to an invalid
+    # redirection URI.
+    #
+    # Host applications that need to refuse a client on their own terms (an
+    # allow-list, a registry lookup) can override this and call +super+ first:
+    #
+    #   class AuthorizationsController < Doorkeeper::AuthorizationsController
+    #     private
+    #
+    #     def validate_client
+    #       super
+    #       return if performed?
+    #       return if MyRegistry.allowed?(client_pre_auth.client.application)
+    #
+    #       head :forbidden
+    #     end
+    #   end
+    def validate_client
+      return if client_pre_auth.client_valid?
+
+      error_response = client_pre_auth.error_response
+      error_response.raise_exception! if Doorkeeper.config.raise_on_errors?
+
+      render_error_response(error_response)
+    end
+
+    # The pre-authentication view of the request. It carries no resource owner
+    # (nobody is authenticated yet), so it is kept apart from #pre_auth:
+    # owner-dependent validations (authorize_resource_owner_for_client) and the
+    # views need the one built with current_resource_owner.
+    def client_pre_auth
+      @client_pre_auth ||= OAuth::PreAuthorization.new(Doorkeeper.configuration, pre_auth_params)
     end
 
     def can_authorize_response?
