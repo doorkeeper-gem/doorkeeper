@@ -38,17 +38,6 @@ module Doorkeeper
         @server ||= Server.new(self)
       end
 
-      # :doc:
-      def doorkeeper_token
-        return @doorkeeper_token if defined?(@doorkeeper_token)
-
-        @doorkeeper_token ||= OAuth::Token.authenticate(request, *config_methods)
-      end
-
-      def config_methods
-        @config_methods ||= Doorkeeper.config.access_token_methods
-      end
-
       def get_error_response_from_exception(exception)
         if exception.respond_to?(:response)
           exception.response

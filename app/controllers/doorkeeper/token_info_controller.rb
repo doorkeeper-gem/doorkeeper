@@ -2,8 +2,10 @@
 
 module Doorkeeper
   class TokenInfoController < Doorkeeper::ApplicationMetalController
+    include Doorkeeper::Rails::Helpers
+
     def show
-      if doorkeeper_token&.accessible?
+      if doorkeeper_token&.accessible? && doorkeeper_token_dpop_binding_satisfied?
         render json: doorkeeper_token_to_json, status: :ok
       else
         error = OAuth::InvalidTokenResponse.new

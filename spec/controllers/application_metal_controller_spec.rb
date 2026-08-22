@@ -67,4 +67,6 @@ RSpec.describe Doorkeeper::ApplicationMetalController, type: :controller do
       end
     end
   end
+
+  include_examples "enforcing proof of possession using dpop"
 end
