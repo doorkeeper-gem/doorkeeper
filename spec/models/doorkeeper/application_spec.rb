@@ -336,6 +336,156 @@ RSpec.describe Doorkeeper::Application do
         expect(app.secret).to eq(Doorkeeper::SecretStoring::Sha256Hash.transform_secret(plain_secret))
       end
 
+      # The upgrade is a write on a read path, decided from a value read before
+      # the comparison, so the row can move underneath it.
+      it "does not write the matched secret back over one replaced meanwhile" do
+        in_flight = described_class.find(app.id)
+
+        app.renew_secret
+        app.save!
+        new_secret = app.plaintext_secret
+
+        expect(in_flight.secret_matches?(plain_secret)).to be(true)
+
+        app.reload
+        expect(app.secret_matches?(new_secret)).to be(true)
+        expect(app.secret_matches?(plain_secret)).to be(false)
+      end
+
+      it "leaves the instance clean when the upgrade finds the row moved" do
+        in_flight = described_class.find(app.id)
+        app.update_column(:secret, Doorkeeper::SecretStoring::Sha256Hash.transform_secret("elsewhere"))
+
+        in_flight.secret_matches?(plain_secret)
+
+        expect(in_flight).not_to be_changed
+        expect(in_flight.secret).to eq(plain_secret)
+      end
+
+      it "leaves the instance clean once the upgrade is written" do
+        expect(app.secret_matches?(plain_secret)).to be(true)
+
+        expect(app).not_to be_changed
+      end
+
+      # The upgrade happens on a read path, so it must not take unrelated
+      # unsaved changes with it the way a `reload` would.
+      it "keeps unrelated unsaved changes once the upgrade is written" do
+        app.name = "renamed but not saved"
+
+        expect(app.secret_matches?(plain_secret)).to be(true)
+
+        expect(app.name).to eq("renamed but not saved")
+        expect(app.changed_attributes.keys).to eq(%w[name])
+        expect(app.secret).to eq(Doorkeeper::SecretStoring::Sha256Hash.transform_secret(plain_secret))
+      end
+
+      if DOORKEEPER_ORM == :active_record
+        # The conditional write is an `update_all`, which bumps an optimistic
+        # locking column on its own and would leave the instance one version
+        # behind — refused on its next save over a change already persisted.
+        context "when the schema has an optimistic locking column" do
+          before do
+            ActiveRecord::Base.connection.create_table(:oauth_applications_locked) do |t|
+              t.string :name, null: false
+              t.string :uid, null: false
+              t.string :secret
+              t.text :redirect_uri
+              t.string :scopes, default: "", null: false
+              t.boolean :confidential, default: true, null: false
+              t.integer :lock_version, default: 0, null: false
+              t.timestamps
+            end
+          end
+
+          after do
+            ActiveRecord::Base.connection.drop_table(:oauth_applications_locked)
+          end
+
+          let(:locked_class) do
+            Class.new(::ActiveRecord::Base) do
+              include Doorkeeper::Orm::ActiveRecord::Mixins::Application
+              self.table_name = "oauth_applications_locked"
+            end
+          end
+
+          let(:locked_app) do
+            locked_class.create!(name: "LockedApp", redirect_uri: "https://example.com").tap do |record|
+              record.update_column(:secret, plain_secret)
+            end
+          end
+
+          it "bumps the lock version on the row and the instance alike" do
+            expect(locked_app.secret_matches?(plain_secret)).to be(true)
+
+            expect(locked_app.lock_version).to eq(1)
+            expect(locked_app).not_to be_changed
+            expect(locked_class.find(locked_app.id).lock_version).to eq(1)
+          end
+
+          it "lets an unrelated unsaved change be saved afterwards" do
+            locked_app.name = "renamed but not saved"
+
+            expect(locked_app.secret_matches?(plain_secret)).to be(true)
+
+            expect { locked_app.save! }.not_to raise_error
+            expect(locked_class.find(locked_app.id).name).to eq("renamed but not saved")
+          end
+
+          it "does not upgrade past a version the row no longer holds" do
+            in_flight = locked_class.find(locked_app.id)
+            locked_app.update!(name: "bumped elsewhere")
+
+            expect(in_flight.secret_matches?(plain_secret)).to be(true)
+
+            expect(in_flight.secret).to eq(plain_secret)
+            expect(locked_class.find(locked_app.id).secret).to eq(plain_secret)
+            expect(locked_class.find(locked_app.id).lock_version).to eq(1)
+          end
+        end
+
+        # Row identity has to come from the configured primary key, not `id`.
+        context "when the primary key is not id" do
+          before do
+            ActiveRecord::Base.connection.create_table(:oauth_applications_keyed, id: false) do |t|
+              t.string :code, null: false, primary_key: true
+              t.string :name, null: false
+              t.string :uid, null: false
+              t.string :secret
+              t.text :redirect_uri
+              t.string :scopes, default: "", null: false
+              t.boolean :confidential, default: true, null: false
+              t.timestamps
+            end
+          end
+
+          after do
+            ActiveRecord::Base.connection.drop_table(:oauth_applications_keyed)
+          end
+
+          let(:keyed_class) do
+            Class.new(::ActiveRecord::Base) do
+              include Doorkeeper::Orm::ActiveRecord::Mixins::Application
+              self.table_name = "oauth_applications_keyed"
+              self.primary_key = "code"
+            end
+          end
+
+          let(:keyed_app) do
+            keyed_class.create!(code: "app-1", name: "KeyedApp", redirect_uri: "https://example.com").tap do |record|
+              record.update_column(:secret, plain_secret)
+            end
+          end
+
+          it "upgrades the row found by that key" do
+            expect(keyed_app.secret_matches?(plain_secret)).to be(true)
+
+            expect(keyed_class.find("app-1").secret)
+              .to eq(Doorkeeper::SecretStoring::Sha256Hash.transform_secret(plain_secret))
+          end
+        end
+      end
+
       it "performs the fallback upgrade through the primary database role" do
         # The upgrade writes during a lookup, which automatic role switching
         # may route to a read replica.

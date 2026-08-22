@@ -13,6 +13,7 @@ User-visible changes worth mentioning.
 - [#1909] Add Rails 8.1 to CI test matrix.
 - [#1910] Add opt-in `validate_client_before_resource_owner_authentication` configuration option: the authorization endpoint validates `client_id` and `redirect_uri` before authenticating the resource owner, so users are not sent through login for a request that can only fail.
 - [#1916] Fix broken Coveralls coverage reporting.
+- [#1917] Fix: the fallback secret upgrade no longer writes the matched secret back over a value stored in the meantime, which could undo a concurrent `#renew_secret` and leave the superseded secret valid. The upgrade is now conditional on the column still holding the value that matched.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.beta2

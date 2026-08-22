@@ -11,6 +11,10 @@ RSpec.describe Doorkeeper::Models::SecretStorable do
         raise "stub this"
       end
 
+      def self.where(*)
+        raise "stub this"
+      end
+
       def update_column(*)
         raise "stub this"
       end
@@ -70,32 +74,141 @@ RSpec.describe Doorkeeper::Models::SecretStorable do
       end
 
       context "when resource is defined" do
-        let(:resource) { double("Token model") }
+        # A real object rather than a double: what matters is the state the
+        # resource is left in, not the messages it received.
+        let(:resource) do
+          Class.new do
+            attr_accessor :attr
+            attr_reader :cleared_changes
 
-        it "calls the strategy for lookup" do
-          expect(clazz)
+            def initialize
+              @attr = "old value"
+              @cleared_changes = []
+            end
+
+            def id
+              1
+            end
+
+            def clear_attribute_changes(attr_names)
+              @cleared_changes.concat(attr_names.map(&:to_s))
+            end
+          end.new
+        end
+        let(:scope) { double("Relation") }
+
+        before do
+          allow(clazz)
             .to receive(:find_by)
             .with("attr" => "fallback")
             .and_return(resource)
 
-          expect(fallback)
+          allow(fallback)
             .to receive(:transform_secret)
             .with("input")
             .and_return("fallback")
 
-          # store_secret will call the resource
-          expect(resource)
-            .to receive(:attr=)
-            .with("new value")
-
           # It will upgrade the secret automatically using the current strategy
-          expect(strategy)
+          allow(strategy)
             .to receive(:transform_secret)
             .with("input")
             .and_return("new value")
+        end
 
-          expect(resource).to receive(:update).with("attr" => "new value")
+        # The stubs are narrow: an upgrade written with anything other than the
+        # value that matched falls through to the class, which raises.
+        it "upgrades the stored value while the row still holds the matched one" do
+          allow(clazz).to receive(:where).with(id: 1, "attr" => "old value").and_return(scope)
+          allow(scope).to receive(:update_all).with({ "attr" => "new value" }).and_return(1)
+
           expect(result).to eq resource
+          expect(resource.attr).to eq "new value"
+          expect(resource.cleared_changes).to eq %w[attr]
+        end
+
+        it "leaves the resource as it was when the row no longer holds the matched value" do
+          allow(clazz).to receive(:where).and_return(scope)
+          allow(scope).to receive(:update_all).and_return(0)
+
+          expect(result).to eq resource
+          expect(resource.attr).to eq "old value"
+          expect(resource.cleared_changes).to be_empty
+        end
+      end
+
+      # This concern is included by the ORM extensions too, so the upgrade may
+      # only use what every ORM provides: a Sequel dataset spells `update_all`
+      # `update`, and its records have no Active Record dirty tracking to put
+      # back in step.
+      context "when the ORM provides neither update_all nor dirty tracking" do
+        let(:resource) do
+          Class.new do
+            attr_accessor :attr
+
+            def initialize
+              @attr = "old value"
+            end
+
+            def id
+              1
+            end
+          end.new
+        end
+        let(:scope) { double("Dataset") }
+
+        before do
+          allow(clazz).to receive(:find_by).with("attr" => "fallback").and_return(resource)
+          allow(fallback).to receive(:transform_secret).with("input").and_return("fallback")
+          allow(strategy).to receive(:transform_secret).with("input").and_return("new value")
+          allow(clazz).to receive(:where).with(id: 1, "attr" => "old value").and_return(scope)
+        end
+
+        it "upgrades the stored value through the write the ORM does provide" do
+          allow(scope).to receive(:update).with({ "attr" => "new value" }).and_return(1)
+
+          expect(result).to eq resource
+          expect(resource.attr).to eq "new value"
+        end
+
+        it "leaves the resource as it was when the row no longer holds the matched value" do
+          allow(scope).to receive(:update).and_return(0)
+
+          expect(result).to eq resource
+          expect(resource.attr).to eq "old value"
+        end
+      end
+
+      # Row identity is the model's configured primary key, which need not
+      # be `id` — and need not exist as a notion at all.
+      context "when the ORM names its primary key" do
+        let(:resource) do
+          Class.new do
+            attr_accessor :attr
+
+            def initialize
+              @attr = "old value"
+            end
+
+            def code
+              "app-1"
+            end
+          end.new
+        end
+        let(:scope) { double("Relation") }
+
+        before do
+          allow(clazz).to receive(:primary_key).and_return("code")
+          allow(clazz).to receive(:find_by).with("attr" => "fallback").and_return(resource)
+          allow(fallback).to receive(:transform_secret).with("input").and_return("fallback")
+          allow(strategy).to receive(:transform_secret).with("input").and_return("new value")
+        end
+
+        it "identifies the row by that key" do
+          allow(clazz).to receive(:where).with("code" => "app-1", "attr" => "old value").and_return(scope)
+          allow(scope).to receive(:update_all).with({ "attr" => "new value" }).and_return(1)
+
+          expect(result).to eq resource
+          expect(resource.attr).to eq "new value"
         end
       end
 
