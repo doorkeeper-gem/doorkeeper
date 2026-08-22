@@ -8,9 +8,16 @@ require "spec_helper"
 # place, where `flash` exists. To exercise the real API-only hierarchy
 # in-process, these specs stub the controller constants with bare
 # ActionController::API subclasses and re-evaluate the real controller sources
-# into them (`load` reopens the stubbed constants, and their superclasses
-# match what `resolve_controller` returns while `api_only` is stubbed).
-# rspec-mocks restores the original controllers after each example.
+# into them (reopening the stubbed constants, whose superclasses match what
+# `resolve_controller` returns while `api_only` is stubbed). rspec-mocks
+# restores the original controllers after each example.
+#
+# The sources are evaluated under a file name of their own rather than
+# `load`ed. Coverage is recorded per file name and attached to the code as
+# compiled: `load` would compile the real file again, and every method the
+# other examples run — the ones of the original controllers — would keep
+# counting into an array the report no longer reads, so the controllers'
+# coverage would depend on which examples happened to run after this file.
 RSpec.describe "Doorkeeper::ApplicationsController in api_only mode", type: :request do
   before do
     allow(Doorkeeper.config).to receive_messages(
@@ -22,7 +29,8 @@ RSpec.describe "Doorkeeper::ApplicationsController in api_only mode", type: :req
     stub_const("Doorkeeper::ApplicationsController", Class.new(Doorkeeper::ApplicationController))
 
     %w[application_controller applications_controller].each do |file|
-      load Doorkeeper::Engine.root.join("app", "controllers", "doorkeeper", "#{file}.rb")
+      path = Doorkeeper::Engine.root.join("app", "controllers", "doorkeeper", "#{file}.rb").to_s
+      eval(File.read(path), TOPLEVEL_BINDING, "#{path} (api_only)") # rubocop:disable Security/Eval
     end
   end
 
