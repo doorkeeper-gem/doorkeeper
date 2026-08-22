@@ -257,6 +257,55 @@ Doorkeeper.configure do
   #
   # hash_application_secrets using: '::Doorkeeper::SecretStoring::BCrypt', fallback: :plain
 
+  # Give client secret rotation a grace period, so that rotating a secret does
+  # not reject the client until it has been redeployed with the new one
+  # (disabled by default).
+  #
+  # enable_secret_rotation
+  #
+  # Requires two extra columns on the applications table:
+  #
+  #   rails generate doorkeeper:secret_rotation
+  #
+  # The flow it enables is driven entirely by your application:
+  #
+  #   secret = application.rotate_secret!  # both secrets now authenticate
+  #   # ... hand `secret` over, let the client deploy it ...
+  #   application.clear_old_secret!        # only the new one authenticates
+  #
+  # To know when every client has moved over, be told when one has not:
+  #
+  # after_old_secret_used ->(application) {
+  #   StatsD.increment('oauth.old_secret_used', tags: ["client:#{application.uid}"])
+  # }
+  #
+  # Nothing expires an old secret on its own — one that is never cleared keeps
+  # authenticating indefinitely. Give the grace period a deadline if you would
+  # rather not rely on remembering:
+  #
+  # secret_rotation_grace_period 7.days
+  #
+  # Past it the old secret stops authenticating, though it stays in the column
+  # until `#clear_old_secret!` removes it. Left nil (the default), the grace
+  # period ends only when you end it; `old_secret_created_at` records when it
+  # started either way.
+  #
+  # For a secret believed to be compromised there is no grace period to give:
+  #
+  #   application.rotate_secret!(revoke_old: true)
+  #   application.rotate_secret!(revoke_old: true, revoke_tokens: true)
+  #
+  # The second form also revokes the application's unredeemed authorization
+  # codes, which the leaked secret is enough to redeem, and the access tokens
+  # already issued to it — precautionary for the tokens, since a secret does
+  # not hand out a token issued to someone else, except under
+  # reuse_access_token.
+  #
+  # While enabled, every client secret comparison evaluates both the current
+  # and the old secret, so that a rotation in progress is not observable in
+  # response times. With bcrypt that is a second bcrypt comparison per token
+  # request; leave this option off if you do not rotate secrets.
+
   # Issue access tokens with refresh token (disabled by default), you may also
   # pass a block which accepts `context` to customize when to give a refresh
   # token or not. Similar to +custom_access_token_expires_in+, `context` has

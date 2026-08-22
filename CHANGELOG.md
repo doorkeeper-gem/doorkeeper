@@ -43,6 +43,7 @@ and changelog below before the update since this version includes breaking chang
 - [#1902] Fix: requests that omit `scope` now compute the same default scopes at the authorization and token endpoints (`Scopes#common`, symmetric). With dynamic scopes enabled, a scope pattern in either `default_scopes` or the application's scopes grants the matching concrete scope at both endpoints, closes [#1889].
 - [#1903] Fix: `revoke_previous_client_credentials_token` no longer revokes a client's live access token issued for a different `resource` ([#1886]), so a client can keep one audience-restricted token per resource server.
 - [#1905] [test] Cover `private_key_jwt` client authentication on the `client_credentials` grant, the one flow where an assertion is the client's only credential end to end. Test-only change.
+- [#1904] Add opt-in client secret rotation (`enable_secret_rotation`): `Application#rotate_secret!` retains the superseded secret so it keeps authenticating the client until `#clear_old_secret!` ends the grace period, removing the downtime between rotating a secret and redeploying the client. Requires new `old_secret` / `old_secret_created_at` columns — run `rails generate doorkeeper:secret_rotation`. Closes [#1675].
 - Please add here
 
 ## 6.0.0.beta1
