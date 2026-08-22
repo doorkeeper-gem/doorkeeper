@@ -12,6 +12,7 @@ User-visible changes worth mentioning.
 - [#1907] Fix: a `resource` parameter no longer produces a 500 at the authorization endpoint when `resource_indicator_validator` is configured without the `doorkeeper:resource_indicators` migration. Such a request is now answered with `server_error`, as the token endpoint already did, and the missing migration is warned about at boot.
 - [#1909] Add Rails 8.1 to CI test matrix.
 - [#1910] Add opt-in `validate_client_before_resource_owner_authentication` configuration option: the authorization endpoint validates `client_id` and `redirect_uri` before authenticating the resource owner, so users are not sent through login for a request that can only fail.
+- [#1916] Fix broken Coveralls coverage reporting.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.beta2
