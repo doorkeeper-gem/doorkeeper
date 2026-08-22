@@ -17,6 +17,14 @@ module Doorkeeper
           true
         end
 
+        # The IANA token endpoint authentication method name this
+        # implements — see Credentials#authenticated_with.
+        AUTH_METHOD_NAME = "client_secret_basic"
+
+        def self.auth_method_name
+          AUTH_METHOD_NAME
+        end
+
         # Match whenever the header decodes to a non-blank +client_id+ — i.e.
         # whenever a Basic authentication *attempt* is present. The secret may
         # be empty (public clients) or missing; those are still Basic auth

@@ -104,4 +104,27 @@ RSpec.describe "Custom client authentication method (README example)" do
 
     expect(json_response["token_endpoint_auth_methods_supported"]).to include("partner_headers")
   end
+
+  # A strategy that declares the IANA name it implements is advertised under
+  # that name, not under the key the host application registered it with: the
+  # advertised value is what a client writes into a request, or into a
+  # metadata document's token_endpoint_auth_method, and only the declared name
+  # is matched there.
+  it "advertises the IANA name a strategy declares rather than its registration key" do
+    strategy = Class.new(PartnerHeadersExample::Authentication) do
+      def self.auth_method_name = "tls_client_auth"
+    end
+    Doorkeeper::ClientAuthentication.register(:corporate_mtls, strategy)
+    Doorkeeper.configure do
+      orm DOORKEEPER_ORM
+      grant_flows %w[client_credentials]
+      client_authentication %i[corporate_mtls none]
+    end
+
+    get "/.well-known/oauth-authorization-server"
+
+    expect(json_response["token_endpoint_auth_methods_supported"]).to eq(%w[tls_client_auth none])
+  ensure
+    Doorkeeper::ClientAuthentication.registered_methods.delete(:corporate_mtls)
+  end
 end

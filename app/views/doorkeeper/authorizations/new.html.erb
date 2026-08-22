@@ -7,6 +7,12 @@
     <%= raw t('.prompt', client_name: content_tag(:strong, class: 'text-info') { @pre_auth.client.name }) %>
   </p>
 
+  <% if (client_id_host = Doorkeeper::ClientIdMetadata.display_host(@pre_auth.client.uid)) %>
+    <p id="oauth-client-id-host" class="text-muted">
+      <%= t('.client_id_host_html', host: content_tag(:strong) { client_id_host }) %>
+    </p>
+  <% end %>
+
   <% if @pre_auth.scopes.count > 0 %>
     <div id="oauth-permissions">
       <p><%= t('.able_to') %></p>

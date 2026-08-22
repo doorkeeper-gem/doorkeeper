@@ -26,6 +26,7 @@ Supported features:
 - [Proof Key for Code Exchange by OAuth Public Clients](https://datatracker.ietf.org/doc/html/rfc7636)
 - [OAuth 2.0 Authorization Server Issuer Identification](https://datatracker.ietf.org/doc/html/rfc9207) — opt-in by setting `issuer`; adds the `iss` parameter to authorization redirects returned to the client
 - [Resource Indicators for OAuth 2.0](https://datatracker.ietf.org/doc/html/rfc8707)
+- [OAuth Client ID Metadata Documents](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document) — experimental, opt-in by setting `use_client_id_metadata_documents`; lets a client identify itself with an `https://` URL Doorkeeper fetches its metadata from instead of pre-registering. See the option's notes in the generated initializer before enabling it.
 
 ## Table of Contents
 
@@ -315,13 +316,42 @@ module PartnerHeaders
 end
 ```
 
-Two things are worth keeping in mind when writing one.
+Three things are worth keeping in mind when writing one.
 
 **Keep `matches_request?` as narrow as possible.** RFC 6749 §2.3 forbids a client from using more than one authentication method in a single request, and Doorkeeper enforces that across the whole registry rather than only the enabled methods. A method that matches too broadly therefore collides with a built-in one and the request is answered with `invalid_request`.
 
-**The returned credentials are resolved with `by_uid_and_secret`.** A blank secret resolves only a public (non-confidential) client — that is what the built-in `none` method relies on — while a confidential client is resolved only when the secret matches the registered one. A method that establishes the client's identity by some other proof, such as a client certificate or a signed assertion, therefore still has to produce the registered secret for a confidential client.
+**The returned credentials are resolved with `by_uid_and_secret`.** A blank secret resolves only a public (non-confidential) client — that is what the built-in `none` method relies on — while a confidential client is resolved only when the secret matches the registered one.
 
-Enabled methods are advertised in the authorization server metadata, so a registered method appears in `token_endpoint_auth_methods_supported` at `/.well-known/oauth-authorization-server` once `client_authentication` lists it.
+A method that establishes the client's identity by some other proof, such as a client certificate or a signed assertion, has no registered secret to produce. Return a `VerifiedCredentials` instead: it carries the uid alone and skips the secret comparison, since the proof has already been checked.
+
+```ruby
+def self.authenticate(request)
+  uid = uid_from_verified_certificate(request)
+  return if uid.blank?
+
+  Doorkeeper::ClientAuthentication::VerifiedCredentials.new(uid)
+end
+```
+
+**Declare the IANA name of the method you implement.** Doorkeeper records which method authenticated a request, so that a caller needing to know *how* a client authenticated does not have to trust each strategy to say so. Expose it as `auth_method_name` — the name as registered with [IANA](https://www.iana.org/assignments/oauth-parameters/oauth-parameters.xhtml#token-endpoint-auth-method), which is how a client naming the method in its metadata would write it, and which need not match the key you registered the strategy under:
+
+```ruby
+def self.auth_method_name
+  "tls_client_auth"
+end
+```
+
+This matters when `use_client_id_metadata_documents` is enabled. Such a client's document names the one method it authenticates with, and the draft requires client authentication "of the registered type", so Doorkeeper refuses to authenticate it by any other — including a strategy that declares no name at all. Such clients are also forbidden every method built on a shared secret, and a strategy is taken to be one unless it says otherwise — so a method that verifies the client without a shared secret (mTLS, a signed assertion) has to declare that too before a document may select it:
+
+```ruby
+def self.uses_shared_secret?
+  false
+end
+```
+
+Servers that do not enable that option are unaffected by either declaration.
+
+Enabled methods are advertised in the authorization server metadata, so a registered method appears in `token_endpoint_auth_methods_supported` at `/.well-known/oauth-authorization-server` once `client_authentication` lists it — under the `auth_method_name` it declares, or under its registration key when it declares none.
 
 ## Example Applications
 

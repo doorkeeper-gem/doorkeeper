@@ -8,6 +8,7 @@ module Doorkeeper
         include OAuth::Helpers
 
         validate :client, error: Errors::InvalidClient
+        validate :client_confidential, error: Errors::InvalidClient
         validate :client_supports_grant_flow, error: Errors::UnauthorizedClient
         validate :scopes, error: Errors::InvalidScope
 
@@ -23,6 +24,22 @@ module Doorkeeper
 
         def validate_client
           @client.present?
+        end
+
+        # RFC 6749 Section 4.4: the client credentials grant "MUST only be used
+        # by confidential clients". Registered public clients keep the
+        # long-standing behaviour here, since a host application registered
+        # them deliberately and may rely on it. A metadata document client is
+        # different: nobody registered it, so a document naming "none" would
+        # let whoever can host that document mint a token for a client of
+        # their own, with this server's default scopes and no authentication
+        # at all.
+        def validate_client_confidential
+          return true unless Doorkeeper::ClientIdMetadata.enabled?
+          return true if @client.blank?
+          return true unless Doorkeeper::ClientIdMetadata.url_client_id?(@client.uid)
+
+          @client.application.confidential?
         end
 
         def validate_client_supports_grant_flow

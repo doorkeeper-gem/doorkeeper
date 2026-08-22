@@ -16,6 +16,16 @@ RSpec.describe Doorkeeper::HttpFetcher do
       expect(fetcher.fetch(url)).to eq('{"client_id":"x"}')
     end
 
+    # Net::HTTP formats the port into the connection address, where a value
+    # too large to be a port raises TypeError — not one of the transport
+    # errors #fetch converts into a FetchError. Callers validate their URLs,
+    # but a jwks_uri comes from a document or a column rather than from
+    # UrlValidator, so the guard belongs here too.
+    it "raises rather than passing an out-of-range port to Net::HTTP" do
+      expect { fetcher.fetch("https://client.example.com:99999999999999999999/app") }
+        .to raise_error(described_class::FetchError, /out-of-range port/)
+    end
+
     it "raises on a non-200 response" do
       stub_request(:get, url).to_return(status: 404, body: "not found")
 
@@ -94,12 +104,38 @@ RSpec.describe Doorkeeper::HttpFetcher do
       expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /over the/)
     end
 
-    it "raises when reading the body outlives the total time budget" do
-      stub_request(:get, url).to_return(status: 200, body: "x" * 512)
-      # Every clock reading lands past the deadline computed before the read.
-      allow(Process).to receive(:clock_gettime).and_return(0, described_class::MAX_TOTAL_TIME + 1)
+    # Net::HTTP has no total-time setting of its own: read_timeout starts
+    # over on every successful read, so a host answering a byte at a time —
+    # in the status line and headers as much as in the body — never trips it.
+    # Only a wall clock around the whole exchange bounds that.
+    it "raises when the exchange outlives the total time budget" do
+      stub_const("Doorkeeper::HttpFetcher::MAX_TOTAL_TIME", 0.05)
+      # The ceiling interrupts the sleep, so the example costs its 0.05
+      # seconds rather than the full second the stub would otherwise take.
+      stub_request(:get, url).to_return do
+        sleep 1
+        { status: 200, body: "{}" }
+      end
 
-      expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /too long/)
+      expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /took too long/)
+    end
+
+    # Net::HTTP retries an idempotent request once by default, and the branch
+    # that decides so catches Timeout::Error: the ceiling above would be
+    # swallowed while the status line or headers are read, and the retry run
+    # with the timer already spent. WebMock replaces #request rather than
+    # #transport_request, so no stubbed exchange reaches that branch and the
+    # setting is pinned directly instead.
+    it "does not let Net::HTTP retry a request" do
+      stub_request(:get, url).to_return(status: 200, body: "{}")
+      connections = []
+      allow(Net::HTTP).to receive(:new).and_wrap_original do |original, *args|
+        original.call(*args).tap { |connection| connections << connection }
+      end
+
+      fetcher.fetch(url)
+
+      expect(connections.map(&:max_retries)).to eq([0])
     end
 
     it "requests an identity encoding so that no body is ever inflated" do
@@ -204,9 +240,15 @@ RSpec.describe Doorkeeper::HttpFetcher do
       ::ffff:127.0.0.1
       ::ffff:192.168.0.1
       64:ff9b::1
+      64:ff9b:1::1
+      64:ff9b:1:ffff::1
       100::1
       2001:db8::1
       2002::1
+      3fff::1
+      3fff:fff::1
+      5f00::1
+      5f00:ffff::1
       fc00::1
       fdff::1
       fe80::1
@@ -226,6 +268,9 @@ RSpec.describe Doorkeeper::HttpFetcher do
       172.32.0.1
       198.17.255.255
       2606:2800:220:1:248:1893:25c8:1946
+      64:ff9b:2::1
+      4000::1
+      6000::1
       ::ffff:8.8.8.8
       ::ffff:93.184.216.34
     ]

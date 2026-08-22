@@ -3,6 +3,7 @@
 require "ipaddr"
 require "net/http"
 require "resolv"
+require "timeout"
 require "uri"
 
 module Doorkeeper
@@ -18,12 +19,12 @@ module Doorkeeper
   # negotiated and verified against the original hostname. An exception for
   # authorization servers themselves running on a loopback interface is
   # intentionally not implemented. These rules follow the fetch hardening of
-  # draft-ietf-oauth-client-id-metadata-document (Sections 6.5 / 6.6), which
+  # draft-ietf-oauth-client-id-metadata-document (Sections 8.6 / 8.7), which
   # fetches documents from the same kind of client-chosen URL.
   #
-  # The response body is bounded and so is the total time spent reading it:
-  # a per-read timeout alone does not stop a server that dribbles bytes out
-  # indefinitely.
+  # The response body is bounded and so is the time the whole exchange may
+  # take: a per-read timeout alone does not stop a server that dribbles bytes
+  # out indefinitely.
   #
   # Everything about the response is chosen by whoever hosts the document —
   # which is whoever supplied the URL — so no failure mode here may escape
@@ -32,12 +33,19 @@ module Doorkeeper
     OPEN_TIMEOUT = 5
     READ_TIMEOUT = 5
 
-    # draft-ietf-oauth-client-id-metadata-document Section 6.6 recommends a
+    # draft-ietf-oauth-client-id-metadata-document Section 8.7 recommends a
     # maximum response size of 5 kilobytes for a document like this.
     MAX_RESPONSE_SIZE = 5 * 1024
 
-    # Ceiling on the whole exchange, so a body delivered one byte per
-    # READ_TIMEOUT cannot hold the connection (and the thread) for hours.
+    # Ceiling on the HTTP exchange — connect, headers and body — so a host
+    # answering a byte at a time cannot hold the connection (and the thread
+    # reading it) for hours. Net::HTTP has no such setting of its own: its
+    # timeouts are per phase, and read_timeout starts over on every
+    # successful read, so neither a dribbled header block nor a dribbled body
+    # ever trips one. The ceiling starts once the host's address has been
+    # vetted: resolution has to happen first, and is bounded by whatever
+    # timeouts the deployment's resolver applies rather than by this
+    # constant.
     MAX_TOTAL_TIME = 10
 
     # The document is served as JSON, either "application/json" or an
@@ -49,8 +57,10 @@ module Doorkeeper
     # in the caller.
     JSON_MEDIA_TYPE = %r{\Aapplication/([\w.+-]+\+)?json\z}i
 
-    # RFC 6890 special-purpose IPv4/IPv6 registries, plus multicast ranges
-    # (224.0.0.0/4, ff00::/8), which are equally unfit as a document origin.
+    # Every non-globally-reachable range in the IANA special-purpose address
+    # registries RFC 6890 established (including the ranges registered
+    # after it: RFC 8215, RFC 9602, RFC 9637), plus multicast (224.0.0.0/4,
+    # ff00::/8), which is equally unfit as a document origin.
     SPECIAL_USE_RANGES = [
       "0.0.0.0/8",          # "this host on this network"
       "10.0.0.0/8",         # private-use
@@ -76,14 +86,20 @@ module Doorkeeper
       # range also covers the two entries above.
       "::/96",
       "64:ff9b::/96",       # IPv4-IPv6 translation
+      "64:ff9b:1::/48",     # local-use IPv4-IPv6 translation (RFC 8215)
       "100::/64",           # discard-only
       "2001::/23",          # IETF protocol assignments (TEREDO, ORCHID, ...)
       "2001:db8::/32",      # documentation
       "2002::/16",          # 6to4
+      "3fff::/20",          # documentation (RFC 9637)
+      "5f00::/16",          # SRv6 segment identifiers (RFC 9602)
       "fc00::/7",           # unique-local
       "fe80::/10",          # link-local
       "ff00::/8",           # multicast
     ].map { |cidr| IPAddr.new(cidr) }.freeze
+
+    # The range a TCP port can occupy; anything else was never connectable.
+    PORT_RANGE = (1..65_535)
 
     FetchError = Class.new(StandardError)
 
@@ -122,6 +138,12 @@ module Doorkeeper
       # caller's is_a?(URI::HTTPS) validation does not guarantee a host —
       # and Resolv raises ArgumentError, not ResolvError, when handed nil.
       raise FetchError, "#{url.inspect} has no host" if uri.host.blank?
+      # URI.parse accepts any integer as a port, but Net::HTTP builds the
+      # connection address out of it, where a value too large to be a port
+      # raises TypeError — not one of the TRANSPORT_ERRORS below. Refusing it
+      # here keeps every caller's URL, however it was validated, from turning
+      # into an exception out of the endpoint.
+      raise FetchError, "#{url.inspect} has an out-of-range port" unless PORT_RANGE.cover?(uri.port)
 
       address = vetted_address_for(uri.host)
 
@@ -164,6 +186,15 @@ module Doorkeeper
       http.ipaddr = address
       http.open_timeout = OPEN_TIMEOUT
       http.read_timeout = READ_TIMEOUT
+      # Net::HTTP retries an idempotent request once by default, and the
+      # branch that decides so catches Timeout::Error along with the
+      # transport errors — so the ceiling below would be swallowed while
+      # reading the status line or headers, and the retry it triggers would
+      # run with the timer already spent. A retry is worth nothing here in
+      # any case: the connection is never reused, so there is no stale socket
+      # for one to recover from, and the host on the other end is the one
+      # that supplied the URL.
+      http.max_retries = 0
 
       request = Net::HTTP::Get.new(
         uri.request_uri,
@@ -173,17 +204,22 @@ module Doorkeeper
         # on the compressed size. A 5 kilobyte document does not need it.
         { "Accept" => "application/json", "Accept-Encoding" => "identity" },
       )
-      deadline = monotonic_now + MAX_TOTAL_TIME
+      Timeout.timeout(MAX_TOTAL_TIME, Timeout::Error, "the exchange with #{uri.host} took too long") do
+        exchange(http, request, uri.host)
+      end
+    end
+
+    def exchange(http, request, host)
       body = nil
 
       http.start do |connection|
         # Net::HTTP never follows redirects on its own; a 3xx just fails
         # the status check below.
         connection.request(request) do |response|
-          raise FetchError, "expected 200 OK from #{uri.host}, got #{response.code}" unless response.is_a?(Net::HTTPOK)
+          raise FetchError, "expected 200 OK from #{host}, got #{response.code}" unless response.is_a?(Net::HTTPOK)
 
-          verify_media_type!(response, uri.host)
-          body = bounded_body(response, uri.host, deadline)
+          verify_media_type!(response, host)
+          body = bounded_body(response, host)
         end
       end
 
@@ -200,10 +236,10 @@ module Doorkeeper
       raise FetchError, "#{host} served #{media_type.inspect}, which is not a JSON media type"
     end
 
-    # Reads the response in chunks so an oversized (or endlessly dribbled)
-    # body is abandoned instead of buffered in full. Raising here unwinds
-    # out of Net::HTTP#start, which closes the connection.
-    def bounded_body(response, host, deadline)
+    # Reads the response in chunks so an oversized body is abandoned instead
+    # of buffered in full. Raising here unwinds out of Net::HTTP#start, which
+    # closes the connection.
+    def bounded_body(response, host)
       declared = response["Content-Length"]
       if declared && declared.to_i > MAX_RESPONSE_SIZE
         raise FetchError, "#{host} declares a #{declared} byte document, over the " \
@@ -215,18 +251,10 @@ module Doorkeeper
       response.read_body do |chunk|
         body << chunk
 
-        if body.bytesize > MAX_RESPONSE_SIZE
-          raise FetchError, "the document from #{host} exceeds #{MAX_RESPONSE_SIZE} bytes"
-        elsif monotonic_now > deadline
-          raise FetchError, "reading the document from #{host} took too long"
-        end
+        raise FetchError, "the document from #{host} exceeds #{MAX_RESPONSE_SIZE} bytes" if body.bytesize > MAX_RESPONSE_SIZE
       end
 
       body
-    end
-
-    def monotonic_now
-      Process.clock_gettime(Process::CLOCK_MONOTONIC)
     end
   end
 end

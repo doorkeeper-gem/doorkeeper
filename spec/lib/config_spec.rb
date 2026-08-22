@@ -1566,6 +1566,23 @@ RSpec.describe Doorkeeper::Config do
       expect(config.validate_client_before_resource_owner_authentication?).to be(true)
     end
 
+    it "enables use_client_id_metadata_documents" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+      end
+
+      expect(config.client_id_metadata_documents?).to be(true)
+    end
+
+    it "disables client ID metadata documents by default" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+
+      expect(config.client_id_metadata_documents?).to be(false)
+    end
+
     it "enables use_polymorphic_resource_owner" do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
@@ -1573,6 +1590,113 @@ RSpec.describe Doorkeeper::Config do
       end
 
       expect(config.polymorphic_resource_owner?).to be(true)
+    end
+  end
+
+  # A document client's assertions are audience-checked against this server's
+  # own identity and never against the request, so without one they cannot be
+  # verified at all. The refusal reaches the client as a bare invalid_client,
+  # which is why the reason has to reach the operator at boot.
+  describe "client ID metadata documents without a server identity" do
+    around do |example|
+      default_url_options = Rails.application.routes.default_url_options
+      Rails.application.routes.default_url_options = {}
+      example.run
+      Rails.application.routes.default_url_options = default_url_options
+    end
+
+    it "warns when private_key_jwt is configured and the server identifies itself nowhere" do
+      expect(Rails.logger).to receive(:warn).with(/identifies itself nowhere/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+        client_authentication %i[client_secret_basic private_key_jwt]
+      end
+    end
+
+    it "stays quiet when an issuer is configured" do
+      expect(Rails.logger).not_to receive(:warn).with(/identifies itself nowhere/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+        client_authentication %i[client_secret_basic private_key_jwt]
+        issuer "https://as.example.com"
+      end
+    end
+
+    it "stays quiet when Rails supplies a default host" do
+      Rails.application.routes.default_url_options = { host: "as.example.com" }
+      expect(Rails.logger).not_to receive(:warn).with(/identifies itself nowhere/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+        client_authentication %i[client_secret_basic private_key_jwt]
+      end
+    end
+
+    it "stays quiet when private_key_jwt is not a configured method" do
+      expect(Rails.logger).not_to receive(:warn).with(/identifies itself nowhere/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+      end
+    end
+
+    # The warning is about the method, not about the key a host application
+    # registered it under: assertions are refused the same way either way.
+    it "warns when private_key_jwt is registered under another name" do
+      Doorkeeper::ClientAuthentication.register(
+        :corporate_key_jwt,
+        Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt,
+      )
+      expect(Rails.logger).to receive(:warn).with(/identifies itself nowhere/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+        client_authentication %i[client_secret_basic corporate_key_jwt]
+      end
+    ensure
+      Doorkeeper::ClientAuthentication.registered_methods.delete(:corporate_key_jwt)
+    end
+  end
+
+  # A document client is registered by no one, so the row it is materialized
+  # as has no owner: where ownership is enforced that row never saves and the
+  # client is refused as invalid_client, with nothing in the response saying
+  # why.
+  describe "client ID metadata documents with enforced application ownership" do
+    it "warns when application ownership is enforced" do
+      expect(Rails.logger).to receive(:warn).with(/incompatible/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+        enable_application_owner confirmation: true
+      end
+    end
+
+    it "stays quiet when ownership is enabled without confirmation" do
+      expect(Rails.logger).not_to receive(:warn).with(/incompatible/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+        enable_application_owner
+      end
+    end
+
+    it "stays quiet when client ID metadata documents are not enabled" do
+      expect(Rails.logger).not_to receive(:warn).with(/incompatible/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enable_application_owner confirmation: true
+      end
     end
   end
 
