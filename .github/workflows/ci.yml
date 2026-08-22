@@ -12,11 +12,6 @@ jobs:
     env:
       CI: true
       BUNDLE_GEMFILE: ${{ matrix.gemfile }}
-      COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-      COVERALLS_PARALLEL: true
-      COVERALLS_SERVICE_NAME: github
-      COVERALLS_SERVICE_JOB_ID: ${{ github.run_id }}
-      COVERALLS_FLAG_NAME: ruby-${{ matrix.ruby }}-${{ matrix.gemfile }}
     runs-on: ${{ matrix.os }}
     if: |
       !(   contains(github.event.pull_request.title,  '[ci skip]')
@@ -50,6 +45,14 @@ jobs:
       - name: Run tests
         timeout-minutes: 10
         run: bundle exec rake spec
+
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          file: coverage/.resultset.json
+          format: simplecov
+          flag-name: ruby-${{ matrix.ruby }}-${{ matrix.gemfile }}
+          parallel: true
 
   # The jwt gem is an optional dependency of the private_key_jwt client
   # authentication method, and the matrix above always resolves its newest

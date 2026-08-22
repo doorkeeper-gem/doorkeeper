@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "coveralls"
+require "simplecov"
 
-Coveralls.wear!("rails") do
+SimpleCov.start("rails") do
   add_filter("/spec/")
   add_filter("/lib/generators/doorkeeper/templates/")
 end
@@ -22,8 +22,8 @@ require "database_cleaner"
 require "generator_spec/test_case"
 require "webmock/rspec"
 
-# Coveralls posts its results over HTTP from an at_exit hook in CI.
-WebMock.disable_net_connect!(allow: "coveralls.io")
+# WebMock is used to stub external HTTP requests in tests.
+WebMock.disable_net_connect!
 
 # Load JRuby SQLite3 if in that platform
 if defined? JRUBY_VERSION
