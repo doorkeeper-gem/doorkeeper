@@ -12,6 +12,8 @@ jobs:
     env:
       CI: true
       BUNDLE_GEMFILE: ${{ matrix.gemfile }}
+      COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+      COVERALLS_PARALLEL: true
     runs-on: ${{ matrix.os }}
     if: |
       !(   contains(github.event.pull_request.title,  '[ci skip]')
@@ -98,3 +100,13 @@ jobs:
           ruby-version: "ruby-head"
           bundler-cache: true
       - run: bundle exec rake spec || echo "Ruby edge test is done."
+
+  coveralls_finish:
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Coveralls Finished
+        uses: coverallsapp/github-action@v2
+        with:
+          parallel-finished: true
