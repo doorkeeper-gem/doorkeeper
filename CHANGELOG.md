@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- Require Ruby >= 3.2 in the gemspec, matching the CI matrix (3.2 / 3.3 / 3.4 / 4.0). Ruby 2.7, 3.0 and 3.1 have reached end-of-life.
 - Fix: the `client_secret_basic` strategy now requires a `client_id` sent in the request body to name the same client as the `Authorization: Basic` header — the RFC 7521 §4.2 agreement check `private_key_jwt` already applies to an assertion's issuer. A request presenting Basic credentials for one client and a `client_id` for another was authenticated as the Basic client, silently discarding the other identity. A bare `client_id` is not a client authentication method of its own, so the RFC 6749 §2.3 multiple-methods check does not (and should not) count it.
 - [#1906] Internal: exempt `Doorkeeper::Config` from `Metrics/ClassLength` with a directive on the class itself instead of raising the cop's global ceiling, so adding a configuration option no longer trips the limit.
 - [#1907] Fix: a `resource` parameter no longer produces a 500 at the authorization endpoint when `resource_indicator_validator` is configured without the `doorkeeper:resource_indicators` migration. Such a request is now answered with `server_error`, as the token endpoint already did, and the missing migration is warned about at boot.

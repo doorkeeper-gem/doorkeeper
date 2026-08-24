@@ -32,7 +32,7 @@ Gem::Specification.new do |gem|
   }
 
   gem.add_dependency "railties", ">= 5"
-  gem.required_ruby_version = ">= 2.7"
+  gem.required_ruby_version = ">= 3.2"
 
   gem.add_development_dependency "appraisal"
   gem.add_development_dependency "capybara"
