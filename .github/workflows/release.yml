@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Required for Trusted Publisher OIDC authentication
+    environment: rubygems
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@1a615958ad9d422dd932dc1d5823942ee002799f # v1.227.0
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      # The published version comes from lib/doorkeeper/version.rb, not from the
+      # tag name. Fail before touching credentials if the two disagree.
+      - name: Verify tag matches gem version
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          gem_version="$(ruby -Ilib -e 'require "doorkeeper/version"; print Doorkeeper::VERSION::STRING')"
+          if [ "$TAG_NAME" != "v$gem_version" ]; then
+            echo "::error::Tag $TAG_NAME does not match gem version $gem_version (expected tag v$gem_version)."
+            exit 1
+          fi
+          echo "Releasing doorkeeper $gem_version from tag $TAG_NAME."
+
+      - name: Configure RubyGems Trusted Publishing credentials
+        uses: rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a # v2.1.0
+
+      - name: Build gem
+        run: gem build doorkeeper.gemspec
+
+      - name: Push gem
+        run: gem push doorkeeper-*.gem
+
+      - name: Wait for release to propagate
+        run: gem exec rubygems-await doorkeeper-*.gem
