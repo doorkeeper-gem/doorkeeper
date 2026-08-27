@@ -5,7 +5,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 gemspec
 
-gem "rails", ">= 7.0", "< 8.1"
+gem "rails", ">= 7.0", "< 8.2"
 
 gem "sprockets-rails"
 
