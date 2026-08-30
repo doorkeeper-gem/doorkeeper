@@ -11,7 +11,7 @@ RSpec.describe Doorkeeper::Models::SecretStorable do
         raise "stub this"
       end
 
-      def update_column(*)
+      def update(*)
         raise "stub this"
       end
 
@@ -70,32 +70,83 @@ RSpec.describe Doorkeeper::Models::SecretStorable do
       end
 
       context "when resource is defined" do
-        let(:resource) { double("Token model") }
+        # A real object rather than a double: what matters is the state the
+        # resource is left in, not the messages it received.
+        let(:resource) do
+          Class.new do
+            attr_accessor :attr
+            attr_reader :updates
 
-        it "calls the strategy for lookup" do
-          expect(clazz)
+            def initialize
+              @attr = "old value"
+              @updates = []
+            end
+
+            def update(changes)
+              @updates << changes
+              true
+            end
+          end.new
+        end
+
+        before do
+          allow(clazz)
             .to receive(:find_by)
             .with("attr" => "fallback")
             .and_return(resource)
 
-          expect(fallback)
+          allow(fallback)
             .to receive(:transform_secret)
             .with("input")
             .and_return("fallback")
 
-          # store_secret will call the resource
-          expect(resource)
-            .to receive(:attr=)
-            .with("new value")
-
           # It will upgrade the secret automatically using the current strategy
-          expect(strategy)
+          allow(strategy)
             .to receive(:transform_secret)
             .with("input")
             .and_return("new value")
+        end
 
-          expect(resource).to receive(:update).with("attr" => "new value")
+        it "upgrades the stored value through the instance, as it always has" do
           expect(result).to eq resource
+          expect(resource.attr).to eq "new value"
+          expect(resource.updates).to eq [{ "attr" => "new value" }]
+        end
+
+        it "routes the write through the primary database role when the class knows one" do
+          roles = []
+          clazz.define_singleton_method(:with_primary_role) do |&block|
+            roles << :writing
+            block.call
+          end
+
+          expect(result).to eq resource
+          expect(roles).to eq [:writing]
+          expect(resource.updates).to eq [{ "attr" => "new value" }]
+        end
+
+        # The write itself is an ORM hook, so an ORM able to write
+        # conditionally can refuse when the row has moved on from the value
+        # the lookup matched.
+        context "when the ORM implements the write hook" do
+          it "hands the hook the value that matched, read before the upgrade was assigned" do
+            received = nil
+            clazz.define_singleton_method(:write_upgraded_secret) do |instance, attr, matched, upgraded|
+              received = [instance, attr, matched, upgraded]
+              true
+            end
+
+            expect(result).to eq resource
+            expect(received).to eq [resource, "attr", "old value", "new value"]
+            expect(resource.attr).to eq "new value"
+          end
+
+          it "puts the instance back when the hook answers that nothing was written" do
+            clazz.define_singleton_method(:write_upgraded_secret) { |*| false }
+
+            expect(result).to eq resource
+            expect(resource.attr).to eq "old value"
+          end
         end
       end
 
