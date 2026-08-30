@@ -204,6 +204,22 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
     end
   end
 
+  describe "POST #create when an exception is raised that has a response" do
+    it "renders the exceptions's response" do
+      custom_response = Doorkeeper::OAuth::InvalidTokenResponse.new(reason: "custom")
+
+      allow(Doorkeeper.config).to(
+        receive(:before_successful_strategy_response)
+          .and_return(->(_request) { raise Doorkeeper::Errors::InvalidToken, custom_response }),
+      )
+
+      post :create, params: { client_id: client.uid, client_secret: client.secret, grant_type: "password" }
+
+      expect(response.status).to eq(401)
+      expect(json).to eq(JSON.parse(custom_response.body.to_json))
+    end
+  end
+
   # https://datatracker.ietf.org/doc/html/rfc7009#section-2.2
   describe "POST #revoke" do
     let(:client) { FactoryBot.create(:application) }
