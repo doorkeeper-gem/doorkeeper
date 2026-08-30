@@ -96,8 +96,29 @@ module Doorkeeper
 
           # Nothing was written: put the instance back rather than leave it
           # carrying a secret that was never stored.
-          instance.public_send(:"#{attr}=", matched)
+          restore_matched_secret(instance, attr, matched)
           false
+        end
+
+        # ORM hook: puts +matched+ back on +instance+ after nothing was
+        # written. This default assigns through the attribute writer, which
+        # an ORM can bypass the way the Active Record implementation does:
+        # a custom writer can transform +matched+ on the way in, leaving the
+        # attribute dirty with a value the row never held, and a later save
+        # would write that over whatever replaced the matched secret — the
+        # stale write the conditional upgrade exists to prevent.
+        #
+        # @param instance
+        #   The instance to restore, still carrying the unwritten upgrade.
+        #
+        # @param attr
+        #   The secret attribute name being restored.
+        #
+        # @param matched
+        #   The stored value the fallback lookup matched.
+        #
+        def restore_matched_secret(instance, attr, matched)
+          instance.public_send(:"#{attr}=", matched)
         end
 
         # ORM hook: writes the upgraded value to storage and answers whether
@@ -123,7 +144,10 @@ module Doorkeeper
         #   The stored value the fallback lookup matched.
         #
         # @param upgraded
-        #   The upgraded value to store.
+        #   The upgraded value to store, as returned by the strategy. The
+        #   instance carries it too, assigned through the attribute writer —
+        #   an implementation that writes past the writer should persist the
+        #   value the writer left on the instance rather than this one.
         #
         # @return [Boolean]
         #   Whether the value was written.
