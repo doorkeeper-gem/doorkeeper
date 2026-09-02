@@ -658,7 +658,7 @@ RSpec.describe Doorkeeper::Config do
   describe "access_token_methods" do
     it "has defaults order" do
       expect(config.access_token_methods)
-        .to eq(%i[from_bearer_authorization from_access_token_param from_bearer_param])
+        .to eq(%i[from_dpop_authorization from_bearer_authorization from_access_token_param from_bearer_param])
     end
 
     it "can change the value" do
@@ -1584,6 +1584,52 @@ RSpec.describe Doorkeeper::Config do
         orm DOORKEEPER_ORM
         issuer "not a valid uri"
       end
+    end
+  end
+
+  describe "force_dpop" do
+    it "is disabled by default" do
+      expect(config.force_dpop?).to be(false)
+    end
+
+    it "can be enabled" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        force_dpop
+      end
+
+      expect(config.force_dpop?).to be(true)
+    end
+
+    it "warns when the access token model does not support dpop" do
+      allow(Doorkeeper::AccessToken).to receive(:dpop_supported?).and_return(false)
+      expect(Rails.logger).to receive(:warn).with(/force_dpop is enabled but .* has no/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        force_dpop
+      end
+    end
+
+    it "does not warn when force_dpop is disabled and dpop is unsupported" do
+      allow(Doorkeeper::AccessToken).to receive(:dpop_supported?).and_return(false)
+      expect(Rails.logger).not_to receive(:warn).with(/force_dpop/)
+
+      Doorkeeper.configure { orm DOORKEEPER_ORM }
+    end
+
+    it "skips the warning when the schema cannot be read yet" do
+      allow(Doorkeeper::AccessToken).to \
+        receive(:dpop_supported?).and_raise(ActiveRecord::StatementInvalid)
+
+      expect(Rails.logger).not_to receive(:warn).with(/force_dpop/)
+
+      expect do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          force_dpop
+        end
+      end.not_to raise_error
     end
   end
 end

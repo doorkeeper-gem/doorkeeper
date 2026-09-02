@@ -147,6 +147,22 @@ RSpec.describe Doorkeeper::OAuth::BaseRequest do
       expect(result.expires_in).to be(500)
     end
 
+    context "when a custom_access_token_attribute collides with the dpop thumbprint" do
+      before { request.dpop_proof = dpop_proof_double }
+
+      it "does not let the custom_access_token_attribute override the dpop_jtk" do
+        result = request.find_or_create_access_token(
+          client,
+          resource_owner,
+          "public",
+          { dpop_jkt: "jkt_if_successful_override" },
+          server,
+        )
+
+        expect(result.dpop_jkt).to eq("jkt_123")
+      end
+    end
+
     it "respects use_refresh_token with a block" do
       server = double(
         :server,

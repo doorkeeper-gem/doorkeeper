@@ -1,0 +1,159 @@
+# frozen_string_literal: true
+
+require "uri"
+
+module Doorkeeper
+  module OAuth
+    class DPoPProof
+      begin
+        require "jwt"
+      rescue LoadError
+        raise %(The `jwt` gem is required for DPoP support. Add `gem "jwt"` to your Gemfile.)
+      end
+
+      ALLOWED_ALGORITHMS = %w[RS256 RS384 RS512 PS256 PS384 PS512 ES256 ES384 ES512].freeze
+
+      include Validations
+
+      validate :presence,          error: :blank
+      validate :single_proof,      error: :multiple_dpop_proofs
+      validate :type,              error: :invalid_type
+      validate :signing_algorithm, error: :invalid_signing_algorithm
+      validate :jwk,               error: :invalid_jwk
+      validate :jti,               error: :invalid_jti
+      validate :iat,               error: :invalid_iat
+      validate :ath,               error: :invalid_ath
+      validate :htm,               error: :invalid_htm
+      validate :htu,               error: :invalid_htu
+      validate :signature,         error: :invalid_signature
+
+      delegate :blank?, to: :dpop
+
+      def initialize(request, access_token = nil)
+        @request = request
+        @access_token = access_token
+
+        @dpop = request.env["HTTP_DPOP"]
+      end
+
+      def validate
+        super.tap { @valid = @error.nil? }
+      end
+
+      def valid?
+        return @valid if defined?(@valid)
+
+        super
+      end
+
+      def jkt
+        return nil unless valid?
+
+        @jkt ||= ::JWT::JWK::Thumbprint.new(jwk).generate
+      end
+
+      private
+
+      attr_reader :access_token, :dpop, :request
+
+      def claims
+        return @claims if defined?(@claims)
+
+        decode_without_verifying_signature
+        @claims
+      end
+
+      def headers
+        return @headers if defined?(@headers)
+
+        decode_without_verifying_signature
+        @headers
+      end
+
+      def decode_without_verifying_signature
+        claims, headers = ::JWT.decode(dpop, nil, false)
+
+        # A JWT segment only has to be valid JSON, so either half can decode to
+        # an Array or a scalar. Anything but a Hash carries no claims we can
+        # read, and indexing it would raise.
+        @claims = claims.is_a?(Hash) ? claims : {}
+        @headers = headers.is_a?(Hash) ? headers : {}
+      rescue ::JWT::DecodeError, TypeError
+        @claims = {}
+        @headers = {}
+      end
+
+      def jwk
+        return @jwk if defined?(@jwk)
+
+        @jwk = headers["jwk"] && ::JWT::JWK.import(headers["jwk"])
+      rescue ::JWT::JWKError, TypeError
+        # `jwk` is attacker-controlled: anything that isn't an importable key
+        # is an invalid proof, not an exception.
+        @jwk = nil
+      end
+
+      def validate_presence
+        present?
+      end
+
+      def validate_single_proof
+        dpop.split(",").size == 1 && dpop.split(";").size == 1
+      end
+
+      def validate_type
+        headers["typ"] == "dpop+jwt"
+      end
+
+      def validate_signing_algorithm
+        ALLOWED_ALGORITHMS.include?(headers["alg"]) &&
+          Doorkeeper.config.dpop_signature_algorithms.include?(headers["alg"])
+      end
+
+      def validate_jwk
+        jwk && !jwk.private?
+      end
+
+      def validate_jti
+        claims["jti"].is_a?(String) && claims["jti"].present?
+      end
+
+      def validate_iat
+        claims["iat"].is_a?(Numeric) &&
+          (claims["iat"] - Time.now.to_i).abs <= Doorkeeper.config.dpop_iat_leeway
+      end
+
+      def validate_ath
+        return true unless access_token
+
+        claims["ath"] == Base64.urlsafe_encode64(Digest::SHA256.digest(access_token), padding: false)
+      end
+
+      def validate_htm
+        claims["htm"] == request.request_method
+      end
+
+      def validate_htu
+        matches_ignoring_query_and_fragment?(request.url, claims["htu"])
+      end
+
+      def validate_signature
+        ::JWT.decode(dpop, jwk.keypair, true, algorithms: [headers["alg"]])
+      rescue ::JWT::DecodeError, ::JWT::JWKError
+        false
+      end
+
+      def matches_ignoring_query_and_fragment?(url, other_url)
+        url, other_url =
+          [URI.parse(url), URI.parse(other_url)].each do |u|
+            u.query = nil
+            u.fragment = nil
+          end
+
+        url == other_url
+      rescue URI::InvalidURIError
+        false
+      end
+    end
+  end
+end

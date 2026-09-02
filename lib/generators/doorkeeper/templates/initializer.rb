@@ -678,4 +678,53 @@ Doorkeeper.configure do
   #   allowed = %w[https://api.example.com/ https://calendar.example.com/]
   #   resource_indicators.all? { |r| allowed.include?(r) }
   # }
+
+  # OAuth 2.0 Demonstrating Proof of Possession (DPoP) (RFC 9449)
+  #
+  # DPoP is a sender-constraining mechanism that binds access tokens to a
+  # client's cryptographic key pair. Unlike bearer tokens, a DPoP-bound token
+  # can't be used by an attacker who intercepts it -- they'd also need the
+  # private key corresponding to the public key presented when the token was
+  # issued. Doorkeeper covers both halves: issuing DPoP-bound access tokens
+  # (authorization server) and enforcing the key binding when authenticating
+  # (resource server).
+  #
+  # This is a minimally spec-compliant implementation. It intentionally omits a
+  # few optional parts of the spec:
+  #   - no `jti` tracking to prevent DPoP proof replays (section 11.1)
+  #   - no server-provided nonces to prevent pre-generated proofs (section 8)
+  #   - no authorization code binding to a DPoP key (section 10)
+  #
+  # DPoP support is enabled by adding the `dpop_jkt` column to the access token
+  # model. Existing installations are unchanged unless you run
+  # `rails generate doorkeeper:dpop` and apply the generated migration. Once
+  # the column exists, Doorkeeper automatically honors valid DPoP proofs; the
+  # options below only customize or require that behavior.
+  #
+  # DPoP proof validation requires the `jwt` gem. It is only required at runtime
+  # once DPoP is enabled and a request includes a DPoP proof.
+  #
+  # Resource-server enforcement works by prepending `:from_dpop_authorization`
+  # to `access_token_methods`. Doorkeeper does this automatically only when
+  # you rely on the default `access_token_methods`. If you set that option
+  # explicitly (see above), you must prepend `:from_dpop_authorization`
+  # yourself.
+  #
+  # Require every token request to include a valid DPoP proof, ensuring newly
+  # issued access tokens are DPoP-bound (disabled by default). This applies
+  # when Doorkeeper acts as an authorization server. Resource-server
+  # enforcement is configured separately via `access_token_methods` or
+  # `doorkeeper_authorize!(dpop: :required)`.
+  #
+  # force_dpop
+  #
+  # Clock skew, in seconds, tolerated when validating a proof's `iat` claim.
+  # Defaults to 300.
+  #
+  # dpop_iat_leeway 300
+  #
+  # Asymmetric JWS algorithms accepted for DPoP proof signatures.
+  # Defaults to %w[ES256 PS256].
+  #
+  # dpop_signature_algorithms %w[ES256 PS256]
 end

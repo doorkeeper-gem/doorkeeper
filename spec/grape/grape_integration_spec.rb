@@ -50,6 +50,30 @@ module GrapeApp
       end
     end
 
+    resource :protected_with_endpoint_dpop_required do
+      before do
+        doorkeeper_authorize!
+      end
+
+      desc "Protected resource, requires DPoP token (defined in endpoint)."
+
+      get :status, dpop: :required do
+        { response: "OK" }
+      end
+    end
+
+    resource :protected_with_helper_dpop_required do
+      before do
+        doorkeeper_authorize! dpop: :required
+      end
+
+      desc "Protected resource, requires DPoP token (defined in helper)."
+
+      get :status do
+        { response: "OK" }
+      end
+    end
+
     resource :public do
       desc "Public resource, no token required."
 
@@ -108,6 +132,58 @@ RSpec.describe "Grape integration" do
       expect(last_response).to be_successful
       expect(json_body).to have_key("response")
     end
+
+    it "fails request for protected resource that requires dpop (Grape endpoint)" do
+      get "api/v1/protected_with_endpoint_dpop_required/status.json?access_token=#{access_token.token}"
+
+      expect(last_response).not_to be_successful
+      expect(json_body).to have_key("error")
+    end
+
+    it "fails request for protected resource that requires dpop (Doorkeeper helper)" do
+      get "api/v1/protected_with_helper_dpop_required/status.json?access_token=#{access_token.token}"
+
+      expect(last_response).not_to be_successful
+      expect(json_body).to have_key("error")
+    end
+  end
+
+  context "with dpop Token", token: :dpop do
+    def build_dpop_proof(htu:,
+                         ath: Base64.urlsafe_encode64(Digest::SHA256.digest(token_string), padding: false),
+                         htm: "GET",
+                         signing_key: self.signing_key)
+      super
+    end
+
+    it "successfully requests protected resource" do
+      get "api/v1/protected/status.json",
+          {},
+          "HTTP_AUTHORIZATION" => "DPoP #{token_string}",
+          "HTTP_DPOP" => build_dpop_proof(htu: "http://example.org/api/v1/protected/status.json")
+
+      expect(last_response).to be_successful
+
+      expect(json_body["token"]).to eq(token.token)
+    end
+
+    it "successfully requests protected resource that requires dpop (Grape endpoint)" do
+      get "api/v1/protected_with_endpoint_dpop_required/status.json",
+          {},
+          "HTTP_AUTHORIZATION" => "DPoP #{token_string}",
+          "HTTP_DPOP" => build_dpop_proof(htu: "http://example.org/api/v1/protected_with_endpoint_dpop_required/status.json")
+
+      expect(last_response).to be_successful
+    end
+
+    it "successfully requests protected resource that requires dpop (Doorkeeper helper)" do
+      get "api/v1/protected_with_helper_dpop_required/status.json",
+          {},
+          "HTTP_AUTHORIZATION" => "DPoP #{token_string}",
+          "HTTP_DPOP" => build_dpop_proof(htu: "http://example.org/api/v1/protected_with_helper_dpop_required/status.json")
+
+      expect(last_response).to be_successful
+    end
   end
 
   context "with invalid Access Token" do
@@ -132,6 +208,53 @@ RSpec.describe "Grape integration" do
 
       expect(last_response).not_to be_successful
       expect(json_body).to have_key("error")
+    end
+  end
+
+  # Grape exposes request headers differently across its history, which causes
+  # the DPoP header to arrive under a different hash / key in each era:
+  #
+  # + ----------------------- + --------------------------------------------- + ---------------------------------------------------------------------------- +
+  # | era                     | behavior                                      | refs                                                                         |
+  # + ----------------------- + --------------------------------------------- + ---------------------------------------------------------------------------- +
+  # | < 2.0                   | stored in `Hash` under `Train-Case` keys      | https://github.com/ruby-grape/grape/blob/v1.8.0/lib/grape/request.rb#L38-L47 |
+  # |                         |                                               | https://github.com/ruby-grape/grape/blob/v1.8.0/lib/grape/request.rb#L49-L51 |
+  # + ----------------------- + --------------------------------------------- + ---------------------------------------------------------------------------- +
+  # | >= 2.0 < 2.1 (Rack < 3) | stored in `Hash` under `Train-Case` keys      | https://github.com/ruby-grape/grape/blob/v2.0.0/lib/grape/request.rb#L38-L47 |
+  # |                         |                                               | https://github.com/ruby-grape/grape/blob/v2.0.0/lib/grape/request.rb#L49-L57 |
+  # + ----------------------- + --------------------------------------------- + ---------------------------------------------------------------------------- +
+  # | >= 2.0 < 2.1 (Rack 3)   | stored in `Hash` under `kebab-case` keys      | (same as above)                                                              |
+  # + ----------------------- + --------------------------------------------- + ---------------------------------------------------------------------------- +
+  # | >= 2.1                  | stored in `Grape::Util::Header` (resolves to  | https://github.com/ruby-grape/grape/blob/v2.1.0/lib/grape/request.rb#L36-L45 |
+  # |                         | `Rack::Headers` or `Rack::Utils::HeaderHash`) | https://github.com/ruby-grape/grape/blob/v2.1.0/lib/grape/util/header.rb     |
+  # |                         | under case-insensitive keys                   |                                                                              |
+  # + ----------------------- + --------------------------------------------- + ---------------------------------------------------------------------------- +
+  #
+  # These specs mimic Grape's different header handling and ensure the `DPoPProof`
+  # resolves from the request.
+  describe "resolving the dpop proof across different grape header implementations" do
+    let(:proof) { build_dpop_proof(htm: "GET", htu: "http://example.org/resource") }
+
+    {
+      "stored in `Hash` under `Train-Case` keys" => ->(proof) { { "Dpop" => proof } },
+      "stored in `Hash` under `kebab-case` keys" => ->(proof) { { "dpop" => proof } },
+      "stored in `Grape::Util::Header` under case-insensitive keys" => ->(proof) { Grape::Util::Header.new.tap { |headers| headers["dpop"] = proof } },
+    }.each do |description, build_headers|
+      context "when #{description}" do
+        subject(:dpop_proof) do
+          Doorkeeper::OAuth::DPoPProof.new(Doorkeeper::Grape::AuthorizationDecorator.new(request))
+        end
+
+        let(:request) do
+          instance_double(Grape::Request, env: { "HTTP_DPOP" => proof },
+                                          headers: build_headers.call(proof),
+                                          request_method: "GET",
+                                          base_url: "http://example.org",
+                                          path: "/resource",)
+        end
+
+        it { expect(dpop_proof).not_to be_blank }
+      end
     end
   end
 end

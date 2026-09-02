@@ -152,5 +152,66 @@ RSpec.describe Doorkeeper::OAuth::Token do
         described_class.authenticate double, token
       end
     end
+
+    context "when multiple methods are given" do
+      it "uses the first method that yields a token and ignores later ones" do
+        first  = ->(_r) { "first-token" }
+        second = double
+        expect(second).not_to receive(:call)
+
+        access_token = double("access token")
+        allow(Doorkeeper::AccessToken)
+          .to receive(:by_token).with("first-token").and_return(access_token)
+
+        expect(described_class.authenticate(double, first, second)).to eq(access_token)
+      end
+
+      it "skips methods that return a blank token" do
+        blank = ->(_r) { nil }
+        found = ->(_r) { "token" }
+
+        access_token = double("access token")
+        allow(Doorkeeper::AccessToken)
+          .to receive(:by_token).with("token").and_return(access_token)
+
+        expect(described_class.authenticate(double, blank, found)).to eq(access_token)
+      end
+
+      it "returns nil and does not query for a token when no method yields one" do
+        blank = ->(_r) { nil }
+        expect(Doorkeeper::AccessToken).not_to receive(:by_token)
+
+        expect(described_class.authenticate(double, blank)).to be_nil
+      end
+    end
+  end
+
+  describe ".resolve" do
+    it "returns a resolution instance when a token is found" do
+      found        = ->(_r) { "token" }
+      access_token = double("access token")
+
+      allow(Doorkeeper::AccessToken).to receive(:by_token).with("token").and_return(access_token)
+
+      expect(described_class.resolve(double, found)).to(
+        eq(Doorkeeper::OAuth::Token::Resolution.new(found, "token", access_token)),
+      )
+    end
+
+    it "returns nil when no method yields a token" do
+      blank = ->(_r) { nil }
+
+      expect(Doorkeeper::AccessToken).not_to receive(:by_token)
+
+      expect(described_class.resolve(double, blank)).to be_nil
+    end
+
+    it "returns nil when a token is found but no access token matches it" do
+      found = ->(_r) { "token" }
+
+      allow(Doorkeeper::AccessToken).to receive(:by_token).with("token").and_return(nil)
+
+      expect(described_class.resolve(double, found)).to be_nil
+    end
   end
 end
