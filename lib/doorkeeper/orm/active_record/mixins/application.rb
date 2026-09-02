@@ -9,6 +9,7 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       self.strict_loading_by_default = false if respond_to?(:strict_loading_by_default)
 
       include ::Doorkeeper::ApplicationMixin
+      include ::Doorkeeper::Orm::ActiveRecord::Mixins::SecretStorable
       # `enable_application_owner?` is read once, at parent-class autoload
       # time (#1831): with the feature off the model exposes no `:owner`
       # association — avoiding a misleading reflection on schemas that lack

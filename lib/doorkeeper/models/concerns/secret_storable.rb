@@ -70,8 +70,9 @@ module Doorkeeper
           end
         end
 
-        # Allow implementations in ORMs to replace a plain
-        # value falling back to to avoid it remaining as plain text.
+        # Replaces a value found through the fallback strategy with its
+        # upgraded form, so it does not remain stored under the old strategy
+        # (e.g. as plain text).
         #
         # @param instance
         #   An instance of this model with a plain value token.
@@ -82,13 +83,78 @@ module Doorkeeper
         # @param plain_secret
         #   The plain secret to upgrade.
         #
+        # @return [Boolean]
+        #   Whether the stored value was upgraded.
+        #
         def upgrade_fallback_value(instance, attr, plain_secret)
+          # The value the fallback strategy matched against, read before
+          # `store_secret` assigns the upgraded one over it.
+          matched = instance.public_send(attr)
           upgraded = secret_strategy.store_secret(instance, attr, plain_secret)
 
-          # The upgrade is a write on what is otherwise a read path (finding a
-          # record by its secret), so it must reach the primary database when
-          # automatic role switching would route the surrounding request to a
-          # read replica.
+          return true if write_upgraded_secret(instance, attr, matched, upgraded)
+
+          # Nothing was written: put the instance back rather than leave it
+          # carrying a secret that was never stored.
+          restore_matched_secret(instance, attr, matched)
+          false
+        end
+
+        # ORM hook: puts +matched+ back on +instance+ after nothing was
+        # written. This default assigns through the attribute writer, which
+        # an ORM can bypass the way the Active Record implementation does:
+        # a custom writer can transform +matched+ on the way in, leaving the
+        # attribute dirty with a value the row never held, and a later save
+        # would write that over whatever replaced the matched secret — the
+        # stale write the conditional upgrade exists to prevent.
+        #
+        # @param instance
+        #   The instance to restore, still carrying the unwritten upgrade.
+        #
+        # @param attr
+        #   The secret attribute name being restored.
+        #
+        # @param matched
+        #   The stored value the fallback lookup matched.
+        #
+        def restore_matched_secret(instance, attr, matched)
+          instance.public_send(:"#{attr}=", matched)
+        end
+
+        # ORM hook: writes the upgraded value to storage and answers whether
+        # it was written.
+        #
+        # The upgrade is a write on what is otherwise a read path (finding a
+        # record by its secret), so the row can move between the match and
+        # this write — another request renewing the secret, or the
+        # application replacing it. An ORM can therefore make the write
+        # conditional on +attr+ still holding +matched+, answering false when
+        # it no longer does, as the Active Record implementation does
+        # (Doorkeeper::Orm::ActiveRecord::Mixins::SecretStorable). This
+        # default keeps the historical unconditional write for ORMs that have
+        # not implemented a conditional one.
+        #
+        # @param instance
+        #   The instance whose row to write, already carrying +upgraded+.
+        #
+        # @param attr
+        #   The secret attribute name being upgraded.
+        #
+        # @param matched
+        #   The stored value the fallback lookup matched.
+        #
+        # @param upgraded
+        #   The upgraded value to store, as returned by the strategy. The
+        #   instance carries it too, assigned through the attribute writer —
+        #   an implementation that writes past the writer should persist the
+        #   value the writer left on the instance rather than this one.
+        #
+        # @return [Boolean]
+        #   Whether the value was written.
+        #
+        def write_upgraded_secret(instance, attr, _matched, upgraded)
+          # The write must reach the primary database when automatic role
+          # switching would route the surrounding request to a read replica.
           if respond_to?(:with_primary_role)
             with_primary_role { instance.update(attr => upgraded) }
           else
