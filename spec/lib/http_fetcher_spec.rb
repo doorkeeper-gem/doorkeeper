@@ -7,7 +7,22 @@ RSpec.describe Doorkeeper::HttpFetcher do
 
   let(:url) { "https://client.example.com/oauth-client" }
   let(:public_address) { "93.184.216.34" }
+  let(:public_v6_address) { "2606:2800:220:1:248:1893:25c8:1946" }
   let(:resolver) { class_double(Resolv, getaddresses: [public_address]) }
+
+  def refuse_connections_to(*unreachable_addresses)
+    allow(Net::HTTP).to receive(:new).and_wrap_original do |new_method, *args|
+      http = new_method.call(*args)
+
+      allow(http).to receive(:start).and_wrap_original do |start_method, *start_args, &block|
+        raise Errno::ENETUNREACH if unreachable_addresses.include?(http.ipaddr)
+
+        start_method.call(*start_args, &block)
+      end
+
+      http
+    end
+  end
 
   describe "#fetch" do
     it "returns the body of a 200 response" do
@@ -68,6 +83,40 @@ RSpec.describe Doorkeeper::HttpFetcher do
       request_stub = stub_request(:get, url)
 
       expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /special-use/)
+      expect(request_stub).not_to have_been_requested
+    end
+
+    it "falls back to the next resolved address when the first cannot be connected to" do
+      allow(resolver).to receive(:getaddresses).and_return([public_v6_address, public_address])
+      refuse_connections_to(public_v6_address)
+      stub_request(:get, url).to_return(status: 200, body: "{}")
+
+      expect(fetcher.fetch(url)).to eq("{}")
+    end
+
+    it "raises when none of the resolved addresses can be connected to" do
+      allow(resolver).to receive(:getaddresses).and_return([public_v6_address, public_address])
+      refuse_connections_to(public_v6_address, public_address)
+      stub_request(:get, url)
+
+      expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /could not connect/)
+    end
+
+    it "does not try another address once a connection has been established" do
+      allow(resolver).to receive(:getaddresses).and_return([public_v6_address, public_address])
+      stub_request(:get, url).to_raise(Net::HTTPBadResponse).then.to_return(status: 200, body: "{}")
+
+      expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /HTTPBadResponse/)
+      expect(a_request(:get, url)).to have_been_made.once
+    end
+
+    it "stops trying further addresses once the total time budget is spent" do
+      allow(resolver).to receive(:getaddresses).and_return([public_v6_address, public_address])
+      refuse_connections_to(public_v6_address)
+      request_stub = stub_request(:get, url).to_return(status: 200, body: "{}")
+      allow(Process).to receive(:clock_gettime).and_return(0, described_class::MAX_TOTAL_TIME + 1)
+
+      expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /could not connect/)
       expect(request_stub).not_to have_been_requested
     end
 
