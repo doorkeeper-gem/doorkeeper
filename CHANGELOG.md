@@ -16,6 +16,7 @@ User-visible changes worth mentioning.
 - [#1916] Fix broken Coveralls coverage reporting.
 - [#1918] The api_only controller specs no longer `load` the real controller sources, which detached the coverage of every other example that ran them and made the reported coverage depend on the random example order.
 - [#1923] Fix: the fallback secret upgrade no longer writes the matched secret back over a value stored in the meantime, which could undo a concurrent `#renew_secret` and leave the superseded secret valid. Active Record writes the upgrade conditionally on the column still holding the value that matched; other ORMs can implement the new `write_upgraded_secret` hook. The Active Record write is a single `update_all` statement, so model callbacks and validations no longer run on this upgrade (timestamps and optimistic locking are still maintained).
+- **[BREAKING]** Fix: `private_key_jwt` client authentication no longer accepts an audience derived from the request's `Host` header, which let a client assertion minted for another authorization server be replayed here. A server that configures neither `issuer` nor Rails' `default_url_options[:host]` now has no acceptable audience and refuses every assertion, and is warned about it at boot.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.beta2

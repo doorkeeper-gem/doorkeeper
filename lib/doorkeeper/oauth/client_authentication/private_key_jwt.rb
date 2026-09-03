@@ -68,7 +68,13 @@ module Doorkeeper
           jwk_set = KeyResolver.jwk_set_for(application)
           return unless jwk_set
 
-          claims = verified_claims(assertion, client_id, jwk_set, request)
+          # A server that identifies itself nowhere has no audience to check
+          # an assertion against, and aud is the only claim that ties one to
+          # this server rather than to another one.
+          audiences = acceptable_audiences(request)
+          return if audiences.empty?
+
+          claims = verified_claims(assertion, client_id, jwk_set, audiences)
           return unless claims
           return unless replay_guard.first_use?(
             "#{client_id}:#{claims["jti"]}",
@@ -104,7 +110,7 @@ module Doorkeeper
         end
         private_class_method :unverified_client_id
 
-        def self.verified_claims(assertion, client_id, jwk_set, request)
+        def self.verified_claims(assertion, client_id, jwk_set, audiences)
           claims, = ::JWT.decode(
             assertion,
             nil,
@@ -116,7 +122,7 @@ module Doorkeeper
             verify_iss: true,
             sub: client_id,
             verify_sub: true,
-            aud: acceptable_audiences(request),
+            aud: audiences,
             verify_aud: true,
             # Passed explicitly so a host application that globally disabled
             # expiration checking for its own tokens (JWT.configuration.decode)
@@ -152,29 +158,25 @@ module Doorkeeper
         # token endpoint URL is accepted at the revocation and introspection
         # endpoints too, not just at the endpoint being called.
         #
-        # The endpoint URLs are built from the server's own configured
+        # Every acceptable value is built from the server's own configured
         # identity, never from the request: aud is what keeps an assertion
         # minted for another authorization server from being replayed here, so
-        # deriving it from the client-supplied Host header would defeat its
-        # purpose on any deployment that does not filter hosts. Only a server
-        # that identifies itself nowhere falls back to the request, which is
-        # how MetadataResponse derives its issuer as well.
+        # deriving it from the client-supplied Host header would let whoever
+        # sends the assertion choose the audience it is checked against. A
+        # server that identifies itself nowhere therefore accepts no audience
+        # at all, and is warned about that at boot.
         def self.acceptable_audiences(request)
-          options = server_url_options(request)
+          audiences = [Doorkeeper.config.issuer.presence]
+          options = configured_url_options
 
-          [
-            Doorkeeper.config.issuer.presence,
-            "#{base_url(options)}#{request.path}",
-            token_endpoint_url(options),
-          ].compact.uniq
+          if options
+            audiences << "#{base_url(options)}#{request.path}"
+            audiences << token_endpoint_url(options)
+          end
+
+          audiences.compact.uniq
         end
         private_class_method :acceptable_audiences
-
-        def self.server_url_options(request)
-          configured_url_options ||
-            { protocol: request.protocol, host: request.host, port: request.optional_port }
-        end
-        private_class_method :server_url_options
 
         # An explicitly configured canonical host wins; failing that, the
         # issuer, when it is an absolute URL (Doorkeeper allows any string).
