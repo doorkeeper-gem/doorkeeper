@@ -7,7 +7,47 @@ RSpec.describe Doorkeeper::HttpFetcher do
 
   let(:url) { "https://client.example.com/oauth-client" }
   let(:public_address) { "93.184.216.34" }
+  let(:public_v6_address) { "2606:2800:220:1:248:1893:25c8:1946" }
   let(:resolver) { class_double(Resolv, getaddresses: [public_address]) }
+
+  def stub_connections(unreachable: [], seconds_per_attempt: 0, chunks: nil)
+    now = 0
+    read_timeouts = []
+    allow(Process).to receive(:clock_gettime) { now }
+
+    allow(Net::HTTP).to receive(:new).and_wrap_original do |new_method, *new_args|
+      new_method.call(*new_args).tap do |http|
+        allow(http).to receive(:start).and_wrap_original do |start_method, *start_args, &block|
+          now += seconds_per_attempt
+          raise Errno::ENETUNREACH if unreachable.include?(http.ipaddr)
+
+          start_method.call(*start_args, &block)
+        end
+
+        record_read_timeouts(http, read_timeouts, chunks) { |elapsed| now += elapsed }
+      end
+    end
+
+    read_timeouts
+  end
+
+  def record_read_timeouts(http, read_timeouts, chunks)
+    allow(http).to receive(:request).and_wrap_original do |request_method, *args, &block|
+      read_timeouts << http.read_timeout
+      next request_method.call(*args, &block) unless chunks
+
+      request_method.call(*args) do |response|
+        allow(response).to receive(:read_body) do |&chunk|
+          chunks.each do |elapsed|
+            yield(elapsed)
+            chunk.call("x")
+            read_timeouts << http.read_timeout
+          end
+        end
+        block.call(response)
+      end
+    end
+  end
 
   describe "#fetch" do
     it "returns the body of a 200 response" do
@@ -68,6 +108,85 @@ RSpec.describe Doorkeeper::HttpFetcher do
       request_stub = stub_request(:get, url)
 
       expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /special-use/)
+      expect(request_stub).not_to have_been_requested
+    end
+
+    it "falls back to the next resolved address when the first cannot be connected to" do
+      allow(resolver).to receive(:getaddresses).and_return([public_v6_address, public_address])
+      stub_connections(unreachable: [public_v6_address])
+      stub_request(:get, url).to_return(status: 200, body: "{}")
+
+      expect(fetcher.fetch(url)).to eq("{}")
+    end
+
+    it "raises when none of the resolved addresses can be connected to" do
+      allow(resolver).to receive(:getaddresses).and_return([public_v6_address, public_address])
+      stub_connections(unreachable: [public_v6_address, public_address])
+      stub_request(:get, url)
+
+      expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /could not connect/)
+    end
+
+    it "does not try another address once a connection has been established" do
+      allow(resolver).to receive(:getaddresses).and_return([public_v6_address, public_address])
+      stub_request(:get, url).to_raise(Net::HTTPBadResponse).then.to_return(status: 200, body: "{}")
+
+      expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /HTTPBadResponse/)
+      expect(a_request(:get, url)).to have_been_made.once
+    end
+
+    it "takes the time spent connecting out of the time left to read" do
+      spent_connecting = 6
+      read_timeouts = stub_connections(seconds_per_attempt: spent_connecting)
+      stub_request(:get, url).to_return(status: 200, body: "{}")
+
+      expect(fetcher.fetch(url)).to eq("{}")
+      expect(read_timeouts).to eq([described_class::MAX_TOTAL_TIME - spent_connecting])
+    end
+
+    it "takes the time spent on an unreachable address out of the time left to read" do
+      spent_per_address = 3
+      allow(resolver).to receive(:getaddresses).and_return([public_v6_address, public_address])
+      read_timeouts = stub_connections(
+        unreachable: [public_v6_address],
+        seconds_per_attempt: spent_per_address,
+      )
+      stub_request(:get, url).to_return(status: 200, body: "{}")
+
+      expect(fetcher.fetch(url)).to eq("{}")
+      expect(read_timeouts).to eq([described_class::MAX_TOTAL_TIME - (spent_per_address * 2)])
+    end
+
+    it "never allows a single read longer than the per-read timeout" do
+      read_timeouts = stub_connections
+      stub_request(:get, url).to_return(status: 200, body: "{}")
+
+      expect(fetcher.fetch(url)).to eq("{}")
+      expect(read_timeouts).to eq([described_class::READ_TIMEOUT])
+    end
+
+    it "shrinks the per-read timeout as a chunked body arrives" do
+      spent_per_chunk = 3
+      read_timeouts = stub_connections(chunks: [spent_per_chunk, spent_per_chunk])
+      stub_request(:get, url).to_return(status: 200, body: "xx")
+
+      expect(fetcher.fetch(url)).to eq("xx")
+      expect(read_timeouts).to eq(
+        [
+          described_class::READ_TIMEOUT,
+          described_class::READ_TIMEOUT,
+          described_class::MAX_TOTAL_TIME - (spent_per_chunk * 2),
+        ],
+      )
+    end
+
+    it "stops trying further addresses once the total time budget is spent" do
+      allow(resolver).to receive(:getaddresses).and_return([public_v6_address, public_address])
+      stub_connections(unreachable: [public_v6_address])
+      request_stub = stub_request(:get, url).to_return(status: 200, body: "{}")
+      allow(Process).to receive(:clock_gettime).and_return(0, described_class::MAX_TOTAL_TIME + 1)
+
+      expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /could not connect/)
       expect(request_stub).not_to have_been_requested
     end
 

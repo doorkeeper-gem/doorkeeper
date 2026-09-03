@@ -13,13 +13,15 @@ module Doorkeeper
   # SSRF hardening: the host is resolved up front and the request is refused
   # when any resolved address falls into an RFC 6890 special-use range
   # (loopback, private-use, link-local, ...). The connection is then pinned
-  # to the vetted address via Net::HTTP#ipaddr= so a second, post-check DNS
+  # to a vetted address via Net::HTTP#ipaddr= so a second, post-check DNS
   # resolution (DNS rebinding) cannot redirect the request; TLS is still
-  # negotiated and verified against the original hostname. An exception for
-  # authorization servers themselves running on a loopback interface is
-  # intentionally not implemented. These rules follow the fetch hardening of
-  # draft-ietf-oauth-client-id-metadata-document (Sections 6.5 / 6.6), which
-  # fetches documents from the same kind of client-chosen URL.
+  # negotiated and verified against the original hostname. When that address
+  # cannot be connected to, the host's remaining vetted addresses are tried
+  # in turn.  An exception for authorization servers themselves running on a
+  # loopback interface is intentionally not implemented. These rules follow
+  # the fetch hardening of draft-ietf-oauth-client-id-metadata-document
+  # (Sections 6.5 / 6.6), which fetches documents from the same kind of
+  # client-chosen URL.
   #
   # The response body is bounded and so is the total time spent reading it:
   # a per-read timeout alone does not stop a server that dribbles bytes out
@@ -87,6 +89,12 @@ module Doorkeeper
 
     FetchError = Class.new(StandardError)
 
+    # A transport failure raised while the connection was still being
+    # established. We'll try to connect to another address if we see this
+    # error.
+    ConnectError = Class.new(StandardError)
+    private_constant :ConnectError
+
     # Everything a host can fail at while answering, so that it surfaces as
     # a rejected client rather than an exception out of the endpoint.
     #
@@ -123,9 +131,23 @@ module Doorkeeper
       # and Resolv raises ArgumentError, not ResolvError, when handed nil.
       raise FetchError, "#{url.inspect} has no host" if uri.host.blank?
 
-      address = vetted_address_for(uri.host)
+      addresses = vetted_addresses_for(uri.host)
+      # One deadline covers connection attempts to all addresses in aggregate.
+      deadline = monotonic_now + MAX_TOTAL_TIME
+      # If we attempt to connect to multiple addresses and all of them fail,
+      # arbitrarily surface the last error we received although all of them are
+      # equally valid.
+      last_error = nil
 
-      perform_request(uri, address)
+      addresses.each do |address|
+        break if last_error && monotonic_now >= deadline
+
+        return perform_request(uri, address, deadline)
+      rescue ConnectError => e
+        last_error = e
+      end
+
+      raise FetchError, "could not connect to #{uri.host}: #{last_error.message}"
     rescue *TRANSPORT_ERRORS => e
       raise FetchError, "#{e.class}: #{e.message}"
     end
@@ -144,7 +166,7 @@ module Doorkeeper
 
     private
 
-    def vetted_address_for(host)
+    def vetted_addresses_for(host)
       addresses = @resolver.getaddresses(host)
       raise FetchError, "could not resolve #{host}" if addresses.empty?
 
@@ -155,14 +177,14 @@ module Doorkeeper
         raise FetchError, "#{host} resolves to a special-use address (RFC 6890)"
       end
 
-      addresses.first.to_s
+      addresses.map(&:to_s)
     end
 
-    def perform_request(uri, address)
+    def perform_request(uri, address, deadline)
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
       http.ipaddr = address
-      http.open_timeout = OPEN_TIMEOUT
+      http.open_timeout = [OPEN_TIMEOUT, remaining_until(deadline)].min
       http.read_timeout = READ_TIMEOUT
 
       request = Net::HTTP::Get.new(
@@ -173,21 +195,29 @@ module Doorkeeper
         # on the compressed size. A 5 kilobyte document does not need it.
         { "Accept" => "application/json", "Accept-Encoding" => "identity" },
       )
-      deadline = monotonic_now + MAX_TOTAL_TIME
       body = nil
+      connected = false
 
       http.start do |connection|
+        connected = true
+        # Re-set this timeout later in the connection to account for the time
+        # we spent trying to connect to the address.
+        connection.read_timeout = [READ_TIMEOUT, remaining_until(deadline)].min
         # Net::HTTP never follows redirects on its own; a 3xx just fails
         # the status check below.
         connection.request(request) do |response|
           raise FetchError, "expected 200 OK from #{uri.host}, got #{response.code}" unless response.is_a?(Net::HTTPOK)
 
           verify_media_type!(response, uri.host)
-          body = bounded_body(response, uri.host, deadline)
+          body = bounded_body(response, connection, uri.host, deadline)
         end
       end
 
       body
+    rescue *TRANSPORT_ERRORS => e
+      raise if connected
+
+      raise ConnectError, "#{e.class}: #{e.message}"
     end
 
     def verify_media_type!(response, host)
@@ -203,7 +233,7 @@ module Doorkeeper
     # Reads the response in chunks so an oversized (or endlessly dribbled)
     # body is abandoned instead of buffered in full. Raising here unwinds
     # out of Net::HTTP#start, which closes the connection.
-    def bounded_body(response, host, deadline)
+    def bounded_body(response, connection, host, deadline)
       declared = response["Content-Length"]
       if declared && declared.to_i > MAX_RESPONSE_SIZE
         raise FetchError, "#{host} declares a #{declared} byte document, over the " \
@@ -220,6 +250,11 @@ module Doorkeeper
         elsif monotonic_now > deadline
           raise FetchError, "reading the document from #{host} took too long"
         end
+
+        # Shorten the timeout for the next read if we've already spent a lot of
+        # time connecting and reading part of the request. Otherwise we could
+        # overshoot `MAX_TOTAL_TIME` by up to `READ_TIMEOUT` seconds.
+        connection.read_timeout = [connection.read_timeout, remaining_until(deadline)].min
       end
 
       body
@@ -227,6 +262,10 @@ module Doorkeeper
 
     def monotonic_now
       Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    end
+
+    def remaining_until(deadline)
+      [deadline - monotonic_now, 0].max
     end
   end
 end
