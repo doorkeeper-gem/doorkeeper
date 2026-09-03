@@ -164,13 +164,86 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
     context "when the server identifies itself nowhere" do
       before { config_is_set(:issuer, nil) }
 
-      it "falls back to the request URL as audience" do
+      # Falling back to the request would let whoever sends the assertion
+      # choose the audience it is checked against, so an assertion minted for
+      # another authorization server could be replayed here behind a forwarded
+      # Host header. With no identity of its own the server accepts no
+      # audience at all instead.
+      it "refuses the assertion rather than falling back to the request URL" do
         request = request_with(build_assertion)
         audience = request.base_url + request.path
 
         credentials = described_class.authenticate(request_with(build_assertion(claims: { "aud" => audience })))
 
+        expect(credentials).to be_nil
+      end
+
+      it "refuses an assertion carrying the request's token endpoint URL" do
+        credentials = described_class.authenticate(
+          request_with(build_assertion(claims: { "aud" => "http://example.org/oauth/token" })),
+        )
+
+        expect(credentials).to be_nil
+      end
+
+      # No assertion can authenticate against an empty audience list, so the
+      # client's keys are never resolved — for a client published through a
+      # jwks_uri that would be an outbound request on every cache miss.
+      it "refuses without resolving the client's keys" do
+        expect(described_class::KeyResolver).not_to receive(:jwk_set_for)
+
+        expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+      end
+    end
+
+    context "when only Rails' default_url_options identifies the server" do
+      before do
+        config_is_set(:issuer, nil)
+        allow(::Rails.application.routes).to receive(:default_url_options)
+          .and_return(protocol: "https", host: "as.example.com")
+      end
+
+      it "accepts an endpoint URL built from it" do
+        request = request_with(build_assertion)
+
+        credentials = described_class.authenticate(
+          request_with(build_assertion(claims: { "aud" => "https://as.example.com#{request.path}" })),
+        )
+
         expect(credentials).not_to be_nil
+      end
+
+      it "rejects an audience built from the request's Host header" do
+        request = request_with(build_assertion)
+        audience = request.base_url + request.path
+
+        credentials = described_class.authenticate(request_with(build_assertion(claims: { "aud" => audience })))
+
+        expect(credentials).to be_nil
+      end
+    end
+
+    # Doorkeeper allows any string as the issuer, so one that is not an
+    # absolute URL identifies the server for the audience check even though no
+    # endpoint URL can be derived from it.
+    context "when the issuer is not a URL" do
+      before { config_is_set(:issuer, "urn:example:as") }
+
+      it "accepts the issuer itself as audience" do
+        credentials = described_class.authenticate(
+          request_with(build_assertion(claims: { "aud" => "urn:example:as" })),
+        )
+
+        expect(credentials).not_to be_nil
+      end
+
+      it "rejects an audience built from the request's Host header" do
+        request = request_with(build_assertion)
+        audience = request.base_url + request.path
+
+        credentials = described_class.authenticate(request_with(build_assertion(claims: { "aud" => audience })))
+
+        expect(credentials).to be_nil
       end
     end
 

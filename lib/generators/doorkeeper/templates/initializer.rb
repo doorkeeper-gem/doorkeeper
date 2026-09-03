@@ -333,9 +333,11 @@ Doorkeeper.configure do
   # private_key_jwt_jwks_cache Doorkeeper::DocumentCache.new(ttl: 300)
   #
   # The accepted audiences are built from your `issuer` or from Rails'
-  # `default_url_options`; set at least one of them, otherwise Doorkeeper has
-  # nothing but the request's Host header to identify itself with and the
-  # audience check cannot tell your server apart from another one.
+  # `default_url_options`, never from the request's Host header - the audience
+  # is what tells your server apart from another one, so it cannot come from a
+  # value the caller controls. Set at least one of them: with neither
+  # configured no audience is acceptable and every assertion is refused
+  # (Doorkeeper says so in the log at boot).
   #
   # A client's `jwks_uri` is fetched with a hardened HTTP client (HTTPS
   # only, no redirects, hosts resolving to RFC 6890 special-use addresses
