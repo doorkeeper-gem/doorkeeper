@@ -59,4 +59,10 @@ RSpec.describe ::Doorkeeper::SecretStoring::Base do
       expect(described_class.secret_matches?("a", "transformed: a")).to be true
     end
   end
+
+  describe "recognizes_stored_secret?" do
+    it "claims every stored value, which leaves it where it is" do
+      expect(described_class.recognizes_stored_secret?("anything at all")).to be true
+    end
+  end
 end

@@ -167,6 +167,23 @@ module Doorkeeper
 
       parameters = %w[client_secret authentication_token access_token refresh_token]
       parameters << "code" if configuration.grant_flows.include?("authorization_code")
+      # A live credential like `secret` is, and plaintext under the default
+      # strategy; Active Record copies these entries into filter_attributes,
+      # so this keeps it out of a logged or inspected application record.
+      # The timestamp goes with it: serialization withholds it because it
+      # says a client is mid-rotation, and the filter is anchored, so the
+      # `old_secret` entry does not cover it.
+      #
+      # Not gated on the option, unlike `code` above: disabling rotation does
+      # not clear the column, so a server that rotated a secret once and then
+      # turned the option off still holds a live credential there — and would
+      # lose the filter for it at the next boot, which is when it would start
+      # showing up in logs and `inspect`. These entries are column names
+      # rather than OAuth request parameters and this list is not
+      # Doorkeeper-scoped, so a host application's own unrelated `old_secret`
+      # is redacted along with them; `access_token` and `refresh_token` above
+      # are as generic and unconditional for the same reason.
+      parameters.push("old_secret", "old_secret_created_at")
       filter = /^(#{Regexp.union(parameters)})$/
       filter_params = ::Rails.application.config.filter_parameters
       filter_params << filter unless filter_params.include?(filter)

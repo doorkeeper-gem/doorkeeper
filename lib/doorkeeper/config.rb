@@ -244,6 +244,23 @@ module Doorkeeper
                               fallback: fallback
       end
 
+      # Give client secret rotation a grace period (disabled by default).
+      #
+      # When enabled, `Application#rotate_secret!` retains the superseded
+      # secret in the `old_secret` column and client authentication keeps
+      # accepting it — everywhere a client authenticates, not the token
+      # endpoint alone — so a client can be updated without a window in which
+      # its credentials are rejected. The grace period ends when the application
+      # calls `#clear_old_secret!`, or at the deadline if
+      # `secret_rotation_grace_period` gives the grace period one.
+      #
+      # Requires the `old_secret` and `old_secret_created_at` columns:
+      #
+      #   rails generate doorkeeper:secret_rotation
+      def enable_secret_rotation
+        @config.instance_variable_set(:@enable_secret_rotation, true)
+      end
+
       private
 
       def deprecated(name, message = nil)
@@ -312,6 +329,19 @@ module Doorkeeper
     option :after_successful_strategy_response,   default: ->(_request, _response) {}
     # Allows to customize Token Introspection response
     option :custom_introspection_response,        default: ->(_token, _context) { {} }
+
+    # Called with the application whenever a client authenticates with the
+    # secret a rotation superseded rather than its current one. The signal an
+    # application needs to tell whether anyone still depends on the old secret
+    # before ending the grace period with `#clear_old_secret!`.
+    option :after_old_secret_used,          default: ->(_application) {}
+
+    # How long a superseded client secret keeps authenticating, as a positive
+    # duration or number of seconds — anything else is refused at
+    # configuration time (Validations#validate_secret_rotation_grace_period).
+    # Nil (the default) means indefinitely — the grace period then ends only
+    # when the application calls `#clear_old_secret!`.
+    option :secret_rotation_grace_period,   default: nil
 
     option :skip_authorization,             default: ->(_routes) {}
     option :access_token_expires_in,        default: 7200
@@ -650,6 +680,10 @@ module Doorkeeper
 
     def enable_dynamic_scopes?
       option_set? :enable_dynamic_scopes
+    end
+
+    def enable_secret_rotation?
+      option_set? :enable_secret_rotation
     end
 
     def dynamic_scopes_delimiter
