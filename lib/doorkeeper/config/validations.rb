@@ -5,6 +5,12 @@ module Doorkeeper
     # Doorkeeper configuration validator.
     #
     module Validations
+      # The two token endpoint authentication methods RFC 8414 Section 2 names
+      # as needing token_endpoint_auth_signing_alg_values_supported alongside
+      # them. Matched on the IANA name a strategy declares, since that is what
+      # the metadata document publishes.
+      ASSERTION_AUTH_METHOD_NAMES = %w[private_key_jwt client_secret_jwt].freeze
+
       # Validates configuration options to be set properly.
       #
       def validate!
@@ -18,9 +24,126 @@ module Doorkeeper
         validate_refresh_token_flow
         validate_issuer_format
         validate_issuer_metadata_discoverability
+        validate_client_id_metadata_documents_identity
+        validate_client_id_metadata_documents_ownership
+        validate_assertion_method_signing_algs
       end
 
       private
+
+      # A Client ID Metadata Document client authenticating with
+      # private_key_jwt has its assertions audience-checked against this
+      # server's own identity, which RFC 7523 Section 3 requires and which
+      # cannot be derived from the request: a document client_id resolves to
+      # the same client, and the same keys, at every server implementing the
+      # draft, so an assertion whose audience came from the Host header would
+      # be replayable across all of them. PrivateKeyJwt therefore refuses such
+      # an assertion outright when the server identifies itself nowhere, and
+      # that refusal reaches the client as a bare invalid_client — so the
+      # reason has to reach the operator here instead.
+      def validate_client_id_metadata_documents_identity
+        return unless client_id_metadata_documents?
+        return unless private_key_jwt_configured?
+        return if issuer.present?
+        return if rails_default_url_host.present?
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] use_client_id_metadata_documents is enabled together with the " \
+          "private_key_jwt client authentication method, but this server identifies itself " \
+          "nowhere: neither the issuer option nor Rails' default_url_options[:host] is set. " \
+          "A document client's assertion is checked against this server's own identity " \
+          "(RFC 7523 Section 3), which must not be taken from the request's Host header, so " \
+          "those assertions are refused unless one of the two is configured. Both are read " \
+          "when Doorkeeper is configured; if you set Rails' default_url_options in a later " \
+          "initializer, this warning does not apply. Registered applications authenticate " \
+          "as they did before this option.",
+        )
+      end
+
+      # A Client ID Metadata Document client is registered by no one: it
+      # exists because a URL serves a document. So the application row it is
+      # materialized as has no owner, and where ownership is enforced that row
+      # never saves — leaving every document client refused as invalid_client,
+      # with nothing in the response to say why. The two options are
+      # incompatible; say so once at boot rather than never.
+      def validate_client_id_metadata_documents_ownership
+        return unless client_id_metadata_documents?
+        return unless confirm_application_owner?
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] use_client_id_metadata_documents is enabled together with " \
+          "enable_application_owner confirmation: true, which are incompatible: a document " \
+          "client is registered by no one, so the application row it is materialized as has " \
+          "no owner and fails that validation. Every Client ID Metadata Document client will " \
+          "be refused as invalid_client until one of the two options is turned off. " \
+          "Pre-registered applications are unaffected.",
+        )
+      end
+
+      # The raw configured names are looked up in the registry one by one
+      # rather than through +client_authentication_methods+, so this validation
+      # does not memoise that resolution while configuration is still being
+      # assembled. What each entry is matched on is the strategy itself, not
+      # the key it is registered under: a host application is free to register
+      # the method under another key, and it is the strategy — the one that
+      # performs the audience check the warning is about — that decides.
+      # Legacy callable adapters are wrapped as Method objects by the
+      # deprecated +client_credentials+ option, which this reader never
+      # returns, and an unregistered entry resolves to nil, so neither can
+      # match.
+      # RFC 8414 Section 2 has token_endpoint_auth_signing_alg_values_supported
+      # published whenever an assertion-based method is advertised, and defines
+      # no default for it, so the metadata document is non-compliant when a
+      # strategy declares one of those names without declaring what it accepts.
+      # Doorkeeper's own private_key_jwt declares its algorithms; this is about
+      # a host application's strategy, whose metadata entry it would otherwise
+      # be silently missing.
+      #
+      # Warned about rather than raised on, and the method is still advertised:
+      # it authenticates clients perfectly well, and withholding it from
+      # discovery would hide a working method to fix a missing one.
+      #
+      # Matched on the name the metadata endpoint will publish, which is the
+      # declared one or, for a strategy declaring none, its registration key
+      # (MetadataResponse reads `auth_method_name || name`). A host that
+      # registers its strategy as :client_secret_jwt and declares nothing
+      # advertises that method just the same, and would otherwise be the one
+      # configuration this warning missed.
+      def validate_assertion_method_signing_algs
+        undeclared = client_authentication.filter_map do |name|
+          method = Doorkeeper::ClientAuthentication.get(name)
+          next unless method
+          next unless ASSERTION_AUTH_METHOD_NAMES.include?((method.auth_method_name || method.name).to_s)
+
+          name if method.auth_signing_alg_values.nil?
+        end
+        return if undeclared.empty?
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] #{undeclared.map(&:to_s).join(", ")} declares an assertion-based " \
+          "token endpoint authentication method but no auth_signing_alg_values. RFC 8414 " \
+          "Section 2 requires token_endpoint_auth_signing_alg_values_supported whenever " \
+          "private_key_jwt or client_secret_jwt is advertised, and defines no default, so " \
+          "the authorization server metadata is published without it. Declare the JWS \"alg\" " \
+          "values the strategy accepts.",
+        )
+      end
+
+      def private_key_jwt_configured?
+        client_authentication.any? do |name|
+          method = Doorkeeper::ClientAuthentication.get(name)
+
+          method&.strategy == Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt
+        end
+      end
+
+      # Read defensively: Doorkeeper is configured from an initializer, and a
+      # host application may not have routes (or an application object) yet.
+      def rails_default_url_host
+        ::Rails.application&.routes&.default_url_options&.[](:host)
+      rescue StandardError
+        nil
+      end
 
       # Warn once, at configuration time, when both the deprecated
       # +client_credentials+ and the new +client_authentication+ options are
