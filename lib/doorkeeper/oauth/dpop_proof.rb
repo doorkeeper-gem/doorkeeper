@@ -6,6 +6,7 @@ module Doorkeeper
   module OAuth
     class DPoPProof
       ALLOWED_ALGORITHMS = %w[RS256 RS384 RS512 PS256 PS384 PS512 ES256 ES384 ES512].freeze
+      MINIMUM_RSA_KEY_BITS = 2048
 
       include Validations
 
@@ -82,9 +83,9 @@ module Doorkeeper
         return @jwk if defined?(@jwk)
 
         @jwk = headers["jwk"] && ::JWT::JWK.import(headers["jwk"])
-      rescue ::JWT::JWKError, TypeError
-        # `jwk` is attacker-controlled: anything that isn't an importable key
-        # is an invalid proof, not an exception.
+        @jwk&.keypair # jwt < 3 defers parsing a `kid`-bearing key until first use, parse it now
+        @jwk
+      rescue ::JWT::DecodeError, OpenSSL::OpenSSLError, TypeError
         @jwk = nil
       end
 
@@ -112,7 +113,21 @@ module Doorkeeper
       end
 
       def validate_jwk
-        jwk && !jwk.private?
+        jwk && !jwk.private? && jwk_matches_signing_algorithm? && jwk_key_size_sufficient?
+      end
+
+      def jwk_matches_signing_algorithm?
+        case headers["alg"]
+        when /\A(?:RS|PS)/ then jwk.keypair.is_a?(OpenSSL::PKey::RSA)
+        when /\AES/        then jwk.keypair.is_a?(OpenSSL::PKey::EC)
+        else false
+        end
+      end
+
+      def jwk_key_size_sufficient?
+        return true unless jwk.keypair.is_a?(OpenSSL::PKey::RSA)
+
+        jwk.keypair.n.num_bits >= MINIMUM_RSA_KEY_BITS
       end
 
       def validate_jti
@@ -140,7 +155,7 @@ module Doorkeeper
 
       def validate_signature
         ::JWT.decode(dpop, jwk.keypair, true, algorithms: [headers["alg"]])
-      rescue ::JWT::DecodeError, ::JWT::JWKError
+      rescue ::JWT::DecodeError, OpenSSL::OpenSSLError
         false
       end
 

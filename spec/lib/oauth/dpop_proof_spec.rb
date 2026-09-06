@@ -128,6 +128,90 @@ RSpec.describe Doorkeeper::OAuth::DPoPProof do
 
         include_examples "invalid because", :invalid_jwk
       end
+
+      context "when a jwk member is not valid urlsafe base64" do
+        let(:jwk) { super().merge(x: "invalid!") }
+
+        include_examples "invalid because", :invalid_jwk
+      end
+
+      context "when the jwk uses a point that is not on the curve" do
+        let(:jwk) do
+          off_curve = Base64.urlsafe_encode64("\x00" * 32, padding: false)
+          super().merge(x: off_curve, y: off_curve)
+        end
+
+        include_examples "invalid because", :invalid_jwk
+      end
+
+      context "when the jwk key type and the alg disagree" do
+        let(:dpop_header) do
+          # `JWT.encode` raises `JWT::EncodeError` when the jwk key type and alg disagree
+          encode = ->(part) { Base64.urlsafe_encode64(JSON.dump(part), padding: false) }
+          "#{encode.call(jwt_headers)}.#{encode.call(claims)}.#{encode.call("")}"
+        end
+
+        context "when an ES256 jwk is used with a PS256 alg" do
+          let(:dpop_signature_algorithms) { %w[ES256 PS256] }
+          let(:alg) { "PS256" }
+          let(:jwk) { JWT::JWK.new(OpenSSL::PKey::EC.generate("prime256v1")).export }
+
+          include_examples "invalid because", :invalid_jwk
+        end
+
+        context "when an ES256 jwk is used with a RS256 alg" do
+          let(:dpop_signature_algorithms) { %w[ES256 RS256] }
+          let(:alg) { "RS256" }
+          let(:jwk) { JWT::JWK.new(OpenSSL::PKey::EC.generate("prime256v1")).export }
+
+          include_examples "invalid because", :invalid_jwk
+        end
+
+        context "when an PS256 jwk is used with a ES256 alg" do
+          let(:dpop_signature_algorithms) { %w[PS256 ES256] }
+          let(:alg) { "ES256" }
+          let(:jwk) { JWT::JWK.new(OpenSSL::PKey::RSA.generate(2048)).export }
+
+          include_examples "invalid because", :invalid_jwk
+        end
+
+        context "when an RS256 jwk is used with a ES256 alg" do
+          let(:dpop_signature_algorithms) { %w[RS256 ES256] }
+          let(:alg) { "ES256" }
+          let(:jwk) { JWT::JWK.new(OpenSSL::PKey::RSA.generate(2048)).export }
+
+          include_examples "invalid because", :invalid_jwk
+        end
+      end
+
+      context "when the jwk uses an insufficient rsa key size" do
+        let(:alg) { "RS256" }
+        let(:dpop_header) do
+          # `JWT.encode` raises `JWT::EncodeError` when the jwk key size is less than 2048 bits
+          encode = ->(part) { Base64.urlsafe_encode64(part, padding: false) }
+          signing_input = "#{encode.call(JSON.dump(jwt_headers))}.#{encode.call(JSON.dump(claims))}"
+          "#{signing_input}.#{encode.call(signing_key.sign("SHA256", signing_input))}"
+        end
+        let(:dpop_signature_algorithms) { %w[RS256] }
+        let(:signing_key) { OpenSSL::PKey::RSA.generate(1024) }
+
+        include_examples "invalid because", :invalid_jwk
+      end
+
+      context "when the key only fails once its material is used" do
+        # jwt < 3 defers parsing a `kid`-bearing key until first use, so import
+        # succeeds and an off-curve point only raises when the keypair is
+        # materialised. stand in a key that mimics that behavior.
+        let(:deferred_jwk) do
+          instance_double(JWT::JWK::EC).tap do |key|
+            allow(key).to receive(:keypair).and_raise(OpenSSL::PKey::EC::Point::Error)
+          end
+        end
+
+        before { allow(JWT::JWK).to receive(:import).and_return(deferred_jwk) }
+
+        include_examples "invalid because", :invalid_jwk
+      end
     end
 
     describe "jti" do
