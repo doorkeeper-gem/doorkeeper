@@ -573,6 +573,23 @@ RSpec.describe "Resource Owner Password Credentials Flow" do
         )
       end
 
+      it "reports invalid_client, not invalid_dpop_proof, when both the secret and dpop proof are invalid" do
+        expect do
+          post(
+            token_endpoint_url,
+            params: password_token_endpoint_params(
+              client: @client,
+              resource_owner: @resource_owner,
+              client_secret: "wrong-secret",
+            ),
+            headers: { "HTTP_DPOP" => build_dpop_proof(htm: "X", htu: "X") },
+          )
+        end.not_to change(Doorkeeper::AccessToken, :count)
+
+        expect(response.status).to eq(401)
+        expect(json_response).to include("error" => "invalid_client")
+      end
+
       context "when dpop is not supported" do
         before { allow(Doorkeeper::AccessToken).to receive(:dpop_supported?).and_return(false) }
 

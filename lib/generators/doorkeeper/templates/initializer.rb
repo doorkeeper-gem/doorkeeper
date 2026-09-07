@@ -745,6 +745,11 @@ Doorkeeper.configure do
   # enforcement is configured separately via `access_token_methods` or
   # `doorkeeper_authorize!(dpop: :required)`.
   #
+  # This only covers tokens issued through `find_or_create_access_token` /
+  # `dpop_token_attributes` (every built-in grant, plus custom grants that use
+  # them). A custom grant that calls `AccessToken.create_for` directly bypasses
+  # the check and can still issue Bearer tokens.
+  #
   # force_dpop
   #
   # Clock skew, in seconds, tolerated when validating a proof's `iat` claim.

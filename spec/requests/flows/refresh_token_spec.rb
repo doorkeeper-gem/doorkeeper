@@ -444,6 +444,17 @@ RSpec.describe "Refresh Token Flow" do
         )
       end
 
+      it "reports invalid_client, not invalid_dpop_proof, when both the secret and dpop proof are invalid" do
+        expect do
+          post refresh_token_endpoint_url,
+               params: refresh_token_endpoint_params(client:, client_secret: "wrong-secret", refresh_token: token.refresh_token),
+               headers: { "HTTP_DPOP" => invalid_dpop_proof }
+        end.not_to change(Doorkeeper::AccessToken, :count)
+
+        expect(response.status).to eq(401)
+        expect(json_response).to include("error" => "invalid_client")
+      end
+
       context "when refreshing an access token that uses dpop" do
         let!(:token) { super().tap { |it| it.update!(dpop_jkt: jkt) } }
 

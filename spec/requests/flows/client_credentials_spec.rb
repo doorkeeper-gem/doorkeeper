@@ -337,6 +337,21 @@ RSpec.describe "Client Credentials Request" do
       )
     end
 
+    it "reports invalid_client, not invalid_dpop_proof, when both the secret and dpop proof are invalid" do
+      headers = authorization(client.uid, "wrong-secret").merge(dpop(htm: "X", htu: "X"))
+      params  = { grant_type: "client_credentials" }
+
+      post "/oauth/token", params: params, headers: headers
+
+      access_token_should_not_exist
+
+      response_status_should_be(401)
+      expect(json_response).to match(
+        "error" => "invalid_client",
+        "error_description" => translated_error_message(:invalid_client),
+      )
+    end
+
     context "when dpop is not supported" do
       before { allow(Doorkeeper::AccessToken).to receive(:dpop_supported?).and_return(false) }
 

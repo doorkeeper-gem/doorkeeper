@@ -11,6 +11,7 @@ module Doorkeeper
       validate :client_match, error: Errors::InvalidGrant
       validate :scope,        error: Errors::InvalidScope
       validate :resource_indicators, error: Errors::InvalidTarget
+      validate :dpop_proof, error: Errors::InvalidDPoPProof
 
       attr_reader :access_token, :client, :credentials, :refresh_token
       attr_reader :missing_param
@@ -192,7 +193,7 @@ module Doorkeeper
 
       def dpop_token_attributes
         if client&.confidential && refresh_token.uses_dpop?
-          { dpop_jkt: refresh_token.dpop_jkt }.merge(super)
+          super(fallback_dpop_jkt: refresh_token.dpop_jkt)
         else
           super
         end

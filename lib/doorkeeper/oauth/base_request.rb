@@ -10,11 +10,6 @@ module Doorkeeper
 
       delegate :default_scopes, to: :server
 
-      def self.inherited(subclass)
-        super
-        subclass.validate :dpop_proof, error: Errors::InvalidDPoPProof
-      end
-
       def authorize
         if valid?
           before_successful_response
@@ -73,10 +68,26 @@ module Doorkeeper
         Doorkeeper.config.access_token_model.dpop_supported?
       end
 
-      def dpop_token_attributes
-        return {} unless dpop_supported?
+      def dpop_token_attributes(fallback_dpop_jkt: nil)
+        attributes = if dpop_supported?
+                       { dpop_jkt: dpop_proof&.jkt || fallback_dpop_jkt }.compact
+                     else
+                       {}
+                     end
 
-        { dpop_jkt: dpop_proof&.jkt }.compact
+        enforce_dpop_binding!(attributes)
+
+        attributes
+      end
+
+      def enforce_dpop_binding!(attributes)
+        return unless Doorkeeper.config.force_dpop?
+        return if attributes[:dpop_jkt].present?
+
+        ErrorResponse.new(
+          name: :invalid_dpop_proof,
+          exception_class: Errors::InvalidDPoPProof,
+        ).raise_exception!
       end
 
       def validate_dpop_proof

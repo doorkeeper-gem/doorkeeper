@@ -786,6 +786,21 @@ feature "Authorization Code Flow" do
       )
     end
 
+    scenario "reports invalid_client, not invalid_dpop_proof, when both the secret and dpop proof are invalid" do
+      visit authorization_endpoint_url(client: @client)
+      click_on "Authorize"
+
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      with_dpop_proof_header(htm: "X", htu: "X")
+      page.driver.post token_endpoint_url,
+                       token_endpoint_params(code: authorization_code, client: @client, client_secret: "wrong-secret")
+
+      access_token_should_not_exist
+
+      response_status_should_be(401)
+      expect(json_response).to include("error" => "invalid_client")
+    end
+
     context "when dpop is not supported" do
       before { allow(Doorkeeper::AccessToken).to receive(:dpop_supported?).and_return(false) }
 

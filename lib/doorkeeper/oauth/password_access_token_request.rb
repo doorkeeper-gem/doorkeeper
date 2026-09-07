@@ -10,6 +10,7 @@ module Doorkeeper
       validate :resource_owner, error: Errors::InvalidGrant
       validate :scopes, error: Errors::InvalidScope
       validate :resource_indicators, error: Errors::InvalidTarget
+      validate :dpop_proof, error: Errors::InvalidDPoPProof
 
       attr_reader :client, :credentials, :resource_owner, :parameters, :access_token
 
