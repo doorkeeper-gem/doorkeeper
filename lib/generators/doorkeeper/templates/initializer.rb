@@ -211,6 +211,9 @@ Doorkeeper.configure do
   # party learn whether a client_id is registered (client identifiers are not
   # confidential per RFC 6749 Section 2.2). To refuse clients on your own terms
   # as well, override Doorkeeper::AuthorizationsController#validate_client.
+  # With use_client_id_metadata_documents this also moves the document fetch,
+  # and the application row it materializes, in front of the login: see that
+  # option's notes on rate limiting.
   #
   # validate_client_before_resource_owner_authentication
 
@@ -314,34 +317,51 @@ Doorkeeper.configure do
   # A `private_key_jwt` method (RFC 7523 / OIDC Core §9) is also registered
   # but not enabled by default — add it to the list above to accept it. It
   # requires the `jwt` gem (>= 2.7) in your bundle, and verifies assertions
-  # against the client's published public keys: `jwks` / `jwks_uri`
-  # attributes you define on your Application model (Doorkeeper does not add
-  # these columns itself). Assertions must carry iss = sub =
+  # against the client's published public keys: the `jwks` / `jwks_uri` of a
+  # Client ID Metadata Document client, or `jwks` / `jwks_uri` attributes you
+  # define on your Application model for registered clients (Doorkeeper does
+  # not add these columns itself). Assertions must carry iss = sub =
   # client_id, an aud of your `issuer` (or the token endpoint URL), a bounded
-  # exp (at most 1 hour ahead), a kid header, and a single-use jti.
+  # exp (at most 1 hour ahead), a kid header, and a single-use jti of at most
+  # 255 characters. exp, nbf and iat must be JSON numbers where present, and
+  # nbf is always honoured.
   #
   # jti replay is tracked in process-local memory by default (bounded at
-  # 10 000 entries, each held at most 1 hour), so an assertion replayed to a
-  # different server process is not caught. To share the tracking across
+  # 10 000 entries per pool - document clients are accounted apart from
+  # registered ones, so neither can crowd the other out - each held until the
+  # assertion's own exp, so at most 1 hour plus any global
+  # JWT.configuration.decode.leeway you have set), so an assertion replayed to
+  # a different server process is not caught. To share the tracking across
   # processes, supply your own store (e.g. backed by Redis):
   #
   # private_key_jwt_replay_guard MyRedisReplayGuard.new
+  #
+  # It is handed keys shaped "<length>:<client_id>:<jti>", marked with a
+  # leading `url:` for a Client ID Metadata Document client. The mark says
+  # which pool the built-in guard accounts the entry in, not which assertion
+  # it is: a client_id can change provenance while an assertion is still
+  # alive, and a jti is single-use per client either way, so decide single use
+  # on the key with any leading `url:` taken off.
   #
   # JWK Sets fetched from a `jwks_uri` are cached in process-local memory
   # for 60 seconds; to change the TTL or share the cache across processes:
   #
   # private_key_jwt_jwks_cache Doorkeeper::DocumentCache.new(ttl: 300)
   #
+  # This cache serves registered applications only. Keys named by a Client
+  # ID Metadata Document are kept on a separate built-in cache, so the
+  # unauthenticated traffic that drives those fetches cannot evict entries
+  # registered clients depend on.
+  #
   # The accepted audiences are built from your `issuer` or from Rails'
   # `default_url_options`; set at least one of them, otherwise Doorkeeper has
   # nothing but the request's Host header to identify itself with and the
   # audience check cannot tell your server apart from another one.
   #
-  # A client's `jwks_uri` is fetched with a hardened HTTP client (HTTPS
-  # only, no redirects, hosts resolving to RFC 6890 special-use addresses
-  # refused), so a jwks_uri on a private network or on localhost is refused
-  # even though you configured it yourself; inline `jwks` has no such
-  # restriction.
+  # A registered client's `jwks_uri` is fetched with the same hardened HTTP
+  # client as a metadata document, so a jwks_uri on a private network or on
+  # localhost is refused even though you configured it yourself; inline `jwks`
+  # has no such restriction.
   #
   # client_authentication %i[client_secret_basic client_secret_post none private_key_jwt]
 
@@ -385,6 +405,11 @@ Doorkeeper.configure do
   # You can completely disable this feature with:
   #
   # allow_blank_redirect_uri false
+  #
+  # Rows materialized from a Client ID Metadata Document are exempt from this
+  # check whatever it is set to (see use_client_id_metadata_documents below):
+  # a document need only publish redirect URIs for the grants that redirect,
+  # and an empty registration never matches at authorization time.
   #
   # Or you can define your custom check:
   #
@@ -678,4 +703,232 @@ Doorkeeper.configure do
   #   allowed = %w[https://api.example.com/ https://calendar.example.com/]
   #   resource_indicators.all? { |r| allowed.include?(r) }
   # }
+
+  # Client ID Metadata Documents (draft-ietf-oauth-client-id-metadata-document).
+  #
+  # When enabled, clients may identify themselves with an https:// client_id
+  # pointing at a metadata document (JSON) that Doorkeeper fetches and
+  # validates instead of requiring pre-registration. Only URL-shaped
+  # client_ids take this path; opaque client_ids keep resolving against
+  # registered applications, and Doorkeeper-generated uids never start with
+  # "https://".
+  #
+  # The feature requires a datetime column on your applications table that
+  # Doorkeeper's own migrations do not add:
+  #
+  #   add_column :oauth_applications, :client_id_metadata_materialized_at, :datetime
+  #
+  # With the Mongoid extension (doorkeeper-mongodb) there is no migration to
+  # run, but the field has to be declared, since its application model lists
+  # its fields explicitly. That model is defined from Doorkeeper's own
+  # to_prepare hook, so it does not exist while this file is being loaded;
+  # declare the field from your application's to_prepare instead, which runs
+  # after Doorkeeper's:
+  #
+  #   # config/application.rb
+  #   config.to_prepare do
+  #     Doorkeeper::Application.field :client_id_metadata_materialized_at, type: Time
+  #   end
+  #
+  # With the Sequel extension (doorkeeper-sequel) the column is added by a
+  # Sequel migration instead:
+  #
+  #   alter_table(:oauth_applications) do
+  #     add_column :client_id_metadata_materialized_at, DateTime
+  #   end
+  #
+  # The column records which rows were materialized from a fetched document,
+  # and is what tells an application whose uid was manually set to an
+  # https:// URL apart from a metadata document client - the draft's
+  # Section 7.1 warns that the prefix alone cannot make that distinction,
+  # and Section 7.2 permits pre-registering such Client Identifier URLs.
+  # Such a registered row keeps working as the registered application it is,
+  # exactly as it does with this option off: its URL is never fetched, and
+  # the row is never refreshed from what the URL serves (whoever controls
+  # the URL would otherwise inherit the grants and tokens attached to it).
+  # One thing such a client cannot do, with this option on or off, is
+  # authenticate with client_secret_basic: Doorkeeper splits the Basic
+  # credential at the first ":" and does not URL-decode it (see
+  # ClientAuthentication::ClientSecretBasic), and every URL carries one.
+  # It authenticates with client_secret_post, or with an assertion.
+  # The flip side is that a registered application holding a URL as its uid
+  # pre-empts the document client at that URL, so if your host application
+  # lets users choose their applications' uids, make sure they cannot choose
+  # https:// URLs. Without the column the feature refuses every metadata
+  # document client.
+  #
+  # Notes and current limitations:
+  # - Metadata is fetched over HTTPS only, redirects are not followed, and
+  #   hosts resolving to RFC 6890 special-use addresses (loopback, private
+  #   ranges, link-local, ...) are refused, so local development targets
+  #   cannot be fetched by design.
+  # - A document body larger than 5 KB is refused, and the whole exchange is
+  #   capped at 13 KB at the socket (an 8 KB allowance for the status line and
+  #   headers on top of the body), so a host streaming headers cannot buffer
+  #   its way around the body limit - and so is a document that is not valid
+  #   UTF-8. The HTTP exchange is
+  #   bounded in time as well (name resolution is bounded by your resolver's
+  #   own timeouts), so a slow or oversized document cannot tie up a request.
+  # - Each successfully validated client is materialized as an application
+  #   row (uid = the client_id URL) so grants and tokens can reference it;
+  #   rows are refreshed from the document on every resolution. Consider the
+  #   growth of this table before enabling the feature on a public server,
+  #   and note what triggers a fetch: an authorization request, which never
+  #   authenticates the client, does so as soon as its resource owner is
+  #   signed in - and before any sign-in at all once
+  #   validate_client_before_resource_owner_authentication is on, which
+  #   moves the fetch and the row in front of the login screen. So does a
+  #   URL client_id at any endpoint that authenticates the client, where
+  #   there is no resource owner in the first place: token, revocation and
+  #   introspection all materialize the row for a public ("none") document
+  #   client. Each such
+  #   request holds the Rails thread serving it for as long as the fetch
+  #   takes - up to 10 seconds for the HTTP exchange, plus whatever your
+  #   resolver spends on a name that does not resolve. That last part is
+  #   outside the 10 seconds and is the larger number of the two where a
+  #   name is served by hosts that answer nothing at all: Resolv tries every
+  #   candidate its search list produces, for both record types, with its
+  #   own escalating timeouts. The timeouts are not configurable here, so a
+  #   caller naming many slow hosts can occupy your worker pool. Rate limiting, of all of these endpoints, is left to the
+  #   host application, and this feature needs it. A document
+  #   whose row fails the model's validation is refused as invalid_client,
+  #   and the reason is logged.
+  # - Disabling the option later also disables every client it materialized:
+  #   a row stamped with client_id_metadata_materialized_at is refused as a
+  #   client while the option is off, since nothing refreshes it any more
+  #   and no one ever registered it. Registered applications, URL-shaped uid
+  #   or not, are untouched. To keep such a client for good, clear its stamp
+  #   and own it as a registered application from then on. Access tokens
+  #   already issued to such rows stay valid until they expire, since
+  #   resource requests never consult the application; revoke them if access
+  #   is to stop at once.
+  # - The consent screen names the one part of a document client's identity
+  #   it demonstrably controls - its URL's host (draft Section 8.5) - via
+  #   the engine's authorizations/new view and the client_id_host_html
+  #   translation. If you copied Doorkeeper's views (rails g
+  #   doorkeeper:views) or overrode that screen or its translations, port
+  #   that line to your copy before enabling this: your users would
+  #   otherwise see only whatever unverified client_name the document
+  #   declares for itself. Doorkeeper ships that translation in English
+  #   only, so on a server serving other locales it needs a translation of
+  #   its own until doorkeeper-i18n carries the key. In api_only mode the
+  #   consent JSON carries no such host; derive it from the application with
+  #   Doorkeeper::ClientIdMetadata.display_host when rendering your own. The
+  #   same host is shown beside the client's name in the engine's
+  #   authorized_applications list, where the user reads it again later.
+  # - A document client is asked for consent on every authorization: an
+  #   earlier authorization is not reused to skip the screen the way it is
+  #   for a registered confidential client, since the document's redirect
+  #   URIs and keys may have changed since (draft Sections 8.3 / 8.4).
+  #   `skip_authorization` applies to such clients like any other. The rule
+  #   lives in the engine's `matching_token?`, so any consent gate that reads
+  #   it composes with it - but an extension deciding consent on its own
+  #   does not. With doorkeeper-openid_connect, in particular, a
+  #   `prompt=none` request can still be answered from an existing token
+  #   until its matching companion change ships; ask for
+  #   `Doorkeeper::ClientIdMetadata.consent_required_every_time?(application)`
+  #   in your own gates until then.
+  # - A document's redirect_uris are validated the way a registered
+  #   application's are, `force_ssl_in_redirect_uri` included: a single
+  #   http:// entry - an RFC 8252 loopback redirect URI, say - refuses the
+  #   whole document. Native-app document clients need that option relaxed
+  #   for loopback URIs (see its notes above). A document that publishes no
+  #   redirect_uris at all is materialized with none, whatever
+  #   allow_blank_redirect_uri is set to: an empty registration matches no
+  #   redirect at authorization time, so such a client keeps only the grants
+  #   that never redirect.
+  # - Documents must not use shared-secret authentication methods, and must
+  #   publish public keys only (draft Section 4.1): a jwks carrying private
+  #   or symmetric key material is refused along with the document, while
+  #   such keys served from a jwks_uri - which is fetched separately, and may
+  #   never be - are dropped when the keys are read. Public clients ("none")
+  #   should be combined with force_pkce.
+  # - Using `private_key_jwt` with document clients requires this server to
+  #   identify itself, through the `issuer` option above or Rails'
+  #   `default_url_options[:host]`. A document client_id resolves to the same
+  #   client, and the same keys, at every server implementing the draft, so
+  #   the audience its assertions are checked against (RFC 7523 Section 3)
+  #   must not come from the request's Host header - otherwise an assertion
+  #   sent to one such server would be replayable at all the others by
+  #   whoever received it. Without either setting, those assertions are
+  #   refused and a warning is logged at boot. Registered applications
+  #   authenticate as they did before this option.
+  # - Not compatible with `enable_application_owner confirmation: true`. A
+  #   document client is registered by no one, so the application row it is
+  #   materialized as has no owner and fails that validation, leaving every
+  #   such client refused as invalid_client. A warning is logged at boot when
+  #   both options are set.
+  # - A document served with a media type that is not JSON is refused (one
+  #   declaring no media type at all is tolerated), and a client_id URL,
+  #   client_name or scope longer than 255 characters is rejected: those
+  #   values go into columns the generated migration declares as strings,
+  #   which MySQL sizes at 255 characters. A client_name carrying control
+  #   characters or bidirectional overrides is rejected as well, since it is
+  #   read by your users on the consent screen, and so is a redirect_uris
+  #   entry that is blank or holds more than one URI. A leading byte order
+  #   mark is ignored rather than read as malformed JSON, and a property
+  #   explicitly set to null counts as one the document did not set.
+  # - Rows are refreshed from the document on every resolution, so editing
+  #   one through your applications admin UI does not hold: the next
+  #   resolution writes the document's values back over it. Delete the row,
+  #   or clear its stamp to adopt it as a registered application, instead.
+  # - A document may only name scopes this server configures; one naming
+  #   anything else is rejected rather than granted it, since an
+  #   application's own scopes stand in for the server's when a token is
+  #   issued.
+  # - Of the client metadata, only client_name, redirect_uris, scope,
+  #   token_endpoint_auth_method and jwks/jwks_uri are honoured. In
+  #   particular grant_types and response_types are not enforced, so a
+  #   document client may use any grant flow you have enabled - review
+  #   `grant_flows` before enabling this. The exceptions are the two grants
+  #   that hand out a token with no resource owner in front of them:
+  #   `client_credentials`, which RFC 6749 Section 4.4 reserves for
+  #   confidential clients, and `password` (even where
+  #   skip_client_authentication_for_password_grant is on). A document
+  #   naming "none" is refused both.
+  # - A document naming `private_key_jwt` is *not* refused them: it is a
+  #   confidential client in the RFC's sense, and its key is its own. So on
+  #   a server that enables this option, that method and the
+  #   `client_credentials` grant (which `grant_flows` includes by default),
+  #   anyone who can host a JSON document and generate a key pair can obtain
+  #   an access token for the client itself, without registering anything.
+  #   Such a token is issued the scopes it asks for, and a document that
+  #   names no `scope` of its own is held to no allow-list, so that is every
+  #   scope this server configures, optional_scopes included. Restrict it
+  #   with `scopes_by_grant_type client_credentials: [...]`, or leave the
+  #   grant out of `grant_flows`, before enabling this on a public server -
+  #   an API guarded by scope alone would otherwise be open to anyone.
+  # - A document naming "none" is refused as an introspection caller as well
+  #   (RFC 7662 Section 4 has that endpoint authorize its caller "to prevent
+  #   token scanning attacks", and hosting a document is not an
+  #   authorization): the request is answered invalid_client, and
+  #   `allow_token_introspection` is never consulted for it. The attempt
+  #   still resolves the document and materializes the row, so the rate
+  #   limiting above covers this endpoint too.
+  # - A *confidential* document client - one authenticating with
+  #   private_key_jwt - introspects like any registered confidential client,
+  #   under whatever `allow_token_introspection` you configure. If you want
+  #   to narrow that, keep the default policy's same-application rule and add
+  #   to it rather than replacing it; a block that only asks whether the
+  #   caller is a document client would let any caller introspect any token.
+  # - Documents are memoized for 60 seconds. The HTTP cache headers the draft
+  #   recommends respecting (Section 5.2) are not honoured yet, and no
+  #   development metadata document service (Appendix A) is provided.
+  # - Only documents that fetch and validate are memoized - error responses
+  #   and invalid documents never are (Section 5.2); one whose application
+  #   row is then refused stays memoized for the TTL - and the memo is keyed
+  #   by the client_id exactly as it was sent (the draft requires client_ids to be
+  #   compared as strings), so case variants of one URL are as many separate
+  #   clients: a caller choosing URLs freely can drive one outbound fetch,
+  #   and one application row, per request. Rate limit the authorization and
+  #   token endpoints accordingly. The uid column decides that comparison
+  #   for stored rows, though, and MySQL's default collation is
+  #   case-insensitive: there two client_id URLs differing only in case
+  #   collide on the unique index, and the second one is refused as
+  #   invalid_client for as long as the first row exists. Declare the column
+  #   as utf8mb4_bin, or require lowercase URLs, if that matters to you.
+  # - A change of client keys does not revoke previously issued tokens
+  #   (Section 8.4.1), and logo_uri is never prefetched (Section 8.8).
+  #
+  # use_client_id_metadata_documents
 end

@@ -22,6 +22,25 @@ feature "Authorized applications" do
     i_should_not_see "Another Client App"
   end
 
+  # Draft Section 8.5: the client's own name is unverified, so the host that
+  # served its document is shown here as well as on the consent screen, which
+  # is where the user sees the two together again.
+  scenario "display the client_id host of a metadata document client" do
+    config_is_set(:client_id_metadata_documents, true)
+    document_client = FactoryBot.create(
+      :application,
+      name: "Example App",
+      uid: "https://client.example.com/oauth-client",
+      client_id_metadata_materialized_at: Time.now.utc,
+    )
+    client_is_authorized document_client, @user
+
+    visit "/oauth/authorized_applications"
+
+    i_should_see "Example App"
+    i_should_see "client.example.com"
+  end
+
   scenario "user revoke access to application" do
     visit "/oauth/authorized_applications"
     i_should_see "Amazing Client App"

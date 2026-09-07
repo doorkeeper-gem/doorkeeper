@@ -16,6 +16,16 @@ RSpec.describe Doorkeeper::HttpFetcher do
       expect(fetcher.fetch(url)).to eq('{"client_id":"x"}')
     end
 
+    # Net::HTTP formats the port into the connection address, where a value
+    # too large to be a port raises TypeError — not one of the transport
+    # errors #fetch converts into a FetchError. Callers validate their URLs,
+    # but a jwks_uri comes from a document or a column rather than from
+    # UrlValidator, so the guard belongs here too.
+    it "raises rather than passing an out-of-range port to Net::HTTP" do
+      expect { fetcher.fetch("https://client.example.com:99999999999999999999/app") }
+        .to raise_error(described_class::FetchError, /out-of-range port/)
+    end
+
     it "raises on a non-200 response" do
       stub_request(:get, url).to_return(status: 404, body: "not found")
 
@@ -63,6 +73,41 @@ RSpec.describe Doorkeeper::HttpFetcher do
       expect(request_stub).not_to have_been_requested
     end
 
+    # The other half of the SSRF guard: vetting the resolved addresses is
+    # worth nothing if the connection then resolves the name again, so the
+    # request is pinned to the address that was vetted (DNS rebinding).
+    it "pins the connection to the vetted address" do
+      stub_request(:get, url).to_return(status: 200, body: "{}")
+      pinned = nil
+      allow(Net::HTTP).to receive(:new).and_wrap_original do |original, *args|
+        original.call(*args).tap do |http|
+          allow(http).to receive(:ipaddr=).and_wrap_original do |setter, value|
+            pinned = value
+            setter.call(value)
+          end
+        end
+      end
+
+      fetcher.fetch(url)
+
+      expect(pinned).to eq(public_address)
+    end
+
+    # URI#host keeps the brackets an IPv6 literal is written with, which
+    # neither the resolver nor the special-use check reads as an address —
+    # while UrlValidator accepts such a URL, so the two must agree.
+    it "refuses an IPv6 literal that names a special-use address" do
+      # The brackets never reach the resolver: with URI#host they would, and
+      # "[::1]" resolves to nothing, so the URL would die as "could not
+      # resolve" rather than as the loopback address it plainly is.
+      allow(resolver).to receive(:getaddresses).with("::1").and_return(["::1"])
+      request_stub = stub_request(:get, "https://[::1]/oauth-client")
+
+      expect { fetcher.fetch("https://[::1]/oauth-client") }
+        .to raise_error(described_class::FetchError, /special-use/)
+      expect(request_stub).not_to have_been_requested
+    end
+
     it "raises when any of several resolved addresses is special-use" do
       allow(resolver).to receive(:getaddresses).and_return([public_address, "10.0.0.5"])
       request_stub = stub_request(:get, url)
@@ -94,12 +139,38 @@ RSpec.describe Doorkeeper::HttpFetcher do
       expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /over the/)
     end
 
-    it "raises when reading the body outlives the total time budget" do
-      stub_request(:get, url).to_return(status: 200, body: "x" * 512)
-      # Every clock reading lands past the deadline computed before the read.
-      allow(Process).to receive(:clock_gettime).and_return(0, described_class::MAX_TOTAL_TIME + 1)
+    # Net::HTTP has no total-time setting of its own: read_timeout starts
+    # over on every successful read, so a host answering a byte at a time —
+    # in the status line and headers as much as in the body — never trips it.
+    # Only a wall clock around the whole exchange bounds that.
+    it "raises when the exchange outlives the total time budget" do
+      stub_const("Doorkeeper::HttpFetcher::MAX_TOTAL_TIME", 0.05)
+      # The ceiling interrupts the sleep, so the example costs its 0.05
+      # seconds rather than the full second the stub would otherwise take.
+      stub_request(:get, url).to_return do
+        sleep 1
+        { status: 200, body: "{}" }
+      end
 
-      expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /too long/)
+      expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /took too long/)
+    end
+
+    # Net::HTTP retries an idempotent request once by default, and the branch
+    # that decides so catches Timeout::Error: the ceiling above would be
+    # swallowed while the status line or headers are read, and the retry run
+    # with the timer already spent. WebMock replaces #request rather than
+    # #transport_request, so no stubbed exchange reaches that branch and the
+    # setting is pinned directly instead.
+    it "does not let Net::HTTP retry a request" do
+      stub_request(:get, url).to_return(status: 200, body: "{}")
+      connections = []
+      allow(Net::HTTP).to receive(:new).and_wrap_original do |original, *args|
+        original.call(*args).tap { |connection| connections << connection }
+      end
+
+      fetcher.fetch(url)
+
+      expect(connections.map(&:max_retries)).to eq([0])
     end
 
     it "requests an identity encoding so that no body is ever inflated" do
@@ -174,6 +245,124 @@ RSpec.describe Doorkeeper::HttpFetcher do
 
       expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError)
     end
+
+    # RFC 8259 Section 8.1: JSON exchanged between systems is UTF-8, and
+    # JSON.parse would otherwise pass invalid bytes on, tagged as UTF-8, into
+    # the first regex or base64url decoder to touch them.
+    it "raises when the body is not valid UTF-8" do
+      stub_request(:get, url).to_return(status: 200, body: "{\"client_id\":\"\xff\"}".b)
+
+      expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /not valid UTF-8/)
+    end
+
+    # Same section: a sender must not add one, but a reader may ignore it.
+    # Editors write it onto static files unasked, and JSON.parse reads it as
+    # an unexpected character.
+    it "strips a leading byte order mark" do
+      stub_request(:get, url).to_return(status: 200, body: "\uFEFF{\"client_id\":\"x\"}")
+
+      expect(fetcher.fetch(url)).to eq('{"client_id":"x"}')
+    end
+
+    it "returns the body tagged as UTF-8" do
+      stub_request(:get, url).to_return(status: 200, body: "{\"client_name\":\"caf\u00e9\"}".b)
+
+      expect(fetcher.fetch(url).encoding).to eq(Encoding::UTF_8)
+    end
+
+    # WebMock replaces Net::HTTP#request, so nothing stubbed ever reaches the
+    # socket. These examples serve a real one on the loopback interface and
+    # skip TLS and address vetting (the loopback address is special-use) to
+    # reach the read path under test.
+    context "when reading from a real socket" do
+      let(:server) { TCPServer.new("127.0.0.1", 0) }
+      let(:loopback_url) { "https://localhost:#{server.addr[1]}/document" }
+      let(:resolver) { class_double(Resolv, getaddresses: ["127.0.0.1"]) }
+
+      around do |example|
+        WebMock.disable_net_connect!(allow_localhost: true)
+        example.run
+      ensure
+        WebMock.disable_net_connect!
+      end
+
+      before do
+        allow(described_class).to receive(:special_use?).and_return(false)
+        allow(Net::HTTP).to receive(:new).and_wrap_original do |original, *args|
+          original.call(*args).tap { |connection| allow(connection).to receive(:use_ssl=) }
+        end
+      end
+
+      after do
+        @serving&.join(1)
+        server.close
+      end
+
+      # Answers the one connection the fetch opens once its request headers
+      # are in; the block writes the response.
+      def serve
+        @serving = Thread.new do
+          client = server.accept
+          begin
+            while (line = client.gets) && line != "\r\n"; end
+            yield client
+          rescue IOError, SystemCallError
+            # The fetcher hung up, which is the point of half of these examples.
+          ensure
+            client.close unless client.closed?
+          end
+        end
+      end
+
+      it "returns a document served with ordinary headers" do
+        body = '{"client_id":"x"}'
+        serve do |client|
+          client.write("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: #{body.bytesize}\r\n\r\n#{body}")
+        end
+
+        expect(fetcher.fetch(loopback_url)).to eq(body)
+      end
+
+      it "returns a document served in chunks" do
+        serve do |client|
+          client.write("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n11\r\n{\"client_id\":\"x\"}\r\n0\r\n\r\n")
+        end
+
+        expect(fetcher.fetch(loopback_url)).to eq('{"client_id":"x"}')
+      end
+
+      # Net::HTTP reads the status line and every header line with no limit
+      # of its own, and before the response - and the body checks - exist.
+      # Left to the wall clock alone, a host streaming headers would have
+      # this process buffer whatever it could push in MAX_TOTAL_TIME.
+      it "abandons a response whose headers never end" do
+        serve do |client|
+          client.write("HTTP/1.1 200 OK\r\n")
+          loop { client.write("X-Filler: #{"a" * 1000}\r\n") }
+        end
+
+        expect { fetcher.fetch(loopback_url) }
+          .to raise_error(described_class::FetchError, /exceeds #{described_class::MAX_EXCHANGE_SIZE} bytes, headers included/)
+      end
+
+      it "abandons a status line that never ends" do
+        serve do |client|
+          loop { client.write("HTTP/1.1 200 OK #{"a" * 1000}") }
+        end
+
+        expect { fetcher.fetch(loopback_url) }.to raise_error(described_class::FetchError, /headers included/)
+      end
+
+      # The size line of each chunk of a chunked body is read the same way.
+      it "abandons a chunked body whose chunk-size line never ends" do
+        serve do |client|
+          client.write("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n")
+          loop { client.write("0" * 1000) }
+        end
+
+        expect { fetcher.fetch(loopback_url) }.to raise_error(described_class::FetchError, /headers included/)
+      end
+    end
   end
 
   describe ".special_use?" do
@@ -204,9 +393,18 @@ RSpec.describe Doorkeeper::HttpFetcher do
       ::ffff:127.0.0.1
       ::ffff:192.168.0.1
       64:ff9b::1
+      64:ff9b:1::1
+      64:ff9b:1:ffff::1
       100::1
+      100:0:0:1::1
+      2001::1
+      2001:1ff:ffff:ffff:ffff:ffff:ffff:ffff
       2001:db8::1
       2002::1
+      3fff::1
+      3fff:fff::1
+      5f00::1
+      5f00:ffff::1
       fc00::1
       fdff::1
       fe80::1
@@ -226,6 +424,9 @@ RSpec.describe Doorkeeper::HttpFetcher do
       172.32.0.1
       198.17.255.255
       2606:2800:220:1:248:1893:25c8:1946
+      64:ff9b:2::1
+      4000::1
+      6000::1
       ::ffff:8.8.8.8
       ::ffff:93.184.216.34
     ]

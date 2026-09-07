@@ -134,6 +134,55 @@ RSpec.describe Doorkeeper do
     end
   end
 
+  # The one prerequisite use_client_id_metadata_documents cannot work without.
+  # Without the column every document client is refused as invalid_client, and
+  # the client sees only that — so the reason has to reach the operator at
+  # boot rather than nowhere.
+  describe "#warn_missing_client_id_metadata_column" do
+    it "reports the missing attribute when the feature is enabled" do
+      described_class.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+      end
+      allow(described_class.config.application_model).to receive(:new).and_return(Object.new)
+
+      expect(Rails.logger).to receive(:error).with(/client_id_metadata_materialized_at/)
+
+      described_class.warn_missing_client_id_metadata_column
+    end
+
+    it "stays quiet when the attribute is there" do
+      described_class.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+      end
+
+      expect(Rails.logger).not_to receive(:error)
+
+      described_class.warn_missing_client_id_metadata_column
+    end
+
+    it "stays quiet while the feature is off" do
+      described_class.configure { orm DOORKEEPER_ORM }
+      expect(described_class.config.application_model).not_to receive(:new)
+
+      described_class.warn_missing_client_id_metadata_column
+    end
+
+    # Run from to_prepare, where a model that cannot be instantiated at all
+    # (no database yet) is not this check's business.
+    it "says nothing when the model cannot be instantiated" do
+      described_class.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+      end
+      allow(described_class.config.application_model).to receive(:new).and_raise(StandardError)
+
+      expect(Rails.logger).not_to receive(:error)
+      expect { described_class.warn_missing_client_id_metadata_column }.not_to raise_error
+    end
+  end
+
   describe "#run_orm_hooks" do
     after do
       described_class.setup

@@ -95,8 +95,24 @@ module Doorkeeper
       end
 
       # Client Authentication
+      #
+      # RFC 7662 Section 4 requires this endpoint to authorize its caller
+      # "to prevent token scanning attacks", so the caller has to be someone
+      # the server knows. A public Client ID Metadata Document client is not:
+      # its client_id is minted by publishing a document at a URL, so
+      # accepting it here would let anyone introspect.
+      #
+      # Answering nil refuses the request as invalid_client rather than
+      # letting it fall through to the bearer-token branch: #authorize!
+      # branches on the credentials, which the "none" strategy did produce,
+      # so this request is the client-authenticated kind whatever this method
+      # answers. A caller holding a bearer token can present it without a
+      # client_id and be authorized that way.
       def authorized_client
-        @authorized_client ||= server.credentials && server.client
+        @authorized_client ||= begin
+          client = server.credentials && server.client
+          client unless Doorkeeper::ClientIdMetadata.public_document_client?(client)
+        end
       end
 
       # Bearer Token Authentication

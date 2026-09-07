@@ -80,18 +80,27 @@ module Doorkeeper
       #   cannot count either; they keep the historical "first extractor that
       #   returns a uid wins" selection (see
       #   ClientAuthentication::LegacyCallable) for the deprecation window.
+      #
+      # What is counted is the strategy, not the registration key: a host
+      # application may register one strategy under several keys — renaming a
+      # method while keeping the old key working — and every one of those
+      # entries answers the same +matches_request?+ about the same payload.
+      # Counting them separately would read one method as two and refuse every
+      # request using it, including one the metadata endpoint advertises.
       def validate_client_authentication!(request)
-        matched = 0
+        matched = nil
 
         Doorkeeper::ClientAuthentication.registered_methods.each_value do |method|
           next if method.name == :none
           next unless method.matches_request?(request)
-
-          matched += 1
+          # The same strategy again, under another key: still one method.
+          next if matched.equal?(method.strategy)
 
           # RFC 6749 §2.3 only forbids using more than one method, so bail out
-          # on the second match instead of evaluating the remaining methods.
-          raise Errors::MultipleClientAuthMethods if matched > 1
+          # on the second one instead of evaluating the remaining methods.
+          raise Errors::MultipleClientAuthMethods if matched
+
+          matched = method.strategy
         end
       end
 

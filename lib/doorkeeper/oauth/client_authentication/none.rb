@@ -11,6 +11,14 @@ module Doorkeeper
           false
         end
 
+        # The IANA token endpoint authentication method name this
+        # implements — see Credentials#authenticated_with.
+        AUTH_METHOD_NAME = "none"
+
+        def self.auth_method_name
+          AUTH_METHOD_NAME
+        end
+
         # Rejects a request that carries header-based client authentication (a
         # +Basic+ credential, or any non-blank Authorization header that is not
         # a bearer token): such a request must not be silently treated as an

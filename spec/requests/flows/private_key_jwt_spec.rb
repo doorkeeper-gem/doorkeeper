@@ -25,8 +25,6 @@ feature "private_key_jwt client authentication" do
       jwks: jwks.to_json,
     )
 
-    Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::KeyResolver.jwks_cache.clear
-    Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::ReplayGuard.instance.clear
     allow(Resolv).to receive(:getaddresses).and_return(["93.184.216.34"])
   end
 
@@ -284,5 +282,232 @@ feature "private_key_jwt client authentication" do
 
     expect(page.driver.response.status).to eq(401)
     expect(json_response["error"]).to eq("invalid_client")
+  end
+
+  context "with a client ID metadata document client" do
+    let(:client_id_url) { "https://client.example.com/oauth-client" }
+    let(:metadata) do
+      {
+        "client_id" => client_id_url,
+        "client_name" => "Confidential Example App",
+        "redirect_uris" => [redirect_uri],
+        "token_endpoint_auth_method" => "private_key_jwt",
+        "jwks" => jwks,
+      }
+    end
+
+    background do
+      config_is_set(:client_id_metadata_documents, true)
+      # A document client's audience is never derived from the request, so the
+      # server has to identify itself for its assertions to be verifiable at
+      # all — see PrivateKeyJwt.acceptable_audiences.
+      config_is_set(:issuer, "http://www.example.com")
+      Doorkeeper::ClientIdMetadata.document_cache.clear
+      stub_request(:get, client_id_url).to_return(status: 200, body: metadata.to_json)
+    end
+
+    def client_assertion(key: rsa_key, header_kid: kid, claims: {})
+      super(key: key, header_kid: header_kid, claims: { "iss" => client_id_url, "sub" => client_id_url }.merge(claims))
+    end
+
+    def authorize_and_return_code
+      visit authorization_endpoint_url(client_id: client_id_url, redirect_uri: redirect_uri)
+      click_on "Authorize" if current_params["code"].blank?
+      current_params["code"]
+    end
+
+    def post_token(code, extra_params = {})
+      page.driver.post token_endpoint_url, {
+        grant_type: "authorization_code",
+        code: code,
+        redirect_uri: redirect_uri,
+        client_id: client_id_url,
+      }.merge(extra_params)
+    end
+
+    scenario "a confidential URL client authenticates the token request with a signed assertion" do
+      code = authorize_and_return_code
+
+      application = Doorkeeper::Application.find_by(uid: client_id_url)
+      expect(application.confidential).to be true
+
+      post_token(
+        code,
+        client_assertion: client_assertion,
+        client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
+      )
+
+      expect(page.driver.response.status).to eq(200)
+      expect(json_response).to have_key("access_token")
+      expect(Doorkeeper::AccessToken.last.application.uid).to eq(client_id_url)
+    end
+
+    # The other side of the client_credentials rule: a document naming
+    # private_key_jwt describes a confidential client, which RFC 6749 Section
+    # 4.4 allows the grant, and it holds a key only its owner can present.
+    scenario "a confidential URL client keeps the client credentials grant" do
+      config_is_set(:grant_flows, %w[client_credentials])
+
+      page.driver.post token_endpoint_url, {
+        grant_type: "client_credentials",
+        client_assertion: client_assertion,
+        client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
+      }
+
+      expect(page.driver.response.status).to eq(200)
+      expect(json_response).to have_key("access_token")
+      expect(Doorkeeper::AccessToken.last.application.uid).to eq(client_id_url)
+    end
+
+    # A document client_id resolves to the same client, and the same keys, at
+    # every server implementing the draft, so an audience taken from the Host
+    # header would make one server's assertion replayable at all of them.
+    scenario "a URL client is refused when the server identifies itself nowhere" do
+      config_is_set(:issuer, nil)
+      code = authorize_and_return_code
+
+      post_token(
+        code,
+        client_assertion: client_assertion(claims: { "aud" => token_endpoint_audience }),
+        client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
+      )
+
+      expect(page.driver.response.status).to eq(401)
+      expect(json_response["error"]).to eq("invalid_client")
+    end
+
+    # Draft Section 7.2: a Client Identifier URL may be pre-registered, and
+    # such a client authenticates with the keys registered for it. Its URL is
+    # never fetched — the document served there is whoever controls the URL's
+    # to write, and must not let them sign as the registered client.
+    scenario "a pre-registered application holding the URL authenticates with its registered keys, not the document's" do
+      registered_key = OpenSSL::PKey::RSA.generate(2048)
+      client_exists(
+        name: "Pre-registered URL client",
+        uid: client_id_url,
+        redirect_uri: redirect_uri,
+        confidential: true,
+        jwks: { "keys" => [JWT::JWK.new(registered_key.public_key, { kid: kid }).export] }.to_json,
+      )
+      config_is_set(:grant_flows, %w[client_credentials])
+
+      # Signed with the key the document publishes.
+      page.driver.post token_endpoint_url, {
+        grant_type: "client_credentials",
+        client_assertion: client_assertion,
+        client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
+      }
+
+      expect(page.driver.response.status).to eq(401)
+      expect(json_response).to include("error" => "invalid_client")
+      expect(Doorkeeper::AccessToken.count).to eq(0)
+
+      # Signed with the key registered for the application.
+      page.driver.post token_endpoint_url, {
+        grant_type: "client_credentials",
+        client_assertion: client_assertion(key: registered_key),
+        client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
+      }
+
+      expect(page.driver.response.status).to eq(200)
+      expect(Doorkeeper::AccessToken.last.application_id).to eq(@client.id)
+      expect(a_request(:get, client_id_url)).not_to have_been_made
+    end
+
+    scenario "keys can also be fetched from the document's jwks_uri" do
+      jwks_uri = "https://client.example.com/jwks.json"
+      stub_request(:get, client_id_url)
+        .to_return(status: 200, body: metadata.except("jwks").merge("jwks_uri" => jwks_uri).to_json)
+      stub_request(:get, jwks_uri).to_return(status: 200, body: jwks.to_json)
+
+      code = authorize_and_return_code
+      post_token(
+        code,
+        client_assertion: client_assertion,
+        client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
+      )
+
+      expect(page.driver.response.status).to eq(200)
+      expect(json_response).to have_key("access_token")
+    end
+
+    context "when the refresh token grant is enabled" do
+      background do
+        config_is_set(:refresh_token_enabled, true)
+        config_is_set(:grant_flows, %w[authorization_code refresh_token])
+      end
+
+      scenario "a confidential URL client refreshes with a signed assertion" do
+        post_token(
+          authorize_and_return_code,
+          client_assertion: client_assertion,
+          client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
+        )
+        expect(page.driver.response.status).to eq(200)
+        refresh_token = json_response["refresh_token"]
+        expect(refresh_token).to be_present
+
+        page.driver.post token_endpoint_url, {
+          grant_type: "refresh_token",
+          refresh_token: refresh_token,
+          client_id: client_id_url,
+          client_assertion: client_assertion,
+          client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
+        }
+
+        expect(page.driver.response.status).to eq(200)
+        expect(json_response).to have_key("access_token")
+      end
+    end
+
+    # The keys come straight from an attacker-controlled document, and they
+    # are resolved before the assertion's signature is checked, so a key the
+    # jwt gem chokes on must fail authentication rather than reach the
+    # endpoint as a 500. This set is well-formed enough to pass the document's
+    # own validation, so it genuinely reaches the key resolver.
+    context "when the document publishes a key the JWK parser cannot build" do
+      let(:jwks) { { "keys" => [{ "kty" => "RSA", "kid" => kid, "n" => 123, "e" => "AQAB" }] } }
+
+      scenario "the token endpoint rejects the client instead of raising" do
+        visit authorization_endpoint_url(client_id: client_id_url, redirect_uri: redirect_uri)
+        click_on "Authorize"
+        code = current_params["code"]
+
+        page.driver.post token_endpoint_url, {
+          grant_type: "authorization_code",
+          code: code,
+          redirect_uri: redirect_uri,
+          client_id: client_id_url,
+          client_assertion: client_assertion,
+          client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
+        }
+
+        expect(page.driver.response.status).to eq(401)
+        expect(json_response["error"]).to eq("invalid_client")
+      end
+    end
+
+    context "when the document's jwks is malformed" do
+      let(:jwks) { [jwk.export] }
+
+      scenario "the invalid document rejects the client at the token endpoint" do
+        visit authorization_endpoint_url(client_id: client_id_url, redirect_uri: redirect_uri)
+
+        # The document itself is now invalid, so there is no client to consent to.
+        expect(Doorkeeper::Application.find_by(uid: client_id_url)).to be_nil
+
+        page.driver.post token_endpoint_url, {
+          grant_type: "authorization_code",
+          code: "irrelevant",
+          redirect_uri: redirect_uri,
+          client_id: client_id_url,
+          client_assertion: client_assertion,
+          client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
+        }
+
+        expect(page.driver.response.status).to eq(401)
+        expect(json_response["error"]).to eq("invalid_client")
+      end
+    end
   end
 end
