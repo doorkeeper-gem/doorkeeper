@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## 5.9.7
 
 - Refuse requests that transmit an access token by more than one method (RFC 6750 §2), instead of silently authorizing with the first configured `access_token_methods` entry that matched and discarding the other tokens. Such a request now fails closed as carrying no usable token (401 `invalid_token`); no calling contract changes. The form-encoded body (§2.2) and the URI query (§2.3) count as two methods even though Rails and Rack merge them into a single `params` hash. The same token repeated across two methods is refused too — §2 forbids the second method, not a disagreement between the two — and a custom callable extractor in `access_token_methods` keeps the historical first-wins behavior and is never invoked more than once. (The strict `invalid_request` (400) answer §3.1 prescribes ships with Doorkeeper 6.0.)
+- [#1925] Internal: pin the development dependency on `json` below 3.0. json 3 removed the positional options Hash from `JSON.parse` and the `quirks_mode` option from `JSON.generate`, both of which Active Support still uses, so the suite could not run on any supported Rails version.
 
 ## 5.9.6
 

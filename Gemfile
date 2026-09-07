@@ -36,3 +36,9 @@ gem "irb", "~> 1.8"
 
 # Interactive Debugging tools
 gem "debug", "~> 1.8"
+
+# json 3.0 removed the positional options Hash from JSON.parse and the
+# quirks_mode option from JSON.generate. Active Support still passes both, so
+# every released Rails version raises ArgumentError as soon as it encodes or
+# decodes JSON. Drop this pin once Rails ships releases that support json 3.
+gem "json", "< 3"
