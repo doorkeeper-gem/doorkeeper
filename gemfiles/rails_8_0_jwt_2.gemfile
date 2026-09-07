@@ -21,4 +21,6 @@ gem "tzinfo-data", platforms: [:mingw, :mswin, :x64_mingw]
 gem "timecop"
 gem "jwt", "2.7.0"
 
+gem "json", "< 3" # Active Support is not compatible with json 3 yet
+
 gemspec path: "../"
