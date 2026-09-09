@@ -36,4 +36,8 @@ jobs:
         uses: dangoslen/changelog-enforcer@v3.7.0
         with:
           changeLogPath: CHANGELOG.md
-          skipLabels: "dependencies"
+          # Dependabot PRs are labeled "dependencies" automatically and don't
+          # need a changelog entry; "Skip-Changelog" keeps a manual escape hatch.
+          # It is the action's default, but an explicit list replaces the
+          # default rather than extending it, so it has to be repeated here.
+          skipLabels: "Skip-Changelog,dependencies"
