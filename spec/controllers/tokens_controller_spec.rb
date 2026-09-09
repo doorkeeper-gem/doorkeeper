@@ -636,6 +636,29 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
       end
     end
 
+    # RFC 6750 §2 forbids transmitting the token by more than one method, and
+    # §3.1 answers it with invalid_request (400), not invalid_token (401).
+    #
+    # The endpoint authenticates its caller through Doorkeeper.authenticate,
+    # which keeps its token-or-nil contract and answers nil here, so the
+    # request joins the existing "not authorized" path and carries that
+    # description rather than the multi-method one. The error code and status
+    # RFC 6750 §3.1 prescribes are what the client acts on, and both hold.
+    context "when authorized using more than one token transmission method" do
+      it "responds with invalid_request error" do
+        request.headers["Authorization"] = "Bearer #{access_token.token}"
+
+        post :introspect, params: { token: token_for_introspection.token, access_token: "another-token" }
+
+        response_status_should_be 400
+
+        expect(json_response).to include(
+          "error" => "invalid_request",
+          "error_description" => I18n.t(:request_not_authorized, scope: %i[doorkeeper errors messages invalid_request]),
+        )
+      end
+    end
+
     context "when authorized using the Bearer token that need to be introspected" do
       it "responds with invalid token error" do
         request.headers["Authorization"] = "Bearer #{access_token.token}"

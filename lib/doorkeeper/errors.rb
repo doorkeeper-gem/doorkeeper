@@ -37,6 +37,20 @@ module Doorkeeper
       end
     end
 
+    # Raised when a request transmits an access token by more than one method,
+    # which RFC 6750 §2 explicitly forbids ("Clients MUST NOT use more than
+    # one method to transmit the token in each request"); §3.1 lists it among
+    # the conditions answered with invalid_request (HTTP 400).
+    class MultipleAccessTokenMethods < DoorkeeperError
+      def type
+        :invalid_request
+      end
+
+      def reason
+        :multiple_access_token_methods
+      end
+    end
+
     class MissingRequiredParameter < DoorkeeperError
       attr_reader :missing_param
 

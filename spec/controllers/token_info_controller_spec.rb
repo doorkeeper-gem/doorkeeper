@@ -48,5 +48,29 @@ RSpec.describe Doorkeeper::TokenInfoController, type: :controller do
         )
       end
     end
+
+    # RFC 6750 §2 forbids transmitting the token by more than one method, and
+    # §3.1 answers it with invalid_request (400), not invalid_token (401).
+    describe "multiple transmission methods" do
+      it "responds with 400 invalid_request when two methods present different tokens" do
+        request.env["HTTP_AUTHORIZATION"] = "Bearer #{doorkeeper_token.token}"
+        get :show, params: { access_token: "another-token" }
+
+        expect(response.status).to eq 400
+        parsed_body = JSON.parse(response.body)
+        expect(parsed_body["error"]).to eq("invalid_request")
+        expect(parsed_body["error_description"]).to eq(
+          I18n.t(:multiple_access_token_methods, scope: %i[doorkeeper errors messages invalid_request]),
+        )
+      end
+
+      it "responds with 400 invalid_request when the same token is repeated across methods" do
+        request.env["HTTP_AUTHORIZATION"] = "Bearer #{doorkeeper_token.token}"
+        get :show, params: { access_token: doorkeeper_token.token }
+
+        expect(response.status).to eq 400
+        expect(JSON.parse(response.body)["error"]).to eq("invalid_request")
+      end
+    end
   end
 end

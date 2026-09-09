@@ -206,8 +206,19 @@ module Doorkeeper
       @orm_adapter.initialize_application_owner!
     end
 
+    # Answers the access token authorizing the request, or nil when there is
+    # none. A request that transmits a token by more than one method (RFC 6750
+    # §2) has no single authorizing token, so it answers nil here rather than
+    # propagating Errors::MultipleAccessTokenMethods: this is the entry point
+    # host applications call, and its token-or-nil contract is what they build
+    # on. Callers that need to tell a refused request apart from one that
+    # carried no token — to describe it as the multi-method refusal it is —
+    # call OAuth::Token.authenticate and handle the error, as the Rails and
+    # Grape helpers do.
     def authenticate(request, methods = Doorkeeper.config.access_token_methods)
       OAuth::Token.authenticate(request, *methods)
+    rescue Errors::MultipleAccessTokenMethods
+      nil
     end
 
     def gem_version

@@ -14,6 +14,8 @@ module ControllerActions
   def doorkeeper_unauthorized_render_options(*); end
 
   def doorkeeper_forbidden_render_options(*); end
+
+  def doorkeeper_bad_request_render_options(*); end
 end
 
 RSpec.describe "doorkeeper authorize filter" do
@@ -98,6 +100,43 @@ RSpec.describe "doorkeeper authorize filter" do
         get :show, params: { id: "4", access_token: token_string }
         expect(response.status).to eq 401
         expect(response.header["WWW-Authenticate"]).to match(/^Bearer/)
+      end
+    end
+
+    # RFC 6750 §2 forbids transmitting the token by more than one method, and
+    # §3.1 answers it with invalid_request (400), not invalid_token (401).
+    context "with tokens transmitted by more than one method", token: :valid do
+      it "refuses the request with invalid_request" do
+        request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
+        get :index, params: { access_token: "another-token" }
+
+        expect(response.status).to eq 400
+        expect(response.header["WWW-Authenticate"]).to include('error="invalid_request"')
+      end
+
+      it "refuses the same token repeated across methods" do
+        request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
+        get :index, params: { access_token: token_string }
+
+        expect(response.status).to eq 400
+        expect(response.header["WWW-Authenticate"]).to include('error="invalid_request"')
+      end
+
+      # The refusal leaves doorkeeper_token nil, which is also what an
+      # unusable token leaves behind, so the render options must be chosen by
+      # the response rather than by that state: a host's 401 body must not be
+      # what answers a 400.
+      it "renders through the bad request hook rather than the unauthorized one" do
+        expect(controller).to receive(:doorkeeper_bad_request_render_options)
+          .with(error: an_instance_of(Doorkeeper::OAuth::InvalidRequestResponse))
+          .and_call_original
+        expect(controller).not_to receive(:doorkeeper_unauthorized_render_options)
+
+        request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
+        get :index, params: { access_token: "another-token" }
+
+        expect(response.status).to eq 400
+        expect(response.body).to be_empty
       end
     end
   end
@@ -344,6 +383,87 @@ RSpec.describe "doorkeeper authorize filter" do
     end
   end
 
+  context "when custom bad request render options are configured" do
+    controller do
+      before_action :doorkeeper_authorize!
+
+      include ControllerActions
+    end
+
+    after do
+      module ControllerActions
+        remove_method :doorkeeper_bad_request_render_options
+
+        def doorkeeper_bad_request_render_options(*); end
+      end
+    end
+
+    context "with a JSON custom render", token: :valid do
+      before do
+        module ControllerActions
+          remove_method :doorkeeper_bad_request_render_options
+
+          def doorkeeper_bad_request_render_options(error: nil)
+            { json: { error_message: error.description } }
+          end
+        end
+      end
+
+      it "renders a custom JSON response" do
+        request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
+        get :index, params: { access_token: "another-token" }
+
+        expect(response.status).to eq 400
+        expect(response.content_type).to include("application/json")
+        expect(response.header["WWW-Authenticate"]).to include('error="invalid_request"')
+
+        expect(json_response).not_to be_nil
+        expect(json_response["error_message"]).to match("more than one method")
+      end
+    end
+
+    context "with a text custom render", token: :valid do
+      before do
+        module ControllerActions
+          remove_method :doorkeeper_bad_request_render_options
+
+          def doorkeeper_bad_request_render_options(**)
+            { plain: "Bad Request" }
+          end
+        end
+      end
+
+      it "renders a custom text response" do
+        request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
+        get :index, params: { access_token: "another-token" }
+
+        expect(response.status).to eq 400
+        expect(response.content_type).to include("text/plain")
+        expect(response.body).to eq("Bad Request")
+      end
+    end
+
+    context "when the token is merely unusable", token: :invalid do
+      before do
+        module ControllerActions
+          remove_method :doorkeeper_bad_request_render_options
+
+          def doorkeeper_bad_request_render_options(**)
+            { plain: "Bad Request" }
+          end
+        end
+      end
+
+      it "keeps answering through the unauthorized hook" do
+        expect(controller).not_to receive(:doorkeeper_bad_request_render_options)
+
+        get :index, params: { access_token: token_string }
+
+        expect(response.status).to eq 401
+      end
+    end
+  end
+
   context "when handle_auth_errors option is set to :raise" do
     subject(:request) { get :index, params: { access_token: token_string } }
 
@@ -377,6 +497,14 @@ RSpec.describe "doorkeeper authorize filter" do
     context "when token is forbidden" do
       it "raises Doorkeeper::Errors::TokenForbidden exception", token: :forbidden do
         expect { request }.to raise_error(Doorkeeper::Errors::TokenForbidden)
+      end
+    end
+
+    context "when tokens are transmitted by more than one method" do
+      it "raises Doorkeeper::Errors::InvalidRequest exception", token: :valid do
+        controller.request.env["HTTP_AUTHORIZATION"] = "Bearer another-token"
+
+        expect { request }.to raise_error(Doorkeeper::Errors::InvalidRequest)
       end
     end
 

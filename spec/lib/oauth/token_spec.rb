@@ -23,11 +23,16 @@ RSpec.describe Doorkeeper::OAuth::Token do
     end
 
     it "delegates methods received as symbols to described_class class" do
-      expect(described_class).to receive(:from_params).with(request)
-      described_class.from_request request, :from_params
+      allow(described_class).to receive(:from_params).with(request).and_return("token-value")
+
+      expect(described_class.from_request(request, :from_params)).to eq("token-value")
     end
 
-    it "stops at the first credentials found" do
+    # Custom callable extractors are exempt from the multi-method check and
+    # keep the historical first-wins selection, so they are never invoked
+    # more than once (parity with the exemption client authentication gives
+    # its legacy callable extractors).
+    it "stops at the first callable that extracts credentials" do
       not_called_method = double
       expect(not_called_method).not_to receive(:call)
       described_class.from_request request, ->(_r) {}, method, not_called_method
@@ -36,6 +41,111 @@ RSpec.describe Doorkeeper::OAuth::Token do
     it "returns the credential from extractor method" do
       credentials = described_class.from_request request, method
       expect(credentials).to eq("token-value")
+    end
+
+    it "skips methods that extract nothing" do
+      credentials = described_class.from_request request, ->(_r) {}, method, ->(_r) { "" }
+      expect(credentials).to eq("token-value")
+    end
+
+    # RFC 6750 §2: "Clients MUST NOT use more than one method to transmit the
+    # token in each request." Every built-in method has to be consulted: a
+    # token presented by a method that is never called cannot be detected as
+    # a second transmission method.
+    it "refuses a request where two built-in methods present different tokens" do
+      allow(described_class).to receive(:from_access_token_param).with(request).and_return("token-value")
+      allow(described_class).to receive(:from_bearer_param).with(request).and_return("another-token-value")
+
+      expect { described_class.from_request(request, :from_access_token_param, :from_bearer_param) }
+        .to raise_error(Doorkeeper::Errors::MultipleAccessTokenMethods)
+    end
+
+    # §2 forbids using more than one method, whatever each one carries, and
+    # §3.1 lists "repeats the same parameter" right beside the multi-method
+    # condition — so the same value presented twice is still two methods.
+    it "refuses a request where two built-in methods present the same token" do
+      allow(described_class).to receive(:from_access_token_param).with(request).and_return("token-value")
+      allow(described_class).to receive(:from_bearer_param).with(request).and_return("token-value")
+
+      expect { described_class.from_request(request, :from_access_token_param, :from_bearer_param) }
+        .to raise_error(Doorkeeper::Errors::MultipleAccessTokenMethods)
+    end
+
+    it "does not count a token presented by a callable extractor" do
+      allow(described_class).to receive(:from_bearer_param).with(request).and_return("another-token-value")
+
+      expect(described_class.from_request(request, method, :from_bearer_param))
+        .to eq("token-value")
+    end
+
+    # RFC 6750 treats the form-encoded body (§2.2) and the URI query (§2.3) as
+    # two distinct transmission methods, but ActionDispatch merges them into a
+    # single parameter hash — request_parameters.merge(query_parameters) — so
+    # the extractor sees one value and the other token is discarded silently.
+    context "when one parameter is transmitted in both the body and the query" do
+      def request_with(parameter, query:, body:)
+        ActionDispatch::Request.new(
+          Rack::MockRequest.env_for(
+            "/resource?#{parameter}=#{query}",
+            method: "POST",
+            params: { parameter.to_s => body },
+          ),
+        )
+      end
+
+      it "refuses conflicting access_token values" do
+        request = request_with(:access_token, query: "query-token", body: "body-token")
+
+        expect(request.parameters[:access_token]).to eq("query-token")
+        expect { described_class.from_request(request, :from_access_token_param) }
+          .to raise_error(Doorkeeper::Errors::MultipleAccessTokenMethods)
+      end
+
+      it "refuses conflicting bearer_token values" do
+        request = request_with(:bearer_token, query: "query-token", body: "body-token")
+
+        expect { described_class.from_request(request, :from_bearer_param) }
+          .to raise_error(Doorkeeper::Errors::MultipleAccessTokenMethods)
+      end
+
+      it "refuses the same value carried by both" do
+        request = request_with(:access_token, query: "token-value", body: "token-value")
+
+        expect { described_class.from_request(request, :from_access_token_param) }
+          .to raise_error(Doorkeeper::Errors::MultipleAccessTokenMethods)
+      end
+
+      # The check counts the extractor's own value alongside the two raw
+      # sources, so a single parameter must not be counted twice: once as
+      # what the extractor read and once as the source it came from.
+      it "returns the token when only the query carries it" do
+        request = ActionDispatch::Request.new(
+          Rack::MockRequest.env_for("/resource?access_token=token-value"),
+        )
+
+        expect(described_class.from_request(request, :from_access_token_param))
+          .to eq("token-value")
+      end
+
+      it "returns the token when only the body carries it" do
+        request = ActionDispatch::Request.new(
+          Rack::MockRequest.env_for("/resource", method: "POST", params: { "access_token" => "token-value" }),
+        )
+
+        expect(described_class.from_request(request, :from_access_token_param))
+          .to eq("token-value")
+      end
+    end
+
+    # A token the extractor reaches by neither raw source — here a path
+    # segment, which ActionDispatch merges into #parameters as well — is one
+    # transmission method, not two.
+    it "returns a token carried only by a path parameter" do
+      request = ActionDispatch::Request.new(Rack::MockRequest.env_for("/resource"))
+      request.path_parameters = { access_token: "token-value" }
+
+      expect(described_class.from_request(request, :from_access_token_param))
+        .to eq("token-value")
     end
   end
 

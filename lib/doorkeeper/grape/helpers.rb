@@ -36,11 +36,20 @@ module Doorkeeper
         env["api.endpoint"]
       end
 
+      # Memoized with the same defined? guard as Rails::Helpers#doorkeeper_token:
+      # both a request without a usable token and a refused multi-method request
+      # leave @doorkeeper_token nil, which ||= would re-evaluate on every call —
+      # re-running authentication just to reach the same verdict again.
       def doorkeeper_token
-        @doorkeeper_token ||= OAuth::Token.authenticate(
+        return @doorkeeper_token if defined?(@doorkeeper_token)
+
+        @doorkeeper_token = OAuth::Token.authenticate(
           decorated_request,
           *Doorkeeper.config.access_token_methods,
         )
+      rescue Errors::MultipleAccessTokenMethods => e
+        @_doorkeeper_multiple_token_methods_error = e
+        @doorkeeper_token = nil
       end
 
       def decorated_request
@@ -49,6 +58,7 @@ module Doorkeeper
 
       def error_status_codes
         {
+          bad_request: 400,
           unauthorized: 401,
           forbidden: 403,
         }
