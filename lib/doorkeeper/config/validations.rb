@@ -10,6 +10,7 @@ module Doorkeeper
       def validate!
         validate_client_authentication_conflict
         validate_client_authentication_registered
+        validate_private_key_jwt_identity
         validate_reuse_access_token_value
         validate_token_reuse_limit
         validate_secret_strategies
@@ -67,6 +68,33 @@ module Doorkeeper
           "(client_authentication resolved to an empty set). All client authentication " \
           "will fail. Configure at least one registered method, e.g. " \
           "client_authentication #{Doorkeeper::ClientAuthentication::DEFAULT_METHODS.inspect}.",
+        )
+      end
+
+      # Warn when private_key_jwt client authentication is enabled on a server
+      # that identifies itself nowhere. An assertion's audience is what keeps
+      # it from being replayed at another authorization server, so it is only
+      # ever checked against the configured +issuer+ or Rails'
+      # +default_url_options+ - never against the request's Host header, which
+      # the client controls. With neither configured there is no acceptable
+      # audience and every assertion is refused, so make that loud at boot
+      # rather than leave it to be discovered request by request.
+      def validate_private_key_jwt_identity
+        # The deprecated client_credentials option only maps onto shared-secret
+        # methods, so a configuration using it alone never enables this one.
+        return if instance_variable_defined?(:@client_credentials_methods) &&
+                  !instance_variable_defined?(:@client_authentication)
+        return unless client_authentication.map(&:to_s).include?("private_key_jwt")
+        return if issuer.present?
+
+        url_options = ::Rails.application&.routes&.default_url_options || {}
+        return if url_options[:host].present?
+
+        ::Rails.logger.error(
+          "[DOORKEEPER] private_key_jwt client authentication is enabled, but the server " \
+          "identifies itself nowhere, so no audience is acceptable and every client " \
+          "assertion will be refused. Configure issuer, or " \
+          "Rails.application.routes.default_url_options[:host].",
         )
       end
 

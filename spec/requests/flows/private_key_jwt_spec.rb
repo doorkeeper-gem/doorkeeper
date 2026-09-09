@@ -13,6 +13,9 @@ feature "private_key_jwt client authentication" do
 
   background do
     config_is_set(:client_authentication, %i[client_secret_basic client_secret_post none private_key_jwt])
+    # The accepted audiences are built from the server's own identity, so the
+    # dummy app has to declare one for an assertion to be acceptable at all.
+    config_is_set(:issuer, "http://www.example.com")
     default_scopes_exist :default
     config_is_set(:authenticate_resource_owner) { User.first || redirect_to("/sign_in") }
     create_resource_owner
@@ -271,6 +274,46 @@ feature "private_key_jwt client authentication" do
 
     expect(page.driver.response.status).to eq(200)
     expect(token.reload).to be_revoked
+  end
+
+  # A server that names itself nowhere has no audience to check an assertion
+  # against, so it authenticates nobody with one rather than trusting the
+  # request to say who it is.
+  context "when the server identifies itself nowhere" do
+    background do
+      config_is_set(:issuer, nil)
+    end
+
+    scenario "an assertion is rejected even though it matches the request URL" do
+      code = authorize_and_return_code
+
+      post_token(
+        code,
+        client_assertion: client_assertion,
+        client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
+      )
+
+      expect(page.driver.response.status).to eq(401)
+      expect(json_response["error"]).to eq("invalid_client")
+    end
+
+    # aud is the only claim tying an assertion to this server. While the
+    # audience was built from the request, a forwarded Host header was enough
+    # to choose the value the assertion would be checked against, so one
+    # minted for another authorization server authenticated here.
+    scenario "an assertion matching a forwarded Host header is rejected" do
+      code = authorize_and_return_code
+
+      page.driver.header("X-Forwarded-Host", "as.attacker.example")
+      post_token(
+        code,
+        client_assertion: client_assertion(claims: { "aud" => "http://as.attacker.example/oauth/token" }),
+        client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
+      )
+
+      expect(page.driver.response.status).to eq(401)
+      expect(json_response["error"]).to eq("invalid_client")
+    end
   end
 
   scenario "an assertion for an unrelated audience is rejected" do

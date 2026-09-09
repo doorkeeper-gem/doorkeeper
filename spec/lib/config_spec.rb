@@ -514,6 +514,62 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
+  describe "private_key_jwt server identity" do
+    # The audience of a client assertion is built from the server's own
+    # identity, so with none configured no audience is acceptable and the
+    # method authenticates nobody. That is a deployment mistake worth
+    # surfacing at boot rather than one request at a time.
+    it "logs an error when private_key_jwt is enabled and the server names itself nowhere" do
+      expect(Rails.logger).to receive(:error).with(
+        /private_key_jwt client authentication is enabled, but the server identifies itself nowhere/,
+      )
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication %i[client_secret_basic private_key_jwt]
+      end
+    end
+
+    it "stays quiet when an issuer identifies the server" do
+      expect(Rails.logger).not_to receive(:error).with(/identifies itself nowhere/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication %i[client_secret_basic private_key_jwt]
+        issuer "https://as.example.com"
+      end
+    end
+
+    it "stays quiet when Rails' default_url_options identifies the server" do
+      allow(Rails.application.routes).to receive(:default_url_options).and_return(host: "as.example.com")
+      expect(Rails.logger).not_to receive(:error).with(/identifies itself nowhere/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication %i[client_secret_basic private_key_jwt]
+      end
+    end
+
+    it "stays quiet when private_key_jwt is not enabled" do
+      expect(Rails.logger).not_to receive(:error).with(/identifies itself nowhere/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication %i[client_secret_basic]
+      end
+    end
+
+    it "stays quiet for a legacy client_credentials configuration" do
+      allow(Kernel).to receive(:warn)
+      expect(Rails.logger).not_to receive(:error).with(/identifies itself nowhere/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_credentials :from_basic
+      end
+    end
+  end
+
   describe "client_authentication_methods" do
     it "warns at configure time and uses client_authentication when both options are set" do
       allow(Kernel).to receive(:warn)
