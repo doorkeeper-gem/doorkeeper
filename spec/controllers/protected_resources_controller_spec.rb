@@ -100,6 +100,28 @@ RSpec.describe "doorkeeper authorize filter" do
         expect(response.header["WWW-Authenticate"]).to match(/^Bearer/)
       end
     end
+
+    # RFC 6750 §2 forbids transmitting the token by more than one method. On
+    # this stable branch such a request fails closed as carrying no usable
+    # token (401 invalid_token); the strict invalid_request (400) of §3.1
+    # ships with 6.0.
+    context "with tokens transmitted by more than one method", token: :valid do
+      it "refuses the request as carrying no usable token" do
+        request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
+        get :index, params: { access_token: "another-token" }
+
+        expect(response.status).to eq 401
+        expect(response.header["WWW-Authenticate"]).to include('error="invalid_token"')
+      end
+
+      it "refuses the same token repeated across methods" do
+        request.env["HTTP_AUTHORIZATION"] = "Bearer #{token_string}"
+        get :index, params: { access_token: token_string }
+
+        expect(response.status).to eq 401
+        expect(response.header["WWW-Authenticate"]).to include('error="invalid_token"')
+      end
+    end
   end
 
   context "when defined with scopes" do
@@ -351,6 +373,14 @@ RSpec.describe "doorkeeper authorize filter" do
     context "when token is forbidden" do
       it "raises Doorkeeper::Errors::TokenForbidden exception", token: :forbidden do
         expect { request }.to raise_error(Doorkeeper::Errors::TokenForbidden)
+      end
+    end
+
+    context "when tokens are transmitted by more than one method" do
+      it "raises Doorkeeper::Errors::TokenUnknown exception", token: :valid do
+        controller.request.env["HTTP_AUTHORIZATION"] = "Bearer another-token"
+
+        expect { request }.to raise_error(Doorkeeper::Errors::TokenUnknown)
       end
     end
 

@@ -5,6 +5,10 @@ upgrade guides.
 
 User-visible changes worth mentioning.
 
+## 5.9.7
+
+- Refuse requests that transmit an access token by more than one method (RFC 6750 §2), instead of silently authorizing with the first configured `access_token_methods` entry that matched and discarding the other tokens. Such a request now fails closed as carrying no usable token (401 `invalid_token`); no calling contract changes. The form-encoded body (§2.2) and the URI query (§2.3) count as two methods even though Rails and Rack merge them into a single `params` hash. The same token repeated across two methods is refused too — §2 forbids the second method, not a disagreement between the two — and a custom callable extractor in `access_token_methods` keeps the historical first-wins behavior and is never invoked more than once. (The strict `invalid_request` (400) answer §3.1 prescribes ships with Doorkeeper 6.0.)
+
 ## 5.9.6
 
 - Reject requests that present more than one client identity (e.g. an `Authorization: Basic` header for one client and a `client_id` parameter naming another) with an `invalid_request` error, instead of authenticating the first extracted identity and silently discarding the other one. A `client_id` sent alongside another authentication method keeps working when it identifies the same client (RFC 7521 §4.2). Like the RFC 6749 §2.3 check released in 5.9.5, this validation does not apply when `client_credentials` is configured with a callable extractor, since the credentials the remaining extractors would return are never evaluated — the `client_credentials` option documents that now.

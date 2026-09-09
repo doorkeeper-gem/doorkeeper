@@ -24,6 +24,12 @@ module GrapeApp
       get :status do
         { token: doorkeeper_token.token }
       end
+
+      # Reachable with a form-encoded body, so a request can present a token
+      # through RFC 6750 §2.2 and §2.3 at the same time.
+      post :status do
+        { token: doorkeeper_token.token }
+      end
     end
 
     resource :protected_with_endpoint_scopes do
@@ -132,6 +138,83 @@ RSpec.describe "Grape integration" do
 
       expect(last_response).not_to be_successful
       expect(json_body).to have_key("error")
+    end
+  end
+
+  # RFC 6750 §2 forbids transmitting the token by more than one method. On
+  # this stable branch such a request fails closed as carrying no usable
+  # token (401 invalid_token); the strict invalid_request (400) of §3.1
+  # ships with 6.0.
+  context "with tokens transmitted by more than one method" do
+    it "refuses the request as carrying no usable token" do
+      get "api/v1/protected/status.json?access_token=another-token",
+          {},
+          { "HTTP_AUTHORIZATION" => "Bearer #{access_token.token}" }
+
+      expect(last_response.status).to eq(401)
+      expect(last_response.headers["WWW-Authenticate"]).to include('error="invalid_token"')
+    end
+
+    # §2 forbids using more than one method, not presenting two different
+    # tokens, so repeating one token across two methods is refused as well.
+    it "refuses the same token repeated across methods" do
+      get "api/v1/protected/status.json?access_token=#{access_token.token}",
+          {},
+          { "HTTP_AUTHORIZATION" => "Bearer #{access_token.token}" }
+
+      expect(last_response.status).to eq(401)
+      expect(last_response.headers["WWW-Authenticate"]).to include('error="invalid_token"')
+    end
+
+    # The form-encoded body (§2.2) and the URI query (§2.3) are two methods,
+    # but Rack merges them into one parameter hash — letting the body win,
+    # the opposite of ActionDispatch — so the query token would otherwise be
+    # discarded without a word.
+    it "refuses different tokens presented in the body and in the query" do
+      post "api/v1/protected/status.json?access_token=another-token",
+           { access_token: access_token.token }
+
+      expect(last_response.status).to eq(401)
+      expect(last_response.headers["WWW-Authenticate"]).to include('error="invalid_token"')
+    end
+
+    it "refuses the same token repeated in the body and in the query" do
+      post "api/v1/protected/status.json?access_token=#{access_token.token}",
+           { access_token: access_token.token }
+
+      expect(last_response.status).to eq(401)
+      expect(last_response.headers["WWW-Authenticate"]).to include('error="invalid_token"')
+    end
+
+    # Grape parses a JSON body itself and merges the result into Rack's form
+    # hash, so the body/query check sees it the same way it sees a
+    # form-encoded body — and the same way ActionDispatch exposes a parsed
+    # JSON body through +POST+.
+    it "refuses a token presented in a JSON body and in the query" do
+      post "api/v1/protected/status.json?access_token=another-token",
+           { access_token: access_token.token }.to_json,
+           { "CONTENT_TYPE" => "application/json" }
+
+      expect(last_response.status).to eq(401)
+      expect(last_response.headers["WWW-Authenticate"]).to include('error="invalid_token"')
+    end
+
+    it "refuses a token presented in a JSON body and in the Authorization header" do
+      post "api/v1/protected/status.json",
+           { access_token: access_token.token }.to_json,
+           { "CONTENT_TYPE" => "application/json", "HTTP_AUTHORIZATION" => "Bearer #{access_token.token}" }
+
+      expect(last_response.status).to eq(401)
+      expect(last_response.headers["WWW-Authenticate"]).to include('error="invalid_token"')
+    end
+
+    it "accepts a token presented only in a JSON body" do
+      post "api/v1/protected/status.json",
+           { access_token: access_token.token }.to_json,
+           { "CONTENT_TYPE" => "application/json" }
+
+      expect(last_response.status).to eq(201)
+      expect(json_body["token"]).to eq(access_token.token)
     end
   end
 end

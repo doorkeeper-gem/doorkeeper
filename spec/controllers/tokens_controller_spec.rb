@@ -595,6 +595,25 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
       end
     end
 
+    # RFC 6750 §2 forbids transmitting the token by more than one method. On
+    # this stable branch such a request fails closed as carrying no usable
+    # token, so introspection treats it like any other unauthorized request;
+    # the strict §3.1 answer ships with 6.0.
+    context "when authorized using more than one token transmission method" do
+      it "responds with invalid_request error" do
+        request.headers["Authorization"] = "Bearer #{access_token.token}"
+
+        post :introspect, params: { token: token_for_introspection.token, access_token: "another-token" }
+
+        response_status_should_be 400
+
+        expect(json_response).to match(
+          "error" => "invalid_request",
+          "error_description" => I18n.t("doorkeeper.errors.messages.invalid_request.request_not_authorized"),
+        )
+      end
+    end
+
     context "when authorized using the Bearer token that need to be introspected" do
       it "responds with invalid token error" do
         request.headers["Authorization"] = "Bearer #{access_token.token}"
