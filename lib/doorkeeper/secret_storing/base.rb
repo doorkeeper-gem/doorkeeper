@@ -44,6 +44,29 @@ module Doorkeeper
       end
 
       ##
+      # Whether +stored+ is a value this strategy wrote, asked of a stored
+      # value with no plaintext to compare it against.
+      #
+      # Answered +true+ here, which is the answer that changes nothing: a
+      # caller uses this to decide whether a value is worth re-deriving under
+      # the active strategy, and a strategy that cannot tell its own output
+      # apart from anyone else's is better left alone than re-encoded on a
+      # guess. Overridden by the strategies whose output has a shape --
+      # +BCrypt+ and +Sha256Hash+ -- so that a value written by a fallback
+      # strategy can be recognised as not theirs.
+      #
+      # Optional for a custom strategy, which is duck typed everywhere else it
+      # is used: one that does not define this at all -- because it does not
+      # subclass this class -- is read as answering +true+, the same way.
+      #
+      # @param stored [String] a stored secret value
+      #
+      # @return [Boolean]
+      def self.recognizes_stored_secret?(_stored)
+        true
+      end
+
+      ##
       # Determines what secrets this strategy is applicable for
       def self.validate_for(model)
         valid = %i[token application]

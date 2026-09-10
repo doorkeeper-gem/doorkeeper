@@ -41,6 +41,7 @@ Supported features:
 - [Extensions](#extensions)
 - [Database maintenance](#database-maintenance)
 - [Resource Indicators](#resource-indicators)
+- [Client Secret Rotation](#client-secret-rotation)
 - [Custom Grant Flows](#custom-grant-flows)
 - [Custom Client Authentication Methods](#custom-client-authentication-methods)
 - [Example Applications](#example-applications)
@@ -168,6 +169,142 @@ RFC 8707 uses repeated query parameters (`?resource=…&resource=…`) for multi
 ```
 
 A single `resource=…` works as-is.
+
+## Client Secret Rotation
+
+Replacing a client secret normally cuts the client off between the moment the new secret is stored and the moment the client is redeployed with it. Doorkeeper can keep the superseded secret working for a grace period so that the two can happen in either order.
+
+### Setup
+
+1. Run the generator to add the required columns:
+
+```bash
+rails generate doorkeeper:secret_rotation
+rails db:migrate
+```
+
+2. Enable the option in your initializer:
+
+```ruby
+# config/initializers/doorkeeper.rb
+Doorkeeper.configure do
+  enable_secret_rotation
+end
+```
+
+`old_secret` and `old_secret_created_at` are named on the application model's
+`filter_attributes`, so the retained secret — and the timestamp that says a
+rotation is under way — read as `[FILTERED]` from `#inspect`. They are named
+there rather than added to your `config.filter_parameters`, which reaches every
+model and every log line in your application: neither is the name of a request
+parameter Doorkeeper accepts, and the entries it does add to that list are
+filtered as before.
+
+That is the model's own list, and it covers `#inspect`. Active Record filters
+the bind values it logs through `ActiveRecord::Base.inspection_filter` — the
+base class's list rather than the model's — so if you log SQL at `debug` level
+and want a rotation's `UPDATE` binds redacted as well, name the columns in your
+own `config.filter_parameters`, which Rails copies into
+`ActiveRecord::Base.filter_attributes` for you. Serialization is a separate
+matter, covered below.
+
+If your application model declares `secret` with Active Record Encryption
+(`encrypts :secret`), declare `encrypts :old_secret` as well: a rotation copies
+the value through the attribute reader, which is to say decrypted.
+
+The generated migration and the model API below are Active Record's, and so is
+the behavior around them: the comparison that lets an old secret authenticate,
+its grace-period expiry, the `after_old_secret_used` hook, and the
+serialization that withholds `old_secret` / `old_secret_created_at` by
+default — including from `only:`, so no view hands them out by asking for
+every attribute. It is a default and not a guarantee: `methods:` appends a
+reader after that filtering, as ActiveModel documents, so
+`serializable_hash(methods: [:old_secret])` still returns the retained secret
+to a caller that names it. Other ORM adapters define their own secret
+comparison and serialization,
+so adding the columns and implementing `#rotate_secret!` /
+`#clear_old_secret!` is not enough — an adapter needs an equivalent of the
+full rotation surface before the option can be used with it.
+
+### Rotating
+
+```ruby
+secret = application.rotate_secret!  # both secrets now authenticate
+# ... hand `secret` to the client, let it deploy ...
+application.clear_old_secret!        # only the new secret authenticates
+```
+
+`#rotate_secret!` returns the new plain text secret. When secrets are hashed that return value, and `application.plaintext_secret` on the same instance, are the only places it can be read — nothing reads it back from the database. Only one generation is retained, so rotating twice in a row ends the first rotation's grace period early: the secret it retained is replaced by the one the second rotation supersedes.
+
+Both calls take a row lock, so they need a persisted record with no unsaved changes: save what you have assigned first, then rotate.
+
+### Knowing when to clear
+
+Ending the grace period means knowing that nobody still depends on the old secret. Doorkeeper reports each time one is used:
+
+```ruby
+# config/initializers/doorkeeper.rb — the same block as above, not a second one:
+# `Doorkeeper.configure` replaces the whole configuration every time it runs.
+Doorkeeper.configure do
+  enable_secret_rotation
+
+  after_old_secret_used ->(application) {
+    StatsD.increment("oauth.old_secret_used", tags: ["client:#{application.uid}"])
+  }
+end
+```
+
+The hook fires only when the old secret is what actually authenticated the client. Silence says the old secret went unused over the window you watched, not that nothing depends on it — give that window the client's own request interval to appear in, and a deployment enough time to reach every instance of it, before reading it as a rotation that is complete.
+
+It runs synchronously inside client authentication, so keep it cheap and keep it from raising: its latency is added to every request that authenticates with the superseded secret — which is every such request, for as long as the grace period is doing its job — and an exception it raises fails the request that reached it. Increment a counter or enqueue a job; do not make a network call inline.
+
+### Deadlines
+
+Nothing expires an old secret on its own: one that is never cleared keeps authenticating indefinitely. Give the grace period a deadline if you would rather not rely on remembering:
+
+```ruby
+# config/initializers/doorkeeper.rb — again the same block.
+Doorkeeper.configure do
+  enable_secret_rotation
+  secret_rotation_grace_period 7.days
+end
+```
+
+Past it the old secret stops authenticating, though it stays in the column until `#clear_old_secret!` removes it. Left unset (the default), the grace period ends only when your application ends it; `old_secret_created_at` records when it started either way, so you can also drive your own job against it. Such a job reads that column before it clears anything, and a rotation can commit in between — pass what it read back so it ends that grace period and not a newer one:
+
+```ruby
+Doorkeeper::Application.where(old_secret_created_at: ..7.days.ago).find_each do |application|
+  application.clear_old_secret!(retained_at: application.old_secret_created_at)
+end
+```
+
+Called without it, `#clear_old_secret!` ends whatever grace period the row holds, which is what an admin ending one by hand means. It needs the columns, not the option: a server that has turned `enable_secret_rotation` off can still end a grace period its last rotation opened, without re-arming the feature for every other client first.
+
+A deadline is a comparison made when a client authenticates, not something stamped on the row: `old_secret_created_at + secret_rotation_grace_period` is evaluated against the configuration in force at the time. Shortening the period does not remove what is already retained, and lengthening or removing it later puts that secret back into service — as does turning `enable_secret_rotation` off and on again, since neither clears the column. `#clear_old_secret!` is the only thing that does, so run it rather than relying on a deadline to have retired anything permanently.
+
+### Compromised secrets
+
+A leaked secret has no grace period to give:
+
+```ruby
+application.rotate_secret!(revoke_old: true)
+application.rotate_secret!(revoke_old: true, revoke_tokens: true)
+```
+
+The second form also revokes the application's unredeemed authorization codes, which the leaked secret is enough to redeem, and the access tokens already issued to it. Revoking those tokens is precautionary — a secret does not hand out a token that was issued to someone else — except under `reuse_access_token`, where a `client_credentials` request made with the leaked secret is answered with the token that grant already holds.
+
+The revocation runs after the rotation has been committed. If it fails, the new secret is already stored and still readable through `application.plaintext_secret`; the revocation itself is idempotent and can be retried with `application.revoke_issued_credentials!`. For the same reason `revoke_tokens: true` is refused inside an open transaction that `with_lock` would join, which would keep the rotation's row lock held past the method (a `joinable: false` transaction — what Rails' transactional tests and DatabaseCleaner wrap every example in — is let through, since a caller passing that has taken transaction boundaries into their own hands) — rotate without it there, and call `revoke_issued_credentials!` once the transaction has committed. Hand the returned secret to the client only after that commit too: if your transaction rolls back, the row still holds the previous secret, the secret you were returned authenticates nothing, and the instance keeps the undone rotation as unsaved changes until it is reloaded.
+
+### Notes
+
+- The feature is opt-in and costs nothing while it is off — the secret comparison is unchanged.
+- While it is on, every comparison evaluates both the current and the old secret so that a rotation in progress is not observable in response times. Under bcrypt that is a second bcrypt comparison per token request.
+- A secret stored under a `fallback:` strategy is re-derived under the active one as it is retained, so that a rotation does not leave the plain text of a `fallback: :plain` secret sitting in `old_secret` for the length of the grace period, and so that both columns cost the same comparison. Re-deriving needs the plain text, which only `fallback: :plain` has: against a fallback that hashes, the secret is retained as stored and a rotation in progress *is* observable in response times. Retire such a fallback — which is what a fallback is for — before rotating under it.
+- It also needs a stored value the active strategy can tell apart from a plain one, and one combination cannot be told apart: `Sha256Hash` recognises its own output by its shape — 64 lower case hex characters — and `default_generator_method :hex` produces plain secrets of exactly that shape (`SecureRandom.hex(32)`). Under both together a plain secret is retained as stored, so `old_secret` holds plain text until the next authentication with it rewrites the column, or `#clear_old_secret!` removes it. Answering the other way round would be worse: a digest re-derived under the same strategy is the hash of a hash, which no client holds, so the grace period would silently authenticate nobody. Rotate under the default `:urlsafe_base64`, or end the grace period promptly, if that matters to you.
+- A custom secret strategy may implement `self.recognizes_stored_secret?(stored)`, which answers whether a stored value is one it wrote and is what decides whether a rotation re-derives it. One that does not — including one that does not subclass `Doorkeeper::SecretStoring::Base` — retains the secret as stored, which is what a rotation did before the predicate existed.
+- If you override `by_uid` or `by_uid_and_secret` with a `select` that narrows the columns loaded, include `old_secret` and `old_secret_created_at` in it — the comparison reads them, and a record loaded without them raises `ActiveModel::MissingAttributeError`.
+- `#rotate_secret!(revoke_old: true)` is the replacement with no grace period at all: it drops what is retained as it rotates, where `#clear_old_secret!` drops it without rotating. `#renew_secret` remains available, but it writes the current secret alone — it does not clear an `old_secret` an earlier rotation retained, and it only assigns, so save the record to store it.
+- Both calls `save!` the record, so a row that no longer passes the model's validations cannot be rotated until it does — an application whose `scopes` predate `enforce_configured_scopes`, or whose `redirect_uri` predates a stricter check, raises `ActiveRecord::RecordInvalid` instead. Fix the row — for a secret believed to be compromised that is the way through, since `#rotate_secret!(revoke_old: true)` is also what ends a grace period an earlier rotation opened. `#renew_secret` with `save(validate: false)` gets a new secret past the validations, but it is not that call: it writes the current secret alone, so a retained `old_secret` goes on authenticating afterwards. Dropping one from a row you cannot save means `update_columns(old_secret: nil, old_secret_created_at: nil)`, which skips the row lock along with the validations.
 
 ## Custom Grant Flows
 

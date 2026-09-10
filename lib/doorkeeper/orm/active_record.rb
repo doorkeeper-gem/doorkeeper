@@ -26,6 +26,7 @@ module Doorkeeper
         autoload :AccessGrant, "doorkeeper/orm/active_record/mixins/access_grant"
         autoload :AccessToken, "doorkeeper/orm/active_record/mixins/access_token"
         autoload :Application, "doorkeeper/orm/active_record/mixins/application"
+        autoload :SecretRotation, "doorkeeper/orm/active_record/mixins/secret_rotation"
         autoload :SecretStorable, "doorkeeper/orm/active_record/mixins/secret_storable"
       end
 

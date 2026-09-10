@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20260801000000) do
+ActiveRecord::Schema.define(version: 20260802000000) do
 
   create_table "oauth_access_grants", force: :cascade do |t|
     t.integer "resource_owner_id", null: false
@@ -64,6 +64,9 @@ ActiveRecord::Schema.define(version: 20260801000000) do
     t.boolean "confidential", default: true, null: false
     t.text "jwks"
     t.string "jwks_uri"
+    t.string "old_secret"
+    t.datetime "old_secret_created_at"
+    t.index ["old_secret_created_at"], name: "index_oauth_applications_on_old_secret_created_at"
     t.index ["owner_id", "owner_type"], name: "index_oauth_applications_on_owner_id_and_owner_type"
     t.index ["uid"], name: "index_oauth_applications_on_uid", unique: true
   end
