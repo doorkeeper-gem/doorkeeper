@@ -813,6 +813,42 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
 
         expect(json_response).to match("active" => false)
       end
+
+      # RFC 7662 §2.2 describes the presented token: a refresh token carries
+      # the scope originally granted (RFC 6749 §6), not the scope of an access
+      # token the client narrowed on refresh.
+      context "when the paired access token was narrowed on refresh" do
+        let(:client) { FactoryBot.create(:application, scopes: "read write") }
+        let(:token_for_introspection) do
+          FactoryBot.create(
+            :access_token,
+            application: client, use_refresh_token: true,
+            scopes: "read", refresh_token_scopes: "read write",
+          )
+        end
+
+        before { default_scopes_exist(:read, :write) }
+
+        it "reports the granted scope for the refresh token" do
+          post :introspect, params: { token: token_for_introspection.refresh_token }
+
+          expect(json_response).to include("active" => true, "scope" => "read write")
+        end
+
+        it "reports the narrowed scope for the access token" do
+          post :introspect, params: { token: token_for_introspection.token }
+
+          expect(json_response).to include("active" => true, "scope" => "read")
+        end
+
+        it "reports the access token scope for a row that predates the refresh_token_scopes migration" do
+          token_for_introspection.update_column(:refresh_token_scopes, nil)
+
+          post :introspect, params: { token: token_for_introspection.refresh_token }
+
+          expect(json_response).to include("active" => true, "scope" => "read")
+        end
+      end
     end
 
     # RFC 7662 §2.1: the hint is allowed to be wrong — when the lookup by the

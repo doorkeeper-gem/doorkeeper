@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1932] Fix: keep the scope originally granted by the resource owner on refresh tokens (RFC 6749 §6), so a chain narrowed on one refresh can return to its granted scope. Tracked in a new `refresh_token_scopes` column; existing installs opt in with `rails generate doorkeeper:refresh_token_scopes`.
 - [#PR ID] Description of the change.
 - [#1938] Fix: a request body ActionDispatch cannot parse (malformed JSON under a JSON content type, say) no longer raises `ActionDispatch::Http::Parameters::ParseError` out of `Doorkeeper::OAuth::Token.from_request` and `doorkeeper_token`. Since 5.9.7 the RFC 6750 §2 multi-method check read the body on every request, so such a request raised even when it carried a valid Bearer header. The body is now treated as carrying no token, the same way ActionDispatch's own `#filtered_parameters` treats that error.
 
