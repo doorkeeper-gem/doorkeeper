@@ -67,7 +67,6 @@ User-visible changes worth mentioning.
 - [#1779] Only lock previous access token model when creating a new token from its refresh token if revoke_previous_refresh_token_on_use is false
 - [#1778] Ensure that token revocation is idempotent by checking that that token has not already been revoked before revoking.
 
-
 ## 5.8.2
 
 - [#1755] Fix the error message for force_pkce
