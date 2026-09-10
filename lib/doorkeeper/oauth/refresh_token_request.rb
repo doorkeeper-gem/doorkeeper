@@ -65,8 +65,21 @@ module Doorkeeper
         Doorkeeper.config.access_token_model.refresh_token_revoked_on_use?
       end
 
+      # RFC 6749 §6: a `scope` parameter that is omitted "is treated as equal
+      # to the scope originally granted by the resource owner", and a
+      # requested scope must not exceed it. Both are the scope the presented
+      # refresh token carries, not the scope of the access token issued with
+      # it, which the client may have narrowed on an earlier refresh.
       def default_scopes
-        refresh_token.scopes
+        granted_scopes
+      end
+
+      # Scope of the presented refresh token. Without the
+      # `refresh_token_scopes` column the model reports the access token
+      # scope here, which is the behavior Doorkeeper had before the column
+      # existed.
+      def granted_scopes
+        refresh_token.refresh_token_scopes
       end
 
       def create_access_token
@@ -95,6 +108,12 @@ module Doorkeeper
         elsif refresh_token.try(:resource).present?
           attributes[:resource] = refresh_token.resource
         end
+
+        # RFC 6749 §6: "If a new refresh token is issued, the refresh token
+        # scope MUST be identical to that of the refresh token included by
+        # the client in the request." Carried explicitly so that a narrowed
+        # access token does not narrow the refresh token issued with it.
+        attributes[:refresh_token_scopes] = granted_scopes.to_s if Doorkeeper.config.access_token_model.refresh_token_scopes_supported?
 
         # RFC6749
         # 1.5.  Refresh Token
@@ -147,7 +166,7 @@ module Doorkeeper
         if @original_scopes.present?
           ScopeChecker.valid?(
             scope_str: @original_scopes,
-            server_scopes: refresh_token.scopes,
+            server_scopes: granted_scopes,
           )
         else
           true

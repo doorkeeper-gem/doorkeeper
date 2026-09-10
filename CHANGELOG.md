@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1932] Fix: the refresh token grant now validates the requested scope against, and defaults an omitted scope to, the scope originally granted by the resource owner instead of the presented access token's scope, so a chain narrowed on one refresh can return to its granted scope (RFC 6749 §6). The granted scope is tracked in a new `refresh_token_scopes` column, part of the install migration; existing installs opt in with `rails generate doorkeeper:refresh_token_scopes` and keep the previous behavior until they do.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.rc1

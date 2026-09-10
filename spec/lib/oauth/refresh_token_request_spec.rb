@@ -241,6 +241,80 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
       request.validate
       expect(request.error).to eq(Doorkeeper::Errors::InvalidScope)
     end
+
+    # RFC 6749 §6: "If a new refresh token is issued, the refresh token scope
+    # MUST be identical to that of the refresh token included by the client
+    # in the request." Narrowing the access token must not narrow the
+    # refresh token issued alongside it.
+    it "issues the new refresh token with the presented refresh token's scope when narrowing" do
+      parameters[:scope] = "public"
+      request.authorize
+
+      new_token = Doorkeeper::AccessToken.last
+      expect(new_token.scopes).to eq(%i[public])
+      expect(new_token.refresh_token_scopes).to eq(%i[public write])
+    end
+
+    context "when the presented refresh token was narrowed on an earlier refresh" do
+      let(:refresh_token) do
+        FactoryBot.create :access_token,
+                          use_refresh_token: true,
+                          scopes: "public",
+                          refresh_token_scopes: "public write"
+      end
+
+      # RFC 6749 §6: an omitted scope "is treated as equal to the scope
+      # originally granted by the resource owner", not to the narrowed
+      # access token's scope.
+      it "restores the granted scope when the scope parameter is omitted" do
+        request.authorize
+
+        new_token = Doorkeeper::AccessToken.last
+        expect(new_token.scopes).to eq(%i[public write])
+        expect(new_token.refresh_token_scopes).to eq(%i[public write])
+      end
+
+      it "accepts a requested scope within the granted scope but wider than the access token's" do
+        parameters[:scope] = "public write"
+        request.authorize
+
+        expect(request.error).to be_nil
+        expect(Doorkeeper::AccessToken.last.scopes).to eq(%i[public write])
+      end
+
+      it "still refuses a scope beyond the granted scope" do
+        parameters[:scope] = "public write update"
+
+        request.validate
+        expect(request.error).to eq(Doorkeeper::Errors::InvalidScope)
+      end
+
+      # Rows that predate the refresh_token_scopes migration carry no
+      # granted scope of their own and keep the pre-column behavior.
+      it "falls back to the access token scope for a row without a stored refresh token scope" do
+        refresh_token.update_column(:refresh_token_scopes, nil)
+        parameters[:scope] = "public write"
+
+        request.validate
+        expect(request.error).to eq(Doorkeeper::Errors::InvalidScope)
+      end
+    end
+
+    context "without the refresh_token_scopes column" do
+      before do
+        allow(Doorkeeper::AccessToken).to receive(:refresh_token_scopes_supported?).and_return(false)
+      end
+
+      it "narrows the refresh token along with the access token, as before the column existed" do
+        parameters[:scope] = "public"
+        request.authorize
+
+        new_token = Doorkeeper::AccessToken.last
+        expect(new_token.scopes).to eq(%i[public])
+        expect(new_token.refresh_token_scopes).to eq(%i[public])
+        expect(new_token[:refresh_token_scopes]).to be_nil
+      end
+    end
   end
 
   context "with dynamic scopes enabled" do

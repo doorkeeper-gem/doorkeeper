@@ -262,6 +262,20 @@ module Doorkeeper
         column_names.include?("resource")
       end
 
+      # RFC 6749 §6: a refresh token keeps the scope originally granted by the
+      # resource owner even when the access tokens issued with it are
+      # narrowed, so that a later refresh can restore the granted scope.
+      # Doorkeeper tracks that scope in the `refresh_token_scopes` column
+      # (added by the `doorkeeper:refresh_token_scopes` generator). Without
+      # the column a refresh is validated against the presented access
+      # token's scope, so a narrowed refresh permanently narrows the chain.
+      #
+      # @return [Boolean] true if the refresh_token_scopes column exists
+      #
+      def refresh_token_scopes_supported?
+        column_names.include?("refresh_token_scopes")
+      end
+
       # Looking for not expired AccessToken record with a matching set of
       # scopes that belongs to specific Application and Resource Owner.
       # If it doesn't exists - then creates it.
@@ -429,6 +443,47 @@ module Doorkeeper
       !!@use_refresh_token
     end
 
+    # Scope the refresh token was issued with: the scope originally granted
+    # by the resource owner (RFC 6749 §6), which the refresh grant validates
+    # a requested scope against and issues the next refresh token with.
+    #
+    # Falls back to the access token scope when the `refresh_token_scopes`
+    # column is absent or empty (rows that predate its migration), which is
+    # the behavior Doorkeeper had before the column existed.
+    #
+    # @return [Doorkeeper::OAuth::Scopes] refresh token scope
+    #
+    def refresh_token_scopes
+      stored = refresh_token_scopes_string
+      return scopes if stored.blank?
+
+      OAuth::Scopes.from_string(stored)
+    end
+
+    # @param value [String, Array, Doorkeeper::OAuth::Scopes, nil]
+    #   scope to store; normalized the same way `scopes=` is
+    def refresh_token_scopes=(value)
+      normalized =
+        if value.is_a?(Array)
+          OAuth::Scopes.from_array(value).to_s
+        else
+          OAuth::Scopes.from_string(value.to_s).to_s
+        end
+
+      super(normalized)
+    end
+
+    # Raw `refresh_token_scopes` column value, nil when the column is
+    # absent.
+    #
+    # @return [String, nil]
+    #
+    def refresh_token_scopes_string
+      return unless self.class.refresh_token_scopes_supported?
+
+      self[:refresh_token_scopes]
+    end
+
     # JSON representation of the Access Token instance.
     #
     # @return [Hash] hash with token data
@@ -548,6 +603,13 @@ module Doorkeeper
     # @return [String] refresh token value
     #
     def generate_refresh_token
+      # A refresh token issued outside the refresh grant (authorization code,
+      # password, or a host app creating the record itself) starts its chain
+      # with the granted scope: the access token's own scope. The refresh
+      # grant sets the attribute explicitly to carry the presented refresh
+      # token's scope forward instead.
+      self.refresh_token_scopes = scopes if self.class.refresh_token_scopes_supported? && refresh_token_scopes_string.blank?
+
       @raw_refresh_token = UniqueToken.generate
       secret_strategy.store_secret(self, :refresh_token, @raw_refresh_token)
     end

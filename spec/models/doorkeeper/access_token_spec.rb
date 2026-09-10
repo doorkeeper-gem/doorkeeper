@@ -386,6 +386,62 @@ RSpec.describe Doorkeeper::AccessToken do
     end
   end
 
+  describe "refresh_token_scopes" do
+    it "records the access token scope as the granted scope when a refresh token is generated" do
+      token = FactoryBot.create :access_token, use_refresh_token: true, scopes: "public write"
+
+      expect(token.refresh_token_scopes_string).to eq("public write")
+      expect(token.refresh_token_scopes).to eq(%i[public write])
+      expect(token.reload.refresh_token_scopes).to eq(%i[public write])
+    end
+
+    it "keeps a granted scope given explicitly, wider than the access token scope" do
+      token = FactoryBot.create :access_token,
+                                use_refresh_token: true,
+                                scopes: "public",
+                                refresh_token_scopes: "public write"
+
+      expect(token.scopes).to eq(%i[public])
+      expect(token.refresh_token_scopes).to eq(%i[public write])
+    end
+
+    it "normalizes the stored value like scopes=" do
+      token = FactoryBot.build :access_token
+      token.refresh_token_scopes = %w[write public]
+      expect(token.refresh_token_scopes_string).to eq("write public")
+
+      token.refresh_token_scopes = Doorkeeper::OAuth::Scopes.from_string("public  write")
+      expect(token.refresh_token_scopes_string).to eq("public write")
+    end
+
+    it "is not recorded for a token issued without a refresh token" do
+      token = FactoryBot.create :access_token, scopes: "public write"
+
+      expect(token.refresh_token_scopes_string).to be_nil
+    end
+
+    it "falls back to the access token scope when nothing is stored" do
+      token = FactoryBot.create :access_token, use_refresh_token: true, scopes: "public write"
+      token.update_column(:refresh_token_scopes, nil)
+
+      expect(token.reload.refresh_token_scopes).to eq(%i[public write])
+    end
+
+    context "without the refresh_token_scopes column" do
+      before do
+        allow(described_class).to receive(:refresh_token_scopes_supported?).and_return(false)
+      end
+
+      it "reports the access token scope and leaves the column alone" do
+        token = FactoryBot.create :access_token, use_refresh_token: true, scopes: "public write"
+
+        expect(token.refresh_token_scopes_string).to be_nil
+        expect(token.refresh_token_scopes).to eq(%i[public write])
+        expect(token[:refresh_token_scopes]).to be_nil
+      end
+    end
+  end
+
   describe "validations" do
     it "is valid without resource_owner_id" do
       # For client credentials flow
