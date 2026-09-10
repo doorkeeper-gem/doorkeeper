@@ -7,6 +7,13 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#PR ID] Description of the change.
+
+## 6.0.0.rc1
+
+**Please make sure** you read the [Upgrade guides](https://github.com/doorkeeper-gem/doorkeeper/wiki/Migration-from-old-versions)
+and changelog below before the update since this version includes breaking changes.
+
 - Require Ruby >= 3.2 in the gemspec, matching the CI matrix (3.2 / 3.3 / 3.4 / 4.0). Ruby 2.7, 3.0 and 3.1 have reached end-of-life.
 - Fix: the `client_secret_basic` strategy now requires a `client_id` sent in the request body to name the same client as the `Authorization: Basic` header — the RFC 7521 §4.2 agreement check `private_key_jwt` already applies to an assertion's issuer. A request presenting Basic credentials for one client and a `client_id` for another was authenticated as the Basic client, silently discarding the other identity. A bare `client_id` is not a client authentication method of its own, so the RFC 6749 §2.3 multiple-methods check does not (and should not) count it.
 - [#1906] Internal: exempt `Doorkeeper::Config` from `Metrics/ClassLength` with a directive on the class itself instead of raising the cop's global ceiling, so adding a configuration option no longer trips the limit.
@@ -17,12 +24,11 @@ User-visible changes worth mentioning.
 - [#1918] The api_only controller specs no longer `load` the real controller sources, which detached the coverage of every other example that ran them and made the reported coverage depend on the random example order.
 - [#1923] Fix: the fallback secret upgrade no longer writes the matched secret back over a value stored in the meantime, which could undo a concurrent `#renew_secret` and leave the superseded secret valid. Active Record writes the upgrade conditionally on the column still holding the value that matched; other ORMs can implement the new `write_upgraded_secret` hook. The Active Record write is a single `update_all` statement, so model callbacks and validations no longer run on this upgrade (timestamps and optimistic locking are still maintained).
 - [#1925] Internal: pin the development dependency on `json` below 3.0. json 3 removed the positional options Hash from `JSON.parse` and the `quirks_mode` option from `JSON.generate`, both of which Active Support still uses, so the suite could not run on any released Rails version.
-- **[BREAKING]** Fix: `private_key_jwt` client authentication no longer accepts an audience derived from the request's `Host` header, which let a client assertion minted for another authorization server be replayed here. A server that configures neither `issuer` nor Rails' `default_url_options[:host]` now has no acceptable audience and refuses every assertion, and is warned about it at boot.
+- [#1926] **[BREAKING]** Fix: `private_key_jwt` client authentication no longer accepts an audience derived from the request's `Host` header, which let a client assertion minted for another authorization server be replayed here. A server that configures neither `issuer` nor Rails' `default_url_options[:host]` now has no acceptable audience and refuses every assertion, and is warned about it at boot.
 - **[BREAKING]** Refuse requests that transmit the access token by more than one method (RFC 6750 §2) with an `invalid_request` error, instead of silently authorizing with the first method that yielded a token and discarding the rest. The form-encoded body (§2.2) and the URI query (§2.3) count as two methods even though Rails and Rack merge them into a single `params` hash, and the same token repeated across two methods is refused too — §2 forbids the second method, not a disagreement between the two.
   - Only the built-in extraction methods take part in the check; a custom callable in `access_token_methods` keeps the historical first-wins behavior and is never invoked more than once.
   - `Doorkeeper::OAuth::Token.from_request` / `.authenticate` raise `Doorkeeper::Errors::MultipleAccessTokenMethods`. `Doorkeeper.authenticate` and every `doorkeeper_token` helper (Rails, Grape, and Doorkeeper's own controllers) keep their token-or-nil contract, so `doorkeeper_authorize!` renders the refusal through a new `doorkeeper_bad_request_render_options(error:)` hook (`head 400` unless you override it).
   - **Upgrade note**: under `handle_auth_errors :raise` these requests raise `Doorkeeper::Errors::InvalidRequest`, a sibling of `Doorkeeper::Errors::InvalidToken` rather than a subclass — an existing `rescue Doorkeeper::Errors::InvalidToken` does not cover it.
-- [#PR ID] Description of the change.
 
 ## 6.0.0.beta2
 
@@ -52,7 +58,6 @@ and changelog below before the update since this version includes breaking chang
 - [#1902] Fix: requests that omit `scope` now compute the same default scopes at the authorization and token endpoints (`Scopes#common`, symmetric). With dynamic scopes enabled, a scope pattern in either `default_scopes` or the application's scopes grants the matching concrete scope at both endpoints, closes [#1889].
 - [#1903] Fix: `revoke_previous_client_credentials_token` no longer revokes a client's live access token issued for a different `resource` ([#1886]), so a client can keep one audience-restricted token per resource server.
 - [#1905] [test] Cover `private_key_jwt` client authentication on the `client_credentials` grant, the one flow where an assertion is the client's only credential end to end. Test-only change.
-- Please add here
 
 ## 6.0.0.beta1
 
@@ -150,7 +155,6 @@ and changelog below before the update since this version includes breaking chang
 - [#1775] Fix Applications Secret Not Null Constraint generator
 - [#1779] Only lock previous access token model when creating a new token from its refresh token if revoke_previous_refresh_token_on_use is false
 - [#1778] Ensure that token revocation is idempotent by checking that that token has not already been revoked before revoking.
-
 
 ## 5.8.2
 
