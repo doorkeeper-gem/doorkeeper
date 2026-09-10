@@ -247,6 +247,59 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       end
     end
 
+    # An issuer string URI cannot parse is still the server's declared identity:
+    # it is accepted as an audience literally, and no endpoint URL is derived
+    # from it rather than the parse failure bubbling out of authentication.
+    context "when the issuer is not a parseable URI" do
+      before { config_is_set(:issuer, "http://[as.example.com") }
+
+      it "accepts the issuer itself as audience" do
+        credentials = described_class.authenticate(
+          request_with(build_assertion(claims: { "aud" => "http://[as.example.com" })),
+        )
+
+        expect(credentials).not_to be_nil
+      end
+
+      it "rejects an audience built from the request's Host header" do
+        request = request_with(build_assertion)
+        audience = request.base_url + request.path
+
+        credentials = described_class.authenticate(request_with(build_assertion(claims: { "aud" => audience })))
+
+        expect(credentials).to be_nil
+      end
+    end
+
+    # The token endpoint URL is generated through the routes the host
+    # application mounted; when that fails (the tokens controller is skipped
+    # or mapped to something no route reaches) the other audiences still stand
+    # rather than the failure bubbling out of authentication.
+    context "when the token endpoint URL cannot be generated" do
+      before do
+        allow(Doorkeeper::Rails::Routes).to receive(:mapping)
+          .and_return(tokens: { controllers: "doorkeeper/unmounted_tokens" })
+      end
+
+      it "still accepts the called endpoint's URL as audience" do
+        request = request_with(build_assertion)
+
+        credentials = described_class.authenticate(
+          request_with(build_assertion(claims: { "aud" => "#{issuer}#{request.path}" })),
+        )
+
+        expect(credentials).not_to be_nil
+      end
+
+      it "no longer accepts the token endpoint URL as audience" do
+        credentials = described_class.authenticate(
+          request_with(build_assertion(claims: { "aud" => "#{issuer}/oauth/token" })),
+        )
+
+        expect(credentials).to be_nil
+      end
+    end
+
     it "accepts a matching client_id parameter next to the assertion" do
       credentials = described_class.authenticate(request_with(build_assertion, client_id: client_id))
 
