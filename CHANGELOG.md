@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#PR ID] Description of the change.
+- [#1933] Warn at boot when the `implicit` or `password` grant flow is enabled: both are deprecated by RFC 9700 (OAuth 2.0 Security BCP) and removed from OAuth 2.1, and may be removed in a future Doorkeeper release.
 
 ## 6.0.0.rc1
 

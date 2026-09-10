@@ -17,6 +17,7 @@ module Doorkeeper
         validate_pkce_code_challenge_methods
         validate_custom_metadata
         validate_refresh_token_flow
+        validate_deprecated_grant_flows
         validate_issuer_format
         validate_issuer_metadata_discoverability
       end
@@ -183,6 +184,27 @@ module Doorkeeper
           "Configure use_refresh_token to issue refresh tokens (the refresh_token " \
           "grant flow is then enabled automatically).",
         )
+      end
+
+      # Grant flows deprecated by RFC 9700 (OAuth 2.0 Security Best Current
+      # Practice, BCP 240) and removed from OAuth 2.1: the implicit grant
+      # (RFC 9700 §2.1.2) and the resource owner password credentials grant
+      # (RFC 9700 §2.4). Warn at boot when one of them is enabled so that
+      # applications relying on them notice ahead of the removal.
+      DEPRECATED_GRANT_FLOWS = %w[implicit password].freeze
+
+      def validate_deprecated_grant_flows
+        enabled = calculate_grant_flows.map(&:to_s)
+
+        DEPRECATED_GRANT_FLOWS.each do |flow|
+          next unless enabled.include?(flow)
+
+          ::Rails.logger.warn(
+            "[DOORKEEPER] The #{flow} grant flow is deprecated by RFC 9700 (OAuth 2.0 " \
+            "Security Best Current Practice) and removed from OAuth 2.1. It is enabled " \
+            "via grant_flows and may be removed in a future Doorkeeper release.",
+          )
+        end
       end
 
       # Warn when a configured issuer is not RFC-compliant. RFC 8414 (the
