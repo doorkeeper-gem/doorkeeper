@@ -922,6 +922,45 @@ RSpec.describe Doorkeeper::Config do
       end
     end
 
+    context "when including a grant flow deprecated by RFC 9700" do
+      it "warns at configuration time when 'implicit' is enabled" do
+        expect(Rails.logger).to receive(:warn).with(/\[DOORKEEPER\] The implicit grant flow is deprecated by RFC 9700/).once
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          grant_flows %w[authorization_code implicit]
+        end
+      end
+
+      it "warns at configuration time when 'password' is enabled" do
+        expect(Rails.logger).to receive(:warn).with(/\[DOORKEEPER\] The password grant flow is deprecated by RFC 9700/).once
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          grant_flows %w[authorization_code password]
+        end
+      end
+
+      it "warns once per deprecated grant flow when both are enabled" do
+        expect(Rails.logger).to receive(:warn).with(/The implicit grant flow is deprecated/).once
+        expect(Rails.logger).to receive(:warn).with(/The password grant flow is deprecated/).once
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          grant_flows %w[implicit password]
+        end
+      end
+
+      it "does not warn for 'authorization_code' and 'client_credentials'" do
+        expect(Rails.logger).not_to receive(:warn).with(/grant flow is deprecated/)
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          grant_flows %w[authorization_code client_credentials]
+        end
+      end
+    end
+
     context "when including 'refresh_token'" do
       it "warns when use_refresh_token is not configured" do
         expect(Rails.logger).to receive(:warn).with(/refresh tokens will not be issued/)
