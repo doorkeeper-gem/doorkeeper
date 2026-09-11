@@ -41,6 +41,7 @@ Supported features:
 - [Extensions](#extensions)
 - [Database maintenance](#database-maintenance)
 - [Resource Indicators](#resource-indicators)
+- [Refresh Token Scopes](#refresh-token-scopes)
 - [Custom Grant Flows](#custom-grant-flows)
 - [Custom Client Authentication Methods](#custom-client-authentication-methods)
 - [Example Applications](#example-applications)
@@ -168,6 +169,19 @@ RFC 8707 uses repeated query parameters (`?resource=…&resource=…`) for multi
 ```
 
 A single `resource=…` works as-is.
+
+## Refresh Token Scopes
+
+A client may narrow the access token it gets back from the refresh token grant by sending a `scope` parameter. Per [RFC 6749 §6](https://datatracker.ietf.org/doc/html/rfc6749#section-6) the refresh token itself keeps the scope originally granted by the resource owner: a later refresh that omits `scope` returns to the granted scope, and one that asks for the granted scope again is accepted.
+
+Doorkeeper tracks the granted scope in the `refresh_token_scopes` column of `oauth_access_tokens`. New installs get it from the install migration; existing installs add it with:
+
+```bash
+rails generate doorkeeper:refresh_token_scopes
+rails db:migrate
+```
+
+Without the column, a narrowed refresh narrows the refresh token as well, so the chain can never return to the granted scope (the behavior of Doorkeeper before the column existed). Rows created before the migration keep that behavior until they are rotated.
 
 ## Custom Grant Flows
 
