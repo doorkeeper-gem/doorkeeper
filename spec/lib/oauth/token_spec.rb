@@ -333,5 +333,40 @@ RSpec.describe Doorkeeper::OAuth::Token do
 
       expect(described_class.resolve(double, found)).to be_nil
     end
+
+    # RFC 6750 §2. resolve reads the configured methods one at a time, so the
+    # multi-method check cannot be left to from_request alone: handed a single
+    # method, from_request can never count two. The refusal has to happen
+    # here, across every method, before any token is looked up.
+    it "refuses a request where two built-in methods present tokens before looking any up" do
+      request = double.as_null_object
+      allow(described_class).to receive(:from_dpop_authorization).with(request).and_return("token-value")
+      allow(described_class).to receive(:from_access_token_param).with(request).and_return("another-token-value")
+
+      expect(Doorkeeper::AccessToken).not_to receive(:by_token)
+
+      expect { described_class.resolve(request, :from_dpop_authorization, :from_access_token_param) }
+        .to raise_error(Doorkeeper::Errors::MultipleAccessTokenMethods)
+    end
+
+    it "refuses the same token repeated across two built-in methods" do
+      request = double.as_null_object
+      allow(described_class).to receive(:from_dpop_authorization).with(request).and_return("token-value")
+      allow(described_class).to receive(:from_access_token_param).with(request).and_return("token-value")
+
+      expect { described_class.resolve(request, :from_dpop_authorization, :from_access_token_param) }
+        .to raise_error(Doorkeeper::Errors::MultipleAccessTokenMethods)
+    end
+
+    it "keeps first-wins selection for a custom callable extractor" do
+      request = double.as_null_object
+      allow(described_class).to receive(:from_dpop_authorization).with(request).and_return("token-value")
+      custom = ->(_r) { "another-token-value" }
+      access_token = double("access token")
+
+      allow(Doorkeeper::AccessToken).to receive(:by_token).with("token-value").and_return(access_token)
+
+      expect(described_class.resolve(request, :from_dpop_authorization, custom).access_token).to eq(access_token)
+    end
   end
 end

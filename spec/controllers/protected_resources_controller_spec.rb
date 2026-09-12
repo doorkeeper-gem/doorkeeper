@@ -629,5 +629,65 @@ RSpec.describe "doorkeeper authorize filter" do
     end
   end
 
+  # RFC 6750 §2 applies to the DPoP scheme as it does to Bearer: a token in
+  # the DPoP Authorization header plus one in a request parameter is two
+  # transmission methods, and is refused with invalid_request (400) before
+  # the proof is ever examined. The helpers resolve the token through
+  # OAuth::Token.resolve, so this pins that the check runs on that path too.
+  context "when a dpop token is also transmitted by a second method", token: :dpop do
+    controller do
+      before_action :doorkeeper_authorize!
+      include ControllerActions
+    end
+
+    def valid_proof
+      build_dpop_proof(
+        ath: Base64.urlsafe_encode64(Digest::SHA256.digest(token_string), padding: false),
+        htm: "GET",
+        htu: "http://test.host/anonymous",
+        signing_key: signing_key,
+      )
+    end
+
+    it "accepts the dpop scheme with a valid proof on its own" do
+      request.env["HTTP_AUTHORIZATION"] = "DPoP #{token_string}"
+      request.env["HTTP_DPOP"] = valid_proof
+      get :index
+
+      expect(response).to be_successful
+    end
+
+    it "refuses the request with invalid_request when a parameter carries another token" do
+      request.env["HTTP_AUTHORIZATION"] = "DPoP #{token_string}"
+      request.env["HTTP_DPOP"] = valid_proof
+      get :index, params: { access_token: "another-token" }
+
+      expect(response.status).to eq 400
+      expect(response.header["WWW-Authenticate"]).to include('error="invalid_request"')
+    end
+
+    it "refuses the same token repeated in the dpop scheme and a parameter" do
+      request.env["HTTP_AUTHORIZATION"] = "DPoP #{token_string}"
+      request.env["HTTP_DPOP"] = valid_proof
+      get :index, params: { access_token: token_string }
+
+      expect(response.status).to eq 400
+      expect(response.header["WWW-Authenticate"]).to include('error="invalid_request"')
+    end
+
+    it "renders through the bad request hook rather than the unauthorized one" do
+      expect(controller).to receive(:doorkeeper_bad_request_render_options)
+        .with(error: an_instance_of(Doorkeeper::OAuth::InvalidRequestResponse))
+        .and_call_original
+      expect(controller).not_to receive(:doorkeeper_unauthorized_render_options)
+
+      request.env["HTTP_AUTHORIZATION"] = "DPoP #{token_string}"
+      request.env["HTTP_DPOP"] = valid_proof
+      get :index, params: { access_token: "another-token" }
+
+      expect(response.status).to eq 400
+    end
+  end
+
   include_examples "enforcing proof of possession using dpop"
 end
