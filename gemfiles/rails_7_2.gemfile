@@ -18,6 +18,7 @@ gem "sprockets-rails"
 gem "sqlite3", "~> 1.4", platform: [:ruby, :mswin, :mingw, :x64_mingw]
 gem "tzinfo-data", platforms: [:mingw, :mswin, :x64_mingw]
 gem "timecop"
+gem "jwt", require: false
 
 gem "json", "< 3" # Active Support is not compatible with json 3 yet
 

@@ -17,7 +17,7 @@ module Doorkeeper
 
     def valid?
       validate
-      @error.nil?
+      error.nil?
     end
 
     module ClassMethods

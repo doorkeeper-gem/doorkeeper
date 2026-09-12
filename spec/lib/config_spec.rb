@@ -714,7 +714,7 @@ RSpec.describe Doorkeeper::Config do
   describe "access_token_methods" do
     it "has defaults order" do
       expect(config.access_token_methods)
-        .to eq(%i[from_bearer_authorization from_access_token_param from_bearer_param])
+        .to eq(%i[from_dpop_authorization from_bearer_authorization from_access_token_param from_bearer_param])
     end
 
     it "can change the value" do
@@ -1640,6 +1640,109 @@ RSpec.describe Doorkeeper::Config do
         orm DOORKEEPER_ORM
         issuer "not a valid uri"
       end
+    end
+  end
+
+  describe "force_dpop" do
+    it "is disabled by default" do
+      expect(config.force_dpop?).to be(false)
+    end
+
+    it "can be enabled" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        force_dpop
+      end
+
+      expect(config.force_dpop?).to be(true)
+    end
+
+    it "warns when the access token model does not support dpop" do
+      allow(Doorkeeper::AccessToken).to receive(:dpop_supported?).and_return(false)
+      expect(Rails.logger).to receive(:warn).with(/force_dpop is enabled but .* has no/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        force_dpop
+      end
+    end
+
+    it "does not warn when force_dpop is disabled and dpop is unsupported" do
+      allow(Doorkeeper::AccessToken).to receive(:dpop_supported?).and_return(false)
+      expect(Rails.logger).not_to receive(:warn).with(/force_dpop/)
+
+      Doorkeeper.configure { orm DOORKEEPER_ORM }
+    end
+
+    it "skips the warning when the schema cannot be read yet" do
+      allow(Doorkeeper::AccessToken).to \
+        receive(:dpop_supported?).and_raise(ActiveRecord::StatementInvalid)
+
+      expect(Rails.logger).not_to receive(:warn).with(/force_dpop/)
+
+      expect do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          force_dpop
+        end
+      end.not_to raise_error
+    end
+  end
+
+  describe "dpop_signature_algorithms" do
+    it "is ['ES256', 'PS256'] by default" do
+      expect(config.dpop_signature_algorithms).to eq(%w[ES256 PS256])
+    end
+
+    it "can be set to a valid subset of the supported algorithms" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        dpop_signature_algorithms ["ES256"]
+      end
+
+      expect(config.dpop_signature_algorithms).to eq(["ES256"])
+    end
+
+    it "normalizes symbols to strings" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        dpop_signature_algorithms [:ES256]
+      end
+
+      expect(config.dpop_signature_algorithms).to eq(["ES256"])
+    end
+
+    it "leaves the option undefined when it was not explicitly configured" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+
+      # Validation must not flip the "was it explicitly set?" signal that
+      # instance_variable_defined? carries for config options.
+      expect(config.instance_variable_defined?(:@dpop_signature_algorithms)).to be(false)
+      expect(config.dpop_signature_algorithms).to eq(%w[ES256 PS256])
+    end
+
+    it "resets to the default when an unsupported algorithm is configured" do
+      expect(Rails.logger).to receive(:warn).with(/dpop_signature_algorithms/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        dpop_signature_algorithms ["ES256", "none"]
+      end
+
+      expect(config.dpop_signature_algorithms).to eq(%w[ES256 PS256])
+    end
+
+    it "resets to the default when configured empty" do
+      expect(Rails.logger).to receive(:warn).with(/dpop_signature_algorithms/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        dpop_signature_algorithms []
+      end
+
+      expect(config.dpop_signature_algorithms).to eq(%w[ES256 PS256])
     end
   end
 end

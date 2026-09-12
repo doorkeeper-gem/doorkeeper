@@ -50,8 +50,10 @@ module Doorkeeper
     autoload :Client, "doorkeeper/oauth/client"
     autoload :ClientCredentialsRequest, "doorkeeper/oauth/client_credentials_request"
     autoload :CodeRequest, "doorkeeper/oauth/code_request"
+    autoload :DPoPProof, "doorkeeper/oauth/dpop_proof"
     autoload :ErrorResponse, "doorkeeper/oauth/error_response"
     autoload :Error, "doorkeeper/oauth/error"
+    autoload :InvalidDPoPProofResponse, "doorkeeper/oauth/invalid_dpop_proof_response"
     autoload :InvalidTokenResponse, "doorkeeper/oauth/invalid_token_response"
     autoload :InvalidRequestResponse, "doorkeeper/oauth/invalid_request_response"
     autoload :ForbiddenTokenResponse, "doorkeeper/oauth/forbidden_token_response"
@@ -100,6 +102,7 @@ module Doorkeeper
 
   module Models
     autoload :Accessible, "doorkeeper/models/concerns/accessible"
+    autoload :DPoP, "doorkeeper/models/concerns/dpop"
     autoload :Expirable, "doorkeeper/models/concerns/expirable"
     autoload :ExpirationTimeSqlMath, "doorkeeper/models/concerns/expiration_time_sql_math"
     autoload :Orderable, "doorkeeper/models/concerns/orderable"

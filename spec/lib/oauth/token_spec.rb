@@ -247,20 +247,126 @@ RSpec.describe Doorkeeper::OAuth::Token do
         end
       end
 
-      it "revokes previous refresh_token if token was found" do
-        token = ->(_r) { "token" }
+      let(:method) { ->(_r) { "token" } }
+
+      it "revokes previous refresh_token for a bearer token" do
+        access_token = instance_double(Doorkeeper::AccessToken, uses_dpop?: false)
         expect(
           Doorkeeper::AccessToken,
-        ).to receive(:by_token).with("token").and_return(token)
-        expect(token).to receive(:revoke_previous_refresh_token!)
-        described_class.authenticate double, token
+        ).to receive(:by_token).with("token").and_return(access_token)
+        expect(access_token).to receive(:revoke_previous_refresh_token!)
+        described_class.authenticate double, method
+      end
+
+      it "does not revoke previous refresh_token for a dpop token" do
+        access_token = instance_double(Doorkeeper::AccessToken, uses_dpop?: true)
+        expect(
+          Doorkeeper::AccessToken,
+        ).to receive(:by_token).with("token").and_return(access_token)
+        expect(access_token).not_to receive(:revoke_previous_refresh_token!)
+        described_class.authenticate double, method
       end
 
       it "calls the finder if token was returned" do
-        token = ->(_r) { "token" }
         expect(Doorkeeper::AccessToken).to receive(:by_token).with("token")
-        described_class.authenticate double, token
+        described_class.authenticate double, method
       end
+    end
+
+    context "when multiple methods are given" do
+      it "uses the first method that yields a token and ignores later ones" do
+        first  = ->(_r) { "first-token" }
+        second = double
+        expect(second).not_to receive(:call)
+
+        access_token = double("access token")
+        allow(Doorkeeper::AccessToken)
+          .to receive(:by_token).with("first-token").and_return(access_token)
+
+        expect(described_class.authenticate(double, first, second)).to eq(access_token)
+      end
+
+      it "skips methods that return a blank token" do
+        blank = ->(_r) { nil }
+        found = ->(_r) { "token" }
+
+        access_token = double("access token")
+        allow(Doorkeeper::AccessToken)
+          .to receive(:by_token).with("token").and_return(access_token)
+
+        expect(described_class.authenticate(double, blank, found)).to eq(access_token)
+      end
+
+      it "returns nil and does not query for a token when no method yields one" do
+        blank = ->(_r) { nil }
+        expect(Doorkeeper::AccessToken).not_to receive(:by_token)
+
+        expect(described_class.authenticate(double, blank)).to be_nil
+      end
+    end
+  end
+
+  describe ".resolve" do
+    it "returns a resolution instance when a token is found" do
+      found        = ->(_r) { "token" }
+      access_token = double("access token")
+
+      allow(Doorkeeper::AccessToken).to receive(:by_token).with("token").and_return(access_token)
+
+      expect(described_class.resolve(double, found)).to(
+        eq(Doorkeeper::OAuth::Token::Resolution.new(found, "token", access_token)),
+      )
+    end
+
+    it "returns nil when no method yields a token" do
+      blank = ->(_r) { nil }
+
+      expect(Doorkeeper::AccessToken).not_to receive(:by_token)
+
+      expect(described_class.resolve(double, blank)).to be_nil
+    end
+
+    it "returns nil when a token is found but no access token matches it" do
+      found = ->(_r) { "token" }
+
+      allow(Doorkeeper::AccessToken).to receive(:by_token).with("token").and_return(nil)
+
+      expect(described_class.resolve(double, found)).to be_nil
+    end
+
+    # RFC 6750 §2. resolve reads the configured methods one at a time, so the
+    # multi-method check cannot be left to from_request alone: handed a single
+    # method, from_request can never count two. The refusal has to happen
+    # here, across every method, before any token is looked up.
+    it "refuses a request where two built-in methods present tokens before looking any up" do
+      request = double.as_null_object
+      allow(described_class).to receive(:from_dpop_authorization).with(request).and_return("token-value")
+      allow(described_class).to receive(:from_access_token_param).with(request).and_return("another-token-value")
+
+      expect(Doorkeeper::AccessToken).not_to receive(:by_token)
+
+      expect { described_class.resolve(request, :from_dpop_authorization, :from_access_token_param) }
+        .to raise_error(Doorkeeper::Errors::MultipleAccessTokenMethods)
+    end
+
+    it "refuses the same token repeated across two built-in methods" do
+      request = double.as_null_object
+      allow(described_class).to receive(:from_dpop_authorization).with(request).and_return("token-value")
+      allow(described_class).to receive(:from_access_token_param).with(request).and_return("token-value")
+
+      expect { described_class.resolve(request, :from_dpop_authorization, :from_access_token_param) }
+        .to raise_error(Doorkeeper::Errors::MultipleAccessTokenMethods)
+    end
+
+    it "keeps first-wins selection for a custom callable extractor" do
+      request = double.as_null_object
+      allow(described_class).to receive(:from_dpop_authorization).with(request).and_return("token-value")
+      custom = ->(_r) { "another-token-value" }
+      access_token = double("access token")
+
+      allow(Doorkeeper::AccessToken).to receive(:by_token).with("token-value").and_return(access_token)
+
+      expect(described_class.resolve(request, :from_dpop_authorization, custom).access_token).to eq(access_token)
     end
   end
 end

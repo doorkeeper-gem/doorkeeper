@@ -1,0 +1,96 @@
+# frozen_string_literal: true
+
+require "spec_helper"
+
+# End-to-end probe: does a malformed (but well-signed) DPoP proof surface as a
+# 400 invalid_dpop_proof, or does it escape as an unhandled 500?
+describe "DPoP proof with unexpected value types", type: :request do
+  let(:client) { FactoryBot.create :application }
+  let(:signing_key) { OpenSSL::PKey::EC.generate("prime256v1") }
+  let(:jwk) { JWT::JWK.new(signing_key).export }
+
+  def handcrafted_proof(claims:, headers: {})
+    base = { "typ" => "dpop+jwt", "alg" => "ES256", "jwk" => jwk }
+    header = headers.is_a?(Hash) ? base.merge(headers) : headers
+    b64 = ->(h) { Base64.urlsafe_encode64(JSON.generate(h), padding: false) }
+    signing_input = "#{b64.call(header)}.#{b64.call(claims)}"
+
+    "#{signing_input}.#{Base64.urlsafe_encode64(es256_raw_signature(signing_input), padding: false)}"
+  end
+
+  # jwt 2.7 (the gemspec lower bound) has no public API to sign a hand-built
+  # signing input (JWT::JWA appeared in later releases), so produce the JWS
+  # ES256 signature directly with OpenSSL: an ECDSA DER signature unpacked
+  # into the raw 64-byte r || s form JWS requires (RFC 7518 3.4).
+  def es256_raw_signature(signing_input)
+    der = signing_key.sign(OpenSSL::Digest.new("SHA256"), signing_input)
+
+    OpenSSL::ASN1.decode(der).value.map do |int|
+      [int.value.to_i.to_s(16).rjust(64, "0")].pack("H*")
+    end.join
+  end
+
+  def authorization(username, password)
+    { "HTTP_AUTHORIZATION" => ActionController::HttpAuthentication::Basic.encode_credentials(username, password) }
+  end
+
+  def post_token(proof)
+    post "/oauth/token",
+         params: { grant_type: "client_credentials" },
+         headers: authorization(client.uid, client.secret).merge("DPoP" => proof)
+  end
+
+  it "rejects a String iat with 400, not 500" do
+    post_token(handcrafted_proof(claims: { "jti" => "x", "iat" => "not-a-number" }))
+
+    expect(response.status).to eq(400)
+    expect(json_response["error"]).to eq("invalid_dpop_proof")
+  end
+
+  it "rejects an Array iat with 400, not 500" do
+    post_token(handcrafted_proof(claims: { "jti" => "x", "iat" => [1, 2] }))
+
+    expect(response.status).to eq(400)
+  end
+
+  it "rejects an unknown jwk kty with 400, not 500" do
+    proof = handcrafted_proof(
+      claims: { "jti" => "x", "iat" => Time.now.to_i },
+      headers: { "jwk" => { "kty" => "bogus" } },
+    )
+    post_token(proof)
+
+    expect(response.status).to eq(400)
+  end
+
+  it "rejects an Array jwk with 400, not 500" do
+    post_token(handcrafted_proof(claims: { "jti" => "x", "iat" => Time.now.to_i },
+                                 headers: { "jwk" => %w[a b] },))
+
+    expect(response.status).to eq(400)
+  end
+
+  it "rejects an Array payload segment with 400, not 500" do
+    post_token(handcrafted_proof(claims: [1, 2, 3]))
+
+    expect(response.status).to eq(400)
+  end
+
+  it "rejects a numeric payload segment with 400, not 500" do
+    post_token(handcrafted_proof(claims: 42))
+
+    expect(response.status).to eq(400)
+  end
+
+  it "rejects an Array header segment with 400, not 500" do
+    post_token(handcrafted_proof(claims: { "jti" => "x", "iat" => Time.now.to_i }, headers: [1, 2]))
+
+    expect(response.status).to eq(400)
+  end
+
+  it "rejects a numeric header segment with 400, not 500" do
+    post_token(handcrafted_proof(claims: { "jti" => "x", "iat" => Time.now.to_i }, headers: 42))
+
+    expect(response.status).to eq(400)
+  end
+end

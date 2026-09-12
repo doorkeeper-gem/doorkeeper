@@ -43,6 +43,7 @@ Supported features:
 - [Resource Indicators](#resource-indicators)
 - [Custom Grant Flows](#custom-grant-flows)
 - [Custom Client Authentication Methods](#custom-client-authentication-methods)
+- [Demonstrating Proof of Possession (DPoP)](#demonstrating-proof-of-possession-dpop)
 - [Example Applications](#example-applications)
 - [Sponsors](#sponsors)
 - [Development](#development)
@@ -323,6 +324,116 @@ Two things are worth keeping in mind when writing one.
 
 Enabled methods are advertised in the authorization server metadata, so a registered method appears in `token_endpoint_auth_methods_supported` at `/.well-known/oauth-authorization-server` once `client_authentication` lists it.
 
+## Demonstrating Proof of Possession (DPoP)
+
+DPoP ([RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449)) is a sender-constraining mechanism that binds access tokens to a client's cryptographic key pair. Unlike a bearer token, possession of a DPoP-bound access token alone isn't enough to use it — the client must also prove possession of the corresponding private key. Doorkeeper covers both halves: issuing DPoP-bound access tokens (authorization server) and enforcing the key binding when authenticating (resource server).
+
+DPoP support is enabled by adding the `dpop_jkt` column to the access token model. Existing installations are unchanged unless you run `rails generate doorkeeper:dpop` and apply the generated migration. Once the column exists, Doorkeeper's built-in grant flows automatically honor valid DPoP proofs.
+
+DPoP proof validation requires the `jwt` gem. It is only required at runtime once DPoP is enabled.
+
+### Configuration
+
+DPoP is optional by default. When a client includes a valid DPoP proof in a token request, the issued access token is bound to that proof's public key. Bearer tokens continue to work for clients that don't use DPoP.
+
+To require DPoP for all token requests:
+
+```ruby
+Doorkeeper.configure do
+  force_dpop
+end
+```
+
+`force_dpop` applies when Doorkeeper acts as an authorization server. Requiring DPoP when accessing protected resources is configured separately; see [Protecting Resources](#protecting-resources) below.
+
+You can also configure the time window accepted for a proof's `iat` claim and the signature algorithms accepted for DPoP proofs:
+
+```ruby
+Doorkeeper.configure do
+  dpop_iat_leeway 300
+  dpop_signature_algorithms %w[ES256 PS256]
+end
+```
+
+When DPoP is supported, Doorkeeper automatically prepends `:from_dpop_authorization` to the default `access_token_methods`. If you've configured `access_token_methods` explicitly, add it yourself:
+
+```ruby
+access_token_methods :from_dpop_authorization,
+                     :from_bearer_authorization,
+                     :from_access_token_param,
+                     :from_bearer_param
+```
+
+### Limitations
+
+This is a minimally spec-compliant implementation. It intentionally omits a few optional parts of the spec:
+
+- No `jti` tracking to prevent DPoP proof replays (§11.1)
+- No server-provided nonces to prevent pre-generated proofs (§8)
+- No authorization code binding to a DPoP key (§10)
+
+The built-in grant flows validate DPoP proofs and use `BaseRequest#dpop_token_attributes` when binding newly issued tokens. `force_dpop` also uses `dpop_token_attributes` as a backstop to prevent those creation paths from issuing an unbound token.
+
+Custom grant flows need to account for both pieces themselves. In particular, a custom grant that calls `AccessToken.create_for` directly can bypass that backstop and issue Bearer tokens even when `force_dpop` is enabled.
+
+### Custom Grant Flows
+
+`Doorkeeper::Server` provides the request's DPoP proof as a `Doorkeeper::OAuth::DPoPProof`. The built-in `Doorkeeper::Request::*` strategies pass that proof to the `OAuth` request objects they construct. The built-in `OAuth` request classes validate the proof and use it when assembling the attributes for newly issued tokens.
+
+A [custom grant flow](#custom-grant-flows) should inject the proof in the same way. Building on the `SamlBearer` example above:
+
+```ruby
+module SamlBearer
+  class Strategy < Doorkeeper::Request::Strategy
+    delegate :client, :dpop_proof, :parameters, to: :server
+
+    def request
+      @request ||= TokenRequest.new(Doorkeeper.config, client, parameters).tap do |request|
+        request.dpop_proof = dpop_proof
+      end
+    end
+  end
+end
+```
+
+If the proof isn't injected, the flow can issue an unbound Bearer token when DPoP is optional, or reject the request under `force_dpop` even when the client supplied a valid proof.
+
+If your custom request subclasses `Doorkeeper::OAuth::BaseRequest`, add the DPoP validation explicitly to match the built-in flows:
+
+```ruby
+validate :dpop_proof, error: Doorkeeper::Errors::InvalidDPoPProof
+```
+
+Custom token creation should also use `dpop_token_attributes` when assembling the attributes passed to `AccessToken.create_for` so that it honors `force_dpop`.
+
+### Protecting Resources
+
+`Doorkeeper::OAuth::Token.authenticate` doesn't preserve enough context to enforce DPoP since it returns only the access token. Looking up a DPoP-bound token through the Bearer authentication scheme does not by itself enforce its sender constraint.
+
+A resource server needs to know which method extracted the token (i.e. whether it arrived under the `DPoP` scheme), and it needs the plaintext token to validate the DPoP proof's `ath` claim.
+
+In a Doorkeeper-aware controller, use the helper. `doorkeeper_authorize!` calls `valid_doorkeeper_token?`, which enforces the binding when necessary. Pass `dpop: :required` to also reject any token that isn't DPoP-bound:
+
+```ruby
+before_action { doorkeeper_authorize! :read, dpop: :required }
+```
+
+Elsewhere, resolve the token with `Doorkeeper::OAuth::Token.resolve` and validate the proof yourself. `resolve` returns a `Resolution(access_token_method, plaintext_token, access_token)` with the additional context needed to enforce DPoP:
+
+```ruby
+resolution = Doorkeeper::OAuth::Token.resolve(request, *Doorkeeper.config.access_token_methods)
+token = resolution&.access_token
+dpop_used = resolution&.access_token_method == :from_dpop_authorization
+
+if dpop_used || token&.uses_dpop?
+  proof = Doorkeeper::OAuth::DPoPProof.new(request, resolution.plaintext_token)
+
+  unless dpop_used && proof.valid? && token.dpop_binding_matches?(proof.jkt)
+    # refuse the request: a dpop-bound token was not presented with a valid proof
+  end
+end
+```
+
 ## Example Applications
 
 These applications show how Doorkeeper works and how to integrate with it. Start with the oAuth2 server and use the clients to connect with the server.
@@ -341,7 +452,7 @@ here](https://github.com/doorkeeper-gem/doorkeeper/wiki/Testing-your-provider-wi
 
 ## Sponsors
 
-[![OpenCollective](https://opencollective.com/doorkeeper-gem/backers/badge.svg)](#backers) 
+[![OpenCollective](https://opencollective.com/doorkeeper-gem/backers/badge.svg)](#backers)
 [![OpenCollective](https://opencollective.com/doorkeeper-gem/sponsors/badge.svg)](#sponsors)
 
 Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/doorkeeper-gem#sponsor)]

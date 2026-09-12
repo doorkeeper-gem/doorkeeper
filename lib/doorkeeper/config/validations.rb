@@ -15,10 +15,12 @@ module Doorkeeper
         validate_token_reuse_limit
         validate_secret_strategies
         validate_pkce_code_challenge_methods
+        validate_dpop_signature_algorithms
         validate_custom_metadata
         validate_refresh_token_flow
         validate_issuer_format
         validate_issuer_metadata_discoverability
+        validate_force_dpop
       end
 
       private
@@ -151,6 +153,25 @@ module Doorkeeper
         @pkce_code_challenge_methods = ["plain", "S256"]
       end
 
+      def validate_dpop_signature_algorithms
+        return unless instance_variable_defined?(:@dpop_signature_algorithms)
+
+        algorithms = dpop_signature_algorithms.map(&:to_s)
+        allowed = Doorkeeper::OAuth::DPoPProof::ALLOWED_ALGORITHMS
+
+        if algorithms.any? && algorithms.all? { |algorithm| allowed.include?(algorithm) }
+          @dpop_signature_algorithms = algorithms
+          return
+        end
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] You have configured an invalid value for dpop_signature_algorithms option. " \
+          "Supported algorithms are #{allowed.join(", ")}. It will be set to default ['ES256', 'PS256'].",
+        )
+
+        @dpop_signature_algorithms = ["ES256", "PS256"]
+      end
+
       def validate_custom_metadata
         return if custom_metadata.is_a? Hash
 
@@ -242,6 +263,27 @@ module Doorkeeper
           "document. Use a host-only issuer, or route the derived well-known path " \
           "to Doorkeeper.",
         )
+      end
+
+      # Validate `force_dpop` should only be enabled if `access_token_model.dpop_supported?`.
+      # `force_dpop` is meant to guarantee only dpop tokens are issued, but that
+      # binding can only be stored once the `dpop_jkt` migration has been run.
+      # without the column, `BaseRequest#validate_dpop_proof` fails and every
+      # token request is rejected.
+      def validate_force_dpop
+        return unless force_dpop?
+        return if access_token_model.dpop_supported?
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] force_dpop is enabled but the #{access_token_model} model has no " \
+          "dpop_jkt column, so every token request will fail. Run the DPoP migration " \
+          "(rails generate doorkeeper:dpop) before enabling force_dpop, or disable force_dpop.",
+        )
+      rescue StandardError
+        # the schema may be unreadable during boot (before migrations run, or
+        # because there's no database connection). we cannot tell whether dpop
+        # is supported, so skip the advisory warning.
+        nil
       end
 
       # Redact any userinfo (e.g. a misconfigured user:pass@host) before the
