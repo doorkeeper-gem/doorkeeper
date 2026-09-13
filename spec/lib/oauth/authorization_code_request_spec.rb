@@ -10,6 +10,7 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
   let(:server) do
     double :server,
            access_token_expires_in: 2.days,
+           public_client_access_token_expires_in: nil,
            refresh_token_enabled?: false,
            custom_access_token_expires_in: lambda { |context|
              context.grant_type == Doorkeeper::OAuth::AUTHORIZATION_CODE ? 1234 : nil

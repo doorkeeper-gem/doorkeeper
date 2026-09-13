@@ -316,6 +316,9 @@ module Doorkeeper
     option :skip_authorization,             default: ->(_routes) {}
     option :access_token_expires_in,        default: 7200
     option :custom_access_token_expires_in, default: ->(_context) { nil }
+    # Ceiling for the TTL of access tokens issued to public clients (OAuth 2.1 Section 2.4).
+    # Applies to every grant, including refresh_token. nil (the default) means no ceiling.
+    option :public_client_access_token_expires_in, default: nil
     option :authorization_code_expires_in,  default: 600
     option :orm,                            default: :active_record
     option :native_redirect_uri,            default: "urn:ietf:wg:oauth:2.0:oob", deprecated: true

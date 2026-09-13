@@ -125,7 +125,7 @@ Doorkeeper.configure do
   #
   # `context` has the following properties available:
   #
-  #   * `client` - the OAuth client application (see Doorkeeper::OAuth::Client)
+  #   * `client` - the client application record (Doorkeeper::Application, or nil when client authentication was skipped)
   #   * `grant_type` - the grant type of the request (see Doorkeeper::OAuth)
   #   * `scopes` - the requested scopes (see Doorkeeper::OAuth::Scopes)
   #   * `resource_owner` - authorized resource owner instance (if present)
@@ -133,6 +133,16 @@ Doorkeeper.configure do
   # custom_access_token_expires_in do |context|
   #   context.client.additional_settings.implicit_oauth_expiration
   # end
+
+  # Cap the lifetime of access tokens issued to public (non-confidential) clients,
+  # for every grant including refresh_token, whatever +access_token_expires_in+ or
+  # +custom_access_token_expires_in+ would have given them (a never-expiring token
+  # is capped too). OAuth 2.1 (Section 2.4) requires an authorization server to limit
+  # the exposure of tokens issued to unauthenticated clients. A request without a
+  # client (e.g. with +skip_client_authentication_for_password_grant+) is treated as a
+  # public client. Confidential clients are not affected. Disabled (nil) by default.
+  #
+  # public_client_access_token_expires_in 1.hour
 
   # Use a custom class for generating the access token.
   # See https://doorkeeper.gitbook.io/guides/configuration/other-configurations#custom-access-token-generator
@@ -266,7 +276,7 @@ Doorkeeper.configure do
   # token or not. Similar to +custom_access_token_expires_in+, `context` has
   # the following properties:
   #
-  # `client` - the OAuth client application (see Doorkeeper::OAuth::Client)
+  # `client` - the client application record (Doorkeeper::Application, or nil when client authentication was skipped)
   # `grant_type` - the grant type of the request (see Doorkeeper::OAuth)
   # `scopes` - the requested scopes (see Doorkeeper::OAuth::Scopes)
   #

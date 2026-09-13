@@ -6,7 +6,7 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
   subject(:request) { described_class.new(server, refresh_token, credentials) }
 
   let(:server) do
-    double :server, access_token_expires_in: 2.minutes
+    double :server, access_token_expires_in: 2.minutes, public_client_access_token_expires_in: nil
   end
 
   let(:refresh_token) do
@@ -129,6 +129,42 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
         scopes: refresh_token.scopes,
         resource_owner: nil,
       )
+    end
+  end
+
+  context "with public_client_access_token_expires_in configured" do
+    let(:refresh_token) do
+      FactoryBot.create(:access_token, application: application, use_refresh_token: true, expires_in: nil)
+    end
+
+    before do
+      allow(server).to receive(:public_client_access_token_expires_in).and_return(600)
+    end
+
+    context "when the client is public" do
+      let(:application) { FactoryBot.create(:application, confidential: false) }
+      let(:credentials) { Doorkeeper::ClientAuthentication::Credentials.new(client.uid, nil) }
+
+      # A refresh chain that started before the ceiling was configured is
+      # brought under it on its next refresh; a never-expiring original token
+      # does not get to mint never-expiring tokens forever.
+      it "caps the expiry of the new token" do
+        request.authorize
+
+        expect(request.error).to be_nil
+        expect(client.reload.access_tokens.max_by(&:created_at).expires_in).to eq(600)
+      end
+    end
+
+    context "when the client is confidential" do
+      let(:application) { FactoryBot.create(:application, confidential: true) }
+
+      it "keeps the expiry of the original token" do
+        request.authorize
+
+        expect(request.error).to be_nil
+        expect(client.reload.access_tokens.max_by(&:created_at).expires_in).to be_nil
+      end
     end
   end
 

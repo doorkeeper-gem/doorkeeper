@@ -32,11 +32,12 @@ RSpec.describe Doorkeeper::OAuth::Authorization::Token do
   end
 
   describe ".access_token_expires_in" do
-    let(:context) { double }
+    let(:context) { double(client: nil) }
 
     it "returns nil for a never-expiring custom expiration" do
       configuration = double(
         option_defined?: true,
+        public_client_access_token_expires_in: nil,
         custom_access_token_expires_in: ->(_context) { Float::INFINITY },
       )
 
@@ -46,6 +47,7 @@ RSpec.describe Doorkeeper::OAuth::Authorization::Token do
     it "falls back to access_token_expires_in when the custom expiration is nil" do
       configuration = double(
         option_defined?: true,
+        public_client_access_token_expires_in: nil,
         custom_access_token_expires_in: ->(_context) {},
         access_token_expires_in: 7200,
       )
@@ -54,7 +56,7 @@ RSpec.describe Doorkeeper::OAuth::Authorization::Token do
     end
 
     it "uses access_token_expires_in when no custom expiration is configured" do
-      configuration = double(option_defined?: false, access_token_expires_in: 7200)
+      configuration = double(option_defined?: false, public_client_access_token_expires_in: nil, access_token_expires_in: 7200)
 
       expect(described_class.access_token_expires_in(configuration, context)).to eq(7200)
     end
@@ -63,6 +65,7 @@ RSpec.describe Doorkeeper::OAuth::Authorization::Token do
       it "falls back to the block when the custom expiration is nil" do
         configuration = double(
           option_defined?: true,
+          public_client_access_token_expires_in: nil,
           custom_access_token_expires_in: ->(_context) {},
         )
 
@@ -70,7 +73,7 @@ RSpec.describe Doorkeeper::OAuth::Authorization::Token do
       end
 
       it "falls back to the block when no custom expiration is configured" do
-        configuration = double(option_defined?: false)
+        configuration = double(option_defined?: false, public_client_access_token_expires_in: nil)
 
         expect(described_class.access_token_expires_in(configuration, context) { 300 }).to eq(300)
       end
@@ -78,6 +81,7 @@ RSpec.describe Doorkeeper::OAuth::Authorization::Token do
       it "prefers the custom expiration over the block" do
         configuration = double(
           option_defined?: true,
+          public_client_access_token_expires_in: nil,
           custom_access_token_expires_in: ->(_context) { 60 },
         )
 
@@ -87,11 +91,80 @@ RSpec.describe Doorkeeper::OAuth::Authorization::Token do
       it "returns nil for a never-expiring custom expiration without calling the block" do
         configuration = double(
           option_defined?: true,
+          public_client_access_token_expires_in: nil,
           custom_access_token_expires_in: ->(_context) { Float::INFINITY },
         )
 
         expect(described_class.access_token_expires_in(configuration, context) { raise "unexpected" }).to be_nil
       end
+    end
+
+    context "with public_client_access_token_expires_in configured" do
+      let(:public_client) { double(confidential?: false) }
+      let(:confidential_client) { double(confidential?: true) }
+
+      def configuration(expiration)
+        double(
+          option_defined?: true,
+          public_client_access_token_expires_in: 600,
+          custom_access_token_expires_in: ->(_context) { expiration },
+        )
+      end
+
+      it "caps the expiration of a public client" do
+        context = double(client: public_client)
+
+        expect(described_class.access_token_expires_in(configuration(7200), context)).to eq(600)
+      end
+
+      it "keeps a shorter expiration of a public client" do
+        context = double(client: public_client)
+
+        expect(described_class.access_token_expires_in(configuration(60), context)).to eq(60)
+      end
+
+      it "caps a never-expiring expiration of a public client" do
+        context = double(client: public_client)
+
+        expect(described_class.access_token_expires_in(configuration(Float::INFINITY), context)).to eq(600)
+      end
+
+      it "caps the fallback of a public client" do
+        context = double(client: public_client)
+
+        expect(described_class.access_token_expires_in(configuration(nil), context) { nil }).to eq(600)
+        expect(described_class.access_token_expires_in(configuration(nil), context) { 7200 }).to eq(600)
+        expect(described_class.access_token_expires_in(configuration(nil), context) { 60 }).to eq(60)
+      end
+
+      it "treats a request without a client as a public client" do
+        context = double(client: nil)
+
+        expect(described_class.access_token_expires_in(configuration(7200), context)).to eq(600)
+      end
+
+      it "does not cap the expiration of a confidential client" do
+        context = double(client: confidential_client)
+
+        expect(described_class.access_token_expires_in(configuration(7200), context)).to eq(7200)
+        expect(described_class.access_token_expires_in(configuration(Float::INFINITY), context)).to be_nil
+      end
+    end
+  end
+
+  describe ".cap_for_public_client" do
+    it "returns the expiration unchanged when no cap is configured" do
+      configuration = double(public_client_access_token_expires_in: nil)
+      application = double(confidential?: false)
+
+      expect(described_class.cap_for_public_client(configuration, application, 7200)).to eq(7200)
+      expect(described_class.cap_for_public_client(configuration, application, nil)).to be_nil
+    end
+
+    it "treats an application that does not know whether it is confidential as public" do
+      configuration = double(public_client_access_token_expires_in: 600)
+
+      expect(described_class.cap_for_public_client(configuration, Object.new, 7200)).to eq(600)
     end
   end
 

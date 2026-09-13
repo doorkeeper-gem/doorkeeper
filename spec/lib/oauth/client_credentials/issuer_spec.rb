@@ -10,6 +10,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
     double(
       :server,
       access_token_expires_in: 100,
+      public_client_access_token_expires_in: nil,
     )
   end
   let(:validator) { double :validator, valid?: true }
@@ -82,6 +83,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Issuer do
       let(:server) do
         double(
           :server,
+          public_client_access_token_expires_in: nil,
           custom_access_token_expires_in: lambda { |context|
             # scopes is normally an object but is a string in this test
             if context.scopes == custom_scope

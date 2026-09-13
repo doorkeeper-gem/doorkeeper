@@ -460,6 +460,33 @@ RSpec.describe "Refresh Token Flow" do
       end
     end
 
+    context "when public_client_access_token_expires_in is configured" do
+      before do
+        config_is_set(:public_client_access_token_expires_in, 10.minutes)
+        @token.update_attribute :expires_in, nil
+      end
+
+      it "caps the expiry of the token refreshed by a public client" do
+        @client.update_attribute :confidential, false
+
+        post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
+          client_id: @client.uid, refresh_token: @token.refresh_token,
+        )
+
+        expect(json_response).to include("expires_in" => 600)
+        expect(Doorkeeper::AccessToken.last.expires_in).to eq(600)
+      end
+
+      it "keeps the expiry of the token refreshed by a confidential client" do
+        post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
+          client: @client, refresh_token: @token.refresh_token,
+        )
+
+        expect(json_response).not_to have_key("expires_in")
+        expect(Doorkeeper::AccessToken.last.expires_in).to be_nil
+      end
+    end
+
     context "when custom_access_token_attributes are configured" do
       before do
         Doorkeeper.configure do

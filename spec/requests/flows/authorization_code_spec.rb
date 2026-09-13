@@ -484,6 +484,44 @@ feature "Authorization Code Flow" do
         )
       end
 
+      scenario "public client gets a capped token when public_client_access_token_expires_in is configured" do
+        config_is_set(:public_client_access_token_expires_in, 10.minutes)
+        @client.update_attribute :confidential, false
+        visit authorization_endpoint_url(client: @client, code_challenge: code_challenge, code_challenge_method: "S256")
+        click_on "Authorize"
+
+        authorization_code = current_params["code"]
+        page.driver.post token_endpoint_url, token_endpoint_params(
+          code: authorization_code,
+          client_id: @client.uid,
+          redirect_uri: @client.redirect_uri,
+          code_verifier: code_verifier,
+        )
+
+        expect(json_response).to include(
+          "access_token" => Doorkeeper::AccessToken.first.token,
+          "expires_in" => 600,
+        )
+      end
+
+      scenario "confidential client keeps its expiry when public_client_access_token_expires_in is configured" do
+        config_is_set(:public_client_access_token_expires_in, 10.minutes)
+        visit authorization_endpoint_url(client: @client, code_challenge: code_challenge, code_challenge_method: "S256")
+        click_on "Authorize"
+
+        authorization_code = current_params["code"]
+        page.driver.post token_endpoint_url, token_endpoint_params(
+          code: authorization_code,
+          client: @client,
+          code_verifier: code_verifier,
+        )
+
+        expect(json_response).to include(
+          "access_token" => Doorkeeper::AccessToken.first.token,
+          "expires_in" => 7200,
+        )
+      end
+
       scenario "mobile app requests an access token with authorization code but no code verifier" do
         visit authorization_endpoint_url(
           client: @client,

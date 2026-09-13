@@ -69,6 +69,31 @@ RSpec.describe "Client Credentials Request" do
     end
   end
 
+  context "when public_client_access_token_expires_in is configured" do
+    before do
+      config_is_set(:public_client_access_token_expires_in, 10.minutes)
+    end
+
+    it "caps the expiry of a token issued to a public client" do
+      client.update_attribute :confidential, false
+
+      post token_endpoint_url, params: { grant_type: "client_credentials", client_id: client.uid }
+
+      expect(json_response).to include(
+        "access_token" => Doorkeeper::AccessToken.first.token,
+        "expires_in" => 600,
+      )
+    end
+
+    it "keeps the expiry of a token issued to a confidential client" do
+      headers = authorization client.uid, client.secret
+
+      post token_endpoint_url, params: { grant_type: "client_credentials" }, headers: headers
+
+      expect(json_response).to include("expires_in" => 7200)
+    end
+  end
+
   context "when configured to check application supported grant flow" do
     before do
       Doorkeeper.configuration.instance_variable_set(
