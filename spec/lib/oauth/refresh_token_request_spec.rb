@@ -58,6 +58,16 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
       expect(new_token.id).not_to eq(refresh_token.id)
       expect(new_token.resource_owner).to eq(resource_owner)
     end
+
+    it "passes the full resource owner on to custom_access_token_expires_in" do
+      contexts = []
+      allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
+      allow(server).to receive(:custom_access_token_expires_in).and_return(->(context) { contexts << context && nil })
+
+      described_class.new(server, refresh_token, credentials).authorize
+
+      expect(contexts.map(&:resource_owner)).to eq([resource_owner])
+    end
   end
 
   it "issues a new token for the client" do
@@ -66,14 +76,60 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
     expect(client.reload.access_tokens.max_by(&:created_at).expires_in).to eq(refresh_token.expires_in)
   end
 
-  it "issues a new token for the client with the same expiry as of original token" do
-    allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
-    allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
+  context "with custom_access_token_expires_in configured" do
+    let(:refresh_token) do
+      FactoryBot.create(:access_token, use_refresh_token: true, expires_in: 1234)
+    end
 
-    described_class.new(server, refresh_token, credentials).authorize
+    before do
+      allow(server).to receive(:option_defined?).with(:custom_access_token_expires_in).and_return(true)
+    end
 
-    # #sort_by used for MongoDB ORM extensions for valid ordering
-    expect(client.reload.access_tokens.max_by(&:created_at).expires_in).to eq(refresh_token.expires_in)
+    # #1364: a lifetime given to the grant the token was first issued with
+    # must survive refreshing, so a callable that has nothing to say about
+    # the refresh_token grant keeps the TTL of the original token instead of
+    # falling back to access_token_expires_in.
+    it "issues a new token with the same expiry as the original token when the callable returns nil" do
+      allow(server).to receive(:custom_access_token_expires_in).and_return(->(_context) {})
+
+      request.authorize
+
+      # #sort_by used for MongoDB ORM extensions for valid ordering
+      expect(client.reload.access_tokens.max_by(&:created_at).expires_in).to eq(1234)
+    end
+
+    it "issues a new token with the expiry the callable returns for the refresh_token grant" do
+      allow(server).to receive(:custom_access_token_expires_in).and_return(
+        ->(context) { context.grant_type == Doorkeeper::OAuth::REFRESH_TOKEN ? 42 : nil },
+      )
+
+      request.authorize
+
+      expect(client.reload.access_tokens.max_by(&:created_at).expires_in).to eq(42)
+    end
+
+    it "issues a never-expiring token when the callable returns Float::INFINITY" do
+      allow(server).to receive(:custom_access_token_expires_in).and_return(->(_context) { Float::INFINITY })
+
+      request.authorize
+
+      expect(client.reload.access_tokens.max_by(&:created_at).expires_in).to be_nil
+    end
+
+    it "calls the callable with the refresh token's application, grant type and scopes" do
+      contexts = []
+      allow(server).to receive(:custom_access_token_expires_in).and_return(->(context) { contexts << context && nil })
+
+      request.authorize
+
+      expect(contexts.size).to eq(1)
+      expect(contexts.first).to have_attributes(
+        client: client,
+        grant_type: Doorkeeper::OAuth::REFRESH_TOKEN,
+        scopes: refresh_token.scopes,
+        resource_owner: nil,
+      )
+    end
   end
 
   it "revokes the previous token" do

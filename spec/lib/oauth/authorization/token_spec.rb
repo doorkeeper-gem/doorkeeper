@@ -52,6 +52,47 @@ RSpec.describe Doorkeeper::OAuth::Authorization::Token do
 
       expect(described_class.access_token_expires_in(configuration, context)).to eq(7200)
     end
+
+    it "uses access_token_expires_in when no custom expiration is configured" do
+      configuration = double(option_defined?: false, access_token_expires_in: 7200)
+
+      expect(described_class.access_token_expires_in(configuration, context)).to eq(7200)
+    end
+
+    context "with a block" do
+      it "falls back to the block when the custom expiration is nil" do
+        configuration = double(
+          option_defined?: true,
+          custom_access_token_expires_in: ->(_context) {},
+        )
+
+        expect(described_class.access_token_expires_in(configuration, context) { 300 }).to eq(300)
+      end
+
+      it "falls back to the block when no custom expiration is configured" do
+        configuration = double(option_defined?: false)
+
+        expect(described_class.access_token_expires_in(configuration, context) { 300 }).to eq(300)
+      end
+
+      it "prefers the custom expiration over the block" do
+        configuration = double(
+          option_defined?: true,
+          custom_access_token_expires_in: ->(_context) { 60 },
+        )
+
+        expect(described_class.access_token_expires_in(configuration, context) { 300 }).to eq(60)
+      end
+
+      it "returns nil for a never-expiring custom expiration without calling the block" do
+        configuration = double(
+          option_defined?: true,
+          custom_access_token_expires_in: ->(_context) { Float::INFINITY },
+        )
+
+        expect(described_class.access_token_expires_in(configuration, context) { raise "unexpected" }).to be_nil
+      end
+    end
   end
 
   describe "#issue_token!" do
