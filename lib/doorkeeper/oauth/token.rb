@@ -69,11 +69,11 @@ module Doorkeeper
         end
 
         def from_access_token_param(request)
-          request.parameters[:access_token]
+          parameters(request)[:access_token]
         end
 
         def from_bearer_param(request)
-          request.parameters[:bearer_token]
+          parameters(request)[:bearer_token]
         end
 
         def from_bearer_authorization(request)
@@ -114,10 +114,27 @@ module Doorkeeper
           return [] unless request.respond_to?(:GET) && request.respond_to?(:POST)
 
           query = request.GET
-          body = request.POST
+          body = body_parameters(request)
           return [] unless query.is_a?(Hash) && body.is_a?(Hash)
 
           [query[parameter], body[parameter]].filter_map(&:presence)
+        end
+
+        # A body ActionDispatch cannot parse — malformed JSON under a JSON
+        # content type, say — carries no token. Reading it must not raise out
+        # of the extractors, which host apps call from places that run after
+        # their own ParseError handling (instrumentation, exception apps), the
+        # same way ActionDispatch's own #filtered_parameters treats that error.
+        def parameters(request)
+          request.parameters
+        rescue ActionDispatch::Http::Parameters::ParseError
+          {}
+        end
+
+        def body_parameters(request)
+          request.POST
+        rescue ActionDispatch::Http::Parameters::ParseError
+          {}
         end
 
         def token_from_basic_header(header, pattern)
