@@ -74,6 +74,39 @@ RSpec.describe Doorkeeper::OAuth::Authorization::Token do
       expect { expect(authorization.issue_token!).to be(first_token) }
         .not_to(change { Doorkeeper::AccessToken.count })
     end
+
+    # RFC 8707: the implicit grant carries the resource indicators the
+    # pre-authorization validated straight to the access token, since there is
+    # no grant to persist them on first.
+    context "with resource indicators" do
+      # The example above builds its pre_auth inline; these lets are local to
+      # this context and only differ from it by carrying resource_indicators.
+      let(:application) { FactoryBot.create(:application) }
+      let(:resource_owner) { FactoryBot.create(:doorkeeper_testing_user) }
+      let(:pre_auth) do
+        double(
+          client: application,
+          scopes: Doorkeeper::OAuth::Scopes.from_string("public"),
+          resource_indicators: ["https://api.example.com/", "https://other.example.com/"],
+        )
+      end
+      let(:authorization) { described_class.new(pre_auth, resource_owner) }
+
+      it "carries them to the access token" do
+        token = authorization.issue_token!
+
+        expect(token).to be_persisted
+        expect(token.resource).to eq("https://api.example.com/ https://other.example.com/")
+      end
+
+      it "raises MissingResourceColumn when the access token table lacks the column" do
+        allow(Doorkeeper.config.access_token_model).to receive(:resource_indicators_supported?).and_return(false)
+
+        expect { authorization.issue_token! }
+          .to raise_error(Doorkeeper::Errors::MissingResourceColumn, /oauth_access_tokens/)
+        expect(Doorkeeper::AccessToken.count).to eq(0)
+      end
+    end
   end
 
   describe "#application" do

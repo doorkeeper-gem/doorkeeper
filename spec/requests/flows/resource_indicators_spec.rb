@@ -57,4 +57,29 @@ feature "Resource Indicators (RFC 8707) Flow" do
     access_token = Doorkeeper::AccessToken.find_by(token: token_response["access_token"])
     expect(access_token.resource).to eq(resource_uri)
   end
+
+  scenario "implicit flow with resource indicator audience-restricts the token" do
+    config_is_set(:grant_flows, ["implicit"])
+
+    params = {
+      client_id: @client.uid,
+      redirect_uri: @client.redirect_uri,
+      response_type: "token",
+      scope: "default",
+      resource: resource_uri,
+    }
+    visit "/oauth/authorize?#{Rack::Utils.build_query(params)}"
+
+    expect(page).to have_button("Authorize")
+    click_on "Authorize"
+
+    # The token is issued straight from the authorization endpoint, with the
+    # resource carried over since there is no grant to inherit it from.
+    access_token = Doorkeeper::AccessToken.first
+    expect(access_token).to be_present
+    expect(access_token.resource).to eq(resource_uri)
+
+    fragment = Rack::Utils.parse_query(URI.parse(page.current_url).fragment)
+    expect(fragment["access_token"]).to eq(access_token.token)
+  end
 end

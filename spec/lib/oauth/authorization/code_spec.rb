@@ -62,6 +62,30 @@ RSpec.describe Doorkeeper::OAuth::Authorization::Code do
         expect(grant.resource_owner).to eq(resource_owner)
       end
     end
+
+    # RFC 8707: the resource indicators the pre-authorization validated are
+    # persisted on the grant so the token endpoint can enforce the subset rule.
+    context "with resource indicators" do
+      before do
+        allow(pre_auth).to receive(:resource_indicators)
+          .and_return(["https://api.example.com/", "https://other.example.com/"])
+      end
+
+      it "persists them on the grant" do
+        grant = authorization.issue_token!
+
+        expect(grant).to be_persisted
+        expect(grant.resource).to eq("https://api.example.com/ https://other.example.com/")
+      end
+
+      it "raises MissingResourceColumn when the access grant table lacks the column" do
+        allow(Doorkeeper.config.access_grant_model).to receive(:resource_indicators_supported?).and_return(false)
+
+        expect { authorization.issue_token! }
+          .to raise_error(Doorkeeper::Errors::MissingResourceColumn, /oauth_access_grants/)
+        expect(Doorkeeper::AccessGrant.count).to eq(0)
+      end
+    end
   end
 
   describe "#issue_token! with read replica support" do
