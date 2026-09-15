@@ -145,6 +145,32 @@ RSpec.describe Doorkeeper::OAuth::Token do
       expect(described_class.from_request(request, :from_access_token_param))
         .to eq("token-value")
     end
+
+    context "when the body cannot be parsed" do
+      def request_with(headers = {})
+        ActionDispatch::Request.new(
+          Rack::MockRequest.env_for(
+            "/resource",
+            method: "POST",
+            input: "not json",
+            "CONTENT_TYPE" => "application/json",
+            **headers,
+          ),
+        )
+      end
+
+      it "returns the token carried by the Authorization header" do
+        request = request_with("HTTP_AUTHORIZATION" => "Bearer token-value")
+
+        expect(described_class.from_request(request, :from_bearer_authorization, :from_access_token_param, :from_bearer_param))
+          .to eq("token-value")
+      end
+
+      it "returns nil when no other method carries a token" do
+        expect(described_class.from_request(request_with, :from_bearer_authorization, :from_access_token_param, :from_bearer_param))
+          .to be_nil
+      end
+    end
   end
 
   describe ".from_access_token_param" do

@@ -5,6 +5,10 @@ upgrade guides.
 
 User-visible changes worth mentioning.
 
+## 5.9.8
+
+- [#1938] Fix: a request body ActionDispatch cannot parse (malformed JSON under a JSON content type, say) no longer raises `ActionDispatch::Http::Parameters::ParseError` out of `Doorkeeper::OAuth::Token.from_request` and `doorkeeper_token`. Since 5.9.7 the RFC 6750 §2 multi-method check read the body on every request, so such a request raised even when it carried a valid Bearer header. The body is now treated as carrying no token, the same way ActionDispatch's own `#filtered_parameters` treats that error.
+
 ## 5.9.7
 
 - Refuse requests that transmit an access token by more than one method (RFC 6750 §2), instead of silently authorizing with the first configured `access_token_methods` entry that matched and discarding the other tokens. Such a request now fails closed as carrying no usable token (401 `invalid_token`); no calling contract changes. The form-encoded body (§2.2) and the URI query (§2.3) count as two methods even though Rails and Rack merge them into a single `params` hash. The same token repeated across two methods is refused too — §2 forbids the second method, not a disagreement between the two — and a custom callable extractor in `access_token_methods` keeps the historical first-wins behavior and is never invoked more than once. (The strict `invalid_request` (400) answer §3.1 prescribes ships with Doorkeeper 6.0.)
