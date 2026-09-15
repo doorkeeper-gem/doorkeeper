@@ -922,6 +922,88 @@ RSpec.describe Doorkeeper::Config do
       end
     end
 
+    context "when including a grant flow deprecated by RFC 9700" do
+      it "warns at configuration time when 'implicit' is enabled" do
+        expect(Rails.logger).to receive(:warn).with(/\[DOORKEEPER\] The implicit grant flow is deprecated by RFC 9700/).once
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          grant_flows %w[authorization_code implicit]
+        end
+      end
+
+      it "warns at configuration time when 'password' is enabled" do
+        expect(Rails.logger).to receive(:warn).with(/\[DOORKEEPER\] The password grant flow is deprecated by RFC 9700/).once
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          grant_flows %w[authorization_code password]
+        end
+      end
+
+      it "warns once per deprecated grant flow when both are enabled" do
+        expect(Rails.logger).to receive(:warn).with(/The implicit grant flow is deprecated/).once
+        expect(Rails.logger).to receive(:warn).with(/The password grant flow is deprecated/).once
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          grant_flows %w[implicit password]
+        end
+      end
+
+      it "does not warn for 'authorization_code' and 'client_credentials'" do
+        expect(Rails.logger).not_to receive(:warn).with(/grant flow is deprecated/)
+
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          grant_flows %w[authorization_code client_credentials]
+        end
+      end
+
+      context "when enabled through a registered alias" do
+        around do |example|
+          origin_aliases = Doorkeeper::GrantFlow::Registry.aliases.deep_dup
+          Doorkeeper::GrantFlow.register_alias("legacy_implicit", as: %w[authorization_code implicit])
+          Doorkeeper::GrantFlow.register_alias("legacy_password", as: %w[authorization_code password])
+          example.run
+          Doorkeeper::GrantFlow::Registry.aliases = origin_aliases
+        end
+
+        it "warns when an alias expands to 'implicit'" do
+          expect(Rails.logger).to receive(:warn).with(/The implicit grant flow is deprecated/).once
+          expect(Rails.logger).not_to receive(:warn).with(/The password grant flow is deprecated/)
+
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            grant_flows %w[legacy_implicit]
+          end
+
+          expect(config.authorization_response_flows).to include Doorkeeper::GrantFlow.get("implicit")
+        end
+
+        it "warns when an alias expands to 'password'" do
+          expect(Rails.logger).to receive(:warn).with(/The password grant flow is deprecated/).once
+          expect(Rails.logger).not_to receive(:warn).with(/The implicit grant flow is deprecated/)
+
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            grant_flows %w[legacy_password]
+          end
+
+          expect(config.token_grant_flows).to include Doorkeeper::GrantFlow.get("password")
+        end
+
+        it "warns once per deprecated grant flow when an alias and a direct entry both enable it" do
+          expect(Rails.logger).to receive(:warn).with(/The implicit grant flow is deprecated/).once
+
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            grant_flows %w[legacy_implicit implicit]
+          end
+        end
+      end
+    end
+
     context "when including 'refresh_token'" do
       it "warns when use_refresh_token is not configured" do
         expect(Rails.logger).to receive(:warn).with(/refresh tokens will not be issued/)
