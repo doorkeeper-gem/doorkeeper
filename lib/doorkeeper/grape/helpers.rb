@@ -12,7 +12,7 @@ module Doorkeeper
       include Doorkeeper::Rails::Helpers
 
       # endpoint specific scopes > parameter scopes > default scopes
-      def doorkeeper_authorize!(*scopes)
+      def doorkeeper_authorize!(*scopes, dpop: nil)
         endpoint_scopes = endpoint.route_setting(:scopes) ||
                           endpoint.options[:route_options][:scopes]
 
@@ -22,7 +22,10 @@ module Doorkeeper
                    Doorkeeper::OAuth::Scopes.from_array(scopes)
                  end
 
-        super(*scopes)
+        endpoint_dpop = endpoint.route_setting(:dpop) ||
+                        endpoint.options[:route_options][:dpop]
+
+        super(*scopes, dpop: endpoint_dpop || dpop)
       end
 
       def doorkeeper_render_error_with(error)
@@ -36,23 +39,7 @@ module Doorkeeper
         env["api.endpoint"]
       end
 
-      # Memoized with the same defined? guard as Rails::Helpers#doorkeeper_token:
-      # both a request without a usable token and a refused multi-method request
-      # leave @doorkeeper_token nil, which ||= would re-evaluate on every call —
-      # re-running authentication just to reach the same verdict again.
-      def doorkeeper_token
-        return @doorkeeper_token if defined?(@doorkeeper_token)
-
-        @doorkeeper_token = OAuth::Token.authenticate(
-          decorated_request,
-          *Doorkeeper.config.access_token_methods,
-        )
-      rescue Errors::MultipleAccessTokenMethods => e
-        @_doorkeeper_multiple_token_methods_error = e
-        @doorkeeper_token = nil
-      end
-
-      def decorated_request
+      def __doorkeeper_request__
         AuthorizationDecorator.new(request)
       end
 

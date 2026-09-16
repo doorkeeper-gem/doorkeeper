@@ -5,6 +5,7 @@ module Doorkeeper
     class BaseRequest
       include Validations
 
+      attr_accessor :dpop_proof
       attr_reader :grant_type, :server
 
       delegate :default_scopes, to: :server
@@ -39,7 +40,7 @@ module Doorkeeper
         }
 
         @access_token =
-          Doorkeeper.config.access_token_model.find_or_create_for(**token_attributes.merge(custom_attributes))
+          Doorkeeper.config.access_token_model.find_or_create_for(**token_attributes.merge(custom_attributes).merge(dpop_token_attributes))
       end
 
       def before_successful_response
@@ -61,6 +62,44 @@ module Doorkeeper
 
           client_scopes.common(default_scopes)
         end
+      end
+
+      def dpop_supported?
+        Doorkeeper.config.access_token_model.dpop_supported?
+      end
+
+      def dpop_token_attributes(fallback_dpop_jkt: nil)
+        attributes = if dpop_supported?
+                       { dpop_jkt: dpop_proof&.jkt || fallback_dpop_jkt }.compact
+                     else
+                       {}
+                     end
+
+        enforce_dpop_binding!(attributes)
+
+        attributes
+      end
+
+      def enforce_dpop_binding!(attributes)
+        return unless Doorkeeper.config.force_dpop?
+        return if attributes[:dpop_jkt].present?
+
+        ErrorResponse.new(
+          name: :invalid_dpop_proof,
+          exception_class: Errors::InvalidDPoPProof,
+        ).raise_exception!
+      end
+
+      def validate_dpop_proof
+        return false if !dpop_supported? &&  Doorkeeper.config.force_dpop?
+        return true  if !dpop_supported? && !Doorkeeper.config.force_dpop?
+
+        return true unless Doorkeeper.config.force_dpop? || dpop_proof.present?
+
+        # A third-party grant flow subclassing BaseRequest inherits this
+        # validation but never gets a proof injected, so `dpop_proof` can be nil
+        # under `force_dpop`. That's an invalid request, not a 500.
+        !!dpop_proof&.valid?
       end
     end
   end

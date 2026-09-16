@@ -3,6 +3,10 @@
 module Doorkeeper
   module OAuth
     class ClientCredentialsRequest < BaseRequest
+      validate :client, error: Errors::InvalidClient
+      validate :resource_indicators, error: Errors::InvalidTarget
+      validate :dpop_proof, error: Errors::InvalidDPoPProof
+
       attr_reader :client, :original_scopes, :parameters, :response
 
       alias error_response response
@@ -23,7 +27,7 @@ module Doorkeeper
       end
 
       def error
-        @resource_indicator_error || issuer.error
+        @error || issuer.error
       end
 
       def issuer
@@ -33,10 +37,20 @@ module Doorkeeper
         )
       end
 
+      # The declared validations (client authentication, resource indicators,
+      # DPoP proof) run first and short-circuit issuance: a request that fails
+      # one of them must never reach the creator.
+      def validate
+        super
+        return if @error
+
+        issuer.create(client, scopes, custom_token_attributes_with_data.merge(dpop_token_attributes))
+      end
+
       private
 
-      def valid?
-        validate_resource_indicators && issuer.create(client, scopes, custom_token_attributes_with_data)
+      def validate_client
+        client.present?
       end
 
       def validate_resource_indicators
@@ -51,7 +65,6 @@ module Doorkeeper
         )
         true
       rescue Errors::InvalidTarget
-        @resource_indicator_error = Errors::InvalidTarget
         false
       end
 

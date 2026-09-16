@@ -7,6 +7,8 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1794] Add a minimally spec-compliant implementation of OAuth 2.0 Demonstrating Proof of Possession (DPoP, RFC 9449). DPoP is a sender-constraining mechanism that binds access tokens to a client's cryptographic key pair so an intercepted token is useless without the corresponding private key. Covers both halves of doorkeeper: issuing DPoP-bound access tokens (authorization server) and enforcing the key binding when authenticating (resource server). Fully opt-in — nothing changes for existing installations unless you run `rails generate doorkeeper:dpop` and migrate. Closes [#1655].
+- [#1794] Remove the private, undocumented `#config_methods` from `Helpers::Controller`. Overriding it in an engine controller (a subclass of `Doorkeeper::ApplicationMetalController` or `Doorkeeper::ApplicationController`) no longer changes the access token methods used by `doorkeeper_token`.
 - [#PR ID] Description of the change.
 - [#1933] Warn at boot when the `implicit` or `password` grant flow is enabled: both are deprecated by RFC 9700 (OAuth 2.0 Security BCP) and removed from OAuth 2.1, and may be removed in a future Doorkeeper release.
 - [#1938] Fix: a request body ActionDispatch cannot parse (malformed JSON under a JSON content type, say) no longer raises `ActionDispatch::Http::Parameters::ParseError` out of `Doorkeeper::OAuth::Token.from_request` and `doorkeeper_token`. Since 5.9.7 the RFC 6750 §2 multi-method check read the body on every request, so such a request raised even when it carried a valid Bearer header. The body is now treated as carrying no token, the same way ActionDispatch's own `#filtered_parameters` treats that error.

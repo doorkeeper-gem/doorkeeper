@@ -17,6 +17,8 @@ module Doorkeeper
         from_bearer_param: "bearer_token",
       }.freeze
 
+      Resolution = Struct.new(:access_token_method, :plaintext_token, :access_token)
+
       class << self
         # RFC 6750 §2: "Clients MUST NOT use more than one method to transmit
         # the token in each request", and §3.1 lists using more than one method
@@ -44,11 +46,7 @@ module Doorkeeper
         # exemption client authentication gives its legacy callable
         # extractors (Request#validate_client_authentication!).
         def from_request(request, *methods)
-          used = methods.sum do |method|
-            method.is_a?(Symbol) ? transmission_methods_used(request, method) : 0
-          end
-
-          raise Errors::MultipleAccessTokenMethods if used > 1
+          refuse_multiple_transmission_methods!(request, methods)
 
           methods.inject(nil) do |_, method|
             method = self.method(method) if method.is_a?(Symbol)
@@ -57,14 +55,25 @@ module Doorkeeper
           end
         end
 
-        def authenticate(request, *methods)
-          if (token = from_request(request, *methods))
-            access_token = Doorkeeper.config.access_token_model.by_token(token)
-            if access_token.present? && Doorkeeper.config.refresh_token_enabled?
-              access_token.revoke_previous_refresh_token!
-            end
-            access_token
+        # Resolves one method at a time, so the multi-method check has to run
+        # here across every configured method before any single one is read:
+        # inside from_request it would only ever see the one method it was
+        # handed and could never count two.
+        def resolve(request, *methods)
+          refuse_multiple_transmission_methods!(request, methods)
+
+          method, token = methods.lazy.map { |m| [m, from_request(request, m)] }.detect(&:last)
+          access_token = Doorkeeper.config.access_token_model.by_token(token) if token
+
+          if access_token && Doorkeeper.config.refresh_token_enabled? && !access_token.uses_dpop?
+            access_token.revoke_previous_refresh_token!
           end
+
+          Resolution.new(method, token, access_token) if access_token
+        end
+
+        def authenticate(request, *methods)
+          resolve(request, *methods)&.access_token
         end
 
         def from_access_token_param(request)
@@ -81,6 +90,12 @@ module Doorkeeper
           token_from_header(header, pattern) if match?(header, pattern)
         end
 
+        def from_dpop_authorization(request)
+          pattern = /^DPoP /i
+          header = request.authorization
+          token_from_header(header, pattern) if match?(header, pattern)
+        end
+
         def from_basic_authorization(request)
           pattern = /^Basic /i
           header = request.authorization
@@ -88,6 +103,14 @@ module Doorkeeper
         end
 
         private
+
+        def refuse_multiple_transmission_methods!(request, methods)
+          used = methods.sum do |method|
+            method.is_a?(Symbol) ? transmission_methods_used(request, method) : 0
+          end
+
+          raise Errors::MultipleAccessTokenMethods if used > 1
+        end
 
         # How many transmission methods the given built-in extractor finds a
         # token in. Usually one, or none — but for the parameter extractors

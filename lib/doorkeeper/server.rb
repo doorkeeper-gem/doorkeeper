@@ -43,5 +43,11 @@ module Doorkeeper
     def credentials
       @credentials ||= client_authentication_method_for_request.authenticate(context.request)
     end
+
+    def dpop_proof
+      return unless Doorkeeper.config.access_token_model.dpop_supported? || Doorkeeper.config.force_dpop?
+
+      @dpop_proof ||= OAuth::DPoPProof.new(context.request)
+    end
   end
 end

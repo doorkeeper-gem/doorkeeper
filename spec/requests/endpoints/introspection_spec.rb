@@ -31,6 +31,33 @@ RSpec.describe "Introspection endpoint" do
     expect(json_response).to include("active" => true)
   end
 
+  context "when authenticating the client with an access token" do
+    let(:authorized_token) { FactoryBot.create(:access_token, application: client) }
+
+    it "authorizes the request" do
+      post introspection_endpoint_url,
+           params: { token: access_token.token },
+           headers: { "HTTP_AUTHORIZATION" => "Bearer #{authorized_token.token}" }
+
+      expect(response).to be_successful
+      expect(json_response).to include("active" => true)
+    end
+
+    context "when the authorized token uses dpop" do
+      before { authorized_token.update!(dpop_jkt: "jkt_abc") }
+
+      it "rejects the request" do
+        post introspection_endpoint_url,
+             params: { token: access_token.token },
+             headers: { "HTTP_AUTHORIZATION" => "Bearer #{authorized_token.token}" }
+
+        expect(response).to have_http_status(:unauthorized)
+        expect(json_response).to include("error" => "invalid_token")
+        expect(json_response).not_to include("active")
+      end
+    end
+  end
+
   it "does not read client credentials from the query string (RFC 6749 §2.3.1)" do
     query = build_query(client_id: client.uid, client_secret: client.secret)
 
@@ -72,6 +99,73 @@ RSpec.describe "Introspection endpoint" do
 
       expect(response).to be_successful
       expect(json_response).to include("access_token", "refresh_token")
+    end
+  end
+
+  context "when introspecting a dpop token" do
+    before do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_refresh_token
+      end
+
+      access_token.update!(dpop_jkt: "jkt_abc")
+    end
+
+    let(:access_token) do
+      FactoryBot.create(:access_token, application: client, use_refresh_token: true)
+    end
+
+    it "reports `cnf` when the access token is presented" do
+      post introspection_endpoint_url,
+           params: { token: access_token.token },
+           headers: { "HTTP_AUTHORIZATION" => basic_auth_header_for_client(client) }
+
+      expect(response).to be_successful
+      expect(json_response).to include("cnf" => { "jkt" => "jkt_abc" })
+    end
+
+    context "with a public client" do
+      let(:client) { FactoryBot.create(:application, confidential: false) }
+
+      it "reports `cnf` when the refresh token is presented" do
+        post introspection_endpoint_url,
+             params: { token: access_token.refresh_token },
+             headers: { "HTTP_AUTHORIZATION" => basic_auth_header_for_client(client) }
+
+        expect(response).to be_successful
+        expect(json_response).to include("cnf" => { "jkt" => "jkt_abc" })
+      end
+    end
+
+    context "with a confidential client" do
+      let(:client) { FactoryBot.create(:application, confidential: true) }
+
+      it "omits `cnf` when the refresh token is presented" do
+        post introspection_endpoint_url,
+             params: { token: access_token.refresh_token },
+             headers: { "HTTP_AUTHORIZATION" => basic_auth_header_for_client(client) }
+
+        expect(response).to be_successful
+        expect(json_response).not_to include("cnf")
+      end
+    end
+
+    context "without a client" do
+      let(:auth_client) { FactoryBot.create(:application) }
+
+      let(:access_token) do
+        FactoryBot.create(:clientless_access_token, use_refresh_token: true)
+      end
+
+      it "reports `cnf` when the refresh token is presented" do
+        post introspection_endpoint_url,
+             params: { token: access_token.refresh_token },
+             headers: { "HTTP_AUTHORIZATION" => basic_auth_header_for_client(auth_client) }
+
+        expect(response).to be_successful
+        expect(json_response).to include("cnf" => { "jkt" => "jkt_abc" })
+      end
     end
   end
 

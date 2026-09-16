@@ -125,7 +125,7 @@ RSpec.describe "polymorphic resource owner models" do
       )
 
       Doorkeeper::OAuth::AuthorizationCodeRequest.new(
-        server, grant, application, redirect_uri: grant.redirect_uri,
+        server, grant, application, { redirect_uri: grant.redirect_uri },
       ).authorize
 
       new_token = PolyAccessToken.order(:id).last
