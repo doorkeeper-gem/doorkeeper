@@ -44,4 +44,17 @@ RSpec.describe ::Doorkeeper::SecretStoring::Sha256Hash do
       expect(described_class.secret_matches?("a", hash_function.call("a"))).to be true
     end
   end
+
+  describe "recognizes_stored_secret?" do
+    it "recognizes a digest it wrote" do
+      expect(described_class.recognizes_stored_secret?(described_class.transform_secret("foobar")))
+        .to be(true)
+    end
+
+    it "refuses a value that is not one" do
+      expect(described_class.recognizes_stored_secret?("plain text secret")).to be(false)
+      expect(described_class.recognizes_stored_secret?(nil)).to be(false)
+      expect(described_class.recognizes_stored_secret?("A" * 64)).to be(false)
+    end
+  end
 end
