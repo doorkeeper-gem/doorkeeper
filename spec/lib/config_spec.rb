@@ -1704,6 +1704,23 @@ RSpec.describe Doorkeeper::Config do
       expect(config.validate_client_before_resource_owner_authentication?).to be(true)
     end
 
+    it "enables use_client_id_metadata_documents" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+      end
+
+      expect(config.client_id_metadata_documents?).to be(true)
+    end
+
+    it "disables client ID metadata documents by default" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+
+      expect(config.client_id_metadata_documents?).to be(false)
+    end
+
     it "enables use_polymorphic_resource_owner" do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
@@ -1711,6 +1728,118 @@ RSpec.describe Doorkeeper::Config do
       end
 
       expect(config.polymorphic_resource_owner?).to be(true)
+    end
+  end
+
+  # RFC 8414 Section 2 requires token_endpoint_auth_signing_alg_values_supported
+  # whenever an assertion-based method is advertised and defines no default, so
+  # a strategy declaring one of those names without saying what it accepts
+  # leaves the metadata document non-compliant with nothing in it to say so.
+  describe "an assertion method that declares no signing algorithms" do
+    def register(key, name, algs)
+      strategy = double(matches_request?: false, authenticate: nil, auth_method_name: name)
+      allow(strategy).to receive(:auth_signing_alg_values).and_return(algs) unless algs == :undeclared
+      Doorkeeper::ClientAuthentication.register(key, strategy)
+    end
+
+    after { Doorkeeper::ClientAuthentication.registered_methods.delete(:partner_assertion) }
+
+    it "warns when the strategy declares none" do
+      register(:partner_assertion, "client_secret_jwt", :undeclared)
+
+      expect(Rails.logger).to receive(:warn).with(/auth_signing_alg_values/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication %i[client_secret_basic partner_assertion]
+      end
+    end
+
+    it "stays quiet when the strategy declares them" do
+      register(:partner_assertion, "client_secret_jwt", %w[HS256])
+
+      expect(Rails.logger).not_to receive(:warn).with(/auth_signing_alg_values/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication %i[client_secret_basic partner_assertion]
+      end
+    end
+
+    # The warning is about the two names RFC 8414 attaches the requirement to,
+    # not about every method that declares nothing.
+    it "stays quiet for a method the requirement does not name" do
+      register(:partner_assertion, "tls_client_auth", :undeclared)
+
+      expect(Rails.logger).not_to receive(:warn).with(/auth_signing_alg_values/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication %i[client_secret_basic partner_assertion]
+      end
+    end
+
+    # A strategy declaring no IANA name is advertised under its registration
+    # key, so a host registering one as :client_secret_jwt advertises that
+    # method just the same — and needs the same warning.
+    it "warns for a strategy registered under the name it declares nothing about" do
+      Doorkeeper::ClientAuthentication.register(
+        :client_secret_jwt,
+        double(matches_request?: false, authenticate: nil),
+      )
+
+      expect(Rails.logger).to receive(:warn).with(/auth_signing_alg_values/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication %i[client_secret_basic client_secret_jwt]
+      end
+    ensure
+      Doorkeeper::ClientAuthentication.registered_methods.delete(:client_secret_jwt)
+    end
+
+    it "stays quiet for Doorkeeper's own private_key_jwt" do
+      expect(Rails.logger).not_to receive(:warn).with(/auth_signing_alg_values/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication %i[client_secret_basic private_key_jwt]
+      end
+    end
+  end
+
+  # A document client is registered by no one, so the row it is materialized
+  # as has no owner: where ownership is enforced that row never saves and the
+  # client is refused as invalid_client, with nothing in the response saying
+  # why.
+  describe "client ID metadata documents with enforced application ownership" do
+    it "warns when application ownership is enforced" do
+      expect(Rails.logger).to receive(:warn).with(/incompatible/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+        enable_application_owner confirmation: true
+      end
+    end
+
+    it "stays quiet when ownership is enabled without confirmation" do
+      expect(Rails.logger).not_to receive(:warn).with(/incompatible/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents
+        enable_application_owner
+      end
+    end
+
+    it "stays quiet when client ID metadata documents are not enabled" do
+      expect(Rails.logger).not_to receive(:warn).with(/incompatible/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        enable_application_owner confirmation: true
+      end
     end
   end
 
@@ -1722,6 +1851,47 @@ RSpec.describe Doorkeeper::Config do
         orm DOORKEEPER_ORM
         issuer "not a valid uri"
       end
+    end
+  end
+
+  # Decided in the predicate rather than in a validator because the ORM
+  # extensions validate redirect URIs with code of their own (doorkeeper-sequel
+  # ships its own validator) that consults nothing but this predicate.
+  describe "allow_blank_redirect_uri?" do
+    let(:application) { FactoryBot.build(:application, redirect_uri: "") }
+
+    before do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        grant_flows %w[authorization_code]
+      end
+    end
+
+    it "refuses a blank redirect URI for a registered application under redirect-based grant flows" do
+      expect(config.allow_blank_redirect_uri?(application)).to be false
+    end
+
+    it "keeps answering for no application at all" do
+      expect(config.allow_blank_redirect_uri?).to be false
+    end
+
+    # A Client ID Metadata Document may omit redirect_uris — the draft
+    # requires registering them only for grants that redirect — so the row it
+    # materializes may store none even where registered applications must.
+    it "allows a blank redirect URI on a row materialized from a Client ID Metadata Document" do
+      application.client_id_metadata_materialized_at = Time.now.utc
+
+      expect(config.allow_blank_redirect_uri?(application)).to be true
+    end
+
+    it "allows it on a materialized row even where the configured callable refuses" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        allow_blank_redirect_uri { |_grant_flows, _application| false }
+      end
+      application.client_id_metadata_materialized_at = Time.now.utc
+
+      expect(config.allow_blank_redirect_uri?(application)).to be true
     end
   end
 end

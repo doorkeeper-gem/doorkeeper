@@ -11,10 +11,23 @@ module Doorkeeper
       # Doorkeeper has never URL-decoded them (like much of the ecosystem),
       # and this strategy deliberately keeps that behaviour — adding the
       # decoding now would break every existing client whose credentials
-      # contain URL-encodable characters.
+      # contain URL-encodable characters. A consequence worth naming: a
+      # client whose uid contains a ":" cannot authenticate this way at all,
+      # since the credential is split at the first one and the encoded form
+      # is never decoded back. Doorkeeper-generated uids never contain one,
+      # but a Client Identifier URL always does; such a client uses
+      # client_secret_post, or a method that needs no shared secret.
       class ClientSecretBasic
         def self.uses_shared_secret?
           true
+        end
+
+        # The IANA token endpoint authentication method name this
+        # implements — see Credentials#authenticated_with.
+        AUTH_METHOD_NAME = "client_secret_basic"
+
+        def self.auth_method_name
+          AUTH_METHOD_NAME
         end
 
         # Match whenever the header decodes to a non-blank +client_id+ — i.e.

@@ -189,6 +189,17 @@ module Doorkeeper
         @config.instance_variable_set(:@validate_client_before_resource_owner_authentication, true)
       end
 
+      # Accept https:// client_ids and resolve their metadata from the URL as
+      # described by the OAuth Client ID Metadata Document draft
+      # (draft-ietf-oauth-client-id-metadata-document). Disabled by default.
+      # Requires a `client_id_metadata_materialized_at` datetime column on
+      # the applications table, which tells the rows this feature
+      # materializes apart from registered applications; see the generated
+      # initializer's notes on the option.
+      def use_client_id_metadata_documents
+        @config.instance_variable_set(:@client_id_metadata_documents, true)
+      end
+
       # Use an API mode for applications generated with --api argument
       # It will skip applications controller, disable forgery protection
       def api_only
@@ -417,6 +428,14 @@ module Doorkeeper
     # shared store instead — any object answering
     # `first_use?(key, expires_at:)`, returning true when the key was never
     # seen before and remembering it until the unix time `expires_at`.
+    # Keys are strings shaped `"<length>:<client_id>:<jti>"`, prefixed with
+    # `url:` for a Client ID Metadata Document client. That prefix marks
+    # which pool the built-in guard accounts an entry in, not which
+    # assertion it is: a client_id can change provenance while an assertion
+    # is still alive, and a jti is single-use per client either way, so a
+    # guard must decide first use on the key with any leading `url:` taken
+    # off. A guard that stores the keys will also find entries written by
+    # 6.0.0.beta2 (`"<client_id>:<jti>"`) no longer match after upgrading.
     #
     # @example
     #   private_key_jwt_replay_guard RedisReplayGuard.new
@@ -425,12 +444,16 @@ module Doorkeeper
     #
     option :private_key_jwt_replay_guard, default: nil
 
-    # Cache for JWK Sets fetched from a client's `jwks_uri` during
-    # `private_key_jwt` authentication. Defaults to a process-local
-    # Doorkeeper::DocumentCache with a 60 second TTL; supply your own
-    # instance to change the TTL, or any object answering
+    # Cache for JWK Sets fetched from a registered application's
+    # `jwks_uri` during `private_key_jwt` authentication. Defaults to a
+    # process-local Doorkeeper::DocumentCache with a 60 second TTL; supply
+    # your own instance to change the TTL, or any object answering
     # `fetch(url) { ... }` (returning the cached document or storing and
     # returning the block's result) to share the cache across processes.
+    # Keys named by a Client ID Metadata Document always stay on a
+    # separate built-in cache: which URLs enter that one is decided by
+    # unauthenticated traffic, which must not evict — or grow — the
+    # entries registered clients depend on.
     #
     # @example
     #   private_key_jwt_jwks_cache Doorkeeper::DocumentCache.new(ttl: 300)
@@ -638,6 +661,10 @@ module Doorkeeper
 
     def validate_client_before_resource_owner_authentication?
       option_set? :validate_client_before_resource_owner_authentication
+    end
+
+    def client_id_metadata_documents?
+      option_set? :client_id_metadata_documents
     end
 
     def enforce_configured_scopes?
@@ -851,7 +878,17 @@ module Doorkeeper
       flows.flatten.uniq
     end
 
+    # Besides the configured allowance, a row materialized from a Client ID
+    # Metadata Document may store no redirect URI even where registered
+    # applications must have one: the draft requires registering redirect
+    # URIs only for grants that redirect, and an empty registration never
+    # matches at authorization time (URIChecker.valid_for_authorization?),
+    # so this closes only the redirect-based flows for that client. Decided
+    # here rather than in a validator because the ORM extensions validate
+    # redirect URIs with code of their own that consults this predicate.
     def allow_blank_redirect_uri?(application = nil)
+      return true if ClientIdMetadata.materialized_row?(application)
+
       if allow_blank_redirect_uri.respond_to?(:call)
         allow_blank_redirect_uri.call(grant_flows, application)
       else

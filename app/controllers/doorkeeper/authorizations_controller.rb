@@ -101,13 +101,35 @@ module Doorkeeper
       @client_pre_auth ||= OAuth::PreAuthorization.new(Doorkeeper.configuration, pre_auth_params)
     end
 
+    # A confidential client the resource owner already authorized for these
+    # scopes is not asked again — unless it is a Client ID Metadata Document
+    # client; see #matching_token?, which is where that exception lives.
     def can_authorize_response?
-      Doorkeeper.config.custom_access_token_attributes.empty? && pre_auth.client.application.confidential? && matching_token?
+      Doorkeeper.config.custom_access_token_attributes.empty? &&
+        pre_auth.client.application.confidential? &&
+        matching_token?
     end
 
     # Active access token issued for the same client and resource owner with
     # the same set of the scopes exists?
+    #
+    # Never for a Client ID Metadata Document client. Its identity is a URL,
+    # and everything behind that URL — the redirect URIs and keys included —
+    # is whatever it serves today: draft Section 8.3 has a URL that changed
+    # hands treated "as if encountering the client for the first time", and
+    # Section 8.4 leaves requiring fresh consent on metadata changes to the
+    # server. An earlier authorization therefore stands for nothing, so that a
+    # redirect URI the document took up after the user consented never
+    # receives a code without the user seeing the consent screen again.
+    # `skip_authorization` remains the host application's way to opt out.
+    #
+    # Answered here rather than in #can_authorize_response? because this is
+    # the predicate every consent gate reads — the engine's own, and the ones
+    # doorkeeper-openid_connect adds for `prompt` handling — so the rule holds
+    # wherever "has this client been authorized before?" is asked.
     def matching_token?
+      return false if Doorkeeper::ClientIdMetadata.consent_required_every_time?(pre_auth.client.application)
+
       # We don't match tokens on the custom attributes here - we're in the pre-auth here,
       # so they haven't been supplied yet (there are no custom attributes to match on yet)
       @matching_token ||= Doorkeeper.config.access_token_model.matching_token_for(

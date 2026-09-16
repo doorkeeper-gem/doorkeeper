@@ -8,6 +8,7 @@ require "doorkeeper/engine"
 module Doorkeeper
   autoload :Errors, "doorkeeper/errors"
   autoload :ClientAuthentication, "doorkeeper/client_authentication"
+  autoload :ClientIdMetadata, "doorkeeper/client_id_metadata"
   autoload :DocumentCache, "doorkeeper/document_cache"
   autoload :GrantFlow, "doorkeeper/grant_flow"
   autoload :HttpFetcher, "doorkeeper/http_fetcher"
@@ -170,6 +171,37 @@ module Doorkeeper
       filter = /^(#{Regexp.union(parameters)})$/
       filter_params = ::Rails.application.config.filter_parameters
       filter_params << filter unless filter_params.include?(filter)
+    end
+
+    # The one prerequisite use_client_id_metadata_documents cannot work
+    # without: the stamp that tells the rows it materializes apart from
+    # registered applications. Doorkeeper's own migrations do not add it, and
+    # without it every document client is refused as invalid_client — after
+    # an outbound fetch, and with nothing in the response saying why. Said
+    # once at boot instead, where the operator can see it.
+    #
+    # Run from `to_prepare` rather than from `Doorkeeper.configure`, so the
+    # application model has been loaded, and asked of an instance rather than
+    # of the column list so the check works on every supported ORM (it is the
+    # same question ApplicationFactory asks before adopting a row). A model
+    # that cannot even be instantiated — no database yet, a `rails
+    # db:create` running — is not this check's business.
+    def warn_missing_client_id_metadata_column
+      return unless defined?(::Rails) && ::Rails.application && configured?
+      return unless config.client_id_metadata_documents?
+      return if config.application_model.new.respond_to?(:client_id_metadata_materialized_at)
+
+      ::Rails.logger.error(
+        "[DOORKEEPER] use_client_id_metadata_documents is enabled, but " \
+        "#{config.application_class} has no client_id_metadata_materialized_at attribute: the " \
+        "feature has no way to tell the rows it materializes apart from registered " \
+        "applications, so every Client ID Metadata Document client is refused as " \
+        "invalid_client. Add the column (`add_column :oauth_applications, " \
+        ":client_id_metadata_materialized_at, :datetime`), or declare the field with the " \
+        "Mongoid extension; see the option's notes in the generated initializer.",
+      )
+    rescue StandardError
+      nil
     end
 
     def setup_orm_adapter
