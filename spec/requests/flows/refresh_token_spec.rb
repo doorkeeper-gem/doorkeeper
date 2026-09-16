@@ -258,6 +258,76 @@ RSpec.describe "Refresh Token Flow" do
     end
   end
 
+  # Regression specs for https://github.com/doorkeeper-gem/doorkeeper/issues/1771
+  #
+  # RFC 6749 §6: the refresh token keeps the scope originally granted by the
+  # resource owner. A client may narrow the access token it gets back from a
+  # refresh, and a later refresh may go back up to the granted scope, whether
+  # by omitting the scope parameter or by asking for the granted scope again.
+  describe "narrowing and restoring the scope across refreshes" do
+    before do
+      default_scopes_exist :public
+      optional_scopes_exist :write, :update
+      authorization_code_exists application: @client,
+                                resource_owner_id: resource_owner.id,
+                                resource_owner_type: resource_owner.class.name,
+                                scopes: "public write"
+    end
+
+    def refresh(token, scope: nil)
+      params = refresh_token_endpoint_params(client: @client, refresh_token: token.refresh_token)
+      params[:scope] = scope if scope
+      post refresh_token_endpoint_url, params: params
+      Doorkeeper::AccessToken.last
+    end
+
+    it "lets a narrowed chain return to the granted scope" do
+      post token_endpoint_url, params: token_endpoint_params(code: @authorization.token, client: @client)
+      granted = Doorkeeper::AccessToken.last
+      expect(granted.scopes.to_s).to eq("public write")
+      expect(granted.refresh_token_scopes.to_s).to eq("public write")
+
+      narrowed = refresh(granted, scope: "public")
+      expect(json_response).to include("scope" => "public", "refresh_token" => narrowed.refresh_token)
+      expect(narrowed.scopes.to_s).to eq("public")
+      expect(narrowed.refresh_token_scopes.to_s).to eq("public write")
+
+      restored = refresh(narrowed)
+      expect(json_response).to include("scope" => "public write", "refresh_token" => restored.refresh_token)
+      expect(restored.scopes.to_s).to eq("public write")
+
+      explicit = refresh(restored, scope: "public write")
+      expect(json_response).to include("scope" => "public write", "refresh_token" => explicit.refresh_token)
+    end
+
+    it "still refuses a scope the resource owner never granted" do
+      post token_endpoint_url, params: token_endpoint_params(code: @authorization.token, client: @client)
+      narrowed = refresh(Doorkeeper::AccessToken.last, scope: "public")
+
+      refresh(narrowed, scope: "public write update")
+
+      expect(response).to have_http_status(:bad_request)
+      expect(json_response).to include("error" => "invalid_scope")
+    end
+
+    context "without the refresh_token_scopes column" do
+      before do
+        allow(Doorkeeper::AccessToken).to receive(:refresh_token_scopes_supported?).and_return(false)
+      end
+
+      it "keeps narrowing the refresh token along with the access token" do
+        post token_endpoint_url, params: token_endpoint_params(code: @authorization.token, client: @client)
+        narrowed = refresh(Doorkeeper::AccessToken.last, scope: "public")
+
+        restored = refresh(narrowed)
+        expect(json_response).to include("scope" => "public", "refresh_token" => restored.refresh_token)
+
+        refresh(restored, scope: "public write")
+        expect(json_response).to include("error" => "invalid_scope")
+      end
+    end
+  end
+
   # Regression specs for https://github.com/doorkeeper-gem/doorkeeper/issues/1686
   #
   # In `application/x-www-form-urlencoded` payloads (and query strings) a "+"

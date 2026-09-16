@@ -108,7 +108,7 @@ module Doorkeeper
       def success_response
         response = {
           active: true,
-          scope: @token.scopes_string,
+          scope: scopes_string,
           client_id: @token.try(:application).try(:uid),
           iat: @token.created_at.to_i,
         }
@@ -205,6 +205,19 @@ module Doorkeeper
 
       def refresh_token_presented?
         @token_type == :refresh_token
+      end
+
+      # RFC 7662 §2.2: `scope` describes the presented token. A refresh token
+      # carries the scope originally granted by the resource owner
+      # (RFC 6749 §6), which can be wider than the scope of the access token
+      # it was issued with when the client narrowed that one on a refresh.
+      # Models without a stored granted scope (no `refresh_token_scopes`
+      # column, or a row created before its migration) report the access
+      # token scope, as before.
+      def scopes_string
+        return @token.scopes_string unless refresh_token_presented?
+
+        @token.try(:refresh_token_scopes_string).presence || @token.scopes_string
       end
 
       def valid_authorized_token?

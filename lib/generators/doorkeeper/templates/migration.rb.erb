@@ -85,6 +85,15 @@ class CreateDoorkeeperTables < ActiveRecord::Migration<%= migration_version %>
       # Comment out this line if you want refresh tokens to be instantly
       # revoked after use.
       t.string   :previous_refresh_token, null: false, default: ""
+
+      # A refresh token keeps the scope originally granted by the resource
+      # owner, so a client that narrowed an access token on one refresh can
+      # request the granted scope again on the next one.
+      # @see https://datatracker.ietf.org/doc/html/rfc6749#section-6
+      #
+      # Comment out this line if you want a narrowed refresh to permanently
+      # narrow the refresh token as well.
+      t.string   :refresh_token_scopes
     end
 
     add_index :oauth_access_tokens, :token, unique: true

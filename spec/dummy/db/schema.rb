@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20260801000000) do
+ActiveRecord::Schema.define(version: 20260911000000) do
 
   create_table "oauth_access_grants", force: :cascade do |t|
     t.integer "resource_owner_id", null: false
@@ -46,6 +46,7 @@ ActiveRecord::Schema.define(version: 20260801000000) do
     t.text "resource"
     t.string "previous_refresh_token", default: "", null: false
     t.string "tenant_name"
+    t.string "refresh_token_scopes"
     t.index ["refresh_token"], name: "index_oauth_access_tokens_on_refresh_token", unique: true
     t.index ["resource_owner_id"], name: "index_oauth_access_tokens_on_resource_owner_id"
     t.index ["token"], name: "index_oauth_access_tokens_on_token", unique: true

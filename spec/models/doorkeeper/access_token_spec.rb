@@ -386,6 +386,106 @@ RSpec.describe Doorkeeper::AccessToken do
     end
   end
 
+  describe "refresh_token_scopes" do
+    it "records the access token scope as the granted scope when a refresh token is generated" do
+      token = FactoryBot.create :access_token, use_refresh_token: true, scopes: "public write"
+
+      expect(token.refresh_token_scopes_string).to eq("public write")
+      expect(token.refresh_token_scopes).to eq(%i[public write])
+      expect(token.reload.refresh_token_scopes).to eq(%i[public write])
+    end
+
+    it "keeps a granted scope given explicitly, wider than the access token scope" do
+      token = FactoryBot.create :access_token,
+                                use_refresh_token: true,
+                                scopes: "public",
+                                refresh_token_scopes: "public write"
+
+      expect(token.scopes).to eq(%i[public])
+      expect(token.refresh_token_scopes).to eq(%i[public write])
+    end
+
+    it "normalizes the stored value like scopes=" do
+      token = FactoryBot.build :access_token
+      token.refresh_token_scopes = %w[write public]
+      expect(token.refresh_token_scopes_string).to eq("write public")
+
+      token.refresh_token_scopes = Doorkeeper::OAuth::Scopes.from_string("public  write")
+      expect(token.refresh_token_scopes_string).to eq("public write")
+    end
+
+    it "is not recorded for a token issued without a refresh token" do
+      token = FactoryBot.create :access_token, scopes: "public write"
+
+      expect(token.refresh_token_scopes_string).to be_nil
+    end
+
+    it "follows the access token scope when it changes between validation and save" do
+      token = FactoryBot.build :access_token, use_refresh_token: true, scopes: "public write"
+      token.valid?
+      expect(token.refresh_token_scopes_string).to eq("public write")
+
+      token.scopes = "public"
+      token.save!
+
+      expect(token.refresh_token_scopes_string).to eq("public")
+      expect(token.reload.refresh_token_scopes).to eq(%i[public])
+    end
+
+    it "keeps an explicitly given granted scope when the access token scope changes before save" do
+      token = FactoryBot.build :access_token,
+                               use_refresh_token: true,
+                               scopes: "public write",
+                               refresh_token_scopes: "public write"
+      token.valid?
+
+      token.scopes = "public"
+      token.save!
+
+      expect(token.scopes).to eq(%i[public])
+      expect(token.reload.refresh_token_scopes).to eq(%i[public write])
+    end
+
+    it "treats an explicitly blank granted scope as not given" do
+      token = FactoryBot.build :access_token, use_refresh_token: true, scopes: "public write"
+      token.refresh_token_scopes = ""
+      token.save!
+
+      expect(token.reload.refresh_token_scopes_string).to eq("public write")
+    end
+
+    it "falls back to the access token scope when nothing is stored" do
+      token = FactoryBot.create :access_token, use_refresh_token: true, scopes: "public write"
+      token.update_column(:refresh_token_scopes, nil)
+
+      expect(token.reload.refresh_token_scopes).to eq(%i[public write])
+    end
+
+    context "without the refresh_token_scopes column" do
+      before do
+        allow(described_class).to receive(:refresh_token_scopes_supported?).and_return(false)
+      end
+
+      it "reports the access token scope and leaves the column alone" do
+        token = FactoryBot.create :access_token, use_refresh_token: true, scopes: "public write"
+
+        expect(token.refresh_token_scopes_string).to be_nil
+        expect(token.refresh_token_scopes).to eq(%i[public write])
+        expect(token[:refresh_token_scopes]).to be_nil
+      end
+
+      it "ignores an assigned refresh token scope instead of writing the missing column" do
+        token = FactoryBot.create(
+          :access_token,
+          use_refresh_token: true, scopes: "public write", refresh_token_scopes: "public",
+        )
+
+        expect(token.refresh_token_scopes).to eq(%i[public write])
+        expect(token[:refresh_token_scopes]).to be_nil
+      end
+    end
+  end
+
   describe "validations" do
     it "is valid without resource_owner_id" do
       # For client credentials flow
@@ -918,6 +1018,93 @@ RSpec.describe Doorkeeper::AccessToken do
           )
           expect(token).to eq(older)
         end.not_to(change { described_class.count })
+      end
+    end
+
+    # RFC 6749 §6: a refresh token carries the scope of the grant it was
+    # issued for. A token narrowed on refresh keeps the wider granted scope
+    # on its refresh token, so it must not be reused for a grant of the
+    # narrower scope only.
+    context "when a matching token's refresh token was granted a wider scope" do
+      let(:narrowed_attributes) do
+        default_attributes.merge(
+          scopes: "public", refresh_token_scopes: "public write", use_refresh_token: true,
+        )
+      end
+      let(:requested_scopes) { Doorkeeper::OAuth::Scopes.from_string("public") }
+
+      it "does not reuse it for a grant of the narrower scope" do
+        narrowed = FactoryBot.create :access_token, narrowed_attributes
+
+        token = nil
+        expect do
+          token = described_class.find_or_create_for(
+            application: application, resource_owner: resource_owner,
+            scopes: requested_scopes, use_refresh_token: true,
+          )
+        end.to(change { described_class.count }.by(1))
+
+        expect(token).not_to eq(narrowed)
+        expect(token.scopes).to eq(%i[public])
+        expect(token.refresh_token_scopes).to eq(%i[public])
+      end
+
+      it "reuses an older matching token whose refresh token carries the granted scope" do
+        older = FactoryBot.create :access_token,
+                                  default_attributes.merge(scopes: "public", use_refresh_token: true, created_at: 1.hour.ago)
+        FactoryBot.create :access_token, narrowed_attributes
+
+        expect do
+          token = described_class.find_or_create_for(
+            application: application, resource_owner: resource_owner,
+            scopes: requested_scopes, use_refresh_token: true,
+          )
+          expect(token).to eq(older)
+        end.not_to(change { described_class.count })
+      end
+
+      it "reuses a matching token without a refresh token regardless of its stored granted scope" do
+        existing = FactoryBot.create :access_token, default_attributes.merge(scopes: "public")
+        existing.update_column(:refresh_token_scopes, "public write")
+
+        expect do
+          token = described_class.find_or_create_for(
+            application: application, resource_owner: resource_owner,
+            scopes: requested_scopes, use_refresh_token: false,
+          )
+          expect(token).to eq(existing)
+        end.not_to(change { described_class.count })
+      end
+
+      it "reuses a matching row that predates the refresh_token_scopes migration" do
+        existing = FactoryBot.create :access_token, default_attributes.merge(use_refresh_token: true)
+        existing.update_column(:refresh_token_scopes, nil)
+
+        expect do
+          token = described_class.find_or_create_for(
+            application: application, resource_owner: resource_owner,
+            scopes: scopes, use_refresh_token: true,
+          )
+          expect(token).to eq(existing)
+        end.not_to(change { described_class.count })
+      end
+
+      context "without the refresh_token_scopes column" do
+        before do
+          allow(described_class).to receive(:refresh_token_scopes_supported?).and_return(false)
+        end
+
+        it "matches on the access token scope alone" do
+          existing = FactoryBot.create :access_token, default_attributes.merge(use_refresh_token: true)
+
+          expect do
+            token = described_class.find_or_create_for(
+              application: application, resource_owner: resource_owner,
+              scopes: scopes, use_refresh_token: true,
+            )
+            expect(token).to eq(existing)
+          end.not_to(change { described_class.count })
+        end
       end
     end
   end
