@@ -425,6 +425,41 @@ RSpec.describe "Refresh Token Flow" do
       end
     end
 
+    context "when custom_access_token_expires_in is configured" do
+      before do
+        @token.update_attribute :expires_in, 3600
+      end
+
+      # https://github.com/doorkeeper-gem/doorkeeper/issues/1364: the TTL a
+      # grant type was given must not be replaced by access_token_expires_in
+      # on refresh when the callable does not decide for refresh_token.
+      it "keeps the expiry of the refreshed token when the callable returns nil" do
+        config_is_set(:custom_access_token_expires_in) do |context|
+          1.hour if context.grant_type == Doorkeeper::OAuth::PASSWORD
+        end
+
+        post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
+          client: @client, refresh_token: @token.refresh_token,
+        )
+
+        expect(json_response).to include("expires_in" => 3600)
+        expect(Doorkeeper::AccessToken.last.expires_in).to eq(3600)
+      end
+
+      it "uses the expiry the callable returns for the refresh_token grant" do
+        config_is_set(:custom_access_token_expires_in) do |context|
+          10.minutes if context.grant_type == Doorkeeper::OAuth::REFRESH_TOKEN
+        end
+
+        post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
+          client: @client, refresh_token: @token.refresh_token,
+        )
+
+        expect(json_response).to include("expires_in" => 600)
+        expect(Doorkeeper::AccessToken.last.expires_in).to eq(600)
+      end
+    end
+
     context "when custom_access_token_attributes are configured" do
       before do
         Doorkeeper.configure do

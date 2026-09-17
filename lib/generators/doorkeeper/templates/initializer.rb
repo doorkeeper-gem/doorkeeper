@@ -119,6 +119,10 @@ Doorkeeper.configure do
   # non-expiring access token (which is not recommended) then you need to return
   # Float::INFINITY from this block.
   #
+  # The block is also called for the refresh_token grant (`context.grant_type` is
+  # Doorkeeper::OAuth::REFRESH_TOKEN). Returning `nil` there keeps the TTL of the token
+  # being refreshed rather than falling back to +access_token_expires_in+.
+  #
   # `context` has the following properties available:
   #
   #   * `client` - the OAuth client application (see Doorkeeper::OAuth::Client)

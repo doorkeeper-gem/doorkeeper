@@ -93,13 +93,6 @@ module Doorkeeper
       def create_access_token
         attributes = {}.merge(custom_token_attributes_with_data)
 
-        resource_owner =
-          if Doorkeeper.config.polymorphic_resource_owner?
-            refresh_token.resource_owner
-          else
-            refresh_token.resource_owner_id
-          end
-
         if refresh_token_revoked_on_use?
           attributes[:previous_refresh_token] = refresh_token.refresh_token
         end
@@ -123,27 +116,54 @@ module Doorkeeper
         # access token does not narrow the refresh token issued with it.
         attributes[:refresh_token_scopes] = granted_scopes.to_s if refresh_token_scopes_supported?
 
-        # RFC6749
-        # 1.5.  Refresh Token
-        #
-        # Refresh tokens are issued to the client by the authorization server and are
-        # used to obtain a new access token when the current access token
-        # becomes invalid or expires, or to obtain additional access tokens
-        # with identical or narrower scope (access tokens may have a shorter
-        # lifetime and fewer permissions than authorized by the resource
-        # owner).
-        #
-        # Here we assume that TTL of the token received after refreshing should be
-        # the same as that of the original token.
-        #
         @access_token = Doorkeeper.config.access_token_model.create_for(
           application: refresh_token.application,
           resource_owner: resource_owner,
           scopes: scopes,
-          expires_in: refresh_token.expires_in,
+          expires_in: access_token_expires_in,
           use_refresh_token: true,
           **attributes,
         )
+      end
+
+      def resource_owner
+        if Doorkeeper.config.polymorphic_resource_owner?
+          refresh_token.resource_owner
+        else
+          refresh_token.resource_owner_id
+        end
+      end
+
+      # RFC6749
+      # 1.5.  Refresh Token
+      #
+      # Refresh tokens are issued to the client by the authorization server and are
+      # used to obtain a new access token when the current access token
+      # becomes invalid or expires, or to obtain additional access tokens
+      # with identical or narrower scope (access tokens may have a shorter
+      # lifetime and fewer permissions than authorized by the resource
+      # owner).
+      #
+      # The TTL of the refreshed token is therefore that of the original token,
+      # so that a lifetime given to the grant the token was first issued with
+      # survives refreshing (#1364). +custom_access_token_expires_in+ is still
+      # consulted, with +Doorkeeper::OAuth::REFRESH_TOKEN+ as the grant type,
+      # so a host can decide the TTL of refreshed tokens explicitly; the TTL
+      # of the original token is only inherited when the callable returns nil
+      # for this grant (or none is configured).
+      #
+      # The context carries the resource owner record only with a polymorphic
+      # resource owner; otherwise the refresh token stores its id alone, and
+      # +resource_owner+ is nil as in the client_credentials grant.
+      def access_token_expires_in
+        context = Authorization::Token.build_context(
+          refresh_token.application,
+          grant_type,
+          scopes,
+          Doorkeeper.config.polymorphic_resource_owner? ? resource_owner : nil,
+        )
+
+        Authorization::Token.access_token_expires_in(server, context) { refresh_token.expires_in }
       end
 
       def validate_token_presence

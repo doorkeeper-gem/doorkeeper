@@ -24,14 +24,26 @@ module Doorkeeper
             )
           end
 
-          def access_token_expires_in(configuration, context)
+          # TTL for a new access token issued in +context+.
+          #
+          # When +custom_access_token_expires_in+ is configured and returns a
+          # value, that value is used (+Float::INFINITY+ meaning "never
+          # expires"). Otherwise the block, when given, supplies the TTL, and
+          # without a block it is +access_token_expires_in+.
+          #
+          # @yieldreturn [Integer, nil] the TTL to fall back to when no custom
+          #   expiration applies (the refresh_token grant passes the TTL of the
+          #   token being refreshed here).
+          def access_token_expires_in(configuration, context, &fallback)
+            fallback ||= -> { configuration.access_token_expires_in }
+
             if configuration.option_defined?(:custom_access_token_expires_in)
               expiration = configuration.custom_access_token_expires_in.call(context)
               return nil if expiration == Float::INFINITY
 
-              expiration || configuration.access_token_expires_in
+              expiration || fallback.call
             else
-              configuration.access_token_expires_in
+              fallback.call
             end
           end
 
