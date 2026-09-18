@@ -115,6 +115,21 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
+  describe "public_client_access_token_expires_in" do
+    it "is nil by default" do
+      expect(config.public_client_access_token_expires_in).to be_nil
+    end
+
+    it "can change the value" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        public_client_access_token_expires_in 1.hour
+      end
+
+      expect(config.public_client_access_token_expires_in).to eq(1.hour)
+    end
+  end
+
   describe "scopes" do
     it "has default scopes" do
       Doorkeeper.configure do

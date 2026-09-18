@@ -31,20 +31,43 @@ module Doorkeeper
           # expires"). Otherwise the block, when given, supplies the TTL, and
           # without a block it is +access_token_expires_in+.
           #
+          # Whatever the source, the result is then capped for a public client
+          # by +public_client_access_token_expires_in+ (see
+          # +cap_for_public_client+).
+          #
           # @yieldreturn [Integer, nil] the TTL to fall back to when no custom
           #   expiration applies (the refresh_token grant passes the TTL of the
           #   token being refreshed here).
           def access_token_expires_in(configuration, context, &fallback)
             fallback ||= -> { configuration.access_token_expires_in }
 
-            if configuration.option_defined?(:custom_access_token_expires_in)
-              expiration = configuration.custom_access_token_expires_in.call(context)
-              return nil if expiration == Float::INFINITY
+            expires_in = if configuration.option_defined?(:custom_access_token_expires_in)
+                           expiration = configuration.custom_access_token_expires_in.call(context)
+                           expiration == Float::INFINITY ? nil : (expiration || fallback.call)
+                         else
+                           fallback.call
+                         end
 
-              expiration || fallback.call
-            else
-              fallback.call
-            end
+            cap_for_public_client(configuration, context.client, expires_in)
+          end
+
+          # OAuth 2.1 (draft-ietf-oauth-v2-1-15) Section 2.4: the authorization
+          # server must limit the exposure of tokens issued to unauthenticated
+          # clients. When +public_client_access_token_expires_in+ is configured,
+          # +expires_in+ is capped to it unless +application+ is a confidential
+          # client. A request that carries no application (client
+          # authentication skipped) is treated as a public client, and so is a
+          # never-expiring TTL (nil), which becomes the cap.
+          #
+          # @param application [Doorkeeper::Application, nil]
+          # @param expires_in [Integer, nil] the TTL the configuration would issue
+          # @return [Integer, nil]
+          def cap_for_public_client(configuration, application, expires_in)
+            cap = configuration.public_client_access_token_expires_in
+            return expires_in if cap.nil?
+            return expires_in if application.respond_to?(:confidential?) && application.confidential?
+
+            [expires_in, cap].compact.min
           end
 
           def refresh_token_enabled?(server, context)

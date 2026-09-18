@@ -105,6 +105,7 @@ RSpec.describe "polymorphic resource owner models" do
     let(:server) do
       double :server,
              access_token_expires_in: 2.days,
+             public_client_access_token_expires_in: nil,
              refresh_token_enabled?: false
     end
 

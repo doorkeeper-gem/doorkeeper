@@ -12,6 +12,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
       :server,
       default_scopes: Doorkeeper::OAuth::Scopes.new,
       access_token_expires_in: 2.hours,
+      public_client_access_token_expires_in: nil,
       refresh_token_enabled?: false,
       custom_access_token_expires_in: lambda { |context|
         context.grant_type == Doorkeeper::OAuth::PASSWORD ? 1234 : nil
@@ -277,6 +278,7 @@ RSpec.describe Doorkeeper::OAuth::PasswordAccessTokenRequest do
         :server,
         default_scopes: Doorkeeper::OAuth::Scopes.new,
         access_token_expires_in: 2.hours,
+        public_client_access_token_expires_in: nil,
         refresh_token_enabled?: false,
         custom_access_token_expires_in: lambda { |context|
           if context.scopes.exists?("public")

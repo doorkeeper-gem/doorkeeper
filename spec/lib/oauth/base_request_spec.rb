@@ -25,6 +25,7 @@ RSpec.describe Doorkeeper::OAuth::BaseRequest do
   let(:server) do
     double :server,
            access_token_expires_in: 100,
+           public_client_access_token_expires_in: nil,
            custom_access_token_expires_in: ->(_context) { nil },
            refresh_token_enabled?: false
   end
@@ -131,6 +132,7 @@ RSpec.describe Doorkeeper::OAuth::BaseRequest do
       server = double(
         :server,
         access_token_expires_in: 100,
+        public_client_access_token_expires_in: nil,
         custom_access_token_expires_in: ->(context) { context.scopes == "public" ? 500 : nil },
         refresh_token_enabled?: false,
       )
@@ -151,6 +153,7 @@ RSpec.describe Doorkeeper::OAuth::BaseRequest do
       server = double(
         :server,
         access_token_expires_in: 100,
+        public_client_access_token_expires_in: nil,
         custom_access_token_expires_in: ->(_context) { nil },
         refresh_token_enabled?: lambda { |context|
           context.scopes == "public"
