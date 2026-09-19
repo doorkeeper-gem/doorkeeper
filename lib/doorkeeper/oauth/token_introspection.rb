@@ -196,11 +196,23 @@ module Doorkeeper
       # The presented token can be valid only if it is not revoked; an access
       # token must additionally be unexpired. A refresh token has no expiry of
       # its own and stays usable at the token endpoint after its paired access
-      # token expires, so that expiry is not consulted here.
+      # token expires, so that expiry is not consulted here. It can however be
+      # revoked on its own (`revoke_previous_access_token_on_refresh false`),
+      # in which case the access token of the same record stays active.
       def valid_token?
         return false if @token.blank?
 
-        refresh_token_presented? ? !@token.revoked? : @token.accessible?
+        refresh_token_presented? ? !refresh_token_revoked? : @token.accessible?
+      end
+
+      # Models that do not implement `refresh_token_revoked?` (the Sequel and
+      # MongoDB adapters ship their own mixins) revoke both tokens together.
+      def refresh_token_revoked?
+        if @token.respond_to?(:refresh_token_revoked?)
+          @token.refresh_token_revoked?
+        else
+          @token.revoked?
+        end
       end
 
       def refresh_token_presented?
