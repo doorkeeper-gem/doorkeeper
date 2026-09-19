@@ -43,6 +43,107 @@ RSpec.describe "Revoke Token Flow" do
       expect(access_token.reload).to be_revoked
     end
 
+    # RFC 7009 §2.1: revoking a refresh token SHOULD also invalidate the
+    # access tokens based on the same authorization grant. Every refresh
+    # creates a new record; the records of one chain share a refresh token
+    # family.
+    context "when the token was refreshed" do
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          use_refresh_token
+        end
+      end
+
+      let!(:other_grant_token) do
+        FactoryBot.create(
+          :access_token,
+          application: private_client_application,
+          resource_owner_id: resource_owner.id,
+          resource_owner_type: resource_owner.class.name,
+          use_refresh_token: true,
+        )
+      end
+
+      def refresh_with(refresh_token)
+        post "/oauth/token",
+             params: { grant_type: "refresh_token", refresh_token: refresh_token },
+             headers: headers
+        Doorkeeper::AccessToken.by_refresh_token(json_response.fetch("refresh_token"))
+      end
+
+      def chain
+        second = refresh_with(access_token.refresh_token)
+        third = refresh_with(second.refresh_token)
+        [access_token, second, third]
+      end
+
+      def access_protected_resource_with(token)
+        get "/full_protected_resources", headers: { "HTTP_AUTHORIZATION" => "Bearer #{token}" }
+      end
+
+      it "carries one family along the chain, distinct from other grants" do
+        family_ids = chain.map { |token| token.reload.refresh_token_family_id }
+
+        expect(family_ids.uniq.size).to eq(1)
+        expect(family_ids.first).to be_present
+        expect(other_grant_token.refresh_token_family_id).not_to eq(family_ids.first)
+      end
+
+      it "revokes every token of the chain when the latest refresh token is revoked" do
+        tokens = chain
+
+        post revocation_token_endpoint_url,
+             params: { token: tokens.last.refresh_token, token_type_hint: "refresh_token" },
+             headers: headers
+
+        expect(response).to be_successful
+        expect(tokens.map(&:reload)).to all(be_revoked)
+        expect(other_grant_token.reload).not_to be_revoked
+
+        access_protected_resource_with(tokens.first.token)
+        expect(response).to have_http_status(:unauthorized)
+      end
+
+      it "revokes every token of the chain when an earlier refresh token is revoked" do
+        tokens = chain
+
+        post revocation_token_endpoint_url, params: { token: tokens.first.refresh_token }, headers: headers
+
+        expect(tokens.map(&:reload)).to all(be_revoked)
+        expect(other_grant_token.reload).not_to be_revoked
+      end
+
+      it "revokes only the record of a presented access token" do
+        tokens = chain
+
+        post revocation_token_endpoint_url, params: { token: tokens.last.token }, headers: headers
+
+        expect(tokens.last.reload).to be_revoked
+        expect(tokens.first(2).map(&:reload)).to all(satisfy { |token| !token.revoked? })
+      end
+
+      context "without the refresh_token_family_id column" do
+        before do
+          allow(Doorkeeper::AccessToken).to receive(:refresh_token_family_supported?).and_return(false)
+        end
+
+        it "revokes only the record of the presented refresh token" do
+          tokens = chain
+
+          post revocation_token_endpoint_url,
+               params: { token: tokens.last.refresh_token, token_type_hint: "refresh_token" },
+               headers: headers
+
+          expect(tokens.last.reload).to be_revoked
+          expect(tokens.first(2).map(&:reload)).to all(satisfy { |token| !token.revoked? })
+
+          access_protected_resource_with(tokens.first.token)
+          expect(response).to be_successful
+        end
+      end
+    end
+
     context "with invalid token to revoke" do
       it "does not revoke any tokens and must respond with success" do
         expect do
