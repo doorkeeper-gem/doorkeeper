@@ -217,6 +217,56 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
       )
     end
 
+    # RFC 7009 §2.1: the revocation of a refresh token reaches the records
+    # that share its refresh token family.
+    context "when the refresh token belongs to a family" do
+      let(:client) { FactoryBot.create(:application, confidential: false) }
+      let!(:family_member) do
+        FactoryBot.create(
+          :access_token,
+          application: client,
+          use_refresh_token: true,
+          refresh_token_family_id: access_token.refresh_token_family_id,
+        )
+      end
+
+      it "revokes the family when the refresh token is presented" do
+        post :revoke, params: { client_id: client.uid, token: access_token.refresh_token }
+
+        expect(response.status).to eq 200
+        expect(access_token.reload).to be_revoked
+        expect(family_member.reload).to be_revoked
+      end
+
+      # An already revoked record is not revocable on its own, but the
+      # records issued after it along the chain can still be live.
+      it "revokes the family when the presented refresh token is already revoked" do
+        access_token.update_column(:revoked_at, 1.hour.ago)
+
+        post :revoke, params: { client_id: client.uid, token: access_token.refresh_token }
+
+        expect(response.status).to eq 200
+        expect(family_member.reload).to be_revoked
+      end
+
+      # The Sequel and MongoDB adapters ship their own access token mixins,
+      # which do not track refresh token families.
+      it "revokes the presented record alone when the model does not track families" do
+        allow(Doorkeeper::AccessToken).to receive(:by_refresh_token).and_wrap_original do |original, *args|
+          original.call(*args).tap do |record|
+            allow(record).to receive(:respond_to?).and_call_original
+            allow(record).to receive(:respond_to?).with(:revoke_refresh_token_family).and_return(false)
+          end
+        end
+
+        post :revoke, params: { client_id: client.uid, token: access_token.refresh_token }
+
+        expect(response.status).to eq 200
+        expect(access_token.reload).to be_revoked
+        expect(family_member.reload).not_to be_revoked
+      end
+    end
+
     context "when associated app is public" do
       let(:client) { FactoryBot.create(:application, confidential: false) }
 
