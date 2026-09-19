@@ -1,0 +1,15 @@
+# frozen_string_literal: true
+
+class AddRefreshTokenFamilyIdToAccessTokens < ActiveRecord::Migration<%= migration_version %>
+  def change
+    # Existing rows are left NULL and need no backfill: a refresh token
+    # without a family is given one the next time it is refreshed, and until
+    # then revoking it revokes its own record only, as before.
+    add_column :oauth_access_tokens, :refresh_token_family_id, :string
+
+    # Revoking a refresh token looks its family up by this column. On a large
+    # table you may want to build the index without locking writes (e.g.
+    # `algorithm: :concurrently` with `disable_ddl_transaction!` on PostgreSQL).
+    add_index :oauth_access_tokens, :refresh_token_family_id
+  end
+end
