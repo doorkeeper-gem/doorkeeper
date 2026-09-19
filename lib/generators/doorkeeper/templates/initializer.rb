@@ -282,6 +282,18 @@ Doorkeeper.configure do
   #
   # use_refresh_token
 
+  # Keep the previous access token usable until it expires when its refresh token
+  # is exchanged for a new one (the refresh_token grant revokes both by default).
+  # Only the exchanged refresh token is revoked, so clients that refresh ahead of
+  # expiry, or from several processes at once, do not have requests that are still
+  # in flight with the previous access token rejected.
+  #
+  # NOTE: you must also run the rails g doorkeeper:refresh_token_revoked_at generator
+  # to provide the necessary support. Without the `refresh_token_revoked_at` column
+  # this option has no effect.
+  #
+  # revoke_previous_access_token_on_refresh false
+
   # Provide support for an owner to be assigned to each registered application (disabled by default)
   # Optional parameter confirmation: true (default: false) if you want to enforce ownership of
   # a registered application

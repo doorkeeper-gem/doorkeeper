@@ -94,6 +94,13 @@ class CreateDoorkeeperTables < ActiveRecord::Migration<%= migration_version %>
       # Comment out this line if you want a narrowed refresh to permanently
       # narrow the refresh token as well.
       t.string   :refresh_token_scopes
+
+      # Lets a refresh token be revoked without revoking the access token
+      # stored on the same record. The column alone changes nothing: set
+      # `revoke_previous_access_token_on_refresh false` in the initializer to
+      # keep the previous access token usable until it expires when its
+      # refresh token is exchanged for a new one.
+      t.datetime :refresh_token_revoked_at
     end
 
     add_index :oauth_access_tokens, :token, unique: true
