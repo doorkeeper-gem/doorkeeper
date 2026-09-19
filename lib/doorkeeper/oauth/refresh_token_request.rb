@@ -45,16 +45,16 @@ module Doorkeeper
           # because the old token is revoked later when the new token is used.
           # This allows multiple concurrent refresh requests to succeed during the
           # transition period, after which the old refresh token will be revoked.
-          raise Errors::InvalidGrantReuse if refresh_token.revoked?
+          raise Errors::InvalidGrantReuse if refresh_token_revoked?
 
           create_access_token
         else
           # Use locking when refresh tokens are revoked immediately
           # to prevent race conditions where multiple tokens could be created
           refresh_token.with_lock do
-            raise Errors::InvalidGrantReuse if refresh_token.revoked?
+            raise Errors::InvalidGrantReuse if refresh_token_revoked?
 
-            refresh_token.revoke
+            revoke_refresh_token
             create_access_token
           end
         end
@@ -63,6 +63,31 @@ module Doorkeeper
 
       def refresh_token_revoked_on_use?
         Doorkeeper.config.access_token_model.refresh_token_revoked_on_use?
+      end
+
+      # The presented refresh token can be revoked on its own, leaving the
+      # access token it was issued with usable (see
+      # `AccessTokenMixin#refresh_token_revoked?`). An access token model
+      # that does not implement it (the Sequel and MongoDB adapters ship
+      # their own mixins) revokes both together, so the record's own state
+      # is the answer.
+      def refresh_token_revoked?
+        if refresh_token.respond_to?(:refresh_token_revoked?)
+          refresh_token.refresh_token_revoked?
+        else
+          refresh_token.revoked?
+        end
+      end
+
+      # Revokes the presented refresh token only, or the whole record when
+      # the previous access token is not kept on refresh (the default) or
+      # the model does not implement `revoke_refresh_token`.
+      def revoke_refresh_token
+        if refresh_token.respond_to?(:revoke_refresh_token)
+          refresh_token.revoke_refresh_token
+        else
+          refresh_token.revoke
+        end
       end
 
       # RFC 6749 §6: a `scope` parameter that is omitted "is treated as equal
@@ -180,7 +205,7 @@ module Doorkeeper
       end
 
       def validate_token
-        refresh_token.present? && !refresh_token.revoked?
+        refresh_token.present? && !refresh_token_revoked?
       end
 
       def validate_client

@@ -335,6 +335,190 @@ RSpec.describe "Refresh Token Flow" do
   # space-delimited scope list "public write" before Doorkeeper sees it. A
   # literal "+" inside a scope value has to be sent percent-encoded as %2B and
   # names a different, single scope (RFC 6749 §3.3 allows "+" in scope tokens).
+  # https://github.com/doorkeeper-gem/doorkeeper/issues/1730
+  #
+  # The refresh token shares its record with the access token it was issued
+  # with, so revoking it used to take the access token down too. With the
+  # `refresh_token_revoked_at` column and
+  # `revoke_previous_access_token_on_refresh false` only the refresh token is
+  # revoked, and the previous access token lives until it expires.
+  describe "keeping the previous access token on refresh" do
+    before do
+      @token = FactoryBot.create(
+        :access_token,
+        application: @client,
+        resource_owner_id: resource_owner.id,
+        resource_owner_type: resource_owner.class.name,
+        use_refresh_token: true,
+      )
+    end
+
+    def refresh_with(refresh_token)
+      post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
+        client: @client, refresh_token: refresh_token,
+      )
+    end
+
+    def access_protected_resource_with(access_token)
+      get "/full_protected_resources", headers: { "HTTP_AUTHORIZATION" => "Bearer #{access_token}" }
+    end
+
+    context "when revoke_previous_access_token_on_refresh is disabled" do
+      before do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          use_refresh_token
+          revoke_previous_access_token_on_refresh false
+        end
+      end
+
+      context "when refresh_token revoked on use" do
+        it "revokes the previous refresh token and keeps the previous access token usable" do
+          refresh_with(@token.refresh_token)
+          new_token = Doorkeeper::AccessToken.last
+
+          access_protected_resource_with(new_token.token)
+          expect(response).to be_successful
+
+          @token.reload
+          expect(@token).to be_refresh_token_revoked
+          expect(@token).not_to be_revoked
+
+          access_protected_resource_with(@token.token)
+          expect(response).to be_successful
+
+          refresh_with(@token.refresh_token)
+          expect(response).to have_http_status(:bad_request)
+          expect(json_response).to include("error" => "invalid_grant")
+
+          refresh_with(new_token.refresh_token)
+          expect(response).to be_successful
+        end
+
+        # The grace period of #1787 is untouched: nothing is revoked until the
+        # rotated access token is first used.
+        it "accepts the same refresh token again while the rotated access token is unused" do
+          refresh_with(@token.refresh_token)
+          refresh_with(@token.refresh_token)
+
+          expect(response).to be_successful
+          expect(@token.reload).not_to be_refresh_token_revoked
+        end
+
+        it "lets the previous access token expire on its own" do
+          refresh_with(@token.refresh_token)
+          access_protected_resource_with(Doorkeeper::AccessToken.last.token)
+
+          @token.update_attribute :expires_in, -100
+
+          access_protected_resource_with(@token.token)
+          expect(response).to have_http_status(:unauthorized)
+        end
+      end
+
+      context "when refresh_token revoked on refresh_token request" do
+        before do
+          allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
+        end
+
+        it "revokes the previous refresh token and keeps the previous access token usable" do
+          refresh_with(@token.refresh_token)
+          expect(response).to be_successful
+
+          @token.reload
+          expect(@token).to be_refresh_token_revoked
+          expect(@token).not_to be_revoked
+
+          access_protected_resource_with(@token.token)
+          expect(response).to be_successful
+
+          refresh_with(@token.refresh_token)
+          expect(response).to have_http_status(:bad_request)
+          expect(json_response).to include("error" => "invalid_grant")
+        end
+      end
+
+      context "without the refresh_token_revoked_at column" do
+        before do
+          allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_at_supported?).and_return(false)
+        end
+
+        it "revokes the previous access token together with its refresh token" do
+          refresh_with(@token.refresh_token)
+          access_protected_resource_with(Doorkeeper::AccessToken.last.token)
+
+          expect(@token.reload).to be_revoked
+          expect(@token[:refresh_token_revoked_at]).to be_nil
+
+          access_protected_resource_with(@token.token)
+          expect(response).to have_http_status(:unauthorized)
+        end
+      end
+
+      context "with reuse_access_token" do
+        before do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            use_refresh_token
+            reuse_access_token
+            revoke_previous_access_token_on_refresh false
+          end
+        end
+
+        # The previous record still carries a usable access token, so it is
+        # among the candidates for reuse, but its refresh token is dead.
+        it "does not hand out the previous record with its revoked refresh token" do
+          refresh_with(@token.refresh_token)
+          new_token = Doorkeeper::AccessToken.last
+          access_protected_resource_with(new_token.token)
+          new_token.revoke
+
+          expect(@token.reload).to be_accessible
+          expect(@token).to be_refresh_token_revoked
+
+          authorization_code_exists application: @client,
+                                    resource_owner_id: resource_owner.id,
+                                    resource_owner_type: resource_owner.class.name,
+                                    scopes: @token.scopes.to_s
+          post token_endpoint_url, params: token_endpoint_params(code: @authorization.token, client: @client)
+
+          expect(response).to be_successful
+          expect(json_response["access_token"]).not_to eq(@token.token)
+          expect(json_response["refresh_token"]).to be_present
+          expect(json_response["refresh_token"]).not_to eq(@token.refresh_token)
+
+          refresh_with(json_response["refresh_token"])
+          expect(response).to be_successful
+        end
+      end
+    end
+
+    context "when revoke_previous_access_token_on_refresh is left enabled (default)" do
+      it "revokes the previous access token once the rotated one is used" do
+        refresh_with(@token.refresh_token)
+        access_protected_resource_with(Doorkeeper::AccessToken.last.token)
+
+        expect(@token.reload).to be_revoked
+        expect(@token.refresh_token_revoked_at).to be_nil
+
+        access_protected_resource_with(@token.token)
+        expect(response).to have_http_status(:unauthorized)
+      end
+
+      it "revokes the previous access token immediately without the previous_refresh_token column" do
+        allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_on_use?).and_return(false)
+
+        refresh_with(@token.refresh_token)
+
+        expect(@token.reload).to be_revoked
+        expect(@token.refresh_token_revoked_at).to be_nil
+
+        access_protected_resource_with(@token.token)
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
+
   describe "refreshing the token with '+' in the scope parameter" do
     before do
       @token = FactoryBot.create(

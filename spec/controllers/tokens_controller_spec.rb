@@ -217,6 +217,57 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
       )
     end
 
+    # A refresh token revoked on its own
+    # (`revoke_previous_access_token_on_refresh false`) is an invalid token
+    # for this endpoint (RFC 7009 §2.2): presenting it must not take down the
+    # access token that is still usable on the same record.
+    context "when only the refresh token has been revoked" do
+      let(:client) { FactoryBot.create(:application, confidential: false) }
+
+      before do
+        access_token.update_column(:refresh_token_revoked_at, 1.minute.ago)
+      end
+
+      it "leaves the access token alone when the revoked refresh token is presented" do
+        post :revoke, params: {
+          client_id: client.uid,
+          token: access_token.refresh_token,
+          token_type_hint: "refresh_token",
+        }
+
+        expect(response.status).to eq 200
+        expect(access_token.reload).not_to be_revoked
+        expect(access_token).to be_accessible
+      end
+
+      it "revokes the record when the access token is presented" do
+        post :revoke, params: { client_id: client.uid, token: access_token.token }
+
+        expect(response.status).to eq 200
+        expect(access_token.reload).to be_revoked
+      end
+
+      # The Sequel and MongoDB adapters ship their own access token mixins,
+      # which revoke the refresh token together with its access token.
+      it "follows the record's own state when the model does not implement refresh token revocation" do
+        allow(Doorkeeper::AccessToken).to receive(:by_refresh_token).and_wrap_original do |original, *args|
+          original.call(*args).tap do |record|
+            allow(record).to receive(:respond_to?).and_call_original
+            allow(record).to receive(:respond_to?).with(:refresh_token_revoked?).and_return(false)
+          end
+        end
+
+        post :revoke, params: {
+          client_id: client.uid,
+          token: access_token.refresh_token,
+          token_type_hint: "refresh_token",
+        }
+
+        expect(response.status).to eq 200
+        expect(access_token.reload).to be_revoked
+      end
+    end
+
     context "when associated app is public" do
       let(:client) { FactoryBot.create(:application, confidential: false) }
 
@@ -812,6 +863,43 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
         post :introspect, params: { token: token_for_introspection.refresh_token }
 
         expect(json_response).to match("active" => false)
+      end
+
+      # A refresh token revoked on its own
+      # (`revoke_previous_access_token_on_refresh false`) shares its record
+      # with an access token that is still usable: RFC 7662 §2.2 describes
+      # the presented token, so each reports its own state.
+      context "when only the refresh token has been revoked" do
+        before do
+          token_for_introspection.update_column(:refresh_token_revoked_at, 1.minute.ago)
+        end
+
+        it "responds with only active state for the refresh token" do
+          post :introspect, params: { token: token_for_introspection.refresh_token }
+
+          expect(json_response).to match("active" => false)
+        end
+
+        it "responds with active state for the access token of the same record" do
+          post :introspect, params: { token: token_for_introspection.token }
+
+          expect(json_response).to include("active" => true, "token_type" => "Bearer")
+        end
+
+        # The Sequel and MongoDB adapters ship their own access token mixins,
+        # which revoke the refresh token together with its access token.
+        it "follows the record's own state when the model does not implement refresh token revocation" do
+          allow(Doorkeeper::AccessToken).to receive(:by_refresh_token).and_wrap_original do |original, *args|
+            original.call(*args).tap do |record|
+              allow(record).to receive(:respond_to?).and_call_original
+              allow(record).to receive(:respond_to?).with(:refresh_token_revoked?).and_return(false)
+            end
+          end
+
+          post :introspect, params: { token: token_for_introspection.refresh_token }
+
+          expect(json_response).to include("active" => true)
+        end
       end
 
       # RFC 7662 §2.2 describes the presented token: a refresh token carries
