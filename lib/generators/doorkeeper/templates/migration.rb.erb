@@ -94,6 +94,15 @@ class CreateDoorkeeperTables < ActiveRecord::Migration<%= migration_version %>
       # Comment out this line if you want a narrowed refresh to permanently
       # narrow the refresh token as well.
       t.string   :refresh_token_scopes
+
+      # Identifier shared by the tokens of one refresh chain, so that revoking
+      # a refresh token also revokes the access tokens issued earlier from
+      # the same authorization grant.
+      # @see https://datatracker.ietf.org/doc/html/rfc7009#section-2.1
+      #
+      # Comment out this line (and its index below) if you want the
+      # revocation of a refresh token to reach its own record only.
+      t.string   :refresh_token_family_id
     end
 
     add_index :oauth_access_tokens, :token, unique: true
@@ -107,6 +116,8 @@ class CreateDoorkeeperTables < ActiveRecord::Migration<%= migration_version %>
     else
       add_index :oauth_access_tokens, :refresh_token, unique: true
     end
+
+    add_index :oauth_access_tokens, :refresh_token_family_id
 
     add_foreign_key(
       :oauth_access_tokens,

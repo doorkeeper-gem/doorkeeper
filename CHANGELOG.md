@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#1932] Fix: keep the scope originally granted by the resource owner on refresh tokens (RFC 6749 §6), so a chain narrowed on one refresh can return to its granted scope. Tracked in a new `refresh_token_scopes` column; existing installs opt in with `rails generate doorkeeper:refresh_token_scopes`.
+- [#1947] Revoking a refresh token now also revokes the tokens issued earlier from the same authorization grant (RFC 7009 §2.1). The refresh chain is tracked in a new `refresh_token_family_id` column; existing installs opt in with `rails generate doorkeeper:refresh_token_family_id`.
 - [#PR ID] Description of the change.
 - [#1933] Warn at boot when the `implicit` or `password` grant flow is enabled: both are deprecated by RFC 9700 (OAuth 2.0 Security BCP) and removed from OAuth 2.1, and may be removed in a future Doorkeeper release.
 - [#1915] Fix: fetching a client's `jwks_uri` now falls back to the other addresses returned by DNS when the first one cannot be connected to.
