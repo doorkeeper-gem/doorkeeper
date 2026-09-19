@@ -486,6 +486,184 @@ RSpec.describe Doorkeeper::AccessToken do
     end
   end
 
+  describe "refresh token revocation" do
+    def keep_previous_access_token
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_refresh_token
+        revoke_previous_access_token_on_refresh false
+      end
+    end
+
+    describe ".refresh_token_revoked_at_supported?" do
+      it "is true when the refresh_token_revoked_at column exists" do
+        expect(described_class.refresh_token_revoked_at_supported?).to be(true)
+      end
+
+      it "is false when the column is absent" do
+        allow(described_class).to receive(:column_names)
+          .and_return(described_class.column_names - ["refresh_token_revoked_at"])
+
+        expect(described_class.refresh_token_revoked_at_supported?).to be(false)
+      end
+    end
+
+    describe ".previous_access_token_kept_on_refresh?" do
+      it "is false by default even though the column exists" do
+        expect(described_class.previous_access_token_kept_on_refresh?).to be(false)
+      end
+
+      it "is true when the option is disabled and the column exists" do
+        keep_previous_access_token
+
+        expect(described_class.previous_access_token_kept_on_refresh?).to be(true)
+      end
+
+      it "is false when the option is disabled but the column is absent" do
+        keep_previous_access_token
+        allow(described_class).to receive(:refresh_token_revoked_at_supported?).and_return(false)
+
+        expect(described_class.previous_access_token_kept_on_refresh?).to be(false)
+      end
+    end
+
+    describe "#refresh_token_revoked?" do
+      let(:token) { FactoryBot.create :access_token, use_refresh_token: true }
+
+      it "is false for a token that was never revoked" do
+        expect(token).not_to be_refresh_token_revoked
+      end
+
+      it "is true for a revoked record without a refresh token revocation time (no backfill needed)" do
+        token.revoke
+
+        expect(token.refresh_token_revoked_at).to be_nil
+        expect(token).to be_refresh_token_revoked
+      end
+
+      it "is true when only the refresh token was revoked, while the access token stays accessible" do
+        token.update_column(:refresh_token_revoked_at, 1.minute.ago)
+
+        expect(token).to be_refresh_token_revoked
+        expect(token).not_to be_revoked
+        expect(token).to be_accessible
+      end
+
+      it "is false while the refresh token revocation time is in the future" do
+        token.update_column(:refresh_token_revoked_at, 1.minute.from_now)
+
+        expect(token).not_to be_refresh_token_revoked
+      end
+
+      it "does not depend on the current value of the option" do
+        token.update_column(:refresh_token_revoked_at, 1.minute.ago)
+
+        expect(Doorkeeper.config.revoke_previous_access_token_on_refresh).to be(true)
+        expect(token).to be_refresh_token_revoked
+      end
+
+      it "follows #revoked? when the column is absent" do
+        allow(described_class).to receive(:refresh_token_revoked_at_supported?).and_return(false)
+
+        expect(token).not_to be_refresh_token_revoked
+        token.revoke
+        expect(token).to be_refresh_token_revoked
+      end
+    end
+
+    describe "#revoke_refresh_token" do
+      let(:token) { FactoryBot.create :access_token, use_refresh_token: true }
+
+      context "when the previous access token is kept on refresh" do
+        before { keep_previous_access_token }
+
+        it "revokes the refresh token and leaves the access token accessible" do
+          token.revoke_refresh_token
+          token.reload
+
+          expect(token).to be_refresh_token_revoked
+          expect(token.refresh_token_revoked_at).to be_present
+          expect(token.revoked_at).to be_nil
+          expect(token).to be_accessible
+        end
+
+        it "uses the given clock" do
+          clock = class_double(Time, now: Time.utc(2026, 1, 1))
+
+          token.revoke_refresh_token(clock)
+
+          expect(token.reload.refresh_token_revoked_at).to eq(Time.utc(2026, 1, 1))
+        end
+
+        it "writes through the primary database role when multiple database roles are enabled" do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            use_refresh_token
+            revoke_previous_access_token_on_refresh false
+            enable_multiple_database_roles
+          end
+
+          expect(ActiveRecord::Base).to receive(:connected_to).with(role: :writing).and_call_original
+
+          token.revoke_refresh_token
+          expect(token.reload).to be_refresh_token_revoked
+        end
+
+        it "does nothing when the refresh token is already revoked" do
+          token.update_column(:refresh_token_revoked_at, 1.hour.ago)
+
+          expect { token.revoke_refresh_token }.not_to(change { token.reload.refresh_token_revoked_at })
+        end
+
+        it "does nothing when the whole record is already revoked" do
+          token.revoke
+
+          token.revoke_refresh_token
+
+          expect(token.reload.refresh_token_revoked_at).to be_nil
+        end
+
+        it "keeps the refresh token revoked after the option is turned back on" do
+          token.revoke_refresh_token
+
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            use_refresh_token
+          end
+
+          expect(token.reload).to be_refresh_token_revoked
+        end
+
+        it "lets #revoke still revoke the whole record" do
+          token.revoke_refresh_token
+          token.revoke
+
+          expect(token.reload).to be_revoked
+          expect(token).not_to be_accessible
+        end
+      end
+
+      it "revokes the whole record by default" do
+        token.revoke_refresh_token
+        token.reload
+
+        expect(token).to be_revoked
+        expect(token.refresh_token_revoked_at).to be_nil
+      end
+
+      it "revokes the whole record when the option is disabled but the column is absent" do
+        keep_previous_access_token
+        allow(described_class).to receive(:refresh_token_revoked_at_supported?).and_return(false)
+
+        token.revoke_refresh_token
+        token.reload
+
+        expect(token).to be_revoked
+        expect(token[:refresh_token_revoked_at]).to be_nil
+      end
+    end
+  end
+
   describe "validations" do
     it "is valid without resource_owner_id" do
       # For client credentials flow
@@ -961,6 +1139,53 @@ RSpec.describe Doorkeeper::AccessToken do
       end
     end
 
+    context "when a matching token has its refresh token revoked on its own" do
+      let!(:existing) do
+        FactoryBot.create(:access_token, default_attributes.merge(use_refresh_token: true)).tap do |token|
+          token.update_column(:refresh_token_revoked_at, 1.minute.ago)
+        end
+      end
+
+      it "does not reuse it for a request that expects a refresh token" do
+        expect(existing).to be_accessible
+
+        token = nil
+        expect do
+          token = described_class.find_or_create_for(
+            application: application, resource_owner: resource_owner,
+            scopes: scopes, use_refresh_token: true,
+          )
+        end.to(change { described_class.count }.by(1))
+
+        expect(token).not_to eq(existing)
+        expect(token).not_to be_refresh_token_revoked
+      end
+
+      it "reuses an older matching token whose refresh token is still usable" do
+        older = FactoryBot.create :access_token, default_attributes.merge(
+          use_refresh_token: true, created_at: 1.minute.ago,
+        )
+
+        token = described_class.find_or_create_for(
+          application: application, resource_owner: resource_owner,
+          scopes: scopes, use_refresh_token: true,
+        )
+
+        expect(token).to eq(older)
+      end
+
+      it "reuses it again once the column is gone" do
+        allow(described_class).to receive(:refresh_token_revoked_at_supported?).and_return(false)
+
+        token = described_class.find_or_create_for(
+          application: application, resource_owner: resource_owner,
+          scopes: scopes, use_refresh_token: true,
+        )
+
+        expect(token).to eq(existing)
+      end
+    end
+
     context "when the request does not expect a refresh token" do
       it "reuses a matching token that has no refresh token" do
         existing = FactoryBot.create :access_token, default_attributes.merge(use_refresh_token: false)
@@ -1254,6 +1479,34 @@ RSpec.describe Doorkeeper::AccessToken do
       token.revoke_previous_refresh_token!
 
       expect(token.reload.previous_refresh_token).to eq("previous")
+    end
+
+    it "revokes the record of the previous refresh token" do
+      previous = FactoryBot.create(:access_token, use_refresh_token: true)
+      token = FactoryBot.create(:access_token, previous_refresh_token: previous.refresh_token)
+
+      token.revoke_previous_refresh_token!
+
+      expect(previous.reload).to be_revoked
+      expect(previous.refresh_token_revoked_at).to be_nil
+      expect(token.reload.previous_refresh_token).to eq("")
+    end
+
+    it "revokes only the previous refresh token when the previous access token is kept on refresh" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_refresh_token
+        revoke_previous_access_token_on_refresh false
+      end
+
+      previous = FactoryBot.create(:access_token, use_refresh_token: true)
+      token = FactoryBot.create(:access_token, previous_refresh_token: previous.refresh_token)
+
+      token.revoke_previous_refresh_token!
+
+      expect(previous.reload).to be_refresh_token_revoked
+      expect(previous).to be_accessible
+      expect(token.reload.previous_refresh_token).to eq("")
     end
 
     it "clears the attribute even when the previous token no longer exists" do

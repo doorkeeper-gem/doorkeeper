@@ -207,6 +207,24 @@ module Doorkeeper
         access_token.refresh_token_scopes == scopes
       end
 
+      # Checks whether a candidate token's refresh token can still be used.
+      #
+      # A row whose refresh token was revoked on its own (see
+      # +previous_access_token_kept_on_refresh?+) keeps a usable access token,
+      # so it is still among the authorized tokens, but reusing it would hand
+      # the client a refresh token the token endpoint refuses. A candidate
+      # without a refresh token has nothing to refuse.
+      #
+      # @param access_token [Doorkeeper::AccessToken]
+      #   the candidate token for reuse
+      #
+      # @return [Boolean] true if the candidate has no refresh token or one
+      #   that is not revoked, false otherwise
+      #
+      def refresh_token_usable?(access_token)
+        access_token.refresh_token.blank? || !access_token.refresh_token_revoked?
+      end
+
       # Checks whether the token scopes match the scopes from the parameters
       #
       # @param token_scopes [#to_s]
@@ -304,6 +322,31 @@ module Doorkeeper
         column_names.include?("refresh_token_scopes")
       end
 
+      # A refresh token shares its row with the access token it was issued
+      # with, so revoking the row (+revoked_at+) revokes both. The
+      # `refresh_token_revoked_at` column (added by the
+      # `doorkeeper:refresh_token_revoked_at` generator) lets the refresh
+      # token be revoked on its own.
+      #
+      # @return [Boolean] true if the refresh_token_revoked_at column exists
+      #
+      def refresh_token_revoked_at_supported?
+        column_names.include?("refresh_token_revoked_at")
+      end
+
+      # Determines if the refresh grant leaves the previous access token
+      # usable until it expires and revokes only the refresh token it was
+      # issued with. Requires both the `refresh_token_revoked_at` column and
+      # the +revoke_previous_access_token_on_refresh+ option set to false,
+      # so that adding the column alone changes nothing.
+      #
+      # @return [Boolean] true if only the refresh token is revoked on refresh
+      #
+      def previous_access_token_kept_on_refresh?
+        !Doorkeeper.config.revoke_previous_access_token_on_refresh &&
+          refresh_token_revoked_at_supported?
+      end
+
       # Looking for not expired AccessToken record with a matching set of
       # scopes that belongs to specific Application and Resource Owner.
       # If it doesn't exists - then creates it.
@@ -345,6 +388,7 @@ module Doorkeeper
             application, resource_owner, scopes, custom_attributes: custom_attributes, include_expired: false,
           ) do |token|
             refresh_token_matches?(token, token_attributes) &&
+              refresh_token_usable?(token) &&
               refresh_token_scopes_match?(token, scopes) &&
               resource_indicators_match?(token, requested_resource)
           end
@@ -521,6 +565,45 @@ module Doorkeeper
       self[:refresh_token_scopes]
     end
 
+    # Indicates whether the refresh token of this record has been revoked:
+    # either together with the access token (+revoked_at+) or on its own
+    # (+refresh_token_revoked_at+). A row revoked before the
+    # `refresh_token_revoked_at` column existed therefore needs no backfill.
+    #
+    # The column is consulted whenever it exists, whatever
+    # +revoke_previous_access_token_on_refresh+ says at the moment: turning
+    # the option back on must not bring refresh tokens revoked under it back
+    # to life.
+    #
+    # @return [Boolean] true if the refresh token is revoked
+    #
+    def refresh_token_revoked?
+      return true if revoked?
+      return false unless self.class.refresh_token_revoked_at_supported?
+
+      refresh_revoked_at = self[:refresh_token_revoked_at]
+      !!(refresh_revoked_at && refresh_revoked_at <= Time.now.utc)
+    end
+
+    # Revokes the refresh token after it was exchanged for a new one. The
+    # access token issued with it is revoked as well unless
+    # +previous_access_token_kept_on_refresh?+, in which case it stays usable
+    # until it expires.
+    #
+    # Revoking a token through the revocation endpoint or +#revoke+ still
+    # revokes the whole record (RFC 7009 §2.1).
+    #
+    # @param clock [Time] time object
+    #
+    def revoke_refresh_token(clock = Time)
+      return revoke(clock) unless self.class.previous_access_token_kept_on_refresh?
+      return if refresh_token_revoked?
+
+      self.class.with_primary_role do
+        update_attribute(:refresh_token_revoked_at, clock.now.utc)
+      end
+    end
+
     # JSON representation of the Access Token instance.
     #
     # @return [Hash] hash with token data
@@ -609,12 +692,14 @@ module Doorkeeper
     end
 
     # Revokes token with `:refresh_token` equal to `:previous_refresh_token`
-    # and clears `:previous_refresh_token` attribute.
+    # and clears `:previous_refresh_token` attribute. Only the refresh token
+    # of that record is revoked when
+    # `previous_access_token_kept_on_refresh?` (see `#revoke_refresh_token`).
     #
     def revoke_previous_refresh_token!
       return if !self.class.refresh_token_revoked_on_use? || previous_refresh_token.blank?
 
-      old_refresh_token&.revoke
+      old_refresh_token&.revoke_refresh_token
 
       if self.class.respond_to?(:with_primary_role)
         self.class.with_primary_role { update_attribute(:previous_refresh_token, "") }
