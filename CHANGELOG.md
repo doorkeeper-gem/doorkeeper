@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1947] Revoking a refresh token now also revokes the tokens issued earlier from the same authorization grant (RFC 7009 §2.1). The refresh chain is tracked in a new `refresh_token_family_id` column; existing installs opt in with `rails generate doorkeeper:refresh_token_family_id`.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.rc2
