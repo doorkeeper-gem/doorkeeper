@@ -101,6 +101,15 @@ class CreateDoorkeeperTables < ActiveRecord::Migration<%= migration_version %>
       # keep the previous access token usable until it expires when its
       # refresh token is exchanged for a new one.
       t.datetime :refresh_token_revoked_at
+
+      # Identifier shared by the tokens of one refresh chain, so that revoking
+      # a refresh token also revokes the access tokens issued earlier from
+      # the same authorization grant.
+      # @see https://datatracker.ietf.org/doc/html/rfc7009#section-2.1
+      #
+      # Comment out this line (and its index below) if you want the
+      # revocation of a refresh token to reach its own record only.
+      t.string   :refresh_token_family_id
     end
 
     add_index :oauth_access_tokens, :token, unique: true
@@ -114,6 +123,8 @@ class CreateDoorkeeperTables < ActiveRecord::Migration<%= migration_version %>
     else
       add_index :oauth_access_tokens, :refresh_token, unique: true
     end
+
+    add_index :oauth_access_tokens, :refresh_token_family_id
 
     add_foreign_key(
       :oauth_access_tokens,
