@@ -304,6 +304,45 @@ module Doorkeeper
         column_names.include?("refresh_token_scopes")
       end
 
+      # Every refresh creates a new record, and nothing else links the
+      # records of one refresh chain together. The
+      # `refresh_token_family_id` column (added by the
+      # `doorkeeper:refresh_token_family_id` generator) carries one
+      # identifier along the chain, so that revoking a refresh token can
+      # reach the access tokens issued earlier from the same authorization
+      # grant (RFC 7009 §2.1). Without the column only the record of the
+      # presented token is revoked.
+      #
+      # @return [Boolean] true if the refresh_token_family_id column exists
+      #
+      def refresh_token_family_supported?
+        column_names.include?("refresh_token_family_id")
+      end
+
+      # Revokes AccessToken records of a refresh token family that have not
+      # been revoked yet.
+      #
+      # The Application is part of the condition so that a family identifier
+      # can never reach the tokens of another client, whatever a host app
+      # stores in the column.
+      #
+      # @param family_id [String]
+      #   refresh token family identifier
+      # @param application_id [Integer, nil]
+      #   ID of the Application the family belongs to
+      #
+      def revoke_refresh_token_family(family_id, application_id, clock = Time)
+        return if family_id.blank? || !refresh_token_family_supported?
+
+        with_primary_role do
+          where(
+            refresh_token_family_id: family_id,
+            application_id: application_id,
+            revoked_at: nil,
+          ).update_all(revoked_at: clock.now.utc)
+        end
+      end
+
       # Looking for not expired AccessToken record with a matching set of
       # scopes that belongs to specific Application and Resource Owner.
       # If it doesn't exists - then creates it.
@@ -521,6 +560,66 @@ module Doorkeeper
       self[:refresh_token_scopes]
     end
 
+    # Identifier shared by the records of one refresh chain, nil when the
+    # `refresh_token_family_id` column is absent or the record has no family
+    # (no refresh token, or created before the column's migration).
+    #
+    # @return [String, nil]
+    #
+    def refresh_token_family_id
+      return unless self.class.refresh_token_family_supported?
+
+      self[:refresh_token_family_id]
+    end
+
+    # Ignored when the `refresh_token_family_id` column is absent, so a host
+    # app that assigns it ahead of the migration does not fail on the
+    # missing attribute.
+    def refresh_token_family_id=(value)
+      return unless self.class.refresh_token_family_supported?
+
+      super
+    end
+
+    # Returns the family identifier of the record, giving it one first when
+    # it has a refresh token but no family yet (a record created before the
+    # column's migration). The refresh grant calls this on the presented
+    # refresh token so that such a chain is tracked from its next refresh on.
+    #
+    # The identifier is written only while the column is still empty, and
+    # read back afterwards, so concurrent refreshes of the same token all
+    # continue the same family.
+    #
+    # @return [String, nil] family identifier, nil when the column is absent
+    #   or the record has no refresh token
+    #
+    def ensure_refresh_token_family_id!
+      return unless self.class.refresh_token_family_supported?
+      return refresh_token_family_id if refresh_token_family_id.present? || refresh_token.blank?
+
+      self.class.with_primary_role do
+        record = self.class.where(id: id)
+        record.where(refresh_token_family_id: nil).update_all(refresh_token_family_id: SecureRandom.uuid)
+
+        self[:refresh_token_family_id] = record.pick(:refresh_token_family_id)
+      end
+      clear_attribute_change(:refresh_token_family_id)
+
+      refresh_token_family_id
+    end
+
+    # Revokes the record together with every record of its refresh token
+    # family: the access tokens (and refresh tokens) issued from the same
+    # authorization grant, as RFC 7009 §2.1 asks of the revocation of a
+    # refresh token. Revokes the record alone when it has no family.
+    #
+    # @param clock [Time] time object
+    #
+    def revoke_refresh_token_family(clock = Time)
+      revoke(clock)
+      self.class.revoke_refresh_token_family(refresh_token_family_id, application_id, clock)
+    end
+
     # JSON representation of the Access Token instance.
     #
     # @return [Hash] hash with token data
@@ -653,6 +752,13 @@ module Doorkeeper
       # column is written directly so the derivation does not count as an
       # explicit assignment.
       self[:refresh_token_scopes] = scopes.to_s if self.class.refresh_token_scopes_supported? && !@refresh_token_scopes_assigned
+
+      # A refresh token issued outside the refresh grant starts a new family;
+      # the refresh grant assigns the family of the presented refresh token
+      # instead. Kept across validations of the same new record.
+      if self.class.refresh_token_family_supported? && self[:refresh_token_family_id].blank?
+        self[:refresh_token_family_id] = SecureRandom.uuid
+      end
 
       @raw_refresh_token = UniqueToken.generate
       secret_strategy.store_secret(self, :refresh_token, @raw_refresh_token)
