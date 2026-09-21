@@ -5,6 +5,14 @@ module Doorkeeper
     class PreAuthorization
       include Validations
 
+      # The validations that identify the client and its redirect URI. None of
+      # them depend on the resource owner, and none of their failures leaves a
+      # redirect target worth trusting: RFC 6749 Section 4.1.2.1 (Section
+      # 4.2.2.1 for the implicit flow) asks for the resource owner to be
+      # informed when the client_id is missing or invalid, and Section 3.1.2.4
+      # asks the same for the redirect URI.
+      CLIENT_VALIDATIONS = %i[client_id client redirect_uri].freeze
+
       validate :client_id, error: Errors::InvalidRequest
       validate :client, error: Errors::InvalidClient
       validate :client_supports_grant_flow, error: Errors::UnauthorizedClient
@@ -38,6 +46,25 @@ module Doorkeeper
 
       def authorizable?
         valid?
+      end
+
+      # Runs only CLIENT_VALIDATIONS, in declared order, so a request naming an
+      # unknown client or an invalid redirect URI can be refused on its own -
+      # the validations in between (client_supports_grant_flow,
+      # resource_owner_authorize_for_client) answer a different question and
+      # are left to a full #validate run.
+      def client_valid?
+        @error = nil
+        @missing_param = nil
+
+        self.class.validations.each do |validation|
+          next unless CLIENT_VALIDATIONS.include?(validation[:attribute])
+
+          @error = validation[:options][:error] unless send("validate_#{validation[:attribute]}")
+          break if @error
+        end
+
+        @error.nil?
       end
 
       def scopes

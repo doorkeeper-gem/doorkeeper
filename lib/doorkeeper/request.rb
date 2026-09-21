@@ -3,18 +3,30 @@
 module Doorkeeper
   module Request
     class << self
+      # Resolves the strategy that answers the given response_type at the
+      # authorization endpoint.
+      #
+      # A response_type no registered authorization flow handles is refused
+      # rather than turned into a class name: `constantize` would otherwise
+      # resolve any constant under Doorkeeper::Request, token endpoint
+      # strategies (`password`, `client_credentials`, `refresh_token`,
+      # `authorization_code`) included, none of which can answer an
+      # authorization request.
       def authorization_strategy(response_type)
+        response_type = response_type.to_s
+
         grant_flow = authorization_flows.detect do |flow|
           flow.matches_response_type?(response_type)
         end
 
-        if grant_flow
-          grant_flow.response_type_strategy
-        else
-          # [NOTE]: this will be removed in a newer versions of Doorkeeper.
-          # For retro-compatibility only
-          build_fallback_strategy_class(response_type)
-        end
+        raise Errors::InvalidTokenStrategy unless grant_flow
+
+        # [NOTE]: this will be removed in a newer versions of Doorkeeper.
+        # For retro-compatibility only: flows declared through the deprecated
+        # Config#calculate_authorization_response_types hook are built as
+        # GrantFlow::FallbackFlow and carry no strategy, so the class is looked
+        # up by name - but only for a response type the server does declare.
+        grant_flow.response_type_strategy || build_fallback_strategy_class(response_type)
       end
 
       def token_strategy(grant_type)
