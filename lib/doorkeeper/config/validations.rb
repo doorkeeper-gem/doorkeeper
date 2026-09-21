@@ -14,6 +14,7 @@ module Doorkeeper
         validate_reuse_access_token_value
         validate_token_reuse_limit
         validate_secret_strategies
+        validate_secret_fallback_strategies
         validate_pkce_code_challenge_methods
         validate_custom_metadata
         validate_refresh_token_flow
@@ -120,6 +121,46 @@ module Doorkeeper
       def validate_secret_strategies
         token_secret_strategy.validate_for(:token)
         application_secret_strategy.validate_for(:application)
+      end
+
+      # Warn for as long as a secret fallback strategy is configured. The
+      # fallback exists so that values written before hashing was enabled stay
+      # valid while they migrate, which makes it a setting for the migration
+      # period rather than a permanent one - but nothing expires it, and an
+      # installation that finished migrating long ago keeps it silently.
+      #
+      # A +:plain+ fallback is worth saying more about: it looks a value up by
+      # the value exactly as given, so while it is configured whatever the
+      # credential column holds is itself a valid credential. Against anyone
+      # who can read the column - a dump, a read-only injection, a logged query
+      # - the hashing protects nothing until the fallback is removed. A
+      # fallback to another hashing strategy does not have that property, since
+      # its stored values are still transformed, so it only gets the first part
+      # of the warning.
+      #
+      # The warning is unconditional rather than raised only while unhashed
+      # rows remain: answering that question means querying the credential
+      # tables at boot, and the setting itself is what needs surfacing.
+      def validate_secret_fallback_strategies
+        {
+          token: token_secret_fallback_strategy,
+          application: application_secret_fallback_strategy,
+        }.each do |type, strategy|
+          next if strategy.nil?
+
+          message =
+            "[DOORKEEPER] hash_#{type}_secrets is configured with a fallback strategy " \
+            "(#{strategy}), which is intended for the migration period only. Remove the " \
+            "fallback: option once every row has been migrated to the hashed format."
+
+          if strategy <= Doorkeeper::SecretStoring::Plain
+            message += " While it is configured, a value stored in the #{type} credential " \
+                       "column is itself a valid credential, so that column needs to be " \
+                       "protected as carefully as a plaintext credential."
+          end
+
+          ::Rails.logger.warn(message)
+        end
       end
 
       def validate_token_reuse_limit

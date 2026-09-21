@@ -32,5 +32,10 @@ RSpec.describe Doorkeeper::InstallGenerator do
     it "adds sample route" do
       assert_file "config/routes.rb", /use_doorkeeper/
     end
+
+    it "documents the secret fallback option as a migration-period setting" do
+      assert_file "config/initializers/doorkeeper.rb",
+                  /The fallback is meant for the migration period only/
+    end
   end
 end
