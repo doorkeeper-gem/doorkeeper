@@ -1620,6 +1620,84 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
+  describe "secret fallback strategy warning" do
+    let(:migration_period) { /\[DOORKEEPER\] hash_\w+_secrets is configured with a fallback strategy/ }
+    let(:plaintext_note) { /is itself a valid credential/ }
+
+    it "warns when token secrets fall back to plain" do
+      expect(Rails.logger).to receive(:warn).with(
+        /hash_token_secrets is configured with a fallback strategy \(Doorkeeper::SecretStoring::Plain\)/,
+      ).once
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        hash_token_secrets fallback: :plain
+      end
+    end
+
+    it "warns when application secrets fall back to plain" do
+      expect(Rails.logger).to receive(:warn).with(
+        /hash_application_secrets is configured with a fallback strategy \(Doorkeeper::SecretStoring::Plain\)/,
+      ).once
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        hash_application_secrets fallback: :plain
+      end
+    end
+
+    it "warns once per configured fallback" do
+      expect(Rails.logger).to receive(:warn).with(migration_period).twice
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        hash_token_secrets fallback: :plain
+        hash_application_secrets fallback: :plain
+      end
+    end
+
+    it "says that the stored value is itself a credential when falling back to plain" do
+      expect(Rails.logger).to receive(:warn).with(plaintext_note).once
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        hash_token_secrets fallback: :plain
+      end
+    end
+
+    # A fallback to another hashing strategy still transforms what it stores,
+    # so the stored value is not a credential on its own - only the reminder to
+    # remove the option applies.
+    it "does not say so for a fallback to another hashing strategy" do
+      expect(Rails.logger).to receive(:warn).with(migration_period).once
+      expect(Rails.logger).not_to receive(:warn).with(plaintext_note)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        hash_application_secrets using: "::Doorkeeper::SecretStoring::BCrypt",
+                                 fallback: "::Doorkeeper::SecretStoring::Sha256Hash"
+      end
+    end
+
+    it "does not warn when hashing is enabled without a fallback" do
+      expect(Rails.logger).not_to receive(:warn).with(migration_period)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        hash_token_secrets
+        hash_application_secrets
+      end
+    end
+
+    it "does not warn when no hashing is configured" do
+      expect(Rails.logger).not_to receive(:warn).with(migration_period)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+      end
+    end
+  end
+
   describe "hash_application_secrets with a custom fallback strategy" do
     before do
       Doorkeeper.configure do

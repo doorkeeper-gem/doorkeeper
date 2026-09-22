@@ -234,6 +234,8 @@ Doorkeeper.configure do
   #
   # Note: If you are already a user of doorkeeper and have existing tokens
   # in your installation, they will be invalid without adding 'fallback: :plain'.
+  # Read the note on the fallback option below before you do: it is a setting
+  # for the migration period, not a permanent one.
   #
   # hash_token_secrets
   # By default, token secrets will be hashed using the
@@ -260,16 +262,30 @@ Doorkeeper.configure do
   # hash_application_secrets using: '::Doorkeeper::SecretStoring::BCrypt'
 
   # When the above option is enabled, and a hashed token or secret is not found,
-  # you can allow to fall back to another strategy. For users upgrading
-  # doorkeeper and wishing to enable hashing, you will probably want to enable
-  # the fallback to plain tokens.
-  #
-  # This will ensure that old access tokens and secrets
-  # will remain valid even if the hashing above is enabled.
-  #
-  # This can be done by adding 'fallback: plain', e.g. :
+  # you can allow to fall back to another strategy, so that values written
+  # before hashing was enabled remain valid. For users upgrading doorkeeper and
+  # wishing to enable hashing, that is the fallback to plain tokens, added with
+  # 'fallback: :plain', e.g. :
   #
   # hash_application_secrets using: '::Doorkeeper::SecretStoring::BCrypt', fallback: :plain
+  #
+  # [IMPORTANT] The fallback is meant for the migration period only, and should
+  # be removed once every row has been migrated to the hashed format. A value
+  # found through the fallback is rewritten in the new format as it is used, so
+  # rows migrate themselves as their tokens and secrets are presented; rows that
+  # are never presented again keep their old format until you migrate or clean
+  # them up yourself. Doorkeeper warns at boot for as long as a fallback is
+  # configured.
+  #
+  # While 'fallback: :plain' is configured, a stored value is itself a valid
+  # credential: the fallback looks the column up by the value exactly as it was
+  # given, so whatever the column holds authenticates. What the hashing above is
+  # meant to protect you from - a database dump, a read-only SQL injection, a
+  # query written to a log - still yields usable tokens and secrets. Protect the
+  # contents of those columns as carefully as plaintext credentials for as long
+  # as it is configured, and remove it as soon as the migration is done. A
+  # fallback to another hashing strategy still transforms what it stores, so
+  # only the reminder above applies to it.
 
   # Issue access tokens with refresh token (disabled by default), you may also
   # pass a block which accepts `context` to customize when to give a refresh
