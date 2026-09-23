@@ -1523,4 +1523,243 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       end
     end
   end
+
+  # DELETE /oauth/authorize built its access_denied response straight from the
+  # request parameters: the client, the redirect URI and the response type were
+  # never validated. An unregistered redirect_uri was therefore honoured and the
+  # authenticated user redirected to it, carrying the OAuth `state`.
+  describe "DELETE #destroy client and redirect URI validation" do
+    let(:attacker_uri) { "https://attacker.example.com/cb" }
+
+    shared_examples "a refused deny request" do
+      it "does not redirect the user agent" do
+        expect(response).not_to be_redirect
+      end
+
+      it "does not hand the unvalidated redirect URI back to the caller" do
+        expect(response.body).not_to include("attacker.example.com")
+      end
+    end
+
+    context "without a client_id" do
+      before do
+        delete :destroy, params: {
+          redirect_uri: attacker_uri,
+          response_type: "token",
+          state: "state",
+        }
+      end
+
+      it_behaves_like "a refused deny request"
+
+      it "answers invalid_request" do
+        expect(response).to have_http_status(:bad_request)
+        expect(response.body).to include(
+          translated_invalid_request_error_message(:missing_param, :client_id),
+        )
+      end
+    end
+
+    context "with an unknown client_id" do
+      before do
+        delete :destroy, params: {
+          client_id: "unknown",
+          redirect_uri: attacker_uri,
+          response_type: "token",
+        }
+      end
+
+      it_behaves_like "a refused deny request"
+
+      it "answers invalid_client" do
+        expect(response).to have_http_status(:unauthorized)
+        expect(response.body).to include(translated_error_message(:invalid_client))
+      end
+    end
+
+    context "with a registered client and an unregistered redirect_uri" do
+      before do
+        delete :destroy, params: {
+          client_id: client.uid,
+          redirect_uri: attacker_uri,
+          response_type: "token",
+          state: "state",
+        }
+      end
+
+      it_behaves_like "a refused deny request"
+
+      it "answers invalid_redirect_uri" do
+        expect(response).to have_http_status(:bad_request)
+        expect(response.body).to include(ERB::Util.html_escape(translated_error_message(:invalid_redirect_uri)))
+      end
+    end
+
+    context "with response_mode=form_post and an unregistered redirect_uri" do
+      before do
+        delete :destroy, params: {
+          client_id: client.uid,
+          redirect_uri: attacker_uri,
+          response_type: "token",
+          response_mode: "form_post",
+        }
+      end
+
+      it_behaves_like "a refused deny request"
+
+      it "does not render the auto-submitting form" do
+        expect(response.body).not_to include("access_denied")
+      end
+    end
+
+    context "without a redirect_uri" do
+      before do
+        delete :destroy, params: { client_id: client.uid, response_type: "token" }
+      end
+
+      it "renders invalid_redirect_uri instead of raising URI::InvalidURIError" do
+        expect(response).to have_http_status(:bad_request)
+        expect(response.body).to include(ERB::Util.html_escape(translated_error_message(:invalid_redirect_uri)))
+      end
+    end
+
+    context "when in API mode" do
+      before do
+        allow(Doorkeeper.config).to receive(:api_only).and_return(true)
+
+        delete :destroy, params: {
+          client_id: client.uid,
+          redirect_uri: attacker_uri,
+          response_type: "token",
+          state: "state",
+        }
+      end
+
+      it_behaves_like "a refused deny request"
+
+      it "answers invalid_redirect_uri as JSON" do
+        expect(response).to have_http_status(:bad_request)
+        expect(response_json_body["error"]).to eq("invalid_redirect_uri")
+        expect(response_json_body).not_to have_key("redirect_uri")
+      end
+    end
+
+    context "when handle_auth_errors is :raise" do
+      before do
+        allow(Doorkeeper.config).to receive_messages(raise_on_errors?: true, redirect_on_errors?: false)
+      end
+
+      it "raises instead of redirecting" do
+        expect do
+          delete :destroy, params: {
+            client_id: client.uid,
+            redirect_uri: attacker_uri,
+            response_type: "token",
+          }
+        end.to raise_error(Doorkeeper::Errors::InvalidRedirectUri)
+      end
+    end
+
+    context "when handle_auth_errors is :redirect" do
+      before do
+        allow(Doorkeeper.config).to receive(:redirect_on_errors?).and_return(true)
+
+        delete :destroy, params: {
+          client_id: client.uid,
+          redirect_uri: attacker_uri,
+          response_type: "token",
+        }
+      end
+
+      it_behaves_like "a refused deny request"
+    end
+
+    context "with a registered client and a registered redirect_uri" do
+      before do
+        delete :destroy, params: {
+          client_id: client.uid,
+          redirect_uri: client.redirect_uri,
+          response_type: "token",
+          state: "state",
+        }
+      end
+
+      it "still denies through the client redirect URI" do
+        expect(response).to be_redirect
+        expect(response.location).to match(/^#{client.redirect_uri}/)
+        expect(response.query_params["error"]).to eq("access_denied")
+        expect(response.query_params["state"]).to eq("state")
+      end
+    end
+
+    context "with the authorization code flow enabled" do
+      before do
+        allow(Doorkeeper.config).to receive(:grant_flows).and_return(%w[authorization_code implicit])
+      end
+
+      it "still denies through the client redirect URI" do
+        delete :destroy, params: {
+          client_id: client.uid,
+          redirect_uri: client.redirect_uri,
+          response_type: "code",
+          state: "state",
+        }
+
+        expect(response).to be_redirect
+        expect(response.location).to start_with("#{client.redirect_uri}?")
+        expect(response.location).to include("error=access_denied")
+      end
+
+      it "refuses a deny request for an unregistered redirect_uri" do
+        delete :destroy, params: {
+          client_id: client.uid,
+          redirect_uri: attacker_uri,
+          response_type: "code",
+        }
+
+        expect(response).not_to be_redirect
+      end
+    end
+  end
+
+  # `Doorkeeper::Request.authorization_strategy` resolved an unregistered
+  # response_type through a `constantize` fallback, so the deny path - the only
+  # one that reaches it without validating the response type - turned
+  # `response_type` into any constant under `Doorkeeper::Request`, token
+  # endpoint strategies included.
+  describe "DELETE #destroy response type resolution" do
+    %w[password client_credentials refresh_token authorization_code].each do |response_type|
+      context "with response_type=#{response_type}" do
+        let(:strategy) { "Doorkeeper::Request::#{response_type.camelize}".constantize }
+
+        it "does not resolve the token endpoint strategy" do
+          expect(strategy).not_to receive(:new)
+
+          delete :destroy, params: {
+            client_id: client.uid,
+            redirect_uri: client.redirect_uri,
+            response_type: response_type,
+          }
+
+          expect(response).not_to be_redirect
+          expect(response.body).to include(translated_error_message(:unsupported_grant_type))
+        end
+      end
+    end
+
+    context "with an unknown response_type" do
+      before do
+        delete :destroy, params: {
+          client_id: client.uid,
+          redirect_uri: client.redirect_uri,
+          response_type: "totally_unknown",
+        }
+      end
+
+      it "renders the error page" do
+        expect(response).not_to be_redirect
+        expect(response.body).to include(translated_error_message(:unsupported_grant_type))
+      end
+    end
+  end
 end
