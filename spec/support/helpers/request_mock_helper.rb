@@ -18,6 +18,9 @@ module RequestMockHelper
       "SERVER_PROTOCOL" => "HTTP/1.1",
       "rack.url_scheme" => "http",
       "HTTP_HOST" => "example.org",
+      # Without PATH_INFO the request's path is "", which makes an endpoint URL
+      # built from it indistinguishable from the server's base URL.
+      "PATH_INFO" => "/test",
       "ORIGINAL_FULLPATH" => "/test",
       "action_dispatch.remote_ip" => "127.0.0.1",
       "action_dispatch.request.query_parameters" => query_parameters.deep_stringify_keys,

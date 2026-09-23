@@ -149,6 +149,16 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(credentials).not_to be_nil
     end
 
+    # Only the endpoint that was actually called is an audience, not any URL
+    # under the server's base URL.
+    it "rejects the URL of another endpoint on the server as audience" do
+      credentials = described_class.authenticate(
+        request_with(build_assertion(claims: { "aud" => "#{issuer}/other" })),
+      )
+
+      expect(credentials).to be_nil
+    end
+
     # The audience is what stops an assertion minted for another authorization
     # server from being accepted here, so it must not be derived from a header
     # the caller controls.
