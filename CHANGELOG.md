@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1951] Fix: the built gem no longer contains `vendor/bundle`. The gemspec globbed all of `vendor/`, which swept in the bundle installed by the release workflow; 6.0.0.rc1 is a 44.4 MB download against 154 KB for 6.0.0.beta2.
 - [#1932] Fix: keep the scope originally granted by the resource owner on refresh tokens (RFC 6749 §6), so a chain narrowed on one refresh can return to its granted scope. Tracked in a new `refresh_token_scopes` column; existing installs opt in with `rails generate doorkeeper:refresh_token_scopes`.
 - [#PR ID] Description of the change.
 - [#1933] Warn at boot when the `implicit` or `password` grant flow is enabled: both are deprecated by RFC 9700 (OAuth 2.0 Security BCP) and removed from OAuth 2.1, and may be removed in a future Doorkeeper release.
