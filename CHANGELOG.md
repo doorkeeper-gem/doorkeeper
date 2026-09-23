@@ -5,6 +5,10 @@ upgrade guides.
 
 User-visible changes worth mentioning.
 
+## 5.9.9
+
+- Fix: `AuthorizedApplicationsController` now answers `401 Unauthorized` instead of running with a `nil` resource owner, which listed and revoked every token that has no resource owner — the ones the client credentials flow issues. Affected host applications are those whose `resource_owner_authenticator` answers `nil` without halting the request itself; the generated initializer's example redirects and is not affected.
+
 ## 5.9.8
 
 - [#1938] Fix: a request body ActionDispatch cannot parse (malformed JSON under a JSON content type, say) no longer raises `ActionDispatch::Http::Parameters::ParseError` out of `Doorkeeper::OAuth::Token.from_request` and `doorkeeper_token`. Since 5.9.7 the RFC 6750 §2 multi-method check read the body on every request, so such a request raised even when it carried a valid Bearer header. The body is now treated as carrying no token, the same way ActionDispatch's own `#filtered_parameters` treats that error.
