@@ -293,6 +293,22 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
     expect(pre_auth).not_to be_authorizable
   end
 
+  # A record that predates the script-scheme check, or was written around
+  # the validator, must still be refused: with `response_mode=form_post` the
+  # redirect URI becomes the action of a form served from this origin.
+  context "when the registered redirect_uri has a script scheme" do
+    let(:script_uri) { "javascript://app.com/callback" }
+
+    before { application.update_column(:redirect_uri, script_uri) }
+
+    it "is not authorizable even when the request matches it exactly" do
+      attributes[:redirect_uri] = script_uri
+
+      expect(pre_auth).not_to be_authorizable
+      expect(pre_auth.error).to eq(Doorkeeper::Errors::InvalidRedirectUri)
+    end
+  end
+
   context "when the application has no registered redirect_uri" do
     before do
       allow(Doorkeeper.config).to receive(:allow_blank_redirect_uri?).and_return(true)
