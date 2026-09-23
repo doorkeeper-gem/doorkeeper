@@ -316,10 +316,13 @@ Doorkeeper.configure do
   # Specify what redirect URI's you want to block during Application creation.
   # Any redirect URI is allowed by default.
   #
-  # You can use this option in order to forbid URI's with 'javascript' scheme
+  # Redirect URIs with a script scheme (`javascript`, `vbscript`, `data`) are
+  # always rejected, regardless of this option.
+  #
+  # You can use this option in order to forbid URI's of a particular host
   # for example.
   #
-  # forbid_redirect_uri { |uri| uri.scheme.to_s.downcase == 'javascript' }
+  # forbid_redirect_uri { |uri| uri.host == 'example.com' }
 
   # Allows to set blank redirect URIs for Applications in case Doorkeeper configured
   # to use URI-less OAuth grant flows like Client Credentials or Resource Owner

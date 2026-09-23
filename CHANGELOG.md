@@ -9,6 +9,7 @@ User-visible changes worth mentioning.
 
 - Fix: `AuthorizedApplicationsController` now answers `401 Unauthorized` instead of running with a `nil` resource owner, which listed and revoked every token that has no resource owner — the ones the client credentials flow issues. Affected host applications are those whose `resource_owner_authenticator` answers `nil` without halting the request itself; the generated initializer's example redirects and is not affected.
 - Fix: `AuthorizationsController#destroy` now validates the client and redirect URI before producing the deny response, and renders — never redirects — when validation fails. Previously the deny path performed no OAuth-layer validation at all, allowing an open redirect to an attacker-controlled origin with the OAuth `state` attached. Also reject unregistered `response_type` values on the authorization endpoint rather than resolving them through the `constantize` fallback.
+- Fix: refuse redirect URIs with a script scheme (`javascript`, `vbscript`, `data`) both when an application is registered and at authorization time, regardless of `forbid_redirect_uri`. Such a URI is never a legitimate redirection endpoint, and with `response_mode=form_post` it became the action of the auto-submitting form the authorization server renders on its own origin. Already stored records with such a URI are now refused with `invalid_redirect_uri` before the consent screen is shown.
 
 ## 5.9.8
 

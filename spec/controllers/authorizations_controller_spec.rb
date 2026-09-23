@@ -946,6 +946,78 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
     end
   end
 
+  # A record with a script-scheme redirect URI predates the validator's
+  # check, or was written around it. Submitting a form whose action is a
+  # `javascript:` URL evaluates it in the page that owns the form, and the
+  # form_post page is served from this origin, so every path that renders it
+  # has to refuse such a URI first.
+  describe "with a registered redirect URI of a script scheme" do
+    let(:script_uri) { "javascript://example.com/%0aalert(document.cookie)" }
+    let(:params) do
+      {
+        client_id: client.uid,
+        response_type: "token",
+        redirect_uri: script_uri,
+        response_mode: "form_post",
+      }
+    end
+    let(:expected_error) { ERB::Util.html_escape(translated_error_message(:invalid_redirect_uri)) }
+
+    before { client.update_column(:redirect_uri, script_uri) }
+
+    shared_examples "refuses the request" do
+      it "answers invalid_redirect_uri without redirecting" do
+        expect(response).not_to be_redirect
+        expect(response).to have_http_status(:bad_request)
+        expect(response.body).to include(expected_error)
+      end
+
+      it "does not render the form_post page" do
+        expect(response.body).not_to include("redirect_form")
+        expect(response.body).not_to include(script_uri)
+      end
+
+      it "does not issue any token" do
+        expect(Doorkeeper::AccessGrant.count).to eq 0
+        expect(Doorkeeper::AccessToken.count).to eq 0
+      end
+    end
+
+    context "when the resource owner would be asked for consent" do
+      before { get :new, params: params }
+
+      include_examples "refuses the request"
+    end
+
+    context "when the resource owner approves" do
+      # #create answers its errors as JSON, so the description is not HTML-escaped.
+      let(:expected_error) { translated_error_message(:invalid_redirect_uri) }
+
+      before { post :create, params: params }
+
+      include_examples "refuses the request"
+    end
+
+    context "with skip_authorization true" do
+      before do
+        allow(Doorkeeper.config).to receive(:skip_authorization).and_return(proc { true })
+        get :new, params: params
+      end
+
+      include_examples "refuses the request"
+    end
+
+    context "with handle_auth_errors :redirect and a rejected scope" do
+      before do
+        config_is_set(:handle_auth_errors, :redirect)
+        default_scopes_exist :public
+        get :new, params: params.merge(scope: "invalid")
+      end
+
+      include_examples "refuses the request"
+    end
+  end
+
   describe "GET #new in API mode with errors" do
     before do
       allow(Doorkeeper.configuration).to receive(:api_only).and_return(true)
