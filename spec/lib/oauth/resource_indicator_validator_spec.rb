@@ -13,6 +13,12 @@ RSpec.describe Doorkeeper::OAuth::ResourceIndicatorValidator do
       expect(described_class.validate!([])).to eq([])
     end
 
+    # The array itself is present, so the blank check above lets it through;
+    # every member being blank still leaves nothing to validate.
+    it "returns empty array when every resource indicator is blank" do
+      expect(described_class.validate!(["", nil])).to eq([])
+    end
+
     it "returns validated URIs for valid absolute URIs" do
       result = described_class.validate!(["https://api.example.com/"])
       expect(result).to eq(["https://api.example.com/"])

@@ -64,6 +64,16 @@ RSpec.describe Doorkeeper::OAuth::CodeResponse do
       end
     end
 
+    # The body is built from what the authorization issued, so an authorization
+    # object that issued neither has nothing to serialize.
+    context "when the auth object is neither an access token nor an access grant" do
+      let(:auth) { double(:auth) }
+
+      it "returns no body" do
+        expect(body).to be_nil
+      end
+    end
+
     context "when an issuer is configured (RFC 9207)" do
       before { config_is_set(:issuer, "https://auth.example.com") }
 

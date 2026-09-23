@@ -254,6 +254,29 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
       expect(issued_token.reload).to be_revoked
     end
 
+    # An application that never ran the `doorkeeper:grant_reuse_revocation`
+    # generator has no `access_token_id` column, so the grant -> token link is
+    # neither written nor read.
+    it "does not record the issued access token when the access_token_id column is not available" do
+      allow(Doorkeeper::AccessGrant).to receive(:access_token_revoked_on_reuse?).and_return(false)
+
+      expect { request.authorize }.to change { Doorkeeper::AccessToken.count }.by(1)
+      expect(grant.reload.access_token_id).to be_nil
+    end
+
+    # The linked token can be gone by the time the code is replayed (a cleanup
+    # rake task, a cascading delete): there is then nothing left to revoke, and
+    # the replay is simply denied.
+    it "denies the replay when the token issued for the code no longer exists" do
+      request.authorize
+      request.access_token.destroy!
+
+      replay = described_class.new(server, grant.reload, client, params)
+      replay.validate
+
+      expect(replay.error).to eq(Doorkeeper::Errors::InvalidGrant)
+    end
+
     it "only denies the request when the access_token_id column is not available" do
       request.authorize
       issued_token = request.access_token

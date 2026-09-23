@@ -555,6 +555,29 @@ RSpec.describe Doorkeeper::Config do
       end
     end
 
+    # Doorkeeper is configured from an initializer, which can run before (or
+    # entirely without) a fully booted Rails application: asking it for
+    # default_url_options must not raise on the way to the warning.
+    it "logs the error when there is no Rails application to ask" do
+      allow(::Rails).to receive(:application).and_return(nil)
+      expect(Rails.logger).to receive(:error).with(/identifies itself nowhere/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication %i[client_secret_basic private_key_jwt]
+      end
+    end
+
+    it "logs the error when the Rails application has no routes yet" do
+      allow(::Rails.application).to receive(:routes).and_return(nil)
+      expect(Rails.logger).to receive(:error).with(/identifies itself nowhere/)
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        client_authentication %i[client_secret_basic private_key_jwt]
+      end
+    end
+
     it "stays quiet when Rails' default_url_options identifies the server" do
       allow(Rails.application.routes).to receive(:default_url_options).and_return(host: "as.example.com")
       expect(Rails.logger).not_to receive(:error).with(/identifies itself nowhere/)

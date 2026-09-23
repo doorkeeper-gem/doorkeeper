@@ -48,6 +48,35 @@ RSpec.describe Doorkeeper::ApplicationMetalController, type: :controller do
     end
   end
 
+  # An application that opts into `handle_auth_errors :raise` rescues the error
+  # itself. Doorkeeper already built a response for it, carrying the headers and
+  # the translated description the RFC 6750 §3 challenge needs, so
+  # handle_token_exception renders that one instead of rebuilding a bare
+  # response out of the error type alone.
+  describe "a subclass rendering a raised error through handle_token_exception" do
+    controller(described_class) do
+      before_action :doorkeeper_authorize!
+
+      rescue_from Doorkeeper::Errors::InvalidToken do |exception|
+        handle_token_exception(exception)
+      end
+
+      def index
+        render json: {}, status: 200
+      end
+    end
+
+    before { config_is_set(:handle_auth_errors, :raise) }
+
+    it "renders the response the exception already carries" do
+      get :index
+
+      expect(response.status).to eq 401
+      expect(response.headers["WWW-Authenticate"]).to include('error="invalid_token"')
+      expect(json_response).to include("error" => "invalid_token", "error_description" => be_present)
+    end
+  end
+
   it "lacks `helper_method` so the included hook becomes a no-op" do
     expect(described_class).not_to respond_to(:helper_method)
   end

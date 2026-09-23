@@ -835,6 +835,53 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
     end
   end
 
+  # RFC 8707: an existing token only stands for the same authorization when it
+  # was issued for the same audience, so the pre-authorization skip has to take
+  # the requested resource into account as well.
+  describe "GET #new with skip_authorization false and a resource indicator" do
+    let(:params) do
+      {
+        client_id: client.uid,
+        response_type: "token",
+        redirect_uri: client.redirect_uri,
+        resource: "https://api.example.com/",
+      }
+    end
+
+    before do
+      config_is_set(:resource_indicator_validator, ->(_indicators, _client) { true })
+      client.update_attribute(:confidential, true)
+    end
+
+    def existing_token_bound_to(resource)
+      FactoryBot.create(
+        :access_token,
+        application_id: client.id,
+        resource_owner_id: user.id,
+        resource_owner_type: user.class.name,
+        scopes: "default",
+        resource: resource,
+      )
+    end
+
+    it "skips the authorization when a token for the same resource exists" do
+      existing_token_bound_to("https://api.example.com/")
+
+      get :new, params: params
+
+      expect(response).to be_redirect
+    end
+
+    it "asks for authorization when the existing token is bound to another resource" do
+      existing_token_bound_to("https://other.example.com/")
+
+      get :new, params: params
+
+      expect(response).to be_successful
+      expect(controller).to render_with :new
+    end
+  end
+
   describe "GET #new with skip_authorization false" do
     let(:params) do
       {

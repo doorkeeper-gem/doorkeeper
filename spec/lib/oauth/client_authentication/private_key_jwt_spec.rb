@@ -223,6 +223,72 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       end
     end
 
+    # The audience check must not depend on there being a fully booted Rails
+    # application: the issuer alone still identifies the server.
+    context "when no Rails application answers default_url_options" do
+      it "still derives the endpoint URLs from the issuer without an application" do
+        request = request_with(build_assertion)
+        allow(::Rails).to receive(:application).and_return(nil)
+
+        credentials = described_class.authenticate(
+          request_with(build_assertion(claims: { "aud" => "#{issuer}#{request.path}" })),
+        )
+
+        expect(credentials).not_to be_nil
+      end
+
+      it "still derives the endpoint URLs from the issuer without routes" do
+        request = request_with(build_assertion)
+        allow(::Rails.application).to receive(:routes).and_return(nil)
+
+        credentials = described_class.authenticate(
+          request_with(build_assertion(claims: { "aud" => "#{issuer}#{request.path}" })),
+        )
+
+        expect(credentials).not_to be_nil
+      end
+    end
+
+    # A non-default port is part of the server's identity, so it has to show up
+    # in the endpoint URLs an audience is checked against.
+    context "when the issuer carries a non-default port" do
+      before { config_is_set(:issuer, "https://as.example.com:8443") }
+
+      it "accepts the called endpoint's URL as audience" do
+        request = request_with(build_assertion)
+
+        credentials = described_class.authenticate(
+          request_with(build_assertion(claims: { "aud" => "https://as.example.com:8443#{request.path}" })),
+        )
+
+        expect(credentials).not_to be_nil
+      end
+
+      it "rejects the same URL without the port" do
+        request = request_with(build_assertion)
+
+        credentials = described_class.authenticate(
+          request_with(build_assertion(claims: { "aud" => "https://as.example.com#{request.path}" })),
+        )
+
+        expect(credentials).to be_nil
+      end
+    end
+
+    # The token endpoint URL is built the way MetadataResponse advertises it, so
+    # a host application that mounted Doorkeeper without the token routes simply
+    # contributes no such audience.
+    it "accepts the called endpoint's URL when the token route is not mounted" do
+      allow(Doorkeeper::Rails::Routes).to receive(:mapping).and_return({})
+      request = request_with(build_assertion)
+
+      credentials = described_class.authenticate(
+        request_with(build_assertion(claims: { "aud" => "#{issuer}#{request.path}" })),
+      )
+
+      expect(credentials).not_to be_nil
+    end
+
     # Doorkeeper allows any string as the issuer, so one that is not an
     # absolute URL identifies the server for the audience check even though no
     # endpoint URL can be derived from it.
@@ -467,6 +533,20 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(credentials).to be_nil
     end
 
+    # RFC 7523 §3: the jti is a string identifier. A blank one would make every
+    # assertion share the same replay key, so it is refused like a missing one.
+    it "rejects an assertion whose jti is blank" do
+      credentials = described_class.authenticate(request_with(build_assertion(claims: { "jti" => "" })))
+
+      expect(credentials).to be_nil
+    end
+
+    it "rejects an assertion whose jti is not a string" do
+      credentials = described_class.authenticate(request_with(build_assertion(claims: { "jti" => 42 })))
+
+      expect(credentials).to be_nil
+    end
+
     it "rejects a replayed assertion" do
       assertion = build_assertion
 
@@ -512,6 +592,28 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
         .not_to raise_error
     end
 
+    # A JWK Set is client-controlled and carries the keys a client is
+    # authenticated with, so it is only ever fetched over TLS: an http://
+    # jwks_uri is refused without any outbound request at all.
+    it "refuses to fetch a jwks_uri that is not https" do
+      jwks_uri = "http://client.example.com/jwks.json"
+      allow(application).to receive_messages(jwks: nil, jwks_uri: jwks_uri)
+
+      expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+      expect(a_request(:get, jwks_uri)).not_to have_been_made
+    end
+
+    # Only JSON objects are stored, so a jwks_uri answering with any other
+    # JSON value fails authentication and is not cached.
+    it "rejects the assertion when the jwks_uri does not answer with a JSON object" do
+      jwks_uri = "https://client.example.com/jwks.json"
+      allow(application).to receive_messages(jwks: nil, jwks_uri: jwks_uri)
+      fetcher = instance_double(Doorkeeper::HttpFetcher, fetch: "[1, 2]")
+      allow(Doorkeeper::HttpFetcher).to receive(:new).and_return(fetcher)
+
+      expect(described_class.authenticate(request_with(build_assertion))).to be_nil
+    end
+
     # A JWT payload is any JSON value, and the issuer is read before anything
     # is verified — so a payload that is not an object must fail
     # authentication rather than raise out of the token endpoint.
@@ -536,6 +638,16 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       allow(application).to receive(:jwks).and_return({ "keys" => [jwk.export] }.to_json)
 
       expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+    end
+
+    # A jwks attribute that is a string but not valid JSON must fail
+    # authentication rather than raise a JSON::ParserError out of the token
+    # endpoint.
+    it "returns nil when the application's jwks is a malformed JSON string" do
+      allow(application).to receive(:jwks).and_return("{ not json")
+
+      expect { expect(described_class.authenticate(request_with(build_assertion))).to be_nil }
+        .not_to raise_error
     end
 
     # A malformed JWK Set must fail authentication rather than raise a

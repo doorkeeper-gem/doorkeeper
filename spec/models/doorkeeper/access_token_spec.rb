@@ -633,6 +633,17 @@ RSpec.describe Doorkeeper::AccessToken do
     end
   end
 
+  # ORM extensions are free to override `find_access_token_in_batches` and
+  # `authorized_tokens_for`, so the shared lookup answers nil for a missing
+  # relation rather than raising.
+  describe ".find_matching_token" do
+    it "returns nil when there is no relation to search" do
+      scopes = Doorkeeper::OAuth::Scopes.from_string("public")
+
+      expect(described_class.find_matching_token(nil, nil, nil, scopes)).to be_nil
+    end
+  end
+
   describe ".matching_token_for" do
     let(:resource_owner)    { FactoryBot.create :resource_owner }
     let(:resource_owner_id) { resource_owner.id }
@@ -1258,6 +1269,19 @@ RSpec.describe Doorkeeper::AccessToken do
 
     it "clears the attribute even when the previous token no longer exists" do
       token = FactoryBot.create(:access_token, previous_refresh_token: "vanished")
+
+      token.revoke_previous_refresh_token!
+
+      expect(token.reload.previous_refresh_token).to eq("")
+    end
+
+    # ORM extensions reimplement the model mixins without the multiple database
+    # roles support of the ActiveRecord one, so the attribute has to be cleared
+    # without `with_primary_role` too.
+    it "clears the attribute on an ORM without primary role support" do
+      token = FactoryBot.create(:access_token, previous_refresh_token: "previous")
+      allow(token.class).to receive(:respond_to?).and_call_original
+      allow(token.class).to receive(:respond_to?).with(:with_primary_role).and_return(false)
 
       token.revoke_previous_refresh_token!
 
