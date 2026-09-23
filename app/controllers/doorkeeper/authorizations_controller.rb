@@ -19,7 +19,14 @@ module Doorkeeper
       redirect_or_render(authorize_response)
     end
 
+    # The deny path answers a request the client sent, so it is subject to the
+    # same client and redirect URI validation as #create: without it an
+    # unregistered redirect_uri was honoured and the user-agent redirected to
+    # it, carrying the OAuth `state` (and, since RFC 9207 support was added,
+    # the issuer) to an origin of the caller's choosing.
     def destroy
+      return if refuse_invalid_client?(pre_auth)
+
       redirect_or_render(authorization.deny)
     rescue Doorkeeper::Errors::InvalidTokenStrategy => e
       error_response = get_error_response_from_exception(e)
@@ -62,13 +69,7 @@ module Doorkeeper
     end
 
     # Refuses the request before resource owner authentication when the
-    # client_id or redirect_uri is missing or invalid. Errors are rendered,
-    # never redirected, regardless of `handle_auth_errors :redirect`: no
-    # failure this check can produce leaves a redirect target worth trusting.
-    # Either the client failed first, so the redirect URI was never reached,
-    # or the redirect URI is itself the invalid one — and RFC 6749
-    # Section 3.1.2.4 forbids redirecting the user-agent to an invalid
-    # redirection URI.
+    # client_id or redirect_uri is missing or invalid.
     #
     # Host applications that need to refuse a client on their own terms (an
     # allow-list, a registry lookup) can override this and call +super+ first:
@@ -85,12 +86,25 @@ module Doorkeeper
     #     end
     #   end
     def validate_client
-      return if client_pre_auth.client_valid?
+      refuse_invalid_client?(client_pre_auth)
+    end
 
-      error_response = client_pre_auth.error_response
+    # Renders the error of +pre_authorization+ when its client_id or
+    # redirect_uri is missing or invalid, and answers whether the request was
+    # refused. Errors are rendered, never redirected, regardless of
+    # `handle_auth_errors :redirect`: no failure this check can produce leaves
+    # a redirect target worth trusting. Either the client failed first, so the
+    # redirect URI was never reached, or the redirect URI is itself the invalid
+    # one — and RFC 6749 Section 3.1.2.4 forbids redirecting the user-agent to
+    # an invalid redirection URI.
+    def refuse_invalid_client?(pre_authorization)
+      return false if pre_authorization.client_valid?
+
+      error_response = pre_authorization.error_response
       error_response.raise_exception! if Doorkeeper.config.raise_on_errors?
 
       render_error_response(error_response)
+      true
     end
 
     # The pre-authentication view of the request. It carries no resource owner

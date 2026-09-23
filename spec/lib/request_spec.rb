@@ -168,6 +168,63 @@ RSpec.describe Doorkeeper::Request do
     end
   end
 
+  describe ".authorization_strategy" do
+    it "returns the strategy of the flow that handles the response type" do
+      expect(described_class.authorization_strategy("code")).to eq(Doorkeeper::Request::Code)
+    end
+
+    # The authorization endpoint's deny path (DELETE /oauth/authorize) resolves
+    # a strategy from an unvalidated `response_type`, so the `constantize`
+    # fallback must not be able to reach a constant the server never declared
+    # as an authorization response type - token endpoint strategies included.
+    it "raises InvalidTokenStrategy for a response type no flow handles" do
+      expect { described_class.authorization_strategy("password") }
+        .to raise_error(Doorkeeper::Errors::InvalidTokenStrategy)
+
+      expect { described_class.authorization_strategy("client_credentials") }
+        .to raise_error(Doorkeeper::Errors::InvalidTokenStrategy)
+
+      expect { described_class.authorization_strategy("refresh_token") }
+        .to raise_error(Doorkeeper::Errors::InvalidTokenStrategy)
+    end
+
+    it "raises InvalidTokenStrategy for a blank response type" do
+      expect { described_class.authorization_strategy(nil) }
+        .to raise_error(Doorkeeper::Errors::InvalidTokenStrategy)
+    end
+
+    it "does not resolve arbitrary constants under Doorkeeper::Request" do
+      stub_const("Doorkeeper::Request::Evil", Class.new)
+
+      expect { described_class.authorization_strategy("evil") }
+        .to raise_error(Doorkeeper::Errors::InvalidTokenStrategy)
+    end
+
+    context "when the response type is declared through the deprecated hook" do
+      before do
+        allow(Doorkeeper.config)
+          .to receive(:calculate_authorization_response_types)
+          .and_return(["id_token token"])
+        allow(Kernel).to receive(:warn)
+      end
+
+      it "falls back to the legacy strategy class with a deprecation warning" do
+        strategy = stub_const("Doorkeeper::Request::IdTokenToken", Class.new)
+
+        expect(Kernel).to receive(:warn).with(/found using fallback/)
+
+        expect(described_class.authorization_strategy("id_token token")).to eq(strategy)
+      end
+
+      it "raises InvalidTokenStrategy when no legacy strategy class exists" do
+        hide_const("Doorkeeper::Request::IdTokenToken") if defined?(Doorkeeper::Request::IdTokenToken)
+
+        expect { described_class.authorization_strategy("id_token token") }
+          .to raise_error(Doorkeeper::Errors::InvalidTokenStrategy)
+      end
+    end
+  end
+
   describe ".token_strategy" do
     it "raises MissingRequiredParameter for a blank grant type" do
       expect { described_class.token_strategy(nil) }
