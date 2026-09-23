@@ -155,12 +155,19 @@ module Doorkeeper
       # The context carries the resource owner record only with a polymorphic
       # resource owner; otherwise the refresh token stores its id alone, and
       # +resource_owner+ is nil as in the client_credentials grant.
+      #
+      # The context is built directly rather than through
+      # +Authorization::Token.build_context+, which unwraps its argument
+      # through #application or #client: that suits the OAuth client the other
+      # grants pass, but would replace this application record with whatever
+      # an application model responding to either method returns (a
+      # +belongs_to :client+ association, say).
       def access_token_expires_in
-        context = Authorization::Token.build_context(
-          refresh_token.application,
-          grant_type,
-          scopes,
-          Doorkeeper.config.polymorphic_resource_owner? ? resource_owner : nil,
+        context = Authorization::Context.new(
+          client: refresh_token.application,
+          grant_type: grant_type,
+          scopes: scopes,
+          resource_owner: Doorkeeper.config.polymorphic_resource_owner? ? resource_owner : nil,
         )
 
         Authorization::Token.access_token_expires_in(server, context) { refresh_token.expires_in }
@@ -218,10 +225,13 @@ module Doorkeeper
         # enforce against. Ignore the `resource` parameter.
         return true if validator.nil? && original_resources.blank?
 
+        # The validator receives the OAuth client, as it does at the
+        # authorization endpoint and for every other grant, rather than the
+        # application record #client holds here.
         @resolved_resource_indicators = ResourceIndicatorValidator.validate!(
           @raw_resource_indicators,
           config_validator: validator,
-          client: client,
+          client: client && Doorkeeper::OAuth::Client.new(client),
           grant_resource_indicators: original_resources,
         )
         true

@@ -481,6 +481,26 @@ RSpec.describe "Resource Indicators (RFC 8707)" do
         expect(new_token.id).not_to eq(access_token.id)
         expect(new_token.resource).to eq(resource_uri)
       end
+
+      # The validator is documented to receive the OAuth client, and does on
+      # every other grant, so one that reaches the application through it
+      # must work on refresh too.
+      it "passes the validator the OAuth client, as the other grants do" do
+        received_clients = []
+        config_is_set(
+          :resource_indicator_validator,
+          lambda { |_indicators, oauth_client|
+            received_clients << oauth_client
+            oauth_client.application.present?
+          },
+        )
+
+        request.authorize
+
+        expect(request.error).to be_nil
+        expect(received_clients).to contain_exactly(an_instance_of(Doorkeeper::OAuth::Client))
+        expect(received_clients.first.application).to eq(application)
+      end
     end
 
     context "with resource not in original token" do

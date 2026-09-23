@@ -60,14 +60,36 @@ module Doorkeeper
           # never-expiring TTL (nil), which becomes the cap.
           #
           # @param application [Doorkeeper::Application, nil]
-          # @param expires_in [Integer, nil] the TTL the configuration would issue
-          # @return [Integer, nil]
+          # @param expires_in [Integer, String, nil] the TTL the configuration
+          #   would issue; a numeric String is compared as a number and
+          #   returned as given, for the ORM to cast
+          # @return [Integer, String, nil]
           def cap_for_public_client(configuration, application, expires_in)
-            cap = configuration.public_client_access_token_expires_in
+            cap = public_client_expires_in_cap(configuration, application)
             return expires_in if cap.nil?
-            return expires_in if application.respond_to?(:confidential?) && application.confidential?
 
-            [expires_in, cap].compact.min
+            [expires_in, cap].compact.min_by { |ttl| comparable_ttl(ttl) }
+          end
+
+          # Whether +access_token+, found for reuse (+reuse_access_token+), can
+          # be handed out again to +application+ without exceeding
+          # +public_client_access_token_expires_in+. A token issued before the
+          # cap was configured, or while the application was still
+          # confidential, can outlive it. What counts is the lifetime the token
+          # has left, since that is what handing it out again exposes; a
+          # never-expiring token never fits under a cap. An ORM extension with
+          # its own +find_or_create_for+ should apply the same check to its
+          # reuse candidates.
+          #
+          # @param application [Doorkeeper::Application, nil]
+          # @param access_token [Doorkeeper::AccessToken] the candidate for reuse
+          # @return [Boolean]
+          def within_public_client_expires_in?(configuration, application, access_token)
+            cap = public_client_expires_in_cap(configuration, application)
+            return true if cap.nil?
+            return false if access_token.expires_in.nil?
+
+            access_token.expires_in_seconds <= comparable_ttl(cap)
           end
 
           def refresh_token_enabled?(server, context)
@@ -76,6 +98,28 @@ module Doorkeeper
             else
               !!server.refresh_token_enabled?
             end
+          end
+
+          private
+
+          # The cap +public_client_access_token_expires_in+ puts on tokens
+          # issued to +application+, or nil when none applies.
+          def public_client_expires_in_cap(configuration, application)
+            cap = configuration.public_client_access_token_expires_in
+            return if cap.nil?
+            return if application.respond_to?(:confidential?) && application.confidential?
+
+            cap
+          end
+
+          # A TTL can arrive as a numeric String: read from ENV without #to_i,
+          # or returned by a +custom_access_token_expires_in+ callable. The ORM
+          # casts it on write, but compared as is it raises against an Integer,
+          # and two Strings compare lexicographically ("86400" < "900"). It is
+          # compared the way the ORM casts it (#to_i), so the value compared is
+          # the value stored.
+          def comparable_ttl(ttl)
+            ttl.is_a?(String) ? ttl.to_i : ttl
           end
         end
 

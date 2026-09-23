@@ -17,6 +17,7 @@ User-visible changes worth mentioning.
 - [#1935] Add opt-in `public_client_access_token_expires_in` configuration option: a ceiling for the lifetime of access tokens issued to public (non-confidential) clients by any grant, refresh_token included, as OAuth 2.1 Section 2.4 requires the exposure of tokens issued to unauthenticated clients to be limited. Confidential clients are not affected.
 - [#1938] Fix: a request body ActionDispatch cannot parse (malformed JSON under a JSON content type, say) no longer raises `ActionDispatch::Http::Parameters::ParseError` out of `Doorkeeper::OAuth::Token.from_request` and `doorkeeper_token`. Since 5.9.7 the RFC 6750 §2 multi-method check read the body on every request, so such a request raised even when it carried a valid Bearer header. The body is now treated as carrying no token, the same way ActionDispatch's own `#filtered_parameters` treats that error.
 - [#1950] Document `hash_token_secrets` / `hash_application_secrets` `fallback:` as a migration-period setting that should be removed once every row is hashed, and warn at boot for as long as one is configured. While a `:plain` fallback is active the stored value is itself a valid credential, so those columns need protecting as carefully as plaintext ones.
+- [#1953] Fix: `public_client_access_token_expires_in` now also holds under `reuse_access_token` and with String TTLs, and the refresh_token grant hands `custom_access_token_expires_in` and `resource_indicator_validator` what every other grant does.
 
 ## 6.0.0.rc1
 

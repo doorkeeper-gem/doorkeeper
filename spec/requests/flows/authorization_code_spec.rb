@@ -504,6 +504,30 @@ feature "Authorization Code Flow" do
         )
       end
 
+      scenario "public client is not handed back a token that outlives the cap when reuse_access_token is enabled" do
+        config_is_set(:reuse_access_token, true)
+        config_is_set(:public_client_access_token_expires_in, 10.minutes)
+        @client.update!(confidential: false)
+        # Issued before the cap was configured, for the same owner and scopes.
+        legacy_token = FactoryBot.create(
+          :access_token,
+          application: @client, resource_owner_id: @resource_owner.id, scopes: "default", expires_in: nil,
+        )
+        visit authorization_endpoint_url(client: @client, code_challenge: code_challenge, code_challenge_method: "S256")
+        click_on "Authorize"
+
+        authorization_code = current_params["code"]
+        page.driver.post token_endpoint_url, token_endpoint_params(
+          code: authorization_code,
+          client_id: @client.uid,
+          redirect_uri: @client.redirect_uri,
+          code_verifier: code_verifier,
+        )
+
+        expect(json_response["access_token"]).not_to eq(legacy_token.token)
+        expect(json_response).to include("expires_in" => 600)
+      end
+
       scenario "confidential client keeps its expiry when public_client_access_token_expires_in is configured" do
         config_is_set(:public_client_access_token_expires_in, 10.minutes)
         visit authorization_endpoint_url(client: @client, code_challenge: code_challenge, code_challenge_method: "S256")

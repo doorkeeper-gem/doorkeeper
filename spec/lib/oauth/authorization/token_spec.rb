@@ -166,6 +166,96 @@ RSpec.describe Doorkeeper::OAuth::Authorization::Token do
 
       expect(described_class.cap_for_public_client(configuration, Object.new, 7200)).to eq(600)
     end
+
+    # A numeric String (ENV read without #to_i, or a value a custom
+    # expiration callable returns) is cast by the ORM on write, so the cap
+    # has to compare it as a number too.
+    context "with a TTL given as a numeric String" do
+      let(:application) { double(confidential?: false) }
+
+      it "compares a String cap with an Integer expiration" do
+        configuration = double(public_client_access_token_expires_in: "600")
+
+        expect(described_class.cap_for_public_client(configuration, application, 7200)).to eq("600")
+        expect(described_class.cap_for_public_client(configuration, application, 60)).to eq(60)
+      end
+
+      it "compares a String expiration with an Integer cap" do
+        configuration = double(public_client_access_token_expires_in: 600)
+
+        expect(described_class.cap_for_public_client(configuration, application, "7200")).to eq(600)
+      end
+
+      it "compares two Strings as numbers rather than lexicographically" do
+        configuration = double(public_client_access_token_expires_in: "900")
+
+        expect(described_class.cap_for_public_client(configuration, application, "86400")).to eq("900")
+      end
+
+      it "still caps a Float::INFINITY expiration" do
+        configuration = double(public_client_access_token_expires_in: 600)
+
+        expect(described_class.cap_for_public_client(configuration, application, Float::INFINITY)).to eq(600)
+      end
+    end
+  end
+
+  describe ".within_public_client_expires_in?" do
+    let(:public_client) { double(confidential?: false) }
+    let(:configuration) { double(public_client_access_token_expires_in: 600) }
+
+    def token(expires_in:, expires_in_seconds: expires_in)
+      double(expires_in: expires_in, expires_in_seconds: expires_in_seconds)
+    end
+
+    it "accepts any token when no cap is configured" do
+      configuration = double(public_client_access_token_expires_in: nil)
+
+      expect(described_class.within_public_client_expires_in?(configuration, public_client, token(expires_in: nil)))
+        .to be(true)
+    end
+
+    it "accepts any token of a confidential client" do
+      confidential_client = double(confidential?: true)
+
+      expect(
+        described_class.within_public_client_expires_in?(configuration, confidential_client, token(expires_in: nil)),
+      ).to be(true)
+    end
+
+    it "refuses a never-expiring token" do
+      expect(described_class.within_public_client_expires_in?(configuration, public_client, token(expires_in: nil)))
+        .to be(false)
+    end
+
+    it "refuses a token with more lifetime left than the cap" do
+      expect(described_class.within_public_client_expires_in?(configuration, public_client, token(expires_in: 7200)))
+        .to be(false)
+    end
+
+    it "accepts a token whose remaining lifetime fits under the cap" do
+      expect(described_class.within_public_client_expires_in?(configuration, public_client, token(expires_in: 600)))
+        .to be(true)
+      expect(
+        described_class.within_public_client_expires_in?(
+          configuration, public_client, token(expires_in: 7200, expires_in_seconds: 300),
+        ),
+      ).to be(true)
+    end
+
+    it "treats a request without a client as a public client" do
+      expect(described_class.within_public_client_expires_in?(configuration, nil, token(expires_in: 7200)))
+        .to be(false)
+    end
+
+    it "compares a String cap as a number" do
+      configuration = double(public_client_access_token_expires_in: "600")
+
+      expect(described_class.within_public_client_expires_in?(configuration, public_client, token(expires_in: 7200)))
+        .to be(false)
+      expect(described_class.within_public_client_expires_in?(configuration, public_client, token(expires_in: 60)))
+        .to be(true)
+    end
   end
 
   describe "#issue_token!" do
