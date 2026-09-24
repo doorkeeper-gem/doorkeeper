@@ -6,6 +6,33 @@ RSpec.describe Doorkeeper::Request do
   describe ".client_authentication_method" do
     subject(:strategy) { described_class.client_authentication_method(request) }
 
+    # A host application's own strategy, and a second one matching the same
+    # payload: between them they tell "one method registered twice" apart from
+    # "two methods in one request".
+    let(:partner_strategy) do
+      Class.new do
+        def self.matches_request?(request)
+          request.request_parameters["partner_token"].present?
+        end
+
+        def self.authenticate(_request)
+          nil
+        end
+      end
+    end
+
+    let(:other_strategy) do
+      Class.new do
+        def self.matches_request?(request)
+          request.request_parameters["partner_token"].present?
+        end
+
+        def self.authenticate(_request)
+          nil
+        end
+      end
+    end
+
     context "with an HTTP Basic authorization header" do
       let(:request) do
         mock_request(authorization: "Basic #{Base64.strict_encode64("id:secret")}")
@@ -55,6 +82,44 @@ RSpec.describe Doorkeeper::Request do
         end
 
         it "still raises MultipleClientAuthMethods (the payload is validated before selection)" do
+          expect { strategy }.to raise_error(Doorkeeper::Errors::MultipleClientAuthMethods)
+        end
+      end
+    end
+
+    # One strategy registered under two keys — a host application renaming a
+    # method while keeping the old key working — is one authentication method,
+    # not two: both entries answer the same matches_request? about the same
+    # payload, and the client used the mechanism once.
+    context "with one strategy registered under two names" do
+      let(:request) { mock_request(request_parameters: { partner_token: "t" }) }
+
+      before do
+        Doorkeeper::ClientAuthentication.register(:corporate_mtls, partner_strategy)
+        Doorkeeper::ClientAuthentication.register(:partner_mtls, partner_strategy)
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          client_authentication %i[corporate_mtls none]
+        end
+      end
+
+      after do
+        Doorkeeper::ClientAuthentication.registered_methods.delete(:corporate_mtls)
+        Doorkeeper::ClientAuthentication.registered_methods.delete(:partner_mtls)
+      end
+
+      it "selects the strategy instead of reading the aliases as two methods" do
+        expect(strategy).to eq(partner_strategy)
+      end
+
+      context "when a second, different strategy matches the same request" do
+        before do
+          Doorkeeper::ClientAuthentication.register(:other_partner, other_strategy)
+        end
+
+        after { Doorkeeper::ClientAuthentication.registered_methods.delete(:other_partner) }
+
+        it "raises MultipleClientAuthMethods" do
           expect { strategy }.to raise_error(Doorkeeper::Errors::MultipleClientAuthMethods)
         end
       end
