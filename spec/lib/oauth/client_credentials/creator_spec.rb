@@ -141,6 +141,64 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Creator do
         expect(result).to eq(existing_token)
       end
     end
+
+    context "when public_client_access_token_expires_in is configured" do
+      before do
+        config_is_set(:public_client_access_token_expires_in, 10.minutes)
+        client.update!(confidential: false)
+      end
+
+      it "does not return a never-expiring token to a public client" do
+        existing_token = creator.call(client, scopes)
+
+        result = creator.call(client, scopes, expires_in: 10.minutes)
+
+        expect(Doorkeeper::AccessToken.count).to eq(2)
+        expect(result).not_to eq(existing_token)
+        expect(result.expires_in).to eq(600)
+      end
+
+      it "does not return a token that outlives the cap to a public client passed as an OAuth client" do
+        existing_token = creator.call(client, scopes, expires_in: 1.day)
+
+        result = creator.call(Doorkeeper::OAuth::Client.new(client), scopes, expires_in: 10.minutes)
+
+        expect(Doorkeeper::AccessToken.count).to eq(2)
+        expect(result).not_to eq(existing_token)
+      end
+
+      # The issuer passes the OAuth client, which does not answer
+      # #confidential? itself: the check has to look at its application.
+      it "returns a long-lived token to a confidential client passed as an OAuth client" do
+        client.update!(confidential: true)
+        oauth_client = Doorkeeper::OAuth::Client.new(client)
+        existing_token = creator.call(oauth_client, scopes, expires_in: 1.day)
+
+        result = creator.call(oauth_client, scopes, expires_in: 1.day)
+
+        expect(Doorkeeper::AccessToken.count).to eq(1)
+        expect(result).to eq(existing_token)
+      end
+
+      it "returns an existing token that fits under the cap" do
+        existing_token = creator.call(client, scopes, expires_in: 10.minutes)
+
+        result = creator.call(client, scopes, expires_in: 10.minutes)
+
+        expect(Doorkeeper::AccessToken.count).to eq(1)
+        expect(result).to eq(existing_token)
+      end
+
+      it "returns a never-expiring token to a confidential client" do
+        client.update!(confidential: true)
+        existing_token = creator.call(client, scopes)
+
+        result = creator.call(client, scopes)
+
+        expect(Doorkeeper::AccessToken.count).to eq(1)
+        expect(result).to eq(existing_token)
+      end
+    end
   end
 
   context "when reuse_access_token is false" do

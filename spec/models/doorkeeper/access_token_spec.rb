@@ -1118,6 +1118,64 @@ RSpec.describe Doorkeeper::AccessToken do
         end
       end
     end
+
+    # A token handed out again is issued to the client as much as a new one,
+    # so one that would outlive the cap public_client_access_token_expires_in
+    # puts on a public client (issued before the cap was configured, or while
+    # the application was confidential) is not reused.
+    context "when public_client_access_token_expires_in is configured" do
+      before do
+        config_is_set(:public_client_access_token_expires_in, 10.minutes)
+        application.update!(confidential: false)
+      end
+
+      def find_or_create_token
+        described_class.find_or_create_for(
+          application: application, resource_owner: resource_owner,
+          scopes: scopes, expires_in: 10.minutes, use_refresh_token: false,
+        )
+      end
+
+      it "does not reuse a never-expiring token for a public client" do
+        existing = FactoryBot.create :access_token, default_attributes.merge(expires_in: nil)
+
+        token = nil
+        expect { token = find_or_create_token }.to(change { described_class.count }.by(1))
+
+        expect(token).not_to eq(existing)
+        expect(token.expires_in).to eq(600)
+      end
+
+      it "does not reuse a token with more lifetime left than the cap for a public client" do
+        existing = FactoryBot.create :access_token, default_attributes.merge(expires_in: 1.day)
+
+        token = nil
+        expect { token = find_or_create_token }.to(change { described_class.count }.by(1))
+
+        expect(token).not_to eq(existing)
+      end
+
+      it "reuses a token that fits under the cap" do
+        existing = FactoryBot.create :access_token, default_attributes.merge(expires_in: 10.minutes)
+
+        expect { expect(find_or_create_token).to eq(existing) }.not_to(change { described_class.count })
+      end
+
+      it "reuses an older matching token that fits under the cap" do
+        older = FactoryBot.create :access_token,
+                                  default_attributes.merge(expires_in: 10.minutes, created_at: 1.minute.ago)
+        FactoryBot.create :access_token, default_attributes.merge(expires_in: nil)
+
+        expect { expect(find_or_create_token).to eq(older) }.not_to(change { described_class.count })
+      end
+
+      it "reuses a never-expiring token for a confidential client" do
+        application.update!(confidential: true)
+        existing = FactoryBot.create :access_token, default_attributes.merge(expires_in: nil)
+
+        expect { expect(find_or_create_token).to eq(existing) }.not_to(change { described_class.count })
+      end
+    end
   end
 
   describe "#as_json" do

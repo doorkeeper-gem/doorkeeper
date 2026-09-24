@@ -317,7 +317,12 @@ module Doorkeeper
       # @param token_attributes [Hash]
       #   Additional attributes to use when creating a token
       # @option token_attributes [Integer] :expires_in
-      #   token lifetime in seconds
+      #   token lifetime in seconds. It is used as given for a new token: with
+      #   +public_client_access_token_expires_in+ configured, pass a TTL
+      #   already capped for the application (see
+      #   +Doorkeeper::OAuth::Authorization::Token.access_token_expires_in+ or
+      #   +.cap_for_public_client+), since an existing token that outlives the
+      #   cap is not reused for a public client
       # @option token_attributes [Boolean] :use_refresh_token
       #   whether to use the refresh token
       #
@@ -339,6 +344,10 @@ module Doorkeeper
           #
           # RFC 8707: resource indicators must also match so that a token
           # audience-restricted to one resource is never reused for another.
+          #
+          # A token that would outlive +public_client_access_token_expires_in+
+          # is not handed out again either, so the cap holds for a public
+          # client whatever tokens it was issued before.
           requested_resource = token_attributes[:resource]
 
           access_token = matching_token_for(
@@ -346,7 +355,10 @@ module Doorkeeper
           ) do |token|
             refresh_token_matches?(token, token_attributes) &&
               refresh_token_scopes_match?(token, scopes) &&
-              resource_indicators_match?(token, requested_resource)
+              resource_indicators_match?(token, requested_resource) &&
+              Doorkeeper::OAuth::Authorization::Token.within_public_client_expires_in?(
+                Doorkeeper.config, application, token,
+              )
           end
 
           return access_token if access_token&.reusable?

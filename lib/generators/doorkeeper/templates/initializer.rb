@@ -142,6 +142,10 @@ Doorkeeper.configure do
   # client (e.g. with +skip_client_authentication_for_password_grant+) is treated as a
   # public client. Confidential clients are not affected. Disabled (nil) by default.
   #
+  # With +reuse_access_token+ enabled, an existing token that would outlive the cap
+  # (issued before the cap was configured, or while the client was confidential) is
+  # not reused for a public client; a new, capped token is issued instead.
+  #
   # public_client_access_token_expires_in 1.hour
 
   # Use a custom class for generating the access token.

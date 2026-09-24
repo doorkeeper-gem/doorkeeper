@@ -130,6 +130,22 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
         resource_owner: nil,
       )
     end
+
+    # The other grants pass an OAuth client, which is unwrapped to its
+    # application; the application record passed here must not be unwrapped
+    # itself when the host's model happens to respond to #client.
+    it "hands the callable the application even when the application model responds to #client" do
+      client.define_singleton_method(:client) { :tenant }
+      # Stubbed on the token, since #with_lock reloads it and drops the cached
+      # association along with the singleton method above.
+      allow(refresh_token).to receive(:application).and_return(client)
+      contexts = []
+      allow(server).to receive(:custom_access_token_expires_in).and_return(->(context) { contexts << context && nil })
+
+      request.authorize
+
+      expect(contexts.first.client).to eq(client)
+    end
   end
 
   context "with public_client_access_token_expires_in configured" do
@@ -160,6 +176,18 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
       let(:application) { FactoryBot.create(:application, confidential: true) }
 
       it "keeps the expiry of the original token" do
+        request.authorize
+
+        expect(request.error).to be_nil
+        expect(client.reload.access_tokens.max_by(&:created_at).expires_in).to be_nil
+      end
+
+      it "keeps the expiry of the original token when the application model responds to #client" do
+        client.define_singleton_method(:client) { Object.new }
+        # Stubbed on the token, since #with_lock reloads it and drops the
+        # cached association along with the singleton method above.
+        allow(refresh_token).to receive(:application).and_return(client)
+
         request.authorize
 
         expect(request.error).to be_nil

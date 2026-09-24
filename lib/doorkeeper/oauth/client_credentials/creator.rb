@@ -13,9 +13,8 @@ module Doorkeeper
           existing_token = find_revocable_token_for(client, scopes, attributes)
 
           with_revocation(existing_token: existing_token) do
-            application = client.is_a?(Doorkeeper.config.application_model) ? client : client&.application
             Doorkeeper.config.access_token_model.create_for(
-              application: application,
+              application: application_for(client),
               resource_owner: nil,
               scopes: scopes,
               **attributes,
@@ -39,10 +38,25 @@ module Doorkeeper
           end
         end
 
+        # A token that would outlive +public_client_access_token_expires_in+
+        # is not reused, so the cap holds for a public client whatever tokens
+        # it was issued before; a new, capped token is issued instead.
+        #
+        # The cap is checked on the token found rather than inside the lookup
+        # +find_revocable_token_for+ shares: there, an over-cap token must
+        # still be found, so that +revoke_previous_client_credentials_token+
+        # revokes it when the capped token replaces it.
         def find_reusable_token_for(client, scopes, attributes)
           token = find_active_existing_token_for(client, scopes, attributes)
+          return unless token&.reusable?
 
-          token if token&.reusable?
+          token if Authorization::Token.within_public_client_expires_in?(
+            Doorkeeper.config, application_for(client), token,
+          )
+        end
+
+        def application_for(client)
+          client.is_a?(Doorkeeper.config.application_model) ? client : client&.application
         end
 
         def find_revocable_token_for(client, scopes, attributes)
