@@ -8,6 +8,9 @@ User-visible changes worth mentioning.
 ## main
 
 - [#PR ID] Description of the change.
+
+## 6.0.0.rc1
+
 - [#1951] Fix: the built gem no longer contains `vendor/bundle`. The gemspec globbed all of `vendor/`, which swept in the bundle installed by the release workflow; 6.0.0.rc1 is a 44.4 MB download against 154 KB for 6.0.0.beta2.
 - Fix: `AuthorizedApplicationsController` now answers `401 Unauthorized` instead of running with a `nil` resource owner, which listed and revoked every token that has no resource owner — the ones the client credentials flow issues. Affected host applications are those whose `resource_owner_authenticator` answers `nil` without halting the request itself; the generated initializer's example redirects and is not affected.
 - Fix: `AuthorizationsController#destroy` now validates the client and redirect URI before producing the deny response, and renders — never redirects — when validation fails. Previously the deny path performed no OAuth-layer validation at all, allowing an open redirect to an attacker-controlled origin with the OAuth `state` attached. Also reject unregistered `response_type` values on the authorization endpoint rather than resolving them through the `constantize` fallback.
