@@ -9,7 +9,10 @@ User-visible changes worth mentioning.
 
 - [#PR ID] Description of the change.
 
-## 6.0.0.rc1
+## 6.0.0.rc2
+
+**Please make sure** you read the [Upgrade guides](https://github.com/doorkeeper-gem/doorkeeper/wiki/Migration-from-old-versions)
+and changelog below before the update since this version includes breaking changes.
 
 - [#1951] Fix: the built gem no longer contains `vendor/bundle`. The gemspec globbed all of `vendor/`, which swept in the bundle installed by the release workflow; 6.0.0.rc1 is a 44.4 MB download against 154 KB for 6.0.0.beta2.
 - Fix: `AuthorizedApplicationsController` now answers `401 Unauthorized` instead of running with a `nil` resource owner, which listed and revoked every token that has no resource owner — the ones the client credentials flow issues. Affected host applications are those whose `resource_owner_authenticator` answers `nil` without halting the request itself; the generated initializer's example redirects and is not affected.
