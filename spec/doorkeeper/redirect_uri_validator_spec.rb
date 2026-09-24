@@ -131,11 +131,11 @@ RSpec.describe Doorkeeper::RedirectUriValidator do
     end
 
     it "forbids redirect uri if required" do
-      client.redirect_uri = "javascript://document.cookie"
+      client.redirect_uri = "https://forbidden.example/callback"
 
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
-        forbid_redirect_uri { |uri| uri.scheme == "javascript" }
+        forbid_redirect_uri { |uri| uri.host == "forbidden.example" }
       end
 
       expect(client).to be_invalid
@@ -150,6 +150,47 @@ RSpec.describe Doorkeeper::RedirectUriValidator do
       expect(client).not_to be_valid
       error = client.errors[:redirect_uri].first
       expect(error).to eq(I18n.t("activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.secured_uri"))
+    end
+  end
+
+  context "with a script scheme" do
+    let(:forbidden_message) do
+      I18n.t("activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.forbidden_uri")
+    end
+
+    it "is invalid without any forbid_redirect_uri configuration" do
+      %w[
+        javascript://example.com/callback
+        vbscript://example.com/callback
+        data://example.com/callback
+      ].each do |uri|
+        client.redirect_uri = uri
+        expect(client).to be_invalid
+        expect(client.errors[:redirect_uri]).to eq([forbidden_message])
+      end
+    end
+
+    it "is invalid regardless of the scheme's case" do
+      client.redirect_uri = "JavaScript://example.com/callback"
+      expect(client).to be_invalid
+      expect(client.errors[:redirect_uri]).to eq([forbidden_message])
+    end
+
+    it "is invalid when one of several redirect uris has a script scheme" do
+      client.redirect_uri = "https://example.com/callback\njavascript://example.com/callback"
+      expect(client).to be_invalid
+      expect(client.errors[:redirect_uri]).to eq([forbidden_message])
+    end
+
+    it "reports the error once when forbid_redirect_uri rejects the scheme as well" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        forbid_redirect_uri { |uri| uri.scheme == "javascript" }
+      end
+
+      client.redirect_uri = "javascript://example.com/callback"
+      expect(client).to be_invalid
+      expect(client.errors[:redirect_uri]).to eq([forbidden_message])
     end
   end
 
