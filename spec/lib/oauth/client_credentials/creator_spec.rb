@@ -28,6 +28,17 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Creator do
     expect(Doorkeeper::AccessToken.last.application).to eq(client)
   end
 
+  # Doorkeeper never reaches the creator without a client of its own, but the
+  # creator is a public, replaceable component: a host application calling it
+  # with no client gets an application-less token rather than a NoMethodError.
+  it "creates a token without an application when there is no client" do
+    expect do
+      creator.call(nil, scopes)
+    end.to change { Doorkeeper::AccessToken.count }.by(1)
+
+    expect(Doorkeeper::AccessToken.last.application).to be_nil
+  end
+
   context "when reuse_access_token is true" do
     before do
       allow(Doorkeeper.config).to receive(:reuse_access_token).and_return(true)

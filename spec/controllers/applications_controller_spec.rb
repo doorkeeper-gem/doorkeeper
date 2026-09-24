@@ -265,5 +265,28 @@ RSpec.describe Doorkeeper::ApplicationsController, type: :controller do
 
       expect(application.reload.name).to eq "Example"
     end
+
+    it "destroys application" do
+      application = FactoryBot.create(:application)
+
+      expect { delete :destroy, params: { id: application.id } }
+        .to change { Doorkeeper::Application.count }.by(-1)
+
+      expect(flash[:notice]).to eq(I18n.t("doorkeeper.flash.applications.destroy.notice"))
+      expect(response).to redirect_to(controller.oauth_applications_url)
+    end
+
+    # A host application can abort the destroy from a before_destroy callback,
+    # and then the flash must not announce a deletion that never happened.
+    it "does not flash a notice when the application was not destroyed" do
+      application = FactoryBot.create(:application)
+      allow(Doorkeeper.config.application_model).to receive(:find).and_return(application)
+      allow(application).to receive(:destroy).and_return(false)
+
+      delete :destroy, params: { id: application.id }
+
+      expect(flash[:notice]).to be_nil
+      expect(response).to redirect_to(controller.oauth_applications_url)
+    end
   end
 end

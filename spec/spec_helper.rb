@@ -3,8 +3,13 @@
 require "simplecov"
 
 SimpleCov.start("rails") do
+  enable_coverage :branch
   add_filter("/spec/")
   add_filter("/lib/generators/doorkeeper/templates/")
+  # Bundler evaluates the gemspec, and with it version.rb, before SimpleCov is
+  # started, so the file is loaded while nothing is counting and can never be
+  # reported as covered.
+  add_filter("/lib/doorkeeper/version.rb")
 end
 
 ENV["RAILS_ENV"] ||= "test"
