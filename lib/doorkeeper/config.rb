@@ -329,7 +329,9 @@ module Doorkeeper
     option :allow_grant_flow_for_client,    default: ->(_grant_flow, _client) { true }
 
     # Allows to forbid specific Application redirect URI's by custom rules.
-    # Doesn't forbid any URI by default.
+    # Doesn't forbid any URI by default. Redirect URIs with a script scheme
+    # (`javascript`, `vbscript`, `data`) are always rejected, regardless of
+    # this option.
     #
     # @param forbid_redirect_uri [Proc] Block or any object respond to #call
     #

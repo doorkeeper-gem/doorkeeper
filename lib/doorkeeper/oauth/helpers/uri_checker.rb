@@ -6,6 +6,15 @@ module Doorkeeper
   module OAuth
     module Helpers
       module URIChecker
+        # Schemes a user agent evaluates in the document that navigates to
+        # them instead of fetching a resource from somewhere else. With
+        # `response_mode=form_post` that document is the authorization
+        # server's own page, so a redirect URI with one of these schemes would
+        # run the client's script on the server's origin. None of them can be
+        # a legitimate redirection endpoint (RFC 6749 Section 3.1.2), so they
+        # are refused regardless of the `forbid_redirect_uri` configuration.
+        SCRIPT_SCHEMES = %w[javascript vbscript data].freeze
+
         def self.valid?(url)
           return true if oob_uri?(url)
 
@@ -62,8 +71,13 @@ module Doorkeeper
 
         def self.valid_scheme?(uri)
           return false if uri.scheme.blank?
+          return false if script_scheme?(uri)
 
           %w[localhost].exclude?(uri.scheme)
+        end
+
+        def self.script_scheme?(uri)
+          SCRIPT_SCHEMES.include?(uri.scheme.to_s.downcase)
         end
 
         def self.hypertext_scheme?(uri)

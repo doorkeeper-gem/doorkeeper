@@ -34,8 +34,12 @@ module Doorkeeper
       Doorkeeper::OAuth::NonStandard::IETF_WG_OAUTH2_OOB_METHODS.include?(uri)
     end
 
+    # Script schemes are refused before the host application's rule is
+    # consulted, so a `forbid_redirect_uri` that rejects them too does not
+    # report the error twice.
     def forbidden_uri?(uri)
-      Doorkeeper.config.forbid_redirect_uri.call(uri)
+      Doorkeeper::OAuth::Helpers::URIChecker.script_scheme?(uri) ||
+        Doorkeeper.config.forbid_redirect_uri.call(uri)
     end
 
     def unspecified_scheme?(uri)

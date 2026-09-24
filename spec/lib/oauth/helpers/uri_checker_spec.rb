@@ -63,6 +63,34 @@ describe Doorkeeper::OAuth::Helpers::URIChecker do
       uri = "com.example.app://test"
       expect(described_class).to be_valid(uri)
     end
+
+    # A script-scheme URI in hierarchical form has a scheme, a host and no
+    # opaque part, so none of the other checks reject it.
+    it "is invalid for script schemes" do
+      expect(described_class).not_to be_valid("javascript://app.co/callback")
+      expect(described_class).not_to be_valid("vbscript://app.co/callback")
+      expect(described_class).not_to be_valid("data://app.co/callback")
+    end
+
+    it "is invalid for script schemes regardless of case" do
+      expect(described_class).not_to be_valid("JavaScript://app.co/callback")
+      expect(described_class).not_to be_valid("DATA://app.co/callback")
+    end
+  end
+
+  describe ".script_scheme?" do
+    it "is true for javascript, vbscript and data schemes" do
+      expect(described_class).to be_script_scheme(URI.parse("javascript://app.co/callback"))
+      expect(described_class).to be_script_scheme(URI.parse("vbscript://app.co/callback"))
+      expect(described_class).to be_script_scheme(URI.parse("data://app.co/callback"))
+      expect(described_class).to be_script_scheme(URI.parse("JavaScript://app.co/callback"))
+    end
+
+    it "is false for other schemes and for a missing scheme" do
+      expect(described_class).not_to be_script_scheme(URI.parse("https://app.co/callback"))
+      expect(described_class).not_to be_script_scheme(URI.parse("com.example.app:/callback"))
+      expect(described_class).not_to be_script_scheme(URI.parse("/callback"))
+    end
   end
 
   describe ".matches?" do
@@ -183,6 +211,11 @@ describe Doorkeeper::OAuth::Helpers::URIChecker do
     it "is false if valid and not included in array" do
       uri = "http://app.co/aaa"
       client_uri = "http://example.com/bbb\nhttp://app.co/cc"
+      expect(described_class).not_to be_valid_for_authorization(uri, client_uri)
+    end
+
+    it "is false for a script-scheme uri even when the client registered it" do
+      uri = client_uri = "javascript://app.co/callback"
       expect(described_class).not_to be_valid_for_authorization(uri, client_uri)
     end
 
