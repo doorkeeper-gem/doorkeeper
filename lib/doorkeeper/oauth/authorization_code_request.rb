@@ -200,8 +200,11 @@ module Doorkeeper
         Doorkeeper.config.access_token_model.revoke_all_for(application.id, resource_owner)
       end
 
+      # A stateless JWT (`stateless_jwt_tokens`) has no row to link, so a
+      # replayed code is still refused but cannot revoke the token it issued.
       def link_access_token_to_grant
         return unless grant.class.access_token_revoked_on_reuse?
+        return unless access_token.respond_to?(:id)
 
         grant.class.with_primary_role do
           grant.update_column(:access_token_id, access_token.id)

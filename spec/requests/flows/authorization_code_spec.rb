@@ -748,4 +748,70 @@ feature "Authorization Code Flow" do
       expect(access_token.tenant_name).to eq("Tenant 1")
     end
   end
+
+  context "with stateless_jwt_tokens enabled" do
+    let(:jwt_secret) { "stateless-jwt-spec-secret" }
+
+    background do
+      secret = jwt_secret
+      stub_const(
+        "StatelessJwtSpecGenerator",
+        Class.new do
+          define_singleton_method(:generate) do |options|
+            JWT.encode(
+              {
+                "resource_owner_id" => options[:resource_owner_id],
+                "scope" => options[:scopes].to_s,
+                "client_id" => options[:application]&.uid,
+                "exp" => (options[:created_at] + options[:expires_in]).to_i,
+              },
+              secret,
+              "HS256",
+            )
+          end
+        end,
+      )
+
+      config_is_set(:stateless_jwt_tokens, true)
+      config_is_set(:access_token_generator, "StatelessJwtSpecGenerator")
+      config_is_set(:jwt_token_decoder, ->(raw) { JWT.decode(raw, secret, true, algorithm: "HS256")[0] })
+    end
+
+    scenario "the code is exchanged for a JWT that is never persisted" do
+      visit authorization_endpoint_url(client: @client)
+      click_on "Authorize"
+
+      create_access_token Doorkeeper::AccessGrant.first.token, @client
+
+      expect(page.driver.response.status).to eq(200)
+      expect(Doorkeeper::AccessToken.count).to eq(0)
+      expect(Doorkeeper::AccessGrant.first.access_token_id).to be_nil
+
+      with_access_token_header json_response.fetch("access_token")
+      visit "/full_protected_resources"
+      expect(page.body).to have_text("index")
+    end
+
+    # RFC 6749 §10.5 asks for the tokens issued from a replayed code to be
+    # revoked. A stateless token has no row to link the grant to, so the
+    # replay is only refused: the token issued by the first exchange stays
+    # valid until it expires.
+    scenario "a replayed code is refused while the first token stays valid" do
+      visit authorization_endpoint_url(client: @client)
+      click_on "Authorize"
+
+      authorization_code = Doorkeeper::AccessGrant.first.token
+      create_access_token authorization_code, @client
+      access_token = json_response.fetch("access_token")
+
+      create_access_token authorization_code, @client
+
+      expect(page.driver.response.status).to eq(400)
+      expect(json_response).to include("error" => "invalid_grant")
+
+      with_access_token_header access_token
+      visit "/full_protected_resources"
+      expect(page.body).to have_text("index")
+    end
+  end
 end
