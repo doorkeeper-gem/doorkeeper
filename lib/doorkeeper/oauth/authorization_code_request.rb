@@ -13,6 +13,7 @@ module Doorkeeper
       # the caller has proven possession of the code (redirect_uri + PKCE).
       validate :grant_accessible, error: Errors::InvalidGrant
       validate :resource_indicators, error: Errors::InvalidTarget
+      validate :dpop_proof, error: Errors::InvalidDPoPProof
 
       attr_reader :grant, :client, :redirect_uri, :access_token, :code_verifier,
                   :invalid_request_reason, :missing_param
