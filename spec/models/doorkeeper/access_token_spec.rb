@@ -486,6 +486,255 @@ RSpec.describe Doorkeeper::AccessToken do
     end
   end
 
+  describe "refresh token family" do
+    describe ".refresh_token_family_supported?" do
+      it "is true when the refresh_token_family_id column exists" do
+        expect(described_class.refresh_token_family_supported?).to be(true)
+      end
+
+      it "is false when the column is absent" do
+        allow(described_class).to receive(:column_names)
+          .and_return(described_class.column_names - ["refresh_token_family_id"])
+
+        expect(described_class.refresh_token_family_supported?).to be(false)
+      end
+    end
+
+    describe "assignment" do
+      it "starts a family when a refresh token is generated" do
+        token = FactoryBot.create :access_token, use_refresh_token: true
+
+        expect(token.refresh_token_family_id).to be_present
+        expect(token.reload.refresh_token_family_id).to eq(token.refresh_token_family_id)
+      end
+
+      it "gives tokens issued separately different families" do
+        application = FactoryBot.create :application
+        first = FactoryBot.create :access_token, application: application, use_refresh_token: true
+        second = FactoryBot.create :access_token, application: application, use_refresh_token: true
+
+        expect(first.refresh_token_family_id).not_to eq(second.refresh_token_family_id)
+      end
+
+      it "has no family without a refresh token" do
+        token = FactoryBot.create :access_token
+
+        expect(token.refresh_token_family_id).to be_nil
+      end
+
+      it "keeps a family given explicitly" do
+        token = FactoryBot.create :access_token, use_refresh_token: true, refresh_token_family_id: "family"
+
+        expect(token.reload.refresh_token_family_id).to eq("family")
+      end
+
+      it "keeps the same family across validations of a new record" do
+        token = FactoryBot.build :access_token, use_refresh_token: true
+        token.valid?
+        family_id = token.refresh_token_family_id
+        token.save!
+
+        expect(family_id).to be_present
+        expect(token.reload.refresh_token_family_id).to eq(family_id)
+      end
+
+      context "without the refresh_token_family_id column" do
+        before do
+          allow(described_class).to receive(:refresh_token_family_supported?).and_return(false)
+        end
+
+        it "starts no family and reports none" do
+          token = FactoryBot.create :access_token, use_refresh_token: true
+
+          expect(token.refresh_token_family_id).to be_nil
+          expect(token[:refresh_token_family_id]).to be_nil
+        end
+
+        it "ignores a family given explicitly" do
+          token = FactoryBot.create :access_token, use_refresh_token: true, refresh_token_family_id: "family"
+
+          expect(token.refresh_token_family_id).to be_nil
+          expect(token[:refresh_token_family_id]).to be_nil
+        end
+      end
+    end
+
+    describe "#ensure_refresh_token_family_id!" do
+      let(:token) { FactoryBot.create :access_token, use_refresh_token: true }
+
+      it "returns the family the record already has" do
+        expect { token.ensure_refresh_token_family_id! }.not_to(change { token.reload.refresh_token_family_id })
+        expect(token.ensure_refresh_token_family_id!).to eq(token.refresh_token_family_id)
+      end
+
+      context "when the record predates the column" do
+        before { token.update_column(:refresh_token_family_id, nil) }
+
+        it "gives it a family and persists it" do
+          family_id = token.ensure_refresh_token_family_id!
+
+          expect(family_id).to be_present
+          expect(token.refresh_token_family_id).to eq(family_id)
+          expect(token).not_to be_changed
+          expect(token.reload.refresh_token_family_id).to eq(family_id)
+        end
+
+        it "continues the family a concurrent refresh gave it meanwhile" do
+          described_class.where(id: token.id).update_all(refresh_token_family_id: "winner")
+
+          expect(token.ensure_refresh_token_family_id!).to eq("winner")
+          expect(token.reload.refresh_token_family_id).to eq("winner")
+        end
+      end
+
+      it "starts no family for a record without a refresh token" do
+        token = FactoryBot.create :access_token
+
+        expect(token.ensure_refresh_token_family_id!).to be_nil
+        expect(token.reload.refresh_token_family_id).to be_nil
+      end
+
+      it "does nothing without the column" do
+        token.update_column(:refresh_token_family_id, nil)
+        allow(described_class).to receive(:refresh_token_family_supported?).and_return(false)
+
+        expect(token.ensure_refresh_token_family_id!).to be_nil
+        expect(token.reload[:refresh_token_family_id]).to be_nil
+      end
+    end
+
+    describe "#revoke_refresh_token_family" do
+      let(:application) { FactoryBot.create :application }
+      let(:resource_owner) { FactoryBot.create :resource_owner }
+      let(:attributes) do
+        {
+          application: application,
+          resource_owner_id: resource_owner.id,
+          resource_owner_type: resource_owner.class.name,
+          use_refresh_token: true,
+        }
+      end
+
+      let!(:first) { FactoryBot.create :access_token, attributes }
+      let!(:second) do
+        FactoryBot.create :access_token, attributes.merge(refresh_token_family_id: first.refresh_token_family_id)
+      end
+      let!(:third) do
+        FactoryBot.create :access_token, attributes.merge(refresh_token_family_id: first.refresh_token_family_id)
+      end
+      let!(:other_family) { FactoryBot.create :access_token, attributes }
+
+      it "revokes every record of the family, whichever member it is called on" do
+        second.revoke_refresh_token_family
+
+        expect(second).to be_revoked
+        expect([first, second, third].map(&:reload)).to all(be_revoked)
+      end
+
+      # One write revokes the family, this record included, so that a
+      # failure can never leave a family partially revoked.
+      it "revokes the record with the same revocation time as the rest of its family" do
+        second.revoke_refresh_token_family
+
+        times = [first, second, third].map { |token| token.reload.revoked_at }
+        expect(times.uniq.size).to eq(1)
+        expect(second.revoked_at).to eq(times.first)
+      end
+
+      it "revokes the rest of the family when the record itself is already revoked" do
+        third.update_column(:revoked_at, Time.utc(2026, 1, 1))
+
+        third.revoke_refresh_token_family
+
+        expect(third.reload.revoked_at).to eq(Time.utc(2026, 1, 1))
+        expect([first, second].map(&:reload)).to all(be_revoked)
+      end
+
+      it "leaves the other families of the same application and resource owner alone" do
+        third.revoke_refresh_token_family
+
+        expect(other_family.reload).not_to be_revoked
+      end
+
+      it "never reaches a record of another application, even with the same family identifier" do
+        foreign = FactoryBot.create :access_token,
+                                    use_refresh_token: true,
+                                    refresh_token_family_id: first.refresh_token_family_id
+
+        third.revoke_refresh_token_family
+
+        expect(foreign.reload).not_to be_revoked
+      end
+
+      it "keeps the revocation time of records that were already revoked" do
+        first.update_column(:revoked_at, Time.utc(2026, 1, 1))
+
+        third.revoke_refresh_token_family
+
+        expect(first.reload.revoked_at).to eq(Time.utc(2026, 1, 1))
+      end
+
+      # `#revoked?` reads a revocation time in the future as not revoked yet,
+      # and `#revoke` revokes such a record right away; so does the family.
+      it "revokes a record whose revocation time is still in the future right away" do
+        first.update_column(:revoked_at, 1.day.from_now)
+        expect(first).not_to be_revoked
+
+        third.revoke_refresh_token_family
+
+        expect(first.reload).to be_revoked
+      end
+
+      it "uses the given clock" do
+        clock = class_double(Time, now: Time.utc(2026, 1, 2))
+
+        third.revoke_refresh_token_family(clock)
+
+        expect([first, second, third].map { |token| token.reload.revoked_at }).to all(eq(Time.utc(2026, 1, 2)))
+      end
+
+      it "revokes the record alone when it has no family" do
+        third.update_column(:refresh_token_family_id, nil)
+
+        third.revoke_refresh_token_family
+
+        expect(third.reload).to be_revoked
+        expect([first, second].map(&:reload)).to all(satisfy { |token| !token.revoked? })
+      end
+
+      it "revokes the record alone without the refresh_token_family_id column" do
+        allow(described_class).to receive(:refresh_token_family_supported?).and_return(false)
+
+        third.revoke_refresh_token_family
+
+        expect(third.reload).to be_revoked
+        expect([first, second].map(&:reload)).to all(satisfy { |token| !token.revoked? })
+      end
+
+      it "writes through the primary database role when multiple database roles are enabled" do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          enable_multiple_database_roles
+        end
+
+        expect(ActiveRecord::Base).to receive(:connected_to).with(role: :writing).at_least(:once).and_call_original
+
+        third.revoke_refresh_token_family
+        expect([first, second, third].map(&:reload)).to all(be_revoked)
+      end
+
+      # .revoke_all_for works on the application and resource owner, a
+      # superset of their families: it takes every family down, while a
+      # family revocation never widens to it.
+      it "is contained in what .revoke_all_for revokes" do
+        described_class.revoke_all_for(application.id, resource_owner)
+
+        expect([first, second, third, other_family].map(&:reload)).to all(be_revoked)
+        expect { other_family.revoke_refresh_token_family }.not_to(change { other_family.reload.revoked_at })
+      end
+    end
+  end
+
   describe "validations" do
     it "is valid without resource_owner_id" do
       # For client credentials flow
