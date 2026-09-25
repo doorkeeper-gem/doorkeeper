@@ -220,6 +220,11 @@ Doorkeeper.configure do
   #
   # force_pkce
 
+  # Accept the https URL of a public client's metadata document as its client_id
+  # (draft-ietf-oauth-client-id-metadata-document). +scopes+ caps what it may request.
+  #
+  # use_client_id_metadata_documents scopes: %w[read]
+
   # Validate the authorization request's client_id and redirect_uri before
   # authenticating the resource owner, so users are not sent through login for
   # a request that can only fail (RFC 6749 Section 4.1.2.1 asks for the
