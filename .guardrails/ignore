@@ -1,0 +1,5 @@
+# The generator templates are ERB that renders Ruby source — migrations and
+# the initializer — not HTML, so every `<%= %>` in them reads to GuardRails
+# as unescaped output and each new template is reported as XSS (#1865,
+# #1932, #1942, #1944). Nothing in them ever reaches a browser.
+lib/generators/doorkeeper/templates/

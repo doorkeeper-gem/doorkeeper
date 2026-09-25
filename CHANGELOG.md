@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1944] Add the `revoke_previous_access_token_on_refresh` option (default `true`): set to `false`, the refresh_token grant revokes only the exchanged refresh token and the previous access token stays usable until it expires. Requires the new `refresh_token_revoked_at` column (`rails generate doorkeeper:refresh_token_revoked_at`).
 - [#PR ID] Description of the change.
 
 ## 6.0.0.rc2

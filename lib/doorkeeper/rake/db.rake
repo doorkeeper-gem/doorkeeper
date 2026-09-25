@@ -19,7 +19,20 @@ namespace :doorkeeper do
 
       desc "Removes expired (TTL passed) access tokens"
       task expired_tokens: "doorkeeper:setup" do
-        expirable_tokens = Doorkeeper.config.access_token_model.where(refresh_token: nil)
+        access_token_model = Doorkeeper.config.access_token_model
+        expirable_tokens = access_token_model.where(refresh_token: nil)
+
+        # A refresh token revoked on its own
+        # (+revoke_previous_access_token_on_refresh false+) leaves +revoked_at+
+        # empty, so the revoked_tokens task never sees the record: once its
+        # access token expires nothing on it can be used anymore.
+        if access_token_model.try(:refresh_token_revoked_at_supported?)
+          refresh_token_revoked_at = access_token_model.arel_table[:refresh_token_revoked_at]
+          expirable_tokens = expirable_tokens.or(
+            access_token_model.where(refresh_token_revoked_at.lt(Time.current)),
+          )
+        end
+
         cleaner = Doorkeeper::StaleRecordsCleaner.new(expirable_tokens)
         cleaner.clean_expired(Doorkeeper.config.access_token_expires_in)
       end
