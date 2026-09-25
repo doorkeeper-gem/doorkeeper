@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#PR ID] Description of the change.
+- Add `use_client_id_metadata_documents`: public clients may use the https URL of their metadata document as `client_id` (draft-ietf-oauth-client-id-metadata-document).
 
 ## 6.0.0.rc2
 

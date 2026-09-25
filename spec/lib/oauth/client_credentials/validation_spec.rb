@@ -7,7 +7,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Validator do
 
   let(:server)      { double :server, scopes: nil }
   let(:application) { double scopes: nil }
-  let(:client)      { double application: application }
+  let(:client)      { double application: application, uid: "client" }
   let(:request)     { double :request, client: client, scopes: nil }
 
   it "is valid with valid request" do

@@ -15,7 +15,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentialsRequest do
   end
 
   let(:application)   { FactoryBot.create(:application, scopes: "") }
-  let(:client)        { double :client, application: application, scopes: "" }
+  let(:client)        { double :client, application: application, scopes: "", uid: "client" }
   let(:token_creator) { double :issuer, create: true, token: double }
 
   before do
