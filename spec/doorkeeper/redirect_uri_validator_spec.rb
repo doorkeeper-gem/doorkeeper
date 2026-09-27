@@ -55,7 +55,7 @@ RSpec.describe Doorkeeper::RedirectUriValidator do
     expect(client.errors[:redirect_uri].first).to eq(I18n.t("activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.fragment_present"))
   end
 
-  it "is invalid when scheme resolves to localhost (needs an explict scheme)" do
+  it "is invalid when scheme resolves to localhost (needs an explicit scheme)" do
     client.redirect_uri = "localhost:80"
     expect(client).to be_invalid
     expect(client.errors[:redirect_uri].first).to eq(I18n.t("activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.unspecified_scheme"))
