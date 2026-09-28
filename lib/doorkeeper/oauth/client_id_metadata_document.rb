@@ -1,0 +1,90 @@
+# frozen_string_literal: true
+
+module Doorkeeper
+  module OAuth
+    # OAuth Client ID Metadata Documents (draft-ietf-oauth-client-id-metadata-document)
+    # for public clients: an https client_id is the URL of the client's own metadata,
+    # fetched and kept as an application row, since grants and tokens reference one.
+    module ClientIdMetadataDocument
+      def self.url?(client_id)
+        Doorkeeper.config.use_client_id_metadata_documents? && url_form?(client_id)
+      end
+
+      # Independent of the option, so that a row it created stays refused where a document's client
+      # never belongs, even after the option is turned off.
+      def self.url_form?(client_id)
+        uri = URI.parse(client_id.to_s)
+        uri.is_a?(URI::HTTPS) && uri.host.present? && uri.path.length > 1 && uri.userinfo.nil? &&
+          uri.fragment.nil? && (uri.path.split("/") & %w[. ..]).empty?
+      rescue URI::InvalidURIError
+        false
+      end
+
+      def self.application(client_id)
+        document = cache.fetch(client_id) { fetch(client_id) }
+        materialize(client_id, document) if document
+      end
+
+      def self.cache
+        @cache ||= DocumentCache.new
+      end
+
+      def self.fetch(client_id)
+        document = JSON.parse(HttpFetcher.new.fetch(client_id))
+        document if valid?(client_id, document)
+      rescue HttpFetcher::FetchError, JSON::ParserError
+        nil
+      end
+
+      def self.valid?(client_id, document)
+        document.is_a?(Hash) &&
+          document["client_id"] == client_id &&
+          document["redirect_uris"].is_a?(Array) && document["redirect_uris"].any? &&
+          document["redirect_uris"].all? { |uri| uri.is_a?(String) } &&
+          public_client?(document) &&
+          document.keys.none? { |key| key.start_with?("client_secret") }
+      end
+
+      # A client that names +none+ among its methods can authenticate as a public client, even if
+      # it prefers another (ChatGPT lists +private_key_jwt+ first). The plural is draft-ietf-oauth-
+      # client-id-metadata-document PR #99; an omitted method means +none+.
+      def self.public_client?(document)
+        methods = [document["token_endpoint_auth_method"], *Array(document["token_endpoint_auth_methods_supported"])].compact
+        methods.empty? || methods.include?("none")
+      end
+
+      # The host is part of the name, as the consent screen's only verified hint of who is asking.
+      def self.materialize(client_id, document)
+        model = Doorkeeper.config.application_model
+        application = model.by_uid(client_id) || model.new(uid: client_id)
+        return if application.persisted? && application.confidential?
+
+        host = URI.parse(client_id).host
+        scopes = scopes(document["scope"])
+        return if scopes.nil?
+
+        application.assign_attributes(
+          name: document["client_name"].present? ? "#{document["client_name"]} (#{host})" : host,
+          redirect_uri: acceptable_redirect_uris(model, document["redirect_uris"]).join("\n"),
+          scopes: scopes,
+          confidential: false,
+        )
+        application if application.save
+      end
+
+      # A document may list redirect URIs this server refuses (e.g. http://localhost); keep the rest.
+      def self.acceptable_redirect_uris(model, uris)
+        uris.select { |uri| model.new(redirect_uri: uri).tap(&:validate).errors[:redirect_uri].empty? }
+      end
+
+      # Blank scopes would mean all server scopes, so a cap that leaves none refuses the client.
+      def self.scopes(requested)
+        allowed = Doorkeeper.config.client_id_metadata_document_scopes
+        return requested.to_s if allowed.blank?
+
+        capped = requested.present? ? OAuth::Scopes.from_string(requested) & allowed : OAuth::Scopes.from_array(allowed)
+        capped.to_s.presence
+      end
+    end
+  end
+end
