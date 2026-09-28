@@ -179,6 +179,12 @@ describe Doorkeeper::OAuth::Helpers::URIChecker do
         expect(described_class).to be_matches(uri, client_uri)
       end
 
+      it "ignores port for localhost" do
+        uri = "http://localhost:5555/auth/callback"
+        client_uri = "http://localhost/auth/callback"
+        expect(described_class).to be_matches(uri, client_uri)
+      end
+
       it "ignores port when only the request URI specifies one" do
         uri = "http://127.0.0.1:5555/auth/callback"
         client_uri = "http://127.0.0.1/auth/callback"
@@ -351,6 +357,10 @@ describe Doorkeeper::OAuth::Helpers::URIChecker do
   describe ".loopback_uri?" do
     it "is true if loopback IP" do
       expect(described_class).to be_loopback_uri(URI.parse("http://127.0.0.1"))
+    end
+
+    it "is true for localhost" do
+      expect(described_class).to be_loopback_uri(URI.parse("http://localhost:3000"))
     end
 
     it "is false if not loopback IP" do

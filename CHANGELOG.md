@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#PR ID] Description of the change.
+- [#1960] Ignore the port of `http://localhost` redirect URIs like that of loopback IP literals (RFC 8252 §7.3 / §8.3).
 
 ## 6.0.0.rc2
 
