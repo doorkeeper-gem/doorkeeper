@@ -9,6 +9,7 @@ User-visible changes worth mentioning.
 
 - [#PR ID] Description of the change.
 - [#1960] Ignore the port of `http://localhost` redirect URIs like that of loopback IP literals (RFC 8252 §7.3 / §8.3).
+- [#1959] A custom `access_token_generator` now receives the token's `resource` (RFC 8707), so a JWT generator can set `aud`.
 
 ## 6.0.0.rc2
 

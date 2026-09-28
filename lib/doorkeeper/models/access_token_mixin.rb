@@ -705,6 +705,8 @@ module Doorkeeper
           attributes[:resource_owner] = resource_owner
         end
 
+        attributes[:resource] = resource if self.class.resource_indicators_supported?
+
         Doorkeeper.config.custom_access_token_attributes.each do |attribute_name|
           attributes[attribute_name] = public_send(attribute_name)
         end
