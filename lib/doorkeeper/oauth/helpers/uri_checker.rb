@@ -62,8 +62,11 @@ module Doorkeeper
             url.fragment == client_url.fragment
         end
 
+        # RFC 8252 §8.3 discourages `localhost` for clients but says it behaves
+        # like the loopback IP literals, and native clients such as Claude Code
+        # register it, so its port may vary too.
         def self.loopback_uri?(uri)
-          IPAddr.new(uri.host).loopback?
+          uri.host == "localhost" || IPAddr.new(uri.host).loopback?
         rescue IPAddr::Error, IPAddr::InvalidAddressError
           false
         end
