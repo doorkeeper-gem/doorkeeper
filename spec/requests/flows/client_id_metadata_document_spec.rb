@@ -28,13 +28,13 @@ feature "Client ID Metadata Documents" do
     visit authorization_endpoint_url(client_id: client_id, redirect_uri: redirect_uri, **params)
   end
 
-  scenario "is advertised in the authorization server metadata" do
+  scenario "is advertised in the authorization server metadata (draft-02 §6)" do
     visit "/.well-known/oauth-authorization-server"
 
     expect(JSON.parse(page.body)).to include("client_id_metadata_document_supported" => true)
   end
 
-  scenario "a client authorizes and exchanges its code with its URL as client_id" do
+  scenario "a client authorizes and exchanges its code with its URL as client_id (draft-02 §5)" do
     authorize
     i_should_see "Example MCP (client.example.com)"
     click_on "Authorize"
@@ -45,34 +45,34 @@ feature "Client ID Metadata Documents" do
     expect(JSON.parse(page.body)).to include("access_token", "token_type" => "Bearer")
   end
 
-  scenario "a redirect_uri the server refuses is dropped, not the whole client" do
+  scenario "a redirect_uri the server refuses is dropped, not the whole client (draft-02 §8.1)" do
     document[:redirect_uris] = ["http://client.example.com/callback", redirect_uri]
     authorize
 
     i_should_see "Example MCP (client.example.com)"
   end
 
-  scenario "without a client_name the host names the client" do
+  scenario "without a client_name the host names the client (draft-02 §8.5)" do
     document.delete(:client_name)
     authorize
 
     expect(Doorkeeper::Application.by_uid(client_id).name).to eq("client.example.com")
   end
 
-  scenario "a document whose redirect_uris are all refused is refused" do
+  scenario "a document whose redirect_uris are all refused is refused (draft-02 §4.2)" do
     document[:redirect_uris] = ["http://client.example.com/callback"]
     authorize
 
     i_should_see_translated_error_message :invalid_client
   end
 
-  scenario "a redirect_uri the document does not list is refused" do
+  scenario "a redirect_uri the document does not list is refused (draft-02 §4.2)" do
     authorize(redirect_uri: "https://evil.example.com/callback")
 
     i_should_see_translated_error_message :invalid_redirect_uri
   end
 
-  scenario "a document that cannot be fetched or parsed is refused" do
+  scenario "a document that cannot be fetched or parsed is refused (draft-02 §5.1)" do
     stub_request(:get, client_id).to_return({ status: 404 }, { status: 200, body: "not json" })
 
     2.times do
@@ -82,7 +82,7 @@ feature "Client ID Metadata Documents" do
     end
   end
 
-  scenario "a client_id that is no valid URI, or has dot segments, is an ordinary one" do
+  scenario "a client_id that is no valid URI, or has dot segments, is an ordinary one (draft-02 §3)" do
     ["https://client example.com/metadata.json", "https://client.example.com/oauth/../metadata.json"].each do |url|
       visit authorization_endpoint_url(client_id: url, redirect_uri: redirect_uri)
 
@@ -91,30 +91,28 @@ feature "Client ID Metadata Documents" do
     expect(a_request(:get, /client.example.com/)).not_to have_been_made
   end
 
-  scenario "a document naming another client_id is refused" do
+  scenario "a document naming another client_id is refused (draft-02 §4)" do
     document[:client_id] = "https://other.example.com/metadata.json"
     authorize
 
     i_should_see_translated_error_message :invalid_client
   end
 
-  scenario "a document preferring another method but also supporting none is accepted as public" do
-    document[:token_endpoint_auth_method] = "private_key_jwt"
-    document[:token_endpoint_auth_methods_supported] = %w[none private_key_jwt]
-    document[:jwks_uri] = "https://client.example.com/jwks.json"
-    authorize
-
-    i_should_see "Example MCP (client.example.com)"
-  end
-
-  scenario "a document asking for a shared secret is refused" do
+  scenario "a document asking for a shared secret is refused (draft-02 §4.1)" do
     document[:token_endpoint_auth_method] = "client_secret_basic"
     authorize
 
     i_should_see_translated_error_message :invalid_client
   end
 
-  scenario "the scopes, the document's own too, are capped by the configuration" do
+  scenario "a document naming no method is refused (draft-02 §4.1, RFC 7591 §2)" do
+    document.delete(:token_endpoint_auth_method)
+    authorize
+
+    i_should_see_translated_error_message :invalid_client
+  end
+
+  scenario "the scopes, the document's own too, are capped by the configuration (RFC 6749 §3.3)" do
     config_is_set(:client_id_metadata_document_scopes, %w[public])
 
     [nil, "public write"].each do |scope|
@@ -126,7 +124,7 @@ feature "Client ID Metadata Documents" do
     end
   end
 
-  scenario "a document whose scopes the configuration leaves nothing of is refused" do
+  scenario "a document whose scopes the configuration leaves nothing of is refused (RFC 6749 §3.3)" do
     config_is_set(:client_id_metadata_document_scopes, %w[public])
     document[:scope] = "write"
     authorize
@@ -134,7 +132,7 @@ feature "Client ID Metadata Documents" do
     i_should_see_translated_error_message :invalid_client
   end
 
-  scenario "the client_credentials grant is refused, also once the option is off" do
+  scenario "the client_credentials grant is refused, also once the option is off (RFC 6749 §4.4)" do
     Doorkeeper::OAuth::ClientIdMetadataDocument.application(client_id)
 
     [true, false].each do |enabled|
@@ -145,7 +143,7 @@ feature "Client ID Metadata Documents" do
     end
   end
 
-  scenario "a registered confidential client with a URL as uid is left alone" do
+  scenario "a registered confidential client with a URL as uid is left alone (draft-02 §7.1)" do
     application = FactoryBot.create(:application, uid: client_id, confidential: true)
     authorize
 
@@ -153,7 +151,7 @@ feature "Client ID Metadata Documents" do
     expect(application.reload).to have_attributes(confidential: true, redirect_uri: application.redirect_uri)
   end
 
-  scenario "an https client_id is an ordinary one while the option is off" do
+  scenario "an https client_id is an ordinary one while the option is off (draft-02 §7.1)" do
     config_is_set(:use_client_id_metadata_documents, false)
     authorize
 

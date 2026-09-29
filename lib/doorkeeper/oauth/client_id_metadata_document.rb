@@ -45,12 +45,10 @@ module Doorkeeper
           document.keys.none? { |key| key.start_with?("client_secret") }
       end
 
-      # A client that names +none+ among its methods can authenticate as a public client, even if
-      # it prefers another (ChatGPT lists +private_key_jwt+ first). The plural is draft-ietf-oauth-
-      # client-id-metadata-document PR #99; an omitted method means +none+.
+      # Only public clients are accepted. An omitted method is refused, as RFC 7591 would default it
+      # to +client_secret_basic+.
       def self.public_client?(document)
-        methods = [document["token_endpoint_auth_method"], *Array(document["token_endpoint_auth_methods_supported"])].compact
-        methods.empty? || methods.include?("none")
+        document["token_endpoint_auth_method"] == "none"
       end
 
       # The host is part of the name, as the consent screen's only verified hint of who is asking.
