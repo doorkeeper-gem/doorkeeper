@@ -1,0 +1,13 @@
+# frozen_string_literal: true
+
+class AddRefreshTokenRevokedAtToAccessTokens < ActiveRecord::Migration<%= migration_version %>
+  def change
+    # Existing rows are left NULL and need no backfill: a row that is already
+    # revoked (`revoked_at`) counts as having its refresh token revoked too.
+    #
+    # The column alone changes nothing. Refreshing keeps revoking the previous
+    # access token until `revoke_previous_access_token_on_refresh false` is
+    # set in the Doorkeeper initializer.
+    add_column :oauth_access_tokens, :refresh_token_revoked_at, :datetime
+  end
+end

@@ -43,5 +43,38 @@ RSpec.describe "doorkeeper rake tasks" do
 
       expect(Doorkeeper::AccessToken.exists?(refreshable_token.id)).to be(true)
     end
+
+    # `revoke_previous_access_token_on_refresh false` revokes the refresh
+    # token on its own and leaves `revoked_at` empty, so these records are
+    # out of reach of the revoked_tokens task.
+    it "removes expired tokens whose refresh token was revoked on its own" do
+      dead_token = FactoryBot.create(
+        :access_token, expires_in: 1, created_at: 10.days.ago, use_refresh_token: true,
+      )
+      dead_token.update_column(:refresh_token_revoked_at, 9.days.ago)
+      live_access_token = FactoryBot.create(:access_token, use_refresh_token: true)
+      live_access_token.update_column(:refresh_token_revoked_at, 1.minute.ago)
+
+      task = Rake::Task["doorkeeper:db:cleanup:expired_tokens"]
+      task.reenable
+      task.invoke
+
+      expect(Doorkeeper::AccessToken.exists?(dead_token.id)).to be(false)
+      expect(Doorkeeper::AccessToken.exists?(live_access_token.id)).to be(true)
+    end
+
+    it "keeps them when the refresh_token_revoked_at column is absent" do
+      token = FactoryBot.create(
+        :access_token, expires_in: 1, created_at: 10.days.ago, use_refresh_token: true,
+      )
+      token.update_column(:refresh_token_revoked_at, 9.days.ago)
+      allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_at_supported?).and_return(false)
+
+      task = Rake::Task["doorkeeper:db:cleanup:expired_tokens"]
+      task.reenable
+      task.invoke
+
+      expect(Doorkeeper::AccessToken.exists?(token.id)).to be(true)
+    end
   end
 end

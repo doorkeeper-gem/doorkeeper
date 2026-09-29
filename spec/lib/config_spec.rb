@@ -130,6 +130,21 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
+  describe "revoke_previous_access_token_on_refresh" do
+    it "is true by default" do
+      expect(config.revoke_previous_access_token_on_refresh).to be(true)
+    end
+
+    it "can be disabled" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        revoke_previous_access_token_on_refresh false
+      end
+
+      expect(config.revoke_previous_access_token_on_refresh).to be(false)
+    end
+  end
+
   describe "scopes" do
     it "has default scopes" do
       Doorkeeper.configure do

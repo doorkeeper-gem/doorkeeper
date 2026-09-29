@@ -42,6 +42,7 @@ Supported features:
 - [Database maintenance](#database-maintenance)
 - [Resource Indicators](#resource-indicators)
 - [Refresh Token Scopes](#refresh-token-scopes)
+- [Keeping the Previous Access Token on Refresh](#keeping-the-previous-access-token-on-refresh)
 - [Custom Grant Flows](#custom-grant-flows)
 - [Custom Client Authentication Methods](#custom-client-authentication-methods)
 - [Example Applications](#example-applications)
@@ -184,6 +185,35 @@ rails db:migrate
 With the column in place, [token introspection](https://datatracker.ietf.org/doc/html/rfc7662#section-2.2) of a refresh token reports the granted scope rather than the scope of the access token it was issued with, and `reuse_access_token` does not hand a grant of a narrower scope an existing token whose refresh token was granted a wider one.
 
 Without the column, a narrowed refresh narrows the refresh token as well, so the chain can never return to the granted scope (the behavior of Doorkeeper before the column existed), and a `refresh_token_scopes` assigned to an access token is ignored. Rows created before the migration keep that behavior until they are rotated, and so do the [ORM extensions](#extensions) (Sequel, MongoDB) until they add the field.
+
+## Keeping the Previous Access Token on Refresh
+
+A refresh token is stored on the same `oauth_access_tokens` record as the access token it was issued with, so by default exchanging it revokes both: the previous access token stops working as soon as the old refresh token is revoked (immediately, or on the first use of the new access token when the `previous_refresh_token` column exists). [RFC 6749 §6](https://datatracker.ietf.org/doc/html/rfc6749#section-6) only speaks of revoking the old *refresh* token, and a client that refreshes ahead of expiry, or from several processes, may still have requests in flight with the previous access token.
+
+To revoke only the refresh token and let the previous access token live until it expires, add the `refresh_token_revoked_at` column:
+
+```bash
+rails generate doorkeeper:refresh_token_revoked_at
+rails db:migrate
+```
+
+and opt in from the initializer:
+
+```ruby
+Doorkeeper.configure do
+  use_refresh_token
+  revoke_previous_access_token_on_refresh false
+end
+```
+
+Both are required: the column alone changes nothing, and the option has no effect without the column. No backfill is needed, because a record that is already revoked (`revoked_at`) counts as having its refresh token revoked as well. `AccessToken#refresh_token_revoked?` answers for the refresh token, while `#revoked?` and `#accessible?` keep answering for the access token; [token introspection](https://datatracker.ietf.org/doc/html/rfc7662#section-2.2) reports each of them accordingly, and `reuse_access_token` does not hand out a record whose refresh token is revoked.
+
+Things to keep in mind:
+
+- Revoking a token through the revocation endpoint, `AccessToken#revoke` or `AccessToken.revoke_all_for` still revokes the whole record. Doorkeeper does not link the records of one refresh chain, so revoking the *current* refresh token does not reach a previous access token that was kept alive; it stays usable until it expires. Keep `access_token_expires_in` short when you enable this.
+- Records whose refresh token was revoked this way keep an empty `revoked_at`, so `doorkeeper:db:cleanup:revoked_tokens` does not see them; `doorkeeper:db:cleanup:expired_tokens` removes them once their access token has expired.
+- Refresh tokens revoked this way stay revoked if you set the option back to `true`. Dropping the column, however, forgets them: revoke those records first (`revoked_at`) if you ever remove it.
+- The [ORM extensions](#extensions) (Sequel, MongoDB) ship their own access token mixins and keep revoking both tokens until they add the field.
 
 ## Custom Grant Flows
 

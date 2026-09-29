@@ -70,6 +70,89 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
     end
   end
 
+  # https://github.com/doorkeeper-gem/doorkeeper/issues/1730
+  describe "revoking the presented refresh token" do
+    def keep_previous_access_token
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_refresh_token
+        revoke_previous_access_token_on_refresh false
+      end
+    end
+
+    it "revokes the whole record by default" do
+      request.authorize
+
+      expect(refresh_token.reload).to be_revoked
+      expect(refresh_token.refresh_token_revoked_at).to be_nil
+    end
+
+    it "revokes only the refresh token when the previous access token is kept on refresh" do
+      keep_previous_access_token
+
+      request.authorize
+
+      expect(request.error).to be_nil
+      expect(refresh_token.reload).to be_refresh_token_revoked
+      expect(refresh_token).not_to be_revoked
+      expect(refresh_token).to be_accessible
+    end
+
+    it "refuses a refresh token that was revoked on its own" do
+      refresh_token.update_column(:refresh_token_revoked_at, 1.minute.ago)
+
+      request.validate
+
+      expect(request.error).to eq(Doorkeeper::Errors::InvalidGrant)
+    end
+
+    it "refuses a refresh token revoked on its own between validation and the locked section" do
+      keep_previous_access_token
+      request.validate
+      Doorkeeper::AccessToken.where(id: refresh_token.id).update_all(refresh_token_revoked_at: 1.minute.ago)
+
+      expect { request.authorize }.to raise_error(Doorkeeper::Errors::InvalidGrantReuse)
+      expect(Doorkeeper::AccessToken.count).to eq(1)
+    end
+
+    it "revokes the whole record when the option is disabled but the column is absent" do
+      keep_previous_access_token
+      allow(Doorkeeper::AccessToken).to receive(:refresh_token_revoked_at_supported?).and_return(false)
+
+      request.authorize
+
+      expect(refresh_token.reload).to be_revoked
+      expect(refresh_token[:refresh_token_revoked_at]).to be_nil
+    end
+
+    # The Sequel and MongoDB adapters ship their own access token mixins,
+    # which revoke the refresh token together with its access token.
+    context "when the access token model does not implement refresh token revocation" do
+      before do
+        keep_previous_access_token
+        allow(refresh_token).to receive(:respond_to?).and_call_original
+        allow(refresh_token).to receive(:respond_to?).with(:refresh_token_revoked?).and_return(false)
+        allow(refresh_token).to receive(:respond_to?).with(:revoke_refresh_token).and_return(false)
+      end
+
+      it "revokes the whole record" do
+        request.authorize
+
+        expect(request.error).to be_nil
+        expect(refresh_token.reload).to be_revoked
+        expect(refresh_token.refresh_token_revoked_at).to be_nil
+      end
+
+      it "refuses a revoked record" do
+        refresh_token.revoke
+
+        request.validate
+
+        expect(request.error).to eq(Doorkeeper::Errors::InvalidGrant)
+      end
+    end
+  end
+
   it "issues a new token for the client" do
     expect { request.authorize }.to change { client.reload.access_tokens.count }.by(1)
     # #sort_by used for MongoDB ORM extensions for valid ordering
