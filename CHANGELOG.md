@@ -12,6 +12,7 @@ User-visible changes worth mentioning.
 - [#1964] `rake doorkeeper:db:cleanup:expired_tokens` no longer raises when `access_token_expires_in` is `nil`; tokens with an individual `expires_in` are still removed once expired (#1963).
 - [#1965] Fix: `force_pkce` without the PKCE columns (`rails generate doorkeeper:pkce`) no longer accepts any `code_verifier`. The authorization code flow is now refused with `server_error` until the migration is applied.
 - [#1956] Add `use_client_id_metadata_documents`: public clients may use the https URL of their metadata document as `client_id` (draft-ietf-oauth-client-id-metadata-document). Needs `rails generate doorkeeper:client_id_metadata_documents`.
+- [#1962] A client ID metadata document also qualifies when `none` is among its `token_endpoint_auth_methods_supported` (OpenID Connect RP Metadata Choices).
 - [#PR ID] Description of the change.
 
 ## 6.0.0.rc2
