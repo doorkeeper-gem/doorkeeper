@@ -99,11 +99,24 @@ feature "Client ID Metadata Documents" do
     i_should_see_translated_error_message :invalid_client
   end
 
-  scenario "a document asking for a shared secret is refused (draft-02 §4.1)" do
-    document[:token_endpoint_auth_method] = "client_secret_basic"
+  scenario "a document preferring another method but also supporting none is accepted as public" do
+    document[:token_endpoint_auth_method] = "private_key_jwt"
+    document[:token_endpoint_auth_methods_supported] = %w[none private_key_jwt]
+    document[:jwks_uri] = "https://client.example.com/jwks.json"
     authorize
 
-    i_should_see_translated_error_message :invalid_client
+    i_should_see "client.example.com: Example MCP"
+  end
+
+  scenario "a document asking for a shared secret is refused, also when it supports none (draft-02 §4.1)" do
+    [nil, %w[none]].each do |supported|
+      document[:token_endpoint_auth_method] = "client_secret_basic"
+      document[:token_endpoint_auth_methods_supported] = supported
+      Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
+      authorize
+
+      i_should_see_translated_error_message :invalid_client
+    end
   end
 
   scenario "a document naming no method is refused (draft-02 §4.1, RFC 7591 §2)" do
