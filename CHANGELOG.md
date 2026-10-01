@@ -7,6 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#1947] Revoking a refresh token now also revokes the tokens issued earlier from the same authorization grant (RFC 7009 §2.1). The refresh chain is tracked in a new `refresh_token_family_id` column; existing installs opt in with `rails generate doorkeeper:refresh_token_family_id`.
 - [#PR ID] Description of the change.
 - [#1960] Ignore the port of `http://localhost` redirect URIs like that of loopback IP literals (RFC 8252 §7.3 / §8.3).
 - [#1959] A custom `access_token_generator` now receives the token's `resource` (RFC 8707), so a JWT generator can set `aud`.

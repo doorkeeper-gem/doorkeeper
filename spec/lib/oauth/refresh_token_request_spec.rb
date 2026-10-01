@@ -70,6 +70,46 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
     end
   end
 
+  describe "refresh token family" do
+    it "continues the family of the presented refresh token" do
+      request.authorize
+
+      new_token = Doorkeeper::AccessToken.order(:id).last
+      expect(new_token.id).not_to eq(refresh_token.id)
+      expect(new_token.refresh_token_family_id).to be_present
+      expect(new_token.refresh_token_family_id).to eq(refresh_token.refresh_token_family_id)
+    end
+
+    it "gives a refresh token that predates the column a family and continues it" do
+      refresh_token.update_column(:refresh_token_family_id, nil)
+
+      request.authorize
+
+      new_token = Doorkeeper::AccessToken.order(:id).last
+      expect(refresh_token.reload.refresh_token_family_id).to be_present
+      expect(new_token.refresh_token_family_id).to eq(refresh_token.refresh_token_family_id)
+    end
+
+    it "tracks no family without the refresh_token_family_id column" do
+      allow(Doorkeeper::AccessToken).to receive(:refresh_token_family_supported?).and_return(false)
+
+      request.authorize
+
+      expect(request.error).to be_nil
+      expect(Doorkeeper::AccessToken.order(:id).last[:refresh_token_family_id]).to be_nil
+    end
+
+    # The Sequel and MongoDB adapters ship their own access token mixins,
+    # which do not track refresh token families.
+    it "issues the token when the access token model does not track families" do
+      allow(refresh_token).to receive(:respond_to?).and_call_original
+      allow(refresh_token).to receive(:respond_to?).with(:ensure_refresh_token_family_id!).and_return(false)
+
+      expect { request.authorize }.to change { Doorkeeper::AccessToken.count }.by(1)
+      expect(request.error).to be_nil
+    end
+  end
+
   it "issues a new token for the client" do
     expect { request.authorize }.to change { client.reload.access_tokens.count }.by(1)
     # #sort_by used for MongoDB ORM extensions for valid ordering

@@ -110,11 +110,7 @@ module Doorkeeper
           attributes[:resource] = refresh_token.resource
         end
 
-        # RFC 6749 §6: "If a new refresh token is issued, the refresh token
-        # scope MUST be identical to that of the refresh token included by
-        # the client in the request." Carried explicitly so that a narrowed
-        # access token does not narrow the refresh token issued with it.
-        attributes[:refresh_token_scopes] = granted_scopes.to_s if refresh_token_scopes_supported?
+        attributes.merge!(refresh_chain_attributes)
 
         @access_token = Doorkeeper.config.access_token_model.create_for(
           application: refresh_token.application,
@@ -124,6 +120,29 @@ module Doorkeeper
           use_refresh_token: true,
           **attributes,
         )
+      end
+
+      # What the new record inherits from the presented refresh token as the
+      # next link of the same refresh chain.
+      def refresh_chain_attributes
+        attributes = {}
+
+        # RFC 6749 §6: "If a new refresh token is issued, the refresh token
+        # scope MUST be identical to that of the refresh token included by
+        # the client in the request." Carried explicitly so that a narrowed
+        # access token does not narrow the refresh token issued with it.
+        attributes[:refresh_token_scopes] = granted_scopes.to_s if refresh_token_scopes_supported?
+
+        # The new record continues the refresh token family of the presented
+        # refresh token, so that revoking any refresh token of the chain
+        # reaches every token issued from the same grant (RFC 7009 §2.1).
+        # Access token models that do not track families (no column, or the
+        # Sequel and MongoDB adapters, which ship their own mixins) have none
+        # to continue.
+        family_id = refresh_token.try(:ensure_refresh_token_family_id!)
+        attributes[:refresh_token_family_id] = family_id if family_id.present?
+
+        attributes
       end
 
       def resource_owner

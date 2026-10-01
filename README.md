@@ -42,6 +42,7 @@ Supported features:
 - [Database maintenance](#database-maintenance)
 - [Resource Indicators](#resource-indicators)
 - [Refresh Token Scopes](#refresh-token-scopes)
+- [Refresh Token Families](#refresh-token-families)
 - [Custom Grant Flows](#custom-grant-flows)
 - [Custom Client Authentication Methods](#custom-client-authentication-methods)
 - [Example Applications](#example-applications)
@@ -184,6 +185,21 @@ rails db:migrate
 With the column in place, [token introspection](https://datatracker.ietf.org/doc/html/rfc7662#section-2.2) of a refresh token reports the granted scope rather than the scope of the access token it was issued with, and `reuse_access_token` does not hand a grant of a narrower scope an existing token whose refresh token was granted a wider one.
 
 Without the column, a narrowed refresh narrows the refresh token as well, so the chain can never return to the granted scope (the behavior of Doorkeeper before the column existed), and a `refresh_token_scopes` assigned to an access token is ignored. Rows created before the migration keep that behavior until they are rotated, and so do the [ORM extensions](#extensions) (Sequel, MongoDB) until they add the field.
+
+## Refresh Token Families
+
+Every refresh creates a new `oauth_access_tokens` record, and more than one record of such a chain can be usable at the same time (the previous refresh token stays valid until the new access token is first used when the `previous_refresh_token` column exists). [RFC 7009 §2.1](https://datatracker.ietf.org/doc/html/rfc7009#section-2.1) says that revoking a refresh token SHOULD also invalidate the access tokens based on the same authorization grant.
+
+Doorkeeper links the records of one chain through the `refresh_token_family_id` column: a token issued with a refresh token starts a family, and the refresh token grant carries it onto every record it creates. New installs get the column from the install migration; existing installs add it with:
+
+```bash
+rails generate doorkeeper:refresh_token_family_id
+rails db:migrate
+```
+
+With the column in place, revoking a refresh token at the revocation endpoint revokes every record of its family, whichever refresh token of the chain is presented — including one that has already been revoked itself, since the records issued after it can still be live. `AccessToken#revoke_refresh_token_family` does the same from your own code. Revoking an *access* token, `AccessToken#revoke` and `AccessToken.revoke_all_for` behave as before.
+
+No backfill is needed: a refresh token issued before the migration joins a family the next time it is refreshed, and until then revoking it revokes its own record only. Without the column that is always the case, and so it is for the [ORM extensions](#extensions) (Sequel, MongoDB) until they add the field.
 
 ## Custom Grant Flows
 
