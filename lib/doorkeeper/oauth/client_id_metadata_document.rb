@@ -62,6 +62,7 @@ module Doorkeeper
         document.is_a?(Hash) &&
           document["client_id"] == client_id &&
           well_typed?(document) &&
+          displayable?(name(client_id, document["client_name"])) &&
           public_client?(document) &&
           document.keys.none? { |key| key.start_with?("client_secret") }
       end
@@ -79,13 +80,22 @@ module Doorkeeper
       end
 
       # The host leads the name, as the consent screen's only verified hint of who is asking.
+      def self.name(client_id, client_name)
+        host = URI.parse(client_id).host
+        client_name.present? ? "#{host}: #{client_name}" : host
+      end
+
+      # Fits a varchar(255) column, and puts no control or bidi characters on the consent screen.
+      def self.displayable?(name)
+        name.length <= 255 && !name.match?(/[\p{Cc}\p{Cf}]/)
+      end
+
       def self.materialize(model, application, document)
-        host = URI.parse(application.uid).host
         scopes = scopes(document["scope"])
         return log_refusal(application, "leaves no scopes") if scopes.nil?
 
         application.assign_attributes(
-          name: document["client_name"].present? ? "#{host}: #{document["client_name"]}" : host,
+          name: name(application.uid, document["client_name"]),
           redirect_uri: acceptable_redirect_uris(application, document["redirect_uris"]).join("\n"),
           scopes: scopes,
           confidential: false,
@@ -119,10 +129,11 @@ module Doorkeeper
         end
       end
 
-      # Blank scopes would mean all server scopes, so a client left without any is refused.
+      # Blank scopes would mean all server scopes, so a client left without any is refused,
+      # also under an empty cap.
       def self.scopes(requested)
         allowed = Doorkeeper.config.client_id_metadata_document_scopes
-        scopes = if allowed.blank?
+        scopes = if allowed.nil?
                    requested.present? ? OAuth::Scopes.from_string(requested) : Doorkeeper.config.default_scopes
                  elsif requested.present?
                    OAuth::Scopes.from_string(requested) & allowed

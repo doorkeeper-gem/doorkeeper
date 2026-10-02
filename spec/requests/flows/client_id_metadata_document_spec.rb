@@ -143,15 +143,19 @@ feature "Client ID Metadata Documents" do
   end
 
   scenario "a document whose scopes the configuration leaves nothing of is refused (RFC 6749 §3.3)" do
-    config_is_set(:client_id_metadata_document_scopes, %w[public])
-    document[:scope] = "write"
-    authorize
+    [[%w[public], "write"], [[], "public"]].each do |cap, scope|
+      config_is_set(:client_id_metadata_document_scopes, cap)
+      document[:scope] = scope
+      Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
+      authorize
 
-    i_should_see_translated_error_message :invalid_client
+      i_should_see_translated_error_message :invalid_client
+    end
   end
 
-  scenario "a document whose scope or client_name is no string is refused (RFC 7591 §2)" do
-    [{ scope: %w[public write] }, { client_name: { "en" => "Example" } }].each do |change|
+  scenario "a document whose scope or client_name is malformed is refused (RFC 7591 §2)" do
+    [{ scope: %w[public write] }, { client_name: { "en" => "Example" } }, { client_name: "x" * 240 },
+     { client_name: "Example\u202Eppa" },].each do |change|
       Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
       stub_request(:get, client_id).to_return(status: 200, body: document.merge(change).to_json)
       authorize

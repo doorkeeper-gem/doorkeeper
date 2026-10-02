@@ -224,7 +224,9 @@ Doorkeeper.configure do
   # (draft-ietf-oauth-client-id-metadata-document). +scopes+ caps what it may request.
   # These are public clients, so pair it with force_pkce. skip_authorization does not
   # apply to them. Needs `rails generate doorkeeper:client_id_metadata_documents`
-  # (ActiveRecord only).
+  # (ActiveRecord only). With validate_client_before_resource_owner_authentication,
+  # documents are fetched and rows written before anyone signs in. Turning the option
+  # off refuses those clients, but access tokens already issued stay valid until they expire.
   #
   # use_client_id_metadata_documents scopes: %w[read]
 
