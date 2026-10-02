@@ -46,10 +46,11 @@ feature "Client ID Metadata Documents" do
   end
 
   scenario "a redirect_uri the server refuses is dropped, not the whole client (draft-02 §8.1)" do
-    document[:redirect_uris] = ["http://client.example.com/callback", redirect_uri]
+    document[:redirect_uris] = ["http://client.example.com/callback", "https://client.example.com/a b", redirect_uri]
     authorize
 
     i_should_see "client.example.com: Example MCP"
+    expect(Doorkeeper::Application.by_uid(client_id).redirect_uri).to eq(redirect_uri)
   end
 
   scenario "without a client_name the host names the client (draft-02 §8.5)" do
@@ -124,7 +125,13 @@ feature "Client ID Metadata Documents" do
     end
   end
 
-  scenario "a document without scope gets the default scopes, not all of them (RFC 6749 §3.3)" do
+  scenario "without a cap the document's scope applies, else the default scopes, never all (RFC 6749 §3.3)" do
+    document[:scope] = "public write"
+    authorize(scope: "write")
+    i_should_see "client.example.com: Example MCP"
+
+    document.delete(:scope)
+    Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
     authorize(scope: "write")
     i_should_see_translated_error_message :invalid_scope
 
@@ -160,10 +167,28 @@ feature "Client ID Metadata Documents" do
     authorize
     i_should_see "client.example.com: Renamed"
 
+    document[:redirect_uris] = ["http://client.example.com/callback"]
+    Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
+    authorize
+    i_should_see_translated_error_message :invalid_client
+
     stub_request(:get, client_id).to_return(status: 404)
     Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
     authorize
     i_should_see_translated_error_message :invalid_client
+  end
+
+  scenario "a first request racing another one for the same client_id still gets the client" do
+    allow(Doorkeeper::Application).to receive(:with_primary_role) do
+      now = Time.current
+      Doorkeeper::Application.insert({ uid: client_id, name: "client.example.com", secret: "secret", redirect_uri: redirect_uri,
+                                       scopes: "public", confidential: false, client_id_metadata_materialized_at: now,
+                                       created_at: now, updated_at: now, })
+      raise ActiveRecord::RecordNotUnique
+    end
+    authorize
+
+    i_should_see "client.example.com"
   end
 
   scenario "skip_authorization does not apply, the user always consents (draft-02 §8.5)" do
@@ -192,6 +217,9 @@ feature "Client ID Metadata Documents" do
 
     page.driver.post token_endpoint_url, grant_type: "authorization_code", code: code, client_id: client_id, redirect_uri: redirect_uri
     expect(JSON.parse(page.body)).to include("error" => "invalid_client")
+
+    authorize
+    i_should_see_translated_error_message :invalid_client
   end
 
   scenario "a registered application with a URL as uid is used as registered, not fetched (draft-02 §7.2)" do

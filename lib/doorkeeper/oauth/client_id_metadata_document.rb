@@ -39,7 +39,6 @@ module Doorkeeper
         model = Doorkeeper.config.application_model
         registered = model.by_uid(client_id)
         return registered if registered && !materialized?(registered)
-        return unless marker_column?(model)
 
         entry = cache.fetch(client_id) { (document = fetch(client_id)) && { document: document, fetched_at: Time.current } }
         return unless entry
@@ -94,10 +93,17 @@ module Doorkeeper
         )
         return application if model.with_primary_role { application.save }
 
-        log_refusal(application, application.errors.full_messages.to_sentence)
+        concurrent_row(model, application) || log_refusal(application, application.errors.full_messages.to_sentence)
       rescue ActiveRecord::RecordNotUnique
-        # A concurrent first request wrote the row in the meantime.
-        model.by_uid(application.uid).then { |row| row if materialized?(row) }
+        concurrent_row(model, application)
+      end
+
+      # A concurrent first request may have written the row in the meantime.
+      def self.concurrent_row(model, application)
+        return if application.persisted?
+
+        row = model.by_uid(application.uid)
+        row if row && materialized?(row)
       end
 
       # A document may list redirect URIs this server refuses (e.g. http://localhost); keep the rest.
@@ -124,14 +130,6 @@ module Doorkeeper
                    OAuth::Scopes.from_array(allowed.to_a)
                  end
         scopes.to_s.presence
-      end
-
-      def self.marker_column?(model)
-        return true if model.column_names.include?(MARKER.to_s)
-
-        ::Rails.logger.warn("[DOORKEEPER] use_client_id_metadata_documents needs the #{MARKER} column; " \
-                            "run `rails generate doorkeeper:client_id_metadata_documents`")
-        false
       end
 
       def self.log_refusal(application, reason)
