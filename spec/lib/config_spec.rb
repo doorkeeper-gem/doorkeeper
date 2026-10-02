@@ -337,6 +337,17 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
+  describe "use_client_id_metadata_documents" do
+    it "accepts the scope cap as a space-separated String" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents scopes: "read write"
+      end
+
+      expect(config.client_id_metadata_document_scopes.to_a).to eq(%w[read write])
+    end
+  end
+
   describe "use_url_path_for_native_authorization" do
     around(:each) do |example|
       Doorkeeper.configure do

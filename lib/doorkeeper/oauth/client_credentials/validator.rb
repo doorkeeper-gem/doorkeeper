@@ -22,7 +22,7 @@ module Doorkeeper
         private
 
         def validate_client
-          @client.present? && (!ClientIdMetadataDocument.url_form?(@client.uid) || @client.application.confidential?)
+          @client.present? && !ClientIdMetadataDocument.materialized?(@client.application)
         end
 
         def validate_client_supports_grant_flow

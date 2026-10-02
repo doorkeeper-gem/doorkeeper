@@ -36,7 +36,7 @@ feature "Client ID Metadata Documents" do
 
   scenario "a client authorizes and exchanges its code with its URL as client_id (draft-02 §5)" do
     authorize
-    i_should_see "Example MCP (client.example.com)"
+    i_should_see "client.example.com: Example MCP"
     click_on "Authorize"
 
     code = Rack::Utils.parse_query(URI.parse(current_url).query)["code"]
@@ -49,7 +49,7 @@ feature "Client ID Metadata Documents" do
     document[:redirect_uris] = ["http://client.example.com/callback", redirect_uri]
     authorize
 
-    i_should_see "Example MCP (client.example.com)"
+    i_should_see "client.example.com: Example MCP"
   end
 
   scenario "without a client_name the host names the client (draft-02 §8.5)" do
@@ -124,12 +124,53 @@ feature "Client ID Metadata Documents" do
     end
   end
 
+  scenario "a document without scope gets the default scopes, not all of them (RFC 6749 §3.3)" do
+    authorize(scope: "write")
+    i_should_see_translated_error_message :invalid_scope
+
+    config_is_set(:default_scopes, Doorkeeper::OAuth::Scopes.new)
+    Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
+    Doorkeeper::Application.delete_all
+    authorize(scope: "write")
+    i_should_see_translated_error_message :invalid_client
+  end
+
   scenario "a document whose scopes the configuration leaves nothing of is refused (RFC 6749 §3.3)" do
     config_is_set(:client_id_metadata_document_scopes, %w[public])
     document[:scope] = "write"
     authorize
 
     i_should_see_translated_error_message :invalid_client
+  end
+
+  scenario "a document whose scope or client_name is no string is refused (RFC 7591 §2)" do
+    [{ scope: %w[public write] }, { client_name: { "en" => "Example" } }].each do |change|
+      Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
+      stub_request(:get, client_id).to_return(status: 200, body: document.merge(change).to_json)
+      authorize
+
+      i_should_see_translated_error_message :invalid_client
+    end
+  end
+
+  scenario "a changed document updates the client, an unfetchable one refuses it (draft-02 §5, §5.1)" do
+    authorize
+    document[:client_name] = "Renamed"
+    Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
+    authorize
+    i_should_see "client.example.com: Renamed"
+
+    stub_request(:get, client_id).to_return(status: 404)
+    Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
+    authorize
+    i_should_see_translated_error_message :invalid_client
+  end
+
+  scenario "skip_authorization does not apply, the user always consents (draft-02 §8.5)" do
+    config_is_set(:skip_authorization) { true }
+    authorize
+
+    i_should_see "client.example.com: Example MCP"
   end
 
   scenario "the client_credentials grant is refused, also once the option is off (RFC 6749 §4.4)" do
@@ -143,12 +184,26 @@ feature "Client ID Metadata Documents" do
     end
   end
 
-  scenario "a registered confidential client with a URL as uid is left alone (draft-02 §7.1)" do
-    application = FactoryBot.create(:application, uid: client_id, confidential: true)
+  scenario "a client known from its document is refused once the option is off (draft-02 §7.1)" do
     authorize
+    click_on "Authorize"
+    code = Rack::Utils.parse_query(URI.parse(current_url).query)["code"]
+    config_is_set(:use_client_id_metadata_documents, false)
 
-    i_should_see_translated_error_message :invalid_client
-    expect(application.reload).to have_attributes(confidential: true, redirect_uri: application.redirect_uri)
+    page.driver.post token_endpoint_url, grant_type: "authorization_code", code: code, client_id: client_id, redirect_uri: redirect_uri
+    expect(JSON.parse(page.body)).to include("error" => "invalid_client")
+  end
+
+  scenario "a registered application with a URL as uid is used as registered, not fetched (draft-02 §7.2)" do
+    [true, false].each do |confidential|
+      Doorkeeper::Application.delete_all
+      application = FactoryBot.create(:application, uid: client_id, confidential: confidential, redirect_uri: redirect_uri)
+      authorize
+
+      i_should_see application.name
+      expect(application.reload).to have_attributes(confidential: confidential, client_id_metadata_materialized_at: nil)
+    end
+    expect(a_request(:get, client_id)).not_to have_been_made
   end
 
   scenario "an https client_id is an ordinary one while the option is off (draft-02 §7.1)" do

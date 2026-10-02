@@ -222,7 +222,9 @@ Doorkeeper.configure do
 
   # Accept the https URL of a public client's metadata document as its client_id
   # (draft-ietf-oauth-client-id-metadata-document). +scopes+ caps what it may request.
-  # These are public clients, so pair it with force_pkce.
+  # These are public clients, so pair it with force_pkce. skip_authorization does not
+  # apply to them. Needs `rails generate doorkeeper:client_id_metadata_documents`
+  # (ActiveRecord only).
   #
   # use_client_id_metadata_documents scopes: %w[read]
 

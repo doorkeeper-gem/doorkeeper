@@ -30,8 +30,8 @@ module Doorkeeper
       end
 
       def self.find(uid, method = Doorkeeper.config.application_model.method(:by_uid))
-        application = ClientIdMetadataDocument.url?(uid) ? ClientIdMetadataDocument.application(uid) : method.call(uid)
-        return unless application
+        return unless (application = method.call(uid))
+        return if ClientIdMetadataDocument.orphaned?(application)
 
         new(application)
       end
@@ -45,6 +45,7 @@ module Doorkeeper
         return find(credentials.uid) if credentials.respond_to?(:pre_authenticated?) && credentials.pre_authenticated?
 
         return unless (application = method.call(credentials.uid, credentials.secret))
+        return if ClientIdMetadataDocument.orphaned?(application)
 
         new(application)
       end
