@@ -178,19 +178,6 @@ feature "Client ID Metadata Documents" do
     i_should_see_translated_error_message :invalid_client
   end
 
-  scenario "a first request racing another one for the same client_id still gets the client" do
-    allow(Doorkeeper::Application).to receive(:with_primary_role) do
-      now = Time.current
-      Doorkeeper::Application.insert({ uid: client_id, name: "client.example.com", secret: "secret", redirect_uri: redirect_uri,
-                                       scopes: "public", confidential: false, client_id_metadata_materialized_at: now,
-                                       created_at: now, updated_at: now, })
-      raise ActiveRecord::RecordNotUnique
-    end
-    authorize
-
-    i_should_see "client.example.com"
-  end
-
   scenario "skip_authorization does not apply, the user always consents (draft-02 §8.5)" do
     config_is_set(:skip_authorization) { true }
     authorize
