@@ -62,7 +62,7 @@ module Doorkeeper
         document.is_a?(Hash) &&
           document["client_id"] == client_id &&
           well_typed?(document) &&
-          displayable?(name(client_id, document["client_name"])) &&
+          displayable?(display_name(client_id, document["client_name"])) &&
           public_client?(document) &&
           document.keys.none? { |key| key.start_with?("client_secret") }
       end
@@ -80,7 +80,7 @@ module Doorkeeper
       end
 
       # The host leads the name, as the consent screen's only verified hint of who is asking.
-      def self.name(client_id, client_name)
+      def self.display_name(client_id, client_name)
         host = URI.parse(client_id).host
         client_name.present? ? "#{host}: #{client_name}" : host
       end
@@ -95,7 +95,7 @@ module Doorkeeper
         return log_refusal(application, "leaves no scopes") if scopes.nil?
 
         application.assign_attributes(
-          name: name(application.uid, document["client_name"]),
+          name: display_name(application.uid, document["client_name"]),
           redirect_uri: acceptable_redirect_uris(application, document["redirect_uris"]).join("\n"),
           scopes: scopes,
           confidential: false,
