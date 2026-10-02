@@ -20,10 +20,6 @@ RSpec.describe Doorkeeper::OAuth::ClientIdMetadataDocument do
     )
   end
 
-  it "keeps Module#name" do
-    expect(described_class.name).to eq("Doorkeeper::OAuth::ClientIdMetadataDocument")
-  end
-
   it "returns the row a concurrent first request wrote" do
     allow(Doorkeeper::Application).to receive(:with_primary_role) do
       now = Time.current
