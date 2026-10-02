@@ -346,6 +346,15 @@ RSpec.describe Doorkeeper::Config do
 
       expect(config.client_id_metadata_document_scopes.to_a).to eq(%w[read write])
     end
+
+    it "accepts the scope cap as Symbols" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        use_client_id_metadata_documents scopes: %i[read write]
+      end
+
+      expect(config.client_id_metadata_document_scopes.to_a).to eq(%w[read write])
+    end
   end
 
   describe "use_url_path_for_native_authorization" do

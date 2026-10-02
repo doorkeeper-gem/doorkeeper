@@ -52,7 +52,10 @@ module Doorkeeper
       end
 
       def self.fetch(client_id)
-        document = JSON.parse(HttpFetcher.new.fetch(client_id))
+        body = HttpFetcher.new.fetch(client_id).dup.force_encoding(Encoding::UTF_8)
+        return unless body.valid_encoding?
+
+        document = JSON.parse(body)
         document if valid?(client_id, document)
       rescue HttpFetcher::FetchError, JSON::ParserError
         nil
@@ -85,9 +88,12 @@ module Doorkeeper
         client_name.present? ? "#{host}: #{client_name}" : host
       end
 
-      # Fits a varchar(255) column, and puts no control or bidi characters on the consent screen.
+      # Fits a varchar(255) column, and puts no control characters, line breaks or bidi controls on the
+      # consent screen. Joiners (U+200C, U+200D) stay allowed, as names in many scripts need them.
+      UNDISPLAYABLE = /[\p{Cc}\p{Zl}\p{Zp}\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/
+
       def self.displayable?(name)
-        name.length <= 255 && !name.match?(/[\p{Cc}\p{Cf}]/)
+        name.length <= 255 && !name.match?(UNDISPLAYABLE)
       end
 
       def self.materialize(model, application, document)

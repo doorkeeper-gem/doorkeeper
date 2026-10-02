@@ -154,14 +154,24 @@ feature "Client ID Metadata Documents" do
   end
 
   scenario "a document whose scope or client_name is malformed is refused (RFC 7591 §2)" do
-    [{ scope: %w[public write] }, { client_name: { "en" => "Example" } }, { client_name: "x" * 240 },
-     { client_name: "Example\u202Eppa" },].each do |change|
+    bodies = [{ scope: %w[public write] }, { client_name: { "en" => "Example" } }, { client_name: "x" * 240 },
+              { client_name: "Example\u202Eppa" }, { client_name: "Line\u2028break" },].map { |change| document.merge(change).to_json }
+    bodies << document.merge(client_name: "X").to_json.sub("X", "\xFF".b)
+
+    bodies.each do |body|
       Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
-      stub_request(:get, client_id).to_return(status: 200, body: document.merge(change).to_json)
+      stub_request(:get, client_id).to_return(status: 200, body: body)
       authorize
 
       i_should_see_translated_error_message :invalid_client
     end
+  end
+
+  scenario "a client_name with joiners, as many scripts need, is accepted (draft-02 §8.5)" do
+    document[:client_name] = "\u0645\u06CC\u200C\u062E\u0648\u0627\u0647\u0645"
+    authorize
+
+    i_should_see "client.example.com: #{document[:client_name]}"
   end
 
   scenario "a changed document updates the client, an unfetchable one refuses it (draft-02 §5, §5.1)" do
