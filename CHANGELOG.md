@@ -10,6 +10,7 @@ User-visible changes worth mentioning.
 - [#PR ID] Description of the change.
 - [#1960] Ignore the port of `http://localhost` redirect URIs like that of loopback IP literals (RFC 8252 §7.3 / §8.3).
 - [#1959] A custom `access_token_generator` now receives the token's `resource` (RFC 8707), so a JWT generator can set `aud`.
+- [#1956] Add `use_client_id_metadata_documents`: public clients may use the https URL of their metadata document as `client_id` (draft-ietf-oauth-client-id-metadata-document). Needs `rails generate doorkeeper:client_id_metadata_documents`.
 
 ## 6.0.0.rc2
 

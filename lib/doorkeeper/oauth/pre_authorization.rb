@@ -127,7 +127,11 @@ module Doorkeeper
       end
 
       def validate_client
-        @client = OAuth::Client.find(client_id)
+        @client = if ClientIdMetadataDocument.url?(client_id)
+                    ClientIdMetadataDocument.application(client_id)&.then { |application| OAuth::Client.new(application) }
+                  else
+                    OAuth::Client.find(client_id)
+                  end
         @client.present?
       end
 
