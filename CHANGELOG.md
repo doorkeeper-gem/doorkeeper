@@ -7,9 +7,10 @@ User-visible changes worth mentioning.
 
 ## main
 
-- [#PR ID] Description of the change.
 - [#1960] Ignore the port of `http://localhost` redirect URIs like that of loopback IP literals (RFC 8252 §7.3 / §8.3).
 - [#1959] A custom `access_token_generator` now receives the token's `resource` (RFC 8707), so a JWT generator can set `aud`.
+- [#1964] `rake doorkeeper:db:cleanup:expired_tokens` no longer raises when `access_token_expires_in` is `nil`; tokens with an individual `expires_in` are still removed once expired (#1963).
+- [#PR ID] Description of the change.
 
 ## 6.0.0.rc2
 
