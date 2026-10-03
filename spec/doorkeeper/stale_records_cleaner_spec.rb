@@ -133,7 +133,49 @@ RSpec.describe Doorkeeper::StaleRecordsCleaner do
           end
         end
 
+        context "when TTL is nil" do
+          before do
+            FactoryBot.create model_name, created_at: 10.minutes.ago,
+                                          expires_in: 1.minute.to_i,
+                                          resource_owner_id: resource_owner.id,
+                                          resource_owner_type: resource_owner.class.name
+            FactoryBot.create model_name, created_at: 10.minutes.ago,
+                                          expires_in: 1.hour.to_i,
+                                          resource_owner_id: resource_owner.id,
+                                          resource_owner_type: resource_owner.class.name
+          end
+
+          it "removes only the expired record" do
+            expect { cleaner.clean_expired(nil) }.to change(model, :count).from(2).to(1)
+            expect(model.last.expires_in).to eq(1.hour.to_i)
+          end
+
+          context "when the model uses an unsupported database adapter" do
+            before do
+              allow(model).to receive(:adapter_name).and_return("unsupported_db")
+              allow(Kernel).to receive(:warn)
+            end
+
+            it "keeps the records" do
+              expect { cleaner.clean_expired(nil) }.not_to(change(model, :count))
+            end
+          end
+        end
+
         if model_name == :access_token
+          context "with record that never expires and TTL is nil" do
+            before do
+              FactoryBot.create model_name, created_at: 1.year.ago,
+                                            expires_in: nil,
+                                            resource_owner_id: resource_owner.id,
+                                            resource_owner_type: resource_owner.class.name
+            end
+
+            it "keeps the record" do
+              expect { cleaner.clean_expired(nil) }.not_to(change(model, :count))
+            end
+          end
+
           context "with record that is past the threshold, but never expires" do
             before do
               FactoryBot.create model_name, created_at: expiry_border - 1.minute,
