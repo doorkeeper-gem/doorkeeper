@@ -517,4 +517,135 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
       expect(Doorkeeper::AccessToken.last.scopes).to eq(%i[public])
     end
   end
+
+  # RFC 8707 §2.2: a token request may restrict the access token to some of
+  # the granted resources; the refresh token stays bound to all of them.
+  context "with resource indicators" do
+    subject(:request) { described_class.new(server, refresh_token, credentials, parameters) }
+
+    let(:calendar) { "https://cal.example.com/" }
+    let(:contacts) { "https://contacts.example.com/" }
+    let(:parameters) { {} }
+    let(:refresh_token) do
+      FactoryBot.create :access_token,
+                        use_refresh_token: true,
+                        resource: calendar,
+                        refresh_token_resource: "#{calendar} #{contacts}"
+    end
+
+    before do
+      allow(Doorkeeper.config).to receive(:resource_indicator_validator).and_return(->(_indicators, _client) { true })
+    end
+
+    it "issues a token for another granted resource than the one being refreshed" do
+      parameters[:resource] = contacts
+      request.authorize
+
+      expect(request.error).to be_nil
+      new_token = Doorkeeper::AccessToken.last
+      expect(new_token.resource).to eq(contacts)
+      expect(new_token.refresh_token_resource).to eq("#{calendar} #{contacts}")
+    end
+
+    it "issues a token for every granted resource" do
+      parameters[:resource] = [calendar, contacts]
+      request.authorize
+
+      expect(request.error).to be_nil
+      expect(Doorkeeper::AccessToken.last.resource).to eq("#{calendar} #{contacts}")
+    end
+
+    it "keeps the audience of the refreshed access token when the resource parameter is omitted" do
+      request.authorize
+
+      new_token = Doorkeeper::AccessToken.last
+      expect(new_token.resource).to eq(calendar)
+      expect(new_token.refresh_token_resource).to eq("#{calendar} #{contacts}")
+    end
+
+    it "still refuses a resource beyond the granted ones" do
+      parameters[:resource] = "https://files.example.com/"
+
+      request.validate
+      expect(request.error).to eq(Doorkeeper::Errors::InvalidTarget)
+    end
+
+    it "enforces the granted resources without a validator configured" do
+      allow(Doorkeeper.config).to receive(:resource_indicator_validator).and_return(nil)
+      parameters[:resource] = "https://files.example.com/"
+
+      request.validate
+      expect(request.error).to eq(Doorkeeper::Errors::InvalidTarget)
+    end
+
+    # Rows that predate the refresh_token_resource migration carry no
+    # granted resources of their own and keep the pre-column behavior.
+    it "falls back to the access token audience for a row without stored granted resources" do
+      refresh_token.update_column(:refresh_token_resource, nil)
+      parameters[:resource] = contacts
+
+      request.validate
+      expect(request.error).to eq(Doorkeeper::Errors::InvalidTarget)
+    end
+
+    it "leaves a refresh token that is bound to no resource unbound" do
+      unbound = FactoryBot.create :access_token, use_refresh_token: true
+      request = described_class.new(server, unbound, credentials_for(unbound))
+      request.authorize
+
+      new_token = Doorkeeper::AccessToken.last
+      expect(new_token.resource).to be_nil
+      expect(new_token[:refresh_token_resource]).to be_nil
+    end
+
+    context "without the refresh_token_resource column" do
+      before do
+        allow(Doorkeeper::AccessToken).to receive(:refresh_token_resource_supported?).and_return(false)
+      end
+
+      it "validates against the access token audience, as before the column existed" do
+        parameters[:resource] = contacts
+
+        request.validate
+        expect(request.error).to eq(Doorkeeper::Errors::InvalidTarget)
+      end
+
+      it "does not write the missing column" do
+        request.authorize
+
+        new_token = Doorkeeper::AccessToken.last
+        expect(new_token.resource).to eq(calendar)
+        expect(new_token[:refresh_token_resource]).to be_nil
+      end
+    end
+
+    # The Sequel and MongoDB adapters ship their own access token mixins,
+    # which predate the granted-resource API.
+    context "when the access token model does not implement refresh_token_resource" do
+      before do
+        allow(Doorkeeper::AccessToken).to receive(:respond_to?).and_call_original
+        allow(Doorkeeper::AccessToken).to receive(:respond_to?).with(:refresh_token_resource_supported?).and_return(false)
+        allow(refresh_token).to receive(:respond_to?).and_call_original
+        allow(refresh_token).to receive(:respond_to?).with(:refresh_token_resource).and_return(false)
+      end
+
+      it "validates against the access token audience" do
+        parameters[:resource] = contacts
+
+        request.validate
+        expect(request.error).to eq(Doorkeeper::Errors::InvalidTarget)
+      end
+
+      it "refreshes with the audience of the access token" do
+        request.authorize
+
+        expect(request.error).to be_nil
+        expect(Doorkeeper::AccessToken.last.resource).to eq(calendar)
+      end
+    end
+
+    def credentials_for(token)
+      Doorkeeper::ClientAuthentication::Credentials.new(token.application.uid, token.application.secret)
+    end
+  end
 end

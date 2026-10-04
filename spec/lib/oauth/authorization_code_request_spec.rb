@@ -550,4 +550,55 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
       expect { request.authorize }.to(change { previous_token.reload.revoked_at })
     end
   end
+
+  # RFC 8707 §2.2: the token request may restrict the access token to some of
+  # the granted resources; the refresh token stays bound to all of them.
+  context "with resource indicators" do
+    let(:calendar) { "https://cal.example.com/" }
+    let(:contacts) { "https://contacts.example.com/" }
+
+    before do
+      allow(server).to receive(:refresh_token_enabled?).and_return(true)
+      allow(Doorkeeper.config).to receive(:resource_indicator_validator).and_return(->(_indicators, _client) { true })
+      grant.update!(resource: "#{calendar} #{contacts}")
+    end
+
+    it "binds the refresh token to every granted resource when the access token is restricted" do
+      params[:resource] = calendar
+      request.authorize
+
+      token = Doorkeeper::AccessToken.last
+      expect(token.resource).to eq(calendar)
+      expect(token.refresh_token_resource).to eq("#{calendar} #{contacts}")
+    end
+
+    it "binds both to the granted resources when the resource parameter is omitted" do
+      request.authorize
+
+      token = Doorkeeper::AccessToken.last
+      expect(token.resource).to eq("#{calendar} #{contacts}")
+      expect(token.refresh_token_resource).to eq("#{calendar} #{contacts}")
+    end
+
+    it "starts the chain with the requested resource when the grant carries none" do
+      grant.update!(resource: nil)
+      params[:resource] = calendar
+      request.authorize
+
+      token = Doorkeeper::AccessToken.last
+      expect(token.resource).to eq(calendar)
+      expect(token.refresh_token_resource).to eq(calendar)
+    end
+
+    it "restricts the refresh token with the access token without the refresh_token_resource column" do
+      allow(Doorkeeper::AccessToken).to receive(:refresh_token_resource_supported?).and_return(false)
+      params[:resource] = calendar
+      request.authorize
+
+      token = Doorkeeper::AccessToken.last
+      expect(token.resource).to eq(calendar)
+      expect(token.refresh_token_resource).to eq(calendar)
+      expect(token[:refresh_token_resource]).to be_nil
+    end
+  end
 end
