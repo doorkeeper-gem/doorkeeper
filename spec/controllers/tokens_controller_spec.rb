@@ -849,6 +849,42 @@ RSpec.describe Doorkeeper::TokensController, type: :controller do
           expect(json_response).to include("active" => true, "scope" => "read")
         end
       end
+
+      # RFC 7662 §2.2 describes the presented token: a refresh token stays
+      # bound to every resource of the original grant (RFC 8707 §2.2), not to
+      # the audience of an access token the client restricted to one of them.
+      context "when the paired access token is restricted to some of the granted resources" do
+        let(:token_for_introspection) do
+          FactoryBot.create(
+            :access_token,
+            application: client, use_refresh_token: true,
+            resource: "https://cal.example.com/",
+            refresh_token_resource: "https://cal.example.com/ https://contacts.example.com/",
+          )
+        end
+
+        it "reports the granted resources for the refresh token" do
+          post :introspect, params: { token: token_for_introspection.refresh_token }
+
+          expect(json_response).to include(
+            "active" => true, "aud" => ["https://cal.example.com/", "https://contacts.example.com/"],
+          )
+        end
+
+        it "reports the restricted audience for the access token" do
+          post :introspect, params: { token: token_for_introspection.token }
+
+          expect(json_response).to include("active" => true, "aud" => "https://cal.example.com/")
+        end
+
+        it "reports the access token audience for a row that predates the refresh_token_resource column" do
+          token_for_introspection.update_column(:refresh_token_resource, nil)
+
+          post :introspect, params: { token: token_for_introspection.refresh_token }
+
+          expect(json_response).to include("active" => true, "aud" => "https://cal.example.com/")
+        end
+      end
     end
 
     # RFC 7662 §2.1: the hint is allowed to be wrong — when the lookup by the
