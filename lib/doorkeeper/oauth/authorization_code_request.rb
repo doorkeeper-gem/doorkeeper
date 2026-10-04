@@ -8,6 +8,9 @@ module Doorkeeper
       validate :grant,        error: Errors::InvalidGrant
       # @see https://datatracker.ietf.org/doc/html/rfc6749#section-5.2
       validate :redirect_uri, error: Errors::InvalidGrant
+      # Runs before :code_verifier, which has nothing to verify against when
+      # the PKCE columns are missing.
+      validate :pkce_storage, error: Errors::ServerError
       validate :code_verifier, error: Errors::InvalidGrant
       # Runs last, so the single-use enforcement it performs only acts once
       # the caller has proven possession of the code (redirect_uri + PKCE).
@@ -129,6 +132,24 @@ module Doorkeeper
           redirect_uri,
           grant.redirect_uri,
         )
+      end
+
+      # With force_pkce the code_verifier must be checked against the
+      # challenge stored on the grant. Without the columns the
+      # doorkeeper:pkce generator adds there is no stored challenge, and
+      # #validate_code_verifier would accept any verifier. Refuse the exchange
+      # with server_error instead (see PreAuthorization#validate_pkce_storage,
+      # which stops such a code from being issued in the first place).
+      def validate_pkce_storage
+        return true unless Doorkeeper.config.force_pkce?
+        return true if pkce_supported?
+
+        ::Rails.logger.error(
+          "[DOORKEEPER] force_pkce is enabled but the PKCE columns are missing from the " \
+          "oauth_access_grants table, so authorization codes cannot be exchanged. " \
+          "Run `rails generate doorkeeper:pkce` and apply the migration.",
+        )
+        false
       end
 
       # if either side (server or client) request PKCE, check the verifier
