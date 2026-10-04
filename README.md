@@ -131,7 +131,7 @@ Doorkeeper supports [Resource Indicators for OAuth 2.0 (RFC 8707)](https://datat
 
 ### Setup
 
-1. Run the generator to add the required `resource` column:
+1. Run the generator to add the required `resource` columns:
 
 ```bash
 rails generate doorkeeper:resource_indicators
@@ -157,8 +157,23 @@ The callable receives an array of resource URIs and the OAuth client. Return `tr
 - Resource URIs must be absolute and must not contain a fragment component.
 - Resource indicators are stored on grants and tokens.
 - Token and refresh requests enforce subset restrictions against the original grant.
+- A refresh token stays bound to every resource of the original grant (RFC 8707 §2.2): a token request that restricts the access token to some of them does not restrict the refresh token, so a later refresh can ask for another granted resource. A refresh that omits `resource` keeps the audience of the access token being refreshed.
 - Token introspection responses include `aud` when resource indicators are present.
 - Grants issued with resource indicators retain their audience restriction even if the validator is later removed from configuration.
+
+### Upgrading from a 6.0 prerelease
+
+The resources a refresh token is bound to are tracked in the `refresh_token_resource` column of `oauth_access_tokens`, which the generator above creates. If you ran the generator on a 6.0 prerelease (beta2, rc1 or rc2), add the column yourself:
+
+```ruby
+class AddRefreshTokenResourceToAccessTokens < ActiveRecord::Migration[7.1]
+  def change
+    add_column :oauth_access_tokens, :refresh_token_resource, :text, null: true
+  end
+end
+```
+
+Without the column, a token request that restricts the access token restricts the refresh token as well, so the chain can never reach the other granted resources again (the behavior of those prereleases). Rows created before the migration fall back to the audience of their access token, and rotating them stores that audience in the column, so a chain narrowed before the migration stays narrowed: the other resources it was granted cannot be recovered automatically, and the resource owner has to authorize the client again. The [ORM extensions](#extensions) (Sequel, MongoDB) keep the prerelease behavior until they add the field.
 
 ### Multiple resources
 

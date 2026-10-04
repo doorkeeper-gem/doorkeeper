@@ -502,6 +502,123 @@ RSpec.describe Doorkeeper::AccessToken do
     end
   end
 
+  describe "refresh_token_resource" do
+    let(:calendar) { "https://cal.example.com/" }
+    let(:contacts) { "https://contacts.example.com/" }
+
+    it "records the access token audience as the granted resources when a refresh token is generated" do
+      token = FactoryBot.create :access_token, use_refresh_token: true, resource: "#{calendar} #{contacts}"
+
+      expect(token[:refresh_token_resource]).to eq("#{calendar} #{contacts}")
+      expect(token.reload.refresh_token_resource).to eq("#{calendar} #{contacts}")
+    end
+
+    it "keeps granted resources given explicitly, wider than the access token audience" do
+      token = FactoryBot.create :access_token,
+                                use_refresh_token: true,
+                                resource: calendar,
+                                refresh_token_resource: "#{calendar} #{contacts}"
+
+      expect(token.resource).to eq(calendar)
+      expect(token.reload.refresh_token_resource).to eq("#{calendar} #{contacts}")
+    end
+
+    it "accepts a list of resources" do
+      token = FactoryBot.build :access_token
+      token.refresh_token_resource = [calendar, contacts, calendar]
+
+      expect(token[:refresh_token_resource]).to eq("#{calendar} #{contacts}")
+    end
+
+    it "is nil for a token that is not audience-restricted" do
+      token = FactoryBot.create :access_token, use_refresh_token: true
+
+      expect(token[:refresh_token_resource]).to be_nil
+      expect(token.refresh_token_resource).to be_nil
+    end
+
+    it "is not recorded for a token issued without a refresh token" do
+      token = FactoryBot.create :access_token, resource: calendar
+
+      expect(token[:refresh_token_resource]).to be_nil
+    end
+
+    it "follows the access token audience when it changes between validation and save" do
+      token = FactoryBot.build :access_token, use_refresh_token: true, resource: "#{calendar} #{contacts}"
+      token.valid?
+      expect(token[:refresh_token_resource]).to eq("#{calendar} #{contacts}")
+
+      token.resource = calendar
+      token.save!
+
+      expect(token.reload[:refresh_token_resource]).to eq(calendar)
+    end
+
+    it "keeps explicitly given granted resources when the access token audience changes before save" do
+      token = FactoryBot.build :access_token,
+                               use_refresh_token: true,
+                               resource: "#{calendar} #{contacts}",
+                               refresh_token_resource: "#{calendar} #{contacts}"
+      token.valid?
+
+      token.resource = calendar
+      token.save!
+
+      expect(token.reload.refresh_token_resource).to eq("#{calendar} #{contacts}")
+    end
+
+    it "treats explicitly blank granted resources as not given" do
+      token = FactoryBot.build :access_token, use_refresh_token: true, resource: calendar
+      token.refresh_token_resource = ""
+      token.save!
+
+      expect(token.reload[:refresh_token_resource]).to eq(calendar)
+    end
+
+    it "falls back to the access token audience when nothing is stored" do
+      token = FactoryBot.create :access_token, use_refresh_token: true, resource: calendar
+      token.update_column(:refresh_token_resource, nil)
+
+      expect(token.reload.refresh_token_resource).to eq(calendar)
+    end
+
+    context "without the refresh_token_resource column" do
+      before do
+        allow(described_class).to receive(:refresh_token_resource_supported?).and_return(false)
+      end
+
+      it "reports the access token audience and leaves the column alone" do
+        token = FactoryBot.create :access_token, use_refresh_token: true, resource: calendar
+
+        expect(token.refresh_token_resource).to eq(calendar)
+        expect(token[:refresh_token_resource]).to be_nil
+      end
+
+      it "ignores assigned granted resources instead of writing the missing column" do
+        token = FactoryBot.create(
+          :access_token,
+          use_refresh_token: true, resource: calendar, refresh_token_resource: "#{calendar} #{contacts}",
+        )
+
+        expect(token.refresh_token_resource).to eq(calendar)
+        expect(token[:refresh_token_resource]).to be_nil
+      end
+    end
+
+    context "without the resource column" do
+      before do
+        allow(described_class).to receive(:resource_indicators_supported?).and_return(false)
+      end
+
+      it "derives nothing from the access token" do
+        token = FactoryBot.create :access_token, use_refresh_token: true
+
+        expect(token[:refresh_token_resource]).to be_nil
+        expect(token.refresh_token_resource).to be_nil
+      end
+    end
+  end
+
   describe "validations" do
     it "is valid without resource_owner_id" do
       # For client credentials flow
@@ -1044,6 +1161,74 @@ RSpec.describe Doorkeeper::AccessToken do
             scopes: scopes, use_refresh_token: false,
           )
           expect(token).to eq(older)
+        end.not_to(change { described_class.count })
+      end
+    end
+
+    # RFC 8707 §2.2: a refresh token stays bound to every resource of the
+    # grant it was issued for. A token restricted to one resource on refresh
+    # keeps the other granted resources on its refresh token, so it must not
+    # be reused for a grant of that one resource only.
+    context "when a matching token's refresh token is bound to more resources" do
+      let(:calendar) { "https://cal.example.com/" }
+      let(:contacts) { "https://contacts.example.com/" }
+      let(:narrowed_attributes) do
+        default_attributes.merge(
+          resource: calendar, refresh_token_resource: "#{calendar} #{contacts}", use_refresh_token: true,
+        )
+      end
+
+      it "does not reuse it for a grant of the single resource" do
+        narrowed = FactoryBot.create :access_token, narrowed_attributes
+
+        token = nil
+        expect do
+          token = described_class.find_or_create_for(
+            application: application, resource_owner: resource_owner,
+            scopes: scopes, use_refresh_token: true, resource: calendar,
+          )
+        end.to(change { described_class.count }.by(1))
+
+        expect(token).not_to eq(narrowed)
+        expect(token.refresh_token_resource).to eq(calendar)
+      end
+
+      it "reuses it for a grant of the same resources restricted to the same audience" do
+        narrowed = FactoryBot.create :access_token, narrowed_attributes
+
+        expect do
+          token = described_class.find_or_create_for(
+            application: application, resource_owner: resource_owner,
+            scopes: scopes, use_refresh_token: true,
+            resource: calendar, refresh_token_resource: "#{contacts} #{calendar}",
+          )
+          expect(token).to eq(narrowed)
+        end.not_to(change { described_class.count })
+      end
+
+      it "reuses a matching token without a refresh token regardless of its stored granted resources" do
+        existing = FactoryBot.create :access_token, default_attributes.merge(resource: calendar)
+        existing.update_column(:refresh_token_resource, "#{calendar} #{contacts}")
+
+        expect do
+          token = described_class.find_or_create_for(
+            application: application, resource_owner: resource_owner,
+            scopes: scopes, use_refresh_token: false, resource: calendar,
+          )
+          expect(token).to eq(existing)
+        end.not_to(change { described_class.count })
+      end
+
+      it "reuses whatever matches the audience without the refresh_token_resource column" do
+        allow(described_class).to receive(:refresh_token_resource_supported?).and_return(false)
+        existing = FactoryBot.create :access_token, default_attributes.merge(resource: calendar, use_refresh_token: true)
+
+        expect do
+          token = described_class.find_or_create_for(
+            application: application, resource_owner: resource_owner,
+            scopes: scopes, use_refresh_token: true, resource: calendar,
+          )
+          expect(token).to eq(existing)
         end.not_to(change { described_class.count })
       end
     end

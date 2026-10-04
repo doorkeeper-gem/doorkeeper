@@ -207,6 +207,32 @@ module Doorkeeper
         access_token.refresh_token_scopes == scopes
       end
 
+      # RFC 8707 §2.2: checks that reusing a token hands out a refresh token
+      # bound to the resources this request grants. An access token narrowed
+      # to the requested audience on an earlier refresh carries a refresh
+      # token of its own chain, which may be bound to different resources
+      # than the grant being exchanged.
+      #
+      # Without the `refresh_token_resource` column, and for a candidate
+      # without a refresh token, there is nothing to compare, as in
+      # +refresh_token_scopes_match?+.
+      #
+      # @param access_token [Doorkeeper::AccessToken]
+      #   the candidate token for reuse
+      # @param token_attributes [Hash]
+      #   attributes the new token would be created with
+      #
+      # @return [Boolean] true if the candidate's refresh token is bound to
+      #   the resources the request grants, false otherwise
+      #
+      def refresh_token_resource_match?(access_token, token_attributes)
+        return true unless refresh_token_resource_supported?
+        return true if access_token.refresh_token.blank?
+
+        granted = token_attributes[:refresh_token_resource].presence || token_attributes[:resource]
+        access_token.refresh_token_resource.to_s.split.sort == granted.to_s.split.sort
+      end
+
       # Checks whether the token scopes match the scopes from the parameters
       #
       # @param token_scopes [#to_s]
@@ -290,6 +316,21 @@ module Doorkeeper
         column_names.include?("resource")
       end
 
+      # RFC 8707 §2.2: a refresh token stays bound to every resource of the
+      # original grant even when the access tokens issued with it are
+      # restricted to a subset, so that a later refresh can ask for another
+      # granted resource. Doorkeeper tracks those resources in the
+      # `refresh_token_resource` column (added by the
+      # `doorkeeper:resource_indicators` generator). Without the column a
+      # refresh is validated against the presented access token's audience,
+      # so a narrowed token request permanently narrows the chain.
+      #
+      # @return [Boolean] true if the refresh_token_resource column exists
+      #
+      def refresh_token_resource_supported?
+        column_names.include?("refresh_token_resource")
+      end
+
       # RFC 6749 §6: a refresh token keeps the scope originally granted by the
       # resource owner even when the access tokens issued with it are
       # narrowed, so that a later refresh can restore the granted scope.
@@ -356,6 +397,7 @@ module Doorkeeper
             refresh_token_matches?(token, token_attributes) &&
               refresh_token_scopes_match?(token, scopes) &&
               resource_indicators_match?(token, requested_resource) &&
+              refresh_token_resource_match?(token, token_attributes) &&
               Doorkeeper::OAuth::Authorization::Token.within_public_client_expires_in?(
                 Doorkeeper.config, application, token,
               )
@@ -533,6 +575,40 @@ module Doorkeeper
       self[:refresh_token_scopes]
     end
 
+    # Resources the refresh token is bound to: every resource of the
+    # original grant (RFC 8707 §2.2), which the refresh grant validates a
+    # requested `resource` against and issues the next refresh token with.
+    #
+    # Falls back to the access token audience when the
+    # `refresh_token_resource` column is absent or empty (rows that predate
+    # its migration), which is the behavior Doorkeeper had before the column
+    # existed.
+    #
+    # @return [String, nil] space-delimited resource URIs
+    #
+    def refresh_token_resource
+      stored = self[:refresh_token_resource] if self.class.refresh_token_resource_supported?
+      return stored if stored.present?
+
+      resource if self.class.resource_indicators_supported?
+    end
+
+    # @param value [String, Array<String>, nil]
+    #   resources to store, space-delimited or as a list. A blank value
+    #   means "no explicit grant", so `generate_refresh_token` derives it
+    #   from the access token audience as if nothing had been assigned.
+    #   Ignored when the `refresh_token_resource` column is absent, so a
+    #   host app that assigns it ahead of the migration keeps the fallback
+    #   above instead of failing on the missing attribute.
+    def refresh_token_resource=(value)
+      return unless self.class.refresh_token_resource_supported?
+
+      normalized = Array.wrap(value).flat_map { |resource| resource.to_s.split }.uniq.join(" ").presence
+
+      @refresh_token_resource_assigned = normalized.present?
+      super(normalized)
+    end
+
     # JSON representation of the Access Token instance.
     #
     # @return [Hash] hash with token data
@@ -666,8 +742,20 @@ module Doorkeeper
       # explicit assignment.
       self[:refresh_token_scopes] = scopes.to_s if self.class.refresh_token_scopes_supported? && !@refresh_token_scopes_assigned
 
+      # The same goes for the resources the grant covers (RFC 8707 §2.2): the
+      # chain starts with the access token's own audience unless the grant
+      # being exchanged or refreshed assigned a wider one.
+      derive_refresh_token_resource unless @refresh_token_resource_assigned
+
       @raw_refresh_token = UniqueToken.generate
       secret_strategy.store_secret(self, :refresh_token, @raw_refresh_token)
+    end
+
+    def derive_refresh_token_resource
+      return unless self.class.refresh_token_resource_supported?
+      return unless self.class.resource_indicators_supported?
+
+      self[:refresh_token_resource] = resource.presence
     end
 
     # Generates and sets the token value with the
