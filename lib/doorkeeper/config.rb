@@ -881,6 +881,8 @@ module Doorkeeper
     end
 
     def allow_grant_flow_for_client?(grant_flow, client)
+      # A client known from its metadata document gets authorization codes only (RFC 9700 §2.1.2, §2.4).
+      return false if OAuth::ClientIdMetadataDocument.materialized?(client) && grant_flow != OAuth::AUTHORIZATION_CODE
       return true unless option_defined?(:allow_grant_flow_for_client)
 
       allow_grant_flow_for_client.call(grant_flow, client)

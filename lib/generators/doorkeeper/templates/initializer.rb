@@ -226,8 +226,8 @@ Doorkeeper.configure do
 
   # Accept the https URL of a public client's metadata document as its client_id
   # (draft-ietf-oauth-client-id-metadata-document). +scopes+ caps what it may request.
-  # These are public clients: they always have to use PKCE, and skip_authorization does
-  # not apply to them. Needs `rails generate doorkeeper:client_id_metadata_documents`
+  # These are public clients: they get authorization codes only, always with S256 PKCE,
+  # and skip_authorization does not apply to them. Needs `rails generate doorkeeper:client_id_metadata_documents`
   # (ActiveRecord only). With validate_client_before_resource_owner_authentication,
   # documents are fetched and rows written before anyone signs in. Turning the option
   # off refuses those clients, but access tokens already issued stay valid until they expire.

@@ -211,8 +211,9 @@ module Doorkeeper
 
       def validate_code_challenge
         # A client known from its metadata document is public and unregistered, so it always uses
-        # PKCE (RFC 9700 §2.1.1).
-        return true unless Doorkeeper.config.force_pkce? || ClientIdMetadataDocument.materialized?(client.application)
+        # PKCE, with S256 (RFC 9700 §2.1.1).
+        document_client = ClientIdMetadataDocument.materialized?(client.application)
+        return true unless Doorkeeper.config.force_pkce? || document_client
         # PKCE (RFC 7636) protects the exchange of an authorization code, so
         # a code_challenge is only required from response types that issue one
         # ("code" and code-carrying hybrid types like "code id_token"). For
@@ -221,9 +222,9 @@ module Doorkeeper
         # verifier could ever be checked, so requiring a challenge would
         # reject those requests over a parameter that cannot be validated.
         return true unless code_issuing_response_type?
-        return true if code_challenge.present?
+        return true if code_challenge.present? && (!document_client || code_challenge_method == "S256")
 
-        @invalid_request_reason = :invalid_code_challenge
+        @invalid_request_reason = code_challenge.blank? ? :invalid_code_challenge : :unknown
         false
       end
 

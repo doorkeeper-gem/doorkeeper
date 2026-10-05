@@ -89,7 +89,8 @@ feature "Client ID Metadata Documents" do
   end
 
   scenario "a client_id that is no valid URI, or has dot segments, is an ordinary one (draft-02 §3)" do
-    ["https://client example.com/metadata.json", "https://client.example.com/oauth/../metadata.json"].each do |url|
+    ["https://client example.com/metadata.json", "https://client.example.com/oauth/../metadata.json",
+     "https://client.example.com/#{"a" * 250}.json",].each do |url|
       visit authorization_endpoint_url(client_id: url, redirect_uri: redirect_uri)
 
       i_should_see_translated_error_message :invalid_client
@@ -215,10 +216,25 @@ feature "Client ID Metadata Documents" do
     expect(Doorkeeper::Application.find_by(uid: client_id).name).to eq("client.example.com: Example MCP")
   end
 
-  scenario "a client known from its document always uses PKCE (RFC 9700 §2.1.1)" do
+  scenario "a client known from its document always uses PKCE with S256 (RFC 9700 §2.1.1)" do
     authorize(code_challenge: nil, code_challenge_method: nil)
-
     i_should_see_translated_invalid_request_error_message :invalid_code_challenge, nil
+
+    authorize(code_challenge: code_verifier, code_challenge_method: "plain")
+    i_should_see_translated_invalid_request_error_message :unknown, nil
+  end
+
+  scenario "a client known from its document gets authorization codes only (RFC 9700 §2.1.2, §2.4)" do
+    config_is_set(:grant_flows, %w[authorization_code implicit password client_credentials])
+    config_is_set(:resource_owner_from_credentials) { User.first }
+    authorize
+    authorize(response_type: "token")
+    i_should_see_translated_error_message :unauthorized_client
+
+    %w[password client_credentials].each do |grant_type|
+      page.driver.post token_endpoint_url, grant_type: grant_type, client_id: client_id, username: "user", password: "secret"
+      expect(JSON.parse(page.body)).to include("error" => "unauthorized_client")
+    end
   end
 
   scenario "skip_authorization does not apply, the user always consents (draft-02 §8.5)" do
@@ -226,17 +242,6 @@ feature "Client ID Metadata Documents" do
     authorize
 
     i_should_see "client.example.com: Example MCP"
-  end
-
-  scenario "the client_credentials grant is refused, also once the option is off (RFC 6749 §4.4)" do
-    Doorkeeper::OAuth::ClientIdMetadataDocument.application(client_id)
-
-    [true, false].each do |enabled|
-      config_is_set(:use_client_id_metadata_documents, enabled)
-      page.driver.post token_endpoint_url, grant_type: "client_credentials", client_id: client_id
-
-      expect(JSON.parse(page.body)).to include("error" => "invalid_client")
-    end
   end
 
   scenario "a client known from its document is refused once the option is off (draft-02 §7.1)" do

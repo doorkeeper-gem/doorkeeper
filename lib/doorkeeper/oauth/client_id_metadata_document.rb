@@ -15,7 +15,10 @@ module Doorkeeper
         Doorkeeper.config.use_client_id_metadata_documents? && url_form?(client_id)
       end
 
+      # At most 255 characters, as the uid column holds no more on MySQL.
       def self.url_form?(client_id)
+        return false if client_id.to_s.length > 255
+
         uri = URI.parse(client_id.to_s)
         uri.is_a?(URI::HTTPS) && uri.host.present? && uri.path.length > 1 && uri.userinfo.nil? &&
           uri.fragment.nil? && (uri.path.split("/").map { |segment| URI.decode_uri_component(segment) } & %w[. ..]).empty?
