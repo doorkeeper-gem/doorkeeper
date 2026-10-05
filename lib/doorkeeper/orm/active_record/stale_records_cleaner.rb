@@ -26,14 +26,17 @@ module Doorkeeper
           table = @base_scope.arel_table
           model_class = @base_scope.is_a?(::ActiveRecord::Relation) ? @base_scope.klass : @base_scope
 
-          scope = @base_scope
-            .where.not(expires_in: nil)
-            .where(table[:created_at].lt(Time.current - ttl))
+          scope = @base_scope.where.not(expires_in: nil)
+          # A nil TTL (non-expiring access tokens) gives no global threshold,
+          # so only the per-record expiration time can tell what has expired.
+          scope = scope.where(table[:created_at].lt(Time.current - ttl)) unless ttl.nil?
 
           if model_class.respond_to?(:supports_expiration_time_math?) && model_class.supports_expiration_time_math?
             scope = scope.where("#{model_class.expiration_time_sql} < ?", Time.current)
           else
             ::Kernel.warn(::Doorkeeper::Models::ExpirationTimeSqlMath::WARNING_MESSAGE)
+            # Without the threshold every record with an expires_in would match.
+            return if ttl.nil?
           end
 
           scope.in_batches(&:delete_all)
