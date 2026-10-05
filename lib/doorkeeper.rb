@@ -48,6 +48,7 @@ module Doorkeeper
     autoload :BaseResponse, "doorkeeper/oauth/base_response"
     autoload :CodeResponse, "doorkeeper/oauth/code_response"
     autoload :Client, "doorkeeper/oauth/client"
+    autoload :ClientIdMetadataDocument, "doorkeeper/oauth/client_id_metadata_document"
     autoload :ClientCredentialsRequest, "doorkeeper/oauth/client_credentials_request"
     autoload :CodeRequest, "doorkeeper/oauth/code_request"
     autoload :ErrorResponse, "doorkeeper/oauth/error_response"
