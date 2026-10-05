@@ -131,11 +131,12 @@ module Doorkeeper
       end
 
       # A document may list redirect URIs this server refuses (e.g. http://localhost); keep the rest.
-      # Whitespace would split one URI into several once stored.
+      # Whitespace would split one URI into several once stored. Out-of-band shows the code to whoever
+      # is at the screen, which an unregistered client must not be able to ask for.
       def self.acceptable_redirect_uris(application, uris)
         validator = RedirectUriValidator.new(attributes: [:redirect_uri])
         uris.select do |uri|
-          next false if uri.blank? || uri.match?(/\s/)
+          next false if uri.blank? || uri.match?(/\s/) || NonStandard::IETF_WG_OAUTH2_OOB_METHODS.include?(uri)
 
           probe = application.class.new
           validator.validate_each(probe, :redirect_uri, uri)

@@ -210,7 +210,9 @@ module Doorkeeper
       end
 
       def validate_code_challenge
-        return true unless Doorkeeper.config.force_pkce?
+        # A client known from its metadata document is public and unregistered, so it always uses
+        # PKCE (RFC 9700 §2.1.1).
+        return true unless Doorkeeper.config.force_pkce? || ClientIdMetadataDocument.materialized?(client.application)
         # PKCE (RFC 7636) protects the exchange of an authorization code, so
         # a code_challenge is only required from response types that issue one
         # ("code" and code-carrying hybrid types like "code id_token"). For

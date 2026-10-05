@@ -5,6 +5,7 @@ require "spec_helper"
 feature "Client ID Metadata Documents" do
   let(:client_id) { "https://client.example.com/oauth/metadata.json" }
   let(:redirect_uri) { "https://client.example.com/callback" }
+  let(:code_verifier) { "a" * 43 }
   let(:document) do
     { client_id: client_id, client_name: "Example MCP", redirect_uris: [redirect_uri], token_endpoint_auth_method: "none" }
   end
@@ -25,7 +26,9 @@ feature "Client ID Metadata Documents" do
   end
 
   def authorize(**params)
-    visit authorization_endpoint_url(client_id: client_id, redirect_uri: redirect_uri, **params)
+    pkce = { code_challenge: Base64.urlsafe_encode64(Digest::SHA256.digest(code_verifier), padding: false),
+             code_challenge_method: "S256", }
+    visit authorization_endpoint_url(client_id: client_id, redirect_uri: redirect_uri, **pkce, **params)
   end
 
   scenario "is advertised in the authorization server metadata (draft-02 §6)" do
@@ -40,13 +43,15 @@ feature "Client ID Metadata Documents" do
     click_on "Authorize"
 
     code = Rack::Utils.parse_query(URI.parse(current_url).query)["code"]
-    page.driver.post token_endpoint_url, grant_type: "authorization_code", code: code, client_id: client_id, redirect_uri: redirect_uri
+    page.driver.post token_endpoint_url, grant_type: "authorization_code", code: code, client_id: client_id,
+                                         redirect_uri: redirect_uri, code_verifier: code_verifier
 
     expect(JSON.parse(page.body)).to include("access_token", "token_type" => "Bearer")
   end
 
   scenario "a redirect_uri the server refuses is dropped, not the whole client (draft-02 §8.1)" do
-    document[:redirect_uris] = ["http://client.example.com/callback", "https://client.example.com/a b", redirect_uri]
+    document[:redirect_uris] = ["http://client.example.com/callback", "https://client.example.com/a b", "urn:ietf:wg:oauth:2.0:oob",
+                                redirect_uri,]
     authorize
 
     i_should_see "client.example.com: Example MCP"
@@ -210,6 +215,12 @@ feature "Client ID Metadata Documents" do
     expect(Doorkeeper::Application.find_by(uid: client_id).name).to eq("client.example.com: Example MCP")
   end
 
+  scenario "a client known from its document always uses PKCE (RFC 9700 §2.1.1)" do
+    authorize(code_challenge: nil, code_challenge_method: nil)
+
+    i_should_see_translated_invalid_request_error_message :invalid_code_challenge, nil
+  end
+
   scenario "skip_authorization does not apply, the user always consents (draft-02 §8.5)" do
     config_is_set(:skip_authorization) { true }
     authorize
@@ -234,7 +245,8 @@ feature "Client ID Metadata Documents" do
     code = Rack::Utils.parse_query(URI.parse(current_url).query)["code"]
     config_is_set(:use_client_id_metadata_documents, false)
 
-    page.driver.post token_endpoint_url, grant_type: "authorization_code", code: code, client_id: client_id, redirect_uri: redirect_uri
+    page.driver.post token_endpoint_url, grant_type: "authorization_code", code: code, client_id: client_id,
+                                         redirect_uri: redirect_uri, code_verifier: code_verifier
     expect(JSON.parse(page.body)).to include("error" => "invalid_client")
 
     authorize
