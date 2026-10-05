@@ -20,15 +20,32 @@ RSpec.describe Doorkeeper::OAuth::ClientIdMetadataDocument do
     )
   end
 
-  it "returns the row a concurrent first request wrote" do
-    allow(Doorkeeper::Application).to receive(:with_primary_role) do
+  # The first write loses to a concurrent first request that wrote +uid+; later calls run as usual.
+  def lose_first_write_to(uid)
+    calls = 0
+    allow(Doorkeeper::Application).to receive(:with_primary_role).and_wrap_original do |original, &block|
+      next original.call(&block) unless (calls += 1) == 1
+
       now = Time.current
-      Doorkeeper::Application.insert({ uid: client_id, name: "concurrent", secret: "secret", redirect_uri: redirect_uri,
+      Doorkeeper::Application.insert({ uid: uid, name: "concurrent", secret: "secret", redirect_uri: redirect_uri,
                                        scopes: "public", confidential: false, client_id_metadata_materialized_at: now,
                                        created_at: now, updated_at: now, })
       raise ActiveRecord::RecordNotUnique
     end
+  end
+
+  it "returns the row a concurrent first request wrote" do
+    lose_first_write_to(client_id)
 
     expect(described_class.application(client_id)).to have_attributes(name: "concurrent")
+  end
+
+  it "does not take a concurrent row for another client_id that a loose collation matches" do
+    allow(Doorkeeper::Application).to receive(:by_uid) do |uid|
+      Doorkeeper::Application.all.find { |application| application.uid.casecmp?(uid.to_s) }
+    end
+    lose_first_write_to(client_id.sub("oauth", "OAuth"))
+
+    expect(described_class.application(client_id)).to be_nil
   end
 end

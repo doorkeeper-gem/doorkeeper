@@ -185,8 +185,9 @@ module Doorkeeper
       # Accept https URLs as the client_id of public clients, per
       # draft-ietf-oauth-client-id-metadata-document. +scopes+ (Strings or
       # Symbols, or a space-separated String) caps what such a client may
-      # request (default: its document's scope, else the default scopes). Needs
-      # the column added by `rails generate doorkeeper:client_id_metadata_documents`.
+      # request; a document naming no scope gets the whole cap. Without a cap,
+      # the document's scope applies, else the default scopes. Needs the column
+      # added by `rails generate doorkeeper:client_id_metadata_documents`.
       def use_client_id_metadata_documents(scopes: nil)
         scopes = scopes.is_a?(String) ? OAuth::Scopes.from_string(scopes) : scopes&.map(&:to_s)
         @config.instance_variable_set(:@use_client_id_metadata_documents, true)

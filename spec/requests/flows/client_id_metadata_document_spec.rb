@@ -112,6 +112,13 @@ feature "Client ID Metadata Documents" do
     i_should_see_translated_error_message :invalid_client
   end
 
+  scenario "a document is refused while the server accepts no public clients (RFC 7591 §2)" do
+    config_is_set(:client_authentication, %i[client_secret_basic])
+    authorize
+
+    i_should_see_translated_error_message :invalid_client
+  end
+
   scenario "a document naming no method is refused (draft-02 §4.1, RFC 7591 §2)" do
     document.delete(:token_endpoint_auth_method)
     authorize

@@ -78,6 +78,7 @@ module Doorkeeper
           well_typed?(document) &&
           displayable?(display_name(client_id, document["client_name"])) &&
           public_client?(document) &&
+          public_clients_accepted? &&
           document.keys.none? { |key| key.start_with?("client_secret") }
       end
 
@@ -91,6 +92,11 @@ module Doorkeeper
       # to +client_secret_basic+.
       def self.public_client?(document)
         document["token_endpoint_auth_method"] == "none"
+      end
+
+      # Without +none+ among the client authentication methods, the code could never be exchanged.
+      def self.public_clients_accepted?
+        Doorkeeper.config.client_authentication_methods.any? { |method| method.name.to_s == "none" }
       end
 
       # The host leads the name, as the consent screen's only verified hint of who is asking.
@@ -118,19 +124,20 @@ module Doorkeeper
           confidential: false,
           MARKER => Time.current,
         )
-        return application if model.with_primary_role { application.save }
+        # A savepoint, so that losing the uid race leaves a caller's transaction usable for the re-read.
+        return application if model.with_primary_role { model.transaction(requires_new: true) { application.save } }
 
         concurrent_row(model, application) || log_refusal(application, application.errors.full_messages.to_sentence)
       rescue ActiveRecord::RecordNotUnique
         concurrent_row(model, application)
       end
 
-      # A concurrent first request may have written the row in the meantime.
+      # A concurrent first request may have written the row in the meantime, on the primary.
       def self.concurrent_row(model, application)
         return if application.persisted?
 
-        row = model.by_uid(application.uid)
-        row if row && materialized?(row)
+        row = model.with_primary_role { model.by_uid(application.uid) }
+        row if materialized?(row) && !other_client?(row, application.uid)
       end
 
       # A document may list redirect URIs this server refuses (e.g. http://localhost); keep the rest.
