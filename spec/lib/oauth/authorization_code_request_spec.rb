@@ -380,6 +380,18 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
         end
       end
 
+      context "when the code_verifier matches the stored code_challenge" do
+        before do
+          grant.update!(code_challenge: "a45a9fea-0676-477e-95b1-a40f72ac3cfb", code_challenge_method: "plain")
+          params[:code_verifier] = grant.code_challenge
+        end
+
+        it "issues a token" do
+          expect { request.authorize }.to change { client.reload.access_tokens.count }.by(1)
+          expect(request.error).to be_nil
+        end
+      end
+
       context "when the app is missing" do
         it "does not assume non-confidential and forcibly validate pkce params" do
           request = described_class.new(server, grant, nil, params)
@@ -466,6 +478,39 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
         request.validate
 
         expect(request.error).to be_nil
+      end
+
+      # force_pkce without the columns the doorkeeper:pkce generator adds:
+      # there is no stored challenge, so any code_verifier would pass.
+      context "when force_pkce is enabled" do
+        before do
+          allow(Doorkeeper.config).to receive(:force_pkce?).and_return(true)
+          allow(Rails.logger).to receive(:error)
+          params[:code_verifier] = "foobar"
+        end
+
+        it "answers server_error instead of accepting any code_verifier" do
+          request.validate
+
+          expect(request.error).to eq(Doorkeeper::Errors::ServerError)
+        end
+
+        it "does not issue a token" do
+          expect { request.authorize }.not_to(change { Doorkeeper::AccessToken.count })
+        end
+
+        it "logs the generator to run" do
+          expect(Rails.logger).to receive(:error).with(/rails generate doorkeeper:pkce/)
+
+          request.validate
+        end
+
+        it "still answers invalid_request when the code_verifier is missing" do
+          params.delete(:code_verifier)
+          request.validate
+
+          expect(request.error).to eq(Doorkeeper::Errors::InvalidRequest)
+        end
       end
     end
   end

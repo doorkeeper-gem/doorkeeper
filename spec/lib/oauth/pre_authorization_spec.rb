@@ -41,6 +41,7 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
       scopes
       code_challenge
       code_challenge_method
+      pkce_storage
       resource_indicators
       resource_indicator_storage
     ])
@@ -577,6 +578,54 @@ RSpec.describe Doorkeeper::OAuth::PreAuthorization do
         attributes[:code_challenge_method] = "unknown"
 
         expect(pre_auth).to be_authorizable
+      end
+
+      # force_pkce without the columns the doorkeeper:pkce generator adds: the
+      # challenge cannot be stored, so the code would be exchangeable with any
+      # code_verifier.
+      context "when force_pkce is enabled" do
+        before do
+          allow(Doorkeeper.config).to receive(:force_pkce?).and_return(true)
+          allow(Rails.logger).to receive(:error)
+          attributes[:code_challenge] = "a45a9fea-0676-477e-95b1-a40f72ac3cfb"
+          attributes[:code_challenge_method] = "plain"
+        end
+
+        it "answers server_error instead of issuing a code that cannot be bound" do
+          expect(pre_auth).not_to be_authorizable
+          expect(pre_auth.error).to eq(Doorkeeper::Errors::ServerError)
+        end
+
+        it "logs the generator to run" do
+          expect(Rails.logger).to receive(:error).with(/rails generate doorkeeper:pkce/)
+
+          pre_auth.authorizable?
+        end
+
+        it "still answers invalid_request when the code_challenge is missing" do
+          attributes.delete(:code_challenge)
+
+          expect(pre_auth).not_to be_authorizable
+          expect(pre_auth.error).to eq(Doorkeeper::Errors::InvalidRequest)
+        end
+
+        # Without the columns no code_challenge_method is supported, so there
+        # is nothing to tell an unknown method apart from a known one.
+        it "answers server_error for an unknown code_challenge_method too" do
+          attributes[:code_challenge_method] = "unknown"
+
+          expect(pre_auth).not_to be_authorizable
+          expect(pre_auth.error).to eq(Doorkeeper::Errors::ServerError)
+        end
+
+        it "authorizes a response type that issues no code" do
+          allow(server).to receive(:grant_flows).and_return(%w[implicit])
+          attributes[:response_type] = "token"
+          attributes.delete(:code_challenge)
+          attributes.delete(:code_challenge_method)
+
+          expect(pre_auth).to be_authorizable
+        end
       end
     end
 
