@@ -67,9 +67,14 @@ feature "Client ID Metadata Documents" do
 
   scenario "a document whose redirect_uris are all refused is refused (draft-02 §4.2)" do
     document[:redirect_uris] = ["http://client.example.com/callback"]
-    authorize
 
-    i_should_see_translated_error_message :invalid_client
+    [false, true].each do |blank_allowed|
+      config_is_set(:allow_blank_redirect_uri, blank_allowed)
+      authorize
+
+      i_should_see_translated_error_message :invalid_client
+    end
+    expect(Doorkeeper::Application.count).to eq(0)
   end
 
   scenario "a redirect_uri the document does not list is refused (draft-02 §4.2)" do
@@ -110,6 +115,13 @@ feature "Client ID Metadata Documents" do
     authorize
 
     i_should_see_translated_error_message :invalid_client
+  end
+
+  scenario "a document client gets no code while the server stores no PKCE challenge (RFC 9700 §2.1.1)" do
+    allow(Doorkeeper::AccessGrant).to receive(:pkce_supported?).and_return(false)
+    authorize
+
+    i_should_see_translated_error_message :server_error
   end
 
   scenario "a document is refused while the server accepts no public clients (RFC 7591 §2)" do

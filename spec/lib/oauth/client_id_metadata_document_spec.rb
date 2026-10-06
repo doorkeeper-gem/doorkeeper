@@ -20,16 +20,20 @@ RSpec.describe Doorkeeper::OAuth::ClientIdMetadataDocument do
     )
   end
 
+  def insert_row(uid, materialized_at: Time.current)
+    now = Time.current
+    Doorkeeper::Application.insert({ uid: uid, name: "concurrent", secret: "secret", redirect_uri: redirect_uri,
+                                     scopes: "public", confidential: false, client_id_metadata_materialized_at: materialized_at,
+                                     created_at: now, updated_at: now, })
+  end
+
   # The first write loses to a concurrent first request that wrote +uid+; later calls run as usual.
   def lose_first_write_to(uid)
     calls = 0
     allow(Doorkeeper::Application).to receive(:with_primary_role).and_wrap_original do |original, &block|
       next original.call(&block) unless (calls += 1) == 1
 
-      now = Time.current
-      Doorkeeper::Application.insert({ uid: uid, name: "concurrent", secret: "secret", redirect_uri: redirect_uri,
-                                       scopes: "public", confidential: false, client_id_metadata_materialized_at: now,
-                                       created_at: now, updated_at: now, })
+      insert_row(uid)
       raise ActiveRecord::RecordNotUnique
     end
   end
@@ -38,6 +42,25 @@ RSpec.describe Doorkeeper::OAuth::ClientIdMetadataDocument do
     lose_first_write_to(client_id)
 
     expect(described_class.application(client_id)).to have_attributes(name: "concurrent")
+  end
+
+  it "returns the row a concurrent first request committed before this one validated" do
+    insert_row(client_id)
+    calls = 0
+    allow(Doorkeeper::Application).to receive(:by_uid).and_wrap_original do |original, uid|
+      original.call(uid) unless (calls += 1) == 1
+    end
+
+    expect(described_class.application(client_id)).to have_attributes(name: "concurrent")
+  end
+
+  it "refuses a known client whose update fails rather than returning it unsaved" do
+    insert_row(client_id, materialized_at: 1.day.ago)
+    row = Doorkeeper::Application.find_by(uid: client_id)
+    allow(Doorkeeper::Application).to receive(:by_uid).and_return(row)
+    allow(row).to receive(:save).and_return(false)
+
+    expect(described_class.application(client_id)).to be_nil
   end
 
   it "does not take a concurrent row for another client_id that a loose collation matches" do

@@ -117,9 +117,12 @@ module Doorkeeper
         scopes = scopes(document["scope"])
         return log_refusal(application, "leaves no scopes") if scopes.nil?
 
+        redirect_uris = acceptable_redirect_uris(application, document["redirect_uris"])
+        return log_refusal(application, "lists no acceptable redirect URI") if redirect_uris.empty?
+
         application.assign_attributes(
           name: display_name(application.uid, document["client_name"]),
-          redirect_uri: acceptable_redirect_uris(application, document["redirect_uris"]).join("\n"),
+          redirect_uri: redirect_uris.join("\n"),
           scopes: scopes,
           confidential: false,
           MARKER => Time.current,
