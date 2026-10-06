@@ -183,7 +183,7 @@ rails db:migrate
 
 With the column in place, [token introspection](https://datatracker.ietf.org/doc/html/rfc7662#section-2.2) of a refresh token reports the granted scope rather than the scope of the access token it was issued with, and `reuse_access_token` does not hand a grant of a narrower scope an existing token whose refresh token was granted a wider one.
 
-Without the column, a narrowed refresh narrows the refresh token as well, so the chain can never return to the granted scope (the behavior of Doorkeeper before the column existed), and a `refresh_token_scopes` assigned to an access token is ignored. Rows created before the migration keep that behavior until they are rotated, and so do the [ORM extensions](#extensions) (Sequel, MongoDB) until they add the field.
+Without the column, a narrowed refresh narrows the refresh token as well, so the chain can never return to the granted scope (the behavior of Doorkeeper before the column existed), and a `refresh_token_scopes` assigned to an access token is ignored. Rows created before the migration fall back to the scope of their access token, and rotating them stores that scope in the column, so a chain narrowed before the migration stays narrowed: the wider scope it was granted cannot be recovered automatically, and the resource owner has to authorize the client again. The [ORM extensions](#extensions) (Sequel, MongoDB) keep the behavior without the column until they add the field.
 
 ## Custom Grant Flows
 
