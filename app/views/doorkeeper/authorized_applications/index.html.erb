@@ -14,7 +14,15 @@
     <tbody>
     <% @applications.each do |application| %>
       <tr>
-        <td><%= application.name %></td>
+        <td>
+          <%= application.name %>
+          <%# The host that vouched for a metadata document client, as on the
+              consent screen (draft Section 8.5): the name beside it is the
+              client's own word, and this list is where it is read again. %>
+          <% if (client_id_host = Doorkeeper::ClientIdMetadata.display_host(application)) %>
+            <span class="text-muted">(<%= client_id_host %>)</span>
+          <% end %>
+        </td>
         <td><%= application.created_at.strftime(t('doorkeeper.authorized_applications.index.date_format')) %></td>
         <td><%= render 'delete_form', application: application %></td>
       </tr>

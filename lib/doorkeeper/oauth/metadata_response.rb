@@ -37,6 +37,13 @@ module Doorkeeper
             authorization_response_iss_parameter_supported: config.issuer.present?,
             # RFC 8707: advertise resource indicator support when configured.
             resource_indicators_supported: resource_indicators_supported?,
+            # RFC 8414 Section 2: MUST be present when an assertion-based
+            # client authentication method is advertised. Absent (and legal)
+            # otherwise, which data.compact! below takes care of.
+            token_endpoint_auth_signing_alg_values_supported: token_endpoint_auth_signing_alg_values_supported,
+            # Client ID Metadata Document draft, Section 6. Like the RFC 9207
+            # field above, false is advertised explicitly.
+            client_id_metadata_document_supported: config.client_id_metadata_documents?,
           }
           data.compact!
 
@@ -145,9 +152,40 @@ module Doorkeeper
       # configuration is honored as the source of truth. Legacy callable
       # extractors have no registered method name a client could use, so they
       # are not advertised.
+      #
+      # What is advertised is the IANA name the strategy declares, which is
+      # the name a client writes down (in a request, or in a metadata
+      # document's token_endpoint_auth_method) — not the key the host
+      # application registered it under, which it chooses freely and which the
+      # two need not share. A strategy declaring no name has only its
+      # registration key to offer, so that is still what is published for it.
       def token_endpoint_auth_methods_supported
-        config.client_authentication_methods.filter_map do |method|
-          method.name.to_s if Doorkeeper::ClientAuthentication.get(method.name)
+        advertised_client_authentication_methods.map do |method|
+          (method.auth_method_name || method.name).to_s
+        end.uniq
+      end
+
+      # The signing algorithms an assertion may use, gathered from the
+      # advertised strategies themselves. RFC 8414 Section 2 requires the entry
+      # whenever *an* assertion-based method is advertised — private_key_jwt or
+      # client_secret_jwt — so reading Doorkeeper's own method off a constant
+      # would leave a host application's client_secret_jwt advertised without
+      # the algorithms it MUST come with. A strategy that authenticates no
+      # assertion declares none, which is what leaves the entry absent (and
+      # legal) on a server that advertises no such method at all.
+      def token_endpoint_auth_signing_alg_values_supported
+        advertised_client_authentication_methods
+          .flat_map { |method| method.auth_signing_alg_values || [] }
+          .uniq
+          .presence
+      end
+
+      # The configured methods that are still registered. An entry naming a
+      # method the registry does not know cannot authenticate anyone, so it is
+      # neither advertised nor asked what it signs.
+      def advertised_client_authentication_methods
+        config.client_authentication_methods.select do |method|
+          Doorkeeper::ClientAuthentication.get(method.name)
         end
       end
 

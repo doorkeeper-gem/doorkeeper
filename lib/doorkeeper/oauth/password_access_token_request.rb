@@ -70,7 +70,13 @@ module Doorkeeper
       #
       #   @see https://datatracker.ietf.org/doc/html/rfc6749#section-4.3
       #
+      # A public Client ID Metadata Document client is no client for this
+      # grant: nobody registered it, so "a client is present" says only that
+      # someone published a document at a URL — the same reason
+      # ClientCredentials::Validator refuses one (RFC 6749 Section 4.4).
       def validate_client
+        return false if Doorkeeper::ClientIdMetadata.public_document_client?(client)
+
         if Doorkeeper.config.skip_client_authentication_for_password_grant
           client.present? || (!parameters[:client_id] && credentials.blank?)
         else

@@ -82,4 +82,28 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Validator do
       end
     end
   end
+
+  # The client check runs first and already refuses a missing client, so
+  # these are asked directly: the confidentiality check must not raise on
+  # what it is handed if it is ever reached with it.
+  context "with Client ID Metadata Documents enabled" do
+    let(:application) { double scopes: nil, uid: "abc123" }
+
+    before { config_is_set(:client_id_metadata_documents, true) }
+
+    it "leaves a missing client to the client check" do
+      allow(request).to receive(:client).and_return(nil)
+
+      expect(validator.send(:validate_client_confidential)).to be(true)
+    end
+
+    it "leaves a client with no application to the other checks" do
+      # Built first: the full validation would reach the scope check, which
+      # reads the application's scopes.
+      validator
+      allow(client).to receive(:application).and_return(nil)
+
+      expect(validator.send(:validate_client_confidential)).to be(true)
+    end
+  end
 end
