@@ -182,6 +182,18 @@ module Doorkeeper
         @config.instance_variable_set(:@force_pkce, true)
       end
 
+      # Accept https URLs as the client_id of public clients, per
+      # draft-ietf-oauth-client-id-metadata-document. +scopes+ (Strings or
+      # Symbols, or a space-separated String) caps what such a client may
+      # request; a document naming no scope gets the whole cap. Without a cap,
+      # the document's scope applies, else the default scopes. Needs the column
+      # added by `rails generate doorkeeper:client_id_metadata_documents`.
+      def use_client_id_metadata_documents(scopes: nil)
+        scopes = scopes.is_a?(String) ? OAuth::Scopes.from_string(scopes) : scopes&.map(&:to_s)
+        @config.instance_variable_set(:@use_client_id_metadata_documents, true)
+        @config.instance_variable_set(:@client_id_metadata_document_scopes, scopes)
+      end
+
       # Validate the authorization request's client_id and redirect_uri before
       # authenticating the resource owner, so users are not sent through login
       # for a request that can only fail (disabled by default)
@@ -564,6 +576,7 @@ module Doorkeeper
            end)
 
     attr_reader :reuse_access_token,
+                :client_id_metadata_document_scopes,
                 :enable_multiple_database_roles,
                 :token_secret_fallback_strategy,
                 :application_secret_fallback_strategy
@@ -639,6 +652,10 @@ module Doorkeeper
 
     def force_pkce?
       option_set? :force_pkce
+    end
+
+    def use_client_id_metadata_documents?
+      option_set? :use_client_id_metadata_documents
     end
 
     def validate_client_before_resource_owner_authentication?
@@ -865,6 +882,8 @@ module Doorkeeper
     end
 
     def allow_grant_flow_for_client?(grant_flow, client)
+      # A client known from its metadata document gets authorization codes only (RFC 9700 §2.1.2, §2.4).
+      return false if OAuth::ClientIdMetadataDocument.materialized?(client) && grant_flow != OAuth::AUTHORIZATION_CODE
       return true unless option_defined?(:allow_grant_flow_for_client)
 
       allow_grant_flow_for_client.call(grant_flow, client)
