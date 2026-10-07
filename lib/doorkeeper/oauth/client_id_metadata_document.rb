@@ -172,7 +172,7 @@ module Doorkeeper
       end
 
       def self.log_refusal(application, reason)
-        ::Rails.logger.info("[DOORKEEPER] client_id #{application.uid} refused: #{reason}")
+        ::Rails.logger.warn("[DOORKEEPER] client_id #{application.uid} refused: #{reason}")
         nil
       end
     end
