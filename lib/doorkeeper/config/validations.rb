@@ -21,6 +21,10 @@ module Doorkeeper
         validate_deprecated_grant_flows
         validate_issuer_format
         validate_issuer_metadata_discoverability
+        validate_secret_rotation_grace_period
+        validate_after_old_secret_used
+        validate_secret_rotation_options_without_rotation
+        validate_secret_rotation_orm
       end
 
       private
@@ -304,6 +308,103 @@ module Doorkeeper
           "oauth-authorization-server#{uri.path}), so they will not discover the " \
           "document. Use a host-only issuer, or route the derived well-known path " \
           "to Doorkeeper.",
+        )
+      end
+
+      # A grace period is consumed as `old_secret_created_at + grace_period`
+      # during client authentication (ApplicationMixin#old_secret_expired?),
+      # so an invalid value boots fine and starts raising TypeError on the
+      # first authentication after a rotation. Refused here instead, the way
+      # an unusable secret strategy is. Zero and negative values are refused
+      # too: such a deadline is already past when a rotation writes it, so
+      # every old secret would expire on arrival — retaining nothing is what
+      # `rotate_secret!(revoke_old: true)` says explicitly. And a finite one:
+      # `Float::INFINITY` is a positive Numeric, but adding it to a time
+      # raises FloatDomainError — an endless grace period is already what the
+      # nil default says. And a real one: `Complex` is a Numeric too, one
+      # with no ordering, so asking whether it is positive would raise
+      # NoMethodError here in place of the ArgumentError below.
+      def validate_secret_rotation_grace_period
+        grace_period = secret_rotation_grace_period
+        return if grace_period.nil?
+        # ActiveSupport::Duration delegates #is_a? and the predicates, so a
+        # duration passes as the numeric it wraps.
+        return if grace_period.is_a?(Numeric) && grace_period.real? && grace_period.finite? && grace_period.positive?
+
+        raise ArgumentError,
+              "secret_rotation_grace_period must be a finite positive number of " \
+              "seconds or a duration (e.g. 7.days), got #{grace_period.inspect}."
+      end
+
+      # Called with the application on every authentication the superseded
+      # secret let in, and nowhere else — so a value that cannot be called
+      # boots fine and fails exactly the requests the grace period exists to
+      # keep working, while requests made with the new secret carry on as if
+      # nothing were wrong. Refused here instead, like the grace period
+      # above. A lambda or a Method is held to its signature as well: `-> {}`
+      # raises ArgumentError the moment it is handed the application, where
+      # a plain proc or block takes whatever it is given — except a required
+      # keyword, which nothing positional ever satisfies.
+      def validate_after_old_secret_used
+        return unless instance_variable_defined?(:@after_old_secret_used)
+
+        hook = after_old_secret_used
+        return if hook.respond_to?(:call) && callable_with_application?(hook)
+
+        raise ArgumentError,
+              "after_old_secret_used must be callable with the application " \
+              "(e.g. ->(application) { ... }), got #{hook.inspect}."
+      end
+
+      # `parameters` rather than `arity`: a required keyword counts toward
+      # the arity of a lambda (`->(application:) {}` reports 1), and a
+      # negative arity only says "optional arguments follow", not how many
+      # positionals must come first (`->(a, b, *c) {}` reports -3).
+      def callable_with_application?(hook)
+        return true unless hook.respond_to?(:parameters)
+
+        types = hook.parameters.map(&:first)
+        return false if types.include?(:keyreq)
+        return true if hook.is_a?(Proc) && !hook.lambda?
+
+        types.count(:req) <= 1 && types.intersect?(%i[req opt rest])
+      end
+
+      # Same shape as validate_refresh_token_flow: the deadline and the hook
+      # are read only from behind `enable_secret_rotation`, so configuring
+      # either without it leaves an operator with a grace period they believe
+      # is bounded, or a signal they believe is being watched for, and no way
+      # to tell from the running server that neither is true.
+      #
+      # `after_old_secret_used` defaults to a lambda, so whether it was
+      # configured is the ivar rather than the value (as
+      # validate_pkce_code_challenge_methods asks it of its own option).
+      def validate_secret_rotation_options_without_rotation
+        return if enable_secret_rotation?
+        return if secret_rotation_grace_period.nil? &&
+                  !instance_variable_defined?(:@after_old_secret_used)
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] secret_rotation_grace_period / after_old_secret_used are configured " \
+          "without enable_secret_rotation, so they have no effect. Add enable_secret_rotation " \
+          "(and run `rails generate doorkeeper:secret_rotation`) to use them.",
+        )
+      end
+
+      # Everything the option changes lives in Doorkeeper::ApplicationMixin
+      # and in the Active Record application mixin. The other ORM adapters
+      # ship application models that include neither, so under them the
+      # option is a no-op — and one nothing else would report: the warning
+      # the Active Record model gives for missing columns never fires where
+      # there is no column to miss.
+      def validate_secret_rotation_orm
+        return unless enable_secret_rotation?
+        return if orm.to_s == "active_record"
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] enable_secret_rotation is implemented for the active_record ORM. With " \
+          "orm #{orm.inspect} it takes effect only if that adapter's application model implements " \
+          "the rotation surface itself (see the Client Secret Rotation section of the README).",
         )
       end
 
