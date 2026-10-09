@@ -12,6 +12,7 @@ User-visible changes worth mentioning.
 - [#1964] `rake doorkeeper:db:cleanup:expired_tokens` no longer raises when `access_token_expires_in` is `nil`; tokens with an individual `expires_in` are still removed once expired (#1963).
 - [#1965] Fix: `force_pkce` without the PKCE columns (`rails generate doorkeeper:pkce`) no longer accepts any `code_verifier`. The authorization code flow is now refused with `server_error` until the migration is applied.
 - [#1966] Fix: a refresh token stays bound to every resource of the original grant when a token request restricts the access token to a subset (RFC 8707 §2.2). Tracked in a new `refresh_token_resource` column that `rails generate doorkeeper:resource_indicators` now creates; installations that ran the generator on a 6.0 prerelease add it by hand (see the README). `reuse_access_token` only reuses a token whose refresh token is bound to the same resources.
+- [#1967] Fix: introspecting a refresh token reports every resource it is bound to as `aud` (RFC 8707 §2.2), rather than the audience of the access token issued with it.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.rc2
