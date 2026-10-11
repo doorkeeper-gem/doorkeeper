@@ -319,6 +319,12 @@ module Doorkeeper
     # Ceiling for the TTL of access tokens issued to public clients (OAuth 2.1 Section 2.4).
     # Applies to every grant, including refresh_token. nil (the default) means no ceiling.
     option :public_client_access_token_expires_in, default: nil
+    # Whether the refresh_token grant revokes the access token the presented
+    # refresh token was issued with (true, the default) or leaves it usable
+    # until it expires and revokes only the refresh token (false). Disabling
+    # it takes effect only once the `refresh_token_revoked_at` column exists
+    # (`rails generate doorkeeper:refresh_token_revoked_at`).
+    option :revoke_previous_access_token_on_refresh, default: true
     option :authorization_code_expires_in,  default: 600
     option :orm,                            default: :active_record
     option :native_redirect_uri,            default: "urn:ietf:wg:oauth:2.0:oob", deprecated: true
