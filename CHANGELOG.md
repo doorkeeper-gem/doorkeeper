@@ -11,6 +11,7 @@ User-visible changes worth mentioning.
 - [#1960] Ignore the port of `http://localhost` redirect URIs like that of loopback IP literals (RFC 8252 §7.3 / §8.3).
 - [#1964] `rake doorkeeper:db:cleanup:expired_tokens` no longer raises when `access_token_expires_in` is `nil`; tokens with an individual `expires_in` are still removed once expired (#1963).
 - [#1965] Fix: `force_pkce` without the PKCE columns (`rails generate doorkeeper:pkce`) no longer accepts any `code_verifier`. The authorization code flow is now refused with `server_error` until the migration is applied.
+- [#1947] Revoking a refresh token now also revokes the tokens issued earlier from the same authorization grant (RFC 7009 §2.1). The refresh chain is tracked in a new `refresh_token_family_id` column; existing installs opt in with `rails generate doorkeeper:refresh_token_family_id`.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.rc2
