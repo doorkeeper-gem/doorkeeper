@@ -304,6 +304,144 @@ RSpec.describe "Client Credentials Request" do
     end
   end
 
+  context "with stateless_jwt_tokens enabled" do
+    let(:jwt_secret) { "stateless-jwt-spec-secret" }
+
+    before do
+      secret = jwt_secret
+      stub_const(
+        "StatelessJwtSpecGenerator",
+        Class.new do
+          define_singleton_method(:generate) do |options|
+            payload = {
+              "resource_owner_id" => options[:resource_owner_id],
+              "scope" => options[:scopes].to_s,
+              "client_id" => options[:application]&.uid,
+            }
+            payload["exp"] = (options[:created_at] + options[:expires_in]).to_i if options[:expires_in]
+            payload["tenant_name"] = options["tenant_name"] if options.key?("tenant_name")
+
+            JWT.encode(payload, secret, "HS256")
+          end
+        end,
+      )
+
+      config_is_set(:stateless_jwt_tokens, true)
+      config_is_set(:access_token_generator, "StatelessJwtSpecGenerator")
+      config_is_set(:jwt_token_decoder, ->(raw) { JWT.decode(raw, secret, true, algorithm: "HS256")[0] })
+    end
+
+    it "issues a JWT that is never persisted" do
+      headers = authorization client.uid, client.secret
+      params  = { grant_type: "client_credentials" }
+
+      post token_endpoint_url, params: params, headers: headers
+
+      expect(response.status).to eq(200)
+      expect(Doorkeeper::AccessToken.count).to eq(0)
+      expect(json_response).to match(
+        "access_token" => an_instance_of(String),
+        "token_type" => "Bearer",
+        "expires_in" => be_within(1).of(Doorkeeper.configuration.access_token_expires_in),
+        "created_at" => an_instance_of(Integer),
+      )
+
+      claims = JWT.decode(json_response["access_token"], jwt_secret, true, algorithm: "HS256")[0]
+      expect(claims).to include("client_id" => client.uid, "resource_owner_id" => nil)
+    end
+
+    it "authenticates a protected resource request with the issued JWT" do
+      headers = authorization client.uid, client.secret
+      params  = { grant_type: "client_credentials" }
+
+      post token_endpoint_url, params: params, headers: headers
+
+      get "/full_protected_resources",
+          headers: { "HTTP_AUTHORIZATION" => "Bearer #{json_response["access_token"]}" }
+
+      expect(response).to be_successful
+      expect(Doorkeeper::AccessToken.count).to eq(0)
+    end
+
+    context "when custom_access_token_expires_in returns Float::INFINITY" do
+      before do
+        config_is_set(:custom_access_token_expires_in, ->(_context) { Float::INFINITY })
+      end
+
+      it "issues a non-expiring JWT instead of applying access_token_expires_in" do
+        headers = authorization client.uid, client.secret
+        params  = { grant_type: "client_credentials" }
+
+        post token_endpoint_url, params: params, headers: headers
+
+        expect(response.status).to eq(200)
+        expect(json_response).not_to have_key("expires_in")
+
+        claims = JWT.decode(json_response["access_token"], jwt_secret, true, algorithm: "HS256")[0]
+        expect(claims).not_to have_key("exp")
+
+        get "/full_protected_resources",
+            headers: { "HTTP_AUTHORIZATION" => "Bearer #{json_response["access_token"]}" }
+
+        expect(response).to be_successful
+      end
+    end
+
+    context "when custom_access_token_attributes are configured by string names" do
+      before { config_is_set(:custom_access_token_attributes, ["tenant_name"]) }
+
+      it "forwards the supplied value to the generator" do
+        headers = authorization client.uid, client.secret
+        params  = { grant_type: "client_credentials", tenant_name: "Me" }
+
+        post token_endpoint_url, params: params, headers: headers
+
+        expect(response.status).to eq(200)
+
+        claims = JWT.decode(json_response["access_token"], jwt_secret, true, algorithm: "HS256")[0]
+        expect(claims).to include("tenant_name" => "Me")
+      end
+    end
+
+    context "when the access token model does not implement build_stateless_token" do
+      before do
+        allow(Doorkeeper.config.access_token_model).to receive(:respond_to?).and_call_original
+        allow(Doorkeeper.config.access_token_model).to receive(:respond_to?).with(:build_stateless_token).and_return(false)
+      end
+
+      it "returns a spec-compliant server_error instead of a NoMethodError" do
+        headers = authorization client.uid, client.secret
+        params  = { grant_type: "client_credentials" }
+
+        post token_endpoint_url, params: params, headers: headers
+
+        expect(response.status).to eq(400)
+        expect(json_response["error"]).to eq("server_error")
+        expect(json_response["error_description"]).to eq(translated_error_message(:server_error))
+        expect(Doorkeeper::AccessToken.count).to eq(0)
+      end
+    end
+
+    context "when revoke_previous_client_credentials_token is true" do
+      before do
+        allow(Doorkeeper.config).to receive_messages(reuse_access_token: false, revoke_previous_client_credentials_token?: true)
+      end
+
+      it "revokes a token persisted before the option was enabled" do
+        persisted_token = FactoryBot.create(:access_token, application: client, resource_owner_id: nil, scopes: "")
+
+        headers = authorization client.uid, client.secret
+        params  = { grant_type: "client_credentials" }
+
+        post token_endpoint_url, params: params, headers: headers
+
+        expect(response.status).to eq(200)
+        expect(persisted_token.reload).to be_revoked
+        expect(Doorkeeper::AccessToken.count).to eq(1)
+      end
+    end
+  end
+
   def authorization(username, password)
     credentials = ActionController::HttpAuthentication::Basic.encode_credentials username, password
     { "HTTP_AUTHORIZATION" => credentials }

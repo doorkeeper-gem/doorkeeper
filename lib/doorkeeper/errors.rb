@@ -115,6 +115,28 @@ module Doorkeeper
       end
     end
 
+    # Raised when stateless_jwt_tokens is enabled but the configured access
+    # token model does not implement `.build_stateless_token`, which is the
+    # case for ORM adapters that reimplement token creation (e.g. Mongoid,
+    # Sequel) and have not been updated for stateless issuance.
+    #
+    # `#type` returns `:server_error` for the same reason as
+    # MissingResourceColumn: the token endpoint emits a spec-compliant error
+    # code and the actionable message stays on the exception for logs.
+    class StatelessTokensUnsupported < DoorkeeperError
+      def initialize(model)
+        super(
+          "stateless_jwt_tokens is enabled but #{model} does not implement `.build_stateless_token`. " \
+          "The configured ORM adapter has not been updated for stateless issuance; " \
+          "disable stateless_jwt_tokens or update the adapter.",
+        )
+      end
+
+      def type
+        :server_error
+      end
+    end
+
     InvalidRequest = Class.new(BaseResponseError)
     InvalidToken = Class.new(BaseResponseError)
     InvalidClient = Class.new(BaseResponseError)

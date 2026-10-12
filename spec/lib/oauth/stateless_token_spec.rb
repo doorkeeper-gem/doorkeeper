@@ -725,6 +725,63 @@ RSpec.describe "Stateless JWT tokens" do
       expect(result.token).to eq("fake-jwt-#{resource_owner.id}-#{result.claims["iat"]}")
     end
 
+    it "passes the polymorphic resource owner to the generator like the persisted path" do
+      config_is_set(:polymorphic_resource_owner, true)
+
+      expect(FakeJwtGenerator).to receive(:generate)
+        .with(hash_including(resource_owner: resource_owner))
+        .and_call_original
+
+      Doorkeeper::AccessToken.find_or_create_for(
+        application: application,
+        resource_owner: resource_owner,
+        scopes: scopes,
+      )
+    end
+
+    it "does not pass resource_owner to the generator without polymorphic_resource_owner" do
+      expect(FakeJwtGenerator).to receive(:generate)
+        .with(hash_excluding(:resource_owner))
+        .and_call_original
+
+      Doorkeeper::AccessToken.find_or_create_for(
+        application: application,
+        resource_owner: resource_owner,
+        scopes: scopes,
+      )
+    end
+
+    it "passes configured custom attributes to the generator like the persisted path" do
+      config_is_set(:custom_access_token_attributes, %i[tenant_name])
+
+      expect(FakeJwtGenerator).to receive(:generate)
+        .with(hash_including(tenant_name: "Tenant 1"))
+        .and_call_original
+
+      Doorkeeper::AccessToken.find_or_create_for(
+        application: application,
+        resource_owner: resource_owner,
+        scopes: scopes,
+        tenant_name: "Tenant 1",
+        not_configured: "value",
+      )
+    end
+
+    it "does not pass unconfigured attributes to the generator" do
+      config_is_set(:custom_access_token_attributes, %i[tenant_name])
+
+      expect(FakeJwtGenerator).to receive(:generate)
+        .with(hash_excluding(:not_configured))
+        .and_call_original
+
+      Doorkeeper::AccessToken.find_or_create_for(
+        application: application,
+        resource_owner: resource_owner,
+        scopes: scopes,
+        not_configured: "value",
+      )
+    end
+
     describe "claims" do
       subject(:claims) do
         Doorkeeper::AccessToken.find_or_create_for(
@@ -783,6 +840,29 @@ RSpec.describe "Stateless JWT tokens" do
         end
       end
 
+      # custom_access_token_expires_in returning Float::INFINITY reaches the
+      # builder as an explicit `expires_in: nil` (Authorization::Token
+      # .access_token_expires_in), which create_for records as a non-expiring
+      # row. Only an omitted lifetime falls back to access_token_expires_in.
+      context "when expires_in is explicitly nil" do
+        let(:token_attributes) { { expires_in: nil } }
+
+        it "builds a non-expiring token instead of applying access_token_expires_in" do
+          expect(Doorkeeper.config.access_token_expires_in).to be_present
+
+          expect(claims).not_to have_key("exp")
+          expect(claims["expires_in"]).to be_nil
+        end
+
+        it "passes the nil lifetime to the generator" do
+          expect(FakeJwtGenerator).to receive(:generate)
+            .with(hash_including(expires_in: nil))
+            .and_call_original
+
+          claims
+        end
+      end
+
       context "when access tokens do not expire" do
         before { config_is_set(:access_token_expires_in, nil) }
 
@@ -811,6 +891,15 @@ RSpec.describe "Stateless JWT tokens" do
             "resource_owner_id" => resource_owner.id,
             "resource_owner_type" => resource_owner.class.name,
           )
+        end
+
+        context "without resource owner" do
+          let(:resource_owner) { nil }
+
+          it "omits resource_owner_type instead of recording NilClass" do
+            expect(claims).to include("resource_owner_id" => nil)
+            expect(claims).not_to have_key("resource_owner_type")
+          end
         end
       end
 
@@ -842,6 +931,26 @@ RSpec.describe "Stateless JWT tokens" do
 
           it "omits the claim" do
             expect(claims).not_to have_key("tenant_name")
+          end
+        end
+
+        # The token requests hand the builder symbol keys
+        # (#custom_token_attributes_with_data calls symbolize_keys) while the
+        # option may be configured with strings; create_for does not care
+        # because Active Record attribute assignment is indifferent.
+        context "when the attribute names are configured as strings" do
+          before { config_is_set(:custom_access_token_attributes, ["tenant_name"]) }
+
+          it "includes the claim" do
+            expect(claims).to include("tenant_name" => "Tenant 1")
+          end
+
+          it "passes the attribute to the generator under the configured name" do
+            expect(FakeJwtGenerator).to receive(:generate)
+              .with(hash_including("tenant_name" => "Tenant 1"))
+              .and_call_original
+
+            claims
           end
         end
       end
@@ -988,6 +1097,34 @@ RSpec.describe "Stateless JWT tokens" do
         stateless_jwt_tokens
         use_refresh_token
         reuse_access_token
+      end
+    end
+
+    it "warns when revoke_previous_client_credentials_token is enabled" do
+      expect(Rails.logger).to receive(:warn).with(
+        /stateless_jwt_tokens is enabled but revoke_previous_client_credentials_token is also enabled/,
+      )
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        stateless_jwt_tokens
+        access_token_generator "FakeJwtGenerator"
+        jwt_token_decoder ->(_raw) { {} }
+        revoke_previous_client_credentials_token
+      end
+    end
+
+    it "warns when revoke_previous_authorization_code_token is enabled" do
+      expect(Rails.logger).to receive(:warn).with(
+        /stateless_jwt_tokens is enabled but revoke_previous_authorization_code_token is also enabled/,
+      )
+
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        stateless_jwt_tokens
+        access_token_generator "FakeJwtGenerator"
+        jwt_token_decoder ->(_raw) { {} }
+        revoke_previous_authorization_code_token
       end
     end
 

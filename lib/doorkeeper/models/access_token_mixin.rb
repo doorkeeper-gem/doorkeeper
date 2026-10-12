@@ -427,7 +427,11 @@ module Doorkeeper
       # Builds an in-memory StatelessToken (signed JWT) without persisting it.
       # Used in stateless_jwt_tokens mode to skip the database write on issuance.
       def build_stateless_token(application:, resource_owner:, scopes:, **token_attributes)
-        expires_in = token_attributes[:expires_in] || Doorkeeper.config.access_token_expires_in
+        # The token requests supply symbol keys while custom_access_token_attributes
+        # may name the attributes as strings; create_for does not notice because
+        # attribute assignment is indifferent, so the lookups below must be too.
+        token_attributes = token_attributes.with_indifferent_access
+        expires_in = stateless_token_expires_in(token_attributes)
         iat = Time.now.utc
         exp = expires_in ? (iat + expires_in.seconds).to_i : nil
 
@@ -439,23 +443,43 @@ module Doorkeeper
           "expires_in" => expires_in,
         }
         claims["exp"] = exp if exp
-        claims["resource_owner_type"] = resource_owner.class.name if Doorkeeper.config.polymorphic_resource_owner?
+        claims["resource_owner_type"] = resource_owner.class.name if resource_owner && Doorkeeper.config.polymorphic_resource_owner?
         Doorkeeper.config.custom_access_token_attributes.each do |attr|
           claims[attr.to_s] = token_attributes[attr] if token_attributes.key?(attr)
         end
 
         raw = stateless_token_generator.generate(
-          resource_owner_id: claims["resource_owner_id"],
-          scopes: scopes,
-          application: application,
-          expires_in: expires_in,
-          created_at: iat,
+          stateless_generator_attributes(claims, resource_owner, token_attributes).merge(
+            scopes: scopes, application: application, expires_in: expires_in, created_at: iat,
+          ),
         )
 
         Doorkeeper::OAuth::StatelessToken.new(claims: claims, application: application, raw_token: raw)
       end
 
       private
+
+      # An explicit `expires_in: nil` is a non-expiring token (the issuers pass
+      # it when custom_access_token_expires_in returns Float::INFINITY), which
+      # create_for records as a NULL lifetime. Only an omitted lifetime falls
+      # back to access_token_expires_in.
+      def stateless_token_expires_in(token_attributes)
+        token_attributes.fetch(:expires_in) { Doorkeeper.config.access_token_expires_in }
+      end
+
+      # The generator receives the same optional attributes as the persisted
+      # path (#attributes_for_token_generator): the polymorphic resource owner
+      # and every configured custom attribute, so a generator that reads
+      # `opts[:tenant_id]` sees the same value on both paths.
+      def stateless_generator_attributes(claims, resource_owner, token_attributes)
+        { resource_owner_id: claims["resource_owner_id"] }.tap do |attributes|
+          attributes[:resource_owner] = resource_owner if Doorkeeper.config.polymorphic_resource_owner?
+
+          Doorkeeper.config.custom_access_token_attributes.each do |attribute_name|
+            attributes[attribute_name] = token_attributes[attribute_name]
+          end
+        end
+      end
 
       # Resolves the configured access_token_generator class, mirroring the instance
       # method #token_generator but callable from build_stateless_token.
