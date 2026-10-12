@@ -231,7 +231,9 @@ Doorkeeper.configure do
   # `rails generate doorkeeper:client_id_metadata_documents` and the PKCE columns of
   # `rails generate doorkeeper:pkce` (ActiveRecord only). With
   # validate_client_before_resource_owner_authentication, documents are fetched and rows
-  # written before anyone signs in. Turning the option off refuses those clients, but
+  # written before anyone signs in. A failed fetch refuses the client, also a known one
+  # (draft-02 §5.1): new authorizations fail until its host answers again, while issued
+  # tokens and refresh keep working. Turning the option off refuses those clients, but
   # access tokens already issued stay valid until they expire.
   #
   # use_client_id_metadata_documents scopes: %w[read]

@@ -201,10 +201,13 @@ feature "Client ID Metadata Documents" do
 
   scenario "a changed document updates the client, an unfetchable one refuses it (draft-02 §5, §5.1)" do
     authorize
+    application = Doorkeeper::Application.find_by(uid: client_id)
+    application.update_columns(client_id_metadata_materialized_at: 1.day.ago, updated_at: 1.day.ago)
     document[:client_name] = "Renamed"
     Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
     authorize
     i_should_see "client.example.com: Renamed"
+    expect(application.reload.client_id_metadata_materialized_at).to be < 1.hour.ago
 
     document[:redirect_uris] = ["http://client.example.com/callback"]
     Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear

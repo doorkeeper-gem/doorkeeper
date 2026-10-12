@@ -20,11 +20,10 @@ RSpec.describe Doorkeeper::OAuth::ClientIdMetadataDocument do
     )
   end
 
-  def insert_row(uid, materialized_at: Time.current)
-    now = Time.current
+  def insert_row(uid, at: Time.current)
     Doorkeeper::Application.insert({ uid: uid, name: "concurrent", secret: "secret", redirect_uri: redirect_uri,
-                                     scopes: "public", confidential: false, client_id_metadata_materialized_at: materialized_at,
-                                     created_at: now, updated_at: now, })
+                                     scopes: "public", confidential: false, client_id_metadata_materialized_at: at,
+                                     created_at: at, updated_at: at, })
   end
 
   # The first write loses to a concurrent first request that wrote +uid+; later calls run as usual.
@@ -55,7 +54,7 @@ RSpec.describe Doorkeeper::OAuth::ClientIdMetadataDocument do
   end
 
   it "refuses a known client whose update fails rather than returning it unsaved" do
-    insert_row(client_id, materialized_at: 1.day.ago)
+    insert_row(client_id, at: 1.day.ago)
     row = Doorkeeper::Application.find_by(uid: client_id)
     allow(Doorkeeper::Application).to receive(:by_uid).and_return(row)
     allow(row).to receive(:save).and_return(false)

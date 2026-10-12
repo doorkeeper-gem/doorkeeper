@@ -6,8 +6,8 @@ module Doorkeeper
     # for public clients: an https client_id is the URL of the client's own metadata,
     # fetched and kept as an application row, since grants and tokens reference one.
     #
-    # Rows written from a document carry a timestamp in MARKER, which is what tells them
-    # apart from registered applications (draft-02 §7.1). ActiveRecord only.
+    # Rows written from a document carry the time of the first write in MARKER, which is what
+    # tells them apart from registered applications (draft-02 §7.1). ActiveRecord only.
     module ClientIdMetadataDocument
       MARKER = :client_id_metadata_materialized_at
 
@@ -53,7 +53,7 @@ module Doorkeeper
 
         entry = cache.fetch(client_id) { (document = fetch(client_id)) && { document: document, fetched_at: Time.current } }
         return unless entry
-        return registered if registered && registered.public_send(MARKER) >= entry[:fetched_at]
+        return registered if registered && registered.updated_at >= entry[:fetched_at]
 
         materialize(model, registered || model.new(uid: client_id), entry[:document])
       end
@@ -125,8 +125,8 @@ module Doorkeeper
           redirect_uri: redirect_uris.join("\n"),
           scopes: scopes,
           confidential: false,
-          MARKER => Time.current,
         )
+        application.public_send(:"#{MARKER}=", Time.current) unless materialized?(application)
         # A savepoint, so that losing the uid race leaves a caller's transaction usable for the re-read.
         return application if model.with_primary_role { model.transaction(requires_new: true) { application.save } }
 
