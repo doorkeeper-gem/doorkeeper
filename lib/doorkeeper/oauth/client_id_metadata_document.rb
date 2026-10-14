@@ -11,8 +11,9 @@ module Doorkeeper
     module ClientIdMetadataDocument
       MARKER = :client_id_metadata_materialized_at
 
+      # A refused client_id is looked up like a registered one, so its document is never fetched.
       def self.url?(client_id)
-        Doorkeeper.config.use_client_id_metadata_documents? && url_form?(client_id)
+        Doorkeeper.config.use_client_id_metadata_documents? && url_form?(client_id) && allowed?(client_id)
       end
 
       # At most 255 characters, as the uid column holds no more on MySQL.
@@ -30,9 +31,15 @@ module Doorkeeper
         application.respond_to?(MARKER) && application.public_send(MARKER).present?
       end
 
-      # A row written from a document while the option was on, and is no longer.
+      # A row written from a document while the option was on, and is no longer, or whose
+      # client_id is refused by now.
       def self.orphaned?(application)
-        materialized?(application) && !Doorkeeper.config.use_client_id_metadata_documents?
+        materialized?(application) &&
+          (!Doorkeeper.config.use_client_id_metadata_documents? || !allowed?(application.uid))
+      end
+
+      def self.allowed?(client_id)
+        Doorkeeper.config.allow_client_id_metadata_document.call(client_id)
       end
 
       # A row written from a document stands for one client_id only, compared as a simple string

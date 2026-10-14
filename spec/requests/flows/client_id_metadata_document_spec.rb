@@ -280,6 +280,33 @@ feature "Client ID Metadata Documents" do
     i_should_see_translated_error_message :invalid_client
   end
 
+  scenario "a client_id allow_client_id_metadata_document refuses is not fetched" do
+    config_is_set(:allow_client_id_metadata_document, ->(id) { URI(id).host == "other.example.com" })
+    authorize
+
+    i_should_see_translated_error_message :invalid_client
+    expect(a_request(:get, client_id)).not_to have_been_made
+    expect(Doorkeeper::Application.by_uid(client_id)).to be_nil
+  end
+
+  scenario "a client allow_client_id_metadata_document no longer accepts is refused, also on refresh" do
+    config_is_set(:refresh_token_enabled, true)
+    config_is_set(:allow_client_id_metadata_document, ->(id) { URI(id).host == "client.example.com" })
+    authorize
+    click_on "Authorize"
+    code = Rack::Utils.parse_query(URI.parse(current_url).query)["code"]
+    page.driver.post token_endpoint_url, grant_type: "authorization_code", code: code, client_id: client_id,
+                                         redirect_uri: redirect_uri, code_verifier: code_verifier
+    refresh_token = JSON.parse(page.body).fetch("refresh_token")
+
+    config_is_set(:allow_client_id_metadata_document, ->(_id) { false })
+    page.driver.post token_endpoint_url, grant_type: "refresh_token", refresh_token: refresh_token, client_id: client_id
+    expect(JSON.parse(page.body)).to include("error" => "invalid_client")
+
+    authorize
+    i_should_see_translated_error_message :invalid_client
+  end
+
   scenario "a registered application with a URL as uid is used as registered, not fetched (draft-02 §7.2)" do
     [true, false].each do |confidential|
       Doorkeeper::Application.delete_all

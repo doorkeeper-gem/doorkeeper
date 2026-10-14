@@ -399,6 +399,16 @@ module Doorkeeper
     #
     option :forbid_redirect_uri,            default: ->(_uri) { false }
 
+    # Limits which clients may identify themselves by a metadata document
+    # (see use_client_id_metadata_documents). Called with the client_id before
+    # the document is fetched; a client it refuses is never fetched, and one
+    # already known is refused at the authorization and token endpoints, also
+    # on refresh. Accepts every client by default.
+    #
+    # @param allow_client_id_metadata_document [Proc] Block or any object respond to #call
+    #
+    option :allow_client_id_metadata_document, default: ->(_client_id) { true }
+
     # WWW-Authenticate Realm (default "Doorkeeper").
     #
     # @param realm [String] ("Doorkeeper") Authentication realm
