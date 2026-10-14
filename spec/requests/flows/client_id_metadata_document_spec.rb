@@ -99,8 +99,8 @@ feature "Client ID Metadata Documents" do
       visit authorization_endpoint_url(client_id: url, redirect_uri: redirect_uri)
 
       i_should_see_translated_error_message :invalid_client
+      expect(a_request(:get, url)).not_to have_been_made
     end
-    expect(a_request(:get, /client.example.com/)).not_to have_been_made
   end
 
   scenario "a document naming another client_id is refused (draft-02 §4)" do
