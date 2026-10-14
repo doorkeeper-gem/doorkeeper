@@ -238,6 +238,15 @@ Doorkeeper.configure do
   #
   # use_client_id_metadata_documents scopes: %w[read]
 
+  # Without this, any https URL can become a client. To accept known clients only, compare
+  # the host (a prefix check like start_with?("https://claude.ai") also matches claude.ai.evil.com).
+  # A client taken off the list is refused at the authorization and token endpoints, also on
+  # refresh; access tokens already issued stay valid until they expire.
+  #
+  # allow_client_id_metadata_document do |client_id|
+  #   %w[claude.ai chatgpt.com].include?(URI(client_id).host)
+  # end
+
   # Validate the authorization request's client_id and redirect_uri before
   # authenticating the resource owner, so users are not sent through login for
   # a request that can only fail (RFC 6749 Section 4.1.2.1 asks for the
