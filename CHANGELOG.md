@@ -19,6 +19,7 @@ User-visible changes worth mentioning.
 - [#1980] Omit `scopes_supported` from the authorization server metadata when no scopes are configured (RFC 8414 §3.2).
 - [#1979] **[BREAKING]** Refuse the non-standard out-of-band redirect URIs (`urn:ietf:wg:oauth:2.0:oob`, `urn:ietf:wg:oauth:2.0:oob:auto`) by default: when an application is registered, at the authorization endpoint and on the code exchange; `oauth/authorize/native` is no longer drawn. Applications already stored with such a URI are refused with `invalid_redirect_uri` at the authorization endpoint and `invalid_grant` on the code exchange. Set `allow_oob_redirect_uris true` to keep the old behavior.
 - [#PR ID] Omit `code_challenge_methods_supported` from the authorization server metadata when the PKCE columns are missing (RFC 8414 §3.2).
+- [#1975] Enforce a wall-clock timeout and a byte budget, headers included, on `HttpFetcher`; refuse special-use addresses from the post-RFC 6890 registries, IPv6 literals and unconnectable ports before fetching; accept a leading byte order mark in a fetched document.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.rc2
