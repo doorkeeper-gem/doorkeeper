@@ -72,10 +72,7 @@ module Doorkeeper
       end
 
       def self.fetch(client_id)
-        body = HttpFetcher.new.fetch(client_id).dup.force_encoding(Encoding::UTF_8)
-        return unless body.valid_encoding?
-
-        document = JSON.parse(body)
+        document = JSON.parse(HttpFetcher.new.fetch(client_id))
         document if valid?(client_id, document)
       rescue HttpFetcher::FetchError, JSON::ParserError
         nil
