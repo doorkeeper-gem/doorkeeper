@@ -132,7 +132,11 @@ module Doorkeeper
       end
 
       def validate_client
-        @client = OAuth::Client.find(client_id)
+        @client = if ClientIdMetadataDocument.url?(client_id)
+                    ClientIdMetadataDocument.application(client_id)&.then { |application| OAuth::Client.new(application) }
+                  else
+                    OAuth::Client.find(client_id)
+                  end
         @client.present?
       end
 
@@ -206,7 +210,10 @@ module Doorkeeper
       end
 
       def validate_code_challenge
-        return true unless Doorkeeper.config.force_pkce?
+        # A client known from its metadata document is public and unregistered, so it always uses
+        # PKCE, with S256 (RFC 9700 §2.1.1).
+        document_client = ClientIdMetadataDocument.materialized?(client.application)
+        return true unless Doorkeeper.config.force_pkce? || document_client
         # PKCE (RFC 7636) protects the exchange of an authorization code, so
         # a code_challenge is only required from response types that issue one
         # ("code" and code-carrying hybrid types like "code id_token"). For
@@ -215,9 +222,9 @@ module Doorkeeper
         # verifier could ever be checked, so requiring a challenge would
         # reject those requests over a parameter that cannot be validated.
         return true unless code_issuing_response_type?
-        return true if code_challenge.present?
+        return true if code_challenge.present? && (!document_client || code_challenge_method == "S256")
 
-        @invalid_request_reason = :invalid_code_challenge
+        @invalid_request_reason = code_challenge.blank? ? :invalid_code_challenge : :unknown
         false
       end
 
@@ -240,13 +247,15 @@ module Doorkeeper
       # Only response types that issue a code are refused, as in
       # #validate_code_challenge. Without force_pkce nothing changes: PKCE is
       # then opportunistic and a challenge is ignored when it cannot be stored.
+      # A client known from its metadata document always has to use PKCE, so it
+      # is refused like under force_pkce.
       def validate_pkce_storage
-        return true unless Doorkeeper.config.force_pkce?
+        return true unless Doorkeeper.config.force_pkce? || ClientIdMetadataDocument.materialized?(client.application)
         return true unless code_issuing_response_type?
         return true if Doorkeeper.config.access_grant_model.pkce_supported?
 
         ::Rails.logger.error(
-          "[DOORKEEPER] force_pkce is enabled but the PKCE columns are missing from the " \
+          "[DOORKEEPER] PKCE is required but the PKCE columns are missing from the " \
           "oauth_access_grants table, so authorization codes cannot be issued. " \
           "Run `rails generate doorkeeper:pkce` and apply the migration.",
         )

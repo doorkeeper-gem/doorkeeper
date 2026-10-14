@@ -83,7 +83,10 @@ module Doorkeeper
         self.status = error.status
       end
 
+      # Never for a client known only from its metadata document: anyone can publish one.
       def skip_authorization?
+        return false if OAuth::ClientIdMetadataDocument.materialized?(@pre_auth.client.application)
+
         !!instance_exec(
           [server.current_resource_owner, @pre_auth.client],
           &Doorkeeper.config.skip_authorization
