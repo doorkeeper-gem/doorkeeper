@@ -20,10 +20,11 @@ RSpec.describe Doorkeeper::OAuth::ClientIdMetadataDocument do
     )
   end
 
+  # What a concurrent first request leaves behind: the materialized public client row for +uid+.
   def insert_row(uid, at: Time.current)
-    Doorkeeper::Application.insert({ uid: uid, name: "concurrent", secret: "secret", redirect_uri: redirect_uri,
-                                     scopes: "public", confidential: false, client_id_metadata_materialized_at: at,
-                                     created_at: at, updated_at: at, })
+    FactoryBot.create(:application, uid: uid, name: "concurrent", redirect_uri: redirect_uri, scopes: "public",
+                                    confidential: false, client_id_metadata_materialized_at: at,
+                                    created_at: at, updated_at: at,)
   end
 
   # The first write loses to a concurrent first request that wrote +uid+; later calls run as usual.
