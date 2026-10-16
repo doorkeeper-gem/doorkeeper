@@ -19,6 +19,7 @@ module Doorkeeper
         validate_issuer_format
         validate_issuer_metadata_discoverability
         validate_stateless_jwt_tokens
+        validate_stateless_single_token_options
       end
 
       private
@@ -255,6 +256,27 @@ module Doorkeeper
           "Token reuse requires database state and is " \
           "unsupported in stateless mode; disable reuse_access_token.",
         )
+      end
+
+      # revoke_previous_*_token promise a single valid token per client, but a
+      # stateless token leaves no row to find and revoke on the next issuance.
+      # Only tokens persisted before stateless_jwt_tokens was enabled are still
+      # revoked, so the promise does not hold once tokens are stateless.
+      def validate_stateless_single_token_options
+        return unless stateless_jwt_tokens?
+
+        {
+          revoke_previous_client_credentials_token: revoke_previous_client_credentials_token?,
+          revoke_previous_authorization_code_token: revoke_previous_authorization_code_token?,
+        }.each do |option, enabled|
+          next unless enabled
+
+          ::Rails.logger.warn(
+            "[DOORKEEPER] stateless_jwt_tokens is enabled but #{option} is also enabled. " \
+            "Stateless tokens cannot be revoked, so only tokens persisted before " \
+            "stateless_jwt_tokens was enabled are revoked; disable #{option}.",
+          )
+        end
       end
     end
   end
