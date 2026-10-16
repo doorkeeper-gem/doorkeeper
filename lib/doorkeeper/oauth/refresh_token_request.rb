@@ -97,18 +97,7 @@ module Doorkeeper
           attributes[:previous_refresh_token] = refresh_token.refresh_token
         end
 
-        # RFC 8707: carry resource indicators to the new access token.
-        # If the refresh request specified a (subset of) resource(s), use those;
-        # otherwise inherit from the refresh token itself.
-        if @resolved_resource_indicators.present?
-          unless Doorkeeper.config.access_token_model.resource_indicators_supported?
-            raise Errors::MissingResourceColumn, "oauth_access_tokens"
-          end
-
-          attributes[:resource] = @resolved_resource_indicators.join(" ")
-        elsif refresh_token.try(:resource).present?
-          attributes[:resource] = refresh_token.resource
-        end
+        attributes.merge!(resource_indicator_attributes)
 
         # RFC 6749 §6: "If a new refresh token is issued, the refresh token
         # scope MUST be identical to that of the refresh token included by
@@ -124,6 +113,51 @@ module Doorkeeper
           use_refresh_token: true,
           **attributes,
         )
+      end
+
+      # RFC 8707: carry resource indicators to the new access token.
+      # If the refresh request specified a (subset of) resource(s), use those;
+      # otherwise inherit the audience of the access token being refreshed.
+      #
+      # RFC 8707 §2.2: the new refresh token stays bound to every resource
+      # the presented one was, whatever audience the access token issued with
+      # it is restricted to. Carried explicitly so that a narrowed access
+      # token does not narrow the refresh token issued with it.
+      def resource_indicator_attributes
+        attributes = {}
+
+        if @resolved_resource_indicators.present?
+          unless Doorkeeper.config.access_token_model.resource_indicators_supported?
+            raise Errors::MissingResourceColumn, "oauth_access_tokens"
+          end
+
+          attributes[:resource] = @resolved_resource_indicators.join(" ")
+        elsif refresh_token.try(:resource).present?
+          attributes[:resource] = refresh_token.resource
+        end
+
+        if refresh_token_resource_supported? && granted_resource_indicators.present?
+          attributes[:refresh_token_resource] = granted_resource_indicators.join(" ")
+        end
+
+        attributes
+      end
+
+      # Resources the presented refresh token is bound to. Without the
+      # `refresh_token_resource` column the model reports the access token
+      # audience here, which is the behavior Doorkeeper had before the column
+      # existed. An access token model that does not implement
+      # `refresh_token_resource` at all (the Sequel and MongoDB adapters ship
+      # their own mixins) gets that same behavior.
+      def granted_resource_indicators
+        @granted_resource_indicators ||=
+          (refresh_token.try(:refresh_token_resource) || refresh_token.try(:resource)).to_s.split
+      end
+
+      # True when the access token model implements the granted-resource API
+      # and has the column to store it.
+      def refresh_token_resource_supported?
+        Doorkeeper.config.access_token_model.try(:refresh_token_resource_supported?)
       end
 
       def resource_owner
@@ -209,15 +243,17 @@ module Doorkeeper
       end
 
       # RFC 8707: resource indicators on refresh must be a subset of those
-      # bound to the original refresh token (which inherited from the grant).
+      # bound to the presented refresh token, which keeps every resource of
+      # the original grant (Section 2.2) rather than the audience of the
+      # access token issued with it.
       #
       # Subset and syntax enforcement run even when no validator is configured
-      # as long as the original token is already audience-restricted: a refresh
-      # must never widen the audience beyond what the original token carried.
-      # Only when the feature is disabled AND the original token has no stored
+      # as long as the refresh token is already bound to resources: a refresh
+      # must never widen the audience beyond what was granted.
+      # Only when the feature is disabled AND the refresh token has no stored
       # resources is the `resource` parameter ignored entirely.
       def validate_resource_indicators
-        original_resources = refresh_token.try(:resource)&.split
+        original_resources = granted_resource_indicators
 
         validator = Doorkeeper.config.resource_indicator_validator
 
