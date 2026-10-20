@@ -14,6 +14,7 @@ User-visible changes worth mentioning.
 - [#1956] Add `use_client_id_metadata_documents`: public clients may use the https URL of their metadata document as `client_id` (draft-ietf-oauth-client-id-metadata-document). Needs `rails generate doorkeeper:client_id_metadata_documents`.
 - [#1973] Add `allow_client_id_metadata_document` to limit which clients may use a metadata document. A refused `client_id` is never fetched, and one already known is refused at the authorization and token endpoints, also on refresh.
 - [#1966] Fix: a refresh token stays bound to every resource of the original grant when a token request restricts the access token to a subset (RFC 8707 §2.2). Tracked in a new `refresh_token_resource` column that `rails generate doorkeeper:resource_indicators` now creates; installations that ran the generator on a 6.0 prerelease add it by hand (see the README). `reuse_access_token` only reuses a token whose refresh token is bound to the same resources.
+- [#1967] Fix: introspecting a refresh token reports every resource it is bound to as `aud` (RFC 8707 §2.2), rather than the audience of the access token issued with it.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.rc2

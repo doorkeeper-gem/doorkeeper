@@ -114,8 +114,8 @@ module Doorkeeper
         }
 
         # RFC 8707: include audience restriction when resource indicators are present
-        if @token.try(:resource).present?
-          aud = @token.resource.split
+        if resource_string.present?
+          aud = resource_string.split
           response[:aud] = aud.length == 1 ? aud.first : aud
         end
 
@@ -218,6 +218,17 @@ module Doorkeeper
         return @token.scopes_string unless refresh_token_presented?
 
         @token.try(:refresh_token_scopes_string).presence || @token.scopes_string
+      end
+
+      # RFC 7662 §2.2: `aud` describes the presented token as well. A refresh
+      # token stays bound to every resource of the original grant
+      # (RFC 8707 §2.2), which can be more than the audience of the access
+      # token it was issued with. Models without stored granted resources
+      # report the access token audience, as before.
+      def resource_string
+        return @token.try(:resource) unless refresh_token_presented?
+
+        @token.try(:refresh_token_resource).presence || @token.try(:resource)
       end
 
       def valid_authorized_token?
