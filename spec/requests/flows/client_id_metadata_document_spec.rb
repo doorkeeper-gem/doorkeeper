@@ -93,9 +93,10 @@ feature "Client ID Metadata Documents" do
     end
   end
 
-  scenario "a client_id that is no valid URI, or has dot segments, is an ordinary one (draft-02 §3)" do
+  scenario "a client_id that is no valid URI, has dot segments or an unconnectable port, is an ordinary one (draft-02 §3)" do
     ["https://client example.com/metadata.json", "https://client.example.com/oauth/../metadata.json",
-     "https://client.example.com/#{"a" * 250}.json",].each do |url|
+     "https://client.example.com/#{"a" * 250}.json", "https://client.example.com:0/metadata.json",
+     "https://client.example.com:99999999999999999999/metadata.json",].each do |url|
       visit authorization_endpoint_url(client_id: url, redirect_uri: redirect_uri)
 
       i_should_see_translated_error_message :invalid_client
