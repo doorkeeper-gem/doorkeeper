@@ -119,6 +119,14 @@ feature "Client ID Metadata Documents" do
     i_should_see "client.example.com: Example MCP"
   end
 
+  scenario "a document listing none only among its supported methods is accepted as public" do
+    document.delete(:token_endpoint_auth_method)
+    document[:token_endpoint_auth_methods_supported] = %w[private_key_jwt none]
+    authorize
+
+    i_should_see "client.example.com: Example MCP"
+  end
+
   scenario "a document asking for a shared secret is refused, also when it supports none (draft-02 §4.1)" do
     [nil, %w[none]].each do |supported|
       document[:token_endpoint_auth_method] = "client_secret_basic"
@@ -131,7 +139,7 @@ feature "Client ID Metadata Documents" do
   end
 
   scenario "a document with a malformed or inconsistent list of supported methods is refused" do
-    [["none", "none"], ["none", %w[none] + [1]], ["private_key_jwt", %w[none]], [nil, %w[none]],
+    [["none", "none"], ["none", %w[none] + [1]], ["private_key_jwt", %w[none]], [nil, %w[private_key_jwt]],
      ["none", %w[none client_secret_post]],].each do |method, supported|
       document[:token_endpoint_auth_method] = method
       document[:token_endpoint_auth_methods_supported] = supported

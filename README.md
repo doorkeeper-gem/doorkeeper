@@ -218,12 +218,14 @@ end
 
 `allow_client_id_metadata_document` decides which `client_id`s are accepted, before anything is fetched. A client it stops accepting is refused from then on, refresh included. Compare the host, not a prefix: `start_with?("https://claude.ai")` also matches `claude.ai.evil.com`.
 
-The authorization server metadata at `/.well-known/oauth-authorization-server` advertises `client_id_metadata_document_supported` once the option is on.
+The authorization server metadata at `/.well-known/oauth-authorization-server` advertises `client_id_metadata_document_supported` once the option is on. If a CDN caches that endpoint, purge it after turning the option on: ChatGPT falls back to manual registration without a word when its copy lacks the flag.
+
+Document clients authenticate with `none` at the token endpoint. Leave `private_key_jwt` out of `client_authentication`: a client such as ChatGPT picks it when the server advertises it, and its token request then fails with `invalid_client`, as Doorkeeper keeps no keys for these clients.
 
 ### Behavior
 
 - A `client_id` is taken for a document URL when it is `https`, has a path other than `/`, is at most 255 characters long and carries no userinfo, fragment or dot segments. Any other `client_id` is looked up as a registered `uid`.
-- The document must name its own URL as `client_id`, list at least one `redirect_uris` entry, and declare `token_endpoint_auth_method` as `none`; a document asking for a shared secret, or naming no method, is refused. Redirect URIs your server refuses are dropped, the rest kept; a document left with none is refused. `force_ssl_in_redirect_uri` is on everywhere but development, so the loopback redirects of native clients (RFC 8252 Section 7.3) are dropped unless you let them through:
+- The document must name its own URL as `client_id`, list at least one `redirect_uris` entry, and be a public client: `token_endpoint_auth_method` is `none`, or `token_endpoint_auth_methods_supported` ([OpenID Connect RP Metadata Choices](https://openid.net/specs/openid-connect-rp-metadata-choices-1_0.html)) lists `none` and no shared-secret method, as ChatGPT's does next to its preferred `private_key_jwt`. A document asking for a shared secret, or naming no method, is refused. Redirect URIs your server refuses are dropped, the rest kept; a document left with none is refused. `force_ssl_in_redirect_uri` is on everywhere but development, so the loopback redirects of native clients (RFC 8252 Section 7.3) are dropped unless you let them through:
 
 ```ruby
 force_ssl_in_redirect_uri { |uri| !%w[127.0.0.1 ::1 localhost].include?(uri.hostname) }
