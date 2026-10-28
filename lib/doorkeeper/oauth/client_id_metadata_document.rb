@@ -95,10 +95,19 @@ module Doorkeeper
           document.values_at("scope", "client_name").all? { |value| value.nil? || value.is_a?(String) }
       end
 
-      # Only public clients are accepted. An omitted method is refused, as RFC 7591 would default it
-      # to +client_secret_basic+.
+      SHARED_SECRET_METHODS = %w[client_secret_basic client_secret_post client_secret_jwt].freeze
+
+      # Public clients only: the method is +none+, or the supported methods (OpenID Connect RP Metadata
+      # Choices) include +none+ and no shared-secret one, as ChatGPT's do with +private_key_jwt+. A method
+      # named next to them must be among them. Naming neither is refused, as RFC 7591 then defaults to
+      # +client_secret_basic+.
       def self.public_client?(document)
-        document["token_endpoint_auth_method"] == "none"
+        method, supported = document.values_at("token_endpoint_auth_method", "token_endpoint_auth_methods_supported")
+        return method == "none" if supported.nil?
+        return false unless supported.is_a?(Array) && supported.all?(String)
+
+        (method.nil? || supported.include?(method)) && supported.include?("none") &&
+          (supported & SHARED_SECRET_METHODS).empty?
       end
 
       # Without +none+ among the client authentication methods, the code could never be exchanged.

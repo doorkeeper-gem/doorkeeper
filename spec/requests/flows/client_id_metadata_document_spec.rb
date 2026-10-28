@@ -110,11 +110,44 @@ feature "Client ID Metadata Documents" do
     i_should_see_translated_error_message :invalid_client
   end
 
-  scenario "a document asking for a shared secret is refused (draft-02 §4.1)" do
-    document[:token_endpoint_auth_method] = "client_secret_basic"
+  scenario "a document preferring another method but also supporting none is accepted as public" do
+    document[:token_endpoint_auth_method] = "private_key_jwt"
+    document[:token_endpoint_auth_methods_supported] = %w[none private_key_jwt]
+    document[:jwks_uri] = "https://client.example.com/jwks.json"
     authorize
 
-    i_should_see_translated_error_message :invalid_client
+    i_should_see "client.example.com: Example MCP"
+  end
+
+  scenario "a document listing none only among its supported methods is accepted as public" do
+    document.delete(:token_endpoint_auth_method)
+    document[:token_endpoint_auth_methods_supported] = %w[private_key_jwt none]
+    authorize
+
+    i_should_see "client.example.com: Example MCP"
+  end
+
+  scenario "a document asking for a shared secret is refused, also when it supports none (draft-02 §4.1)" do
+    [nil, %w[none]].each do |supported|
+      document[:token_endpoint_auth_method] = "client_secret_basic"
+      document[:token_endpoint_auth_methods_supported] = supported
+      Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
+      authorize
+
+      i_should_see_translated_error_message :invalid_client
+    end
+  end
+
+  scenario "a document with a malformed or inconsistent list of supported methods is refused" do
+    [["none", "none"], ["none", %w[none] + [1]], ["private_key_jwt", %w[none]], [nil, %w[private_key_jwt]],
+     ["none", %w[none client_secret_post]],].each do |method, supported|
+      document[:token_endpoint_auth_method] = method
+      document[:token_endpoint_auth_methods_supported] = supported
+      Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
+      authorize
+
+      i_should_see_translated_error_message :invalid_client
+    end
   end
 
   scenario "a document client gets no code while the server stores no PKCE challenge (RFC 9700 §2.1.1)" do
