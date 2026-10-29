@@ -220,7 +220,7 @@ end
 
 The authorization server metadata at `/.well-known/oauth-authorization-server` advertises `client_id_metadata_document_supported` once the option is on. If a CDN caches that endpoint, purge it after turning the option on: ChatGPT falls back to manual registration without a word when its copy lacks the flag.
 
-Document clients authenticate with `none` at the token endpoint. Leave `private_key_jwt` out of `client_authentication`: a client such as ChatGPT picks it when the server advertises it, and its token request then fails with `invalid_client`, as Doorkeeper keeps no keys for these clients.
+A client such as ChatGPT authenticates with `private_key_jwt` whenever the server advertises it. Doorkeeper keeps the document's `jwks_uri` on the application when your model has a `jwks_uri` column, the one `private_key_jwt` reads for registered clients as well. No Doorkeeper generator adds it; a client known before gets its `jwks_uri` on the next authorization, when its document is fetched again. A document that prefers `private_key_jwt` and names a `jwks_uri` then makes a confidential client: it has to authenticate with its key, and `none` no longer redeems its codes or refresh tokens, or revokes its tokens. Its tokens stay under `public_client_access_token_expires_in`, as anyone can publish a document with keys of their own. Without that column, leave `private_key_jwt` out of `client_authentication`, or the token request of such a client fails with `invalid_client`.
 
 ### Behavior
 
@@ -231,7 +231,7 @@ Document clients authenticate with `none` at the token endpoint. Leave `private_
 force_ssl_in_redirect_uri { |uri| !%w[127.0.0.1 ::1 localhost].include?(uri.hostname) }
 ```
 
-- These are public clients: they get authorization codes only, always with S256 PKCE, and `skip_authorization` does not apply, so the user consents on every authorization. The consent screen shows the document's host before its `client_name`, as the only verified hint of who is asking.
+- These clients get authorization codes only, always with S256 PKCE, and `skip_authorization` does not apply, so the user consents on every authorization, also when a confidential one already holds a token. The consent screen shows the document's host before its `client_name`, as the only verified hint of who is asking.
 - A failed fetch refuses the client, also one seen before (the draft forbids using a stale document): new authorizations fail until its host answers again, while issued tokens and refresh keep working. A changed document updates the client on the next fetch.
 - A registered application whose `uid` is a URL is used as registered and never fetched. Turning the option off refuses the clients written from documents, but access tokens already issued stay valid until they expire.
 - Fetches are bounded (https only, no redirects, a few seconds and kilobytes, no private or special-use addresses). Failed fetches are not cached, so rate limiting of the authorization endpoint is left to the host application. With `validate_client_before_resource_owner_authentication`, documents are fetched and applications created before anyone signs in, so without an allow hook anyone can create them anonymously.

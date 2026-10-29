@@ -103,11 +103,14 @@ module Doorkeeper
           private
 
           # The cap +public_client_access_token_expires_in+ puts on tokens
-          # issued to +application+, or nil when none applies.
+          # issued to +application+, or nil when none applies. A client known
+          # from its metadata document stays capped when it authenticates with
+          # private_key_jwt, as anyone can publish one with keys of their own.
           def public_client_expires_in_cap(configuration, application)
             cap = configuration.public_client_access_token_expires_in
             return if cap.nil?
-            return if application.respond_to?(:confidential?) && application.confidential?
+            return if application.respond_to?(:confidential?) && application.confidential? &&
+                      !OAuth::ClientIdMetadataDocument.materialized?(application)
 
             cap
           end
