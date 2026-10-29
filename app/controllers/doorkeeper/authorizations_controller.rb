@@ -115,8 +115,11 @@ module Doorkeeper
       @client_pre_auth ||= OAuth::PreAuthorization.new(Doorkeeper.configuration, pre_auth_params)
     end
 
+    # Never for a client known only from its metadata document, confidential or not: anyone can publish one.
     def can_authorize_response?
-      Doorkeeper.config.custom_access_token_attributes.empty? && pre_auth.client.application.confidential? && matching_token?
+      application = pre_auth.client.application
+      Doorkeeper.config.custom_access_token_attributes.empty? && application.confidential? &&
+        !OAuth::ClientIdMetadataDocument.materialized?(application) && matching_token?
     end
 
     # Active access token issued for the same client and resource owner with

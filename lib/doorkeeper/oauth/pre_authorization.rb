@@ -210,8 +210,8 @@ module Doorkeeper
       end
 
       def validate_code_challenge
-        # A client known from its metadata document is public and unregistered, so it always uses
-        # PKCE, with S256 (RFC 9700 §2.1.1).
+        # A client known from its metadata document is unregistered, so it always uses PKCE, with S256
+        # (RFC 9700 §2.1.1), also when it authenticates with private_key_jwt.
         document_client = ClientIdMetadataDocument.materialized?(client.application)
         return true unless Doorkeeper.config.force_pkce? || document_client
         # PKCE (RFC 7636) protects the exchange of an authorization code, so

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
+require "jwt"
 
 feature "Client ID Metadata Documents" do
   let(:client_id) { "https://client.example.com/oauth/metadata.json" }
@@ -148,6 +149,45 @@ feature "Client ID Metadata Documents" do
 
       i_should_see_translated_error_message :invalid_client
     end
+  end
+
+  scenario "a document client preferring private_key_jwt must use it where the server offers it" do
+    rsa_key = OpenSSL::PKey::RSA.generate(2048)
+    jwks_uri = "https://client.example.com/jwks.json"
+    # Another spec may have cached other keys for the same URL.
+    Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::KeyResolver.jwks_cache.clear
+    stub_request(:get, jwks_uri).to_return(status: 200, headers: { "Content-Type" => "application/json" },
+                                           body: { keys: [JWT::JWK.new(rsa_key.public_key, { kid: "k" }).export] }.to_json,)
+    config_is_set(:client_authentication, %i[none private_key_jwt])
+    config_is_set(:issuer, "http://www.example.com")
+    config_is_set(:refresh_token_enabled, true)
+    config_is_set(:public_client_access_token_expires_in, 60)
+    document.merge!(token_endpoint_auth_method: "private_key_jwt", token_endpoint_auth_methods_supported: %w[none private_key_jwt],
+                    jwks_uri: jwks_uri,)
+    with_assertion = lambda do
+      { client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
+        client_assertion: JWT.encode({ iss: client_id, sub: client_id, aud: "http://www.example.com/oauth/token",
+                                       exp: 1.minute.from_now.to_i, jti: SecureRandom.hex(8), }, rsa_key, "RS256", { kid: "k" }), }
+    end
+    authorize
+    click_on "Authorize"
+    code = Rack::Utils.parse_query(URI.parse(current_url).query)["code"]
+    exchange = { grant_type: "authorization_code", code: code, redirect_uri: redirect_uri, code_verifier: code_verifier }
+
+    page.driver.post token_endpoint_url, exchange.merge(client_id: client_id)
+    expect(JSON.parse(page.body)).to include("error" => "invalid_client")
+    page.driver.post token_endpoint_url, exchange.merge(with_assertion.call)
+    expect(JSON.parse(page.body)).to include("expires_in" => 60)
+    refresh_token = JSON.parse(page.body).fetch("refresh_token")
+
+    page.driver.post token_endpoint_url, grant_type: "refresh_token", refresh_token: refresh_token, client_id: client_id
+    expect(JSON.parse(page.body)).to include("error" => "invalid_client")
+    page.driver.post token_endpoint_url, { grant_type: "refresh_token", refresh_token: refresh_token }.merge(with_assertion.call)
+    expect(JSON.parse(page.body)).to include("access_token")
+
+    # A confidential client with a matching token skips the consent screen, one known from its document never does.
+    authorize
+    i_should_see "client.example.com: Example MCP"
   end
 
   scenario "a document client gets no code while the server stores no PKCE challenge (RFC 9700 §2.1.1)" do

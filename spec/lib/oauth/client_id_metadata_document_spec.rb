@@ -63,6 +63,34 @@ RSpec.describe Doorkeeper::OAuth::ClientIdMetadataDocument do
     expect(described_class.application(client_id)).to be_nil
   end
 
+  context "with a document preferring private_key_jwt, on a server offering it" do
+    before do
+      config_is_set(:client_authentication, %i[none private_key_jwt])
+      stub_request(:get, client_id).to_return(
+        status: 200,
+        body: { client_id: client_id, redirect_uris: [redirect_uri], token_endpoint_auth_method: "private_key_jwt",
+                token_endpoint_auth_methods_supported: %w[none private_key_jwt],
+                jwks_uri: "https://client.example.com/jwks.json", }.to_json,
+      )
+    end
+
+    it "makes a public client without a secret confidential" do
+      insert_row(client_id, at: 1.day.ago).update_column(:secret, nil)
+
+      expect(described_class.application(client_id)).to have_attributes(confidential: true, persisted?: true, changed?: false)
+    end
+
+    it "keeps the client public where the model has no jwks_uri column" do
+      insert_row(client_id, at: 1.day.ago)
+      row = Doorkeeper::Application.find_by(uid: client_id)
+      allow(Doorkeeper::Application).to receive(:by_uid).and_return(row)
+      allow(row).to receive(:respond_to?).and_call_original
+      allow(row).to receive(:respond_to?).with(:jwks_uri=).and_return(false)
+
+      expect(described_class.application(client_id)).to have_attributes(confidential: false, jwks_uri: nil)
+    end
+  end
+
   it "does not take a concurrent row for another client_id that a loose collation matches" do
     allow(Doorkeeper::Application).to receive(:by_uid) do |uid|
       Doorkeeper::Application.all.find { |application| application.uid.casecmp?(uid.to_s) }

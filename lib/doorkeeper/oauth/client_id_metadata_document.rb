@@ -142,6 +142,7 @@ module Doorkeeper
           scopes: scopes,
           confidential: false,
         )
+        assign_keys(application, document) if application.respond_to?(:jwks_uri=)
         application.public_send(:"#{MARKER}=", Time.current) unless materialized?(application)
         # A savepoint, so that losing the uid race leaves a caller's transaction usable for the re-read.
         return application if model.with_primary_role { model.transaction(requires_new: true) { application.save } }
@@ -149,6 +150,27 @@ module Doorkeeper
         concurrent_row(model, application) || log_refusal(application, application.errors.full_messages.to_sentence)
       rescue ActiveRecord::RecordNotUnique
         concurrent_row(model, application)
+      end
+
+      def self.assign_keys(application, document)
+        application.jwks_uri = jwks_uri(document["jwks_uri"])
+        application.confidential = private_key_jwt?(document, application.jwks_uri)
+        # Generated on create only, so a public client turning confidential may still lack one.
+        application.renew_secret if application.confidential? && application.secret.blank?
+      end
+
+      # A client preferring private_key_jwt, with keys to verify it against, on a server offering it, must
+      # authenticate with it: as a confidential client, +none+ no longer redeems its codes or refresh tokens.
+      def self.private_key_jwt?(document, jwks_uri)
+        jwks_uri.present? && document["token_endpoint_auth_method"] == "private_key_jwt" &&
+          Doorkeeper.config.client_authentication_methods.any? { |method| method.name.to_s == "private_key_jwt" }
+      end
+
+      # Kept where the application model has the column, so private_key_jwt can verify the client's
+      # assertions: ChatGPT picks it whenever the server offers it. Https only, as the key resolver
+      # fetches nothing else (and refuses a malformed one itself), and at most 255 characters, like the uid.
+      def self.jwks_uri(uri)
+        uri if uri.is_a?(String) && uri.length <= 255 && uri.start_with?("https://")
       end
 
       # A concurrent first request may have written the row in the meantime, on the primary.
