@@ -37,6 +37,23 @@ RSpec.describe Doorkeeper::RedirectUriValidator do
     expect(client).to be_valid
   end
 
+  context "with forbid_oob_redirect_uris" do
+    before { config_is_set(:forbid_oob_redirect_uris, true) }
+
+    it "rejects the oob redirect uris" do
+      %w[urn:ietf:wg:oauth:2.0:oob urn:ietf:wg:oauth:2.0:oob:auto].each do |uri|
+        client.redirect_uri = uri
+        expect(client).to be_invalid
+        expect(client.errors[:redirect_uri].first).to eq(I18n.t("activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.forbidden_uri"))
+      end
+    end
+
+    it "still accepts other redirect uris" do
+      client.redirect_uri = "https://example.com/callback"
+      expect(client).to be_valid
+    end
+  end
+
   it "is invalid when the uri is not a uri" do
     client.redirect_uri = "]"
     expect(client).not_to be_valid

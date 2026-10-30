@@ -16,7 +16,7 @@ module Doorkeeper
         SCRIPT_SCHEMES = %w[javascript vbscript data].freeze
 
         def self.valid?(url)
-          return true if oob_uri?(url)
+          return !Doorkeeper.config.forbid_oob_redirect_uris? if oob_uri?(url)
 
           uri = as_uri(url)
           valid_scheme?(uri) && iff_host?(uri) && uri.fragment.nil? && uri.opaque.nil?

@@ -95,6 +95,20 @@ feature "Authorization Code Flow Errors" do
       i_should_see_translated_error_message :invalid_redirect_uri
     end
   end
+
+  context "with forbid_oob_redirect_uris and a client registered before it was set" do
+    background do
+      @client.update!(redirect_uri: "urn:ietf:wg:oauth:2.0:oob")
+      config_is_set(:forbid_oob_redirect_uris, true)
+    end
+
+    scenario "displays invalid_redirect_uri error" do
+      visit authorization_endpoint_url(client: @client)
+
+      i_should_not_see "Authorize"
+      i_should_see_translated_error_message :invalid_redirect_uri
+    end
+  end
 end
 
 RSpec.describe "Authorization Code Flow Errors after authorization" do

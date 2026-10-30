@@ -4,6 +4,17 @@ require "spec_helper"
 
 describe Doorkeeper::OAuth::Helpers::URIChecker do
   describe ".valid?" do
+    it "is valid for the oob redirect uri" do
+      expect(described_class).to be_valid("urn:ietf:wg:oauth:2.0:oob")
+    end
+
+    it "is invalid for the oob redirect uris when forbid_oob_redirect_uris is set" do
+      config_is_set(:forbid_oob_redirect_uris, true)
+
+      expect(described_class).not_to be_valid("urn:ietf:wg:oauth:2.0:oob")
+      expect(described_class).not_to be_valid("urn:ietf:wg:oauth:2.0:oob:auto")
+    end
+
     it "is valid for valid uris" do
       uri = "http://app.co"
       expect(described_class).to be_valid(uri)

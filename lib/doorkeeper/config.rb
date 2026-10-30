@@ -182,6 +182,15 @@ module Doorkeeper
         @config.instance_variable_set(:@force_pkce, true)
       end
 
+      # Refuse the out-of-band redirect URIs urn:ietf:wg:oauth:2.0:oob and
+      # urn:ietf:wg:oauth:2.0:oob:auto, which OAuth 2.1 no longer has: when an
+      # application is registered, at the authorization endpoint, and by not
+      # drawing the page that shows the code (oauth/authorize/native).
+      # (disabled by default)
+      def forbid_oob_redirect_uris
+        @config.instance_variable_set(:@forbid_oob_redirect_uris, true)
+      end
+
       # Accept https URLs as the client_id of public clients, per
       # draft-ietf-oauth-client-id-metadata-document. +scopes+ (Strings or
       # Symbols, or a space-separated String) caps what such a client may
@@ -668,6 +677,10 @@ module Doorkeeper
 
     def force_pkce?
       option_set? :force_pkce
+    end
+
+    def forbid_oob_redirect_uris?
+      option_set? :forbid_oob_redirect_uris
     end
 
     def use_client_id_metadata_documents?

@@ -16,6 +16,7 @@ User-visible changes worth mentioning.
 - [#1962] A client ID metadata document also qualifies when `none` is among its `token_endpoint_auth_methods_supported` (OpenID Connect RP Metadata Choices), with or without `token_endpoint_auth_method`. Such clients still authenticate with `none`, so ChatGPT's token request fails while `private_key_jwt` is among the `client_authentication` methods, unless the application model has a `jwks_uri` column (#1978).
 - [#1978] A client ID metadata document's `jwks_uri` is kept when the application model has a `jwks_uri` column. A document preferring `private_key_jwt` then makes a confidential client, which has to authenticate with its key wherever the server offers `private_key_jwt`, and whose tokens stay under `public_client_access_token_expires_in`.
 - [#1944] Add the `revoke_previous_access_token_on_refresh` option (default `true`): set to `false`, the refresh_token grant revokes only the exchanged refresh token and the previous access token stays usable until it expires. Requires the new `refresh_token_revoked_at` column (`rails generate doorkeeper:refresh_token_revoked_at`).
+- [#1979] Add opt-in `forbid_oob_redirect_uris`: refuse the non-standard out-of-band redirect URIs (`urn:ietf:wg:oauth:2.0:oob`, `urn:ietf:wg:oauth:2.0:oob:auto`) when an application is registered, at the authorization endpoint and on the code exchange, and do not draw `oauth/authorize/native`. Applications already stored with such a URI are refused with `invalid_redirect_uri`.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.rc2

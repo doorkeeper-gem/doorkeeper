@@ -1846,6 +1846,15 @@ RSpec.describe Doorkeeper::Config do
       expect(config.force_pkce?).to be(true)
     end
 
+    it "enables forbid_oob_redirect_uris" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        forbid_oob_redirect_uris
+      end
+
+      expect(config.forbid_oob_redirect_uris?).to be(true)
+    end
+
     it "enables validate_client_before_resource_owner_authentication" do
       Doorkeeper.configure do
         orm DOORKEEPER_ORM
