@@ -42,4 +42,27 @@ RSpec.describe "Default routes" do
   it "GET /.well-known/oauth-authorization-server routes to Metadata controller" do
     expect(get("/.well-known/oauth-authorization-server")).to route_to("doorkeeper/metadata#show")
   end
+
+  it "GET /oauth/authorize/native routes to authorizations controller" do
+    expect(get("/oauth/authorize/native")).to route_to("doorkeeper/authorizations#show")
+  end
+
+  context "with forbid_oob_redirect_uris" do
+    around do |example|
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        forbid_oob_redirect_uris
+      end
+      Rails.application.reload_routes!
+
+      example.run
+    ensure
+      Doorkeeper.configure { orm DOORKEEPER_ORM }
+      Rails.application.reload_routes!
+    end
+
+    it "does not route GET /oauth/authorize/native" do
+      expect(get("/oauth/authorize/native")).not_to be_routable
+    end
+  end
 end

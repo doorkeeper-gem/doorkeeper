@@ -224,6 +224,15 @@ Doorkeeper.configure do
   #
   # force_pkce
 
+  # Refuse the out-of-band redirect URIs urn:ietf:wg:oauth:2.0:oob and
+  # urn:ietf:wg:oauth:2.0:oob:auto, which OAuth 2.1 no longer has, when an
+  # application is registered and at the authorization endpoint, and do not
+  # draw the page that shows the code (oauth/authorize/native). Applications
+  # already stored with such a URI are refused with invalid_redirect_uri.
+  # (disabled by default)
+  #
+  # forbid_oob_redirect_uris
+
   # Accept the https URL of a public client's metadata document as its client_id
   # (draft-ietf-oauth-client-id-metadata-document). +scopes+ caps what it may request.
   # These are public clients: they get authorization codes only, always with S256 PKCE,

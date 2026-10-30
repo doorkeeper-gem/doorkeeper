@@ -13,7 +13,7 @@ module Doorkeeper
         record.errors.add(attribute, :blank)
       else
         value.split.each do |val|
-          next if oob_redirect_uri?(val)
+          next if handled_as_oob_redirect_uri?(record, attribute, val)
 
           uri = ::URI.parse(val)
           record.errors.add(attribute, :forbidden_uri) if forbidden_uri?(uri)
@@ -30,8 +30,12 @@ module Doorkeeper
 
     private
 
-    def oob_redirect_uri?(uri)
-      Doorkeeper::OAuth::NonStandard::IETF_WG_OAUTH2_OOB_METHODS.include?(uri)
+    # An out-of-band URI is no URI to parse; it is accepted unless forbid_oob_redirect_uris is set.
+    def handled_as_oob_redirect_uri?(record, attribute, uri)
+      return false unless Doorkeeper::OAuth::NonStandard::IETF_WG_OAUTH2_OOB_METHODS.include?(uri)
+
+      record.errors.add(attribute, :forbidden_uri) if Doorkeeper.config.forbid_oob_redirect_uris?
+      true
     end
 
     # Script schemes are refused before the host application's rule is
