@@ -60,6 +60,7 @@ module Doorkeeper
             end
 
             token_attributes[:resource] = effective_resources.join(" ")
+            token_attributes.merge!(refresh_token_resource_attributes)
           end
 
           find_or_create_access_token(
@@ -215,6 +216,19 @@ module Doorkeeper
 
       def grant_resource_indicators
         @grant_resource_indicators || []
+      end
+
+      # RFC 8707 §2.2: a token request may restrict the access token to a
+      # subset of the granted resources, but the refresh token issued with it
+      # stays bound to all of them, so a later refresh can ask for another
+      # one. Left out when the grant carries no resource (the access token
+      # audience then starts the chain) and when the access token model has
+      # no `refresh_token_resource` column or does not implement it.
+      def refresh_token_resource_attributes
+        return {} if grant_resource_indicators.blank?
+        return {} unless Doorkeeper.config.access_token_model.try(:refresh_token_resource_supported?)
+
+        { refresh_token_resource: grant_resource_indicators.join(" ") }
       end
 
       def revoke_previous_tokens(application, resource_owner)
