@@ -25,7 +25,7 @@ module Doorkeeper
             token_endpoint: token_endpoint,
             revocation_endpoint: revocation_endpoint,
             introspection_endpoint: (introspection_endpoint if introspection_enabled?),
-            scopes_supported: scopes_supported,
+            scopes_supported: scopes_supported.presence,
             response_types_supported: response_types_supported,
             response_modes_supported: response_modes_supported,
             grant_types_supported: grant_types_supported,
