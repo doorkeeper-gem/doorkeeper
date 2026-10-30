@@ -17,6 +17,7 @@ User-visible changes worth mentioning.
 - [#1978] A client ID metadata document's `jwks_uri` is kept when the application model has a `jwks_uri` column. A document preferring `private_key_jwt` then makes a confidential client, which has to authenticate with its key wherever the server offers `private_key_jwt`, and whose tokens stay under `public_client_access_token_expires_in`.
 - [#1944] Add the `revoke_previous_access_token_on_refresh` option (default `true`): set to `false`, the refresh_token grant revokes only the exchanged refresh token and the previous access token stays usable until it expires. Requires the new `refresh_token_revoked_at` column (`rails generate doorkeeper:refresh_token_revoked_at`).
 - [#1980] Omit `scopes_supported` from the authorization server metadata when no scopes are configured (RFC 8414 §3.2).
+- [#1979] **[BREAKING]** Refuse the non-standard out-of-band redirect URIs (`urn:ietf:wg:oauth:2.0:oob`, `urn:ietf:wg:oauth:2.0:oob:auto`) by default: when an application is registered, at the authorization endpoint and on the code exchange; `oauth/authorize/native` is no longer drawn. Applications already stored with such a URI are refused with `invalid_redirect_uri` at the authorization endpoint and `invalid_grant` on the code exchange. Set `allow_oob_redirect_uris true` to keep the old behavior.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.rc2

@@ -42,4 +42,8 @@ RSpec.describe "Default routes" do
   it "GET /.well-known/oauth-authorization-server routes to Metadata controller" do
     expect(get("/.well-known/oauth-authorization-server")).to route_to("doorkeeper/metadata#show")
   end
+
+  it "does not route GET /oauth/authorize/native" do
+    expect(get("/oauth/authorize/native")).not_to be_routable
+  end
 end

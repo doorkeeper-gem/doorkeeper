@@ -155,7 +155,7 @@ module Doorkeeper
       # Choose to use the url path for native autorization codes
       # Enabling this flag sets the authorization code response route for
       # native redirect uris to oauth/authorize/<code>. The default is
-      # oauth/authorize/native?code=<code>.
+      # oauth/authorize/native?code=<code>. Needs allow_oob_redirect_uris.
       # Rationale: https://github.com/doorkeeper-gem/doorkeeper/issues/1143
       def use_url_path_for_native_authorization
         @config.instance_variable_set(:@use_url_path_for_native_authorization, true)
@@ -340,6 +340,10 @@ module Doorkeeper
     option :authorization_code_expires_in,  default: 600
     option :orm,                            default: :active_record
     option :native_redirect_uri,            default: "urn:ietf:wg:oauth:2.0:oob", deprecated: true
+    # Accept the non-standard out-of-band redirect URIs urn:ietf:wg:oauth:2.0:oob
+    # and urn:ietf:wg:oauth:2.0:oob:auto and draw the page that shows the code
+    # (oauth/authorize/native). Off by default, as OAuth 2.1 has no such flow.
+    option :allow_oob_redirect_uris,        default: false
     option :grant_flows,                    default: %w[authorization_code client_credentials]
     option :pkce_code_challenge_methods,    default: %w[plain S256]
     option :handle_auth_errors,             default: :render
