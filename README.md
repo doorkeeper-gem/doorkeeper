@@ -244,9 +244,24 @@ Both columns are named on the application model's `filter_attributes`, so they r
 
 The feature is implemented for Active Record. Other ORM adapters define their own secret comparison, so they need the whole rotation surface, not just the columns, before the option takes effect.
 
+### Rotating
+
+```ruby
+secret = application.rotate_secret!  # both secrets now authenticate
+# ... hand `secret` to the client, let it deploy ...
+```
+
+`#rotate_secret!` returns the new plain text secret; when secrets are hashed, that return value and `application.plaintext_secret` on the same instance are the only places it can be read. Only one generation is retained, so rotating twice in a row ends the first grace period early. The call takes a row lock, so it needs a persisted record with no unsaved changes. `#renew_secret` is unchanged: it writes the current secret alone and does not clear a retained `old_secret`.
+
+For a secret believed to be compromised there is no grace period to give: `application.rotate_secret!(revoke_old: true)` replaces the secret and drops whatever was retained.
+
 ### Notes
 
 - While the option is on, every comparison evaluates both the current and the old secret so that a rotation in progress is not observable in response times. Under bcrypt that is a second bcrypt comparison per token request. Off, the comparison is unchanged.
+- A secret stored under a `fallback:` strategy is re-derived under the active one as it is retained, so that the plain text of a `fallback: :plain` secret does not sit in `old_secret` for the grace period and both columns cost the same comparison. A fallback that hashes has no plain text to re-derive from, so the secret is retained as stored and a rotation in progress is observable: retire such a fallback before rotating under it.
+- `Sha256Hash` recognises its own output by shape (64 lower case hex characters), and `default_generator_method :hex` produces plain secrets of that shape, so under both together a plain secret is retained as stored until the next authentication with it rewrites the column. Re-deriving it would store the hash of a hash, which authenticates nobody.
+- A custom secret strategy may implement `self.recognizes_stored_secret?(stored)` to say whether a stored value is one it wrote. One that does not retains the secret as stored. The re-derivation writes through the strategy's `store_secret`, as `#renew_secret` does.
+- `#rotate_secret!` calls `save!`, so a row that no longer passes the model's validations raises `ActiveRecord::RecordInvalid`. Fix the row first.
 - If you override `by_uid` or `by_uid_and_secret` with a `select`, include `old_secret` and `old_secret_created_at` in it: the comparison reads them.
 
 ## Client ID Metadata Documents

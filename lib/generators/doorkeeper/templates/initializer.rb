@@ -324,6 +324,9 @@ Doorkeeper.configure do
   #
   # enable_secret_rotation
   #
+  #   secret = application.rotate_secret!  # both secrets now authenticate
+  #   # ... hand `secret` over, let the client deploy it ...
+  #
   # While enabled, every client secret comparison evaluates both the current
   # and the old secret, so that a rotation in progress is not observable in
   # response times. With bcrypt that is a second bcrypt comparison per token
