@@ -328,6 +328,21 @@ Doorkeeper.configure do
   #   # ... hand `secret` over, let the client deploy it ...
   #   application.clear_old_secret!        # only the new one authenticates
   #
+  # To know when every client has moved over, be told when one has not. The
+  # hook runs synchronously inside client authentication, so keep it cheap
+  # and keep it from raising:
+  #
+  # after_old_secret_used ->(application) {
+  #   StatsD.increment('oauth.old_secret_used', tags: ["client:#{application.uid}"])
+  # }
+  #
+  # Nothing expires an old secret on its own. Give the grace period a deadline
+  # if you would rather not rely on remembering; past it the old secret stops
+  # authenticating but stays in the column until `#clear_old_secret!` removes
+  # it, and removing or lengthening the deadline later puts it back into service:
+  #
+  # secret_rotation_grace_period 7.days
+  #
   # While enabled, every client secret comparison evaluates both the current
   # and the old secret, so that a rotation in progress is not observable in
   # response times. With bcrypt that is a second bcrypt comparison per token

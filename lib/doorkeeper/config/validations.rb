@@ -21,6 +21,10 @@ module Doorkeeper
         validate_deprecated_grant_flows
         validate_issuer_format
         validate_issuer_metadata_discoverability
+        validate_secret_rotation_grace_period
+        validate_after_old_secret_used
+        validate_secret_rotation_options_without_rotation
+        validate_secret_rotation_orm
       end
 
       private
@@ -304,6 +308,79 @@ module Doorkeeper
           "oauth-authorization-server#{uri.path}), so they will not discover the " \
           "document. Use a host-only issuer, or route the derived well-known path " \
           "to Doorkeeper.",
+        )
+      end
+
+      # Consumed as `old_secret_created_at + grace_period` during client
+      # authentication, so an invalid value would boot fine and raise on the
+      # first authentication after a rotation. Zero and negative would expire
+      # every old secret on arrival; `Float::INFINITY` raises FloatDomainError
+      # when added to a time (nil already means endless); `Complex` has no
+      # ordering.
+      def validate_secret_rotation_grace_period
+        grace_period = secret_rotation_grace_period
+        return if grace_period.nil?
+        # ActiveSupport::Duration delegates #is_a? and the predicates.
+        return if grace_period.is_a?(Numeric) && grace_period.real? && grace_period.finite? && grace_period.positive?
+
+        raise ArgumentError,
+              "secret_rotation_grace_period must be a finite positive number of " \
+              "seconds or a duration (e.g. 7.days), got #{grace_period.inspect}."
+      end
+
+      # Called only on authentications the superseded secret let in, so a
+      # value that cannot be called would fail exactly the requests the grace
+      # period exists to keep working.
+      def validate_after_old_secret_used
+        return unless instance_variable_defined?(:@after_old_secret_used)
+
+        hook = after_old_secret_used
+        return if hook.respond_to?(:call) && callable_with_application?(hook)
+
+        raise ArgumentError,
+              "after_old_secret_used must be callable with the application " \
+              "(e.g. ->(application) { ... }), got #{hook.inspect}."
+      end
+
+      # `parameters` rather than `arity`: a required keyword counts toward a
+      # lambda's arity, and a negative arity does not say how many positionals
+      # must come first. A plain proc takes whatever it is given.
+      def callable_with_application?(hook)
+        return true unless hook.respond_to?(:parameters)
+
+        types = hook.parameters.map(&:first)
+        return false if types.include?(:keyreq)
+        return true if hook.is_a?(Proc) && !hook.lambda?
+
+        types.count(:req) <= 1 && types.intersect?(%i[req opt rest])
+      end
+
+      # Same shape as validate_refresh_token_flow: both options are read only
+      # from behind `enable_secret_rotation`. The hook defaults to a lambda,
+      # so whether it was configured is the ivar rather than the value.
+      def validate_secret_rotation_options_without_rotation
+        return if enable_secret_rotation?
+        return if secret_rotation_grace_period.nil? &&
+                  !instance_variable_defined?(:@after_old_secret_used)
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] secret_rotation_grace_period / after_old_secret_used are configured " \
+          "without enable_secret_rotation, so they have no effect. Add enable_secret_rotation " \
+          "(and run `rails generate doorkeeper:secret_rotation`) to use them.",
+        )
+      end
+
+      # The other ORM adapters ship application models that include neither
+      # Doorkeeper::ApplicationMixin nor the Active Record mixin, so under
+      # them the option is a silent no-op.
+      def validate_secret_rotation_orm
+        return unless enable_secret_rotation?
+        return if orm.to_s == "active_record"
+
+        ::Rails.logger.warn(
+          "[DOORKEEPER] enable_secret_rotation is implemented for the active_record ORM. With " \
+          "orm #{orm.inspect} it takes effect only if that adapter's application model implements " \
+          "the rotation surface itself (see the Client Secret Rotation section of the README).",
         )
       end
 
