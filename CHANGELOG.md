@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#1981] Add `enable_secret_rotation` and `rails generate doorkeeper:secret_rotation`: with the option on, client authentication also accepts the secret retained in the new `old_secret` column, evaluating both secrets so that a rotation in progress is not observable in response times.
+- [#1982] `old_secret` and `old_secret_created_at` are withheld from application serialization (`as_json`, `serializable_hash`) and read as `[FILTERED]` from `#inspect`.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.rc4
