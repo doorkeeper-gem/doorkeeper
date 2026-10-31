@@ -256,6 +256,15 @@ module Doorkeeper
                               fallback: fallback
       end
 
+      # Give client secret rotation a grace period (disabled by default).
+      # Client authentication then also accepts the secret retained in
+      # `old_secret`, so a secret can be replaced before the client has been
+      # redeployed with the new one. Requires the columns added by
+      # `rails generate doorkeeper:secret_rotation`.
+      def enable_secret_rotation
+        @config.instance_variable_set(:@enable_secret_rotation, true)
+      end
+
       private
 
       def deprecated(name, message = nil)
@@ -688,6 +697,10 @@ module Doorkeeper
 
     def enable_dynamic_scopes?
       option_set? :enable_dynamic_scopes
+    end
+
+    def enable_secret_rotation?
+      option_set? :enable_secret_rotation
     end
 
     def dynamic_scopes_delimiter
