@@ -44,6 +44,22 @@ module Doorkeeper
       end
 
       ##
+      # Whether +stored+ is a value this strategy wrote, asked of a stored
+      # value with no plaintext to compare against. Decides whether a rotation
+      # re-derives a fallback-written secret under this strategy before
+      # retaining it. +true+ by default, which retains the value as stored:
+      # misreading a value this strategy did write would replace a working
+      # retained secret with the hash of its own hash. Optional for a custom
+      # strategy; one that does not define it is read as +true+.
+      #
+      # @param stored [String] a stored secret value
+      #
+      # @return [Boolean]
+      def self.recognizes_stored_secret?(_stored)
+        true
+      end
+
+      ##
       # Determines what secrets this strategy is applicable for
       def self.validate_for(model)
         valid = %i[token application]
