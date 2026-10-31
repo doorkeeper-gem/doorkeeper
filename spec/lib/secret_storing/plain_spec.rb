@@ -41,4 +41,10 @@ RSpec.describe ::Doorkeeper::SecretStoring::Plain do
       expect(described_class.secret_matches?("a", "b")).to be false
     end
   end
+
+  describe "recognizes_stored_secret?" do
+    it "claims every stored value, since every value is a plain one" do
+      expect(described_class.recognizes_stored_secret?("foobar")).to be true
+    end
+  end
 end
