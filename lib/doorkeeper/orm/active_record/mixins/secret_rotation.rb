@@ -32,28 +32,46 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
     # @return [String] new plain text secret value
     #
     def rotate_secret!(revoke_old: false)
-      ensure_secret_rotation_enabled!
-      ensure_lockable!
+      # Captured before the guards so that a refused call keeps the plaintext
+      # the caller already had.
+      previous_raw_secret = @raw_secret
+      # The secret `save!` stored, so the rescue can tell a failure after the
+      # COMMIT (host after_commit raising) from one before it.
+      stored_secret = nil
+      # Nothing is written before the lock block, so a failure ahead of it
+      # must not discard values the caller assigned.
+      locked = false
 
-      self.class.with_primary_role do
-        # Read-modify-write: without the lock two rotations racing would let
-        # the later one overwrite a secret the earlier one already handed
-        # out. `with_lock` reloads, so the retained value is the committed one.
-        with_lock do
-          # A blank `secret` (a public client on a schema that relaxed
-          # `null: false`) has nothing to retain; stamping the timestamp
-          # anyway would report a rotation midway through nothing.
-          if revoke_old || secret.blank?
-            self.old_secret = nil
-            self.old_secret_created_at = nil
-          else
-            retain_secret
-            self.old_secret_created_at = Time.now.utc
+      begin
+        ensure_secret_rotation_enabled!
+        ensure_lockable!
+
+        self.class.with_primary_role do
+          # Read-modify-write: without the lock two rotations racing would let
+          # the later one overwrite a secret the earlier one already handed
+          # out. `with_lock` reloads, so the retained value is the committed one.
+          with_lock do
+            locked = true
+
+            # A blank `secret` (a public client on a schema that relaxed
+            # `null: false`) has nothing to retain; stamping the timestamp
+            # anyway would report a rotation midway through nothing.
+            if revoke_old || secret.blank?
+              self.old_secret = nil
+              self.old_secret_created_at = nil
+            else
+              retain_secret
+              self.old_secret_created_at = Time.now.utc
+            end
+
+            renew_secret
+            save!
+            stored_secret = secret
           end
-
-          renew_secret
-          save!
         end
+      rescue StandardError
+        undo_failed_rotation(locked, previous_raw_secret, stored_secret)
+        raise
       end
 
       plaintext_secret
@@ -165,6 +183,49 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
         "client secret rotation needs a persisted #{self.class.name}; #{remedy}",
         self,
       )
+    end
+
+    # Puts the instance back after a rotation that did not complete: Active
+    # Record rolls the row back but leaves the in-memory attributes as the
+    # failed write left them. Everything dirtied is restored (`updated_at`
+    # included, or every later `with_lock` on this instance would refuse the
+    # unsaved change), and only when the lock block ran.
+    #
+    # The plaintext kept is whichever one still describes the stored secret:
+    # the previous one after a rollback, this rotation's after a failure past
+    # the COMMIT. A COMMIT lost to +ActiveRecord::ConnectionFailed+ (Rails
+    # 7.1+ invalidates the transaction without rolling the record back) leaves
+    # the instance claiming a secret the row never took, so the row is reloaded
+    # from the primary in that case.
+    #
+    # @return [Boolean] whether the rotation that stored +stored_secret+ is
+    #   the one the row holds (see #rotation_committed?)
+    def undo_failed_rotation(locked, previous_raw_secret, stored_secret)
+      unless locked
+        @raw_secret = previous_raw_secret
+        return false
+      end
+
+      committed = rotation_committed?(stored_secret)
+      restore_attributes
+      self.class.with_primary_role { reload } if !committed && !stored_secret.nil? && secret == stored_secret
+      @raw_secret = restorable_raw_secret(@raw_secret) ||
+                    restorable_raw_secret(previous_raw_secret)
+      committed
+    end
+
+    # Whether the rotation that stored +stored_secret+ is the one the row
+    # holds, read off the row on the primary: after a COMMIT lost to
+    # +ActiveRecord::ConnectionFailed+ the instance looks committed while the
+    # row most likely is not. A row gone in the meantime answers false.
+    def rotation_committed?(stored_secret)
+      return false if stored_secret.nil?
+
+      self.class.with_primary_role do
+        self.class.unscoped.find(id).secret == stored_secret
+      end
+    rescue ActiveRecord::RecordNotFound
+      false
     end
 
     # Carries the stored secret into `old_secret` as it is, unless the fallback

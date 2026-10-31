@@ -254,6 +254,8 @@ application.clear_old_secret!        # only the new secret authenticates
 
 `#rotate_secret!` returns the new plain text secret; when secrets are hashed, that return value and `application.plaintext_secret` on the same instance are the only places it can be read. Only one generation is retained, so rotating twice in a row ends the first grace period early. The call takes a row lock, so it needs a persisted record with no unsaved changes. `#renew_secret` is unchanged: it writes the current secret alone and does not clear a retained `old_secret`.
 
+When the write fails, the instance is put back to what the row holds before the error is re-raised, so a caller that rescues can retry. A rotation made inside a transaction of your own that rolls back leaves the row on the previous secret and the instance holding the undone rotation as unsaved changes, so hand the returned secret to the client only after your commit.
+
 `#clear_old_secret!` ends the grace period and returns whether there was one to end. It needs the columns, not the option, so it keeps working with rotation turned off; nothing else removes a retained secret, so a grace period that is never ended lasts indefinitely. A job driving its own deadline from `old_secret_created_at` should pass back the value it read, so that a rotation committed in between is left alone:
 
 ```ruby
