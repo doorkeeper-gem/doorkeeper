@@ -249,9 +249,18 @@ The feature is implemented for Active Record. Other ORM adapters define their ow
 ```ruby
 secret = application.rotate_secret!  # both secrets now authenticate
 # ... hand `secret` to the client, let it deploy ...
+application.clear_old_secret!        # only the new secret authenticates
 ```
 
 `#rotate_secret!` returns the new plain text secret; when secrets are hashed, that return value and `application.plaintext_secret` on the same instance are the only places it can be read. Only one generation is retained, so rotating twice in a row ends the first grace period early. The call takes a row lock, so it needs a persisted record with no unsaved changes. `#renew_secret` is unchanged: it writes the current secret alone and does not clear a retained `old_secret`.
+
+`#clear_old_secret!` ends the grace period and returns whether there was one to end. It needs the columns, not the option, so it keeps working with rotation turned off; nothing else removes a retained secret, so a grace period that is never ended lasts indefinitely. A job driving its own deadline from `old_secret_created_at` should pass back the value it read, so that a rotation committed in between is left alone:
+
+```ruby
+Doorkeeper::Application.where(old_secret_created_at: ..7.days.ago).find_each do |application|
+  application.clear_old_secret!(retained_at: application.old_secret_created_at)
+end
+```
 
 For a secret believed to be compromised there is no grace period to give: `application.rotate_secret!(revoke_old: true)` replaces the secret and drops whatever was retained.
 
