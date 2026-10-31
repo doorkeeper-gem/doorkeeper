@@ -40,6 +40,14 @@ RSpec.describe "Authorization Server Metadata endpoint" do
     expect(json_response["code_challenge_methods_supported"]).to be_a(Array)
   end
 
+  it "omits scopes_supported when no scopes are configured" do
+    allow(Doorkeeper.config).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.new)
+
+    get "/.well-known/oauth-authorization-server"
+
+    expect(json_response).not_to have_key("scopes_supported")
+  end
+
   it "omits client authentication methods that are not registered" do
     unregistered = double(name: :made_up_method)
     allow(Doorkeeper.config).to receive(:client_authentication_methods).and_return([unregistered])
