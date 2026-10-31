@@ -256,7 +256,7 @@ application.clear_old_secret!        # only the new secret authenticates
 
 When the write fails, the instance is put back to what the row holds before the error is re-raised, so a caller that rescues can retry. A rotation made inside a transaction of your own that rolls back leaves the row on the previous secret and the instance holding the undone rotation as unsaved changes, so hand the returned secret to the client only after your commit.
 
-`#clear_old_secret!` ends the grace period and returns whether there was one to end. It needs the columns, not the option, so it keeps working with rotation turned off; nothing else removes a retained secret, so a grace period that is never ended lasts indefinitely. A job driving its own deadline from `old_secret_created_at` should pass back the value it read, so that a rotation committed in between is left alone:
+`#clear_old_secret!` ends the grace period and returns whether there was one to end. It needs the columns, not the option, so it keeps working with rotation turned off; nothing else removes a retained secret. A job driving its own deadline from `old_secret_created_at` should pass back the value it read, so that a rotation committed in between is left alone:
 
 ```ruby
 Doorkeeper::Application.where(old_secret_created_at: ..7.days.ago).find_each do |application|
@@ -265,6 +265,35 @@ end
 ```
 
 For a secret believed to be compromised there is no grace period to give: `application.rotate_secret!(revoke_old: true)` replaces the secret and drops whatever was retained.
+
+### Knowing when to clear
+
+Doorkeeper reports each time the old secret is what authenticated a client:
+
+```ruby
+Doorkeeper.configure do
+  enable_secret_rotation
+
+  after_old_secret_used ->(application) {
+    StatsD.increment("oauth.old_secret_used", tags: ["client:#{application.uid}"])
+  }
+end
+```
+
+The hook runs synchronously inside client authentication, so keep it cheap and keep it from raising: an exception fails the request that reached it. Silence over a window longer than the client's own request interval, and a deployment's time to reach every instance, is what says a rotation is complete.
+
+### Deadlines
+
+Nothing expires an old secret on its own. Give the grace period a deadline if you would rather not rely on remembering:
+
+```ruby
+Doorkeeper.configure do
+  enable_secret_rotation
+  secret_rotation_grace_period 7.days
+end
+```
+
+Past it the old secret stops authenticating, though it stays in the column until `#clear_old_secret!` removes it. The deadline is a comparison made when a client authenticates, not a mark on the row, so lengthening or removing it later, or turning `enable_secret_rotation` off and on again, puts the secret back into service. Only `#clear_old_secret!` or `#rotate_secret!(revoke_old: true)` removes it; a job that does so on its own schedule is shown above. Both options are read only while `enable_secret_rotation` is set, and Doorkeeper warns at boot when either is configured without it, or when the option is set under an ORM other than Active Record.
 
 ### Notes
 

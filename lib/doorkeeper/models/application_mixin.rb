@@ -129,6 +129,8 @@ module Doorkeeper
     # @note When the secret matches only via the fallback strategy, the stored
     #       secret is upgraded to the active strategy as a side-effect (mirrors
     #       the find_by_plaintext_token -> find_by_fallback_token pattern).
+    # @note When only the retained old secret matches, the configured
+    #       +after_old_secret_used+ hook is called with this application.
     #
     def secret_matches?(input)
       # return false if either is nil, since secure_compare depends on strings
@@ -145,14 +147,18 @@ module Doorkeeper
       match = stored_secret_matches?(input, :secret)
       old_match = old_secret_matches?(input)
 
+      # Only on a successful authentication, so it adds no signal an attacker
+      # can measure.
+      Doorkeeper.config.after_old_secret_used.call(self) if old_match && !match
+
       match || old_match
     end
 
     # Check whether the given plain text secret matches the secret superseded
     # by the last rotation (see +#rotate_secret!+).
     #
-    # A comparison runs even when there is nothing retained: against the
-    # current secret, with the result
+    # A comparison runs even when there is nothing retained, or the retained
+    # secret has expired: against the current secret, with the result
     # discarded, so that whether this client is midway through a rotation
     # cannot be read off the response time. That holds whenever both columns
     # were written by the same strategy, which a rotation sees to (see the
@@ -174,8 +180,12 @@ module Doorkeeper
       # never checked; +#secret_matches?+ never reaches here for one.
       return false if secret.nil?
 
+      # Read before the comparison so it can be pointed away from a credential
+      # this server has already declared dead.
+      expired = old_secret_expired?
+
       matched =
-        if rotated
+        if rotated && !expired
           stored_secret_matches?(input.to_s, :old_secret)
         else
           # The dummy comparison must write nothing: with the upgrade left on,
@@ -184,7 +194,29 @@ module Doorkeeper
         end
 
       # Exactly one comparison has run on every path.
-      rotated && matched
+      rotated && matched && !expired
+    end
+
+    # Whether the retained secret has outlived the configured
+    # `secret_rotation_grace_period`. Always false when none is configured
+    # (the default: the grace period then ends only with +#clear_old_secret!+)
+    # or when nothing is retained. An old secret with no
+    # +old_secret_created_at+ is treated as expired rather than ageless:
+    # honouring a deadline nobody can date would leave exactly the
+    # indefinitely valid secret the option was configured to prevent.
+    #
+    # Expiring stops the old secret authenticating; it does not remove it.
+    #
+    # @return [Boolean]
+    #
+    def old_secret_expired?
+      return false unless self.class.secret_rotation_enabled?
+
+      grace_period = Doorkeeper.config.secret_rotation_grace_period
+      return false if grace_period.nil? || old_secret.blank?
+      return true if old_secret_created_at.blank?
+
+      old_secret_created_at + grace_period < Time.now.utc
     end
 
     private

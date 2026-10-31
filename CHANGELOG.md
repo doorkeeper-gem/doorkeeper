@@ -22,6 +22,7 @@ User-visible changes worth mentioning.
 - [#1983] Add `Application#rotate_secret!`: replaces the secret and retains the superseded one in `old_secret` so that both authenticate (`revoke_old: true` replaces it with no grace period). A secret the `fallback:` strategy wrote is re-derived under the active strategy as it is retained; `SecretStoring::Base.recognizes_stored_secret?` is the new strategy hook that decides it.
 - [#1984] Add `Application#clear_old_secret!`, which ends the grace period a rotation opened; it needs the columns but not the option, and `retained_at:` lets a cleanup job end only the grace period it looked at.
 - [#1985] `Application#rotate_secret!` puts the instance back to what the row holds when the write fails, including a COMMIT lost to `ActiveRecord::ConnectionFailed`, so that a caller that rescues does not carry on with a secret that was never stored.
+- [#1986] Add `after_old_secret_used`, called with the application whenever the superseded secret is what authenticated a client, and `secret_rotation_grace_period`, a deadline after which a retained secret stops authenticating. Both are validated at configuration time, and Doorkeeper warns at boot when they are set without `enable_secret_rotation` or when rotation is enabled under an ORM other than Active Record.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.rc2
