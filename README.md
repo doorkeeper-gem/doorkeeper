@@ -264,7 +264,7 @@ Doorkeeper::Application.where(old_secret_created_at: ..7.days.ago).find_each do 
 end
 ```
 
-For a secret believed to be compromised there is no grace period to give: `application.rotate_secret!(revoke_old: true)` replaces the secret and drops whatever was retained.
+For a secret believed to be compromised there is no grace period to give: see [Compromised secrets](#compromised-secrets) below.
 
 ### Knowing when to clear
 
@@ -294,6 +294,17 @@ end
 ```
 
 Past it the old secret stops authenticating, though it stays in the column until `#clear_old_secret!` removes it. The deadline is a comparison made when a client authenticates, not a mark on the row, so lengthening or removing it later, or turning `enable_secret_rotation` off and on again, puts the secret back into service. Only `#clear_old_secret!` or `#rotate_secret!(revoke_old: true)` removes it; a job that does so on its own schedule is shown above. Both options are read only while `enable_secret_rotation` is set, and Doorkeeper warns at boot when either is configured without it, or when the option is set under an ORM other than Active Record.
+
+### Compromised secrets
+
+A leaked secret has no grace period to give:
+
+```ruby
+application.rotate_secret!(revoke_old: true)
+application.rotate_secret!(revoke_old: true, revoke_tokens: true)
+```
+
+The second form also revokes the application's access tokens and its unredeemed authorization codes, which the leaked secret is enough to redeem. Pass it whenever the secret may already have been used: tokens minted with it before the rotation stay valid until they expire. The revocation runs after the rotation has committed and is idempotent; if it fails, retry it with `application.revoke_issued_credentials!`. It is refused inside an open transaction that `with_lock` would join (`Doorkeeper::Errors::SecretRotationInTransaction`), since the row lock would then outlive the method: rotate without it there and revoke after your commit. Rails' transactional tests and DatabaseCleaner open a `joinable: false` transaction, which is let through.
 
 ### Notes
 
