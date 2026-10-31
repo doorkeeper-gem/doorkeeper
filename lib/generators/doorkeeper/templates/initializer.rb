@@ -326,6 +326,7 @@ Doorkeeper.configure do
   #
   #   secret = application.rotate_secret!  # both secrets now authenticate
   #   # ... hand `secret` over, let the client deploy it ...
+  #   application.clear_old_secret!        # only the new one authenticates
   #
   # While enabled, every client secret comparison evaluates both the current
   # and the old secret, so that a rotation in progress is not observable in
