@@ -131,10 +131,12 @@ module Doorkeeper
 
     # Raised when `Application#rotate_secret!` is called without client secret
     # rotation being available (option off or columns missing): rotating would
-    # drop the superseded secret rather than retain it.
+    # drop the superseded secret rather than retain it. `#clear_old_secret!`
+    # raises it only for missing columns, since ending a grace period has to
+    # keep working with the option off.
     class SecretRotationNotEnabled < DoorkeeperError
-      def initialize(table)
-        super(self.class.rotation_message(table))
+      def initialize(table, columns_only: false)
+        super(columns_only ? self.class.columns_message(table) : self.class.rotation_message(table))
       end
 
       def self.rotation_message(table)
@@ -144,7 +146,16 @@ module Doorkeeper
           "secret without a grace period with `#rotate_secret!(revoke_old: true)`. Not with " \
           "`#renew_secret`, which writes the current secret alone: where an earlier rotation left " \
           "an `old_secret` on this row, that credential is still there, and authenticates again " \
-          "the moment rotation is available."
+          "the moment rotation is available. To drop it without turning the option back on, " \
+          "call `#clear_old_secret!`, which needs the columns alone."
+      end
+
+      def self.columns_message(table)
+        "Client secret rotation columns are missing: `#clear_old_secret!` needs the `old_secret` " \
+          "and `old_secret_created_at` columns on the #{table} table " \
+          "(`rails generate doorkeeper:secret_rotation`). It does not need the " \
+          "`enable_secret_rotation` option, so a grace period an earlier rotation opened can be " \
+          "ended with the option off."
       end
     end
 
