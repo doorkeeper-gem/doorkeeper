@@ -22,6 +22,7 @@ User-visible changes worth mentioning.
 - [#1984] Add `Application#clear_old_secret!`, which ends the grace period a rotation opened; it needs the columns but not the option, and `retained_at:` lets a cleanup job end only the grace period it looked at.
 - [#1985] `Application#rotate_secret!` puts the instance back to what the row holds when the write fails, including a COMMIT lost to `ActiveRecord::ConnectionFailed`, so that a caller that rescues does not carry on with a secret that was never stored.
 - [#1986] Add `after_old_secret_used`, called with the application whenever the superseded secret is what authenticated a client, and `secret_rotation_grace_period`, a deadline after which a retained secret stops authenticating. Both are validated at configuration time, and Doorkeeper warns at boot when they are set without `enable_secret_rotation` or when rotation is enabled under an ORM other than Active Record.
+- [#1987] `Application#rotate_secret!(revoke_tokens: true)` also revokes the application's access tokens and unredeemed authorization codes once the rotation has committed (`#revoke_issued_credentials!` retries it on its own); it is refused inside an open transaction that would hold the row lock past the method.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.rc2

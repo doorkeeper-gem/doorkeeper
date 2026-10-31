@@ -129,6 +129,22 @@ module Doorkeeper
       end
     end
 
+    # Raised when `Application#rotate_secret!(revoke_tokens: true)` is called
+    # inside a transaction the rotation would join: the revocation must run
+    # after the rotation's row lock is released (under it the lock order is
+    # the reverse of the one token requests take), and a joined transaction
+    # holds that lock until its own commit.
+    class SecretRotationInTransaction < DoorkeeperError
+      def initialize
+        super(
+          "`rotate_secret!(revoke_tokens: true)` cannot run inside an open transaction: the " \
+          "revocation must wait for the rotation's row lock to be released, and a transaction " \
+          "it joined holds that lock until its own commit. Rotate without `revoke_tokens`, " \
+          "then call `#revoke_issued_credentials!` once the transaction has committed.",
+        )
+      end
+    end
+
     # Raised when `Application#rotate_secret!` is called without client secret
     # rotation being available (option off or columns missing): rotating would
     # drop the superseded secret rather than retain it. `#clear_old_secret!`
