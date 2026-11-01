@@ -180,6 +180,10 @@ RSpec.describe Doorkeeper::OAuth::Scopes do
     end
 
     context "with dynamic scopes disabled" do
+      it "has no dynamic scope delimiter" do
+        expect(scopes.send(:dynamic_scope_delimiter)).to be_nil
+      end
+
       context "with wildcard dynamic scope" do
         before do
           scopes.add "user:*"

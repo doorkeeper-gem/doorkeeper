@@ -19,6 +19,37 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Validator do
     expect(validator).not_to be_valid
   end
 
+  # `#validate` stops at the first failing check, so once the client is
+  # missing the later checks are never reached through `#valid?`. They still
+  # have to cope with a missing client on their own.
+  context "when the later checks run without a client" do
+    before do
+      allow(request).to receive(:client).and_return(nil)
+    end
+
+    it "skips the grant flow check instead of asking about a missing application" do
+      expect(Doorkeeper.config).not_to receive(:allow_grant_flow_for_client?)
+
+      expect(validator.send(:validate_client_supports_grant_flow)).to be_nil
+    end
+
+    it "accepts an empty scope request" do
+      expect(validator.send(:validate_scopes)).to be(true)
+    end
+
+    it "checks the requested scopes against the server scopes alone" do
+      server_scopes = Doorkeeper::OAuth::Scopes.from_string("email")
+      allow(server).to receive(:scopes).and_return(server_scopes)
+      allow(request).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("email"))
+
+      expect(validator.send(:validate_scopes)).to be(true)
+
+      allow(request).to receive(:scopes).and_return(Doorkeeper::OAuth::Scopes.from_string("profile"))
+
+      expect(validator.send(:validate_scopes)).to be(false)
+    end
+  end
+
   context "when a grant flow check is configured" do
     let(:callback) { double("callback") }
 
