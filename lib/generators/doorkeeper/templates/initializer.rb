@@ -318,6 +318,17 @@ Doorkeeper.configure do
   # fallback to another hashing strategy still transforms what it stores, so
   # only the reminder above applies to it.
 
+  # Give client secret rotation a grace period, so that replacing a secret does
+  # not reject the client until it has been redeployed with the new one
+  # (disabled by default). Requires `rails generate doorkeeper:secret_rotation`.
+  #
+  # enable_secret_rotation
+  #
+  # While enabled, every client secret comparison evaluates both the current
+  # and the old secret, so that a rotation in progress is not observable in
+  # response times. With bcrypt that is a second bcrypt comparison per token
+  # request; leave this option off if you do not rotate secrets.
+
   # Issue access tokens with refresh token (disabled by default), you may also
   # pass a block which accepts `context` to customize when to give a refresh
   # token or not. Similar to +custom_access_token_expires_in+, `context` has
