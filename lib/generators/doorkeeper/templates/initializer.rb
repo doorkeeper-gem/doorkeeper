@@ -343,6 +343,13 @@ Doorkeeper.configure do
   #
   # secret_rotation_grace_period 7.days
   #
+  # For a secret believed to be compromised there is no grace period to give.
+  # The second form also revokes the access tokens already issued and the
+  # unredeemed authorization codes, which the leaked secret is enough to redeem:
+  #
+  #   application.rotate_secret!(revoke_old: true)
+  #   application.rotate_secret!(revoke_old: true, revoke_tokens: true)
+  #
   # While enabled, every client secret comparison evaluates both the current
   # and the old secret, so that a rotation in progress is not observable in
   # response times. With bcrypt that is a second bcrypt comparison per token
