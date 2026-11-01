@@ -19,6 +19,7 @@ User-visible changes worth mentioning.
 - [#1980] Omit `scopes_supported` from the authorization server metadata when no scopes are configured (RFC 8414 §3.2).
 - [#1981] Add `enable_secret_rotation` and `rails generate doorkeeper:secret_rotation`: with the option on, client authentication also accepts the secret retained in the new `old_secret` column, evaluating both secrets so that a rotation in progress is not observable in response times.
 - [#1982] `old_secret` and `old_secret_created_at` are withheld from application serialization (`as_json`, `serializable_hash`) and read as `[FILTERED]` from `#inspect`.
+- [#1983] Add `Application#rotate_secret!`: replaces the secret and retains the superseded one in `old_secret` so that both authenticate (`revoke_old: true` replaces it with no grace period). A secret the `fallback:` strategy wrote is re-derived under the active strategy as it is retained; `SecretStoring::Base.recognizes_stored_secret?` is the new strategy hook that decides it.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.rc2
