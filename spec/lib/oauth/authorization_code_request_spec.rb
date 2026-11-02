@@ -337,6 +337,8 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
   context "when redirect_uri is the native one" do
     let(:redirect_uri) { "urn:ietf:wg:oauth:2.0:oob" }
 
+    before { config_is_set(:allow_oob_redirect_uris, true) }
+
     it "invalidates when redirect_uri of the grant is not native" do
       request.validate
       expect(request.error).to eq(Doorkeeper::Errors::InvalidGrant)
@@ -346,6 +348,13 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
       allow(grant).to receive(:redirect_uri) { redirect_uri }
       request.validate
       expect(request.error).to be_nil
+    end
+
+    it "invalidates a native grant when oob redirect URIs are not allowed" do
+      config_is_set(:allow_oob_redirect_uris, false)
+      allow(grant).to receive(:redirect_uri) { redirect_uri }
+      request.validate
+      expect(request.error).to eq(Doorkeeper::Errors::InvalidGrant)
     end
   end
 

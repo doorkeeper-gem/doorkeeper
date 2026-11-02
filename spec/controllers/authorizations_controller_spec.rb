@@ -673,6 +673,8 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
   end
 
   describe "GET #new token request with native url and skip_authorization true" do
+    include_context "with oob redirect uris allowed"
+
     before do
       allow(Doorkeeper.config).to receive(:skip_authorization).and_return(proc do
         true
@@ -702,6 +704,8 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
   end
 
   describe "GET #new code request with native url and skip_authorization true" do
+    include_context "with oob redirect uris allowed"
+
     before do
       allow(Doorkeeper.config).to receive_messages(grant_flows: %w[authorization_code], skip_authorization: proc do
         true
@@ -734,6 +738,7 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
       around(:each) do |example|
         Doorkeeper.configure do
           orm DOORKEEPER_ORM
+          allow_oob_redirect_uris true
           use_url_path_for_native_authorization
         end
 
@@ -1659,6 +1664,8 @@ RSpec.describe Doorkeeper::AuthorizationsController, type: :controller do
   end
 
   describe "GET #new with callbacks" do
+    include_context "with oob redirect uris allowed"
+
     after do
       client.update_attribute :redirect_uri, "urn:ietf:wg:oauth:2.0:oob"
       get :new, params: { client_id: client.uid, response_type: "token", redirect_uri: client.redirect_uri }
