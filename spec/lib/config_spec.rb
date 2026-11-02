@@ -1557,6 +1557,34 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
+  describe "configure_secrets_for" do
+    let(:builder) { Doorkeeper::Config::Builder.new(described_class.new) }
+
+    it "only knows application and token secrets" do
+      expect do
+        builder.send(:configure_secrets_for, :grant, using: "::Doorkeeper::SecretStoring::Plain", fallback: nil)
+      end.to raise_error(ArgumentError, "Invalid type grant")
+    end
+  end
+
+  describe "deprecated" do
+    let(:builder) { Doorkeeper::Config::Builder.new(described_class.new) }
+
+    it "warns with the option name alone when no message is given" do
+      expect(Kernel).to receive(:warn).with("[DOORKEEPER] some_option has been deprecated and will soon be removed")
+
+      builder.send(:deprecated, :some_option)
+    end
+
+    it "appends the message when one is given" do
+      expect(Kernel).to receive(:warn).with(
+        "[DOORKEEPER] some_option has been deprecated and will soon be removed\nUse other_option instead",
+      )
+
+      builder.send(:deprecated, :some_option, "Use other_option instead")
+    end
+  end
+
   describe "application_secret_strategy" do
     it "is plain by default" do
       expect(config.application_secret_strategy).to eq(Doorkeeper::SecretStoring::Plain)

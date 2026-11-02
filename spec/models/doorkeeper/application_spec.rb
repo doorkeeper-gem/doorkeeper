@@ -88,6 +88,16 @@ RSpec.describe Doorkeeper::Application do
     expect(new_application).to be_valid
   end
 
+  it "keeps generating a secret for a public client when the secret column cannot be inspected" do
+    columns = described_class.columns.reject { |column| column.name == "secret" }
+    allow(described_class).to receive(:columns).and_return(columns)
+    new_application.confidential = false
+    new_application.secret = nil
+
+    expect(new_application).to be_valid
+    expect(new_application.secret).to be_present
+  end
+
   it "generates a secret using a custom object" do
     module CustomGeneratorArgs
       def self.generate
