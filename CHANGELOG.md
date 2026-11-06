@@ -18,6 +18,7 @@ User-visible changes worth mentioning.
 - [#1944] Add the `revoke_previous_access_token_on_refresh` option (default `true`): set to `false`, the refresh_token grant revokes only the exchanged refresh token and the previous access token stays usable until it expires. Requires the new `refresh_token_revoked_at` column (`rails generate doorkeeper:refresh_token_revoked_at`).
 - [#1980] Omit `scopes_supported` from the authorization server metadata when no scopes are configured (RFC 8414 §3.2).
 - [#1979] **[BREAKING]** Refuse the non-standard out-of-band redirect URIs (`urn:ietf:wg:oauth:2.0:oob`, `urn:ietf:wg:oauth:2.0:oob:auto`) by default: when an application is registered, at the authorization endpoint and on the code exchange; `oauth/authorize/native` is no longer drawn. Applications already stored with such a URI are refused with `invalid_redirect_uri` at the authorization endpoint and `invalid_grant` on the code exchange. Set `allow_oob_redirect_uris true` to keep the old behavior.
+- [#PR ID] Omit `code_challenge_methods_supported` from the authorization server metadata when the PKCE columns are missing (RFC 8414 §3.2).
 - [#PR ID] Description of the change.
 
 ## 6.0.0.rc2
