@@ -48,6 +48,14 @@ RSpec.describe "Authorization Server Metadata endpoint" do
     expect(json_response).not_to have_key("scopes_supported")
   end
 
+  it "omits code_challenge_methods_supported without the PKCE columns" do
+    allow(Doorkeeper.config.access_grant_model).to receive(:pkce_supported?).and_return(false)
+
+    get "/.well-known/oauth-authorization-server"
+
+    expect(json_response).not_to have_key("code_challenge_methods_supported")
+  end
+
   it "omits client authentication methods that are not registered" do
     unregistered = double(name: :made_up_method)
     allow(Doorkeeper.config).to receive(:client_authentication_methods).and_return([unregistered])

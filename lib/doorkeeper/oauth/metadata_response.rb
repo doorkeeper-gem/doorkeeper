@@ -30,7 +30,7 @@ module Doorkeeper
             response_modes_supported: response_modes_supported,
             grant_types_supported: grant_types_supported,
             token_endpoint_auth_methods_supported: token_endpoint_auth_methods_supported,
-            code_challenge_methods_supported: code_challenge_methods_supported,
+            code_challenge_methods_supported: code_challenge_methods_supported.presence,
             # RFC 9207: true only when an issuer is configured, matching the
             # condition under which the iss parameter is emitted. false survives
             # the compaction below, so it is advertised explicitly.
