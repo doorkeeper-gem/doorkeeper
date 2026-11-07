@@ -340,6 +340,30 @@ RSpec.describe Doorkeeper::HttpFetcher do
       expect(connections.map(&:max_retries)).to eq([0])
     end
 
+    # Net::HTTP takes its proxy from the environment by default, and a
+    # proxied connection is opened to the proxy rather than to the pinned
+    # address, so the proxy would resolve the host on its own. Net::HTTP
+    # looks the proxy up under the http scheme whatever use_ssl says, hence
+    # the variable name, and only when #proxy? is first asked, hence the
+    # expectation inside the window the variable is set for.
+    it "connects directly even when the environment configures a proxy" do
+      stub_request(:get, url).to_return(status: 200, body: "{}")
+      connections = []
+      allow(Net::HTTP).to receive(:new).and_wrap_original do |original, *args|
+        original.call(*args).tap { |connection| connections << connection }
+      end
+
+      previous = ENV.fetch("http_proxy", nil)
+      ENV["http_proxy"] = "http://proxy.example:3128"
+      begin
+        fetcher.fetch(url)
+
+        expect(connections.map(&:proxy?)).to eq([false])
+      ensure
+        previous ? ENV["http_proxy"] = previous : ENV.delete("http_proxy")
+      end
+    end
+
     it "requests an identity encoding so that no body is ever inflated" do
       stub_request(:get, url).to_return(status: 200, body: "{}")
 

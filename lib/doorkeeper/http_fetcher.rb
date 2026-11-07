@@ -297,7 +297,14 @@ module Doorkeeper
       remaining = remaining_until(deadline)
       raise ConnectError, "no time left to connect to #{address}" if remaining <= 0
 
-      Net::HTTP.new(uri.hostname, uri.port).tap do |http|
+      # The explicit nil disables the proxy Net::HTTP would otherwise take
+      # from the environment (`p_addr` defaults to :ENV, honouring
+      # http_proxy and friends). With a proxy configured, #connect opens
+      # the TCP connection to the proxy address instead of the one pinned
+      # via ipaddr= below, and the proxy resolves the host on its own, so
+      # the vetting above could be bypassed to reach an address it refused.
+      # The fetch therefore always connects directly.
+      Net::HTTP.new(uri.hostname, uri.port, nil).tap do |http|
         http.extend(BoundedExchange)
         http.byte_budget = MAX_EXCHANGE_SIZE
         http.use_ssl = true
