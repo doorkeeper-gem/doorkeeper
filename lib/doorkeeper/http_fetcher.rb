@@ -244,10 +244,13 @@ module Doorkeeper
       # block dribbled a byte at a time keeps resetting read_timeout and
       # never trips it. So the same ceiling is also held as a wall clock
       # around everything from the first connection attempt to the last body
-      # byte. The Timeout::Error it raises is one of the TRANSPORT_ERRORS
-      # below — or, while no connection is up yet, a ConnectError that ends
-      # the loop, the deadline having passed by then.
-      Timeout.timeout(MAX_TOTAL_TIME, Timeout::Error, "the exchange with #{uri.hostname} took too long") do
+      # byte. No exception class is passed on purpose: Timeout then unwinds
+      # the block with an exception no `rescue` inside it can catch, and
+      # raises Timeout::Error only once control is back here, where it is
+      # one of the TRANSPORT_ERRORS below. The ceiling thus reaches #fetch
+      # by exactly one path, with neither the ConnectError handling nor
+      # Net::HTTP's own retry able to intercept it.
+      Timeout.timeout(MAX_TOTAL_TIME, nil, "the exchange with #{uri.hostname} took too long") do
         addresses.each do |address|
           break if last_error && monotonic_now >= deadline
 
@@ -308,14 +311,11 @@ module Doorkeeper
         # not less than `OPEN_TIMEOUT`.
         http.open_timeout = [OPEN_TIMEOUT, remaining / 2.0].min
         http.read_timeout = READ_TIMEOUT
-        # Disable Net::HTTP internal retries to prevent re-attempting reads
-        # which will reuse the same timeout params and may exceed the overall
-        # timeout we're aiming for. The branch that decides to retry an
-        # idempotent request also catches Timeout::Error, so the wall clock
-        # in #fetch would be swallowed while the status line or headers are
-        # read, and the retry run with the timer already spent. Nothing is
-        # lost by turning it off: the connection is never reused, so there is
-        # no stale socket for a retry to recover from.
+        # Disable Net::HTTP internal retries: a request retried after a
+        # Net::ReadTimeout would reuse the same timeouts and push the whole
+        # exchange past MAX_TOTAL_TIME. Nothing is lost by turning it off:
+        # the connection is never reused, so there is no stale socket for a
+        # retry to recover from.
         http.max_retries = 0
       end
     end

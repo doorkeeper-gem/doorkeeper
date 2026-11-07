@@ -323,10 +323,9 @@ RSpec.describe Doorkeeper::HttpFetcher do
       expect { fetcher.fetch(url) }.to raise_error(described_class::FetchError, /took too long/)
     end
 
-    # Net::HTTP retries an idempotent request once by default, and the branch
-    # that decides so catches Timeout::Error: the ceiling above would be
-    # swallowed while the status line or headers are read, and the retry run
-    # with the timer already spent. WebMock replaces #request rather than
+    # Net::HTTP retries an idempotent request once by default after a
+    # Net::ReadTimeout, with the same timeouts again, which would push the
+    # exchange past MAX_TOTAL_TIME. WebMock replaces #request rather than
     # #transport_request, so no stubbed exchange reaches that branch and the
     # setting is pinned directly instead.
     it "does not let Net::HTTP retry a request" do
