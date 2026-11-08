@@ -19,6 +19,8 @@ User-visible changes worth mentioning.
 - [#1980] Omit `scopes_supported` from the authorization server metadata when no scopes are configured (RFC 8414 §3.2).
 - [#1979] **[BREAKING]** Refuse the non-standard out-of-band redirect URIs (`urn:ietf:wg:oauth:2.0:oob`, `urn:ietf:wg:oauth:2.0:oob:auto`) by default: when an application is registered, at the authorization endpoint and on the code exchange; `oauth/authorize/native` is no longer drawn. Applications already stored with such a URI are refused with `invalid_redirect_uri` at the authorization endpoint and `invalid_grant` on the code exchange. Set `allow_oob_redirect_uris true` to keep the old behavior.
 - [#1990] Omit `code_challenge_methods_supported` from the authorization server metadata when the PKCE columns are missing (RFC 8414 §3.2).
+- [#PR ID] Omit `code_challenge_methods_supported` from the authorization server metadata when the PKCE columns are missing (RFC 8414 §3.2).
+- [#1992] Fix: a router that includes `Doorkeeper::Rails::AbstractRouter` without its own `initialize` no longer raises `NameError` (`AbstractRouter::Mapper`) when built without a mapper.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.rc2
