@@ -7,7 +7,7 @@ User-visible changes worth mentioning.
 
 ## main
 
-- [#PR] Reject a protocol-relative redirect URI (e.g. `//example.com`) at application registration. It parsed with no scheme but a host, so `relative_uri?` accepted it; it is now rejected as `relative_uri` like any other scheme-less reference. The authorization endpoint already refused it (`URIChecker.valid?` requires a scheme), so this only aligns registration validation with that behavior.
+- [#1993] Reject a protocol-relative redirect URI (e.g. `//example.com`) at application registration. It parsed with no scheme but a host, so `relative_uri?` accepted it; it is now rejected as `relative_uri` like any other scheme-less reference. The authorization endpoint already refused it (`URIChecker.valid?` requires a scheme), so this only aligns registration validation with that behavior.
 
 - [#1959] A custom `access_token_generator` now receives the token's `resource` (RFC 8707), so a JWT generator can set `aud`.
 - [#1960] Ignore the port of `http://localhost` redirect URIs like that of loopback IP literals (RFC 8252 §7.3 / §8.3).
