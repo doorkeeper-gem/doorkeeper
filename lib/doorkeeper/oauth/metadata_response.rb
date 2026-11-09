@@ -56,7 +56,9 @@ module Doorkeeper
 
       def headers
         {
-          "Cache-Control" => "public",
+          # The document is built from the request host, so a shared cache
+          # must not hand one request's answer to the next (RFC 9111 §5.2.2.7).
+          "Cache-Control" => "private",
           "Content-Type" => "application/json; charset=utf-8",
         }
       end
