@@ -8,6 +8,13 @@ RSpec.describe "Authorization Server Metadata endpoint" do
     optional_scopes_exist :write, :publish
   end
 
+  it "is not storable by shared caches, since the document follows the request host" do
+    get "/.well-known/oauth-authorization-server"
+
+    response_status_should_be(200)
+    expect(response.headers["Cache-Control"]).to eq "private"
+  end
+
   it "returns json" do
     get "/.well-known/oauth-authorization-server"
 
