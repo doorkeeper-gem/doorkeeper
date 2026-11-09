@@ -56,8 +56,13 @@ module Doorkeeper
       uri.is_a?(URI::HTTP) && uri.host.blank?
     end
 
+    # A redirect URI must be absolute, i.e. carry a scheme. A URI without one
+    # is a relative reference (RFC 3986 Section 4.2) and is rejected. This
+    # includes a network-path reference such as "//example.com", which parses
+    # with no scheme but a host: a user agent resolves it against the current
+    # scheme, so it must not be accepted as a redirect URI.
     def relative_uri?(uri)
-      uri.scheme.nil? && uri.host.blank?
+      uri.scheme.nil?
     end
 
     def invalid_ssl_uri?(uri)

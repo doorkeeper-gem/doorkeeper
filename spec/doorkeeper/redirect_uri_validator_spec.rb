@@ -58,6 +58,15 @@ RSpec.describe Doorkeeper::RedirectUriValidator do
     expect(client.errors[:redirect_uri].first).to eq(I18n.t("activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.relative_uri"))
   end
 
+  # A network-path reference (RFC 3986 Section 4.2) parses with no scheme but a
+  # host, so it must be rejected as relative just like "/abcd"; a user agent
+  # would otherwise resolve it against the current scheme.
+  it "is invalid when the uri is protocol-relative" do
+    client.redirect_uri = "//example.com/callback"
+    expect(client).not_to be_valid
+    expect(client.errors[:redirect_uri].first).to eq(I18n.t("activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.relative_uri"))
+  end
+
   it "is invalid when the uri has a fragment" do
     client.redirect_uri = "https://example.com/abcd#xyz"
     expect(client).not_to be_valid

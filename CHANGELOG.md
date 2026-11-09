@@ -21,6 +21,7 @@ User-visible changes worth mentioning.
 - [#1980] Omit `scopes_supported` from the authorization server metadata when no scopes are configured (RFC 8414 §3.2).
 - [#1990] Omit `code_challenge_methods_supported` from the authorization server metadata when the PKCE columns are missing (RFC 8414 §3.2).
 - [#1992] Fix: a router that includes `Doorkeeper::Rails::AbstractRouter` without its own `initialize` no longer raises `NameError` (`AbstractRouter::Mapper`) when built without a mapper.
+- [#1993] Reject a protocol-relative redirect URI (e.g. `//example.com`) at application registration. It parsed with no scheme but a host, so `relative_uri?` accepted it; it is now rejected as `relative_uri` like any other scheme-less reference. The authorization endpoint already refused it (`URIChecker.valid?` requires a scheme), so this only aligns registration validation with that behavior.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.rc2
