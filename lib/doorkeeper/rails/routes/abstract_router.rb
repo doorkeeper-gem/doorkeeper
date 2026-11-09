@@ -12,7 +12,7 @@ module Doorkeeper
 
       attr_reader :routes
 
-      def initialize(routes, mapper = Mapper.new, &block)
+      def initialize(routes, mapper = Doorkeeper::Rails::Routes::Mapper.new, &block)
         @routes = routes
         @mapping = mapper.map(&block)
       end
