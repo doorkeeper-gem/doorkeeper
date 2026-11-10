@@ -5,6 +5,10 @@ upgrade guides.
 
 User-visible changes worth mentioning.
 
+## 5.9.10
+
+- Fix: `force_pkce` without the PKCE columns (`rails generate doorkeeper:pkce`) no longer accepts any `code_verifier` from a non-confidential client. The authorization code flow is now refused with `server_error` for those clients until the migration is applied.
+
 ## 5.9.9
 
 - Fix: `AuthorizedApplicationsController` now answers `401 Unauthorized` instead of running with a `nil` resource owner, which listed and revoked every token that has no resource owner — the ones the client credentials flow issues. Affected host applications are those whose `resource_owner_authenticator` answers `nil` without halting the request itself; the generated initializer's example redirects and is not affected.
