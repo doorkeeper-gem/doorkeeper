@@ -262,6 +262,18 @@ feature "Client ID Metadata Documents" do
     i_should_see "client.example.com: Example MCP"
   end
 
+  scenario "a document declaring private_key_jwt without keys Doorkeeper can fetch is refused where the server offers it (draft-03, Client Authentication)" do
+    config_is_set(:client_authentication, %i[none private_key_jwt])
+    document.merge!(token_endpoint_auth_methods_supported: %w[private_key_jwt none], token_endpoint_auth_method: nil)
+    [{ jwks: { keys: [] } }, { jwks_uri: "http://client.example.com/jwks.json" }].each do |keys|
+      stub_request(:get, client_id).to_return(status: 200, body: document.merge(keys).to_json)
+      Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
+      authorize
+
+      i_should_see_translated_error_message :invalid_client
+    end
+  end
+
   scenario "a document client gets no code while the server stores no PKCE challenge (RFC 9700 §2.1.1)" do
     allow(Doorkeeper::AccessGrant).to receive(:pkce_supported?).and_return(false)
     authorize

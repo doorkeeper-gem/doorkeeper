@@ -114,6 +114,7 @@ module Doorkeeper
         return "its client_name cannot be shown" unless displayable?(display_name(client_id, document["client_name"]))
         return "its document declares no public client" unless public_client?(document)
         return "client_authentication does not offer none" unless public_clients_accepted?
+        return "its document declares private_key_jwt without an https jwks_uri" if keyless_private_key_jwt?(document)
 
         "its document carries a client secret or both jwks and jwks_uri" unless credentials_allowed?(document)
       end
@@ -202,18 +203,23 @@ module Doorkeeper
 
       def self.assign_keys(application, document)
         application.jwks_uri = jwks_uri(document["jwks_uri"])
-        application.confidential = private_key_jwt?(document, application.jwks_uri)
+        application.confidential = private_key_jwt?(document)
         # Generated on create only, so a public client turning confidential may still lack one.
         application.renew_secret if application.confidential? && application.secret.blank?
       end
 
-      # A client declaring private_key_jwt, with keys to verify it against, on a server offering it, must
-      # authenticate with it: as a confidential client, +none+ no longer redeems its codes or refresh tokens.
-      # Declared in its supported methods, or, without those, as its method (draft-03, Client Authentication).
-      def self.private_key_jwt?(document, jwks_uri)
-        declared = document["token_endpoint_auth_methods_supported"] || [document["token_endpoint_auth_method"]]
-        jwks_uri.present? && declared.include?("private_key_jwt") &&
+      # A client declaring private_key_jwt, on a server offering it, must authenticate with it: as a
+      # confidential client, +none+ no longer redeems its codes or refresh tokens (draft-03, Client
+      # Authentication). Only among its supported methods, next to +none+, as public_client? refuses the rest.
+      def self.private_key_jwt?(document)
+        Array(document["token_endpoint_auth_methods_supported"]).include?("private_key_jwt") &&
           Doorkeeper.config.client_authentication_methods.any? { |method| method.name.to_s == "private_key_jwt" }
+      end
+
+      # Its keys could not be fetched, as Doorkeeper verifies assertions against a jwks_uri only, so it
+      # could not authenticate as it must.
+      def self.keyless_private_key_jwt?(document)
+        private_key_jwt?(document) && jwks_uri(document["jwks_uri"]).nil?
       end
 
       # Kept where the application model has the column, so private_key_jwt can verify the client's
