@@ -115,6 +115,100 @@ RSpec.describe Doorkeeper::Config do
     end
   end
 
+  describe "allow_client_credentials_grant_for_public_clients" do
+    it "is false by default" do
+      expect(config.allow_client_credentials_grant_for_public_clients).to be(false)
+    end
+
+    it "can change the value" do
+      Doorkeeper.configure do
+        orm DOORKEEPER_ORM
+        allow_client_credentials_grant_for_public_clients true
+      end
+
+      expect(config.allow_client_credentials_grant_for_public_clients).to be(true)
+    end
+  end
+
+  describe "#allow_grant_flow_for_client?" do
+    let(:confidential_client) { FactoryBot.build(:application, confidential: true) }
+    let(:public_client) { FactoryBot.build(:application, confidential: false) }
+
+    # RFC 6749 Section 4.4: "The client credentials grant type MUST only be
+    # used by confidential clients."
+    context "with the client credentials grant" do
+      let(:grant_flow) { Doorkeeper::OAuth::CLIENT_CREDENTIALS }
+
+      it "allows a confidential client" do
+        expect(config.allow_grant_flow_for_client?(grant_flow, confidential_client)).to be(true)
+      end
+
+      it "refuses a public client" do
+        expect(config.allow_grant_flow_for_client?(grant_flow, public_client)).to be(false)
+      end
+
+      it "refuses a missing client" do
+        expect(config.allow_grant_flow_for_client?(grant_flow, nil)).to be(false)
+      end
+
+      it "refuses a client that does not say whether it is confidential" do
+        expect(config.allow_grant_flow_for_client?(grant_flow, Object.new)).to be(false)
+      end
+
+      it "does not hand a public client to the allow_grant_flow_for_client block" do
+        asked = []
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          allow_grant_flow_for_client { |flow, client| asked << [flow, client] }
+        end
+
+        expect(config.allow_grant_flow_for_client?(grant_flow, public_client)).to be(false)
+        expect(asked).to be_empty
+      end
+
+      it "hands a confidential client to the allow_grant_flow_for_client block" do
+        Doorkeeper.configure do
+          orm DOORKEEPER_ORM
+          allow_grant_flow_for_client { |_flow, client| client.name == "admin" }
+        end
+
+        expect(config.allow_grant_flow_for_client?(grant_flow, confidential_client)).to be(false)
+
+        confidential_client.name = "admin"
+
+        expect(config.allow_grant_flow_for_client?(grant_flow, confidential_client)).to be(true)
+      end
+
+      context "with allow_client_credentials_grant_for_public_clients" do
+        it "allows a public client" do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            allow_client_credentials_grant_for_public_clients true
+          end
+
+          expect(config.allow_grant_flow_for_client?(grant_flow, public_client)).to be(true)
+        end
+
+        it "leaves a public client to the allow_grant_flow_for_client block" do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            allow_client_credentials_grant_for_public_clients true
+            allow_grant_flow_for_client { |_flow, client| client.confidential? }
+          end
+
+          expect(config.allow_grant_flow_for_client?(grant_flow, public_client)).to be(false)
+          expect(config.allow_grant_flow_for_client?(grant_flow, confidential_client)).to be(true)
+        end
+      end
+    end
+
+    it "allows a public client the other grant flows" do
+      flows = [Doorkeeper::OAuth::AUTHORIZATION_CODE, Doorkeeper::OAuth::PASSWORD, Doorkeeper::OAuth::REFRESH_TOKEN]
+
+      expect(flows.map { |flow| config.allow_grant_flow_for_client?(flow, public_client) }).to all(be(true))
+    end
+  end
+
   describe "scopes" do
     it "has default scopes" do
       Doorkeeper.configure do
