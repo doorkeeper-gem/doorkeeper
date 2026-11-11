@@ -75,6 +75,7 @@ RSpec.describe "Client Credentials Request" do
     end
 
     it "caps the expiry of a token issued to a public client" do
+      config_is_set(:allow_client_credentials_grant_for_public_clients, true)
       client.update_attribute :confidential, false
 
       post token_endpoint_url, params: { grant_type: "client_credentials", client_id: client.uid }
@@ -91,6 +92,71 @@ RSpec.describe "Client Credentials Request" do
       post token_endpoint_url, params: { grant_type: "client_credentials" }, headers: headers
 
       expect(json_response).to include("expires_in" => 7200)
+    end
+  end
+
+  # RFC 6749 Section 4.4: "The client credentials grant type MUST only be used
+  # by confidential clients." A public client is known by its client_id alone.
+  context "when the client is public" do
+    before do
+      client.update!(confidential: false)
+    end
+
+    it "refuses a request that names the client by its client_id alone" do
+      expect do
+        post token_endpoint_url, params: { grant_type: "client_credentials", client_id: client.uid }
+      end.not_to change(Doorkeeper::AccessToken, :count)
+
+      expect(response.status).to eq(400)
+      expect(json_response).to match(
+        "error" => "unauthorized_client",
+        "error_description" => translated_error_message(:unauthorized_client),
+      )
+    end
+
+    it "refuses a request that carries the secret the application still holds" do
+      headers = authorization client.uid, client.secret
+
+      expect do
+        post token_endpoint_url, params: { grant_type: "client_credentials" }, headers: headers
+      end.not_to change(Doorkeeper::AccessToken, :count)
+
+      expect(response.status).to eq(400)
+      expect(json_response).to include("error" => "unauthorized_client")
+    end
+
+    it "refuses the request whatever allow_grant_flow_for_client answers" do
+      config_is_set(:allow_grant_flow_for_client, ->(_grant_flow, _client) { true })
+
+      expect do
+        post token_endpoint_url, params: { grant_type: "client_credentials", client_id: client.uid }
+      end.not_to change(Doorkeeper::AccessToken, :count)
+
+      expect(response.status).to eq(400)
+      expect(json_response).to include("error" => "unauthorized_client")
+    end
+
+    context "with allow_client_credentials_grant_for_public_clients" do
+      before do
+        config_is_set(:allow_client_credentials_grant_for_public_clients, true)
+      end
+
+      it "issues a token for the client_id alone" do
+        post token_endpoint_url, params: { grant_type: "client_credentials", client_id: client.uid }
+
+        expect(response.status).to eq(200)
+        expect(json_response).to include("access_token" => Doorkeeper::AccessToken.first.token)
+        expect(Doorkeeper::AccessToken.first.application_id).to eq(client.id)
+      end
+
+      it "still refuses a client that allow_grant_flow_for_client refuses" do
+        config_is_set(:allow_grant_flow_for_client, ->(_grant_flow, _client) { false })
+
+        post token_endpoint_url, params: { grant_type: "client_credentials", client_id: client.uid }
+
+        expect(response.status).to eq(400)
+        expect(json_response).to include("error" => "unauthorized_client")
+      end
     end
   end
 

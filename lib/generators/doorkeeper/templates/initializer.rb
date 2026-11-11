@@ -209,6 +209,14 @@ Doorkeeper.configure do
   #
   # revoke_previous_client_credentials_token
 
+  # Issue client credentials tokens to public (non-confidential) applications as
+  # well. Not recommended: RFC 6749 Section 4.4 limits the grant to confidential
+  # clients, as a public client is known by its client_id alone and anyone who
+  # knows that id would get a token in the name of the application. By default
+  # such a request is refused with unauthorized_client.
+  #
+  # allow_client_credentials_grant_for_public_clients true
+
   # Only allow one valid access token obtained via authorization code
   # per client. If a new access token is obtained before the old one
   # expired, the old one gets revoked (disabled by default)
@@ -586,6 +594,10 @@ Doorkeeper.configure do
   #
   # In case this option invocation result is `false`, Doorkeeper server returns
   # :unauthorized_client error and stops the request.
+  #
+  # A public (non-confidential) application is refused the client credentials
+  # grant without the block being asked, unless
+  # allow_client_credentials_grant_for_public_clients is set.
   #
   # @param allow_grant_flow_for_client [Proc] Block or any object respond to #call
   # @return [Boolean] `true` if allow or `false` if forbid the request
