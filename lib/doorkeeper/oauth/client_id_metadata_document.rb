@@ -11,15 +11,18 @@ module Doorkeeper
     module ClientIdMetadataDocument
       MARKER = :client_id_metadata_materialized_at
 
-      # A refused client_id is looked up like a registered one, so its document is never fetched.
+      # A refused client_id is looked up like a registered one, so its document is never fetched. Neither is
+      # the issuer's own, as its tokens' aud and its assertions' iss would then name this server
+      # (draft-03, Client Identifier URL Confusion Attacks); other parties' identifiers are for
+      # allow_client_id_metadata_document to refuse.
       def self.url?(client_id)
-        Doorkeeper.config.use_client_id_metadata_documents? && url_form?(client_id) && allowed?(client_id)
+        Doorkeeper.config.use_client_id_metadata_documents? && url_form?(client_id) &&
+          client_id.to_s != Doorkeeper.config.issuer.to_s && allowed?(client_id)
       end
 
-      # At most 255 characters, as the uid column holds no more on MySQL. The port is held to what
-      # the fetcher could connect to, so the two agree on what is fetchable.
+      # The port is held to what the fetcher could connect to, so the two agree on what is fetchable.
       def self.url_form?(client_id)
-        return false if client_id.to_s.length > 255
+        return false unless storable?(client_id.to_s)
 
         uri = URI.parse(client_id.to_s)
         uri.is_a?(URI::HTTPS) && uri.host.present? && HttpFetcher::PORT_RANGE.cover?(uri.port) &&
@@ -29,6 +32,12 @@ module Doorkeeper
         false
       end
 
+      # At most 255 characters, as the uid column holds no more on MySQL, and no control characters,
+      # which URI.parse lets through in a query, and which would reach the log on a refusal.
+      def self.storable?(client_id)
+        client_id.length <= 255 && !client_id.match?(/[[:cntrl:]]/)
+      end
+
       def self.materialized?(application)
         application.respond_to?(MARKER) && application.public_send(MARKER).present?
       end
@@ -36,8 +45,7 @@ module Doorkeeper
       # A row written from a document while the option was on, and is no longer, or whose
       # client_id is refused by now.
       def self.orphaned?(application)
-        materialized?(application) &&
-          (!Doorkeeper.config.use_client_id_metadata_documents? || !allowed?(application.uid))
+        materialized?(application) && !url?(application.uid)
       end
 
       def self.allowed?(client_id)
@@ -82,16 +90,36 @@ module Doorkeeper
         document.is_a?(Hash) &&
           document["client_id"] == client_id &&
           well_typed?(document) &&
+          code_flow_declared?(document) &&
           displayable?(display_name(client_id, document["client_name"])) &&
           public_client?(document) &&
           public_clients_accepted? &&
-          document.keys.none? { |key| key.start_with?("client_secret") }
+          credentials_allowed?(document)
+      end
+
+      # No shared secret, and not both jwks and jwks_uri, which leaves open which keys count
+      # (RFC 7591 §2, draft-03 Credential and Key Material Restrictions).
+      def self.credentials_allowed?(document)
+        document.keys.none? { |key| key.start_with?("client_secret") } &&
+          !(document.key?("jwks") && document.key?("jwks_uri"))
       end
 
       def self.well_typed?(document)
         uris = document["redirect_uris"]
         uris.is_a?(Array) && uris.any? && uris.all? { |uri| uri.is_a?(String) } &&
           document.values_at("scope", "client_name").all? { |value| value.nil? || value.is_a?(String) }
+      end
+
+      # A client known from its document gets the authorization code flow only, so its grant and response
+      # types, RFC 7591's defaults when absent, have to include it; otherwise what the client declares and
+      # what this server supports for it do not intersect (draft-03, Client Information Discovery).
+      CODE_FLOW = { "grant_types" => "authorization_code", "response_types" => "code" }.freeze
+
+      def self.code_flow_declared?(document)
+        CODE_FLOW.all? do |property, type|
+          declared = document[property].nil? ? [type] : document[property]
+          declared.is_a?(Array) && declared.all?(String) && declared.include?(type)
+        end
       end
 
       SHARED_SECRET_METHODS = %w[client_secret_basic client_secret_post client_secret_jwt].freeze

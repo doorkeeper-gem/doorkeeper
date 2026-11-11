@@ -246,7 +246,7 @@ end
 
 `scopes` is a hard cap: a document client never gets more, whatever its document asks for. A document without a `scope` field gets all scopes in the cap; one asking only for scopes outside the cap is refused. Always set it, as anyone can publish a document.
 
-`allow_client_id_metadata_document` decides which `client_id`s are accepted, before anything is fetched. A client it stops accepting is refused from then on, refresh included. Compare the host, not a prefix: `start_with?("https://claude.ai")` also matches `claude.ai.evil.com`.
+`allow_client_id_metadata_document` decides which `client_id`s are accepted, before anything is fetched. A client it stops accepting is refused from then on, refresh included. Compare the host, not a prefix: `start_with?("https://claude.ai")` also matches `claude.ai.evil.com`. The `issuer` itself is never accepted; refuse the identifiers of resource servers and other authorization servers you trust here.
 
 The authorization server metadata at `/.well-known/oauth-authorization-server` advertises `client_id_metadata_document_supported` once the option is on. If a CDN caches that endpoint, purge it after turning the option on: ChatGPT falls back to manual registration without a word when its copy lacks the flag.
 

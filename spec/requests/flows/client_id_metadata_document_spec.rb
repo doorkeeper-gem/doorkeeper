@@ -94,15 +94,32 @@ feature "Client ID Metadata Documents" do
     end
   end
 
-  scenario "a client_id that is no valid URI, has dot segments or an unconnectable port, is an ordinary one (draft-02 §3)" do
+  scenario "a client_id that is no valid URI, has dot segments, control characters or an unconnectable port, is an ordinary one (draft-02 §3)" do
     ["https://client example.com/metadata.json", "https://client.example.com/oauth/../metadata.json",
      "https://client.example.com/#{"a" * 250}.json", "https://client.example.com:0/metadata.json",
-     "https://client.example.com:99999999999999999999/metadata.json",].each do |url|
+     "https://client.example.com:99999999999999999999/metadata.json", "#{client_id}?a\n[DOORKEEPER] forged",
+     "#{client_id}?a\u0000\e[31m",].each do |url|
       visit authorization_endpoint_url(client_id: url, redirect_uri: redirect_uri)
 
       i_should_see_translated_error_message :invalid_client
       expect(a_request(:get, url)).not_to have_been_made
     end
+  end
+
+  scenario "the issuer's own identifier is no client_id whose document is fetched (draft-03, Client Identifier URL Confusion Attacks)" do
+    config_is_set(:issuer, client_id)
+    authorize
+
+    i_should_see_translated_error_message :invalid_client
+    expect(a_request(:get, client_id)).not_to have_been_made
+
+    # Nor is a row written before the issuer was set to it.
+    config_is_set(:issuer, nil)
+    authorize
+    config_is_set(:issuer, client_id)
+    authorize
+
+    i_should_see_translated_error_message :invalid_client
   end
 
   scenario "a document naming another client_id is refused (draft-02 §4)" do
@@ -140,6 +157,25 @@ feature "Client ID Metadata Documents" do
     end
   end
 
+  scenario "a document without the code flow among its grant or response types is refused (draft-03, Client Information Discovery)" do
+    [{ grant_types: %w[client_credentials] }, { grant_types: %w[refresh_token] }, { response_types: %w[token] },
+     { grant_types: "authorization_code" }, { response_types: ["code", 1] },].each do |change|
+      stub_request(:get, client_id).to_return(status: 200, body: document.merge(change).to_json)
+      Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
+      authorize
+
+      i_should_see_translated_error_message :invalid_client
+    end
+  end
+
+  scenario "a document declaring more grant and response types than the code flow is accepted" do
+    document.merge!(grant_types: %w[authorization_code refresh_token urn:ietf:params:oauth:grant-type:jwt-bearer],
+                    response_types: %w[code token], application_type: "native",)
+    authorize
+
+    i_should_see "client.example.com: Example MCP"
+  end
+
   scenario "a document with a malformed or inconsistent list of supported methods is refused" do
     [["none", "none"], ["none", %w[none] + [1]], ["private_key_jwt", %w[none]], [nil, %w[private_key_jwt]],
      ["none", %w[none client_secret_post]],].each do |method, supported|
@@ -150,6 +186,13 @@ feature "Client ID Metadata Documents" do
 
       i_should_see_translated_error_message :invalid_client
     end
+  end
+
+  scenario "a document with both jwks and jwks_uri is refused (draft-03, Credential and Key Material Restrictions)" do
+    document.merge!(jwks: { keys: [] }, jwks_uri: "https://client.example.com/jwks.json")
+    authorize
+
+    i_should_see_translated_error_message :invalid_client
   end
 
   scenario "a document client preferring private_key_jwt must use it where the server offers it" do
