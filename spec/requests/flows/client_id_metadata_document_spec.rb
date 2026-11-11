@@ -32,13 +32,13 @@ feature "Client ID Metadata Documents" do
     visit authorization_endpoint_url(client_id: client_id, redirect_uri: redirect_uri, **pkce, **params)
   end
 
-  scenario "is advertised in the authorization server metadata (draft-02 §6)" do
+  scenario "is advertised in the authorization server metadata (draft-03, Authorization Server Metadata)" do
     visit "/.well-known/oauth-authorization-server"
 
     expect(JSON.parse(page.body)).to include("client_id_metadata_document_supported" => true)
   end
 
-  scenario "a client authorizes and exchanges its code with its URL as client_id (draft-02 §5)" do
+  scenario "a client authorizes and exchanges its code with its URL as client_id (draft-03, Client Information Discovery)" do
     authorize
     i_should_see "client.example.com: Example MCP"
     click_on "Authorize"
@@ -62,7 +62,7 @@ feature "Client ID Metadata Documents" do
     i_should_see "client.example.com: Example MCP"
   end
 
-  scenario "a redirect_uri the server refuses is dropped, not the whole client (draft-02 §8.1)" do
+  scenario "a redirect_uri the server refuses is dropped, not the whole client (draft-03, Relationship between redirect_uris and client_id)" do
     document[:redirect_uris] = ["http://client.example.com/callback", "https://client.example.com/a b", "urn:ietf:wg:oauth:2.0:oob",
                                 redirect_uri,]
     authorize
@@ -71,14 +71,14 @@ feature "Client ID Metadata Documents" do
     expect(Doorkeeper::Application.by_uid(client_id).redirect_uri).to eq(redirect_uri)
   end
 
-  scenario "without a client_name the host names the client (draft-02 §8.5)" do
+  scenario "without a client_name the host names the client (draft-03, OAuth Phishing Attacks)" do
     document.delete(:client_name)
     authorize
 
     expect(Doorkeeper::Application.by_uid(client_id).name).to eq("client.example.com")
   end
 
-  scenario "a document whose redirect_uris are all refused is refused (draft-02 §4.2)" do
+  scenario "a document whose redirect_uris are all refused is refused (draft-03, Redirect URL Registration)" do
     document[:redirect_uris] = ["http://client.example.com/callback"]
 
     [false, true].each do |blank_allowed|
@@ -90,13 +90,13 @@ feature "Client ID Metadata Documents" do
     expect(Doorkeeper::Application.count).to eq(0)
   end
 
-  scenario "a redirect_uri the document does not list is refused (draft-02 §4.2)" do
+  scenario "a redirect_uri the document does not list is refused (draft-03, Redirect URL Registration)" do
     authorize(redirect_uri: "https://evil.example.com/callback")
 
     i_should_see_translated_error_message :invalid_redirect_uri
   end
 
-  scenario "a document that cannot be fetched or parsed is refused (draft-02 §5.1)" do
+  scenario "a document that cannot be fetched or parsed is refused (draft-03, Metadata Discovery Errors)" do
     stub_request(:get, client_id).to_return({ status: 404 }, { status: 200, body: "not json" }, { status: 200, body: "[]" })
 
     3.times do
@@ -106,7 +106,7 @@ feature "Client ID Metadata Documents" do
     end
   end
 
-  scenario "a client_id that is no valid URI, has dot segments, control characters or an unconnectable port, is an ordinary one (draft-02 §3)" do
+  scenario "a client_id that is no valid URI, has dot segments, control characters or an unconnectable port, is an ordinary one (draft-03, Client Identifier URL)" do
     ["https://client example.com/metadata.json", "https://client.example.com/oauth/../metadata.json",
      "https://client.example.com/#{"a" * 250}.json", "https://client.example.com:0/metadata.json",
      "https://client.example.com:99999999999999999999/metadata.json", "#{client_id}?a\n[DOORKEEPER] forged",
@@ -134,7 +134,7 @@ feature "Client ID Metadata Documents" do
     i_should_see_translated_error_message :invalid_client
   end
 
-  scenario "a document naming another client_id is refused (draft-02 §4)" do
+  scenario "a document naming another client_id is refused (draft-03, Client ID Metadata Document)" do
     document[:client_id] = "https://other.example.com/metadata.json"
     authorize
 
@@ -158,7 +158,7 @@ feature "Client ID Metadata Documents" do
     i_should_see "client.example.com: Example MCP"
   end
 
-  scenario "a document asking for a shared secret is refused, also when it supports none (draft-02 §4.1)" do
+  scenario "a document asking for a shared secret is refused, also when it supports none (draft-03, Credential and Key Material Restrictions)" do
     [nil, %w[none]].each do |supported|
       document[:token_endpoint_auth_method] = "client_secret_basic"
       document[:token_endpoint_auth_methods_supported] = supported
@@ -342,14 +342,14 @@ feature "Client ID Metadata Documents" do
     end
   end
 
-  scenario "a client_name with joiners, as many scripts need, is accepted (draft-02 §8.5)" do
+  scenario "a client_name with joiners, as many scripts need, is accepted (draft-03, OAuth Phishing Attacks)" do
     document[:client_name] = "\u0645\u06CC\u200C\u062E\u0648\u0627\u0647\u0645"
     authorize
 
     i_should_see "client.example.com: #{document[:client_name]}"
   end
 
-  scenario "a changed document updates the client, an unfetchable one refuses it (draft-02 §5, §5.1)" do
+  scenario "a changed document updates the client, an unfetchable one refuses it (draft-03, Client Information Discovery, Metadata Discovery Errors)" do
     authorize
     application = Doorkeeper::Application.find_by(uid: client_id)
     application.update_columns(client_id_metadata_materialized_at: 1.day.ago, updated_at: 1.day.ago)
@@ -370,7 +370,7 @@ feature "Client ID Metadata Documents" do
     i_should_see_translated_error_message :invalid_client
   end
 
-  scenario "a client_id equal to a stored one only under a loose collation is another client (draft-02 §3)" do
+  scenario "a client_id equal to a stored one only under a loose collation is another client (draft-03, Client Identifier URL)" do
     authorize
     # MySQL's default collations compare case- and accent-insensitively, some ignore trailing spaces.
     allow(Doorkeeper::Application).to receive(:by_uid) do |uid|
@@ -409,14 +409,14 @@ feature "Client ID Metadata Documents" do
     end
   end
 
-  scenario "skip_authorization does not apply, the user always consents (draft-02 §8.5)" do
+  scenario "skip_authorization does not apply, the user always consents (draft-03, OAuth Phishing Attacks)" do
     config_is_set(:skip_authorization) { true }
     authorize
 
     i_should_see "client.example.com: Example MCP"
   end
 
-  scenario "a client known from its document is refused once the option is off (draft-02 §7.1)" do
+  scenario "a client known from its document is refused once the option is off (draft-03, Supporting Both Pre-Registered and Unregistered Clients)" do
     authorize
     click_on "Authorize"
     code = Rack::Utils.parse_query(URI.parse(current_url).query)["code"]
@@ -457,7 +457,7 @@ feature "Client ID Metadata Documents" do
     i_should_see_translated_error_message :invalid_client
   end
 
-  scenario "a registered application with a URL as uid is used as registered, not fetched (draft-02 §7.2)" do
+  scenario "a registered application with a URL as uid is used as registered, not fetched (draft-03, Pre-Registering Client Identifier URLs)" do
     [true, false].each do |confidential|
       Doorkeeper::Application.delete_all
       application = FactoryBot.create(:application, uid: client_id, confidential: confidential, redirect_uri: redirect_uri)
@@ -469,7 +469,7 @@ feature "Client ID Metadata Documents" do
     expect(a_request(:get, client_id)).not_to have_been_made
   end
 
-  scenario "an https client_id is an ordinary one while the option is off (draft-02 §7.1)" do
+  scenario "an https client_id is an ordinary one while the option is off (draft-03, Supporting Both Pre-Registered and Unregistered Clients)" do
     config_is_set(:use_client_id_metadata_documents, false)
     authorize
 

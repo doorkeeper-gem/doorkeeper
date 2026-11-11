@@ -58,7 +58,8 @@ feature "Client ID Metadata Documents of real clients" do
     JSON.parse(page.body)
   end
 
-  # Authorizes, exchanges the code and refreshes, authenticating as +auth+ returns; returns the refresh's response.
+  # Authorizes, exchanges the code and refreshes, authenticating as +auth+ returns;
+  # returns the refresh's response.
   def run_flow(name, redirect_uri, auth)
     client_id = documents.fetch(name).fetch("client_id")
     callback = authorization_response(client_id, redirect_uri)

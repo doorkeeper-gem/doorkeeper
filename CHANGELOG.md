@@ -23,6 +23,7 @@ User-visible changes worth mentioning.
 - [#1992] Fix: a router that includes `Doorkeeper::Rails::AbstractRouter` without its own `initialize` no longer raises `NameError` (`AbstractRouter::Mapper`) when built without a mapper.
 - [#1993] Reject a protocol-relative redirect URI (e.g. `//example.com`) at application registration. It parsed with no scheme but a host, so `relative_uri?` accepted it; it is now rejected as `relative_uri` like any other scheme-less reference. The authorization endpoint already refused it (`URIChecker.valid?` requires a scheme), so this only aligns registration validation with that behavior.
 - [#1994] Serve the authorization server metadata document with `Cache-Control: private` instead of `public`: its issuer and endpoint URLs follow the request host, so a shared cache must not reuse one client's copy for another.
+- [#1997] Follow draft-03 of client ID metadata documents: a document naming no token endpoint auth method is a public client (`none`) instead of being refused; `private_key_jwt` among `token_endpoint_auth_methods_supported` alone now makes a confidential client as well; documents whose `grant_types`/`response_types` leave out the authorization code flow, or that carry both `jwks` and `jwks_uri`, are refused; the `issuer` itself is refused as a `client_id`; a warning is logged while no `issuer` is set, as the authorization response must carry `iss`; why a document is refused is logged.
 - [#PR ID] Description of the change.
 
 ## 6.0.0.rc2

@@ -6,8 +6,9 @@ module Doorkeeper
     # for public clients: an https client_id is the URL of the client's own metadata,
     # fetched and kept as an application row, since grants and tokens reference one.
     #
-    # Rows written from a document carry the time of the first write in MARKER, which is what
-    # tells them apart from registered applications (draft-02 §7.1). ActiveRecord only.
+    # Rows written from a document carry the time of the first write in MARKER, which is what tells
+    # them apart from registered applications (draft-03, Supporting Both Pre-Registered and
+    # Unregistered Clients). ActiveRecord only.
     module ClientIdMetadataDocument
       MARKER = :client_id_metadata_materialized_at
 
@@ -53,15 +54,15 @@ module Doorkeeper
       end
 
       # A row written from a document stands for one client_id only, compared as a simple string
-      # (draft-02 §3). The database may compare more loosely: MySQL's default collations ignore case
-      # and accents, some of them trailing spaces as well.
+      # (draft-03, Client Identifier URL). The database may compare more loosely: MySQL's default
+      # collations ignore case and accents, some of them trailing spaces as well.
       def self.other_client?(application, client_id)
         materialized?(application) && application.uid != client_id.to_s
       end
 
-      # The authorization endpoint's lookup. A registered application wins (draft-02 §7.2);
-      # otherwise the document is fetched, and a failed fetch refuses the client even when
-      # a row was written from an earlier one (draft-02 §5.1).
+      # The authorization endpoint's lookup. A registered application wins (draft-03, Pre-Registering
+      # Client Identifier URLs); otherwise the document is fetched, and a failed fetch refuses the
+      # client even when a row was written from an earlier one (draft-03, Metadata Discovery Errors).
       def self.application(client_id)
         model = Doorkeeper.config.application_model
         registered = model.by_uid(client_id)
@@ -118,7 +119,7 @@ module Doorkeeper
       end
 
       # No shared secret, and not both jwks and jwks_uri, which leaves open which keys count
-      # (RFC 7591 §2, draft-03 Credential and Key Material Restrictions).
+      # (RFC 7591 §2, draft-03, Credential and Key Material Restrictions).
       def self.credentials_allowed?(document)
         document.keys.none? { |key| key.start_with?("client_secret") } &&
           !(document.key?("jwks") && document.key?("jwks_uri"))
