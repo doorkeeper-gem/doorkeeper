@@ -99,4 +99,10 @@ RSpec.describe Doorkeeper::OAuth::ClientIdMetadataDocument do
 
     expect(described_class.application(client_id)).to be_nil
   end
+
+  it "logs a refusal on one line, whatever bytes the document's host sent" do
+    expect(Rails.logger).to receive(:warn).with("[DOORKEEPER] client_id #{client_id} refused: its document could not be fetched: a?b?[31m?c ?")
+
+    described_class.log_refusal(client_id, "its document could not be fetched: a\nb\e[31m\u202Ec \xFF".b)
+  end
 end

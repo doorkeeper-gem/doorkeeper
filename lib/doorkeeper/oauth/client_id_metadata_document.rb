@@ -75,26 +75,46 @@ module Doorkeeper
         materialize(model, registered || model.new(uid: client_id), entry[:document])
       end
 
+      # The authorization response has to carry +iss+ (RFC 9207) for a client known from its document,
+      # which Doorkeeper only adds once +issuer+ is set (draft-03, Authorization Response). Only a
+      # warning, as the issuer may be resolved per request.
+      def self.warn_without_issuer
+        return if Doorkeeper.config.issuer.present?
+
+        ::Rails.logger.warn("[DOORKEEPER] use_client_id_metadata_documents needs `issuer` to be set, " \
+                            "as the authorization response must carry iss (RFC 9207)")
+      end
+
       def self.cache
         @cache ||= DocumentCache.new
       end
 
+      # Logs why a document is refused, as the client itself only sees invalid_client.
       def self.fetch(client_id)
         document = JSON.parse(HttpFetcher.new.fetch(client_id))
-        document if valid?(client_id, document)
-      rescue HttpFetcher::FetchError, JSON::ParserError
-        nil
+        reason = refusal(client_id, document)
+        return log_refusal(client_id, reason) if reason
+
+        warn_without_issuer
+        document
+      rescue HttpFetcher::FetchError => e
+        log_refusal(client_id, "its document could not be fetched: #{e.message}")
+      rescue JSON::ParserError
+        # Not its message, which older json versions fill with the body as served.
+        log_refusal(client_id, "its document is no JSON")
       end
 
-      def self.valid?(client_id, document)
-        document.is_a?(Hash) &&
-          document["client_id"] == client_id &&
-          well_typed?(document) &&
-          code_flow_declared?(document) &&
-          displayable?(display_name(client_id, document["client_name"])) &&
-          public_client?(document) &&
-          public_clients_accepted? &&
-          credentials_allowed?(document)
+      # Why a document is refused, the first reason that applies, or nil.
+      def self.refusal(client_id, document)
+        return "its document is no JSON object" unless document.is_a?(Hash)
+        return "its document names another client_id" unless document["client_id"] == client_id
+        return "its document has malformed redirect_uris, scope or client_name" unless well_typed?(document)
+        return "its document declares no authorization code flow" unless code_flow_declared?(document)
+        return "its client_name cannot be shown" unless displayable?(display_name(client_id, document["client_name"]))
+        return "its document declares no public client" unless public_client?(document)
+        return "client_authentication does not offer none" unless public_clients_accepted?
+
+        "its document carries a client secret or both jwks and jwks_uri" unless credentials_allowed?(document)
       end
 
       # No shared secret, and not both jwks and jwks_uri, which leaves open which keys count
@@ -158,10 +178,10 @@ module Doorkeeper
 
       def self.materialize(model, application, document)
         scopes = scopes(document["scope"])
-        return log_refusal(application, "leaves no scopes") if scopes.nil?
+        return log_refusal(application.uid, "leaves no scopes") if scopes.nil?
 
         redirect_uris = acceptable_redirect_uris(application, document["redirect_uris"])
-        return log_refusal(application, "lists no acceptable redirect URI") if redirect_uris.empty?
+        return log_refusal(application.uid, "lists no acceptable redirect URI") if redirect_uris.empty?
 
         application.assign_attributes(
           name: display_name(application.uid, document["client_name"]),
@@ -174,7 +194,7 @@ module Doorkeeper
         # A savepoint, so that losing the uid race leaves a caller's transaction usable for the re-read.
         return application if model.with_primary_role { model.transaction(requires_new: true) { application.save } }
 
-        concurrent_row(model, application) || log_refusal(application, application.errors.full_messages.to_sentence)
+        concurrent_row(model, application) || log_refusal(application.uid, application.errors.full_messages.to_sentence)
       rescue ActiveRecord::RecordNotUnique
         concurrent_row(model, application)
       end
@@ -238,8 +258,10 @@ module Doorkeeper
         scopes.to_s.presence
       end
 
-      def self.log_refusal(application, reason)
-        ::Rails.logger.warn("[DOORKEEPER] client_id #{application.uid} refused: #{reason}")
+      # A fetch error may quote what the document's host sent, so the line is scrubbed like a client_name.
+      def self.log_refusal(client_id, reason)
+        line = "[DOORKEEPER] client_id #{client_id} refused: #{reason}"
+        ::Rails.logger.warn(line.dup.force_encoding(Encoding::UTF_8).scrub("?").gsub(UNDISPLAYABLE, "?"))
         nil
       end
     end

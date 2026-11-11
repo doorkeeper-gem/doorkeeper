@@ -50,6 +50,18 @@ feature "Client ID Metadata Documents" do
     expect(JSON.parse(page.body)).to include("access_token", "token_type" => "Bearer")
   end
 
+  scenario "without an issuer, which puts iss in the authorization response, a warning is logged (draft-03, Authorization Response)" do
+    allow(Rails.logger).to receive(:warn)
+    expect(Rails.logger).to receive(:warn).with(/needs `issuer`/).once
+    authorize
+    authorize
+
+    config_is_set(:issuer, "http://www.example.com")
+    Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
+    authorize
+    i_should_see "client.example.com: Example MCP"
+  end
+
   scenario "a redirect_uri the server refuses is dropped, not the whole client (draft-02 §8.1)" do
     document[:redirect_uris] = ["http://client.example.com/callback", "https://client.example.com/a b", "urn:ietf:wg:oauth:2.0:oob",
                                 redirect_uri,]
@@ -85,9 +97,9 @@ feature "Client ID Metadata Documents" do
   end
 
   scenario "a document that cannot be fetched or parsed is refused (draft-02 §5.1)" do
-    stub_request(:get, client_id).to_return({ status: 404 }, { status: 200, body: "not json" })
+    stub_request(:get, client_id).to_return({ status: 404 }, { status: 200, body: "not json" }, { status: 200, body: "[]" })
 
-    2.times do
+    3.times do
       Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
       authorize
       i_should_see_translated_error_message :invalid_client
@@ -193,6 +205,22 @@ feature "Client ID Metadata Documents" do
     authorize
 
     i_should_see_translated_error_message :invalid_client
+  end
+
+  scenario "the reason a document is refused is logged, as the client only sees invalid_client" do
+    allow(Rails.logger).to receive(:warn)
+    expect(Rails.logger).to receive(:warn).with("[DOORKEEPER] client_id #{client_id} refused: its document declares no authorization code flow")
+    expect(Rails.logger).to receive(:warn).with(/client_id #{client_id} refused: its document could not be fetched: expected 200 OK/)
+    # Not the parser's message, which may carry the body as served.
+    expect(Rails.logger).to receive(:warn).with("[DOORKEEPER] client_id #{client_id} refused: its document is no JSON")
+    stub_request(:get, client_id).to_return({ status: 200, body: document.merge(grant_types: %w[refresh_token]).to_json }, { status: 404 },
+                                            { status: 200, body: "{\n[DOORKEEPER] forged" })
+
+    3.times do
+      Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
+      authorize
+      i_should_see_translated_error_message :invalid_client
+    end
   end
 
   scenario "a document client preferring private_key_jwt must use it where the server offers it" do
