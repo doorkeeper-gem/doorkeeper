@@ -1,0 +1,82 @@
+{
+  "claude_code": {
+    "client_id": "https://claude.ai/oauth/claude-code-client-metadata",
+    "client_name": "Claude Code",
+    "client_uri": "https://claude.ai",
+    "redirect_uris": [
+      "http://localhost/callback",
+      "http://127.0.0.1/callback"
+    ],
+    "grant_types": [
+      "authorization_code",
+      "refresh_token"
+    ],
+    "response_types": [
+      "code"
+    ],
+    "token_endpoint_auth_method": "none"
+  },
+  "claude_ai": {
+    "client_id": "https://claude.ai/oauth/mcp-oauth-client-metadata",
+    "client_name": "Claude",
+    "client_uri": "https://claude.ai",
+    "redirect_uris": [
+      "https://claude.ai/api/mcp/auth_callback"
+    ],
+    "grant_types": [
+      "authorization_code",
+      "refresh_token",
+      "urn:ietf:params:oauth:grant-type:jwt-bearer"
+    ],
+    "response_types": [
+      "code"
+    ],
+    "token_endpoint_auth_method": "none"
+  },
+  "chatgpt": {
+    "client_id": "https://chatgpt.com/oauth/client.json",
+    "client_uri": "https://chatgpt.com/",
+    "redirect_uris": [
+      "https://chatgpt.com/connector_platform_oauth_redirect"
+    ],
+    "token_endpoint_auth_method": "private_key_jwt",
+    "token_endpoint_auth_methods_supported": [
+      "none",
+      "private_key_jwt"
+    ],
+    "grant_types": [
+      "authorization_code",
+      "refresh_token",
+      "urn:ietf:params:oauth:grant-type:jwt-bearer"
+    ],
+    "response_types": [
+      "code"
+    ],
+    "client_name": "ChatGPT",
+    "logo_uri": "https://persistent.oaistatic.com/sonic/misc/openai-logo.png",
+    "token_endpoint_auth_signing_alg": "RS256",
+    "jwks_uri": "https://chatgpt.com/oauth/jwks.json"
+  },
+  "codex": {
+    "client_id": "https://chatgpt.com/oauth/codex/client.json",
+    "client_uri": "https://chatgpt.com/codex",
+    "application_type": "native",
+    "redirect_uris": [
+      "http://127.0.0.1/callback",
+      "http://localhost/callback"
+    ],
+    "token_endpoint_auth_method": "none",
+    "token_endpoint_auth_methods_supported": [
+      "none"
+    ],
+    "grant_types": [
+      "authorization_code",
+      "refresh_token"
+    ],
+    "response_types": [
+      "code"
+    ],
+    "client_name": "Codex",
+    "logo_uri": "https://persistent.oaistatic.com/sonic/misc/openai-logo.png"
+  }
+}
