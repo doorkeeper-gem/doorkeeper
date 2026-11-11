@@ -98,11 +98,11 @@ module Doorkeeper
 
       # Public clients only: the method is +none+, or the supported methods (OpenID Connect RP Metadata
       # Choices) include +none+ and no shared-secret one, as ChatGPT's do with +private_key_jwt+. A method
-      # named next to them must be among them. Naming neither is refused, as RFC 7591 then defaults to
-      # +client_secret_basic+.
+      # named next to them must be among them. Naming neither means +none+, not RFC 7591's default of
+      # +client_secret_basic+ (draft-03, Client Authentication).
       def self.public_client?(document)
         method, supported = document.values_at("token_endpoint_auth_method", "token_endpoint_auth_methods_supported")
-        return method == "none" if supported.nil?
+        return [nil, "none"].include?(method) if supported.nil?
         return false unless supported.is_a?(Array) && supported.all?(String)
 
         (method.nil? || supported.include?(method)) && supported.include?("none") &&
@@ -158,10 +158,12 @@ module Doorkeeper
         application.renew_secret if application.confidential? && application.secret.blank?
       end
 
-      # A client preferring private_key_jwt, with keys to verify it against, on a server offering it, must
+      # A client declaring private_key_jwt, with keys to verify it against, on a server offering it, must
       # authenticate with it: as a confidential client, +none+ no longer redeems its codes or refresh tokens.
+      # Declared in its supported methods, or, without those, as its method (draft-03, Client Authentication).
       def self.private_key_jwt?(document, jwks_uri)
-        jwks_uri.present? && document["token_endpoint_auth_method"] == "private_key_jwt" &&
+        declared = document["token_endpoint_auth_methods_supported"] || [document["token_endpoint_auth_method"]]
+        jwks_uri.present? && declared.include?("private_key_jwt") &&
           Doorkeeper.config.client_authentication_methods.any? { |method| method.name.to_s == "private_key_jwt" }
       end
 

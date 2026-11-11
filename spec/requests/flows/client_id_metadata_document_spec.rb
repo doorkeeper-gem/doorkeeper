@@ -205,11 +205,16 @@ feature "Client ID Metadata Documents" do
     i_should_see_translated_error_message :invalid_client
   end
 
-  scenario "a document naming no method is refused (draft-02 §4.1, RFC 7591 §2)" do
+  scenario "a document naming no method is a public client, not one of RFC 7591's default (draft-03, Client Authentication)" do
     document.delete(:token_endpoint_auth_method)
     authorize
+    click_on "Authorize"
 
-    i_should_see_translated_error_message :invalid_client
+    code = Rack::Utils.parse_query(URI.parse(current_url).query)["code"]
+    page.driver.post token_endpoint_url, grant_type: "authorization_code", code: code, client_id: client_id,
+                                         redirect_uri: redirect_uri, code_verifier: code_verifier
+    expect(JSON.parse(page.body)).to include("access_token")
+    expect(Doorkeeper::Application.by_uid(client_id)).not_to be_confidential
   end
 
   scenario "the scopes, the document's own too, are capped by the configuration (RFC 6749 §3.3)" do

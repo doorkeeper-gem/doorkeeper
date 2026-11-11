@@ -94,6 +94,18 @@ feature "Client ID Metadata Documents of real clients" do
     expect(run_flow(:chatgpt, "https://chatgpt.com/connector_platform_oauth_redirect", private_key_jwt)).to include("access_token")
   end
 
+  scenario "ChatGPT, without the token_endpoint_auth_method draft-03 recommends against, still has to use its key" do
+    config_is_set(:client_authentication, %i[none private_key_jwt])
+    document = documents[:chatgpt].except("token_endpoint_auth_method")
+    stub_request(:get, document["client_id"]).to_return(status: 200, body: document.to_json)
+    callback = authorization_response(document["client_id"], "https://chatgpt.com/connector_platform_oauth_redirect")
+    exchange = { grant_type: "authorization_code", code: callback.fetch("code"), code_verifier: code_verifier,
+                 redirect_uri: "https://chatgpt.com/connector_platform_oauth_redirect", }
+
+    expect(token_request(exchange.merge(none.call(document["client_id"])))).to include("error" => "invalid_client")
+    expect(token_request(exchange.merge(private_key_jwt.call(document["client_id"])))).to include("access_token")
+  end
+
   scenario "ChatGPT, on a server offering private_key_jwt, is refused without its key" do
     config_is_set(:client_authentication, %i[none private_key_jwt])
     callback = authorization_response("https://chatgpt.com/oauth/client.json", "https://chatgpt.com/connector_platform_oauth_redirect")
