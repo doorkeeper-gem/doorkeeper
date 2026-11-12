@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#1944] Add the `revoke_previous_access_token_on_refresh` option (default `true`): set to `false`, the refresh_token grant revokes only the exchanged refresh token and the previous access token stays usable until it expires. Requires the new `refresh_token_revoked_at` column (`rails generate doorkeeper:refresh_token_revoked_at`).
+- [#1947] Revoking a refresh token now also revokes the tokens issued earlier from the same authorization grant (RFC 7009 §2.1). The refresh chain is tracked in a new `refresh_token_family_id` column; existing installs opt in with `rails generate doorkeeper:refresh_token_family_id`.
 - [#1956] Add `use_client_id_metadata_documents`: public clients may use the https URL of their metadata document as `client_id` (draft-ietf-oauth-client-id-metadata-document). Needs `rails generate doorkeeper:client_id_metadata_documents`.
 - [#1959] A custom `access_token_generator` now receives the token's `resource` (RFC 8707), so a JWT generator can set `aud`.
 - [#1960] Ignore the port of `http://localhost` redirect URIs like that of loopback IP literals (RFC 8252 §7.3 / §8.3).

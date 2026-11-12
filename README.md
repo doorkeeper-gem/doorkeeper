@@ -44,6 +44,7 @@ Supported features:
 - [Resource Indicators](#resource-indicators)
 - [Refresh Token Scopes](#refresh-token-scopes)
 - [Keeping the Previous Access Token on Refresh](#keeping-the-previous-access-token-on-refresh)
+- [Refresh Token Families](#refresh-token-families)
 - [Client ID Metadata Documents](#client-id-metadata-documents)
 - [Custom Grant Flows](#custom-grant-flows)
 - [Custom Client Authentication Methods](#custom-client-authentication-methods)
@@ -212,10 +213,25 @@ Both are required: the column alone changes nothing, and the option has no effec
 
 Things to keep in mind:
 
-- Revoking a token through the revocation endpoint, `AccessToken#revoke` or `AccessToken.revoke_all_for` still revokes the whole record. Doorkeeper does not link the records of one refresh chain, so revoking the *current* refresh token does not reach a previous access token that was kept alive; it stays usable until it expires. Keep `access_token_expires_in` short when you enable this.
+- Revoking a token through the revocation endpoint, `AccessToken#revoke` or `AccessToken.revoke_all_for` still revokes the whole record. Without the `refresh_token_family_id` column Doorkeeper does not link the records of one refresh chain, so revoking the *current* refresh token does not reach a previous access token that was kept alive; it stays usable until it expires. Keep `access_token_expires_in` short when you enable this, or add the column so that revoking any refresh token of the chain reaches every record of it (see [Refresh Token Families](#refresh-token-families)).
 - Records whose refresh token was revoked this way keep an empty `revoked_at`, so `doorkeeper:db:cleanup:revoked_tokens` does not see them; `doorkeeper:db:cleanup:expired_tokens` removes them once their access token has expired.
 - Refresh tokens revoked this way stay revoked if you set the option back to `true`. Dropping the column, however, forgets them: revoke those records first (`revoked_at`) if you ever remove it.
 - The [ORM extensions](#extensions) (Sequel, MongoDB) ship their own access token mixins and keep revoking both tokens until they add the field.
+
+## Refresh Token Families
+
+Every refresh creates a new `oauth_access_tokens` record, and more than one record of such a chain can be usable at the same time (the previous refresh token stays valid until the new access token is first used when the `previous_refresh_token` column exists). [RFC 7009 §2.1](https://datatracker.ietf.org/doc/html/rfc7009#section-2.1) says that revoking a refresh token SHOULD also invalidate the access tokens based on the same authorization grant.
+
+Doorkeeper links the records of one chain through the `refresh_token_family_id` column: a token issued with a refresh token starts a family, and the refresh token grant carries it onto every record it creates. New installs get the column from the install migration; existing installs add it with:
+
+```bash
+rails generate doorkeeper:refresh_token_family_id
+rails db:migrate
+```
+
+With the column in place, revoking a refresh token at the revocation endpoint revokes every record of its family, whichever refresh token of the chain is presented — including one that has already been revoked itself, since the records issued after it can still be live. `AccessToken#revoke_refresh_token_family` does the same from your own code. Revoking an *access* token, `AccessToken#revoke` and `AccessToken.revoke_all_for` behave as before.
+
+No backfill is needed: a refresh token issued before the migration joins a family the next time it is refreshed, and until then revoking it revokes its own record only. Without the column that is always the case, and so it is for the [ORM extensions](#extensions) (Sequel, MongoDB) until they add the field.
 
 ## Client ID Metadata Documents
 
