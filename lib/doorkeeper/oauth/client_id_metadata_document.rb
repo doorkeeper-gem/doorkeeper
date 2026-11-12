@@ -6,20 +6,24 @@ module Doorkeeper
     # for public clients: an https client_id is the URL of the client's own metadata,
     # fetched and kept as an application row, since grants and tokens reference one.
     #
-    # Rows written from a document carry the time of the first write in MARKER, which is what
-    # tells them apart from registered applications (draft-02 §7.1). ActiveRecord only.
+    # Rows written from a document carry the time of the first write in MARKER, which is what tells
+    # them apart from registered applications (draft-03, Supporting Both Pre-Registered and
+    # Unregistered Clients). ActiveRecord only.
     module ClientIdMetadataDocument
       MARKER = :client_id_metadata_materialized_at
 
-      # A refused client_id is looked up like a registered one, so its document is never fetched.
+      # A refused client_id is looked up like a registered one, so its document is never fetched. Neither is
+      # the issuer's own, as its tokens' aud and its assertions' iss would then name this server
+      # (draft-03, Client Identifier URL Confusion Attacks); other parties' identifiers are for
+      # allow_client_id_metadata_document to refuse.
       def self.url?(client_id)
-        Doorkeeper.config.use_client_id_metadata_documents? && url_form?(client_id) && allowed?(client_id)
+        Doorkeeper.config.use_client_id_metadata_documents? && url_form?(client_id) &&
+          client_id.to_s != Doorkeeper.config.issuer.to_s && allowed?(client_id)
       end
 
-      # At most 255 characters, as the uid column holds no more on MySQL. The port is held to what
-      # the fetcher could connect to, so the two agree on what is fetchable.
+      # The port is held to what the fetcher could connect to, so the two agree on what is fetchable.
       def self.url_form?(client_id)
-        return false if client_id.to_s.length > 255
+        return false unless storable?(client_id.to_s)
 
         uri = URI.parse(client_id.to_s)
         uri.is_a?(URI::HTTPS) && uri.host.present? && HttpFetcher::PORT_RANGE.cover?(uri.port) &&
@@ -29,6 +33,12 @@ module Doorkeeper
         false
       end
 
+      # At most 255 characters, as the uid column holds no more on MySQL, and no control characters,
+      # which URI.parse lets through in a query, and which would reach the log on a refusal.
+      def self.storable?(client_id)
+        client_id.length <= 255 && !client_id.match?(/[[:cntrl:]]/)
+      end
+
       def self.materialized?(application)
         application.respond_to?(MARKER) && application.public_send(MARKER).present?
       end
@@ -36,8 +46,7 @@ module Doorkeeper
       # A row written from a document while the option was on, and is no longer, or whose
       # client_id is refused by now.
       def self.orphaned?(application)
-        materialized?(application) &&
-          (!Doorkeeper.config.use_client_id_metadata_documents? || !allowed?(application.uid))
+        materialized?(application) && !url?(application.uid)
       end
 
       def self.allowed?(client_id)
@@ -45,15 +54,15 @@ module Doorkeeper
       end
 
       # A row written from a document stands for one client_id only, compared as a simple string
-      # (draft-02 §3). The database may compare more loosely: MySQL's default collations ignore case
-      # and accents, some of them trailing spaces as well.
+      # (draft-03, Client Identifier URL). The database may compare more loosely: MySQL's default
+      # collations ignore case and accents, some of them trailing spaces as well.
       def self.other_client?(application, client_id)
         materialized?(application) && application.uid != client_id.to_s
       end
 
-      # The authorization endpoint's lookup. A registered application wins (draft-02 §7.2);
-      # otherwise the document is fetched, and a failed fetch refuses the client even when
-      # a row was written from an earlier one (draft-02 §5.1).
+      # The authorization endpoint's lookup. A registered application wins (draft-03, Pre-Registering
+      # Client Identifier URLs); otherwise the document is fetched, and a failed fetch refuses the
+      # client even when a row was written from an earlier one (draft-03, Metadata Discovery Errors).
       def self.application(client_id)
         model = Doorkeeper.config.application_model
         registered = model.by_uid(client_id)
@@ -67,25 +76,54 @@ module Doorkeeper
         materialize(model, registered || model.new(uid: client_id), entry[:document])
       end
 
+      # The authorization response has to carry +iss+ (RFC 9207) for a client known from its document,
+      # which Doorkeeper only adds once +issuer+ is set (draft-03, Authorization Response). Only a
+      # warning, as the issuer may be resolved per request.
+      def self.warn_without_issuer
+        return if Doorkeeper.config.issuer.present?
+
+        ::Rails.logger.warn("[DOORKEEPER] use_client_id_metadata_documents needs `issuer` to be set, " \
+                            "as the authorization response must carry iss (RFC 9207)")
+      end
+
       def self.cache
         @cache ||= DocumentCache.new
       end
 
+      # Logs why a document is refused, as the client itself only sees invalid_client.
       def self.fetch(client_id)
         document = JSON.parse(HttpFetcher.new.fetch(client_id))
-        document if valid?(client_id, document)
-      rescue HttpFetcher::FetchError, JSON::ParserError
-        nil
+        reason = refusal(client_id, document)
+        return log_refusal(client_id, reason) if reason
+
+        warn_without_issuer
+        document
+      rescue HttpFetcher::FetchError => e
+        log_refusal(client_id, "its document could not be fetched: #{e.message}")
+      rescue JSON::ParserError
+        # Not its message, which older json versions fill with the body as served.
+        log_refusal(client_id, "its document is no JSON")
       end
 
-      def self.valid?(client_id, document)
-        document.is_a?(Hash) &&
-          document["client_id"] == client_id &&
-          well_typed?(document) &&
-          displayable?(display_name(client_id, document["client_name"])) &&
-          public_client?(document) &&
-          public_clients_accepted? &&
-          document.keys.none? { |key| key.start_with?("client_secret") }
+      # Why a document is refused, the first reason that applies, or nil.
+      def self.refusal(client_id, document)
+        return "its document is no JSON object" unless document.is_a?(Hash)
+        return "its document names another client_id" unless document["client_id"] == client_id
+        return "its document has malformed redirect_uris, scope or client_name" unless well_typed?(document)
+        return "its document declares no authorization code flow" unless code_flow_declared?(document)
+        return "its client_name cannot be shown" unless displayable?(display_name(client_id, document["client_name"]))
+        return "its document declares no public client" unless public_client?(document)
+        return "client_authentication does not offer none" unless public_clients_accepted?
+        return "its document declares private_key_jwt without an https jwks_uri" if keyless_private_key_jwt?(document)
+
+        "its document carries a client secret or both jwks and jwks_uri" unless credentials_allowed?(document)
+      end
+
+      # No shared secret, and not both jwks and jwks_uri, which leaves open which keys count
+      # (RFC 7591 §2, draft-03, Credential and Key Material Restrictions).
+      def self.credentials_allowed?(document)
+        document.keys.none? { |key| key.start_with?("client_secret") } &&
+          !(document.key?("jwks") && document.key?("jwks_uri"))
       end
 
       def self.well_typed?(document)
@@ -94,15 +132,27 @@ module Doorkeeper
           document.values_at("scope", "client_name").all? { |value| value.nil? || value.is_a?(String) }
       end
 
+      # A client known from its document gets the authorization code flow only, so its grant and response
+      # types, RFC 7591's defaults when absent, have to include it; otherwise what the client declares and
+      # what this server supports for it do not intersect (draft-03, Client Information Discovery).
+      CODE_FLOW = { "grant_types" => "authorization_code", "response_types" => "code" }.freeze
+
+      def self.code_flow_declared?(document)
+        CODE_FLOW.all? do |property, type|
+          declared = document[property].nil? ? [type] : document[property]
+          declared.is_a?(Array) && declared.all?(String) && declared.include?(type)
+        end
+      end
+
       SHARED_SECRET_METHODS = %w[client_secret_basic client_secret_post client_secret_jwt].freeze
 
       # Public clients only: the method is +none+, or the supported methods (OpenID Connect RP Metadata
       # Choices) include +none+ and no shared-secret one, as ChatGPT's do with +private_key_jwt+. A method
-      # named next to them must be among them. Naming neither is refused, as RFC 7591 then defaults to
-      # +client_secret_basic+.
+      # named next to them must be among them. Naming neither means +none+, not RFC 7591's default of
+      # +client_secret_basic+ (draft-03, Client Authentication).
       def self.public_client?(document)
         method, supported = document.values_at("token_endpoint_auth_method", "token_endpoint_auth_methods_supported")
-        return method == "none" if supported.nil?
+        return [nil, "none"].include?(method) if supported.nil?
         return false unless supported.is_a?(Array) && supported.all?(String)
 
         (method.nil? || supported.include?(method)) && supported.include?("none") &&
@@ -130,10 +180,10 @@ module Doorkeeper
 
       def self.materialize(model, application, document)
         scopes = scopes(document["scope"])
-        return log_refusal(application, "leaves no scopes") if scopes.nil?
+        return log_refusal(application.uid, "leaves no scopes") if scopes.nil?
 
         redirect_uris = acceptable_redirect_uris(application, document["redirect_uris"])
-        return log_refusal(application, "lists no acceptable redirect URI") if redirect_uris.empty?
+        return log_refusal(application.uid, "lists no acceptable redirect URI") if redirect_uris.empty?
 
         application.assign_attributes(
           name: display_name(application.uid, document["client_name"]),
@@ -146,23 +196,30 @@ module Doorkeeper
         # A savepoint, so that losing the uid race leaves a caller's transaction usable for the re-read.
         return application if model.with_primary_role { model.transaction(requires_new: true) { application.save } }
 
-        concurrent_row(model, application) || log_refusal(application, application.errors.full_messages.to_sentence)
+        concurrent_row(model, application) || log_refusal(application.uid, application.errors.full_messages.to_sentence)
       rescue ActiveRecord::RecordNotUnique
         concurrent_row(model, application)
       end
 
       def self.assign_keys(application, document)
         application.jwks_uri = jwks_uri(document["jwks_uri"])
-        application.confidential = private_key_jwt?(document, application.jwks_uri)
+        application.confidential = private_key_jwt?(document)
         # Generated on create only, so a public client turning confidential may still lack one.
         application.renew_secret if application.confidential? && application.secret.blank?
       end
 
-      # A client preferring private_key_jwt, with keys to verify it against, on a server offering it, must
-      # authenticate with it: as a confidential client, +none+ no longer redeems its codes or refresh tokens.
-      def self.private_key_jwt?(document, jwks_uri)
-        jwks_uri.present? && document["token_endpoint_auth_method"] == "private_key_jwt" &&
+      # A client declaring private_key_jwt, on a server offering it, must authenticate with it: as a
+      # confidential client, +none+ no longer redeems its codes or refresh tokens (draft-03, Client
+      # Authentication). Only among its supported methods, next to +none+, as public_client? refuses the rest.
+      def self.private_key_jwt?(document)
+        Array(document["token_endpoint_auth_methods_supported"]).include?("private_key_jwt") &&
           Doorkeeper.config.client_authentication_methods.any? { |method| method.name.to_s == "private_key_jwt" }
+      end
+
+      # Its keys could not be fetched, as Doorkeeper verifies assertions against a jwks_uri only, so it
+      # could not authenticate as it must.
+      def self.keyless_private_key_jwt?(document)
+        private_key_jwt?(document) && jwks_uri(document["jwks_uri"]).nil?
       end
 
       # Kept where the application model has the column, so private_key_jwt can verify the client's
@@ -208,8 +265,10 @@ module Doorkeeper
         scopes.to_s.presence
       end
 
-      def self.log_refusal(application, reason)
-        ::Rails.logger.warn("[DOORKEEPER] client_id #{application.uid} refused: #{reason}")
+      # A fetch error may quote what the document's host sent, so the line is scrubbed like a client_name.
+      def self.log_refusal(client_id, reason)
+        line = "[DOORKEEPER] client_id #{client_id} refused: #{reason}"
+        ::Rails.logger.warn(line.dup.force_encoding(Encoding::UTF_8).scrub("?").gsub(UNDISPLAYABLE, "?"))
         nil
       end
     end
