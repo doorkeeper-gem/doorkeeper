@@ -66,6 +66,23 @@ RSpec.describe "Client secret rotation" do
     end
   end
 
+  context "when the secret is rotated without a grace period" do
+    let!(:new_secret) { client.rotate_secret!(revoke_old: true) }
+
+    it "rejects the superseded secret immediately" do
+      request_token_with_basic_auth(old_secret)
+
+      expect(response).to have_http_status(:unauthorized)
+      expect(json_response).to include("error" => "invalid_client")
+    end
+
+    it "accepts the new secret" do
+      request_token_with_basic_auth(new_secret)
+
+      expect(response).to have_http_status(:ok)
+    end
+  end
+
   context "when the option is left disabled" do
     before do
       Doorkeeper.configure do

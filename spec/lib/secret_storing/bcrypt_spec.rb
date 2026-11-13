@@ -61,4 +61,22 @@ RSpec.describe ::Doorkeeper::SecretStoring::BCrypt do
       expect(described_class.secret_matches?("foobar", password.to_s)).to be(true)
     end
   end
+
+  describe "recognizes_stored_secret?" do
+    it "recognizes a digest it wrote" do
+      expect(described_class.recognizes_stored_secret?(described_class.transform_secret("foobar")))
+        .to be(true)
+    end
+
+    it "refuses a value written by another strategy" do
+      expect(described_class.recognizes_stored_secret?("plain text secret")).to be(false)
+      expect(described_class.recognizes_stored_secret?(Digest::SHA256.hexdigest("foobar")))
+        .to be(false)
+    end
+
+    it "refuses a blank value" do
+      expect(described_class.recognizes_stored_secret?(nil)).to be(false)
+      expect(described_class.recognizes_stored_secret?("")).to be(false)
+    end
+  end
 end
