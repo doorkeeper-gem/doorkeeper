@@ -240,6 +240,8 @@ end
 
 With both in place, client authentication accepts the secret held in `old_secret` as well as the current one, wherever a client authenticates. Enabling the option without the columns leaves authentication unchanged and logs a warning once. If `secret` uses Active Record Encryption, declare `encrypts :old_secret` as well.
 
+Both columns are named on the application model's `filter_attributes`, so they read as `[FILTERED]` from `#inspect`. SQL bind logging goes through `ActiveRecord::Base`'s list instead: the `:secret` entry Rails generates in `filter_parameter_logging.rb` matches them as a substring, so name them in your own `config.filter_parameters` only if you removed it. Neither column is serialized by default (`as_json`, `to_json`, `serializable_hash`, including with `only:`); a `methods: [:old_secret]` option still returns it, as ActiveModel documents.
+
 The feature is implemented for Active Record. Other ORM adapters define their own secret comparison, so they need the whole rotation surface, not just the columns, before the option takes effect.
 
 ### Notes

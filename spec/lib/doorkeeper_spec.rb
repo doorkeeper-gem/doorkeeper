@@ -91,6 +91,24 @@ RSpec.describe Doorkeeper do
       )
     end
 
+    # The columns a rotation writes are named on the model instead
+    # (Doorkeeper::Application.filter_attributes), which is what Active Record
+    # matches against column names. This list is the host application's own and
+    # holds the names of OAuth *request* parameters, none of which they are.
+    it "leaves the columns a secret rotation writes out of the host-wide list" do
+      Rails.application.config.filter_parameters.clear
+
+      described_class.configure do
+        orm DOORKEEPER_ORM
+        resource_owner_authenticator { nil }
+        enable_secret_rotation
+      end
+      described_class.setup_filter_parameters
+
+      expect(Rails.application.config.filter_parameters.map(&:inspect).join)
+        .not_to include("old_secret")
+    end
+
     it "includes code parameter when authorization_code flow is enabled" do
       Rails.application.config.filter_parameters.clear
 
