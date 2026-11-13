@@ -19,6 +19,15 @@ shared_context "with client secret rotation" do
     old_plaintext
   end
 
+  # A COMMIT lost to ConnectionFailed (Rails 7.1+): savepoint rolled back, connection kept.
+  def lose_commit(connection)
+    allow(connection).to receive(:release_savepoint).and_wrap_original do |_original, name|
+      connection.rollback_to_savepoint(name)
+      raise ::ActiveRecord::ConnectionFailed, "lost during COMMIT"
+    end
+    allow(connection).to receive(:throw_away!)
+  end
+
   # Reset the once-per-process warning flag: `column_names` stubs are undone per example, it is not.
   after do
     if Doorkeeper::Application.instance_variable_defined?(:@secret_rotation_columns_warned)

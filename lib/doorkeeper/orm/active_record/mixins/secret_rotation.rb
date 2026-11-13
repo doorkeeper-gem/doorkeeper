@@ -59,6 +59,61 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       plaintext_secret
     end
 
+    # Ends the grace period opened by the last rotation, dropping the
+    # superseded secret. Needs the columns, not the option: turning
+    # `enable_secret_rotation` off leaves the retained secret in the row, and
+    # it authenticates again the moment the option returns.
+    #
+    # Decides whether there is anything to clear under the row lock: read
+    # outside it, the answer describes whatever this instance was loaded with.
+    #
+    # @param retained_at [Time, nil] the +old_secret_created_at+ the caller
+    #   decided on. A job selecting rows by that column can be raced by a fresh
+    #   rotation between its query and this lock; with the timestamp it saw, a
+    #   row whose grace period changed underneath is left alone and answers
+    #   false. Nil clears whatever the row holds. Anything that is not a time
+    #   raises +ArgumentError+ rather than answering false, which the caller
+    #   could not tell apart from another process having got there first.
+    #
+    # @return [Boolean] whether a grace period was there to end
+    #
+    def clear_old_secret!(retained_at: nil)
+      ensure_secret_rotation_columns!
+      ensure_comparable_retained_at!(retained_at)
+      ensure_lockable!
+
+      cleared = false
+      locked = false
+
+      self.class.with_primary_role do
+        with_lock do
+          locked = true
+
+          # `with_lock` reloaded `secret` but not the volatile plaintext; keep
+          # it only while it still describes the stored secret.
+          @raw_secret = restorable_raw_secret(@raw_secret)
+
+          # Both columns decide: a timestamp with nothing behind it would
+          # otherwise be reselected by a cleanup job forever.
+          next if old_secret.blank? && old_secret_created_at.blank?
+          next if retained_at && old_secret_created_at != retained_at
+
+          # Assignment + `save!` rather than `update!`: the latter snapshots
+          # the record inside its own transaction, so a rollback arriving
+          # after the write would leave nothing for the rescue to restore.
+          self.old_secret = nil
+          self.old_secret_created_at = nil
+          save!
+          cleared = true
+        end
+      end
+
+      cleared
+    rescue StandardError
+      undo_failed_clear(locked, cleared)
+      raise
+    end
+
     # Serializes the application attributes minus the ones a rotation writes
     # (see #withhold_rotation_attributes). Every ActiveModel serialization path
     # (#as_json, #to_json) runs through here. A caller naming +old_secret+ in
@@ -74,10 +129,28 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
 
     private
 
+    # A String (what a time becomes through a job payload or a form) is never
+    # equal to a time, so comparing it would answer false, indistinguishable
+    # from another process having ended the grace period first. Coercing it
+    # is no better: `#to_s` drops the sub-second digits the column keeps.
+    def ensure_comparable_retained_at!(retained_at)
+      return if retained_at.nil? || retained_at.acts_like?(:time)
+
+      raise ArgumentError,
+            "retained_at must be the `old_secret_created_at` you decided on, " \
+            "got #{retained_at.inspect}."
+    end
+
     def ensure_secret_rotation_enabled!
       return if self.class.secret_rotation_enabled?
 
       raise Doorkeeper::Errors::SecretRotationNotEnabled, self.class.table_name
+    end
+
+    def ensure_secret_rotation_columns!
+      return if self.class.secret_rotation_columns?
+
+      raise Doorkeeper::Errors::SecretRotationNotEnabled.new(self.class.table_name, columns_only: true)
     end
 
     # `with_lock` takes no row lock on an unpersisted record and does not
@@ -126,6 +199,35 @@ module Doorkeeper::Orm::ActiveRecord::Mixins
       return true unless secret_strategy.respond_to?(:recognizes_stored_secret?)
 
       secret_strategy.recognizes_stored_secret?(stored)
+    end
+
+    # Puts the instance back after a clear that did not complete: Active
+    # Record rolls the row back but leaves the in-memory attributes as the
+    # failed write left them, and only when the lock block ran. A COMMIT lost
+    # to +ActiveRecord::ConnectionFailed+ (Rails 7.1+ invalidates the
+    # transaction without rolling the record back) leaves the record clean
+    # with the columns cleared while the row still holds the retained secret,
+    # so the row is reloaded from the primary in that case.
+    def undo_failed_clear(locked, written)
+      return unless locked
+
+      restore_attributes
+      return unless written && old_secret.blank? && old_secret_created_at.blank?
+
+      self.class.with_primary_role { reload }
+    end
+
+    # The plaintext to keep: only while it still matches the stored secret,
+    # which a rotation racing this one may have replaced. A row with no secret
+    # (a nullable `secret` column) leaves nothing to describe, and the
+    # strategies raise on a nil stored value.
+    def restorable_raw_secret(raw)
+      return raw if raw.nil?
+      return if secret.nil?
+      return raw if secret_strategy.secret_matches?(raw, secret)
+      return raw if fallback_secret_strategy&.secret_matches?(raw, secret)
+
+      nil
     end
 
     # Expressed against `only` as well as `except` because ActiveModel honours
