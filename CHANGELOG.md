@@ -7,6 +7,10 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#PR ID] Description of the change.
+
+## 6.0.0.rc3
+
 - [#1944] Add the `revoke_previous_access_token_on_refresh` option (default `true`): set to `false`, the refresh_token grant revokes only the exchanged refresh token and the previous access token stays usable until it expires. Requires the new `refresh_token_revoked_at` column (`rails generate doorkeeper:refresh_token_revoked_at`).
 - [#1956] Add `use_client_id_metadata_documents`: public clients may use the https URL of their metadata document as `client_id` (draft-ietf-oauth-client-id-metadata-document). Needs `rails generate doorkeeper:client_id_metadata_documents`.
 - [#1959] A custom `access_token_generator` now receives the token's `resource` (RFC 8707), so a JWT generator can set `aud`.
@@ -24,7 +28,6 @@ User-visible changes worth mentioning.
 - [#1993] Reject a protocol-relative redirect URI (e.g. `//example.com`) at application registration. It parsed with no scheme but a host, so `relative_uri?` accepted it; it is now rejected as `relative_uri` like any other scheme-less reference. The authorization endpoint already refused it (`URIChecker.valid?` requires a scheme), so this only aligns registration validation with that behavior.
 - [#1994] Serve the authorization server metadata document with `Cache-Control: private` instead of `public`: its issuer and endpoint URLs follow the request host, so a shared cache must not reuse one client's copy for another.
 - [#1997] Follow draft-03 of client ID metadata documents: a document naming no token endpoint auth method is a public client (`none`) instead of being refused; `private_key_jwt` among `token_endpoint_auth_methods_supported` alone now makes a confidential client as well, and one declaring it without an https `jwks_uri` is refused where the server offers it; documents whose `grant_types`/`response_types` leave out the authorization code flow, or that carry both `jwks` and `jwks_uri`, are refused; the `issuer` itself is refused as a `client_id`; a warning is logged while no `issuer` is set, as the authorization response must carry `iss`; why a document is refused is logged.
-- [#PR ID] Description of the change.
 
 ## 6.0.0.rc2
 
