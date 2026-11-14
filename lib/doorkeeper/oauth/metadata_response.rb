@@ -30,6 +30,7 @@ module Doorkeeper
             response_modes_supported: response_modes_supported,
             grant_types_supported: grant_types_supported,
             token_endpoint_auth_methods_supported: token_endpoint_auth_methods_supported,
+            token_endpoint_auth_signing_alg_values_supported: token_endpoint_auth_signing_alg_values_supported,
             code_challenge_methods_supported: code_challenge_methods_supported.presence,
             # RFC 9207: true only when an issuer is configured, matching the
             # condition under which the iss parameter is emitted. false survives
@@ -152,6 +153,19 @@ module Doorkeeper
         config.client_authentication_methods.filter_map do |method|
           method.name.to_s if Doorkeeper::ClientAuthentication.get(method.name)
         end
+      end
+
+      # RFC 8414 §2: the entry MUST be present when private_key_jwt or
+      # client_secret_jwt is among the advertised methods, and no default is
+      # implied when it is omitted. The values are asked of the advertised
+      # methods themselves rather than read off Doorkeeper's own
+      # private_key_jwt, so an assertion-based method a host application
+      # registered is published with the algorithms it declares; where no
+      # advertised method declares any, the entry is left out.
+      def token_endpoint_auth_signing_alg_values_supported
+        config.client_authentication_methods.flat_map do |method|
+          Doorkeeper::ClientAuthentication.get(method.name)&.auth_signing_alg_values || []
+        end.uniq.presence
       end
 
       def code_challenge_methods_supported

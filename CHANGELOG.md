@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#PR ID] Description of the change.
+- [#2001] Publish `token_endpoint_auth_signing_alg_values_supported` in the authorization server metadata when `private_key_jwt` is enabled, as RFC 8414 §2 requires. A custom assertion-based method declares its algorithms with `auth_signing_alg_values`.
 
 ## 6.0.0.rc3
 

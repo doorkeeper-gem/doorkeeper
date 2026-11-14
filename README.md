@@ -422,6 +422,14 @@ Two things are worth keeping in mind when writing one.
 
 Enabled methods are advertised in the authorization server metadata, so a registered method appears in `token_endpoint_auth_methods_supported` at `/.well-known/oauth-authorization-server` once `client_authentication` lists it.
 
+A method that authenticates the client with a signed assertion, such as `client_secret_jwt`, also has to tell clients which JWS algorithms it accepts: [RFC 8414 §2](https://datatracker.ietf.org/doc/html/rfc8414#section-2) requires `token_endpoint_auth_signing_alg_values_supported` wherever `private_key_jwt` or `client_secret_jwt` is advertised. Define `auth_signing_alg_values` on the method and Doorkeeper publishes the values of every enabled method there; the built-in `private_key_jwt` declares its own.
+
+```ruby
+def self.auth_signing_alg_values
+  %w[HS256 HS512]
+end
+```
+
 ## Example Applications
 
 These applications show how Doorkeeper works and how to integrate with it. Start with the oAuth2 server and use the clients to connect with the server.
