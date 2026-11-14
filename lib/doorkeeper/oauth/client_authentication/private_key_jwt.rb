@@ -101,19 +101,57 @@ module Doorkeeper
         # locate the client (and thereby its keys); every claim is verified
         # against those keys before the assertion authenticates anyone.
         def self.unverified_client_id(assertion)
-          claims, = ::JWT.decode(assertion, nil, false)
+          claims = unverified_claims(assertion)
           # A JWT payload is any JSON value, not necessarily an object, and
           # nothing is verified at this point — so the decoded claims are
           # type-checked before being indexed into.
-          return unless claims.is_a?(Hash)
+          return unless claims.is_a?(Hash) && well_formed?(claims)
 
           issuer = claims["iss"]
 
           issuer if issuer.is_a?(String) && issuer == claims["sub"]
-        rescue ::JWT::DecodeError
-          nil
         end
         private_class_method :unverified_client_id
+
+        # The assertion's payload, read without verifying anything, or nil
+        # when it does not decode. The jwt gem indexes into the JOSE header on
+        # the way without checking that it parsed as a JSON object, so a
+        # header that is an array, a number, a boolean or null raises
+        # TypeError or NoMethodError rather than a JWT::DecodeError — out of
+        # an assertion that takes no key, signature or client to build.
+        def self.unverified_claims(assertion)
+          claims, = ::JWT.decode(assertion, nil, false)
+          claims
+        rescue ::JWT::DecodeError, TypeError, NoMethodError
+          nil
+        end
+        private_class_method :unverified_claims
+
+        # Whether the claims have the JSON types an assertion must have, asked
+        # before anything is verified because the jwt gem asks none of it
+        # while verifying.
+        #
+        # RFC 7519 §4.1.4 and §4.1.5: exp and nbf are NumericDates. The gem
+        # casts both with to_i, which reads a numeric string as a number and
+        # raises for the rest — NoMethodError for an array, an object or a
+        # boolean, FloatDomainError for the Infinity an exponent too large for
+        # a Float (1e400) parses as — and neither is a JWT::DecodeError.
+        #
+        # A string claim's bytes are tagged as UTF-8 without being checked,
+        # and the first regex to touch invalid ones raises ArgumentError
+        # (String#blank? is one): the issuer is asked before the client is
+        # looked up, the jti before the replay guard is.
+        def self.well_formed?(claims)
+          numeric_date?(claims["exp"]) &&
+            (claims["nbf"].nil? || numeric_date?(claims["nbf"])) &&
+            claims.values_at("iss", "jti").none? { |value| value.is_a?(String) && !value.valid_encoding? }
+        end
+        private_class_method :well_formed?
+
+        def self.numeric_date?(value)
+          value.is_a?(Numeric) && value.finite?
+        end
+        private_class_method :numeric_date?
 
         def self.verified_claims(assertion, client_id, jwk_set, audiences)
           claims, = ::JWT.decode(
@@ -135,12 +173,9 @@ module Doorkeeper
             verify_expiration: true,
           )
 
-          # RFC 7519 §4.1.4: exp is a NumericDate — a number. The jwt gem's
-          # own expiration check casts it with to_i, which would let a numeric
-          # string through (and read a non-numeric one as 0), so the type is
-          # pinned before the value is compared or handed to the replay guard.
+          # A finite number by now: well_formed? pinned the type before this
+          # decode, so exp is compared and handed to the replay guard as it is.
           exp = claims["exp"]
-          return unless exp.is_a?(Numeric) && exp.finite?
           return unless exp <= Time.now.to_i + MAX_LIFETIME
           return unless claims["jti"].is_a?(String) && claims["jti"].present?
 

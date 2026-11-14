@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#PR ID] Description of the change.
+- [#2000] Fix: a malformed `private_key_jwt` client assertion is refused with `invalid_client` instead of raising: a JOSE header that is no JSON object, an `exp` or `nbf` that is no finite number, an issuer or `jti` that is not valid UTF-8.
 
 ## 6.0.0.rc3
 
