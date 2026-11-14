@@ -24,6 +24,7 @@ RSpec.describe Doorkeeper::ResourceIndicatorsGenerator do
         assert migration.include?("ActiveRecord::Migration[7.1]\n")
         assert migration.include?("add_column :oauth_access_grants, :resource, :text")
         assert migration.include?("add_column :oauth_access_tokens, :resource, :text")
+        assert migration.include?("add_column :oauth_access_tokens, :refresh_token_resource, :text")
       end
     end
   end
