@@ -42,6 +42,11 @@ module Doorkeeper
         # guard's memory.
         MAX_LIFETIME = 3600
 
+        # Upper bound on the length of a jti. The replay guard remembers one
+        # for every assertion until that assertion expires, so without a bound
+        # the client would choose how much memory each of those entries holds.
+        MAX_JTI_LENGTH = 255
+
         def self.matches_request?(request)
           params = request.request_parameters.with_indifferent_access
 
@@ -142,7 +147,7 @@ module Doorkeeper
           exp = claims["exp"]
           return unless exp.is_a?(Numeric) && exp.finite?
           return unless exp <= Time.now.to_i + MAX_LIFETIME
-          return unless claims["jti"].is_a?(String) && claims["jti"].present?
+          return unless claims["jti"].is_a?(String) && claims["jti"].present? && claims["jti"].length <= MAX_JTI_LENGTH
 
           claims
         rescue ::JWT::DecodeError, OpenSSL::OpenSSLError
