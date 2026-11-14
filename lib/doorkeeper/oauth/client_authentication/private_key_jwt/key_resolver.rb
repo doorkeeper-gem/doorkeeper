@@ -31,17 +31,42 @@ module Doorkeeper
             return unless keys.is_a?(Array)
 
             asymmetric = keys.grep(Hash).reject { |key| (key["kty"] || key[:kty]).to_s == "oct" }
-            return if asymmetric.empty?
+            usable = asymmetric.filter_map { |key| build_key(key) }
+            return if usable.empty?
 
-            ::JWT::JWK::Set.new({ "keys" => asymmetric })
-          rescue ::JWT::DecodeError, OpenSSL::OpenSSLError
-            # A hostile key can fail to parse in more ways than JWT::JWKError:
-            # a member that is not valid base64url raises JWT::Base64DecodeError
-            # (a sibling of JWT::JWKError under JWT::DecodeError, not a
-            # subclass), and an EC point that is not on its curve raises a bare
-            # OpenSSL error. None of them may escape into the token endpoint.
+            ::JWT::JWK::Set.new(usable)
+          end
+
+          # One key of the set, or nil for a key that cannot be used.
+          #
+          # Built one at a time because JWT::JWK::Set builds every member in
+          # its constructor, where the first failure takes the whole set with
+          # it: one entry without a "kty", or of a key type the gem does not
+          # know, would stop the client authenticating with the keys that are
+          # fine. RFC 7517 §5 asks for the opposite, a member that is not
+          # understood is ignored.
+          #
+          # A hostile key can fail to parse in more ways than JWT::JWKError: a
+          # member that is not valid base64url raises JWT::Base64DecodeError (a
+          # sibling of JWT::JWKError under JWT::DecodeError, not a subclass),
+          # and an EC point that is not on its curve raises a bare OpenSSL
+          # error. The gem also takes the members it decodes to be Strings, as
+          # RFC 7518 §6 defines them (base64url): a JSON number, array, object
+          # or boolean there raises NoMethodError or TypeError, and bytes that
+          # are not valid UTF-8 raise ArgumentError. None of them may escape
+          # into the token endpoint. Members are not filtered on their type
+          # instead, as a key may carry ones that are no Strings ("ext",
+          # "key_ops").
+          def self.build_key(key)
+            jwk = ::JWT::JWK.new(key)
+            # The gem defers the parse while a key carries a "kid", which
+            # would move the failure into the verifying decode.
+            jwk.verify_key
+            jwk
+          rescue ::JWT::DecodeError, OpenSSL::OpenSSLError, TypeError, NoMethodError, ArgumentError
             nil
           end
+          private_class_method :build_key
 
           def self.raw_jwks(application)
             application_jwks(application) || fetch_jwks(application_jwks_uri(application))
