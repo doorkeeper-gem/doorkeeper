@@ -274,6 +274,52 @@ RSpec.describe Doorkeeper::OAuth::AuthorizationCodeRequest do
 
         expect(request.error).to be_nil
       end
+
+      # force_pkce without the columns the doorkeeper:pkce generator adds:
+      # there is no stored challenge, so any code_verifier would pass.
+      context "when force_pkce is enabled" do
+        before do
+          allow(Doorkeeper.config).to receive(:force_pkce?).and_return(true)
+          allow(Rails.logger).to receive(:error)
+          params[:code_verifier] = "foobar"
+        end
+
+        context "when the app is not confidential" do
+          before do
+            client.update(confidential: false)
+          end
+
+          it "answers server_error instead of accepting any code_verifier" do
+            request.validate
+
+            expect(request.error).to eq(Doorkeeper::Errors::ServerError)
+          end
+
+          it "does not issue a token" do
+            expect { request.authorize }.not_to(change { Doorkeeper::AccessToken.count })
+          end
+
+          it "logs the generator to run" do
+            expect(Rails.logger).to receive(:error).with(/rails generate doorkeeper:pkce/)
+
+            request.validate
+          end
+
+          it "still answers invalid_request when the code_verifier is missing" do
+            params.delete(:code_verifier)
+            request.validate
+
+            expect(request.error).to eq(Doorkeeper::Errors::InvalidRequest)
+          end
+        end
+
+        context "when the app is confidential" do
+          it "issues a token, as force_pkce does not apply to it" do
+            expect { request.authorize }.to change { client.reload.access_tokens.count }.by(1)
+            expect(request.error).to be_nil
+          end
+        end
+      end
     end
   end
 

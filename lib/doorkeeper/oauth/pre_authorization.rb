@@ -24,6 +24,11 @@ module Doorkeeper
       validate :scopes, error: Errors::InvalidScope
       validate :code_challenge, error: Errors::InvalidRequest
       validate :code_challenge_method, error: Errors::InvalidCodeChallengeMethod
+      # Runs after :code_challenge so a missing challenge is still answered as
+      # the client's error. The method is not: without the columns no method is
+      # supported (#validate_code_challenge_method skips the check), so an
+      # unknown one is answered with server_error like a known one.
+      validate :pkce_storage, error: Errors::ServerError
 
       attr_reader :client, :code_challenge, :code_challenge_method, :missing_param,
                   :redirect_uri, :resource_owner, :response_type, :state,
@@ -186,6 +191,32 @@ module Doorkeeper
 
         code_challenge.blank? ||
           (code_challenge_method.present? && Doorkeeper.config.pkce_code_challenge_methods_supported.include?(code_challenge_method))
+      end
+
+      # force_pkce promises that every authorization code issued to a
+      # non-confidential client is bound to a code_challenge, but the columns
+      # that hold the challenge come from the separate doorkeeper:pkce
+      # generator. Without them Authorization::Code drops the challenge and
+      # the token endpoint has nothing to check the code_verifier against, so
+      # the code would be exchangeable with any verifier while the server
+      # appears to enforce PKCE. That is a server misconfiguration: refuse to
+      # issue the code and answer server_error (RFC 6749 Section 4.1.2.1).
+      #
+      # Only response types that issue a code are refused. Without force_pkce
+      # nothing changes: PKCE is then opportunistic and a challenge is ignored
+      # when it cannot be stored.
+      def validate_pkce_storage
+        return true unless Doorkeeper.config.force_pkce?
+        return true if client.confidential
+        return true unless response_type.to_s.split.include?("code")
+        return true if Doorkeeper.config.access_grant_model.pkce_supported?
+
+        ::Rails.logger.error(
+          "[DOORKEEPER] force_pkce is enabled but the PKCE columns are missing from the " \
+          "oauth_access_grants table, so authorization codes cannot be issued. " \
+          "Run `rails generate doorkeeper:pkce` and apply the migration.",
+        )
+        false
       end
 
       def response_on_fragment?

@@ -191,6 +191,10 @@ Doorkeeper.configure do
   # Require non-confidential clients to use PKCE when using an authorization code
   # to obtain an access_token (disabled by default)
   #
+  # Needs the PKCE columns on the access grants table: run
+  # `rails generate doorkeeper:pkce` and migrate first. Without them the
+  # authorization code flow is refused with a `server_error` for those clients.
+  #
   # force_pkce
 
   # Hash access and refresh tokens before persisting them.
