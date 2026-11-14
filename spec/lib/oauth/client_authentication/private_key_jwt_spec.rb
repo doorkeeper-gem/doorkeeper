@@ -688,6 +688,59 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       end
     end
 
+    # RFC 7518 defines the members the jwt gem decodes as Strings, and the gem
+    # takes that for granted: any other JSON type raises NoMethodError or
+    # TypeError, and bytes that are not valid UTF-8 raise ArgumentError, none
+    # of them a JWT::DecodeError. With a kid the key is only parsed once the
+    # assertion names it; without one, as soon as the set is built.
+    {
+      "a number" => 1,
+      "an array" => ["AQAB"],
+      "an object" => { "value" => "AQAB" },
+      "a boolean" => true,
+      "not valid UTF-8" => "\xFF".dup.force_encoding(Encoding::UTF_8),
+    }.each do |description, member|
+      it "returns nil when the key the assertion names has a modulus that is #{description}" do
+        allow(application).to receive(:jwks).and_return({ "keys" => [jwk.export.merge(n: member)] })
+
+        expect { expect(described_class.authenticate(request_with(build_assertion))).to be_nil }
+          .not_to raise_error
+      end
+
+      it "still authenticates with the usable key beside a kid-less one whose modulus is #{description}" do
+        broken = jwk.export.except(:kid).merge(n: member)
+        allow(application).to receive(:jwks).and_return({ "keys" => [broken, jwk.export] })
+
+        expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+      end
+    end
+
+    it "returns nil when the EC key the assertion names has a coordinate that is a number" do
+      ec_key = OpenSSL::PKey::EC.generate("prime256v1")
+      ec_jwk = JWT::JWK.new(ec_key, { kid: kid }).export.merge(x: 1)
+      allow(application).to receive(:jwks).and_return({ "keys" => [ec_jwk] })
+
+      expect { expect(described_class.authenticate(request_with(build_assertion(key: ec_key, alg: "ES256")))).to be_nil }
+        .not_to raise_error
+    end
+
+    # RFC 7517 §5: a JWK the implementation does not understand, or that
+    # misses a required member, is ignored rather than fatal to the set. The
+    # set's constructor builds every key, so the first one it could not build
+    # used to take the usable ones with it.
+    {
+      "has no kty" => { "kid" => "untyped" },
+      "is of a key type the jwt gem does not know" => { "kty" => "OKP", "crv" => "Ed25519", "x" => "AA", "kid" => "ed" },
+      "misses a required member" => { "kty" => "RSA", "e" => "AQAB", "kid" => "partial" },
+      "is an EC point that is not on its curve" => { "kty" => "EC", "crv" => "P-256", "x" => "AA", "y" => "AA" },
+    }.each do |description, unusable|
+      it "still authenticates with the usable key beside one that #{description}" do
+        allow(application).to receive(:jwks).and_return({ "keys" => [unusable, jwk.export] })
+
+        expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+      end
+    end
+
     # The keys of a registered application are fetched over https only, the
     # same as a document's: a jwks_uri column left on http would otherwise
     # have this server take a client's verification keys off the wire.
