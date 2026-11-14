@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#PR ID] Description of the change.
+- [#1999] Fix: a client known from its metadata document whose token endpoint auth method is `none` can no longer authenticate with a client assertion, even when the application holds its `jwks_uri`; the token request is refused (draft-03, Client Authentication).
 
 ## 6.0.0.rc3
 

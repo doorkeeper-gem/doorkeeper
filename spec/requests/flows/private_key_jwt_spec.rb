@@ -80,6 +80,22 @@ feature "private_key_jwt client authentication" do
     expect(Doorkeeper::AccessToken.first.application.uid).to eq(@client.uid)
   end
 
+  # Only a client known from its metadata document is held to none once that
+  # was determined to be its method; a registered one is not.
+  scenario "a registered public client that published keys authenticates with a signed assertion" do
+    @client.update!(confidential: false)
+    code = authorize_and_return_code
+
+    post_token(
+      code,
+      client_assertion: client_assertion,
+      client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
+    )
+
+    expect(page.driver.response.status).to eq(200)
+    expect(json_response).to include("access_token" => Doorkeeper::AccessToken.first.token)
+  end
+
   # RFC 7523 §2.2 is what private_key_jwt implements, and client_credentials
   # is the shortest end-to-end demonstration of it: no resource owner, no
   # browser step, so the assertion is the only thing standing in for the
