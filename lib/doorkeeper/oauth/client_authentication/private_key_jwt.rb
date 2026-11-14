@@ -32,6 +32,13 @@ module Doorkeeper
         # shared-secret/unauthenticated and must never verify an assertion.
         ALLOWED_ALGORITHMS = %w[RS256 RS384 RS512 PS256 PS384 PS512 ES256 ES384 ES512].freeze
 
+        # Published as token_endpoint_auth_signing_alg_values_supported in the
+        # authorization server metadata, which RFC 8414 §2 requires wherever
+        # this method is advertised.
+        def self.auth_signing_alg_values
+          ALLOWED_ALGORITHMS
+        end
+
         # iss/sub identify the client, aud prevents cross-server replay,
         # exp bounds the assertion lifetime and jti makes it single-use
         # (OIDC Core §9 requires all of these for private_key_jwt).

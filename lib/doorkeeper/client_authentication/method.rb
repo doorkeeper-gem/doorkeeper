@@ -35,6 +35,20 @@ module Doorkeeper
           name.to_s.include?("client_secret")
         end
       end
+
+      # The JWS "alg" values the strategy accepts on the assertion it
+      # authenticates a client with, as Strings. RFC 8414 §2 has them
+      # published whenever an assertion-based method (private_key_jwt,
+      # client_secret_jwt) is advertised, and the strategy is the only thing
+      # that knows what it verifies.
+      #
+      # Strategies declare them by defining +auth_signing_alg_values+; one
+      # that authenticates no assertion declares nothing and answers nil.
+      def auth_signing_alg_values
+        return unless strategy.respond_to?(:auth_signing_alg_values)
+
+        Array(strategy.auth_signing_alg_values).map(&:to_s).presence
+      end
     end
   end
 end

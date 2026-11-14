@@ -44,4 +44,21 @@ RSpec.describe Doorkeeper::ClientAuthentication::Method do
       expect(described_class.new(:tls_client_auth, double).uses_shared_secret?).to be false
     end
   end
+
+  describe "#auth_signing_alg_values" do
+    it "answers what the strategy declares, as Strings" do
+      declared = described_class.new(:client_secret_jwt, double(auth_signing_alg_values: %i[HS256 HS512]))
+
+      expect(declared.auth_signing_alg_values).to eq(%w[HS256 HS512])
+    end
+
+    it "answers nil for a strategy that declares none" do
+      expect(described_class.new(:client_secret_jwt, double(auth_signing_alg_values: [])).auth_signing_alg_values).to be_nil
+      expect(described_class.new(:client_secret_jwt, double(auth_signing_alg_values: nil)).auth_signing_alg_values).to be_nil
+    end
+
+    it "answers nil for a strategy that does not declare them" do
+      expect(method.auth_signing_alg_values).to be_nil
+    end
+  end
 end

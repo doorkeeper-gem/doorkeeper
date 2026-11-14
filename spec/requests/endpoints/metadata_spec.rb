@@ -348,6 +348,82 @@ RSpec.describe "Authorization Server Metadata endpoint" do
     end
   end
 
+  # RFC 8414 §2: token_endpoint_auth_signing_alg_values_supported "MUST be
+  # present if either of these authentication methods [private_key_jwt,
+  # client_secret_jwt] are specified in the
+  # token_endpoint_auth_methods_supported entry".
+  context "without an assertion-based client_authentication method (default)" do
+    it "omits token_endpoint_auth_signing_alg_values_supported" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response).not_to have_key("token_endpoint_auth_signing_alg_values_supported")
+    end
+  end
+
+  context "with private_key_jwt enabled" do
+    before do
+      config_is_set(:client_authentication, %i[client_secret_basic private_key_jwt])
+    end
+
+    it "publishes the signing algorithms an assertion may use" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["token_endpoint_auth_methods_supported"]).to include("private_key_jwt")
+      expect(json_response["token_endpoint_auth_signing_alg_values_supported"])
+        .to eq(Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::ALLOWED_ALGORITHMS)
+      expect(json_response["token_endpoint_auth_signing_alg_values_supported"]).not_to include("none")
+    end
+  end
+
+  context "with private_key_jwt registered but not enabled" do
+    it "omits token_endpoint_auth_signing_alg_values_supported" do
+      expect(Doorkeeper::ClientAuthentication.get(:private_key_jwt)).not_to be_nil
+
+      get "/.well-known/oauth-authorization-server"
+
+      expect(json_response["token_endpoint_auth_methods_supported"]).not_to include("private_key_jwt")
+      expect(json_response).not_to have_key("token_endpoint_auth_signing_alg_values_supported")
+    end
+  end
+
+  context "with a custom assertion-based method that declares its signing algorithms" do
+    before do
+      Doorkeeper::ClientAuthentication.register(
+        :client_secret_jwt,
+        double(matches_request?: false, authenticate: nil, auth_signing_alg_values: %i[HS256 RS256]),
+      )
+      config_is_set(:client_authentication, %i[private_key_jwt client_secret_jwt])
+    end
+
+    after do
+      Doorkeeper::ClientAuthentication::Registry.registered_methods.delete(:client_secret_jwt)
+    end
+
+    it "publishes every advertised method's algorithms once" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["token_endpoint_auth_signing_alg_values_supported"])
+        .to eq(Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::ALLOWED_ALGORITHMS + %w[HS256])
+    end
+  end
+
+  context "with token_endpoint_auth_signing_alg_values_supported in custom_metadata" do
+    before do
+      config_is_set(:client_authentication, %i[client_secret_basic private_key_jwt])
+      config_is_set(:custom_metadata, token_endpoint_auth_signing_alg_values_supported: %w[ES256])
+    end
+
+    it "lets the host application's value win" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["token_endpoint_auth_signing_alg_values_supported"]).to eq(%w[ES256])
+    end
+  end
+
   context "with a deprecated client_credentials-only configuration" do
     before do
       # The legacy DSL converts client_credentials names and stores them in
