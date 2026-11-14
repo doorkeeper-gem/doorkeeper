@@ -10,6 +10,8 @@ feature "Client ID Metadata Documents" do
   let(:document) do
     { client_id: client_id, client_name: "Example MCP", redirect_uris: [redirect_uri], token_endpoint_auth_method: "none" }
   end
+  let(:rsa_key) { OpenSSL::PKey::RSA.generate(2048) }
+  let(:jwks_uri) { "https://client.example.com/jwks.json" }
 
   background do
     Doorkeeper.configure do
@@ -30,6 +32,22 @@ feature "Client ID Metadata Documents" do
     pkce = { code_challenge: Base64.urlsafe_encode64(Digest::SHA256.digest(code_verifier), padding: false),
              code_challenge_method: "S256", }
     visit authorization_endpoint_url(client_id: client_id, redirect_uri: redirect_uri, **pkce, **params)
+  end
+
+  # Serves the client's keys at its jwks_uri, and sets the issuer its assertions have to name as audience.
+  def serve_keys
+    # Another spec may have cached other keys for the same URL.
+    Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::KeyResolver.jwks_cache.clear
+    stub_request(:get, jwks_uri).to_return(status: 200, headers: { "Content-Type" => "application/json" },
+                                           body: { keys: [JWT::JWK.new(rsa_key.public_key, { kid: "k" }).export] }.to_json,)
+    config_is_set(:issuer, "http://www.example.com")
+  end
+
+  # What a token request authenticating with private_key_jwt carries, signed with the client's key.
+  def client_assertion
+    { client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
+      client_assertion: JWT.encode({ iss: client_id, sub: client_id, aud: "http://www.example.com/oauth/token",
+                                     exp: 1.minute.from_now.to_i, jti: SecureRandom.hex(8), }, rsa_key, "RS256", { kid: "k" }), }
   end
 
   scenario "is advertised in the authorization server metadata (draft-03, Authorization Server Metadata)" do
@@ -224,23 +242,12 @@ feature "Client ID Metadata Documents" do
   end
 
   scenario "a document client preferring private_key_jwt must use it where the server offers it" do
-    rsa_key = OpenSSL::PKey::RSA.generate(2048)
-    jwks_uri = "https://client.example.com/jwks.json"
-    # Another spec may have cached other keys for the same URL.
-    Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::KeyResolver.jwks_cache.clear
-    stub_request(:get, jwks_uri).to_return(status: 200, headers: { "Content-Type" => "application/json" },
-                                           body: { keys: [JWT::JWK.new(rsa_key.public_key, { kid: "k" }).export] }.to_json,)
+    serve_keys
     config_is_set(:client_authentication, %i[none private_key_jwt])
-    config_is_set(:issuer, "http://www.example.com")
     config_is_set(:refresh_token_enabled, true)
     config_is_set(:public_client_access_token_expires_in, 60)
     document.merge!(token_endpoint_auth_method: "private_key_jwt", token_endpoint_auth_methods_supported: %w[none private_key_jwt],
                     jwks_uri: jwks_uri,)
-    with_assertion = lambda do
-      { client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
-        client_assertion: JWT.encode({ iss: client_id, sub: client_id, aud: "http://www.example.com/oauth/token",
-                                       exp: 1.minute.from_now.to_i, jti: SecureRandom.hex(8), }, rsa_key, "RS256", { kid: "k" }), }
-    end
     authorize
     click_on "Authorize"
     code = Rack::Utils.parse_query(URI.parse(current_url).query)["code"]
@@ -248,13 +255,13 @@ feature "Client ID Metadata Documents" do
 
     page.driver.post token_endpoint_url, exchange.merge(client_id: client_id)
     expect(JSON.parse(page.body)).to include("error" => "invalid_client")
-    page.driver.post token_endpoint_url, exchange.merge(with_assertion.call)
+    page.driver.post token_endpoint_url, exchange.merge(client_assertion)
     expect(JSON.parse(page.body)).to include("expires_in" => 60)
     refresh_token = JSON.parse(page.body).fetch("refresh_token")
 
     page.driver.post token_endpoint_url, grant_type: "refresh_token", refresh_token: refresh_token, client_id: client_id
     expect(JSON.parse(page.body)).to include("error" => "invalid_client")
-    page.driver.post token_endpoint_url, { grant_type: "refresh_token", refresh_token: refresh_token }.merge(with_assertion.call)
+    page.driver.post token_endpoint_url, { grant_type: "refresh_token", refresh_token: refresh_token }.merge(client_assertion)
     expect(JSON.parse(page.body)).to include("access_token")
 
     # A confidential client with a matching token skips the consent screen, one known from its document never does.
@@ -298,6 +305,25 @@ feature "Client ID Metadata Documents" do
                                          redirect_uri: redirect_uri, code_verifier: code_verifier
     expect(JSON.parse(page.body)).to include("access_token")
     expect(Doorkeeper::Application.by_uid(client_id)).not_to be_confidential
+  end
+
+  scenario "a client whose method is none is refused when it sends a client assertion (draft-03, Client Authentication)" do
+    serve_keys
+    config_is_set(:client_authentication, %i[none private_key_jwt])
+    [{ token_endpoint_auth_method: "none" }, { token_endpoint_auth_methods_supported: %w[none] }, {}].each do |methods|
+      stub_request(:get, client_id)
+        .to_return(status: 200, body: document.except(:token_endpoint_auth_method).merge(methods, jwks_uri: jwks_uri).to_json)
+      Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
+      authorize
+      click_on "Authorize"
+      code = Rack::Utils.parse_query(URI.parse(current_url).query)["code"]
+      exchange = { grant_type: "authorization_code", code: code, redirect_uri: redirect_uri, code_verifier: code_verifier }
+
+      page.driver.post token_endpoint_url, exchange.merge(client_assertion)
+      expect(JSON.parse(page.body)).to include("error" => "invalid_client")
+      page.driver.post token_endpoint_url, exchange.merge(client_id: client_id)
+      expect(JSON.parse(page.body)).to include("access_token")
+    end
   end
 
   scenario "the scopes, the document's own too, are capped by the configuration (RFC 6749 §3.3)" do

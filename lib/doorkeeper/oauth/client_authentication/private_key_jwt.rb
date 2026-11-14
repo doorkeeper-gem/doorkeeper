@@ -73,7 +73,7 @@ module Doorkeeper
           # must agree with the assertion's issuer.
           return if params[:client_id].present? && params[:client_id] != client_id
 
-          application = OAuth::Client.find(client_id)&.application
+          application = application_for(client_id)
           return unless application
 
           jwk_set = KeyResolver.jwk_set_for(application)
@@ -88,6 +88,21 @@ module Doorkeeper
 
           Doorkeeper::ClientAuthentication::VerifiedCredentials.new(client_id)
         end
+
+        # The application the assertion names as its issuer, unless that
+        # client must not authenticate at all: one known from its metadata
+        # document whose token endpoint authentication method was determined
+        # to be none is refused even when its published keys would verify the
+        # assertion (draft-ietf-oauth-client-id-metadata-document-03, Client
+        # Authentication).
+        def self.application_for(client_id)
+          application = OAuth::Client.find(client_id)&.application
+          return unless application
+          return if OAuth::ClientIdMetadataDocument.materialized?(application) && !application.confidential?
+
+          application
+        end
+        private_class_method :application_for
 
         # The built-in guard is process-local; a multi-process deployment can
         # supply a shared store through the private_key_jwt_replay_guard
