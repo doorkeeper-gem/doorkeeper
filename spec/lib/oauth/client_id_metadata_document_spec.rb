@@ -91,6 +91,40 @@ RSpec.describe Doorkeeper::OAuth::ClientIdMetadataDocument do
     end
   end
 
+  context "with a document that leaves private_key_jwt as the only method, where the model has no jwks_uri column" do
+    let(:row) { insert_row(client_id, at: 1.day.ago) }
+
+    before do
+      allow(Doorkeeper::Application).to receive(:by_uid).and_return(row)
+      allow(row).to receive(:respond_to?).and_call_original
+      allow(row).to receive(:respond_to?).with(:jwks_uri=).and_return(false)
+    end
+
+    def serve(methods)
+      stub_request(:get, client_id).to_return(
+        status: 200,
+        body: { client_id: client_id, redirect_uris: [redirect_uri], token_endpoint_auth_methods_supported: methods,
+                jwks_uri: "https://client.example.com/jwks.json", }.to_json,
+      )
+    end
+
+    it "refuses a document declaring nothing else, rather than keeping a public client" do
+      config_is_set(:client_authentication, %i[none private_key_jwt])
+      serve(%w[private_key_jwt])
+      allow(Rails.logger).to receive(:warn)
+      expect(Rails.logger).to receive(:warn).with(/refused: needs a jwks_uri column for private_key_jwt/)
+
+      expect(described_class.application(client_id)).to be_nil
+    end
+
+    it "refuses a document declaring none as well, on a server not offering none" do
+      config_is_set(:client_authentication, %i[private_key_jwt])
+      serve(%w[none private_key_jwt])
+
+      expect(described_class.application(client_id)).to be_nil
+    end
+  end
+
   it "does not take a concurrent row for another client_id that a loose collation matches" do
     allow(Doorkeeper::Application).to receive(:by_uid) do |uid|
       Doorkeeper::Application.all.find { |application| application.uid.casecmp?(uid.to_s) }

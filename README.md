@@ -26,7 +26,7 @@ Supported features:
 - [Proof Key for Code Exchange by OAuth Public Clients](https://datatracker.ietf.org/doc/html/rfc7636)
 - [OAuth 2.0 Authorization Server Issuer Identification](https://datatracker.ietf.org/doc/html/rfc9207) — opt-in by setting `issuer`; adds the `iss` parameter to authorization redirects returned to the client
 - [Resource Indicators for OAuth 2.0](https://datatracker.ietf.org/doc/html/rfc8707)
-- [OAuth Client ID Metadata Documents](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document) — opt-in by setting `use_client_id_metadata_documents`; a public client identifies itself with the https URL of its metadata document instead of registering
+- [OAuth Client ID Metadata Documents](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document) — opt-in by setting `use_client_id_metadata_documents`; a client identifies itself with the https URL of its metadata document instead of registering
 
 ## Table of Contents
 
@@ -219,7 +219,7 @@ Things to keep in mind:
 
 ## Client ID Metadata Documents
 
-Doorkeeper supports [OAuth Client ID Metadata Documents](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document) for public clients: a client such as an MCP client or an agent identifies itself with the `https://` URL of a JSON document describing it, instead of registering with your server first. Doorkeeper fetches the document, keeps what it says as an application row, and the authorization code flow runs as for a registered public client. The specification is still an IETF draft, so the behavior may change with it; Doorkeeper follows draft-03.
+Doorkeeper supports [OAuth Client ID Metadata Documents](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document): a client such as an MCP client or an agent identifies itself with the `https://` URL of a JSON document describing it, instead of registering with your server first. Doorkeeper fetches the document, keeps what it says as an application row, and the authorization code flow runs as for a registered client: a public one, or a confidential one where it authenticates with `private_key_jwt`. The specification is still an IETF draft, so the behavior may change with it; Doorkeeper follows draft-03.
 
 ### Setup
 
@@ -230,7 +230,7 @@ rails generate doorkeeper:client_id_metadata_documents
 rails db:migrate
 ```
 
-2. Enable the option in your initializer, with the scopes such a client may be granted at most. `none` has to be among the `client_authentication` methods, which it is by default:
+2. Enable the option in your initializer, with the scopes such a client may be granted at most. A public client needs `none` among the `client_authentication` methods, which it is by default; a client authenticating with its key needs `private_key_jwt` there (see below):
 
 ```ruby
 # config/initializers/doorkeeper.rb
@@ -252,12 +252,12 @@ Set `issuer` as well: the authorization response to such a client has to carry `
 
 The authorization server metadata at `/.well-known/oauth-authorization-server` advertises `client_id_metadata_document_supported` once the option is on. If a CDN caches that endpoint, purge it after turning the option on: ChatGPT falls back to manual registration without a word when its copy lacks the flag.
 
-A client such as ChatGPT authenticates with `private_key_jwt` whenever the server advertises it. Doorkeeper keeps the document's `jwks_uri` on the application when your model has a `jwks_uri` column, the one `private_key_jwt` reads for registered clients as well. No Doorkeeper generator adds it; a client known before gets its `jwks_uri` on the next authorization, when its document is fetched again. A document whose `token_endpoint_auth_methods_supported` lists `private_key_jwt` next to `none`, as ChatGPT's does, makes a confidential client (one listing `private_key_jwt` without `none`, or naming it only as `token_endpoint_auth_method`, is refused, as below): it has to authenticate with its key, and `none` no longer redeems its codes or refresh tokens, or revokes its tokens. Without an https `jwks_uri` such a document is refused, as Doorkeeper verifies assertions against nothing else. Its tokens stay under `public_client_access_token_expires_in`, as anyone can publish a document with keys of their own. Without that column, leave `private_key_jwt` out of `client_authentication`, or the token request of such a client fails with `invalid_client`.
+A client such as ChatGPT authenticates with `private_key_jwt` whenever the server advertises it. Doorkeeper keeps the document's `jwks_uri` on the application when your model has a `jwks_uri` column, the one `private_key_jwt` reads for registered clients as well. No Doorkeeper generator adds it; a client known before gets its `jwks_uri` on the next authorization, when its document is fetched again. Where the server offers `private_key_jwt`, a document declaring it makes a confidential client, whether it lists `none` next to it, as ChatGPT's does, or not: it has to authenticate with its key, and `none` no longer redeems its codes or refresh tokens, or revokes its tokens. Without an https `jwks_uri` such a document is refused, as Doorkeeper verifies assertions against nothing else. Its tokens stay under `public_client_access_token_expires_in`, as anyone can publish a document with keys of their own. Without that column, leave `private_key_jwt` out of `client_authentication`, or the token request of a client like ChatGPT fails with `invalid_client`. A document declaring `private_key_jwt` without `none` needs both, that column and `private_key_jwt` among the `client_authentication` methods, and is refused otherwise.
 
 ### Behavior
 
 - A `client_id` is taken for a document URL when it is `https`, has a path other than `/`, is at most 255 characters long and carries no userinfo, fragment or dot segments. Any other `client_id` is looked up as a registered `uid`.
-- The document must name its own URL as `client_id`, list at least one `redirect_uris` entry, and be a public client: `token_endpoint_auth_method` is `none`, or `token_endpoint_auth_methods_supported` ([OpenID Connect RP Metadata Choices](https://openid.net/specs/openid-connect-rp-metadata-choices-1_0.html)) lists `none` and no shared-secret method, as ChatGPT's does next to its preferred `private_key_jwt`. A document naming neither is a public client too: draft-03 rules out RFC 7591's default of `client_secret_basic` here. A document asking for a shared secret, or with both `jwks` and `jwks_uri`, is refused, as is one whose `grant_types` leave out `authorization_code` or whose `response_types` leave out `code` (absent, they default to those). Redirect URIs your server refuses are dropped, the rest kept; a document left with none is refused. `force_ssl_in_redirect_uri` is on everywhere but development, so the loopback redirects of native clients (RFC 8252 Section 7.3) are dropped unless you let them through:
+- The document must name its own URL as `client_id`, list at least one `redirect_uris` entry, and declare a token endpoint auth method your server offers, `none` or `private_key_jwt`: among its `token_endpoint_auth_methods_supported` ([OpenID Connect RP Metadata Choices](https://openid.net/specs/openid-connect-rp-metadata-choices-1_0.html)), where ChatGPT's lists both, or, without that list, as its `token_endpoint_auth_method`. A document with neither property is a public client (`none`): draft-03 rules out RFC 7591's default of `client_secret_basic` here. A document asking for a shared secret, or with both `jwks` and `jwks_uri`, is refused, as is one whose `grant_types` leave out `authorization_code` or whose `response_types` leave out `code` (absent, they default to those). Redirect URIs your server refuses are dropped, the rest kept; a document left with none is refused. `force_ssl_in_redirect_uri` is on everywhere but development, so the loopback redirects of native clients (RFC 8252 Section 7.3) are dropped unless you let them through:
 
 ```ruby
 force_ssl_in_redirect_uri { |uri| !%w[127.0.0.1 ::1 localhost].include?(uri.hostname) }

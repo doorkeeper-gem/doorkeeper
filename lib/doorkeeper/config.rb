@@ -182,7 +182,7 @@ module Doorkeeper
         @config.instance_variable_set(:@force_pkce, true)
       end
 
-      # Accept https URLs as the client_id of public clients, per
+      # Accept the https URL of a client's metadata document as its client_id, per
       # draft-ietf-oauth-client-id-metadata-document. +scopes+ (Strings or
       # Symbols, or a space-separated String) caps what such a client may
       # request; a document naming no scope gets the whole cap. Without a cap,

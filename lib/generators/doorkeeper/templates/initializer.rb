@@ -232,10 +232,11 @@ Doorkeeper.configure do
   #
   # allow_oob_redirect_uris true
 
-  # Accept the https URL of a public client's metadata document as its client_id
+  # Accept the https URL of a client's metadata document as its client_id
   # (draft-ietf-oauth-client-id-metadata-document). +scopes+ caps what it may request.
-  # These are public clients: they get authorization codes only, always with S256 PKCE,
-  # and skip_authorization does not apply to them. Needs the column of
+  # Public or authenticating with private_key_jwt, these clients are unregistered: they get
+  # authorization codes only, always with S256 PKCE, and skip_authorization does not apply
+  # to them. Needs the column of
   # `rails generate doorkeeper:client_id_metadata_documents` and the PKCE columns of
   # `rails generate doorkeeper:pkce` (ActiveRecord only). With
   # validate_client_before_resource_owner_authentication, documents are fetched and rows
