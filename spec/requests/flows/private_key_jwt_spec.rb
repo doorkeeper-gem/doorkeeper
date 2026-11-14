@@ -224,6 +224,24 @@ feature "private_key_jwt client authentication" do
     expect(json_response["error"]).to eq("invalid_client")
   end
 
+  # The key set is the client's own to publish, so a key in it that cannot be
+  # parsed is answered like any other failed authentication, and it does not
+  # cost the client the keys beside it.
+  scenario "a published key that cannot be parsed is rejected, not raised on, and leaves the others usable" do
+    broken = jwk.export.merge(kid: "broken", n: 1)
+    @client.update!(jwks: { keys: [broken, jwk.export] }.to_json)
+    type = Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE
+
+    post_token("any-code", client_assertion: client_assertion(header_kid: "broken"), client_assertion_type: type)
+
+    expect(page.driver.response.status).to eq(401)
+    expect(json_response["error"]).to eq("invalid_client")
+
+    post_token(authorize_and_return_code, client_assertion: client_assertion, client_assertion_type: type)
+
+    expect(page.driver.response.status).to eq(200)
+  end
+
   scenario "private_key_jwt is advertised in the authorization server metadata" do
     page.driver.get "/.well-known/oauth-authorization-server"
 

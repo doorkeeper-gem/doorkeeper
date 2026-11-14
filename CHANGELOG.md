@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#PR ID] Description of the change.
+- [#2002] Fix: a key in a client's JWK Set that cannot be parsed no longer raises out of `private_key_jwt`, and no longer costs the client its other keys. A key that is malformed, of an unknown key type or without `kty` is ignored (RFC 7517 §5).
 
 ## 6.0.0.rc3
 
