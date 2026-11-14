@@ -202,6 +202,21 @@ feature "private_key_jwt client authentication" do
     expect(json_response["error"]).to eq("invalid_client")
   end
 
+  # Nothing about such an assertion needs a registered client or a key, so
+  # the token endpoint has to answer it like any other failed authentication.
+  scenario "an assertion whose JOSE header is no JSON object is rejected, not raised on" do
+    segments = ["[]", { iss: @client.uid, sub: @client.uid }.to_json, "signature"]
+
+    post_token(
+      "any-code",
+      client_assertion: segments.map { |segment| Base64.urlsafe_encode64(segment, padding: false) }.join("."),
+      client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
+    )
+
+    expect(page.driver.response.status).to eq(401)
+    expect(json_response["error"]).to eq("invalid_client")
+  end
+
   scenario "a replayed assertion is rejected" do
     assertion = client_assertion
 

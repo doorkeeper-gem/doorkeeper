@@ -36,6 +36,25 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
     JWT.encode(claims, key, alg, headers)
   end
 
+  # JWT.encode refuses to mint an assertion whose exp is no NumericDate, and
+  # no JSON generator emits an overflowing exponent or invalid UTF-8, so such
+  # a payload is handed over as raw JSON and signed by hand.
+  def sign_raw_json(payload_json, key: rsa_key)
+    segments = [{ "alg" => "RS256", "kid" => kid }.to_json, payload_json].map do |segment|
+      Base64.urlsafe_encode64(segment, padding: false)
+    end
+    signature = key.sign(OpenSSL::Digest.new("SHA256"), segments.join("."))
+
+    (segments << Base64.urlsafe_encode64(signature, padding: false)).join(".")
+  end
+
+  def raw_claims(overrides = {})
+    {
+      "iss" => client_id, "sub" => client_id, "aud" => issuer,
+      "exp" => Time.now.to_i + 300, "jti" => SecureRandom.hex(8),
+    }.merge(overrides)
+  end
+
   def request_with(assertion, extra_params = {})
     mock_request(
       request_parameters: {
@@ -499,6 +518,45 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
         .not_to raise_error
     end
 
+    # An Infinity literal is not valid JSON, but an exponent too large for a
+    # Float is: 1e400 parses as Float::INFINITY, whose to_i — the cast the jwt
+    # gem verifies exp and nbf with — raises FloatDomainError, which is no
+    # JWT::DecodeError. The signature is valid, so the assertion gets that far.
+    { "exp" => "1e400", "nbf" => "-1e400" }.each do |claim, literal|
+      it "rejects a validly signed assertion whose #{claim} overflows to Infinity without raising" do
+        payload = raw_claims(claim => "OVERFLOW").to_json.sub('"OVERFLOW"') { literal }
+
+        expect { expect(described_class.authenticate(request_with(sign_raw_json(payload)))).to be_nil }
+          .not_to raise_error
+      end
+    end
+
+    # The same cast raises NoMethodError for any JSON type that has no to_i.
+    %w[exp nbf].each do |claim|
+      [{}, [1], true].each do |value|
+        it "rejects a validly signed assertion whose #{claim} is #{value.to_json} without raising" do
+          payload = raw_claims(claim => value).to_json
+
+          expect { expect(described_class.authenticate(request_with(sign_raw_json(payload)))).to be_nil }
+            .not_to raise_error
+        end
+      end
+    end
+
+    # RFC 7519 §4.1.5: nbf is a NumericDate like exp, and is held to it the
+    # same way — the gem's cast would read this one as a number.
+    it "rejects a validly signed assertion whose nbf is a numeric string" do
+      payload = raw_claims("nbf" => (Time.now.to_i - 60).to_s).to_json
+
+      expect(described_class.authenticate(request_with(sign_raw_json(payload)))).to be_nil
+    end
+
+    it "accepts an assertion whose nbf is a NumericDate in the past" do
+      credentials = described_class.authenticate(request_with(build_assertion(claims: { "nbf" => Time.now.to_i - 60 })))
+
+      expect(credentials).not_to be_nil
+    end
+
     it "accepts an assertion whose exp is a finite float NumericDate" do
       credentials = described_class.authenticate(
         request_with(build_assertion(claims: { "exp" => Time.now.to_f.floor + 300.5 })),
@@ -635,6 +693,39 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
         expect { expect(described_class.authenticate(request_with(assertion))).to be_nil }
           .not_to raise_error
       end
+    end
+
+    # The JOSE header is any JSON value too, and the jwt gem indexes into it
+    # without checking that it is an object: TypeError or NoMethodError, from
+    # an assertion that takes no key, signature or client to build.
+    ["[1]", "42", "null", "true"].each do |header|
+      it "rejects an assertion whose JOSE header is #{header} without raising" do
+        segments = [header, { "iss" => client_id, "sub" => client_id }.to_json, "signature"]
+        assertion = segments.map { |segment| Base64.urlsafe_encode64(segment, padding: false) }.join(".")
+
+        expect { expect(described_class.authenticate(request_with(assertion))).to be_nil }
+          .not_to raise_error
+      end
+    end
+
+    # A claim's bytes are tagged as UTF-8 without being checked, and the first
+    # regex to touch invalid ones raises ArgumentError (String#blank? is one):
+    # asked of the issuer before anything is verified, of the jti afterwards.
+    { "raw bytes" => %("\xff").b, "a lone surrogate escape" => '"\\udc00"' }.each do |description, literal|
+      it "rejects an assertion whose issuer is not valid UTF-8 (#{description}) without raising" do
+        payload = raw_claims("iss" => "ISSUER", "sub" => "ISSUER").to_json.b.gsub('"ISSUER"'.b) { literal.b }
+
+        expect(Doorkeeper::OAuth::Client).not_to receive(:find)
+        expect { expect(described_class.authenticate(request_with(sign_raw_json(payload)))).to be_nil }
+          .not_to raise_error
+      end
+    end
+
+    it "rejects a validly signed assertion whose jti is not valid UTF-8 without raising" do
+      payload = raw_claims("jti" => "JTI").to_json.b.sub('"JTI"'.b) { %("a\xff").b }
+
+      expect { expect(described_class.authenticate(request_with(sign_raw_json(payload)))).to be_nil }
+        .not_to raise_error
     end
 
     it "returns nil when the client publishes no keys" do
