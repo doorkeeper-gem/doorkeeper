@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#PR ID] Description of the change.
+- [#1998] A client ID metadata document declaring `private_key_jwt` without `none` is no longer refused where the server offers `private_key_jwt`, also on a server not offering `none`: it makes a confidential client that has to authenticate with its key (draft-03, Examples of Client Authentication).
 
 ## 6.0.0.rc3
 

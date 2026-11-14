@@ -95,6 +95,12 @@ feature "Client ID Metadata Documents of real clients" do
     expect(run_flow(:chatgpt, "https://chatgpt.com/connector_platform_oauth_redirect", private_key_jwt)).to include("access_token")
   end
 
+  scenario "ChatGPT, on a server offering only private_key_jwt, with its key" do
+    config_is_set(:client_authentication, %i[private_key_jwt])
+
+    expect(run_flow(:chatgpt, "https://chatgpt.com/connector_platform_oauth_redirect", private_key_jwt)).to include("access_token")
+  end
+
   scenario "ChatGPT, without the token_endpoint_auth_method draft-03 recommends against, still has to use its key" do
     config_is_set(:client_authentication, %i[none private_key_jwt])
     document = documents[:chatgpt].except("token_endpoint_auth_method")

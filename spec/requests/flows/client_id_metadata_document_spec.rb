@@ -10,6 +10,8 @@ feature "Client ID Metadata Documents" do
   let(:document) do
     { client_id: client_id, client_name: "Example MCP", redirect_uris: [redirect_uri], token_endpoint_auth_method: "none" }
   end
+  let(:rsa_key) { OpenSSL::PKey::RSA.generate(2048) }
+  let(:jwks_uri) { "https://client.example.com/jwks.json" }
 
   background do
     Doorkeeper.configure do
@@ -30,6 +32,22 @@ feature "Client ID Metadata Documents" do
     pkce = { code_challenge: Base64.urlsafe_encode64(Digest::SHA256.digest(code_verifier), padding: false),
              code_challenge_method: "S256", }
     visit authorization_endpoint_url(client_id: client_id, redirect_uri: redirect_uri, **pkce, **params)
+  end
+
+  # Serves the client's keys at its jwks_uri, and sets the issuer its assertions have to name as audience.
+  def serve_keys
+    # Another spec may have cached other keys for the same URL.
+    Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::KeyResolver.jwks_cache.clear
+    stub_request(:get, jwks_uri).to_return(status: 200, headers: { "Content-Type" => "application/json" },
+                                           body: { keys: [JWT::JWK.new(rsa_key.public_key, { kid: "k" }).export] }.to_json,)
+    config_is_set(:issuer, "http://www.example.com")
+  end
+
+  # What a token request authenticating with private_key_jwt carries, signed with the client's key.
+  def client_assertion
+    { client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
+      client_assertion: JWT.encode({ iss: client_id, sub: client_id, aud: "http://www.example.com/oauth/token",
+                                     exp: 1.minute.from_now.to_i, jti: SecureRandom.hex(8), }, rsa_key, "RS256", { kid: "k" }), }
   end
 
   scenario "is advertised in the authorization server metadata (draft-03, Authorization Server Metadata)" do
@@ -189,8 +207,10 @@ feature "Client ID Metadata Documents" do
   end
 
   scenario "a document with a malformed or inconsistent list of supported methods is refused" do
-    [["none", "none"], ["none", %w[none] + [1]], ["private_key_jwt", %w[none]], [nil, %w[private_key_jwt]],
-     ["none", %w[none client_secret_post]],].each do |method, supported|
+    config_is_set(:client_authentication, %i[none private_key_jwt])
+    document[:jwks_uri] = jwks_uri
+    [["none", "none"], ["none", %w[none] + [1]], ["private_key_jwt", %w[none]], ["none", %w[private_key_jwt]],
+     ["none", %w[none client_secret_post]], [nil, []],].each do |method, supported|
       document[:token_endpoint_auth_method] = method
       document[:token_endpoint_auth_methods_supported] = supported
       Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
@@ -224,23 +244,12 @@ feature "Client ID Metadata Documents" do
   end
 
   scenario "a document client preferring private_key_jwt must use it where the server offers it" do
-    rsa_key = OpenSSL::PKey::RSA.generate(2048)
-    jwks_uri = "https://client.example.com/jwks.json"
-    # Another spec may have cached other keys for the same URL.
-    Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::KeyResolver.jwks_cache.clear
-    stub_request(:get, jwks_uri).to_return(status: 200, headers: { "Content-Type" => "application/json" },
-                                           body: { keys: [JWT::JWK.new(rsa_key.public_key, { kid: "k" }).export] }.to_json,)
+    serve_keys
     config_is_set(:client_authentication, %i[none private_key_jwt])
-    config_is_set(:issuer, "http://www.example.com")
     config_is_set(:refresh_token_enabled, true)
     config_is_set(:public_client_access_token_expires_in, 60)
     document.merge!(token_endpoint_auth_method: "private_key_jwt", token_endpoint_auth_methods_supported: %w[none private_key_jwt],
                     jwks_uri: jwks_uri,)
-    with_assertion = lambda do
-      { client_assertion_type: Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt::CLIENT_ASSERTION_TYPE,
-        client_assertion: JWT.encode({ iss: client_id, sub: client_id, aud: "http://www.example.com/oauth/token",
-                                       exp: 1.minute.from_now.to_i, jti: SecureRandom.hex(8), }, rsa_key, "RS256", { kid: "k" }), }
-    end
     authorize
     click_on "Authorize"
     code = Rack::Utils.parse_query(URI.parse(current_url).query)["code"]
@@ -248,13 +257,13 @@ feature "Client ID Metadata Documents" do
 
     page.driver.post token_endpoint_url, exchange.merge(client_id: client_id)
     expect(JSON.parse(page.body)).to include("error" => "invalid_client")
-    page.driver.post token_endpoint_url, exchange.merge(with_assertion.call)
+    page.driver.post token_endpoint_url, exchange.merge(client_assertion)
     expect(JSON.parse(page.body)).to include("expires_in" => 60)
     refresh_token = JSON.parse(page.body).fetch("refresh_token")
 
     page.driver.post token_endpoint_url, grant_type: "refresh_token", refresh_token: refresh_token, client_id: client_id
     expect(JSON.parse(page.body)).to include("error" => "invalid_client")
-    page.driver.post token_endpoint_url, { grant_type: "refresh_token", refresh_token: refresh_token }.merge(with_assertion.call)
+    page.driver.post token_endpoint_url, { grant_type: "refresh_token", refresh_token: refresh_token }.merge(client_assertion)
     expect(JSON.parse(page.body)).to include("access_token")
 
     # A confidential client with a matching token skips the consent screen, one known from its document never does.
@@ -264,9 +273,65 @@ feature "Client ID Metadata Documents" do
 
   scenario "a document declaring private_key_jwt without keys Doorkeeper can fetch is refused where the server offers it (draft-03, Client Authentication)" do
     config_is_set(:client_authentication, %i[none private_key_jwt])
-    document.merge!(token_endpoint_auth_methods_supported: %w[private_key_jwt none], token_endpoint_auth_method: nil)
-    [{ jwks: { keys: [] } }, { jwks_uri: "http://client.example.com/jwks.json" }].each do |keys|
-      stub_request(:get, client_id).to_return(status: 200, body: document.merge(keys).to_json)
+    document[:token_endpoint_auth_method] = nil
+    keyless = [{ jwks: { keys: [] } }, { jwks_uri: "http://client.example.com/jwks.json" }]
+    [%w[private_key_jwt none], %w[private_key_jwt]].product(keyless).each do |supported, keys|
+      stub_request(:get, client_id).to_return(status: 200, body: document.merge(keys, token_endpoint_auth_methods_supported: supported).to_json)
+      Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
+      authorize
+
+      i_should_see_translated_error_message :invalid_client
+    end
+  end
+
+  scenario "a document declaring only private_key_jwt is a confidential client (draft-03, Examples of Client Authentication)" do
+    serve_keys
+    config_is_set(:client_authentication, %i[none private_key_jwt])
+    document.merge!(token_endpoint_auth_method: nil, token_endpoint_auth_methods_supported: %w[private_key_jwt], jwks_uri: jwks_uri)
+    authorize
+    click_on "Authorize"
+    code = Rack::Utils.parse_query(URI.parse(current_url).query)["code"]
+    exchange = { grant_type: "authorization_code", code: code, redirect_uri: redirect_uri, code_verifier: code_verifier }
+
+    expect(Doorkeeper::Application.by_uid(client_id)).to be_confidential
+    page.driver.post token_endpoint_url, exchange.merge(client_id: client_id)
+    expect(JSON.parse(page.body)).to include("error" => "invalid_client")
+    page.driver.post token_endpoint_url, exchange.merge(client_assertion)
+    expect(JSON.parse(page.body)).to include("access_token")
+  end
+
+  scenario "a document naming private_key_jwt as its only method is a confidential client too (draft-03, Client Authentication)" do
+    config_is_set(:client_authentication, %i[none private_key_jwt])
+    document.merge!(token_endpoint_auth_method: "private_key_jwt", jwks_uri: jwks_uri)
+    authorize
+
+    i_should_see "client.example.com: Example MCP"
+    expect(Doorkeeper::Application.by_uid(client_id)).to have_attributes(confidential: true, jwks_uri: jwks_uri)
+  end
+
+  scenario "a server offering only private_key_jwt accepts a confidential-only document client (draft-03, Client Authentication)" do
+    serve_keys
+    config_is_set(:client_authentication, %i[private_key_jwt])
+    document.merge!(token_endpoint_auth_method: nil, token_endpoint_auth_methods_supported: %w[private_key_jwt], jwks_uri: jwks_uri)
+    authorize
+    click_on "Authorize"
+    code = Rack::Utils.parse_query(URI.parse(current_url).query)["code"]
+    page.driver.post token_endpoint_url, { grant_type: "authorization_code", code: code, redirect_uri: redirect_uri,
+                                           code_verifier: code_verifier, }.merge(client_assertion)
+    expect(JSON.parse(page.body)).to include("access_token")
+
+    # Not a public client though, whose code could never be exchanged there.
+    document[:token_endpoint_auth_methods_supported] = %w[none]
+    Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
+    authorize
+    i_should_see_translated_error_message :invalid_client
+  end
+
+  scenario "a document declaring only private_key_jwt is refused while the server does not offer it (draft-03, Client Authentication)" do
+    allow(Rails.logger).to receive(:warn)
+    expect(Rails.logger).to receive(:warn).with(/refused: client_authentication offers no method its document declares/).twice
+    [{ token_endpoint_auth_methods_supported: %w[private_key_jwt] }, { token_endpoint_auth_method: "private_key_jwt" }].each do |methods|
+      stub_request(:get, client_id).to_return(status: 200, body: document.except(:token_endpoint_auth_method).merge(methods).to_json)
       Doorkeeper::OAuth::ClientIdMetadataDocument.cache.clear
       authorize
 

@@ -2,9 +2,10 @@
 
 module Doorkeeper
   module OAuth
-    # OAuth Client ID Metadata Documents (draft-ietf-oauth-client-id-metadata-document)
-    # for public clients: an https client_id is the URL of the client's own metadata,
-    # fetched and kept as an application row, since grants and tokens reference one.
+    # OAuth Client ID Metadata Documents (draft-ietf-oauth-client-id-metadata-document):
+    # an https client_id is the URL of the client's own metadata, fetched and kept as an
+    # application row, since grants and tokens reference one. Such a client is public, or
+    # confidential where it authenticates with private_key_jwt.
     #
     # Rows written from a document carry the time of the first write in MARKER, which is what tells
     # them apart from registered applications (draft-03, Supporting Both Pre-Registered and
@@ -112,8 +113,8 @@ module Doorkeeper
         return "its document has malformed redirect_uris, scope or client_name" unless well_typed?(document)
         return "its document declares no authorization code flow" unless code_flow_declared?(document)
         return "its client_name cannot be shown" unless displayable?(display_name(client_id, document["client_name"]))
-        return "its document declares no public client" unless public_client?(document)
-        return "client_authentication does not offer none" unless public_clients_accepted?
+        return "its document declares no acceptable token endpoint auth method" if auth_methods(document).empty?
+        return "client_authentication offers no method its document declares" unless auth_method_offered?(document)
         return "its document declares private_key_jwt without an https jwks_uri" if keyless_private_key_jwt?(document)
 
         "its document carries a client secret or both jwks and jwks_uri" unless credentials_allowed?(document)
@@ -146,22 +147,35 @@ module Doorkeeper
 
       SHARED_SECRET_METHODS = %w[client_secret_basic client_secret_post client_secret_jwt].freeze
 
-      # Public clients only: the method is +none+, or the supported methods (OpenID Connect RP Metadata
-      # Choices) include +none+ and no shared-secret one, as ChatGPT's do with +private_key_jwt+. A method
-      # named next to them must be among them. Naming neither means +none+, not RFC 7591's default of
-      # +client_secret_basic+ (draft-03, Client Authentication).
-      def self.public_client?(document)
-        method, supported = document.values_at("token_endpoint_auth_method", "token_endpoint_auth_methods_supported")
-        return [nil, "none"].include?(method) if supported.nil?
-        return false unless supported.is_a?(Array) && supported.all?(String)
+      # What a client known from its document can authenticate with: nothing, or a key it publishes.
+      AUTH_METHODS = %w[none private_key_jwt].freeze
 
-        (method.nil? || supported.include?(method)) && supported.include?("none") &&
-          (supported & SHARED_SECRET_METHODS).empty?
+      # The token endpoint auth methods a document declares, of those above: its supported methods (OpenID
+      # Connect RP Metadata Choices), else its single method, else +none+, not RFC 7591's default of
+      # +client_secret_basic+ (draft-03, Client Authentication). None when they are malformed, when a method
+      # named next to the supported ones is not among them, or when a shared-secret one is.
+      def self.auth_methods(document)
+        method, supported = document.values_at("token_endpoint_auth_method", "token_endpoint_auth_methods_supported")
+        supported = [method.nil? ? "none" : method] if supported.nil?
+        return [] unless supported.is_a?(Array) && supported.all?(String) && (method.nil? || supported.include?(method))
+
+        (supported & SHARED_SECRET_METHODS).empty? ? supported & AUTH_METHODS : []
       end
 
-      # Without +none+ among the client authentication methods, the code could never be exchanged.
+      # A public client: +none+ is among its methods, as it is among ChatGPT's next to +private_key_jwt+.
+      def self.public_client?(document)
+        auth_methods(document).include?("none")
+      end
+
+      # Without +none+ among the client authentication methods, a public client's code could never be exchanged.
       def self.public_clients_accepted?
         Doorkeeper.config.client_authentication_methods.any? { |method| method.name.to_s == "none" }
+      end
+
+      # The server offers a method the document declares: +private_key_jwt+, with or without +none+ on either
+      # side, or else +none+. With no method in common the client is refused (draft-03, Client Authentication).
+      def self.auth_method_offered?(document)
+        private_key_jwt?(document) || (public_client?(document) && public_clients_accepted?)
       end
 
       # The host leads the name, as the consent screen's only verified hint of who is asking.
@@ -184,6 +198,7 @@ module Doorkeeper
 
         redirect_uris = acceptable_redirect_uris(application, document["redirect_uris"])
         return log_refusal(application.uid, "lists no acceptable redirect URI") if redirect_uris.empty?
+        return log_refusal(application.uid, "needs a jwks_uri column for private_key_jwt") unless key_storable?(application, document)
 
         application.assign_attributes(
           name: display_name(application.uid, document["client_name"]),
@@ -191,7 +206,7 @@ module Doorkeeper
           scopes: scopes,
           confidential: false,
         )
-        assign_keys(application, document) if application.respond_to?(:jwks_uri=)
+        assign_keys(application, document)
         application.public_send(:"#{MARKER}=", Time.current) unless materialized?(application)
         # A savepoint, so that losing the uid race leaves a caller's transaction usable for the re-read.
         return application if model.with_primary_role { model.transaction(requires_new: true) { application.save } }
@@ -201,7 +216,15 @@ module Doorkeeper
         concurrent_row(model, application)
       end
 
+      # Without a jwks_uri column the row is that of a public client. A client left with private_key_jwt as
+      # its only method here is refused then, as +none+ would redeem its codes, or nothing would.
+      def self.key_storable?(application, document)
+        application.respond_to?(:jwks_uri=) || (public_client?(document) && public_clients_accepted?)
+      end
+
       def self.assign_keys(application, document)
+        return unless application.respond_to?(:jwks_uri=)
+
         application.jwks_uri = jwks_uri(document["jwks_uri"])
         application.confidential = private_key_jwt?(document)
         # Generated on create only, so a public client turning confidential may still lack one.
@@ -210,9 +233,10 @@ module Doorkeeper
 
       # A client declaring private_key_jwt, on a server offering it, must authenticate with it: as a
       # confidential client, +none+ no longer redeems its codes or refresh tokens (draft-03, Client
-      # Authentication). Only among its supported methods, next to +none+, as public_client? refuses the rest.
+      # Authentication), whether its document declares +none+ next to it or not (draft-03, Examples of
+      # Client Authentication).
       def self.private_key_jwt?(document)
-        Array(document["token_endpoint_auth_methods_supported"]).include?("private_key_jwt") &&
+        auth_methods(document).include?("private_key_jwt") &&
           Doorkeeper.config.client_authentication_methods.any? { |method| method.name.to_s == "private_key_jwt" }
       end
 
