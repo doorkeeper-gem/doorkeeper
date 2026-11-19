@@ -49,6 +49,10 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
     expect(described_class.uses_shared_secret?).to be false
   end
 
+  it "declares the signing algorithms it accepts on an assertion" do
+    expect(described_class.auth_signing_alg_values).to eq(described_class::ALLOWED_ALGORITHMS)
+  end
+
   describe ".matches_request?" do
     it "matches a POST with an assertion and the jwt-bearer assertion type" do
       expect(described_class.matches_request?(request_with(build_assertion))).to be true
