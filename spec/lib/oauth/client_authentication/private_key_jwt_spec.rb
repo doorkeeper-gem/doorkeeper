@@ -717,10 +717,12 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
 
     # The JOSE header is any JSON value too, and the jwt gem indexes into it
     # without checking that it is an object: TypeError or NoMethodError, from
-    # an assertion that takes no key, signature or client to build.
+    # an assertion that takes no key or signature to build. Which of the gem's
+    # two decodes raises depends on its version, so the claims are complete:
+    # the header is the only thing left to refuse the assertion for.
     ["[1]", "42", "null", "true"].each do |header|
       it "rejects an assertion whose JOSE header is #{header} without raising" do
-        segments = [header, { "iss" => client_id, "sub" => client_id }.to_json, "signature"]
+        segments = [header, raw_claims.to_json, "signature"]
         assertion = segments.map { |segment| Base64.urlsafe_encode64(segment, padding: false) }.join(".")
 
         expect { expect(described_class.authenticate(request_with(assertion))).to be_nil }

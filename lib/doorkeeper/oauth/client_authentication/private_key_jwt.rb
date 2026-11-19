@@ -126,18 +126,31 @@ module Doorkeeper
         private_class_method :unverified_client_id
 
         # The assertion's payload, read without verifying anything, or nil
-        # when it does not decode. The jwt gem indexes into the JOSE header on
-        # the way without checking that it parsed as a JSON object, so a
-        # header that is an array, a number, a boolean or null raises
-        # TypeError or NoMethodError rather than a JWT::DecodeError — out of
-        # an assertion that takes no key, signature or client to build.
+        # when it does not decode.
         def self.unverified_claims(assertion)
+          return unless json_object_header?(assertion)
+
           claims, = ::JWT.decode(assertion, nil, false)
           claims
-        rescue ::JWT::DecodeError, TypeError, NoMethodError
+        rescue ::JWT::DecodeError
           nil
         end
         private_class_method :unverified_claims
+
+        # RFC 7519 §7.2: the JOSE header is a JSON object. The jwt gem indexes
+        # into whatever it parsed as — while reading the payload in its
+        # current releases, while verifying in the oldest supported ones — so
+        # an array, a number, a boolean or null raises TypeError or
+        # NoMethodError rather than a JWT::DecodeError, out of an assertion
+        # that takes no key or signature to build. The type is asked here
+        # instead of rescuing those two around the gem, which would cover for
+        # a bug as readily.
+        def self.json_object_header?(assertion)
+          JSON.parse(Base64.urlsafe_decode64(assertion.split(".").first.to_s)).is_a?(Hash)
+        rescue ArgumentError, JSON::ParserError
+          false
+        end
+        private_class_method :json_object_header?
 
         # Whether the claims have the JSON types an assertion must have, asked
         # before anything is verified because the jwt gem asks none of it

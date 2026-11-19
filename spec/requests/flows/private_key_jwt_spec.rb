@@ -202,10 +202,14 @@ feature "private_key_jwt client authentication" do
     expect(json_response["error"]).to eq("invalid_client")
   end
 
-  # Nothing about such an assertion needs a registered client or a key, so
-  # the token endpoint has to answer it like any other failed authentication.
+  # Nothing about such an assertion needs a key or a signature, so the token
+  # endpoint has to answer it like any other failed authentication.
   scenario "an assertion whose JOSE header is no JSON object is rejected, not raised on" do
-    segments = ["[]", { iss: @client.uid, sub: @client.uid }.to_json, "signature"]
+    claims = {
+      iss: @client.uid, sub: @client.uid, aud: token_endpoint_audience,
+      exp: Time.now.to_i + 60, jti: SecureRandom.hex(8),
+    }
+    segments = ["[]", claims.to_json, "signature"]
 
     post_token(
       "any-code",
