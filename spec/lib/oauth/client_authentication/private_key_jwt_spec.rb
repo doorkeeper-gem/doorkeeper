@@ -557,6 +557,22 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(credentials).to be_nil
     end
 
+    # The replay guard remembers a jti until its assertion expires, so an
+    # unbounded one would let the client choose what each entry costs.
+    it "rejects an assertion whose jti is longer than MAX_JTI_LENGTH, leaving the guard without it" do
+      jti = "a" * (described_class::MAX_JTI_LENGTH + 1)
+      guard = described_class::ReplayGuard.instance
+
+      expect(described_class.authenticate(request_with(build_assertion(claims: { "jti" => jti })))).to be_nil
+      expect(guard.first_use?("#{client_id}:#{jti}", expires_at: Time.now.to_i + 60)).to be true
+    end
+
+    it "accepts an assertion whose jti is exactly MAX_JTI_LENGTH characters long" do
+      jti = "a" * described_class::MAX_JTI_LENGTH
+
+      expect(described_class.authenticate(request_with(build_assertion(claims: { "jti" => jti })))).not_to be_nil
+    end
+
     it "rejects a replayed assertion" do
       assertion = build_assertion
 
