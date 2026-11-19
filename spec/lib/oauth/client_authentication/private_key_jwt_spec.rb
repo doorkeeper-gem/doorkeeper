@@ -836,13 +836,38 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       end
     end
 
-    it "returns nil when the EC key the assertion names has a coordinate that is a number" do
-      ec_key = OpenSSL::PKey::EC.generate("prime256v1")
-      ec_jwk = JWT::JWK.new(ec_key, { kid: kid }).export.merge(x: 1)
-      allow(application).to receive(:jwks).and_return({ "keys" => [ec_jwk] })
+    # The modulus is one of ten: every member the gem decodes is asked for its
+    # type before the gem sees it, the private ones too. A client is not meant
+    # to publish those, but nothing stops it.
+    {
+      "RSA" => %w[e d p q dp dq qi],
+      "EC" => %w[x y d],
+    }.each do |kty, names|
+      names.each do |name|
+        it "returns nil when the #{kty} key the assertion names has a #{name} that is a number" do
+          key, alg = kty == "RSA" ? [rsa_key, "RS256"] : [OpenSSL::PKey::EC.generate("prime256v1"), "ES256"]
+          published = JWT::JWK.new(key, { kid: kid }).export(include_private: true).merge(name.to_sym => 1)
+          allow(application).to receive(:jwks).and_return({ "keys" => [published] })
 
-      expect { expect(described_class.authenticate(request_with(build_assertion(key: ec_key, alg: "ES256")))).to be_nil }
-        .not_to raise_error
+          expect { expect(described_class.authenticate(request_with(build_assertion(key: key, alg: alg)))).to be_nil }
+            .not_to raise_error
+        end
+      end
+    end
+
+    # Only those members, and only where they are present: the gem takes a
+    # null for an absent member, and decodes nothing else of a key.
+    it "still authenticates with a key whose private members are null" do
+      allow(application).to receive(:jwks).and_return({ "keys" => [jwk.export.merge(d: nil, p: nil, q: nil)] })
+
+      expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+    end
+
+    it "still authenticates with a key carrying other members that are no Strings" do
+      published = jwk.export.merge(ext: true, key_ops: ["verify"])
+      allow(application).to receive(:jwks).and_return({ "keys" => [published] })
+
+      expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
     end
 
     # RFC 7517 §5: a JWK the implementation does not understand, or that

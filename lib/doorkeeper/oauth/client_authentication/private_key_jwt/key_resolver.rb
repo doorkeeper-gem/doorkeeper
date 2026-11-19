@@ -50,23 +50,40 @@ module Doorkeeper
           # member that is not valid base64url raises JWT::Base64DecodeError (a
           # sibling of JWT::JWKError under JWT::DecodeError, not a subclass),
           # and an EC point that is not on its curve raises a bare OpenSSL
-          # error. The gem also takes the members it decodes to be Strings, as
-          # RFC 7518 §6 defines them (base64url): a JSON number, array, object
-          # or boolean there raises NoMethodError or TypeError, and bytes that
-          # are not valid UTF-8 raise ArgumentError. None of them may escape
-          # into the token endpoint. Members are not filtered on their type
-          # instead, as a key may carry ones that are no Strings ("ext",
-          # "key_ops").
+          # error. Neither may escape into the token endpoint.
           def self.build_key(key)
+            return unless decodable_members?(key)
+
             jwk = ::JWT::JWK.new(key)
             # The gem defers the parse while a key carries a "kid", which
             # would move the failure into the verifying decode.
             jwk.verify_key
             jwk
-          rescue ::JWT::DecodeError, OpenSSL::OpenSSLError, TypeError, NoMethodError, ArgumentError
+          rescue ::JWT::DecodeError, OpenSSL::OpenSSLError
             nil
           end
           private_class_method :build_key
+
+          # The members RFC 7518 defines as base64url: an RSA key's modulus,
+          # exponent and private parts (§6.3), an EC key's coordinates and
+          # private part (§6.2). They are the ones the jwt gem decodes.
+          BASE64URL_MEMBERS = %w[n e d p q dp dq qi x y].freeze
+          private_constant :BASE64URL_MEMBERS
+
+          # Whether those members are Strings the gem can decode. It takes
+          # that for granted: a JSON number, array, object or true there
+          # raises NoMethodError or TypeError, and bytes that are not valid
+          # UTF-8 raise ArgumentError. The type is asked here instead of
+          # rescuing those three around the gem, which would cover for a bug
+          # as readily. A null or false is left to the gem, which takes it for
+          # an absent member, and so is every other member: the gem decodes
+          # none of them, and a key may carry ones that are no Strings ("ext",
+          # "key_ops").
+          def self.decodable_members?(key)
+            decoded = key.select { |name, value| value && BASE64URL_MEMBERS.include?(name.to_s) }
+            decoded.each_value.all? { |value| value.is_a?(String) && value.valid_encoding? }
+          end
+          private_class_method :decodable_members?
 
           def self.raw_jwks(application)
             application_jwks(application) || fetch_jwks(application_jwks_uri(application))
