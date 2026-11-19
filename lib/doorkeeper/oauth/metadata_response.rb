@@ -162,10 +162,16 @@ module Doorkeeper
       # private_key_jwt, so an assertion-based method a host application
       # registered is published with the algorithms it declares; where no
       # advertised method declares any, the entry is left out.
+      #
+      # The same section goes on: 'The value "none" MUST NOT be used.'
+      # Doorkeeper's own private_key_jwt never declares it, so it is dropped
+      # here for the method of a host application that does.
       def token_endpoint_auth_signing_alg_values_supported
-        config.client_authentication_methods.flat_map do |method|
+        algorithms = config.client_authentication_methods.flat_map do |method|
           Doorkeeper::ClientAuthentication.get(method.name)&.auth_signing_alg_values || []
-        end.uniq.presence
+        end
+
+        (algorithms.uniq - ["none"]).presence
       end
 
       def code_challenge_methods_supported

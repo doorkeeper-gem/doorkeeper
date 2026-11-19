@@ -410,6 +410,50 @@ RSpec.describe "Authorization Server Metadata endpoint" do
     end
   end
 
+  # RFC 8414 §2 on the same entry: 'The value "none" MUST NOT be used.'
+  context "with a custom assertion-based method that declares none among its signing algorithms" do
+    before do
+      Doorkeeper::ClientAuthentication.register(
+        :client_secret_jwt,
+        double(matches_request?: false, authenticate: nil, auth_signing_alg_values: %w[HS256 none HS512]),
+      )
+      config_is_set(:client_authentication, %i[client_secret_basic client_secret_jwt])
+    end
+
+    after do
+      Doorkeeper::ClientAuthentication::Registry.registered_methods.delete(:client_secret_jwt)
+    end
+
+    it "publishes the other algorithms without it" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["token_endpoint_auth_signing_alg_values_supported"]).to eq(%w[HS256 HS512])
+    end
+  end
+
+  context "with a custom assertion-based method that declares none as its only signing algorithm" do
+    before do
+      Doorkeeper::ClientAuthentication.register(
+        :client_secret_jwt,
+        double(matches_request?: false, authenticate: nil, auth_signing_alg_values: %i[none]),
+      )
+      config_is_set(:client_authentication, %i[client_secret_basic client_secret_jwt])
+    end
+
+    after do
+      Doorkeeper::ClientAuthentication::Registry.registered_methods.delete(:client_secret_jwt)
+    end
+
+    it "omits token_endpoint_auth_signing_alg_values_supported" do
+      get "/.well-known/oauth-authorization-server"
+
+      response_status_should_be(200)
+      expect(json_response["token_endpoint_auth_methods_supported"]).to include("client_secret_jwt")
+      expect(json_response).not_to have_key("token_endpoint_auth_signing_alg_values_supported")
+    end
+  end
+
   context "with token_endpoint_auth_signing_alg_values_supported in custom_metadata" do
     before do
       config_is_set(:client_authentication, %i[client_secret_basic private_key_jwt])

@@ -430,6 +430,8 @@ def self.auth_signing_alg_values
 end
 ```
 
+Doorkeeper leaves `none` out of what it publishes there, as the same section says the value MUST NOT be used.
+
 ## Example Applications
 
 These applications show how Doorkeeper works and how to integrate with it. Start with the oAuth2 server and use the clients to connect with the server.
