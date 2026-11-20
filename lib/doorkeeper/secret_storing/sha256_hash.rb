@@ -21,6 +21,16 @@ module Doorkeeper
       def self.allows_restoring_secrets?
         false
       end
+
+      ##
+      # A digest's shape (64 lower case hex characters) is all there is to go
+      # on. `default_generator_method :hex` produces plain secrets of exactly
+      # that shape, so under it a legacy plain secret is retained as stored
+      # rather than re-derived; the README says so. Answering the other way
+      # round would retain the hash of a hash, which authenticates nobody.
+      def self.recognizes_stored_secret?(stored)
+        /\A[0-9a-f]{64}\z/.match?(stored.to_s)
+      end
     end
   end
 end
