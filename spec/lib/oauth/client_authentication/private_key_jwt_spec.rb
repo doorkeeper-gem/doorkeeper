@@ -809,6 +809,84 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       end
     end
 
+    # RFC 7518 defines the members the jwt gem decodes as Strings, and the gem
+    # takes that for granted: any other JSON type raises NoMethodError or
+    # TypeError, and bytes that are not valid UTF-8 raise ArgumentError, none
+    # of them a JWT::DecodeError. With a kid the key is only parsed once the
+    # assertion names it; without one, as soon as the set is built.
+    {
+      "a number" => 1,
+      "an array" => ["AQAB"],
+      "an object" => { "value" => "AQAB" },
+      "a boolean" => true,
+      "not valid UTF-8" => "\xFF".dup.force_encoding(Encoding::UTF_8),
+    }.each do |description, member|
+      it "returns nil when the key the assertion names has a modulus that is #{description}" do
+        allow(application).to receive(:jwks).and_return({ "keys" => [jwk.export.merge(n: member)] })
+
+        expect { expect(described_class.authenticate(request_with(build_assertion))).to be_nil }
+          .not_to raise_error
+      end
+
+      it "still authenticates with the usable key beside a kid-less one whose modulus is #{description}" do
+        broken = jwk.export.except(:kid).merge(n: member)
+        allow(application).to receive(:jwks).and_return({ "keys" => [broken, jwk.export] })
+
+        expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+      end
+    end
+
+    # The modulus is one of ten: every member the gem decodes is asked for its
+    # type before the gem sees it, the private ones too. A client is not meant
+    # to publish those, but nothing stops it.
+    {
+      "RSA" => %w[e d p q dp dq qi],
+      "EC" => %w[x y d],
+    }.each do |kty, names|
+      names.each do |name|
+        it "returns nil when the #{kty} key the assertion names has a #{name} that is a number" do
+          key, alg = kty == "RSA" ? [rsa_key, "RS256"] : [OpenSSL::PKey::EC.generate("prime256v1"), "ES256"]
+          published = JWT::JWK.new(key, { kid: kid }).export(include_private: true).merge(name.to_sym => 1)
+          allow(application).to receive(:jwks).and_return({ "keys" => [published] })
+
+          expect { expect(described_class.authenticate(request_with(build_assertion(key: key, alg: alg)))).to be_nil }
+            .not_to raise_error
+        end
+      end
+    end
+
+    # Only those members, and only where they are present: the gem takes a
+    # null for an absent member, and decodes nothing else of a key.
+    it "still authenticates with a key whose private members are null" do
+      allow(application).to receive(:jwks).and_return({ "keys" => [jwk.export.merge(d: nil, p: nil, q: nil)] })
+
+      expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+    end
+
+    it "still authenticates with a key carrying other members that are no Strings" do
+      published = jwk.export.merge(ext: true, key_ops: ["verify"])
+      allow(application).to receive(:jwks).and_return({ "keys" => [published] })
+
+      expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+    end
+
+    # RFC 7517 §5: a JWK the implementation does not understand, or that
+    # misses a required member, is ignored rather than fatal to the set. The
+    # set's constructor builds every key, so the first one it could not build
+    # used to take the usable ones with it.
+    {
+      "has no kty" => { "kid" => "untyped" },
+      "is of a key type the jwt gem does not know" => { "kty" => "OKP", "crv" => "Ed25519", "x" => "AA", "kid" => "ed" },
+      "misses a required member" => { "kty" => "RSA", "e" => "AQAB", "kid" => "partial" },
+      "is an EC point that is not on its curve" => { "kty" => "EC", "crv" => "P-256", "x" => "AA", "y" => "AA" },
+    }.each do |description, unusable|
+      it "still authenticates with the usable key beside one that #{description}" do
+        allow(application).to receive(:jwks).and_return({ "keys" => [unusable, jwk.export] })
+
+        expect(described_class.authenticate(request_with(build_assertion))).not_to be_nil
+      end
+    end
+
     # The keys of a registered application are fetched over https only, the
     # same as a document's: a jwks_uri column left on http would otherwise
     # have this server take a client's verification keys off the wire.

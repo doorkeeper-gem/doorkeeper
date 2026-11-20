@@ -7,10 +7,11 @@ User-visible changes worth mentioning.
 
 ## main
 
-- [#1998] A client ID metadata document declaring `private_key_jwt` without `none` is no longer refused where the server offers `private_key_jwt`, also on a server not offering `none`: it makes a confidential client that has to authenticate with its key (draft-03, Examples of Client Authentication).
 - Fix: `private_key_jwt` refuses a client assertion whose `jti` is longer than 255 characters. The replay guard remembers every `jti` until its assertion expires, and nothing bounded its length.
-- [#2001] Publish `token_endpoint_auth_signing_alg_values_supported` in the authorization server metadata when `private_key_jwt` is enabled, as RFC 8414 §2 requires. A custom assertion-based method declares its algorithms with `auth_signing_alg_values`.
+- [#1998] A client ID metadata document declaring `private_key_jwt` without `none` is no longer refused where the server offers `private_key_jwt`, also on a server not offering `none`: it makes a confidential client that has to authenticate with its key (draft-03, Examples of Client Authentication).
 - [#2000] Fix: a malformed `private_key_jwt` client assertion is refused with `invalid_client` instead of raising: a JOSE header that is no JSON object, an `exp` or `nbf` that is no finite number, an issuer or `jti` that is not valid UTF-8.
+- [#2001] Publish `token_endpoint_auth_signing_alg_values_supported` in the authorization server metadata when `private_key_jwt` is enabled, as RFC 8414 §2 requires. A custom assertion-based method declares its algorithms with `auth_signing_alg_values`.
+- [#2002] Fix: a key in a client's JWK Set that cannot be parsed no longer raises out of `private_key_jwt`, and no longer costs the client its other keys. A key that is malformed, of an unknown key type or without `kty` is ignored (RFC 7517 §5).
 - [#PR ID] Description of the change.
 
 ## 6.0.0.rc3
