@@ -160,7 +160,9 @@ module Doorkeeper
         # casts both with to_i, which reads a numeric string as a number and
         # raises for the rest — NoMethodError for an array, an object or a
         # boolean, FloatDomainError for the Infinity an exponent too large for
-        # a Float (1e400) parses as — and neither is a JWT::DecodeError.
+        # a Float (1e400) parses as — and neither is a JWT::DecodeError. nbf is
+        # optional, but a null is no way to leave it out: the key is asked
+        # for, since the cast would read that one as 0.
         #
         # A string claim's bytes are tagged as UTF-8 without being checked,
         # and the first regex to touch invalid ones raises ArgumentError
@@ -168,7 +170,7 @@ module Doorkeeper
         # looked up, the jti before the replay guard is.
         def self.well_formed?(claims)
           numeric_date?(claims["exp"]) &&
-            (claims["nbf"].nil? || numeric_date?(claims["nbf"])) &&
+            (!claims.key?("nbf") || numeric_date?(claims["nbf"])) &&
             claims.values_at("iss", "jti").none? { |value| value.is_a?(String) && !value.valid_encoding? }
         end
         private_class_method :well_formed?

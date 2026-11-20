@@ -555,6 +555,14 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(described_class.authenticate(request_with(sign_raw_json(payload)))).to be_nil
     end
 
+    # A JSON null is a claim that is present, not one that was left out: the
+    # gem's cast would read it as 0, the epoch.
+    it "rejects a validly signed assertion whose nbf is null" do
+      payload = raw_claims("nbf" => nil).to_json
+
+      expect(described_class.authenticate(request_with(sign_raw_json(payload)))).to be_nil
+    end
+
     it "accepts an assertion whose nbf is a NumericDate in the past" do
       credentials = described_class.authenticate(request_with(build_assertion(claims: { "nbf" => Time.now.to_i - 60 })))
 
