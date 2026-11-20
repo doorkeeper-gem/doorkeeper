@@ -231,6 +231,8 @@ rails db:migrate
 
 With the column in place, revoking a refresh token at the revocation endpoint revokes every record of its family, whichever refresh token of the chain is presented — including one that has already been revoked itself, since the records issued after it can still be live. `AccessToken#revoke_refresh_token_family` does the same from your own code. Revoking an *access* token, `AccessToken#revoke` and `AccessToken.revoke_all_for` behave as before.
 
+The family is revoked with a single `UPDATE` (`update_all`, like `AccessToken.revoke_all_for`), the record of the presented refresh token included. No ActiveRecord callbacks or validations of your access token model run for these records, so an audit log, a cache or anything else you keep up to date from callbacks (`after_save`, `after_commit`, …) does not see the revocation, while `AccessToken#revoke` does run callbacks. If you rely on them, override `revoke_refresh_token_family` in your access token model, call `super` and do that work there.
+
 No backfill is needed: a refresh token issued before the migration joins a family the next time it is refreshed, and until then revoking it revokes its own record only. Without the column that is always the case, and so it is for the [ORM extensions](#extensions) (Sequel, MongoDB) until they add the field.
 
 ## Client ID Metadata Documents

@@ -371,6 +371,11 @@ module Doorkeeper
       # can never reach the tokens of another client, whatever a host app
       # stores in the column.
       #
+      # The records are written with one `update_all`, as `.revoke_all_for`
+      # writes its records: no model callbacks or validations run for them,
+      # so an audit log or a cache kept up to date from callbacks of the
+      # access token model does not see this revocation.
+      #
       # @param family_id [String]
       #   refresh token family identifier
       # @param application_id [Integer, nil]
@@ -721,7 +726,10 @@ module Doorkeeper
     # The family is revoked by the single write of
     # `.revoke_refresh_token_family`, this record included, so that a failure
     # can never leave a family with some of its records revoked and others
-    # not.
+    # not. That write runs no model callbacks or validations, for this record
+    # either (`#revoke` does run callbacks): override this method in your
+    # access token model, calling `super`, if an audit log or a cache has to
+    # follow the revocation of a family.
     #
     # @param clock [Time] time object
     #

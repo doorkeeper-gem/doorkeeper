@@ -124,6 +124,9 @@ class CreateDoorkeeperTables < ActiveRecord::Migration<%= migration_version %>
       add_index :oauth_access_tokens, :refresh_token, unique: true
     end
 
+    # Comment out this line (and the `refresh_token_family_id` column above)
+    # if you want the revocation of a refresh token to reach its own record
+    # only.
     add_index :oauth_access_tokens, :refresh_token_family_id
 
     add_foreign_key(

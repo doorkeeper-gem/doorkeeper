@@ -131,6 +131,30 @@ RSpec.describe "Revoke Token Flow" do
         expect(other_grant_token.reload).not_to be_revoked
       end
 
+      # RFC 7009 §2.2: an invalid token is answered with HTTP 200 as well.
+      # Replaying the revocation of a family that is already revoked reads
+      # like a request for an unknown token and writes nothing.
+      it "answers a replayed revocation like an unknown token and revokes nothing more" do
+        tokens = chain
+        params = { token: tokens.first.refresh_token, token_type_hint: "refresh_token" }
+
+        post revocation_token_endpoint_url, params: params, headers: headers
+        revoked_at = tokens.map { |token| token.reload.revoked_at }
+        expect(revoked_at).to all(be_present)
+
+        post revocation_token_endpoint_url, params: params.merge(token: "unknown"), headers: headers
+        unknown_token_response = [response.status, response.body]
+
+        Timecop.travel(1.hour.from_now) do
+          post revocation_token_endpoint_url, params: params, headers: headers
+        end
+
+        expect(response).to have_http_status(:ok)
+        expect([response.status, response.body]).to eq(unknown_token_response)
+        expect(tokens.map { |token| token.reload.revoked_at }).to eq(revoked_at)
+        expect(other_grant_token.reload).not_to be_revoked
+      end
+
       it "revokes only the record of a presented access token" do
         tokens = chain
 
