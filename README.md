@@ -44,6 +44,7 @@ Supported features:
 - [Resource Indicators](#resource-indicators)
 - [Refresh Token Scopes](#refresh-token-scopes)
 - [Keeping the Previous Access Token on Refresh](#keeping-the-previous-access-token-on-refresh)
+- [Client Secret Rotation](#client-secret-rotation)
 - [Client ID Metadata Documents](#client-id-metadata-documents)
 - [Custom Grant Flows](#custom-grant-flows)
 - [Custom Client Authentication Methods](#custom-client-authentication-methods)
@@ -216,6 +217,35 @@ Things to keep in mind:
 - Records whose refresh token was revoked this way keep an empty `revoked_at`, so `doorkeeper:db:cleanup:revoked_tokens` does not see them; `doorkeeper:db:cleanup:expired_tokens` removes them once their access token has expired.
 - Refresh tokens revoked this way stay revoked if you set the option back to `true`. Dropping the column, however, forgets them: revoke those records first (`revoked_at`) if you ever remove it.
 - The [ORM extensions](#extensions) (Sequel, MongoDB) ship their own access token mixins and keep revoking both tokens until they add the field.
+
+## Client Secret Rotation
+
+Replacing a client secret normally cuts the client off between the moment the new secret is stored and the moment the client is redeployed with it. Doorkeeper can keep the superseded secret working for a grace period so that the two can happen in either order.
+
+### Setup
+
+Add the `old_secret` and `old_secret_created_at` columns and enable the option:
+
+```bash
+rails generate doorkeeper:secret_rotation
+rails db:migrate
+```
+
+```ruby
+# config/initializers/doorkeeper.rb
+Doorkeeper.configure do
+  enable_secret_rotation
+end
+```
+
+With both in place, client authentication accepts the secret held in `old_secret` as well as the current one, wherever a client authenticates. Enabling the option without the columns leaves authentication unchanged and logs a warning once. If `secret` uses Active Record Encryption, declare `encrypts :old_secret` as well.
+
+The feature is implemented for Active Record. Other ORM adapters define their own secret comparison, so they need the whole rotation surface, not just the columns, before the option takes effect.
+
+### Notes
+
+- While the option is on, every comparison evaluates both the current and the old secret so that a rotation in progress is not observable in response times. Under bcrypt that is a second bcrypt comparison per token request. Off, the comparison is unchanged.
+- If you override `by_uid` or `by_uid_and_secret` with a `select`, include `old_secret` and `old_secret_created_at` in it: the comparison reads them.
 
 ## Client ID Metadata Documents
 
