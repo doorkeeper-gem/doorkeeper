@@ -66,6 +66,20 @@ RSpec.describe "Client secret rotation" do
     end
   end
 
+  context "when the grace period has been ended" do
+    before do
+      client.rotate_secret!
+      client.clear_old_secret!
+    end
+
+    it "rejects the superseded secret" do
+      request_token_with_basic_auth(old_secret)
+
+      expect(response).to have_http_status(:unauthorized)
+      expect(json_response).to include("error" => "invalid_client")
+    end
+  end
+
   context "when the secret is rotated without a grace period" do
     let!(:new_secret) { client.rotate_secret!(revoke_old: true) }
 
