@@ -347,6 +347,59 @@ module Doorkeeper
           refresh_token_revoked_at_supported?
       end
 
+      # Every refresh creates a new record, and nothing else links the
+      # records of one refresh chain together. The
+      # `refresh_token_family_id` column (added by the
+      # `doorkeeper:refresh_token_family_id` generator) carries one
+      # identifier along the chain, so that revoking a refresh token can
+      # reach the access tokens issued earlier from the same authorization
+      # grant (RFC 7009 §2.1). Without the column only the record of the
+      # presented token is revoked.
+      #
+      # @return [Boolean] true if the refresh_token_family_id column exists
+      #
+      def refresh_token_family_supported?
+        column_names.include?("refresh_token_family_id")
+      end
+
+      # Revokes AccessToken records of a refresh token family that have not
+      # been revoked yet. A revocation time in the future does not count as
+      # revoked (see `#revoked?`), so such a record is revoked right away, as
+      # `#revoke` does for a single record.
+      #
+      # The Application is part of the condition so that a family identifier
+      # can never reach the tokens of another client, whatever a host app
+      # stores in the column.
+      #
+      # The records are written with one `update_all`, as `.revoke_all_for`
+      # writes its records: no model callbacks or validations run for them,
+      # so an audit log or a cache kept up to date from callbacks of the
+      # access token model does not see this revocation.
+      #
+      # @param family_id [String]
+      #   refresh token family identifier
+      # @param application_id [Integer, nil]
+      #   ID of the Application the family belongs to
+      #
+      # @return [Time, nil] revocation time written, nil when there is no
+      #   family to revoke
+      #
+      def revoke_refresh_token_family(family_id, application_id, clock = Time)
+        return if family_id.blank? || !refresh_token_family_supported?
+
+        now = clock.now.utc
+        family = where(refresh_token_family_id: family_id, application_id: application_id)
+
+        with_primary_role do
+          family
+            .where(revoked_at: nil)
+            .or(family.where(arel_table[:revoked_at].gt(now)))
+            .update_all(revoked_at: now)
+        end
+
+        now
+      end
+
       # Looking for not expired AccessToken record with a matching set of
       # scopes that belongs to specific Application and Resource Owner.
       # If it doesn't exists - then creates it.
@@ -616,6 +669,82 @@ module Doorkeeper
       end
     end
 
+    # Identifier shared by the records of one refresh chain, nil when the
+    # `refresh_token_family_id` column is absent or the record has no family
+    # (no refresh token, or created before the column's migration).
+    #
+    # @return [String, nil]
+    #
+    def refresh_token_family_id
+      return unless self.class.refresh_token_family_supported?
+
+      self[:refresh_token_family_id]
+    end
+
+    # Ignored when the `refresh_token_family_id` column is absent, so a host
+    # app that assigns it ahead of the migration does not fail on the
+    # missing attribute.
+    def refresh_token_family_id=(value)
+      return unless self.class.refresh_token_family_supported?
+
+      super
+    end
+
+    # Returns the family identifier of the record, giving it one first when
+    # it has a refresh token but no family yet (a record created before the
+    # column's migration). The refresh grant calls this on the presented
+    # refresh token so that such a chain is tracked from its next refresh on.
+    #
+    # The identifier is written only while the column is still empty, and
+    # read back afterwards, so concurrent refreshes of the same token all
+    # continue the same family.
+    #
+    # @return [String, nil] family identifier, nil when the column is absent
+    #   or the record has no refresh token
+    #
+    def ensure_refresh_token_family_id!
+      return unless self.class.refresh_token_family_supported?
+      return refresh_token_family_id if refresh_token_family_id.present? || refresh_token.blank?
+
+      self.class.with_primary_role do
+        persisted_row.where(refresh_token_family_id: nil).update_all(refresh_token_family_id: SecureRandom.uuid)
+      end
+      read_back_written_attribute(:refresh_token_family_id)
+
+      refresh_token_family_id
+    end
+
+    # Revokes the record together with every record of its refresh token
+    # family: the access tokens (and refresh tokens) issued from the same
+    # authorization grant, as RFC 7009 §2.1 asks of the revocation of a
+    # refresh token. Revokes the record alone when it has no family.
+    #
+    # The family is revoked by the single write of
+    # `.revoke_refresh_token_family`, this record included, so that a failure
+    # can never leave a family with some of its records revoked and others
+    # not. That write runs no model callbacks or validations, for this record
+    # either (`#revoke` does run callbacks): override this method in your
+    # access token model, calling `super`, if an audit log or a cache has to
+    # follow the revocation of a family.
+    #
+    # The record is left carrying the revocation time its row holds: the one
+    # written here, or an earlier one when another request had already
+    # revoked the family.
+    #
+    # @param clock [Time] time object
+    #
+    def revoke_refresh_token_family(clock = Time)
+      family_id = refresh_token_family_id
+      return revoke(clock) if family_id.blank?
+
+      now = self.class.revoke_refresh_token_family(family_id, application_id, clock)
+
+      # A record that was already revoked was not written to.
+      return if revoked_at && revoked_at <= now
+
+      read_back_written_attribute(:revoked_at)
+    end
+
     # JSON representation of the Access Token instance.
     #
     # @return [Hash] hash with token data
@@ -732,6 +861,49 @@ module Doorkeeper
       @old_refresh_token ||= self.class.by_previous_refresh_token(previous_refresh_token)
     end
 
+    # The row of the record, found by the configured primary key: it may be
+    # named something other than `id`. The key value is wrapped in a list so
+    # that a composite key matches too, which Active Record takes as a list
+    # of key tuples.
+    def persisted_row
+      self.class.where(self.class.primary_key => [id])
+    end
+
+    # Brings the record in step with a column that an `update_all` has just
+    # written past it. The value is read back from the primary rather than
+    # assumed: a concurrent request may have written the column first (a
+    # refresh that gave the record its family, a revocation of the same
+    # family), in which case the write left the row alone.
+    #
+    # Under optimistic locking `update_all` also bumps the lock column, which
+    # would leave the record stale and have its next save refused. The lock
+    # version is taken over when the row is exactly one version ahead of the
+    # record: the only write since the record was read is then the one that
+    # set the column. A row further ahead was written by someone else too,
+    # so the record stays stale and its next save is still refused.
+    #
+    # Only what was read back is marked clean, so unrelated unsaved changes
+    # of the record are kept (a `reload` would discard them).
+    def read_back_written_attribute(column)
+      lock = self.class.locking_column if self.class.locking_enabled?
+
+      # `pluck` answers the bare value for one column and a pair for two.
+      # `pick` needs Rails 6, the gemspec still allows railties 5.
+      value, version = self.class.with_primary_role do
+        persisted_row.limit(1).pluck(column, *lock).first # rubocop:disable Rails/Pick
+      end
+
+      self[column] = value
+      synced = [column]
+
+      if lock && version.to_i == self[lock].to_i + 1
+        self[lock] = version
+        synced << lock
+      end
+
+      clear_attribute_changes(synced)
+    end
+
     # Generates refresh token with UniqueToken generator.
     #
     # @return [String] refresh token value
@@ -750,6 +922,13 @@ module Doorkeeper
       # column is written directly so the derivation does not count as an
       # explicit assignment.
       self[:refresh_token_scopes] = scopes.to_s if self.class.refresh_token_scopes_supported? && !@refresh_token_scopes_assigned
+
+      # A refresh token issued outside the refresh grant starts a new family;
+      # the refresh grant assigns the family of the presented refresh token
+      # instead. Kept across validations of the same new record.
+      if self.class.refresh_token_family_supported? && self[:refresh_token_family_id].blank?
+        self[:refresh_token_family_id] = SecureRandom.uuid
+      end
 
       @raw_refresh_token = UniqueToken.generate
       secret_strategy.store_secret(self, :refresh_token, @raw_refresh_token)

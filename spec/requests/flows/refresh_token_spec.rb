@@ -46,6 +46,38 @@ RSpec.describe "Refresh Token Flow" do
     end
   end
 
+  describe "refresh token family" do
+    def exchange_new_authorization_code
+      authorization_code_exists application: @client,
+                                resource_owner_id: resource_owner.id,
+                                resource_owner_type: resource_owner.class.name
+      post token_endpoint_url, params: token_endpoint_params(code: @authorization.token, client: @client)
+      Doorkeeper::AccessToken.by_token(json_response.fetch("access_token"))
+    end
+
+    it "starts a family per authorization grant and carries it across refreshes" do
+      first_grant_token = exchange_new_authorization_code
+      second_grant_token = exchange_new_authorization_code
+
+      expect(first_grant_token.refresh_token_family_id).to be_present
+      expect(second_grant_token.refresh_token_family_id).to be_present
+      expect(first_grant_token.refresh_token_family_id).not_to eq(second_grant_token.refresh_token_family_id)
+
+      post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
+        client: @client, refresh_token: first_grant_token.refresh_token,
+      )
+      refreshed = Doorkeeper::AccessToken.by_token(json_response.fetch("access_token"))
+
+      post refresh_token_endpoint_url, params: refresh_token_endpoint_params(
+        client: @client, refresh_token: refreshed.refresh_token,
+      )
+      refreshed_again = Doorkeeper::AccessToken.by_token(json_response.fetch("access_token"))
+
+      expect([refreshed, refreshed_again].map(&:refresh_token_family_id))
+        .to all(eq(first_grant_token.refresh_token_family_id))
+    end
+  end
+
   describe "refreshing the token" do
     before do
       @token = FactoryBot.create(
