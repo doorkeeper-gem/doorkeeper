@@ -707,13 +707,9 @@ module Doorkeeper
       return refresh_token_family_id if refresh_token_family_id.present? || refresh_token.blank?
 
       self.class.with_primary_role do
-        record = self.class.where(id: id)
-        record.where(refresh_token_family_id: nil).update_all(refresh_token_family_id: SecureRandom.uuid)
-
-        # `pick` needs Rails 6, the gemspec still allows railties 5.
-        self[:refresh_token_family_id] = record.limit(1).pluck(:refresh_token_family_id).first # rubocop:disable Rails/Pick
+        persisted_row.where(refresh_token_family_id: nil).update_all(refresh_token_family_id: SecureRandom.uuid)
       end
-      clear_attribute_change(:refresh_token_family_id)
+      read_back_written_attribute(:refresh_token_family_id)
 
       refresh_token_family_id
     end
@@ -731,6 +727,10 @@ module Doorkeeper
     # access token model, calling `super`, if an audit log or a cache has to
     # follow the revocation of a family.
     #
+    # The record is left carrying the revocation time its row holds: the one
+    # written here, or an earlier one when another request had already
+    # revoked the family.
+    #
     # @param clock [Time] time object
     #
     def revoke_refresh_token_family(clock = Time)
@@ -739,11 +739,10 @@ module Doorkeeper
 
       now = self.class.revoke_refresh_token_family(family_id, application_id, clock)
 
-      # Leave the record in memory as `#revoke` leaves the one it updates.
+      # A record that was already revoked was not written to.
       return if revoked_at && revoked_at <= now
 
-      self[:revoked_at] = now
-      clear_attribute_change(:revoked_at)
+      read_back_written_attribute(:revoked_at)
     end
 
     # JSON representation of the Access Token instance.
@@ -860,6 +859,49 @@ module Doorkeeper
     #
     def old_refresh_token
       @old_refresh_token ||= self.class.by_previous_refresh_token(previous_refresh_token)
+    end
+
+    # The row of the record, found by the configured primary key: it may be
+    # named something other than `id`. The key value is wrapped in a list so
+    # that a composite key matches too, which Active Record takes as a list
+    # of key tuples.
+    def persisted_row
+      self.class.where(self.class.primary_key => [id])
+    end
+
+    # Brings the record in step with a column that an `update_all` has just
+    # written past it. The value is read back from the primary rather than
+    # assumed: a concurrent request may have written the column first (a
+    # refresh that gave the record its family, a revocation of the same
+    # family), in which case the write left the row alone.
+    #
+    # Under optimistic locking `update_all` also bumps the lock column, which
+    # would leave the record stale and have its next save refused. The lock
+    # version is taken over when the row is exactly one version ahead of the
+    # record: the only write since the record was read is then the one that
+    # set the column. A row further ahead was written by someone else too,
+    # so the record stays stale and its next save is still refused.
+    #
+    # Only what was read back is marked clean, so unrelated unsaved changes
+    # of the record are kept (a `reload` would discard them).
+    def read_back_written_attribute(column)
+      lock = self.class.locking_column if self.class.locking_enabled?
+
+      # `pluck` answers the bare value for one column and a pair for two.
+      # `pick` needs Rails 6, the gemspec still allows railties 5.
+      value, version = self.class.with_primary_role do
+        persisted_row.limit(1).pluck(column, *lock).first # rubocop:disable Rails/Pick
+      end
+
+      self[column] = value
+      synced = [column]
+
+      if lock && version.to_i == self[lock].to_i + 1
+        self[lock] = version
+        synced << lock
+      end
+
+      clear_attribute_changes(synced)
     end
 
     # Generates refresh token with UniqueToken generator.
