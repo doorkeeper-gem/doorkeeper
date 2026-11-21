@@ -368,6 +368,7 @@ feature "Client ID Metadata Documents" do
   scenario "a client whose method is none is refused when it sends a client assertion (draft-03, Client Authentication)" do
     serve_keys
     config_is_set(:client_authentication, %i[none private_key_jwt])
+    config_is_set(:refresh_token_enabled, true)
     [{ token_endpoint_auth_method: "none" }, { token_endpoint_auth_methods_supported: %w[none] }, {}].each do |methods|
       stub_request(:get, client_id)
         .to_return(status: 200, body: document.except(:token_endpoint_auth_method).merge(methods, jwks_uri: jwks_uri).to_json)
@@ -380,6 +381,13 @@ feature "Client ID Metadata Documents" do
       page.driver.post token_endpoint_url, exchange.merge(client_assertion)
       expect(JSON.parse(page.body)).to include("error" => "invalid_client")
       page.driver.post token_endpoint_url, exchange.merge(client_id: client_id)
+      expect(JSON.parse(page.body)).to include("access_token")
+      refresh = { grant_type: "refresh_token", refresh_token: JSON.parse(page.body).fetch("refresh_token") }
+
+      page.driver.post token_endpoint_url, refresh.merge(client_assertion)
+      expect(page.driver.response.status).to eq(401)
+      expect(JSON.parse(page.body)).to include("error" => "invalid_client")
+      page.driver.post token_endpoint_url, refresh.merge(client_id: client_id)
       expect(JSON.parse(page.body)).to include("access_token")
     end
   end

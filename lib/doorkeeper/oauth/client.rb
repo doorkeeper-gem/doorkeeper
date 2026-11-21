@@ -39,6 +39,9 @@ module Doorkeeper
 
       def self.authenticate(credentials, method = Doorkeeper.config.application_model.method(:by_uid_and_secret))
         return if credentials.blank?
+        # Client authentication its method refused authenticates no client,
+        # whatever the lookup would make of it.
+        return if credentials.respond_to?(:rejected?) && credentials.rejected?
 
         # Credentials that were fully authenticated by their client
         # authentication method (e.g. a verified private_key_jwt assertion)
