@@ -85,8 +85,11 @@ module Doorkeeper
           # must agree with the assertion's issuer.
           return if params[:client_id].present? && params[:client_id] != client_id
 
-          application = application_for(client_id)
-          return unless application
+          client = OAuth::Client.find(client_id)
+          return unless client
+
+          application = client.application
+          return Doorkeeper::ClientAuthentication::RejectedCredentials.new if determined_none?(application)
 
           jwk_set = KeyResolver.jwk_set_for(application)
           return unless jwk_set
@@ -101,20 +104,17 @@ module Doorkeeper
           Doorkeeper::ClientAuthentication::VerifiedCredentials.new(client_id)
         end
 
-        # The application the assertion names as its issuer, unless that
-        # client must not authenticate at all: one known from its metadata
-        # document whose token endpoint authentication method was determined
-        # to be none is refused even when its published keys would verify the
-        # assertion (draft-ietf-oauth-client-id-metadata-document-03, Client
-        # Authentication).
-        def self.application_for(client_id)
-          application = OAuth::Client.find(client_id)&.application
-          return unless application
-          return if OAuth::ClientIdMetadataDocument.materialized?(application) && !application.confidential?
-
-          application
+        # Whether the client must not authenticate at all: one known from its
+        # metadata document whose token endpoint authentication method was
+        # determined to be none is refused even when its published keys would
+        # verify the assertion (draft-ietf-oauth-client-id-metadata-document-03,
+        # Client Authentication). The refusal is returned as credentials, not
+        # as nil, so that a grant that accepts a request without client
+        # authentication (refresh_token) answers invalid_client as well.
+        def self.determined_none?(application)
+          OAuth::ClientIdMetadataDocument.materialized?(application) && !application.confidential?
         end
-        private_class_method :application_for
+        private_class_method :determined_none?
 
         # The built-in guard is process-local; a multi-process deployment can
         # supply a shared store through the private_key_jwt_replay_guard

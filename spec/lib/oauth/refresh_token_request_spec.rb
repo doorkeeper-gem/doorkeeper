@@ -307,6 +307,14 @@ RSpec.describe Doorkeeper::OAuth::RefreshTokenRequest do
     expect(request.error).to eq(Doorkeeper::Errors::InvalidClient)
   end
 
+  # Not invalid_grant: the request did carry client authentication, which is
+  # what failed, not the refresh token's ownership.
+  it "fails client authentication with credentials their authentication method rejected" do
+    request = described_class.new(server, refresh_token, Doorkeeper::ClientAuthentication::RejectedCredentials.new)
+    request.validate
+    expect(request.error).to eq(Doorkeeper::Errors::InvalidClient)
+  end
+
   it "requires the token's client and current client to match" do
     other_app = FactoryBot.create(:application)
     credentials = Doorkeeper::ClientAuthentication::Credentials.new(other_app.uid, other_app.secret)
