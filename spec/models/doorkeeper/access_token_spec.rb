@@ -796,6 +796,19 @@ RSpec.describe Doorkeeper::AccessToken do
           expect(token.ensure_refresh_token_family_id!).to eq("winner")
           expect(token.reload.refresh_token_family_id).to eq("winner")
         end
+
+        # Read from a lagging replica, the family just written would come
+        # back empty and the chain would go on without it.
+        it "writes the family and reads it back through the primary database role" do
+          Doorkeeper.configure do
+            orm DOORKEEPER_ORM
+            enable_multiple_database_roles
+          end
+
+          expect(ActiveRecord::Base).to receive(:connected_to).with(role: :writing).twice.and_call_original
+
+          expect(token.ensure_refresh_token_family_id!).to be_present
+        end
       end
 
       it "starts no family for a record without a refresh token" do
@@ -885,6 +898,20 @@ RSpec.describe Doorkeeper::AccessToken do
         expect(first.reload.revoked_at).to eq(Time.utc(2026, 1, 1))
       end
 
+      # Another request can revoke the family after the record was read: the
+      # write then leaves the earlier revocation time of its row alone, and
+      # the record must not report a later one.
+      it "leaves the record with the revocation time of its row when the family was revoked meanwhile" do
+        earlier = Time.utc(2026, 1, 1)
+        described_class.find(first.id).revoke_refresh_token_family(class_double(Time, now: earlier))
+
+        third.revoke_refresh_token_family(class_double(Time, now: Time.utc(2026, 1, 2)))
+
+        expect(third.revoked_at).to eq(earlier)
+        expect(third).not_to be_changed
+        expect(third.reload.revoked_at).to eq(earlier)
+      end
+
       # `#revoked?` reads a revocation time in the future as not revoked yet,
       # and `#revoke` revokes such a record right away; so does the family.
       it "revokes a record whose revocation time is still in the future right away" do
@@ -942,6 +969,208 @@ RSpec.describe Doorkeeper::AccessToken do
 
         expect([first, second, third, other_family].map(&:reload)).to all(be_revoked)
         expect { other_family.revoke_refresh_token_family }.not_to(change { other_family.reload.revoked_at })
+      end
+    end
+
+    # Giving a record its family and revoking a family are `update_all`s that
+    # go past the record they are called on. They have to find its row by the
+    # primary key the host app configured, and to keep the record in step
+    # with an optimistic locking column, which `update_all` bumps on its own.
+    describe "on an access tokens table of another shape" do
+      def create_access_tokens_table(name, **options)
+        ActiveRecord::Base.connection.create_table(name, **options) do |t|
+          yield t
+          t.integer :resource_owner_id
+          t.string :resource_owner_type
+          t.integer :application_id
+          t.string :token, null: false
+          t.string :refresh_token
+          t.integer :expires_in
+          t.datetime :revoked_at
+          t.datetime :created_at, null: false
+          t.string :scopes
+          t.string :refresh_token_family_id
+        end
+      end
+
+      # Named, since the `application` association cannot be read on an
+      # anonymous class.
+      def access_token_model(name, table, &definition)
+        model = Class.new(::ActiveRecord::Base) do
+          include Doorkeeper::Orm::ActiveRecord::Mixins::AccessToken
+          self.table_name = table
+        end
+        model.class_eval(&definition) if definition
+        stub_const(name, model)
+      end
+
+      let(:application) { FactoryBot.create :application }
+      let(:attributes) { { application_id: application.id, use_refresh_token: true, expires_in: 7200 } }
+
+      shared_examples "family writes that find the row of the record" do
+        # Another record that predates the column: the write must not reach it.
+        before { bystander.update_column(:refresh_token_family_id, nil) }
+
+        it "gives a record that predates the column its family, and no other record" do
+          token.update_column(:refresh_token_family_id, nil)
+
+          family_id = token.ensure_refresh_token_family_id!
+
+          expect(family_id).to be_present
+          expect(token).not_to be_changed
+          expect(model.where(refresh_token_family_id: family_id).count).to eq(1)
+          expect(model.find(token.id).refresh_token_family_id).to eq(family_id)
+        end
+
+        it "revokes the family of the record and reads its revocation time back" do
+          token.revoke_refresh_token_family
+
+          expect(token).to be_revoked
+          expect(token).not_to be_changed
+          expect(token.revoked_at).to eq(model.find(token.id).revoked_at)
+          expect(model.find(bystander.id)).not_to be_revoked
+        end
+      end
+
+      context "when the primary key is not id" do
+        before do
+          create_access_tokens_table(:oauth_access_tokens_keyed, id: false) do |t|
+            t.string :token_key, null: false, primary_key: true
+          end
+        end
+
+        after do
+          ActiveRecord::Base.connection.drop_table(:oauth_access_tokens_keyed)
+        end
+
+        let(:model) do
+          access_token_model("KeyedAccessToken", "oauth_access_tokens_keyed") { self.primary_key = "token_key" }
+        end
+        let(:token) { model.create!(attributes.merge(token_key: "first")) }
+        let(:bystander) { model.create!(attributes.merge(token_key: "second")) }
+
+        it_behaves_like "family writes that find the row of the record"
+      end
+
+      # A primary key can also name several columns, which Active Record
+      # answers with as an array — supported since Rails 7.1.
+      context "when the primary key is composed of several columns",
+              if: ActiveRecord.version >= Gem::Version.new("7.1") do
+        before do
+          create_access_tokens_table(:oauth_access_tokens_composite, id: false) do |t|
+            t.integer :shop_id, null: false
+            t.integer :seq, null: false
+          end
+        end
+
+        after do
+          ActiveRecord::Base.connection.drop_table(:oauth_access_tokens_composite)
+        end
+
+        let(:model) do
+          access_token_model("CompositeAccessToken", "oauth_access_tokens_composite") do
+            self.primary_key = %i[shop_id seq]
+          end
+        end
+        let(:token) { model.create!(attributes.merge(shop_id: 1, seq: 1)) }
+        let(:bystander) { model.create!(attributes.merge(shop_id: 1, seq: 2)) }
+
+        it_behaves_like "family writes that find the row of the record"
+      end
+
+      context "when the table has an optimistic locking column" do
+        before do
+          create_access_tokens_table(:oauth_access_tokens_locked) do |t|
+            t.integer :lock_version, default: 0, null: false
+          end
+        end
+
+        after do
+          ActiveRecord::Base.connection.drop_table(:oauth_access_tokens_locked)
+        end
+
+        let(:model) { access_token_model("LockedAccessToken", "oauth_access_tokens_locked") }
+        let(:token) { model.create!(attributes) }
+
+        describe "#ensure_refresh_token_family_id!" do
+          before { token.update_column(:refresh_token_family_id, nil) }
+
+          it "bumps the lock version on the row and the record alike" do
+            token.ensure_refresh_token_family_id!
+
+            expect(token.lock_version).to eq(1)
+            expect(token).not_to be_changed
+            expect(model.find(token.id).lock_version).to eq(1)
+            expect { token.update!(scopes: "public") }.not_to raise_error
+          end
+
+          it "lets an unrelated unsaved change be saved afterwards" do
+            token.expires_in = 60
+
+            token.ensure_refresh_token_family_id!
+
+            expect { token.save! }.not_to raise_error
+            expect(model.find(token.id).expires_in).to eq(60)
+          end
+
+          # The row is one version ahead, and what was written is the family
+          # this record continues.
+          it "keeps the record saveable when a concurrent refresh gave it its family first" do
+            in_flight = model.find(token.id)
+            family_id = token.ensure_refresh_token_family_id!
+
+            expect(in_flight.ensure_refresh_token_family_id!).to eq(family_id)
+            expect { in_flight.update!(scopes: "public") }.not_to raise_error
+          end
+
+          it "leaves the record stale when its row was written by someone else too" do
+            in_flight = model.find(token.id)
+            token.update!(scopes: "public")
+
+            expect(in_flight.ensure_refresh_token_family_id!).to be_present
+            expect { in_flight.update!(expires_in: 60) }.to raise_error(ActiveRecord::StaleObjectError)
+          end
+        end
+
+        describe "#revoke_refresh_token_family" do
+          it "bumps the lock version on the row and the record alike" do
+            token.revoke_refresh_token_family
+
+            expect(token.lock_version).to eq(1)
+            expect(token).not_to be_changed
+            expect(model.find(token.id).lock_version).to eq(1)
+            expect { token.update!(scopes: "public") }.not_to raise_error
+          end
+
+          it "lets an unrelated unsaved change be saved afterwards" do
+            token.expires_in = 60
+
+            token.revoke_refresh_token_family
+
+            expect { token.save! }.not_to raise_error
+            expect(model.find(token.id).expires_in).to eq(60)
+          end
+
+          it "keeps the record saveable when a concurrent request revoked the family first" do
+            in_flight = model.find(token.id)
+            token.revoke_refresh_token_family
+
+            in_flight.revoke_refresh_token_family
+
+            expect(in_flight.revoked_at).to eq(model.find(token.id).revoked_at)
+            expect { in_flight.update!(scopes: "public") }.not_to raise_error
+          end
+
+          it "leaves the record stale when its row was written by someone else too" do
+            in_flight = model.find(token.id)
+            token.update!(scopes: "public")
+
+            in_flight.revoke_refresh_token_family
+
+            expect(model.find(token.id)).to be_revoked
+            expect { in_flight.update!(expires_in: 60) }.to raise_error(ActiveRecord::StaleObjectError)
+          end
+        end
       end
     end
   end
