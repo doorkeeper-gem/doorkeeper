@@ -706,10 +706,11 @@ module Doorkeeper
       return unless self.class.refresh_token_family_supported?
       return refresh_token_family_id if refresh_token_family_id.present? || refresh_token.blank?
 
+      row = row_before_write
       self.class.with_primary_role do
         persisted_row.where(refresh_token_family_id: nil).update_all(refresh_token_family_id: SecureRandom.uuid)
       end
-      read_back_written_attribute(:refresh_token_family_id)
+      read_back_written_attribute(:refresh_token_family_id, row)
 
       refresh_token_family_id
     end
@@ -737,12 +738,13 @@ module Doorkeeper
       family_id = refresh_token_family_id
       return revoke(clock) if family_id.blank?
 
+      row = row_before_write
       now = self.class.revoke_refresh_token_family(family_id, application_id, clock)
 
       # A record that was already revoked was not written to.
       return if revoked_at && revoked_at <= now
 
-      read_back_written_attribute(:revoked_at)
+      read_back_written_attribute(:revoked_at, row)
     end
 
     # JSON representation of the Access Token instance.
@@ -869,6 +871,28 @@ module Doorkeeper
       self.class.where(self.class.primary_key => [id])
     end
 
+    # What the row of the record holds in the given columns, by column name,
+    # read from the primary. Every column is nil when the row is gone.
+    def persisted_values(columns)
+      values = self.class.with_primary_role do
+        # `pick` needs Rails 6, the gemspec still allows railties 5.
+        persisted_row.limit(1).pluck(*columns).first # rubocop:disable Rails/Pick
+      end
+
+      # `pluck` answers the bare value for one column and a list for several.
+      columns.zip(columns.one? ? [values] : values.to_a).to_h
+    end
+
+    # The row of the record as it is before an `update_all` goes past the
+    # record, for `read_back_written_attribute` to compare with the row
+    # afterwards. The row is compared with itself rather than with the
+    # attributes of the record, so that the comparison does not depend on
+    # how a value survives the round trip to the database. Only read under
+    # optimistic locking, which is all it is needed for.
+    def row_before_write
+      persisted_values(self.class.column_names) if self.class.locking_enabled?
+    end
+
     # Brings the record in step with a column that an `update_all` has just
     # written past it. The value is read back from the primary rather than
     # assumed: a concurrent request may have written the column first (a
@@ -877,31 +901,44 @@ module Doorkeeper
     #
     # Under optimistic locking `update_all` also bumps the lock column, which
     # would leave the record stale and have its next save refused. The lock
-    # version is taken over when the row is exactly one version ahead of the
-    # record: the only write since the record was read is then the one that
-    # set the column. A row further ahead was written by someone else too,
-    # so the record stays stale and its next save is still refused.
+    # version of the row is taken over when the written column is all the
+    # record misses of its row (see `only_column_written_since?`); otherwise
+    # the record stays stale and its next save is still refused.
     #
     # Only what was read back is marked clean, so unrelated unsaved changes
     # of the record are kept (a `reload` would discard them).
-    def read_back_written_attribute(column)
-      lock = self.class.locking_column if self.class.locking_enabled?
+    def read_back_written_attribute(column, before)
+      column = column.to_s
+      after = persisted_values(before ? self.class.column_names : [column])
 
-      # `pluck` answers the bare value for one column and a pair for two.
-      # `pick` needs Rails 6, the gemspec still allows railties 5.
-      value, version = self.class.with_primary_role do
-        persisted_row.limit(1).pluck(column, *lock).first # rubocop:disable Rails/Pick
-      end
-
-      self[column] = value
+      self[column] = after[column]
       synced = [column]
 
-      if lock && version.to_i == self[lock].to_i + 1
-        self[lock] = version
+      if before && only_column_written_since?(column, before, after)
+        lock = self.class.locking_column
+        self[lock] = after[lock]
         synced << lock
       end
 
       clear_attribute_changes(synced)
+    end
+
+    # True when the record was up to date with its row before the write, the
+    # row has a newer lock version now, and no column other than the written
+    # one has changed since: the record then misses nothing but what was
+    # just read back.
+    #
+    # The lock version alone does not say that. A write that finds the
+    # column already set leaves the row alone, and a row one version ahead
+    # may then be the work of a concurrent save that set the column together
+    # with other attributes: taking its version over would let the record
+    # save over attributes it never read.
+    def only_column_written_since?(column, before, after)
+      lock = self.class.locking_column
+
+      before[lock].to_i == self[lock].to_i &&
+        after[lock] != before[lock] &&
+        before.except(column, lock) == after.except(column, lock)
     end
 
     # Generates refresh token with UniqueToken generator.

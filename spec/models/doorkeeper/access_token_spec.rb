@@ -1092,6 +1092,17 @@ RSpec.describe Doorkeeper::AccessToken do
         let(:model) { access_token_model("LockedAccessToken", "oauth_access_tokens_locked") }
         let(:token) { model.create!(attributes) }
 
+        # A concurrent request saving +record+ after the row was read for the
+        # family write and just before the write itself: the second trip to
+        # the primary.
+        def save_just_before_the_write(record, **changes)
+          calls = 0
+          allow(model).to receive(:with_primary_role).and_wrap_original do |original, &block|
+            record.update!(changes) if (calls += 1) == 2
+            original.call(&block)
+          end
+        end
+
         describe "#ensure_refresh_token_family_id!" do
           before { token.update_column(:refresh_token_family_id, nil) }
 
@@ -1113,14 +1124,14 @@ RSpec.describe Doorkeeper::AccessToken do
             expect(model.find(token.id).expires_in).to eq(60)
           end
 
-          # The row is one version ahead, and what was written is the family
-          # this record continues.
-          it "keeps the record saveable when a concurrent refresh gave it its family first" do
+          # The record was stale before the call, which wrote nothing: the
+          # version on the row is not this call's to take over.
+          it "continues the family a concurrent refresh gave it first, and leaves the record stale" do
             in_flight = model.find(token.id)
             family_id = token.ensure_refresh_token_family_id!
 
             expect(in_flight.ensure_refresh_token_family_id!).to eq(family_id)
-            expect { in_flight.update!(scopes: "public") }.not_to raise_error
+            expect { in_flight.update!(scopes: "public") }.to raise_error(ActiveRecord::StaleObjectError)
           end
 
           it "leaves the record stale when its row was written by someone else too" do
@@ -1129,6 +1140,26 @@ RSpec.describe Doorkeeper::AccessToken do
 
             expect(in_flight.ensure_refresh_token_family_id!).to be_present
             expect { in_flight.update!(expires_in: 60) }.to raise_error(ActiveRecord::StaleObjectError)
+          end
+
+          # The row is one version ahead, as after this call's own write, but
+          # the write skipped it: the version is that of the concurrent save.
+          it "does not save over a concurrent save that set the family together with another attribute" do
+            in_flight = model.find(token.id)
+            token.update!(refresh_token_family_id: "winner", scopes: "public")
+
+            expect(in_flight.ensure_refresh_token_family_id!).to eq("winner")
+            expect { in_flight.update!(scopes: "write") }.to raise_error(ActiveRecord::StaleObjectError)
+            expect(model.find(token.id).scopes.to_s).to eq("public")
+          end
+
+          it "does not save over such a save that lands between the read of the row and the write" do
+            in_flight = model.find(token.id)
+            save_just_before_the_write(token, refresh_token_family_id: "winner", scopes: "public")
+
+            expect(in_flight.ensure_refresh_token_family_id!).to eq("winner")
+            expect { in_flight.update!(scopes: "write") }.to raise_error(ActiveRecord::StaleObjectError)
+            expect(model.find(token.id).scopes.to_s).to eq("public")
           end
         end
 
@@ -1151,14 +1182,16 @@ RSpec.describe Doorkeeper::AccessToken do
             expect(model.find(token.id).expires_in).to eq(60)
           end
 
-          it "keeps the record saveable when a concurrent request revoked the family first" do
+          # The record was stale before the call, which wrote nothing to its
+          # row: the version on the row is not this call's to take over.
+          it "reads back when a concurrent request revoked the family first, and leaves the record stale" do
             in_flight = model.find(token.id)
             token.revoke_refresh_token_family
 
             in_flight.revoke_refresh_token_family
 
             expect(in_flight.revoked_at).to eq(model.find(token.id).revoked_at)
-            expect { in_flight.update!(scopes: "public") }.not_to raise_error
+            expect { in_flight.update!(scopes: "public") }.to raise_error(ActiveRecord::StaleObjectError)
           end
 
           it "leaves the record stale when its row was written by someone else too" do
@@ -1169,6 +1202,28 @@ RSpec.describe Doorkeeper::AccessToken do
 
             expect(model.find(token.id)).to be_revoked
             expect { in_flight.update!(expires_in: 60) }.to raise_error(ActiveRecord::StaleObjectError)
+          end
+
+          # The row is one version ahead, as after this call's own write, but
+          # the write skipped it: the version is that of the concurrent save.
+          it "does not save over a concurrent save that revoked the record together with another attribute" do
+            in_flight = model.find(token.id)
+            token.update!(revoked_at: Time.now.utc, scopes: "public")
+
+            in_flight.revoke_refresh_token_family
+
+            expect { in_flight.update!(scopes: "write") }.to raise_error(ActiveRecord::StaleObjectError)
+            expect(model.find(token.id).scopes.to_s).to eq("public")
+          end
+
+          it "does not save over such a save that lands between the read of the row and the write" do
+            in_flight = model.find(token.id)
+            save_just_before_the_write(token, revoked_at: 1.minute.ago, scopes: "public")
+
+            in_flight.revoke_refresh_token_family
+
+            expect { in_flight.update!(scopes: "write") }.to raise_error(ActiveRecord::StaleObjectError)
+            expect(model.find(token.id).scopes.to_s).to eq("public")
           end
         end
       end
