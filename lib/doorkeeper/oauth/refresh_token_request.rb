@@ -47,6 +47,9 @@ module Doorkeeper
           # transition period, after which the old refresh token will be revoked.
           raise Errors::InvalidGrantReuse if refresh_token_revoked?
 
+          # Presenting this refresh token proves the client received it, so
+          # the transition period of the one it replaced is over.
+          refresh_token.revoke_previous_refresh_token!
           create_access_token
         else
           # Use locking when refresh tokens are revoked immediately
