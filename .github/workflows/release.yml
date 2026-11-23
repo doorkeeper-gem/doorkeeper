@@ -43,5 +43,10 @@ jobs:
       - name: Push gem
         run: gem push doorkeeper-*.gem
 
+      # `gem exec` resolves rubygems-await's `bundler (>= 2.2)` to the newest
+      # Bundler, and rubygems-await 0.5.4 cannot read the `info` endpoint with
+      # Bundler 4.1 (https://github.com/segiddins/rubygems-await/pull/222): that
+      # check raises on every poll until the step times out, after the gem was
+      # pushed. Drop `--skip info` once rubygems-await ships the fix.
       - name: Wait for release to propagate
-        run: gem exec rubygems-await doorkeeper-*.gem
+        run: gem exec rubygems-await --skip info doorkeeper-*.gem
