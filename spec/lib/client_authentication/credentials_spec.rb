@@ -16,4 +16,9 @@ RSpec.describe Doorkeeper::ClientAuthentication::Credentials do
     expect(credentials.uid).to eq("some-uid")
     expect(credentials.secret).to eq("some-secret")
   end
+
+  it "is not rejected" do
+    expect(described_class.new("some-uid", "some-secret")).not_to be_rejected
+    expect(described_class.new(nil, nil)).not_to be_rejected
+  end
 end

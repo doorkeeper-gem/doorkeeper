@@ -6,6 +6,12 @@ module Doorkeeper
       # Public clients may have their secret blank, but "credentials" are
       # still present as long as the uid is present.
       delegate :blank?, to: :uid
+
+      # Whether the client authentication method refused the client
+      # authentication the request carried (see RejectedCredentials).
+      def rejected?
+        false
+      end
     end
   end
 end
