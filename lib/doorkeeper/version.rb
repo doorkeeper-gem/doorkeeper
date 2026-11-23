@@ -6,7 +6,7 @@ module Doorkeeper
     MAJOR = 6
     MINOR = 0
     TINY = 0
-    PRE = "rc3"
+    PRE = "rc4"
 
     # Full version number
     STRING = [MAJOR, MINOR, TINY, PRE].compact.join(".")

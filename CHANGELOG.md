@@ -7,15 +7,21 @@ User-visible changes worth mentioning.
 
 ## main
 
+- [#PR ID] Description of the change.
+
+## 6.0.0.rc4
+
+### Security
 - Fix: `private_key_jwt` refuses a client assertion whose `jti` is longer than 255 characters. The replay guard remembers every `jti` until its assertion expires, and nothing bounded its length.
 - [GHSA-88xh-fgq2-m396] Fix: with refresh tokens revoked on use, exchanging a refresh token now ends the transition period of the one it replaced. Before, a replaced refresh token stayed usable until the newer access token passed through `doorkeeper_authorize!`, so a client that refreshed twice in a row, or a resource server that checks tokens another way (`by_token`, introspection), left old refresh tokens of the chain valid.
 - **[BREAKING]** Fix: refuse the client credentials grant for public (non-confidential) clients with `unauthorized_client`, as RFC 6749 Section 4.4 limits it to confidential clients: a public client's `client_id` alone was enough to be issued a token. Set `allow_client_credentials_grant_for_public_clients true` to keep the old behavior.
+
+### Other changes
 - [#1998] A client ID metadata document declaring `private_key_jwt` without `none` is no longer refused where the server offers `private_key_jwt`, also on a server not offering `none`: it makes a confidential client that has to authenticate with its key (draft-03, Examples of Client Authentication).
 - [#1999] Fix: a client known from its metadata document whose token endpoint auth method is `none` can no longer authenticate with a client assertion, even when the application holds its `jwks_uri`; the token request is refused (draft-03, Client Authentication).
 - [#2000] Fix: a malformed `private_key_jwt` client assertion is refused with `invalid_client` instead of raising: a JOSE header that is no JSON object, an `exp` or `nbf` that is no finite number, an issuer or `jti` that is not valid UTF-8.
 - [#2001] Publish `token_endpoint_auth_signing_alg_values_supported` in the authorization server metadata when `private_key_jwt` is enabled, as RFC 8414 §2 requires. A custom assertion-based method declares its algorithms with `auth_signing_alg_values`.
 - [#2002] Fix: a key in a client's JWK Set that cannot be parsed no longer raises out of `private_key_jwt`, and no longer costs the client its other keys. A key that is malformed, of an unknown key type or without `kty` is ignored (RFC 7517 §5).
-- [#PR ID] Description of the change.
 
 ## 6.0.0.rc3
 
@@ -143,6 +149,22 @@ and changelog below before the update since this version includes breaking chang
 - [#1864] Fix `custom_access_token_attributes` values being dropped when the authorization goes through the consent screen: the approve/deny forms now carry the custom attributes as hidden fields, and the pre-authorization JSON (`api_only` mode) includes them so custom consent UIs can send them back.
 - [#1869] Improve test coverage
 - [#1870] Fix: raise the intended `Doorkeeper::Errors::TokenGeneratorNotFound` / `UnableToGenerateToken` (instead of a confusing `NameError`) when `application_secret_generator` is misconfigured.
+
+## 5.9.10
+
+- Fix: `force_pkce` without the PKCE columns (`rails generate doorkeeper:pkce`) no longer accepts any `code_verifier` from a non-confidential client. The authorization code flow is now refused with `server_error` for those clients until the migration is applied.
+- [GHSA-88xh-fgq2-m396] Fix: with refresh tokens revoked on use, exchanging a refresh token now ends the transition period of the one it replaced. Before, a replaced refresh token stayed usable until the newer access token passed through `doorkeeper_authorize!`, so a client that refreshed twice in a row, or a resource server that checks tokens another way (`by_token`, introspection), left old refresh tokens of the chain valid.
+- Fix: refuse the client credentials grant for public (non-confidential) clients with `unauthorized_client`, as RFC 6749 Section 4.4 limits it to confidential clients: a public client's `client_id` alone was enough to be issued a token. Set `allow_client_credentials_grant_for_public_clients true` to keep the old behavior.
+
+## 5.9.9
+
+- Fix: `AuthorizedApplicationsController` now answers `401 Unauthorized` instead of running with a `nil` resource owner, which listed and revoked every token that has no resource owner — the ones the client credentials flow issues. Affected host applications are those whose `resource_owner_authenticator` answers `nil` without halting the request itself; the generated initializer's example redirects and is not affected.
+- Fix: `AuthorizationsController#destroy` now validates the client and redirect URI before producing the deny response, and renders — never redirects — when validation fails. Previously the deny path performed no OAuth-layer validation at all, allowing an open redirect to an attacker-controlled origin with the OAuth `state` attached. Also reject unregistered `response_type` values on the authorization endpoint rather than resolving them through the `constantize` fallback.
+- Fix: refuse redirect URIs with a script scheme (`javascript`, `vbscript`, `data`) both when an application is registered and at authorization time, regardless of `forbid_redirect_uri`. Such a URI is never a legitimate redirection endpoint, and with `response_mode=form_post` it became the action of the auto-submitting form the authorization server renders on its own origin. Already stored records with such a URI are now refused with `invalid_redirect_uri` before the consent screen is shown.
+
+## 5.9.8
+
+- [#1938] Fix: a request body ActionDispatch cannot parse (malformed JSON under a JSON content type, say) no longer raises `ActionDispatch::Http::Parameters::ParseError` out of `Doorkeeper::OAuth::Token.from_request` and `doorkeeper_token`. Since 5.9.7 the RFC 6750 §2 multi-method check read the body on every request, so such a request raised even when it carried a valid Bearer header. The body is now treated as carrying no token, the same way ActionDispatch's own `#filtered_parameters` treats that error.
 
 ## 5.9.7
 
