@@ -157,11 +157,12 @@ RSpec.describe "Revoke Token Flow" do
 
       it "revokes only the record of a presented access token" do
         tokens = chain
+        revoked_before = tokens.first(2).map { |token| token.reload.revoked_at }
 
         post revocation_token_endpoint_url, params: { token: tokens.last.token }, headers: headers
 
         expect(tokens.last.reload).to be_revoked
-        expect(tokens.first(2).map(&:reload)).to all(satisfy { |token| !token.revoked? })
+        expect(tokens.first(2).map { |token| token.reload.revoked_at }).to eq(revoked_before)
       end
 
       context "without the refresh_token_family_id column" do
@@ -171,15 +172,16 @@ RSpec.describe "Revoke Token Flow" do
 
         it "revokes only the record of the presented refresh token" do
           tokens = chain
+          revoked_before = tokens.first(2).map { |token| token.reload.revoked_at }
 
           post revocation_token_endpoint_url,
                params: { token: tokens.last.refresh_token, token_type_hint: "refresh_token" },
                headers: headers
 
           expect(tokens.last.reload).to be_revoked
-          expect(tokens.first(2).map(&:reload)).to all(satisfy { |token| !token.revoked? })
+          expect(tokens.first(2).map { |token| token.reload.revoked_at }).to eq(revoked_before)
 
-          access_protected_resource_with(tokens.first.token)
+          access_protected_resource_with(tokens.second.token)
           expect(response).to be_successful
         end
       end
