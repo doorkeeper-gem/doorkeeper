@@ -6,7 +6,7 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Validator do
   subject(:validator) { described_class.new(server, request) }
 
   let(:server)      { double :server, scopes: nil }
-  let(:application) { double scopes: nil }
+  let(:application) { double scopes: nil, confidential?: true }
   let(:client)      { double application: application }
   let(:request)     { double :request, client: client, scopes: nil }
 
@@ -17,6 +17,25 @@ RSpec.describe Doorkeeper::OAuth::ClientCredentials::Validator do
   it "is invalid when client is not present" do
     allow(request).to receive(:client).and_return(nil)
     expect(validator).not_to be_valid
+  end
+
+  # RFC 6749 Section 4.4: "The client credentials grant type MUST only be used
+  # by confidential clients."
+  context "when the client is public" do
+    before do
+      allow(application).to receive(:confidential?).and_return(false)
+    end
+
+    it "is invalid" do
+      expect(validator).not_to be_valid
+      expect(validator.error).to eq(Doorkeeper::Errors::UnauthorizedClient)
+    end
+
+    it "is valid with allow_client_credentials_grant_for_public_clients" do
+      config_is_set(:allow_client_credentials_grant_for_public_clients, true)
+
+      expect(validator).to be_valid
+    end
   end
 
   # `#validate` stops at the first failing check, so once the client is

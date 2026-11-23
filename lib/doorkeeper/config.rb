@@ -370,6 +370,16 @@ module Doorkeeper
     option :skip_client_authentication_for_password_grant,
            default: false
 
+    # Issue client credentials tokens to public (non-confidential) clients as well.
+    #
+    # This is discouraged. RFC 6749 Section 4.4 limits the client credentials grant
+    # to confidential clients: a public client is known by its client_id alone, so
+    # anyone who knows that id is issued a token in the name of the application.
+    # Off by default, in which case such a request is answered with
+    # :unauthorized_client.
+    option :allow_client_credentials_grant_for_public_clients,
+           default: false
+
     # Hook to allow arbitrary user-client authorization
     option :authorize_resource_owner_for_client,
            default: ->(_client, _resource_owner) { true }
@@ -394,6 +404,10 @@ module Doorkeeper
     #
     # In case this option invocation result is `false`, Doorkeeper server returns
     # :unauthorized_client error and stops the request.
+    #
+    # A public (non-confidential) application is refused the client credentials
+    # grant without the block being asked, unless
+    # +allow_client_credentials_grant_for_public_clients+ is set.
     #
     # @param allow_grant_flow_for_client [Proc] Block or any object respond to #call
     # @return [Boolean] `true` if allow or `false` if forbid the request
@@ -904,6 +918,8 @@ module Doorkeeper
     def allow_grant_flow_for_client?(grant_flow, client)
       # A client known from its metadata document gets authorization codes only (RFC 9700 §2.1.2, §2.4).
       return false if OAuth::ClientIdMetadataDocument.materialized?(client) && grant_flow != OAuth::AUTHORIZATION_CODE
+      # The client credentials grant is for confidential clients only (RFC 6749 §4.4).
+      return false if grant_flow == OAuth::CLIENT_CREDENTIALS && !client_credentials_grant_open_to?(client)
       return true unless option_defined?(:allow_grant_flow_for_client)
 
       allow_grant_flow_for_client.call(grant_flow, client)
@@ -914,6 +930,12 @@ module Doorkeeper
     end
 
     private
+
+    # An application that does not say it is confidential is taken for a public one.
+    def client_credentials_grant_open_to?(client)
+      allow_client_credentials_grant_for_public_clients ||
+        (client.respond_to?(:confidential?) && client.confidential?)
+    end
 
     # Helper to read boolearized configuration option
     def option_set?(instance_key)
