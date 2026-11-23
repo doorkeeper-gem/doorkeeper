@@ -51,6 +51,15 @@ module UrlHelper
     "/oauth/token?#{build_query(parameters)}"
   end
 
+  def refresh_token_endpoint_params(options = {})
+    {
+      refresh_token: options[:refresh_token],
+      client_id: options[:client_id] || options[:client].try(:uid),
+      client_secret: options[:client_secret] || options[:client].try(:secret),
+      grant_type: options[:grant_type] || "refresh_token",
+    }.reject { |_, v| v.blank? }
+  end
+
   def revocation_token_endpoint_url
     "/oauth/revoke"
   end

@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## 5.9.10
 
 - Fix: `force_pkce` without the PKCE columns (`rails generate doorkeeper:pkce`) no longer accepts any `code_verifier` from a non-confidential client. The authorization code flow is now refused with `server_error` for those clients until the migration is applied.
+- [GHSA-88xh-fgq2-m396] Fix: with refresh tokens revoked on use, exchanging a refresh token now ends the transition period of the one it replaced. Before, a replaced refresh token stayed usable until the newer access token passed through `doorkeeper_authorize!`, so a client that refreshed twice in a row, or a resource server that checks tokens another way (`by_token`, introspection), left old refresh tokens of the chain valid.
 
 ## 5.9.9
 
