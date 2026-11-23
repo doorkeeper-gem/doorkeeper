@@ -423,6 +423,28 @@ RSpec.describe Doorkeeper::OAuth::ClientAuthentication::PrivateKeyJwt do
       expect(credentials).to be_nil
     end
 
+    context "when the client is known from a metadata document" do
+      let(:application) do
+        double("application", jwks: jwks, jwks_uri: nil, client_id_metadata_materialized_at: Time.current, confidential?: false)
+      end
+
+      it "rejects the assertion of one whose method is none, without resolving its keys" do
+        expect(described_class::KeyResolver).not_to receive(:jwk_set_for)
+
+        credentials = described_class.authenticate(request_with(build_assertion))
+
+        expect(credentials).to be_a(Doorkeeper::ClientAuthentication::RejectedCredentials)
+      end
+
+      it "authenticates a confidential one" do
+        allow(application).to receive(:confidential?).and_return(true)
+
+        credentials = described_class.authenticate(request_with(build_assertion))
+
+        expect(credentials).to be_a(Doorkeeper::ClientAuthentication::VerifiedCredentials)
+      end
+    end
+
     it "rejects an assertion signed with the wrong key" do
       other_key = OpenSSL::PKey::RSA.generate(2048)
 

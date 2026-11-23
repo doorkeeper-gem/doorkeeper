@@ -57,5 +57,12 @@ RSpec.describe Doorkeeper::OAuth::Client do
       expect(authenticator).to receive(:call).with("some-uid", "some-secret").and_return(nil)
       expect(described_class.authenticate(credentials, authenticator)).to be_nil
     end
+
+    it "returns nil for credentials their authentication method rejected, without looking a client up" do
+      credentials = Doorkeeper::ClientAuthentication::RejectedCredentials.new
+      authenticator = double
+      expect(authenticator).not_to receive(:call)
+      expect(described_class.authenticate(credentials, authenticator)).to be_nil
+    end
   end
 end

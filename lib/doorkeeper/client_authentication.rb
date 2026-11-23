@@ -2,6 +2,7 @@
 
 require "doorkeeper/client_authentication/credentials"
 require "doorkeeper/client_authentication/verified_credentials"
+require "doorkeeper/client_authentication/rejected_credentials"
 require "doorkeeper/client_authentication/fallback_method"
 require "doorkeeper/client_authentication/legacy_callable"
 require "doorkeeper/client_authentication/method"
