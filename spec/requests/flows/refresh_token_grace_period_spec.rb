@@ -23,6 +23,14 @@ RSpec.describe "Refresh token grace period" do
     json_response
   end
 
+  it "keeps a replaced refresh token usable while the token that replaced it is unused" do
+    refresh(token.refresh_token)
+    expect(response).to have_http_status(:ok)
+
+    refresh(token.refresh_token)
+    expect(response).to have_http_status(:ok)
+  end
+
   # The client refreshes twice without its access tokens passing through
   # Doorkeeper's authentication, e.g. a resource server that checks tokens
   # with AccessToken.by_token or introspection.
