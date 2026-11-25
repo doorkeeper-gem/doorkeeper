@@ -8,6 +8,7 @@ User-visible changes worth mentioning.
 ## main
 
 - [#PR ID] Description of the change.
+- [#2007] Keep a client ID metadata document's `logo_uri` on the application when the application model has a `logo_uri` column, so a consent screen can show the client's logo. Only an https URL is kept; anything else is dropped without refusing the client.
 
 ## 6.0.0.rc4
 
