@@ -35,7 +35,7 @@ jobs:
           echo "Releasing doorkeeper $gem_version from tag $TAG_NAME."
 
       - name: Configure RubyGems Trusted Publishing credentials
-        uses: rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a # v2.1.0
+        uses: rubygems/configure-rubygems-credentials@c6ca7f4bac0e29c9bde8eeae0a0a986b27efa05f # v2.2.0
 
       - name: Build gem
         run: gem build doorkeeper.gemspec
