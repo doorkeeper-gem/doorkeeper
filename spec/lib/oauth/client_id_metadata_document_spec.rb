@@ -91,6 +91,58 @@ RSpec.describe Doorkeeper::OAuth::ClientIdMetadataDocument do
     end
   end
 
+  context "with a document naming a logo_uri" do
+    def stub_document(logo_uri)
+      stub_request(:get, client_id).to_return(
+        status: 200,
+        body: { client_id: client_id, redirect_uris: [redirect_uri], token_endpoint_auth_method: "none",
+                logo_uri: logo_uri, }.compact.to_json,
+      )
+    end
+
+    it "keeps an https logo_uri" do
+      stub_document("https://client.example.com/logo.png")
+
+      expect(described_class.application(client_id)).to have_attributes(logo_uri: "https://client.example.com/logo.png")
+    end
+
+    it "keeps a logo_uri at the 2048-character limit" do
+      logo_uri = "https://client.example.com/".ljust(2048, "a")
+      stub_document(logo_uri)
+
+      expect(described_class.application(client_id)).to have_attributes(persisted?: true, logo_uri: logo_uri)
+    end
+
+    ["http://client.example.com/logo.png", "javascript:alert(1)", "https://user@client.example.com/logo.png",
+     "https://client.example.com/logo.png#x", "https://client.example.com/a b.png",
+     "https://client.example.com/".ljust(2049, "a"),
+     "https://client.example.com/logo.png?x=\u0000", 42,].each do |logo_uri|
+      it "drops #{logo_uri.inspect} without refusing the client" do
+        stub_document(logo_uri)
+
+        expect(described_class.application(client_id)).to have_attributes(persisted?: true, logo_uri: nil)
+      end
+    end
+
+    it "clears the logo when the document stops naming one" do
+      insert_row(client_id, at: 1.day.ago).update_column(:logo_uri, "https://client.example.com/old.png")
+      stub_document(nil)
+
+      expect(described_class.application(client_id)).to have_attributes(logo_uri: nil)
+    end
+
+    it "leaves a model without a logo_uri column alone" do
+      stub_document("https://client.example.com/logo.png")
+      insert_row(client_id, at: 1.day.ago)
+      row = Doorkeeper::Application.find_by(uid: client_id)
+      allow(Doorkeeper::Application).to receive(:by_uid).and_return(row)
+      allow(row).to receive(:respond_to?).and_call_original
+      allow(row).to receive(:respond_to?).with(:logo_uri=).and_return(false)
+
+      expect(described_class.application(client_id)).to have_attributes(persisted?: true, logo_uri: nil)
+    end
+  end
+
   context "with a document that leaves private_key_jwt as the only method, where the model has no jwks_uri column" do
     let(:row) { insert_row(client_id, at: 1.day.ago) }
 

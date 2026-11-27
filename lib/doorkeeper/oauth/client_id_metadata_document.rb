@@ -206,7 +206,7 @@ module Doorkeeper
           scopes: scopes,
           confidential: false,
         )
-        assign_keys(application, document)
+        assign_optional_columns(application, document)
         application.public_send(:"#{MARKER}=", Time.current) unless materialized?(application)
         # A savepoint, so that losing the uid race leaves a caller's transaction usable for the re-read.
         return application if model.with_primary_role { model.transaction(requires_new: true) { application.save } }
@@ -251,6 +251,31 @@ module Doorkeeper
       # fetches nothing else (and refuses a malformed one itself), and at most 255 characters, like the uid.
       def self.jwks_uri(uri)
         uri if uri.is_a?(String) && uri.length <= 255 && uri.start_with?("https://")
+      end
+
+      # What the document gives the columns a host application may add to its model.
+      def self.assign_optional_columns(application, document)
+        assign_keys(application, document)
+        assign_logo_uri(application, document)
+      end
+
+      # Kept where the application model has a logo_uri column, for the consent screen to show (RFC 7591 §2).
+      # A logo that is not an https URL is dropped rather than refused, as it only decorates the screen.
+      def self.assign_logo_uri(application, document)
+        return unless application.respond_to?(:logo_uri=)
+
+        application.logo_uri = logo_uri(document["logo_uri"])
+      end
+
+      # At most 2048 characters, without userinfo or a fragment, and nothing a consent screen would
+      # fetch other than over https.
+      def self.logo_uri(value)
+        return unless value.is_a?(String) && value.length <= 2048 && !value.match?(/[[:cntrl:]\s]/)
+
+        uri = URI.parse(value)
+        value if uri.is_a?(URI::HTTPS) && uri.host.present? && uri.userinfo.nil? && uri.fragment.nil?
+      rescue URI::InvalidURIError
+        nil
       end
 
       # A concurrent first request may have written the row in the meantime, on the primary.
