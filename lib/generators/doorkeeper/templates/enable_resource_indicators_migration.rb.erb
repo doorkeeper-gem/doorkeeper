@@ -4,5 +4,11 @@ class EnableResourceIndicators < ActiveRecord::Migration<%= migration_version %>
   def change
     add_column :oauth_access_grants, :resource, :text, null: true
     add_column :oauth_access_tokens, :resource, :text, null: true
+
+    # A refresh token stays bound to every resource of the original grant,
+    # so a client that restricted an access token to one of them can ask for
+    # another one on the next refresh.
+    # @see https://datatracker.ietf.org/doc/html/rfc8707#section-2.2
+    add_column :oauth_access_tokens, :refresh_token_resource, :text, null: true
   end
 end
