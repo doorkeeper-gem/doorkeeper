@@ -106,8 +106,17 @@ RSpec.describe Doorkeeper::OAuth::ClientIdMetadataDocument do
       expect(described_class.application(client_id)).to have_attributes(logo_uri: "https://client.example.com/logo.png")
     end
 
+    it "keeps a logo_uri at the 2048-character limit" do
+      logo_uri = "https://client.example.com/".ljust(2048, "a")
+      stub_document(logo_uri)
+
+      expect(described_class.application(client_id)).to have_attributes(persisted?: true, logo_uri: logo_uri)
+    end
+
     ["http://client.example.com/logo.png", "javascript:alert(1)", "https://user@client.example.com/logo.png",
-     "https://client.example.com/logo.png#x", "https://client.example.com/a b.png", 42,].each do |logo_uri|
+     "https://client.example.com/logo.png#x", "https://client.example.com/a b.png",
+     "https://client.example.com/".ljust(2049, "a"),
+     "https://client.example.com/logo.png?x=\u0000", 42,].each do |logo_uri|
       it "drops #{logo_uri.inspect} without refusing the client" do
         stub_document(logo_uri)
 
